@@ -1,0 +1,36 @@
+{
+  "name": "UserWidgetPreference",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The user this preference belongs to"
+    },
+    "widget_id": {
+      "type": "string",
+      "description": "Reference to the DashboardWidget"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether user has this widget shown"
+    },
+    "position": {
+      "type": "number",
+      "description": "Order position on the dashboard"
+    },
+    "size_override": {
+      "type": "string",
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "description": "User's preferred size override"
+    }
+  },
+  "required": [
+    "user_id",
+    "widget_id"
+  ]
+}

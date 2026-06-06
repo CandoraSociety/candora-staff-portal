@@ -1,0 +1,51 @@
+{
+  "name": "AccessPermission",
+  "type": "object",
+  "properties": {
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "portal_card",
+        "feature",
+        "module"
+      ],
+      "description": "What type of thing is being permissioned"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "ID of the portal card, feature, or module"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "role",
+        "department",
+        "individual"
+      ],
+      "description": "What level this permission applies at"
+    },
+    "scope_value": {
+      "type": "string",
+      "description": "The role name, department ID, or user ID"
+    },
+    "permission": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "description": "Whether to grant or deny access"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "target_type",
+    "target_id",
+    "scope_type",
+    "scope_value",
+    "permission"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "name": "DashboardWidget",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name of the widget"
+    },
+    "widget_type": {
+      "type": "string",
+      "enum": [
+        "welcome",
+        "quick_links",
+        "announcements",
+        "stats_counter",
+        "calendar_preview",
+        "recent_activity",
+        "team_directory",
+        "custom_html"
+      ],
+      "description": "Type of widget to render"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this widget shows"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Admin toggle to make widget available"
+    },
+    "default_for_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Roles that get this widget by default"
+    },
+    "config": {
+      "type": "object",
+      "description": "Widget-specific configuration data"
+    },
+    "size": {
+      "type": "string",
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "default": "medium",
+      "description": "Default widget size"
+    }
+  },
+  "required": [
+    "name",
+    "widget_type"
+  ]
+}

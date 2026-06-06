@@ -1,0 +1,29 @@
+{
+  "name": "OrgSettings",
+  "type": "object",
+  "properties": {
+    "org_name": {
+      "type": "string",
+      "default": "Candora"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL to the organization logo"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#2a9d8f"
+    },
+    "secondary_color": {
+      "type": "string",
+      "default": "#e9963e"
+    },
+    "welcome_message": {
+      "type": "string",
+      "default": "Welcome to the Candora Staff Portal"
+    }
+  },
+  "required": [
+    "org_name"
+  ]
+}

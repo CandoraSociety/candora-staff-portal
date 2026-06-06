@@ -1,0 +1,36 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "super_admin",
+        "executive_director",
+        "manager",
+        "team_lead",
+        "frontline_staff",
+        "board",
+        "extended"
+      ],
+      "default": "frontline_staff"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID of the user's primary department"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
