@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { type, volunteerName, volunteerEmail, details } = await req.json();
 
-    const coordinatorEmail = "Yasmin.escobar@candorasociety.com";
+    const coordinatorEmail = "yazmin.escobar@candorasociety.com";
 
     let subject, body;
     if (type === 'new_registration') {

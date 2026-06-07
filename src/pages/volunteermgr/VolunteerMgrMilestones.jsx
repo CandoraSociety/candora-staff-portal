@@ -8,25 +8,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Award, Clock, Users, Trophy } from 'lucide-react';
+import { Award, Clock, Trophy } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import moment from 'moment';
+import { getUnawardedMilestones } from '@/lib/milestones';
 
 export default function VolunteerMgrMilestones() {
   const [showAward, setShowAward] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState(null);
-  const [awardForm, setAwardForm] = useState({ title: '', description: '', type: 'milestone_hours' });
+  const [awardForm, setAwardForm] = useState({ title: '', description: '', type: 'milestone_hours', milestone_key: '' });
   const queryClient = useQueryClient();
 
   const { data: volunteers = [] } = useQuery({
     queryKey: ['vol-volunteers'],
     queryFn: () => base44.entities.Volunteer.list(undefined, 500),
-  });
-
-  const { data: timeLogs = [] } = useQuery({
-    queryKey: ['vol-timelogs-all'],
-    queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 5000),
   });
 
   const { data: recognitions = [] } = useQuery({
@@ -40,60 +36,15 @@ export default function VolunteerMgrMilestones() {
       queryClient.invalidateQueries({ queryKey: ['vol-recognition'] });
       setShowAward(false);
       setSelectedVolunteer(null);
-      setAwardForm({ title: '', description: '', type: 'milestone_hours' });
+      setAwardForm({ title: '', description: '', type: 'milestone_hours', milestone_key: '' });
     },
   });
 
-  // Calculate pending milestones for each volunteer
-  const calculateMilestones = (volunteer) => {
-    const totalHours = timeLogs
-      .filter(log => log.volunteer_id === volunteer.id)
-      .reduce((sum, log) => sum + (log.total_hours || 0), 0);
-
-    const awardedKeys = recognitions
-      .filter(rec => rec.volunteer_id === volunteer.id)
-      .map(rec => rec.milestone_key);
-
-    const pending = [];
-
-    // Hour milestones
-    [50, 100, 250, 500, 1000].forEach(hours => {
-      const key = `milestone_hours_${hours}`;
-      if (totalHours >= hours && !awardedKeys.includes(key)) {
-        pending.push({
-          type: 'milestone_hours',
-          milestone_key: key,
-          title: `${hours} Hours Milestone`,
-          description: `Reached ${hours} hours of volunteer service`,
-          volunteer_id: volunteer.id,
-        });
-      }
-    });
-
-    // Years of service
-    if (volunteer.start_date) {
-      const yearsWorked = moment().diff(moment(volunteer.start_date), 'years');
-      [1, 3, 5, 10, 15, 20].forEach(years => {
-        const key = `years_of_service_${years}`;
-        if (yearsWorked >= years && !awardedKeys.includes(key)) {
-          pending.push({
-            type: 'years_of_service',
-            milestone_key: key,
-            title: `${years} Year${years > 1 ? 's' : ''} of Service`,
-            description: `Celebrating ${years} year${years > 1 ? 's' : ''} of dedication`,
-            volunteer_id: volunteer.id,
-          });
-        }
-      });
-    }
-
-    return { totalHours, pending };
-  };
-
   const volunteersWithMilestones = volunteers
     .map(v => {
-      const { totalHours, pending } = calculateMilestones(v);
-      return { volunteer: v, totalHours, pending };
+      const volRecognitions = recognitions.filter(r => r.volunteer_id === v.id);
+      const pending = getUnawardedMilestones(v, volRecognitions);
+      return { volunteer: v, totalHours: v.total_hours || 0, pending };
     })
     .filter(v => v.pending.length > 0);
 
@@ -103,6 +54,7 @@ export default function VolunteerMgrMilestones() {
       title: milestone.title,
       description: milestone.description,
       type: milestone.type,
+      milestone_key: milestone.milestone_key,
     });
     setShowAward(true);
   };
@@ -117,9 +69,7 @@ export default function VolunteerMgrMilestones() {
         description: awardForm.description,
         date_awarded: moment().format('YYYY-MM-DD'),
         awarded_by: 'Volunteer Manager',
-        milestone_key: awardForm.type === 'milestone_hours' 
-          ? `milestone_hours_${selectedVolunteer.totalHours}` 
-          : `years_of_service_${moment().diff(moment(selectedVolunteer.start_date), 'years')}`,
+        milestone_key: awardForm.milestone_key,
       });
     }
   };
