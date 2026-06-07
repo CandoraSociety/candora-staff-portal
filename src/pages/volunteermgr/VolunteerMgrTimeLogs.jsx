@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Clock, Plus } from 'lucide-react';
+import { Search, Clock, Plus, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import moment from 'moment';
 
@@ -24,7 +24,9 @@ export default function VolunteerMgrTimeLogs() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [importFile, setImportFile] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: timeLogs = [] } = useQuery({
@@ -44,6 +46,32 @@ export default function VolunteerMgrTimeLogs() {
       queryClient.invalidateQueries({ queryKey: ['vol-timelogs-all'] });
       setFormOpen(false);
       setForm(emptyForm);
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/functions/importTimeLogsFromSpreadsheet', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Import failed');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-timelogs-all'] });
+      setImportOpen(false);
+      setImportFile(null);
+      alert(data.summary);
+    },
+    onError: (error) => {
+      alert('Import failed: ' + error.message);
     },
   });
 
@@ -69,7 +97,10 @@ export default function VolunteerMgrTimeLogs() {
           <h1 className="text-2xl font-bold font-display">Time Logs</h1>
           <p className="text-sm text-muted-foreground mt-1">{timeLogs.length} total entries</p>
         </div>
-        <Button onClick={() => setFormOpen(true)} className="gap-2"><Plus className="w-4 h-4" /> Log Hours</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2"><Upload className="w-4 h-4" /> Import Time Logs</Button>
+          <Button onClick={() => setFormOpen(true)} className="gap-2"><Plus className="w-4 h-4" /> Log Hours</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -148,6 +179,31 @@ export default function VolunteerMgrTimeLogs() {
               <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Save'}</Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={importOpen} onOpenChange={o => { setImportOpen(o); if (!o) setImportFile(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Import Time Logs from CSV</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Upload a CSV file with columns: volunteer_id, volunteer_name, position_id, position_title, sign_in_time, sign_out_time, total_hours, date, notes, status</p>
+              <Input 
+                type="file" 
+                accept=".csv" 
+                onChange={e => setImportFile(e.target.files?.[0] || null)} 
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={() => importFile && importMutation.mutate(importFile)} 
+                disabled={!importFile || importMutation.isPending}
+              >
+                {importMutation.isPending ? 'Importing...' : 'Import'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
