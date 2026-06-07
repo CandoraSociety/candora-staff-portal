@@ -127,27 +127,33 @@ export default function TimeLogsStats({ timeLogs }) {
     const fiscalYearStart = moment(`${currentYear}-04-01`);
     const fiscalYearEnd = moment(`${currentYear + 1}-03-31`);
     
-    const allTimeTotal = timeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
+    // All-time total - sum all logs with valid hours
+    const allTimeTotal = timeLogs
+      .filter(log => log.total_hours != null && log.total_hours > 0)
+      .reduce((sum, log) => sum + log.total_hours, 0);
 
+    // Calendar YTD - current year only
     const cytdLogs = timeLogs.filter(log => {
       const logDate = moment(log.date || log.sign_in_time);
-      return logDate.year() === currentYear && log.total_hours;
+      return logDate.isValid() && logDate.year() === currentYear && log.total_hours != null && log.total_hours > 0;
     });
     const cytdTotal = cytdLogs.reduce((sum, log) => sum + log.total_hours, 0);
 
+    // Fiscal YTD - Apr 1 to Mar 31
     const fytdLogs = timeLogs.filter(log => {
       const logDate = moment(log.date || log.sign_in_time);
-      return logDate.isBetween(fiscalYearStart, fiscalYearEnd, 'day', '[]') && log.total_hours;
+      return logDate.isValid() && logDate.isBetween(fiscalYearStart, fiscalYearEnd, 'day', '[]') && log.total_hours != null && log.total_hours > 0;
     });
     const fytdTotal = fytdLogs.reduce((sum, log) => sum + log.total_hours, 0);
 
     const signedInCount = timeLogs.filter(log => log.status === 'signed_in').length;
 
+    // Hours today
     const todayLogs = timeLogs.filter(log => {
       const logDate = moment(log.date || log.sign_in_time);
-      return logDate.isSame(now, 'day');
+      return logDate.isValid() && logDate.isSame(now, 'day') && log.total_hours != null && log.total_hours > 0;
     });
-    const hoursToday = todayLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
+    const hoursToday = todayLogs.reduce((sum, log) => sum + log.total_hours, 0);
 
     const totalEntries = timeLogs.length;
 
