@@ -131,10 +131,22 @@ export default function VolunteerMgrProfile() {
               {isCorporate ? (volunteer.company_name?.[0] || 'C') : isDeceased ? '🕊️' : <>{volunteer.first_name?.[0]}{volunteer.last_name?.[0]}</>}
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold font-display">
-                {isCorporate ? `${volunteer.company_name || 'Unknown Company'}${volunteer.first_name ? ` — ${volunteer.first_name}` : ''}` : `${volunteer.first_name} ${volunteer.last_name}`}
-                {isDeceased && ' 🕊️'}
-              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl font-bold font-display">
+                  {isCorporate ? `${volunteer.company_name || 'Unknown Company'}${volunteer.first_name ? ` — ${volunteer.first_name}` : ''}` : `${volunteer.first_name} ${volunteer.last_name}`}
+                  {isDeceased && ' 🕊️'}
+                </h1>
+                {!isCorporate && volunteer.birth_date && (
+                  <Badge className="bg-accent text-accent-foreground">
+                    {moment().diff(moment(volunteer.birth_date), 'years')} years old
+                  </Badge>
+                )}
+                {!isCorporate && volunteer.gender && (
+                  <Badge className="bg-accent text-accent-foreground">
+                    {volunteer.gender.toLowerCase().startsWith('m') ? 'M' : volunteer.gender.toLowerCase().startsWith('f') ? 'F' : volunteer.gender.charAt(0).toUpperCase()}
+                  </Badge>
+                )}
+              </div>
               <div className="flex items-center gap-2 mt-2">
                 <VolunteerTypeBadge type={volunteer.volunteer_type} />
                 <Badge className={statusColors[volunteer.status]}>{volunteer.status}</Badge>
