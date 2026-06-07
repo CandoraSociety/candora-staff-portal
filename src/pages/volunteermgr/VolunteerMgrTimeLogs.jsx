@@ -53,13 +53,17 @@ export default function VolunteerMgrTimeLogs() {
     mutationFn: async (file) => {
       const formData = new FormData();
       formData.append('file', file);
+      
+      // Use the SDK's internal auth - get token from session
       const response = await fetch('/api/functions/importTimeLogsFromSpreadsheet', {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Import failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Import failed');
       }
       return response.json();
     },
