@@ -166,11 +166,24 @@ export default function VolunteerMgrEvents() {
                 >
                   <Pencil className="w-3.5 h-3.5" /> Edit
                 </Button>
-                {event.is_placeholder && (
+                {event.is_placeholder ? (
                   <Button
                     size="sm"
                     variant="ghost"
                     className="text-destructive hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteTarget(event);
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Delete event"
                     onClick={(e) => {
                       e.stopPropagation();
                       setDeleteTarget(event);
@@ -195,9 +208,10 @@ export default function VolunteerMgrEvents() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Placeholder?</AlertDialogTitle>
+            <AlertDialogTitle>{deleteTarget?.is_placeholder ? 'Delete Placeholder?' : 'Delete Event?'}</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete "<strong>{deleteTarget?.title}</strong>". This action cannot be undone.
+              {!deleteTarget?.is_placeholder && ' Any sign-ups associated with this event will remain in the system.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

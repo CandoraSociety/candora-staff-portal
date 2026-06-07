@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, Briefcase, Calendar, Clock, Award, CheckSquare, Cake, Trophy, UserCheck } from 'lucide-react';
+import { Users, Briefcase, Calendar, Clock, Award, CheckSquare, Cake, Trophy, UserCheck, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
@@ -43,6 +43,11 @@ export default function VolunteerMgrDashboard() {
     queryFn: () => base44.entities.VolunteerApproval.list(),
   });
 
+  const { data: staffRequests = [] } = useQuery({
+    queryKey: ['staff-volunteer-requests'],
+    queryFn: () => base44.entities.StaffVolunteerRequest.list(),
+  });
+
   const { data: timeLogs = [] } = useQuery({
     queryKey: ['vol-timelogs-all'],
     queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 5000),
@@ -54,6 +59,7 @@ export default function VolunteerMgrDashboard() {
   const pendingApprovals = approvals.filter(a => a.status === 'pending');
   const totalHours = timeLogs.reduce((sum, l) => sum + (l.total_hours || 0), 0);
   const activeSignIns = timeLogs.filter(l => l.status === 'signed_in');
+  const pendingStaffRequests = staffRequests.filter(r => r.status === 'pending');
 
   const recentVolunteers = [...volunteers]
     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
@@ -99,7 +105,7 @@ export default function VolunteerMgrDashboard() {
           <CardContent className="space-y-2">
             {recentVolunteers.length === 0 && <p className="text-sm text-muted-foreground">No volunteers yet.</p>}
             {recentVolunteers.map(v => (
-              <Link key={v.id} to="/volunteermgr/volunteers" className="flex items-center justify-between hover:bg-muted/50 rounded px-2 py-1.5 transition-colors">
+              <Link key={v.id} to={`/volunteermgr/volunteers/${v.id}`} className="flex items-center justify-between hover:bg-muted/50 rounded px-2 py-1.5 transition-colors">
                 <div>
                   <p className="text-sm font-medium">{v.first_name} {v.last_name}</p>
                   <p className="text-xs text-muted-foreground">{v.volunteer_type?.replace(/_/g, ' ')}</p>
@@ -182,20 +188,36 @@ export default function VolunteerMgrDashboard() {
         </Card>
       </div>
 
-      {pendingApprovals.length > 0 && (
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckSquare className="w-5 h-5 text-accent" />
-              <div>
-                <p className="font-medium text-sm">{pendingApprovals.length} pending approval{pendingApprovals.length !== 1 ? 's' : ''}</p>
-                <p className="text-xs text-muted-foreground">Volunteer registrations or changes awaiting review</p>
+      <div className="space-y-3">
+        {pendingApprovals.length > 0 && (
+          <Card className="border-accent/30 bg-accent/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckSquare className="w-5 h-5 text-accent" />
+                <div>
+                  <p className="font-medium text-sm">{pendingApprovals.length} pending approval{pendingApprovals.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-muted-foreground">Volunteer registrations or changes awaiting review</p>
+                </div>
               </div>
-            </div>
-            <Link to="/volunteermgr/approvals" className="text-sm text-primary font-medium hover:underline">Review →</Link>
-          </CardContent>
-        </Card>
-      )}
+              <Link to="/volunteermgr/approvals" className="text-sm text-primary font-medium hover:underline">Review →</Link>
+            </CardContent>
+          </Card>
+        )}
+        {pendingStaffRequests.length > 0 && (
+          <Card className="border-blue-300/40 bg-blue-50/50">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <ClipboardList className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="font-medium text-sm">{pendingStaffRequests.length} staff volunteer request{pendingStaffRequests.length !== 1 ? 's' : ''}</p>
+                  <p className="text-xs text-muted-foreground">From staff awaiting coordinator action</p>
+                </div>
+              </div>
+              <Link to="/volunteermgr/staff-requests" className="text-sm text-primary font-medium hover:underline">Review →</Link>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

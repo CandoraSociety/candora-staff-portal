@@ -41,6 +41,8 @@ export default function VolunteerMgrApprovals() {
         const req = approvals.find(a => a.id === id);
         if (req?.request_type === 'new_registration' && req?.volunteer_id) {
           await base44.entities.Volunteer.update(req.volunteer_id, { status: 'active' });
+          // Send welcome email with onboarding documents
+          await base44.functions.invoke('sendWelcomeEmail', { volunteer_id: req.volunteer_id });
         }
       }
     },

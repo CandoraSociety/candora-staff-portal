@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Users, Briefcase, Calendar, Clock,
   Award, GraduationCap, FileText, CheckSquare,
   ChevronLeft, ChevronRight, LogOut, Upload, Mail,
-  Cake, Trophy, CalendarDays, ExternalLink
+  Cake, Trophy, CalendarDays, ExternalLink, ClipboardList
 } from 'lucide-react';
 
 const navItems = [
@@ -25,6 +25,7 @@ const navItems = [
   { path: '/volunteermgr/email', label: 'Email', icon: Mail },
   { path: '/volunteermgr/birthdays', label: 'Birthdays', icon: Cake },
   { path: '/volunteermgr/milestones', label: 'Milestones', icon: Trophy },
+  { path: '/volunteermgr/staff-requests', label: 'Staff Requests', icon: ClipboardList },
 ];
 
 
