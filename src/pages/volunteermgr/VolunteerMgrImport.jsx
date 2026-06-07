@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Upload, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import { toast } from 'sonner';
+import Papa from 'papaparse';
 
 const CSV_COLUMNS = [
   'first_name', 'last_name', 'email', 'phone', 'address', 'city', 'birth_date', 'gender',
@@ -17,83 +18,102 @@ const CSV_COLUMNS = [
 ];
 
 const parseCSV = (text) => {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return { data: [], error: 'File must have header and at least one data row' };
-  
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-  
+  // Use Papa Parse for proper CSV parsing (handles quoted fields, commas, newlines, etc.)
+  const parseResult = Papa.parse(text, {
+    header: true,
+    skipEmptyLines: false,
+    dynamicTyping: false,
+    transformHeader: (header) => header.trim().toLowerCase()
+  });
+
+  if (parseResult.errors.length > 0) {
+    const criticalErrors = parseResult.errors.filter(e => e.type === 'Header' || e.type === 'Delimiter');
+    if (criticalErrors.length > 0) {
+      return { data: [], error: `CSV parsing failed: ${criticalErrors[0].message}` };
+    }
+  }
+
   // Validate headers
+  const headers = parseResult.meta.fields || [];
   const missingColumns = CSV_COLUMNS.filter(col => !headers.includes(col));
   if (missingColumns.length > 0) {
     return { data: [], error: `Missing columns: ${missingColumns.join(', ')}` };
   }
-  
+
   const data = [];
   const errors = [];
-  
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    // Simple CSV parsing (doesn't handle quoted commas - can be enhanced if needed)
-    const values = line.split(',').map(v => v.trim());
-    const row = {};
-    
-    headers.forEach((header, idx) => {
-      row[header] = values[idx] || '';
-    });
-    
-    // Parse according to rules
+
+  parseResult.data.forEach((row, index) => {
+    const rowNum = index + 2; // 1-indexed + header row
+
+    // Skip completely empty rows
+    if (Object.values(row).every(val => !val || val === '')) {
+      return;
+    }
+
     try {
+      // Handle multi-line text in skills field (Papa Parse preserves newlines in quoted fields)
+      const skills = row.skills || '';
+      
+      // Handle pipe-separated programs (empty string = empty array)
+      const programs = row.programs ? row.programs.split('|').map(p => p.trim()).filter(p => p) : [];
+
+      // Parse is_deceased (handle various boolean representations)
+      const isDeceasedValue = (row.is_deceased || '').toString().toLowerCase().trim();
+      const isDeceased = isDeceasedValue === 'true' || isDeceasedValue === 'yes' || isDeceasedValue === '1';
+
+      // Parse total_hours as float, default to 0
+      const totalHours = row.total_hours ? parseFloat(row.total_hours) : 0;
+
       const volunteer = {
-        first_name: row.first_name || '',
-        last_name: row.last_name || '',
-        email: row.email || '',
-        phone: row.phone || '',
-        address: row.address || '',
-        city: row.city || '',
-        birth_date: row.birth_date || '',
-        gender: row.gender || '',
-        volunteer_type: row.volunteer_type || 'community',
-        status: row.status || 'pending',
-        start_date: row.start_date || '',
-        total_hours: row.total_hours ? parseFloat(row.total_hours) : 0,
-        company_name: row.company_name || '',
-        school_name: row.school_name || '',
-        skills: row.skills || '',
-        availability: row.availability || '',
-        programs: row.programs ? row.programs.split('|').filter(p => p.trim()) : [],
-        emergency_contact_name: row.emergency_contact_name || '',
-        emergency_contact_phone: row.emergency_contact_phone || '',
-        crc: row.crc || '',
-        irc: row.irc || '',
-        ell_level: row.ell_level || '',
-        allergies: row.allergies || '',
-        food_restriction: row.food_restriction || '',
-        pictures_consent: row.pictures_consent || '',
-        how_heard: row.how_heard || '',
-        notes: row.notes || '',
-        pin_code: row.pin_code || '',
-        is_deceased: row.is_deceased === 'true',
-        deceased_date: row.deceased_date || '',
+        first_name: row.first_name?.trim() || '',
+        last_name: row.last_name?.trim() || '',
+        email: row.email?.trim() || '',
+        phone: row.phone?.trim() || '',
+        address: row.address?.trim() || '',
+        city: row.city?.trim() || '',
+        birth_date: row.birth_date?.trim() || '',
+        gender: row.gender?.trim() || '',
+        volunteer_type: row.volunteer_type?.trim() || 'community',
+        status: row.status?.trim() || 'pending',
+        start_date: row.start_date?.trim() || '',
+        total_hours: isNaN(totalHours) ? 0 : totalHours,
+        company_name: row.company_name?.trim() || '',
+        school_name: row.school_name?.trim() || '',
+        skills: skills,
+        availability: row.availability?.trim() || '',
+        programs: programs,
+        emergency_contact_name: row.emergency_contact_name?.trim() || '',
+        emergency_contact_phone: row.emergency_contact_phone?.trim() || '',
+        crc: row.crc?.trim() || '',
+        irc: row.irc?.trim() || '',
+        ell_level: row.ell_level?.trim() || '',
+        allergies: row.allergies?.trim() || '',
+        food_restriction: row.food_restriction?.trim() || '',
+        pictures_consent: row.pictures_consent?.trim() || '',
+        how_heard: row.how_heard?.trim() || '',
+        notes: row.notes?.trim() || '',
+        pin_code: row.pin_code?.trim() || '',
+        is_deceased: isDeceased,
+        deceased_date: row.deceased_date?.trim() || '',
         corporate_members: []
       };
-      
+
       // Validate required fields
       if (!volunteer.first_name || !volunteer.last_name) {
-        errors.push(`Row ${i + 1}: Missing first_name or last_name`);
+        errors.push(`Row ${rowNum}: Missing required field - first_name or last_name`);
       } else if (!['community', 'skilled', 'practicum', 'corporate', 'internal_placement'].includes(volunteer.volunteer_type)) {
-        errors.push(`Row ${i + 1}: Invalid volunteer_type "${volunteer.volunteer_type}"`);
+        errors.push(`Row ${rowNum}: Invalid volunteer_type "${volunteer.volunteer_type}" - must be one of: community, skilled, practicum, corporate, internal_placement`);
       } else if (!['pending', 'active', 'occasional', 'inactive', 'suspended'].includes(volunteer.status)) {
-        errors.push(`Row ${i + 1}: Invalid status "${volunteer.status}"`);
+        errors.push(`Row ${rowNum}: Invalid status "${volunteer.status}" - must be one of: pending, active, occasional, inactive, suspended`);
       } else {
         data.push(volunteer);
       }
     } catch (err) {
-      errors.push(`Row ${i + 1}: Parse error - ${err.message}`);
+      errors.push(`Row ${rowNum}: Parse error - ${err.message}`);
     }
-  }
-  
+  });
+
   return { data, errors };
 };
 
