@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift, TrendingUp, ChevronDown } from 'lucide-react';
+import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift, TrendingUp, ChevronDown, CalendarClock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { getUnawardedMilestones } from '@/lib/milestones';
@@ -80,6 +80,14 @@ export default function VolunteerMgrDashboard() {
     queryKey: ['vol-timelogs-all'],
     queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 5000),
   });
+  const { data: shiftAssignments = [] } = useQuery({
+    queryKey: ['vol-shift-assignments'],
+    queryFn: () => base44.entities.ShiftAssignment.list('-date', 200),
+  });
+  const { data: shiftTemplates = [] } = useQuery({
+    queryKey: ['vol-shift-templates'],
+    queryFn: () => base44.entities.ShiftTemplate.list(),
+  });
   const { data: recognitions = [] } = useQuery({
     queryKey: ['vol-recognitions-all'],
     queryFn: () => base44.entities.VolunteerRecognition.list(),
@@ -125,6 +133,19 @@ export default function VolunteerMgrDashboard() {
       return { ...row, volunteer_type: vol?.volunteer_type || '', status: vol?.status || '' };
     });
   }, [timeLogs, leaderboardPeriod, volunteers]);
+
+  // Upcoming shifts (next 7 days)
+  const upcomingShifts = useMemo(() => {
+    const start = today.clone().startOf('day');
+    const end = today.clone().add(7, 'days').endOf('day');
+    return shiftAssignments
+      .filter(s => s.date && moment(s.date).isBetween(start, end, 'day', '[]') && s.status !== 'cancelled')
+      .map(s => {
+        const tmpl = shiftTemplates.find(t => t.id === s.template_id);
+        return { ...s, role_title: tmpl?.role_title || s.role_title || 'Shift', start_time: tmpl?.start_time || '', program_name: tmpl?.program_name || '' };
+      })
+      .sort((a, b) => moment(a.date).diff(moment(b.date)));
+  }, [shiftAssignments, shiftTemplates]);
 
   // Milestone alerts
   const volunteersWithUnawarded = volunteers
@@ -262,8 +283,8 @@ export default function VolunteerMgrDashboard() {
         </SectionCard>
       </div>
 
-      {/* Row 2: Currently Signed In | Staff Requests */}
-      <div className="grid md:grid-cols-2 gap-5">
+      {/* Row 2: Currently Signed In | Upcoming Shifts | Staff Requests */}
+      <div className="grid md:grid-cols-3 gap-5">
         <SectionCard icon={UserCheck} iconColor="text-green-600" borderColor="border-l-green-400"
           title="Currently Signed In" linkTo="/volunteermgr/timelogs" linkLabel="View logs">
           {activeSignIns.length === 0
@@ -277,6 +298,26 @@ export default function VolunteerMgrDashboard() {
                 <Badge className="bg-green-100 text-green-700 border-0 text-xs shrink-0">
                   Since {moment(log.sign_in_time).format('h:mm a')}
                 </Badge>
+              </div>
+            ))
+          }
+        </SectionCard>
+
+        <SectionCard icon={CalendarClock} iconColor="text-violet-600" borderColor="border-l-violet-400"
+          title="Upcoming Shifts" linkTo="/volunteermgr/schedule" linkLabel="Schedule">
+          {upcomingShifts.length === 0
+            ? <p className="text-sm text-muted-foreground py-1">No shifts in the next 7 days.</p>
+            : upcomingShifts.slice(0, 6).map(s => (
+              <div key={s.id} className="flex items-center gap-2 hover:bg-muted/60 rounded-md px-2 py-1.5 transition-colors -mx-2">
+                <div className="w-2 h-2 rounded-full bg-violet-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{s.volunteer_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{s.role_title}{s.program_name ? ` · ${s.program_name}` : ''}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-medium">{moment(s.date).format('MMM D')}</p>
+                  {s.start_time && <p className="text-xs text-muted-foreground">{s.start_time}</p>}
+                </div>
               </div>
             ))
           }
