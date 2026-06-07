@@ -22,32 +22,56 @@ Deno.serve(async (req) => {
     let skipped = 0;
     const errors = [];
 
+    // Pre-fetch all volunteers for fast lookup
+    const allVolunteers = await base44.asServiceRole.entities.Volunteer.list();
+    const volunteerById = new Map();
+    const volunteerByName = new Map();
+    
+    allVolunteers.forEach((vol) => {
+      if (vol.id) volunteerById.set(vol.id, vol);
+      const fullName = `${vol.first_name} ${vol.last_name}`.toLowerCase().trim();
+      if (fullName) volunteerByName.set(fullName, vol);
+    });
+
     for (let i = 0; i < parseResult.data.length; i++) {
       const row = parseResult.data[i];
       const rowNum = i + 1;
 
       try {
-        if (!row.volunteer_id || !row.volunteer_name) {
-          errors.push({ row: rowNum, error: 'Missing volunteer_id or volunteer_name' });
+        if (!row.volunteer_id && !row.volunteer_name) {
+          errors.push({ row: rowNum, error: 'Missing volunteer_id and volunteer_name' });
           skipped++;
           continue;
         }
 
-        // Validate volunteer exists
-        const volunteers = await base44.asServiceRole.entities.Volunteer.filter({ id: row.volunteer_id });
-        if (!volunteers || volunteers.length === 0) {
-          errors.push({ row: rowNum, error: `Volunteer ID ${row.volunteer_id} not found` });
+        // Try to find volunteer by ID first, then by name
+        let volunteer = null;
+        
+        if (row.volunteer_id) {
+          volunteer = volunteerById.get(row.volunteer_id);
+        }
+        
+        // Fallback: try matching by name if ID not found
+        if (!volunteer && row.volunteer_name) {
+          const normalizedName = row.volunteer_name.toLowerCase().trim();
+          volunteer = volunteerByName.get(normalizedName);
+        }
+
+        if (!volunteer) {
+          errors.push({ 
+            row: rowNum, 
+            error: `Volunteer not found: ID="${row.volunteer_id || 'N/A'}", Name="${row.volunteer_name || 'N/A'}"` 
+          });
           skipped++;
           continue;
         }
 
-        const volunteer = volunteers[0];
         const signOut = row.sign_out_time ? new Date(row.sign_out_time).toISOString() : null;
         const totalHours = row.total_hours ? parseFloat(row.total_hours) : null;
         const signIn = row.sign_in_time ? new Date(row.sign_in_time).toISOString() : null;
 
         await base44.asServiceRole.entities.VolunteerTimeLog.create({
-          volunteer_id: row.volunteer_id,
+          volunteer_id: volunteer.id,
           volunteer_name: row.volunteer_name || `${volunteer.first_name} ${volunteer.last_name}`,
           position_id: row.position_id || null,
           position_title: row.position_title || 'Volunteer Work',
@@ -72,7 +96,7 @@ Deno.serve(async (req) => {
     return Response.json({ 
       success: true, 
       summary: `Imported ${imported} time logs, skipped ${skipped} rows`,
-      details: { imported, skipped, errors: errors.slice(0, 10) } // Show first 10 errors
+      details: { imported, skipped, errors: errors.slice(0, 20) } // Show first 20 errors
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
