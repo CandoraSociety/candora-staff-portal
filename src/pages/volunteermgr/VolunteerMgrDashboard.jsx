@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import BirthdayCard from '@/components/volunteermgr/BirthdayCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, Clipbo
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { getUnawardedMilestones } from '@/lib/milestones';
-import BirthdayCard from '@/components/volunteermgr/BirthdayCard';
 
 function StatCard({ icon: Icon, title, value, trend, color = 'text-primary', bgColor = 'bg-primary/10' }) {
   return (
@@ -276,7 +276,7 @@ export default function VolunteerMgrDashboard() {
       <BirthdayCard
         volunteer={birthdayCardVolunteer}
         open={!!birthdayCardVolunteer}
-        onOpenChange={o => { if (!o) setBirthdayCardVolunteer(null); }}
+        onOpenChange={(o) => { if (!o) setBirthdayCardVolunteer(null); }}
       />
     </div>
   );

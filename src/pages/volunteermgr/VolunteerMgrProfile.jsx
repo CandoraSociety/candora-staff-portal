@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -40,6 +40,12 @@ export default function VolunteerMgrProfile() {
   const { data: documents = [] } = useQuery({
     queryKey: ['documents', id],
     queryFn: () => base44.entities.VolunteerDocument.filter({ volunteer_id: id }),
+    enabled: !!id,
+  });
+
+  const { data: trainingRecords = [] } = useQuery({
+    queryKey: ['training-records', id],
+    queryFn: () => base44.entities.TrainingRecord.filter({ volunteer_id: id }),
     enabled: !!id,
   });
 
@@ -262,6 +268,32 @@ export default function VolunteerMgrProfile() {
           })()}
         </CardContent>
       </Card>
+
+      {trainingRecords.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" /> Training Records
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3">
+              {trainingRecords.map((rec) => (
+                <div key={rec.id} className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{rec.pathway_title || 'Training'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {rec.completed_modules?.length || 0} modules completed
+                      {rec.completion_date ? ` · ${moment(rec.completion_date).format('MMM D, YYYY')}` : ''}
+                    </p>
+                  </div>
+                  <Badge variant={rec.status === 'completed' ? 'default' : 'secondary'} className="capitalize">{rec.status?.replace(/_/g, ' ')}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {documents.length > 0 && (
         <Card>

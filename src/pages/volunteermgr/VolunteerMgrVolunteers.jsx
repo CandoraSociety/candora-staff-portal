@@ -9,11 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Mail, Phone, Pencil, MoreHorizontal, Eye, LayoutGrid, List, Upload, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, LayoutGrid, List, Upload } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import VolunteerTypeBadge from '@/components/volunteermgr/VolunteerTypeBadge';
-import { Link } from 'react-router-dom';
-
 const statusColors = {
   active: 'bg-green-50 text-green-700 border-green-200',
   pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -94,9 +93,9 @@ export default function VolunteerMgrVolunteers() {
           <h1 className="text-2xl font-bold font-display">Volunteers</h1>
           <p className="text-sm text-muted-foreground mt-1">{volunteers.length} total volunteers</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.location.href = '/volunteermgr/import'} className="gap-2"><Upload className="w-4 h-4" /> Import</Button>
-          <Button variant="outline" onClick={() => window.location.href = '/volunteermgr/email'} className="gap-2"><Mail className="w-4 h-4" /> Email</Button>
+        <div className="flex items-center gap-2">
+          <Link to="/volunteermgr/import"><Button variant="outline" className="gap-2"><Upload className="w-4 h-4" /> Import</Button></Link>
+          <Link to="/volunteermgr/email"><Button variant="outline" className="gap-2"><Mail className="w-4 h-4" /> Email</Button></Link>
           <Button onClick={openNew} className="gap-2"><Plus className="w-4 h-4" /> Add Volunteer</Button>
         </div>
       </div>

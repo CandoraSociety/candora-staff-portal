@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Award, Trash2, Trophy, Clock } from 'lucide-react';
+import { Plus, Award, Trash2 } from 'lucide-react';
 import moment from 'moment';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getUnawardedMilestones } from '@/lib/milestones';
-import EmptyState from '@/components/shared/EmptyState';
 
 const RECOGNITION_TYPES = [
   { value: 'milestone_hours', label: '⏱️ Milestone Hours' },
@@ -24,22 +23,17 @@ const RECOGNITION_TYPES = [
   { value: 'special_achievement', label: '🎖️ Special Achievement' },
 ];
 
-const emptyForm = {
-  volunteer_id: '', volunteer_name: '', type: 'outstanding_service',
-  title: '', description: '', date_awarded: moment().format('YYYY-MM-DD'), awarded_by: '',
-};
+const emptyForm = { volunteer_id: '', volunteer_name: '', type: 'outstanding_service', title: '', description: '', date_awarded: moment().format('YYYY-MM-DD'), awarded_by: '' };
 
 export default function VolunteerMgrRecognition() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [awardDialog, setAwardDialog] = useState(null); // { volunteer, milestone }
-  const [awardForm, setAwardForm] = useState({});
   const queryClient = useQueryClient();
 
   const { data: recognitions = [] } = useQuery({
     queryKey: ['vol-recognitions'],
-    queryFn: () => base44.entities.VolunteerRecognition.list('-date_awarded', 200),
+    queryFn: () => base44.entities.VolunteerRecognition.list('-date_awarded', 100),
   });
 
   const { data: volunteers = [] } = useQuery({
@@ -47,13 +41,35 @@ export default function VolunteerMgrRecognition() {
     queryFn: () => base44.entities.Volunteer.list(undefined, 500),
   });
 
+  // Milestone auto-award
+  const awardMilestoneMutation = useMutation({
+    mutationFn: ({ volunteer, milestone }) => base44.entities.VolunteerRecognition.create({
+      volunteer_id: volunteer.id,
+      volunteer_name: `${volunteer.first_name} ${volunteer.last_name}`,
+      type: milestone.type,
+      title: milestone.title,
+      description: milestone.description,
+      date_awarded: moment().format('YYYY-MM-DD'),
+      awarded_by: 'Volunteer Manager',
+      milestone_key: milestone.milestone_key,
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vol-recognitions'] }),
+  });
+
+  const volunteersWithMilestones = volunteers
+    .filter(v => !v.is_deceased)
+    .map(v => {
+      const volRecs = recognitions.filter(r => r.volunteer_id === v.id);
+      const pending = getUnawardedMilestones(v, volRecs);
+      return { volunteer: v, pending };
+    })
+    .filter(x => x.pending.length > 0);
+
   const saveMutation = useMutation({
     mutationFn: (data) => base44.entities.VolunteerRecognition.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vol-recognitions'] });
-      queryClient.invalidateQueries({ queryKey: ['vol-recognitions-all'] });
       setFormOpen(false);
-      setAwardDialog(null);
       setForm({ ...emptyForm });
     },
   });
@@ -66,57 +82,34 @@ export default function VolunteerMgrRecognition() {
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const selectVolunteer = (volId) => {
     const vol = volunteers.find(v => v.id === volId);
-    setForm(p => ({ ...p, volunteer_id: volId, volunteer_name: vol ? `${vol.first_name} ${vol.last_name}` : '' }));
+    update('volunteer_id', volId);
+    update('volunteer_name', vol ? `${vol.first_name} ${vol.last_name}` : '');
   };
+
   const getTypeLabel = (type) => RECOGNITION_TYPES.find(t => t.value === type)?.label || type?.replace(/_/g, ' ');
-
-  // Pending milestones across all volunteers
-  const volunteersWithPending = volunteers
-    .filter(v => !v.is_deceased)
-    .map(v => {
-      const volRecs = recognitions.filter(r => r.volunteer_id === v.id);
-      const pending = getUnawardedMilestones(v, volRecs);
-      return { volunteer: v, pending };
-    })
-    .filter(v => v.pending.length > 0);
-
-  const openAwardDialog = (volunteer, milestone) => {
-    setAwardDialog({ volunteer, milestone });
-    setAwardForm({
-      volunteer_id: volunteer.id,
-      volunteer_name: `${volunteer.first_name} ${volunteer.last_name}`,
-      type: milestone.type,
-      title: milestone.title,
-      description: milestone.description,
-      milestone_key: milestone.milestone_key,
-      date_awarded: moment().format('YYYY-MM-DD'),
-      awarded_by: 'Volunteer Manager',
-    });
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-display">Recognition</h1>
-          <p className="text-sm text-muted-foreground mt-1">{recognitions.length} awards given</p>
+          <p className="text-sm text-muted-foreground mt-1">{recognitions.length} awards given · {volunteersWithMilestones.reduce((s, x) => s + x.pending.length, 0)} pending milestones</p>
         </div>
         <Button onClick={() => setFormOpen(true)} className="gap-2"><Plus className="w-4 h-4" /> Award Recognition</Button>
       </div>
 
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="awards">
         <TabsList>
-          <TabsTrigger value="all">All Awards ({recognitions.length})</TabsTrigger>
-          <TabsTrigger value="pending">
+          <TabsTrigger value="awards">All Awards</TabsTrigger>
+          <TabsTrigger value="milestones">
             Pending Milestones
-            {volunteersWithPending.length > 0 && (
-              <Badge className="ml-2 bg-yellow-400 text-yellow-900 border-0 text-xs">{volunteersWithPending.reduce((s, v) => s + v.pending.length, 0)}</Badge>
+            {volunteersWithMilestones.length > 0 && (
+              <span className="ml-1.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded-full px-1.5 py-0.5">{volunteersWithMilestones.reduce((s, x) => s + x.pending.length, 0)}</span>
             )}
           </TabsTrigger>
         </TabsList>
 
-        {/* All Awards tab */}
-        <TabsContent value="all" className="mt-4">
+        <TabsContent value="awards" className="mt-4">
           <div className="grid gap-3">
             {recognitions.map(rec => (
               <Card key={rec.id} className="shadow-sm group">
@@ -137,43 +130,41 @@ export default function VolunteerMgrRecognition() {
                 </CardContent>
               </Card>
             ))}
-            {recognitions.length === 0 && (
-              <EmptyState icon={Award} title="No recognitions yet" description="Award your first recognition using the button above." />
-            )}
+            {recognitions.length === 0 && <div className="text-center py-12 text-muted-foreground">No recognitions awarded yet.</div>}
           </div>
         </TabsContent>
 
-        {/* Pending Milestones tab */}
-        <TabsContent value="pending" className="mt-4">
-          {volunteersWithPending.length === 0 ? (
-            <EmptyState icon={Trophy} title="All milestones awarded!" description="Every eligible volunteer has been recognized." />
+        <TabsContent value="milestones" className="mt-4">
+          {volunteersWithMilestones.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Award className="w-8 h-8 mx-auto mb-2 text-green-500" />
+              <p>All eligible volunteers have been recognized!</p>
+            </div>
           ) : (
-            <div className="grid gap-6">
-              {volunteersWithPending.map(({ volunteer, pending }) => (
-                <Card key={volunteer.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
+            <div className="grid gap-4">
+              {volunteersWithMilestones.map(({ volunteer, pending }) => (
+                <Card key={volunteer.id} className="shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
                       <div>
-                        <CardTitle className="text-base">{volunteer.first_name} {volunteer.last_name}</CardTitle>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {volunteer.volunteer_type?.replace(/_/g, ' ')} · {Math.round(volunteer.total_hours || 0)} hrs
-                        </p>
+                        <p className="font-semibold">{volunteer.first_name} {volunteer.last_name}</p>
+                        <p className="text-xs text-muted-foreground">{volunteer.volunteer_type?.replace(/_/g, ' ')} · {Math.round(volunteer.total_hours || 0)} hours</p>
                       </div>
-                      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                        <Clock className="w-3 h-3 mr-1" />{pending.length} pending
-                      </Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">{pending.length} pending</Badge>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-2 md:grid-cols-2">
                       {pending.map((milestone, idx) => (
-                        <div key={idx} className="p-4 border rounded-lg hover:bg-muted/30 transition-colors flex flex-col gap-2">
-                          <div className="flex items-center justify-between">
+                        <div key={idx} className="flex items-center justify-between p-3 bg-muted/40 rounded-lg border">
+                          <div className="flex items-center gap-2">
                             <span className="text-xl">{milestone.icon}</span>
-                            <Button size="sm" onClick={() => openAwardDialog(volunteer, milestone)}>Award</Button>
+                            <div>
+                              <p className="text-sm font-medium">{milestone.title}</p>
+                              <p className="text-xs text-muted-foreground">{milestone.description}</p>
+                            </div>
                           </div>
-                          <p className="font-medium text-sm">{milestone.title}</p>
-                          <p className="text-xs text-muted-foreground">{milestone.description}</p>
+                          <Button size="sm" onClick={() => awardMilestoneMutation.mutate({ volunteer, milestone })} disabled={awardMilestoneMutation.isPending}>
+                            Award
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -185,7 +176,6 @@ export default function VolunteerMgrRecognition() {
         </TabsContent>
       </Tabs>
 
-      {/* Delete confirm */}
       <AlertDialog open={!!deleteTarget} onOpenChange={o => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Delete Recognition?</AlertDialogTitle><AlertDialogDescription>This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
@@ -196,7 +186,6 @@ export default function VolunteerMgrRecognition() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Award new recognition dialog */}
       <Dialog open={formOpen} onOpenChange={o => { setFormOpen(o); if (!o) setForm({ ...emptyForm }); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Award Recognition</DialogTitle></DialogHeader>
@@ -205,7 +194,7 @@ export default function VolunteerMgrRecognition() {
               <Label>Volunteer *</Label>
               <Select value={form.volunteer_id} onValueChange={selectVolunteer}>
                 <SelectTrigger><SelectValue placeholder="Select volunteer..." /></SelectTrigger>
-                <SelectContent>{volunteers.map(v => <SelectItem key={v.id} value={v.id}>{v.first_name} {v.last_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{volunteers.filter(v => v.status === 'active').map(v => <SelectItem key={v.id} value={v.id}>{v.first_name} {v.last_name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
@@ -224,26 +213,6 @@ export default function VolunteerMgrRecognition() {
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Award'}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Quick-award milestone dialog */}
-      <Dialog open={!!awardDialog} onOpenChange={o => { if (!o) setAwardDialog(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Award Milestone</DialogTitle></DialogHeader>
-          <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(awardForm); }} className="space-y-4">
-            <div><Label>Volunteer</Label><Input value={awardDialog ? `${awardDialog.volunteer.first_name} ${awardDialog.volunteer.last_name}` : ''} disabled /></div>
-            <div><Label>Award Title *</Label><Input value={awardForm.title || ''} onChange={e => setAwardForm(p => ({ ...p, title: e.target.value }))} required /></div>
-            <div><Label>Description</Label><Textarea value={awardForm.description || ''} onChange={e => setAwardForm(p => ({ ...p, description: e.target.value }))} rows={2} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Date Awarded</Label><Input type="date" value={awardForm.date_awarded || ''} onChange={e => setAwardForm(p => ({ ...p, date_awarded: e.target.value }))} /></div>
-              <div><Label>Awarded By</Label><Input value={awardForm.awarded_by || ''} onChange={e => setAwardForm(p => ({ ...p, awarded_by: e.target.value }))} /></div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setAwardDialog(null)}>Cancel</Button>
-              <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Awarding...' : 'Award Milestone'}</Button>
             </div>
           </form>
         </DialogContent>
