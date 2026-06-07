@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Clock, Plus, Upload, Search, Filter, Download } from 'lucide-react';
+import { Clock, Plus, Upload, Search, Filter, Download, FileDown } from 'lucide-react';
 import moment from 'moment';
 import TimeLogsStats from '@/components/timelogs/TimeLogsStats';
 import { toast } from 'sonner';
@@ -121,6 +121,25 @@ export default function VolunteerMgrTimeLogs() {
     importMutation.mutate(importFile);
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await base44.functions.invoke('exportTimeLogsCSV', {});
+      // Create download link
+      const blob = new Blob([response.csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `time-logs-${moment().format('YYYY-MM-DD')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Time logs exported successfully');
+    } catch (error) {
+      toast.error('Export failed: ' + error.message);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -130,6 +149,11 @@ export default function VolunteerMgrTimeLogs() {
           <p className="text-sm text-muted-foreground">Track volunteer hours and attendance</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="gap-2">
+            <FileDown className="w-4 h-4" />
+            Export
+          </Button>
+
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
