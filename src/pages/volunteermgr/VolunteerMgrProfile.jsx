@@ -137,7 +137,7 @@ export default function VolunteerMgrProfile() {
                 </span>
                 {isDeceased && ' 🕊️'}
                 {!isCorporate && volunteer.birth_date && volunteer.gender && (
-                  <span className="text-accent font-medium">
+                  <span className="text-[#0066cc] font-medium">
                     {moment().diff(moment(volunteer.birth_date), 'years')}/{volunteer.gender.toLowerCase().startsWith('m') ? 'M' : volunteer.gender.toLowerCase().startsWith('f') ? 'F' : volunteer.gender.charAt(0).toUpperCase()}
                   </span>
                 )}
