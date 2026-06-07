@@ -8,7 +8,7 @@ export default function PageHeader({ title, description, actions }) {
             alt=""
             className="w-8 h-8 object-contain shrink-0"
           />
-          <h1 className="text-2xl font-bold font-display text-foreground">{title}</h1>
+          <h1 className="text-2xl font-bold font-display tracking-wide text-[hsl(45,92%,53%)] drop-shadow-sm">{title}</h1>
         </div>
         {description && <p className="text-muted-foreground mt-1 ml-10">{description}</p>}
       </div>
