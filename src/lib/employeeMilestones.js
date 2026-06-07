@@ -1,55 +1,57 @@
-import { useMemo } from 'react';
 import moment from 'moment';
 
-export function calculateMilestones(employee, timeLogs = []) {
+export function calculateMilestones(employee, timeLogs, recognitions) {
   const milestones = [];
-  const now = moment();
-  
-  // Years of service milestones (5, 10, 15, 20, 25+)
-  if (employee.hire_date) {
-    const hireDate = moment(employee.hire_date);
-    const yearsOfService = now.diff(hireDate, 'years', true);
-    
-    if (yearsOfService >= 5) {
-      const milestoneYears = [5, 10, 15, 20, 25];
-      milestoneYears.forEach(year => {
-        if (yearsOfService >= year) {
-          milestones.push({
-            milestone_key: `${year}_years`,
-            title: `${year} Year${year > 1 ? 's' : ''} of Service`,
-            icon: '🏆',
-            type: 'years_of_service',
-            achieved: true
-          });
-        }
+  const employeeId = employee.id;
+
+  // Calculate total hours
+  const totalHours = timeLogs
+    .filter(log => log.employee_id === employeeId)
+    .reduce((sum, log) => sum + (log.total_hours || 0), 0);
+
+  // Update employee total_hours if needed
+  if (totalHours !== (employee.total_hours || 0)) {
+    // This would be handled by an automation or backend function
+  }
+
+  // Check existing recognitions to avoid duplicates
+  const awardedKeys = recognitions
+    .filter(rec => rec.employee_id === employeeId)
+    .map(rec => rec.milestone_key);
+
+  // Hour milestones
+  const hourMilestones = [50, 100, 250, 500, 1000];
+  hourMilestones.forEach(hours => {
+    const key = `milestone_hours_${hours}`;
+    if (totalHours >= hours && !awardedKeys.includes(key)) {
+      milestones.push({
+        type: 'milestone_hours',
+        milestone_key: key,
+        title: `${hours} Hours Milestone`,
+        icon: '⏱️',
+        employee_id: employeeId,
       });
     }
-  }
-  
-  // Hours milestones (50, 100, 250, 500, 750, 1000+)
-  const totalHours = timeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
-  
-  if (totalHours > 0) {
-    const hourMilestones = [50, 100, 250, 500, 750, 1000];
-    hourMilestones.forEach(hours => {
-      if (totalHours >= hours) {
+  });
+
+  // Years of service milestones
+  const hireDate = moment(employee.hire_date);
+  if (hireDate.isValid()) {
+    const yearsWorked = moment().diff(hireDate, 'years');
+    const yearMilestones = [1, 3, 5, 10, 15, 20, 25];
+    yearMilestones.forEach(years => {
+      const key = `years_of_service_${years}`;
+      if (yearsWorked >= years && !awardedKeys.includes(key)) {
         milestones.push({
-          milestone_key: `${hours}_hours`,
-          title: `${hours} Hours Milestone`,
-          icon: '⏱️',
-          type: 'milestone_hours',
-          achieved: true
+          type: 'years_of_service',
+          milestone_key: key,
+          title: `${years} Year${years > 1 ? 's' : ''} of Service`,
+          icon: '🎖️',
+          employee_id: employeeId,
         });
       }
     });
   }
-  
-  return milestones;
-}
 
-export function getPendingMilestones(employee, timeLogs = [], awardedRecognitions = []) {
-  const allMilestones = calculateMilestones(employee, timeLogs);
-  const awardedKeys = new Set(awardedRecognitions.filter(r => r.milestone_key).map(r => r.milestone_key));
-  
-  return allMilestones.filter(m => !awardedKeys.has(m.milestone_key));
+  return milestones;
 }
