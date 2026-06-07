@@ -53,6 +53,7 @@ export default function PortalSignIn() {
     // Check for active sign-in
     const activeLogs = await base44.entities.VolunteerTimeLog.filter({ volunteer_id: vol.id, status: 'signed_in' });
 
+
     setFoundVolunteer(vol);
     setActiveLog(activeLogs[0] || null);
     setStep('action');
@@ -196,7 +197,7 @@ export default function PortalSignIn() {
                       <SelectValue placeholder="Select position (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={null}>General Volunteering</SelectItem>
+                      <SelectItem value="general">General Volunteering</SelectItem>
                       {positions.map(p => (
                         <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
                       ))}

@@ -73,7 +73,7 @@ export default function PortalRegistration({ onComplete }) {
         volunteer_id: volunteer.id,
         volunteer_name: `${form.first_name} ${form.last_name}`,
         request_type: 'new_registration',
-        description: `New volunteer registration from portal. Areas of interest: ${form.programs.join(', ')}`,
+        description: `New volunteer registration from portal. Areas of interest: ${form.programs.join(', ')}${form.notes ? `. Notes: ${form.notes}` : ''}`,
         status: 'pending',
       });
       // Notify coordinator
@@ -210,6 +210,7 @@ export default function PortalRegistration({ onComplete }) {
             </div>
             <div><Label>Skills & Experience</Label><Textarea value={form.skills} onChange={e => update('skills', e.target.value)} rows={2} className="mt-1" placeholder="Any relevant skills or experience..." /></div>
             <div><Label>Availability</Label><Input value={form.availability} onChange={e => update('availability', e.target.value)} className="mt-1" placeholder="e.g. Weekday mornings, Tuesdays..." /></div>
+            <div><Label>Why do you want to volunteer?</Label><Textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} className="mt-1" placeholder="Tell us a bit about your motivation..." /></div>
             <div>
               <Label>Photo Consent</Label>
               <Select value={form.pictures_consent} onValueChange={v => update('pictures_consent', v)}>
