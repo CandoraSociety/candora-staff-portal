@@ -177,6 +177,8 @@ export default function VolunteerMgrProfile() {
         </CardContent>
       </Card>
 
+      <VolunteerHourStats timeLogs={timeLogs} />
+
       {isCorporate && (volunteer.corporate_members || []).length > 0 && (
         <Card>
           <CardHeader>
@@ -204,8 +206,6 @@ export default function VolunteerMgrProfile() {
       )}
 
       <VolunteerDetails volunteer={volunteer} isDeceased={isDeceased} />
-
-      <VolunteerHourStats timeLogs={timeLogs} />
 
       <Card>
         <CardHeader>
