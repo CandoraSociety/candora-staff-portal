@@ -58,18 +58,22 @@ export default function VolunteerMgrTimeLogs() {
       // Step 2: Call the import function with the file URL
       const importResult = await base44.functions.invoke('importTimeLogsFromSpreadsheet', { file_url: fileUrl });
       
-      return importResult;
+      return importResult.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });
       queryClient.invalidateQueries({ queryKey: ['vol-timelogs-all'] });
       setImportOpen(false);
       setImportFile(null);
-      alert(data.summary);
+      if (data.summary) {
+        alert(data.summary);
+      } else {
+        alert(`Successfully imported ${data.imported || 0} time logs`);
+      }
     },
     onError: (error) => {
       console.error('Import error:', error);
-      alert('Import failed: ' + error.message);
+      alert('Import failed: ' + (error.message || 'Unknown error'));
     },
   });
 
