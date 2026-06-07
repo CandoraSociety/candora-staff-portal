@@ -4,12 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp, GraduationCap, User, Calendar, Shield, AlertCircle, Utensils, Image, Building, BookOpen, Heart } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import VolunteerTypeBadge from '@/components/volunteermgr/VolunteerTypeBadge';
 import VolunteerHourStats from '@/components/volunteermgr/VolunteerHourStats';
+import VolunteerDetails from '@/components/volunteermgr/VolunteerDetails';
 import { calculateMilestones } from '@/lib/milestones';
 
 export default function VolunteerMgrProfile() {
@@ -194,6 +195,8 @@ export default function VolunteerMgrProfile() {
           </CardContent>
         </Card>
       )}
+
+      <VolunteerDetails volunteer={volunteer} isDeceased={isDeceased} />
 
       <VolunteerHourStats timeLogs={timeLogs} />
 
