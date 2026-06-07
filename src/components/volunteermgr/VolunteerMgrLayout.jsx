@@ -23,7 +23,6 @@ const navItems = [
   { path: '/volunteermgr/approvals', label: 'Approvals', icon: CheckSquare },
   { path: '/volunteermgr/import', label: 'Import', icon: Upload },
   { path: '/volunteermgr/email', label: 'Email', icon: Mail },
-  { path: '/volunteermgr/birthdays', label: 'Birthdays', icon: Cake },
   { path: '/volunteermgr/milestones', label: 'Milestones', icon: Trophy },
   { path: '/volunteermgr/staff-requests', label: 'Staff Requests', icon: ClipboardList },
 ];
@@ -66,7 +65,7 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
             <img
               src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
               alt="The Candora Society"
-              className="h-10 object-contain"
+              className="h-16 object-contain"
             />
           )}
         </Link>
