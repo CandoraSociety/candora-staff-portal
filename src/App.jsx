@@ -46,6 +46,7 @@ import VolunteerMgrTraining from '@/pages/volunteermgr/VolunteerMgrTraining';
 import VolunteerMgrRecognition from '@/pages/volunteermgr/VolunteerMgrRecognition';
 import VolunteerMgrDocuments from '@/pages/volunteermgr/VolunteerMgrDocuments';
 import VolunteerMgrApprovals from '@/pages/volunteermgr/VolunteerMgrApprovals';
+import VolunteerMgrProfile from '@/pages/volunteermgr/VolunteerMgrProfile';
 
 // Admin pages
 import ManageCards from '@/pages/admin/ManageCards';
@@ -108,6 +109,7 @@ const AuthenticatedApp = () => {
           <Route path="/volunteermgr/recognition" element={<VolunteerMgrRecognition />} />
           <Route path="/volunteermgr/documents" element={<VolunteerMgrDocuments />} />
           <Route path="/volunteermgr/approvals" element={<VolunteerMgrApprovals />} />
+          <Route path="/volunteermgr/volunteers/:id" element={<VolunteerMgrProfile />} />
         </Route>
 
         {/* NexusHR - standalone layout */}

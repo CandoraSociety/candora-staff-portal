@@ -9,7 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Mail, Phone, Pencil } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, MoreHorizontal, Eye, LayoutGrid, List, Upload, ArrowUpDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import VolunteerTypeBadge from '@/components/volunteermgr/VolunteerTypeBadge';
+import { Link } from 'react-router-dom';
 
 const statusColors = {
   active: 'bg-green-50 text-green-700 border-green-200',
@@ -20,22 +23,33 @@ const statusColors = {
 };
 
 const emptyForm = {
-  first_name: '', last_name: '', email: '', phone: '', volunteer_type: 'community',
-  status: 'active', start_date: '', skills: '', availability: '', notes: '',
+  first_name: '', last_name: '', email: '', phone: '', address: '', city: '', birth_date: '', gender: '',
+  emergency_contact_name: '', emergency_contact_phone: '', volunteer_type: 'community', company_name: '', school_name: '',
+  skills: '', availability: '', status: 'pending', notes: '', pin_code: '',
+  allergies: '', food_restriction: '', pictures_consent: '', how_heard: '', ell_level: '',
+  corporate_members: [], programs: [], is_deceased: false, deceased_date: '', start_date: '',
 };
 
 export default function VolunteerMgrVolunteers() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [programFilter, setProgramFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('name_asc');
   const queryClient = useQueryClient();
 
   const { data: volunteers = [], isLoading } = useQuery({
     queryKey: ['vol-volunteers'],
     queryFn: () => base44.entities.Volunteer.list('-created_date', 200),
+  });
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ['programs'],
+    queryFn: () => base44.entities.VolunteerProgram.list('name', 200),
   });
 
   const saveMutation = useMutation({
@@ -58,7 +72,19 @@ export default function VolunteerMgrVolunteers() {
     const matchesSearch = `${v.first_name} ${v.last_name} ${v.email}`.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === 'all' || v.status === statusFilter;
     const matchesType = typeFilter === 'all' || v.volunteer_type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+    const matchesProgram = programFilter === 'all' || (v.programs || []).includes(programFilter);
+    return matchesSearch && matchesStatus && matchesType && matchesProgram;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'name_asc': return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+      case 'name_desc': return `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.first_name}`);
+      case 'start_date_newest': return new Date(b.start_date || 0) - new Date(a.start_date || 0);
+      case 'start_date_oldest': return new Date(a.start_date || 0) - new Date(b.start_date || 0);
+      case 'hours_desc': return (b.total_hours || 0) - (a.total_hours || 0);
+      case 'hours_asc': return (a.total_hours || 0) - (b.total_hours || 0);
+      case 'status': return (a.status || '').localeCompare(b.status || '');
+      default: return 0;
+    }
   });
 
   return (
@@ -98,38 +124,90 @@ export default function VolunteerMgrVolunteers() {
             <SelectItem value="internal_placement">Internal Placement</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={programFilter} onValueChange={setProgramFilter}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Program" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Programs</SelectItem>
+            {programs.map((p) => (
+              <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Sort" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name_asc">Name (A → Z)</SelectItem>
+            <SelectItem value="name_desc">Name (Z → A)</SelectItem>
+            <SelectItem value="start_date_newest">Start Date (Newest)</SelectItem>
+            <SelectItem value="start_date_oldest">Start Date (Oldest)</SelectItem>
+            <SelectItem value="hours_desc">Hours (Most)</SelectItem>
+            <SelectItem value="hours_asc">Hours (Least)</SelectItem>
+            <SelectItem value="status">Status</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-1 border rounded-md p-1">
+          <Button size="sm" variant="ghost" onClick={() => setViewMode('grid')} className={viewMode === 'grid' ? 'bg-primary text-primary-foreground' : ''}><LayoutGrid className="w-4 h-4" /></Button>
+          <Button size="sm" variant="ghost" onClick={() => setViewMode('list')} className={viewMode === 'list' ? 'bg-primary text-primary-foreground' : ''}><List className="w-4 h-4" /></Button>
+        </div>
       </div>
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">Loading...</div>
+      ) : viewMode === 'grid' ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map(vol => (
+            <Card key={vol.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = `/volunteermgr/volunteers/${vol.id}`}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
+                    {vol.is_deceased ? '🕊️' : <>{vol.first_name?.[0]}{vol.last_name?.[0]}</>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">
+                      {vol.volunteer_type === 'corporate' ? `${vol.company_name || 'Unknown Company'}${vol.first_name ? ` — ${vol.first_name}` : ''}` : `${vol.first_name} ${vol.last_name}`}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <VolunteerTypeBadge type={vol.volunteer_type} />
+                      <Badge className={`text-xs border ${statusColors[vol.status] || statusColors.inactive}`}>{vol.status}</Badge>
+                    </div>
+                  </div>
+                </div>
+                {vol.email && <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" />{vol.email}</p>}
+                {vol.phone && <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{vol.phone}</p>}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-xs text-muted-foreground">{Math.round(vol.total_hours || 0)} hours</span>
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(vol); }}><Pencil className="w-3.5 h-3.5" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="grid gap-3">
           {filtered.map(vol => (
-            <Card key={vol.id} className="shadow-sm hover:shadow-md transition-shadow">
+            <Card key={vol.id} className="shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = `/volunteermgr/volunteers/${vol.id}`}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                  {vol.first_name?.[0]}{vol.last_name?.[0]}
+                  {vol.is_deceased ? '🕊️' : <>{vol.first_name?.[0]}{vol.last_name?.[0]}</>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
-                    {vol.volunteer_type === 'corporate' ? vol.company_name || 'Unknown Company' : `${vol.first_name} ${vol.last_name}`}
-                    {vol.is_deceased && ' 🕊️'}
+                  <p className="font-medium text-sm truncate">
+                    {vol.volunteer_type === 'corporate' ? `${vol.company_name || 'Unknown Company'}${vol.first_name ? ` — ${vol.first_name}` : ''}` : `${vol.first_name} ${vol.last_name}`}
                   </p>
-                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                  <div className="flex items-center gap-3 mt-0.5">
                     {vol.email && <span className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="w-3 h-3" />{vol.email}</span>}
                     {vol.phone && <span className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{vol.phone}</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="text-xs capitalize">{vol.volunteer_type?.replace(/_/g, ' ')}</Badge>
+                  <VolunteerTypeBadge type={vol.volunteer_type} />
                   <Badge className={`text-xs border ${statusColors[vol.status] || statusColors.inactive}`}>{vol.status}</Badge>
                   <span className="text-xs text-muted-foreground">{Math.round(vol.total_hours || 0)} hrs</span>
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(vol)}><Pencil className="w-3.5 h-3.5" /></Button>
+                  <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(vol); }}><Pencil className="w-3.5 h-3.5" /></Button>
                 </div>
               </CardContent>
             </Card>
           ))}
-          {filtered.length === 0 && <div className="text-center py-12 text-muted-foreground">No volunteers found.</div>}
         </div>
       )}
 
