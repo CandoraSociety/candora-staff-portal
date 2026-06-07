@@ -34,6 +34,8 @@ import NexusLegalCases from '@/pages/nexushr/NexusLegalCases';
 import NexusCareerPlans from '@/pages/nexushr/NexusCareerPlans';
 import NexusPayGrid from '@/pages/nexushr/NexusPayGrid';
 import NexusServiceAwards from '@/pages/nexushr/NexusServiceAwards';
+import NexusTimeLogs from '@/pages/nexushr/NexusTimeLogs';
+import NexusRecognition from '@/pages/nexushr/NexusRecognition';
 
 // Volunteer Manager
 import VolunteerMgrLayout from '@/components/volunteermgr/VolunteerMgrLayout';
@@ -128,6 +130,8 @@ const AuthenticatedApp = () => {
           <Route path="/nexushr/career-plans" element={<NexusCareerPlans />} />
           <Route path="/nexushr/pay-grid" element={<NexusPayGrid />} />
           <Route path="/nexushr/service-awards" element={<NexusServiceAwards />} />
+          <Route path="/nexushr/time-logs" element={<NexusTimeLogs />} />
+          <Route path="/nexushr/recognition" element={<NexusRecognition />} />
         </Route>
       </Route>
 
