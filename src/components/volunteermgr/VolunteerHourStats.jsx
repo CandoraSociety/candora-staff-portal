@@ -53,21 +53,14 @@ export default function VolunteerHourStats({ timeLogs = [] }) {
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-medium">Hour Statistics</CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        {items.map((item, i) => (
-          <div key={i} className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{item.label}</p>
-              {item.sub && <p className="text-xs text-muted-foreground">{item.sub}</p>}
-            </div>
-            <p className="text-lg font-bold">{item.value.toFixed(1)}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-5 gap-4">
+      {items.map((item, i) => (
+        <div key={i} className="bg-card rounded-lg border p-4 text-center">
+          <p className="text-3xl font-bold text-primary mb-2">{item.value.toFixed(1)}</p>
+          <p className="text-xs font-medium text-foreground">{item.label}</p>
+          {item.sub && <p className="text-xs text-muted-foreground mt-1">{item.sub}</p>}
+        </div>
+      ))}
+    </div>
   );
 }
