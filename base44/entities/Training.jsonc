@@ -1,0 +1,68 @@
+{
+  "name": "Training",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "training_name": {
+      "type": "string",
+      "description": "Name of training or certification"
+    },
+    "training_type": {
+      "type": "string",
+      "enum": [
+        "certification",
+        "course",
+        "workshop",
+        "orientation",
+        "safety",
+        "compliance",
+        "professional_development",
+        "other"
+      ]
+    },
+    "provider": {
+      "type": "string",
+      "description": "Training provider or institution"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "in_progress",
+        "expired",
+        "scheduled"
+      ],
+      "default": "completed"
+    },
+    "certificate_url": {
+      "type": "string",
+      "description": "Uploaded certificate file URL"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "document_url": {
+      "type": "string",
+      "description": "Supporting document or picture URL"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "training_name",
+    "training_type"
+  ]
+}

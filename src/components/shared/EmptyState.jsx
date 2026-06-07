@@ -1,0 +1,9 @@
+export default function EmptyState({ icon: Icon, title, description }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      {Icon && <Icon className="w-12 h-12 text-muted-foreground/40 mb-4" />}
+      <h3 className="text-lg font-medium text-foreground">{title}</h3>
+      {description && <p className="text-muted-foreground mt-1 text-sm">{description}</p>}
+    </div>
+  );
+}

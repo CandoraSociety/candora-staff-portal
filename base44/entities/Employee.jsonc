@@ -1,0 +1,119 @@
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "First name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Last name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Work email"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "position": {
+      "type": "string",
+      "description": "Job title"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "Administration",
+        "Operations",
+        "Finance",
+        "Human Resources",
+        "Marketing",
+        "IT",
+        "Sales",
+        "Customer Service",
+        "Legal",
+        "Other"
+      ],
+      "description": "Department"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "on_leave",
+        "terminated",
+        "suspended",
+        "probation"
+      ],
+      "default": "active",
+      "description": "Employment status"
+    },
+    "hire_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date hired"
+    },
+    "termination_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of termination if applicable"
+    },
+    "manager_email": {
+      "type": "string",
+      "description": "Direct manager's email"
+    },
+    "pay_grade": {
+      "type": "string",
+      "description": "Pay grid level"
+    },
+    "salary": {
+      "type": "number",
+      "description": "Annual salary"
+    },
+    "employee_id_number": {
+      "type": "string",
+      "description": "Internal employee ID"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "Profile photo URL"
+    },
+    "address": {
+      "type": "string",
+      "description": "Home address"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes (HR Admin only)"
+    },
+    "probationary_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date of probationary period"
+    },
+    "probationary_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "passed",
+        "did_not_pass"
+      ],
+      "description": "Probationary period status"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "email",
+    "position",
+    "department"
+  ]
+}

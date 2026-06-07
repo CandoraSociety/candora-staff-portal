@@ -1,0 +1,102 @@
+{
+  "name": "LegalCase",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Case title"
+    },
+    "employee_id": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "case_type": {
+      "type": "string",
+      "enum": [
+        "human_rights_complaint",
+        "wrongful_dismissal",
+        "harassment_claim",
+        "discrimination_claim",
+        "workers_compensation",
+        "grievance",
+        "labour_board",
+        "privacy_breach",
+        "other"
+      ],
+      "description": "Type of legal case"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "in_mediation",
+        "in_litigation",
+        "settled",
+        "closed",
+        "dismissed"
+      ],
+      "default": "open"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "date_opened": {
+      "type": "string",
+      "format": "date"
+    },
+    "date_closed": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string"
+    },
+    "external_counsel": {
+      "type": "string",
+      "description": "External legal counsel name/firm"
+    },
+    "regulatory_body": {
+      "type": "string",
+      "description": "e.g. Alberta Human Rights Commission"
+    },
+    "timeline_notes": {
+      "type": "string",
+      "description": "Key dates and milestones"
+    },
+    "resolution": {
+      "type": "string"
+    },
+    "financial_impact": {
+      "type": "number",
+      "description": "Estimated or actual financial impact"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Legal document URLs"
+    },
+    "confidential_notes": {
+      "type": "string",
+      "description": "Highly confidential notes"
+    }
+  },
+  "required": [
+    "title",
+    "case_type",
+    "status",
+    "date_opened",
+    "description"
+  ]
+}

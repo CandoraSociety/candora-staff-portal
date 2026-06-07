@@ -1,0 +1,50 @@
+{
+  "name": "ServiceAward",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "employee_email": {
+      "type": "string"
+    },
+    "hire_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "years_of_service": {
+      "type": "number",
+      "description": "Years milestone (1, 3, 5, 10, 15, 20, 25)"
+    },
+    "award_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "acknowledged",
+        "presented",
+        "missed"
+      ],
+      "default": "upcoming"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "notified": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "hire_date",
+    "years_of_service"
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "name": "IncidentReport",
+  "type": "object",
+  "properties": {
+    "employee_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of all employees involved"
+    },
+    "employee_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of all employees involved"
+    },
+    "reporter_email": {
+      "type": "string",
+      "description": "Email of person filing report"
+    },
+    "reporter_name": {
+      "type": "string",
+      "description": "Name of person filing report"
+    },
+    "assigned_to_email": {
+      "type": "string",
+      "description": "Email of person responsible for investigating/resolving"
+    },
+    "assigned_to_name": {
+      "type": "string",
+      "description": "Name of assigned investigator"
+    },
+    "incident_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "incident_type": {
+      "type": "string",
+      "enum": [
+        "workplace_safety",
+        "policy_violation",
+        "harassment",
+        "discrimination",
+        "attendance",
+        "insubordination",
+        "theft",
+        "substance_abuse",
+        "property_damage",
+        "verbal_altercation",
+        "physical_altercation",
+        "other"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "location": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "witnesses": {
+      "type": "string"
+    },
+    "action_taken": {
+      "type": "string"
+    },
+    "follow_up_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "follow_up_notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_investigation",
+        "resolved",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "File URLs"
+    }
+  },
+  "required": [
+    "employee_ids",
+    "employee_names",
+    "incident_date",
+    "incident_type",
+    "severity",
+    "description"
+  ]
+}

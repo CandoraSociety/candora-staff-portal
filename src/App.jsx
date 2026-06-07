@@ -20,6 +20,21 @@ import AppLayout from '@/components/layout/AppLayout';
 import Dashboard from '@/pages/Dashboard';
 import Portal from '@/pages/Portal';
 
+// NexusHR
+import NexusLayout from '@/components/nexushr/NexusLayout';
+import NexusDashboard from '@/pages/nexushr/NexusDashboard';
+import NexusEmployees from '@/pages/nexushr/NexusEmployees';
+import NexusPerformanceReviews from '@/pages/nexushr/NexusPerformanceReviews';
+import NexusIncidents from '@/pages/nexushr/NexusIncidents';
+import NexusTraining from '@/pages/nexushr/NexusTraining';
+import NexusDocuments from '@/pages/nexushr/NexusDocuments';
+import NexusContracts from '@/pages/nexushr/NexusContracts';
+import NexusCorrectiveActions from '@/pages/nexushr/NexusCorrectiveActions';
+import NexusLegalCases from '@/pages/nexushr/NexusLegalCases';
+import NexusCareerPlans from '@/pages/nexushr/NexusCareerPlans';
+import NexusPayGrid from '@/pages/nexushr/NexusPayGrid';
+import NexusServiceAwards from '@/pages/nexushr/NexusServiceAwards';
+
 // Admin pages
 import ManageCards from '@/pages/admin/ManageCards';
 import ManageWidgets from '@/pages/admin/ManageWidgets';
@@ -68,6 +83,22 @@ const AuthenticatedApp = () => {
           <Route path="/admin/users" element={<UsersAccess />} />
           <Route path="/admin/announcements" element={<Announcements />} />
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
+        </Route>
+
+        {/* NexusHR - standalone layout */}
+        <Route element={<NexusLayout />}>
+          <Route path="/nexushr" element={<NexusDashboard />} />
+          <Route path="/nexushr/employees" element={<NexusEmployees />} />
+          <Route path="/nexushr/reviews" element={<NexusPerformanceReviews />} />
+          <Route path="/nexushr/incidents" element={<NexusIncidents />} />
+          <Route path="/nexushr/training" element={<NexusTraining />} />
+          <Route path="/nexushr/documents" element={<NexusDocuments />} />
+          <Route path="/nexushr/contracts" element={<NexusContracts />} />
+          <Route path="/nexushr/corrective-actions" element={<NexusCorrectiveActions />} />
+          <Route path="/nexushr/legal" element={<NexusLegalCases />} />
+          <Route path="/nexushr/career-plans" element={<NexusCareerPlans />} />
+          <Route path="/nexushr/pay-grid" element={<NexusPayGrid />} />
+          <Route path="/nexushr/service-awards" element={<NexusServiceAwards />} />
         </Route>
       </Route>
 

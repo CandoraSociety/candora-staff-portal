@@ -1,0 +1,63 @@
+{
+  "name": "Contract",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "Employee record ID"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Employee full name"
+    },
+    "contract_type": {
+      "type": "string",
+      "enum": [
+        "full_time",
+        "part_time",
+        "contract",
+        "temporary",
+        "casual"
+      ],
+      "description": "Type of contract"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "terminated",
+        "pending"
+      ],
+      "default": "active"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded contract document URL"
+    },
+    "salary": {
+      "type": "number"
+    },
+    "terms_summary": {
+      "type": "string",
+      "description": "Key terms summary"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "contract_type",
+    "start_date"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "name": "CorrectiveAction",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "issued_by_email": {
+      "type": "string"
+    },
+    "issued_by_name": {
+      "type": "string"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "verbal_warning",
+        "written_warning",
+        "final_warning",
+        "suspension",
+        "performance_improvement_plan",
+        "termination"
+      ],
+      "description": "Type of corrective action"
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the corrective action"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description"
+    },
+    "improvement_plan": {
+      "type": "string",
+      "description": "Steps the employee must take"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "escalated",
+        "withdrawn"
+      ],
+      "default": "active"
+    },
+    "employee_acknowledged": {
+      "type": "boolean",
+      "default": false
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supporting document URLs"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "action_type",
+    "issue_date",
+    "reason"
+  ]
+}

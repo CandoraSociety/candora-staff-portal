@@ -1,0 +1,68 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
+const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation'];
+
+export default function EmployeeForm({ onSubmit, isLoading }) {
+  const [data, setData] = useState({
+    first_name: '', last_name: '', email: '', phone: '',
+    position: '', department: '', status: 'active', hire_date: '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>First Name *</Label>
+          <Input value={data.first_name} onChange={e => setData({ ...data, first_name: e.target.value })} placeholder="First name" required />
+        </div>
+        <div className="space-y-1">
+          <Label>Last Name *</Label>
+          <Input value={data.last_name} onChange={e => setData({ ...data, last_name: e.target.value })} placeholder="Last name" required />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label>Email *</Label>
+        <Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} placeholder="Email" required />
+      </div>
+      <div className="space-y-1">
+        <Label>Phone</Label>
+        <Input value={data.phone} onChange={e => setData({ ...data, phone: e.target.value })} placeholder="Phone" />
+      </div>
+      <div className="space-y-1">
+        <Label>Position *</Label>
+        <Input value={data.position} onChange={e => setData({ ...data, position: e.target.value })} placeholder="Job title" required />
+      </div>
+      <div className="space-y-1">
+        <Label>Department *</Label>
+        <Select value={data.department} onValueChange={val => setData({ ...data, department: val })}>
+          <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+          <SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label>Hire Date</Label>
+        <Input type="date" value={data.hire_date} onChange={e => setData({ ...data, hire_date: e.target.value })} />
+      </div>
+      <div className="space-y-1">
+        <Label>Status</Label>
+        <Select value={data.status} onValueChange={val => setData({ ...data, status: val })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{statuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? 'Saving...' : 'Save Employee'}
+      </Button>
+    </form>
+  );
+}

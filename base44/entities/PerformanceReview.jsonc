@@ -1,0 +1,135 @@
+{
+  "name": "PerformanceReview",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "Employee record ID"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "reviewer_email": {
+      "type": "string",
+      "description": "Email of the reviewer"
+    },
+    "reviewer_name": {
+      "type": "string"
+    },
+    "review_period": {
+      "type": "string",
+      "enum": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4",
+        "Annual",
+        "Probationary",
+        "Mid-Year"
+      ],
+      "description": "Review period"
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "overall_rating": {
+      "type": "string",
+      "enum": [
+        "exceeds_expectations",
+        "meets_expectations",
+        "needs_improvement",
+        "unsatisfactory"
+      ],
+      "description": "Overall performance rating"
+    },
+    "job_knowledge": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "work_quality": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "communication": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "teamwork": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "reliability": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "initiative": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "strengths": {
+      "type": "string"
+    },
+    "areas_for_improvement": {
+      "type": "string"
+    },
+    "goals_next_period": {
+      "type": "string"
+    },
+    "comments": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "acknowledged"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "review_period",
+    "review_date",
+    "overall_rating"
+  ]
+}

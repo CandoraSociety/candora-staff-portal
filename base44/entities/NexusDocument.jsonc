@@ -1,0 +1,70 @@
+{
+  "name": "NexusDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "job_description",
+        "policy",
+        "procedure",
+        "handbook",
+        "template",
+        "form",
+        "pay_grid",
+        "org_chart",
+        "other"
+      ],
+      "description": "Document category"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "All",
+        "Administration",
+        "Operations",
+        "Finance",
+        "Human Resources",
+        "Marketing",
+        "IT",
+        "Sales",
+        "Customer Service",
+        "Legal",
+        "Other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded file URL"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "access_level": {
+      "type": "string",
+      "enum": [
+        "all_staff",
+        "managers_only",
+        "hr_admin_only"
+      ],
+      "default": "managers_only",
+      "description": "Who can access this document"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Comma-separated tags for search"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "file_url"
+  ]
+}

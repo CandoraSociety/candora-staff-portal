@@ -1,0 +1,61 @@
+{
+  "name": "CareerPlan",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string"
+    },
+    "employee_name": {
+      "type": "string"
+    },
+    "current_position": {
+      "type": "string"
+    },
+    "target_position": {
+      "type": "string",
+      "description": "Target role for succession/development"
+    },
+    "readiness": {
+      "type": "string",
+      "enum": [
+        "ready_now",
+        "ready_1_year",
+        "ready_2_years",
+        "developing",
+        "not_applicable"
+      ],
+      "description": "Readiness level"
+    },
+    "development_goals": {
+      "type": "string"
+    },
+    "required_training": {
+      "type": "string"
+    },
+    "mentor": {
+      "type": "string",
+      "description": "Assigned mentor name"
+    },
+    "timeline": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "on_hold",
+        "cancelled"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name",
+    "current_position"
+  ]
+}

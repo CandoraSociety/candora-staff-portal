@@ -1,0 +1,66 @@
+{
+  "name": "IncidentResolution",
+  "type": "object",
+  "properties": {
+    "incident_id": {
+      "type": "string",
+      "description": "Link to parent incident report"
+    },
+    "resolution_type": {
+      "type": "string",
+      "enum": [
+        "no_action",
+        "corrective_action",
+        "performance_improvement_plan",
+        "mediation",
+        "termination",
+        "suspension",
+        "training_required",
+        "other"
+      ]
+    },
+    "no_action_reason": {
+      "type": "string",
+      "enum": [
+        "employees_resolved_themselves",
+        "no_fault_found",
+        "insufficient_evidence",
+        "not_substantiated",
+        "other"
+      ],
+      "description": "Only used when resolution_type is 'no_action'"
+    },
+    "details": {
+      "type": "string",
+      "description": "Resolution details and findings"
+    },
+    "resolved_by_email": {
+      "type": "string"
+    },
+    "resolved_by_name": {
+      "type": "string"
+    },
+    "resolution_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "implemented",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "incident_id",
+    "resolution_type",
+    "resolution_date"
+  ]
+}
