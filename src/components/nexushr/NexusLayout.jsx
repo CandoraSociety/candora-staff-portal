@@ -40,7 +40,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
       collapsed ? 'w-16' : 'w-60'
     )}>
       <div className={cn('flex items-center h-14 px-3 border-b border-border', collapsed ? 'justify-center' : 'justify-between')}>
-        {!collapsed && <span className="font-bold text-sm text-foreground">NexusHR</span>}
+        {!collapsed && <span className="font-bold text-sm text-foreground">HR Management</span>}
         <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-muted text-muted-foreground">
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
