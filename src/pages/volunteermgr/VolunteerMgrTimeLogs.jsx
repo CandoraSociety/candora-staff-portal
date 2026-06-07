@@ -61,11 +61,20 @@ export default function VolunteerMgrTimeLogs() {
         body: formData,
       });
       
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response body:', responseText);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Import failed');
+        try {
+          const errorData = JSON.parse(responseText);
+          throw new Error(errorData.error || 'Import failed');
+        } catch {
+          throw new Error(`Import failed with status ${response.status}: ${responseText.substring(0, 200)}`);
+        }
       }
-      return response.json();
+      
+      return JSON.parse(responseText);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });
@@ -75,6 +84,7 @@ export default function VolunteerMgrTimeLogs() {
       alert(data.summary);
     },
     onError: (error) => {
+      console.error('Import error:', error);
       alert('Import failed: ' + error.message);
     },
   });
