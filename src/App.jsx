@@ -40,6 +40,7 @@ import VolunteerMgrLayout from '@/components/volunteermgr/VolunteerMgrLayout';
 import VolunteerMgrDashboard from '@/pages/volunteermgr/VolunteerMgrDashboard';
 import VolunteerMgrVolunteers from '@/pages/volunteermgr/VolunteerMgrVolunteers';
 import VolunteerMgrEvents from '@/pages/volunteermgr/VolunteerMgrEvents';
+import VolunteerMgrEventDetail from '@/pages/volunteermgr/VolunteerMgrEventDetail';
 import VolunteerMgrPositions from '@/pages/volunteermgr/VolunteerMgrPositions';
 import VolunteerMgrTimeLogs from '@/pages/volunteermgr/VolunteerMgrTimeLogs';
 import VolunteerMgrTraining from '@/pages/volunteermgr/VolunteerMgrTraining';
@@ -110,6 +111,7 @@ const AuthenticatedApp = () => {
           <Route path="/volunteermgr/documents" element={<VolunteerMgrDocuments />} />
           <Route path="/volunteermgr/approvals" element={<VolunteerMgrApprovals />} />
           <Route path="/volunteermgr/volunteers/:id" element={<VolunteerMgrProfile />} />
+          <Route path="/volunteermgr/events/:id" element={<VolunteerMgrEventDetail />} />
         </Route>
 
         {/* NexusHR - standalone layout */}
