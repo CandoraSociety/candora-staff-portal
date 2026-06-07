@@ -139,6 +139,13 @@ export default function VolunteerMgrProfile() {
                 <VolunteerTypeBadge type={volunteer.volunteer_type} />
                 <Badge className={statusColors[volunteer.status]}>{volunteer.status}</Badge>
               </div>
+              {volunteer.programs && volunteer.programs.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {volunteer.programs.map((prog, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">{prog}</Badge>
+                  ))}
+                </div>
+              )}
               <div className="flex flex-wrap gap-4 mt-4 text-sm">
                 {!isCorporate && volunteer.email && (
                   <span className="flex items-center gap-2 text-muted-foreground">
