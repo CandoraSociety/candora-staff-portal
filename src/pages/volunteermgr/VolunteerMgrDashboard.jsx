@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift } from 'lucide-react';
+import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift, TrendingUp, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { getUnawardedMilestones } from '@/lib/milestones';
@@ -53,7 +53,8 @@ function SectionCard({ icon: Icon, iconColor, borderColor, title, linkTo, linkLa
 
 export default function VolunteerMgrDashboard() {
   const [birthdayCardVolunteer, setBirthdayCardVolunteer] = useState(null);
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState('month');
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState('all');
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
 
   const { data: volunteers = [] } = useQuery({
     queryKey: ['vol-volunteers'],
@@ -101,7 +102,7 @@ export default function VolunteerMgrDashboard() {
     .filter(l => l.date && moment(l.date).isSameOrAfter(fiscalYearStart))
     .reduce((sum, l) => sum + (l.total_hours || 0), 0);
 
-  // Leaderboard
+  // Volunteer Hours leaderboard
   const leaderboard = useMemo(() => {
     let filtered = timeLogs;
     if (leaderboardPeriod === 'month') {
@@ -117,8 +118,13 @@ export default function VolunteerMgrDashboard() {
       if (!map[l.volunteer_id]) map[l.volunteer_id] = { id: l.volunteer_id, name: l.volunteer_name, hours: 0 };
       map[l.volunteer_id].hours += l.total_hours || 0;
     });
-    return Object.values(map).sort((a, b) => b.hours - a.hours).slice(0, 7);
-  }, [timeLogs, leaderboardPeriod]);
+    const rows = Object.values(map).sort((a, b) => b.hours - a.hours);
+    // enrich with volunteer type/status
+    return rows.map(row => {
+      const vol = volunteers.find(v => v.id === row.id);
+      return { ...row, volunteer_type: vol?.volunteer_type || '', status: vol?.status || '' };
+    });
+  }, [timeLogs, leaderboardPeriod, volunteers]);
 
   // Milestone alerts
   const volunteersWithUnawarded = volunteers
@@ -256,8 +262,8 @@ export default function VolunteerMgrDashboard() {
         </SectionCard>
       </div>
 
-      {/* Row 2: Currently Signed In | Staff Requests | Leaderboard */}
-      <div className="grid md:grid-cols-3 gap-5">
+      {/* Row 2: Currently Signed In | Staff Requests */}
+      <div className="grid md:grid-cols-2 gap-5">
         <SectionCard icon={UserCheck} iconColor="text-green-600" borderColor="border-l-green-400"
           title="Currently Signed In" linkTo="/volunteermgr/timelogs" linkLabel="View logs">
           {activeSignIns.length === 0
@@ -293,43 +299,67 @@ export default function VolunteerMgrDashboard() {
           }
         </SectionCard>
 
-        {/* Leaderboard */}
-        <Card className="border-l-4 border-l-amber-400">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-500" />
-              <span>Hours Leaderboard</span>
-              <div className="ml-auto">
-                <Select value={leaderboardPeriod} onValueChange={setLeaderboardPeriod}>
-                  <SelectTrigger className="h-6 text-xs px-2 py-0 w-28 border-none shadow-none bg-muted">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="month">This Month</SelectItem>
-                    <SelectItem value="year">This Year</SelectItem>
-                    <SelectItem value="all">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4 space-y-1">
-            {leaderboard.length === 0
-              ? <p className="text-sm text-muted-foreground py-1">No hours logged yet.</p>
-              : leaderboard.map((entry, i) => (
-                <div key={entry.id} className="flex items-center gap-2 hover:bg-muted/60 rounded-md px-2 py-1.5 transition-colors -mx-2">
-                  <span className={`text-xs font-bold w-5 text-center shrink-0 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-400' : i === 2 ? 'text-amber-700' : 'text-muted-foreground'}`}>
-                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`}
-                  </span>
-                  <p className="text-sm font-medium flex-1 truncate">{entry.name}</p>
-                  <Badge className="bg-amber-100 text-amber-800 border-0 text-xs shrink-0">
-                    {Math.round(entry.hours)} hrs
-                  </Badge>
-                </div>
-              ))
-            }
-          </CardContent>
-        </Card>
+      </div>
+
+      {/* Volunteer Hours — full-width collapsible */}
+      <div className="rounded-xl border bg-card shadow overflow-hidden">
+        {/* Header bar */}
+        <button
+          className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/40 transition-colors"
+          onClick={() => setLeaderboardOpen(o => !o)}
+        >
+          <div className="flex items-center gap-2 font-semibold text-sm">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            Volunteer Hours
+          </div>
+          <div className="flex items-center gap-3">
+            <Select value={leaderboardPeriod} onValueChange={e => { e.stopPropagation?.(); setLeaderboardPeriod(e); }} onClick={e => e.stopPropagation()}>
+              <SelectTrigger className="h-6 text-xs px-2 w-28 border-none shadow-none bg-muted" onClick={e => e.stopPropagation()}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${leaderboardOpen ? 'rotate-180' : ''}`} />
+          </div>
+        </button>
+
+        {/* Expanded table */}
+        {leaderboardOpen && (
+          <div className="border-t max-h-96 overflow-y-auto">
+            {leaderboard.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-5 py-4">No hours logged for this period.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Volunteer</th>
+                    <th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Type</th>
+                    <th className="text-left px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                    <th className="text-right px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Hours</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboard.map((entry, i) => (
+                    <tr key={entry.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-2 font-medium">{entry.name}</td>
+                      <td className="px-3 py-2 text-muted-foreground capitalize">{entry.volunteer_type?.replace(/_/g, ' ') || '—'}</td>
+                      <td className="px-3 py-2">
+                        <span className={`text-xs ${entry.status === 'active' ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {entry.status || '—'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-2 text-right font-semibold text-primary">{entry.hours % 1 === 0 ? entry.hours : entry.hours.toFixed(1)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </div>
 
       <BirthdayCard
