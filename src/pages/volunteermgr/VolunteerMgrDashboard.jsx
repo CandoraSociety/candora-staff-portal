@@ -175,8 +175,15 @@ export default function VolunteerMgrDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold font-display">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Welcome to VolunteerTrack</p>
+        <div className="flex items-center gap-2.5">
+          <img
+            src="https://media.base44.com/images/public/6a15e361478575d63a95c265/562a66657_Candoracirclelogo_noanniversary.png"
+            alt=""
+            className="w-8 h-8 object-contain shrink-0"
+          />
+          <h1 className="text-2xl font-bold font-display">Dashboard</h1>
+        </div>
+        <p className="text-muted-foreground text-sm mt-0.5 ml-10">Welcome to VolunteerTrack</p>
       </div>
 
       {/* Stat Cards */}
