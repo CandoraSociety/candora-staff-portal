@@ -45,6 +45,8 @@ import VolunteerMgrDashboard from '@/pages/volunteermgr/VolunteerMgrDashboard';
 import VolunteerMgrVolunteers from '@/pages/volunteermgr/VolunteerMgrVolunteers';
 import VolunteerMgrEvents from '@/pages/volunteermgr/VolunteerMgrEvents';
 import VolunteerMgrEventDetail from '@/pages/volunteermgr/VolunteerMgrEventDetail';
+import VolunteerMgrImport from '@/pages/volunteermgr/VolunteerMgrImport';
+import VolunteerMgrEmail from '@/pages/volunteermgr/VolunteerMgrEmail';
 import VolunteerMgrPositions from '@/pages/volunteermgr/VolunteerMgrPositions';
 import VolunteerMgrTimeLogs from '@/pages/volunteermgr/VolunteerMgrTimeLogs';
 import VolunteerMgrTraining from '@/pages/volunteermgr/VolunteerMgrTraining';
@@ -52,6 +54,10 @@ import VolunteerMgrRecognition from '@/pages/volunteermgr/VolunteerMgrRecognitio
 import VolunteerMgrDocuments from '@/pages/volunteermgr/VolunteerMgrDocuments';
 import VolunteerMgrApprovals from '@/pages/volunteermgr/VolunteerMgrApprovals';
 import VolunteerMgrProfile from '@/pages/volunteermgr/VolunteerMgrProfile';
+import VolunteerMgrImport from '@/pages/volunteermgr/VolunteerMgrImport';
+import VolunteerMgrEmail from '@/pages/volunteermgr/VolunteerMgrEmail';
+import VolunteerMgrBirthdays from '@/pages/volunteermgr/VolunteerMgrBirthdays';
+import VolunteerMgrMilestones from '@/pages/volunteermgr/VolunteerMgrMilestones';
 
 // Admin pages
 import ManageCards from '@/pages/admin/ManageCards';
@@ -116,6 +122,13 @@ const AuthenticatedApp = () => {
           <Route path="/volunteermgr/approvals" element={<VolunteerMgrApprovals />} />
           <Route path="/volunteermgr/volunteers/:id" element={<VolunteerMgrProfile />} />
           <Route path="/volunteermgr/events/:id" element={<VolunteerMgrEventDetail />} />
+          <Route path="/volunteermgr/import" element={<VolunteerMgrImport />} />
+          <Route path="/volunteermgr/email" element={<VolunteerMgrEmail />} />
+          <Route path="/volunteermgr/import" element={<VolunteerMgrImport />} />
+          <Route path="/volunteermgr/email" element={<VolunteerMgrEmail />} />
+          <Route path="/volunteermgr/birthdays" element={<VolunteerMgrBirthdays />} />
+          <Route path="/volunteermgr/milestones" element={<VolunteerMgrMilestones />} /> element={<VolunteerMgrBirthdays />} />
+          <Route path="/volunteermgr/milestones" element={<VolunteerMgrMilestones />} />
         </Route>
 
         {/* NexusHR - standalone layout */}

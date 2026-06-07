@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Briefcase, Calendar, Clock,
   Award, GraduationCap, FileText, CheckSquare, ChevronLeft,
-  ChevronRight, LogOut
+  ChevronRight, LogOut, Upload, Mail, Cake, Trophy
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +19,12 @@ const navItems = [
   { path: '/volunteermgr/recognition', label: 'Recognition', icon: Award },
   { path: '/volunteermgr/documents', label: 'Documents', icon: FileText },
   { path: '/volunteermgr/approvals', label: 'Approvals', icon: CheckSquare },
+  { path: '/volunteermgr/import', label: 'Import', icon: Upload },
+  { path: '/volunteermgr/email', label: 'Email', icon: Mail },
+  { path: '/volunteermgr/import', label: 'Import', icon: Upload },
+  { path: '/volunteermgr/email', label: 'Email', icon: Mail },
+  { path: '/volunteermgr/birthdays', label: 'Birthdays', icon: Cake },
+  { path: '/volunteermgr/milestones', label: 'Milestones', icon: Trophy },
 ];
 
 function VolunteerSidebar({ collapsed, setCollapsed }) {
