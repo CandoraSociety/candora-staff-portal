@@ -43,8 +43,8 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
       )}>
         {/* Logo */}
         <div className={cn(
-          "flex items-center h-20 border-b border-border px-4 pt-6",
-          collapsed ? "justify-center" : "gap-3"
+          "flex items-center h-20 border-b border-border",
+          collapsed ? "justify-center px-0" : "justify-start px-6 gap-3"
         )}>
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-primary-foreground font-display font-bold text-lg">C</span>
