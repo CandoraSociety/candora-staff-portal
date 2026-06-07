@@ -98,7 +98,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       {/* Public portal routes — no auth required */}
-      <Route path="/portal" element={<VolunteerPortal />} />
+      <Route path="/volunteer-portal" element={<VolunteerPortal />} />
       <Route path="/staff-portal" element={<StaffPortal />} />
 
       <Route path="/login" element={<Login />} />
