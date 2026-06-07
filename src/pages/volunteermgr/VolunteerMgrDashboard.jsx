@@ -181,7 +181,7 @@ export default function VolunteerMgrDashboard() {
             alt=""
             className="w-8 h-8 object-contain shrink-0"
           />
-          <h1 className="text-2xl font-bold font-display tracking-wide text-[hsl(45,92%,53%)] drop-shadow-sm">Dashboard</h1>
+          <h1 className="text-2xl font-display font-extrabold uppercase tracking-widest text-[hsl(45,60%,70%)]">Dashboard</h1>
         </div>
         <p className="text-muted-foreground text-sm mt-0.5 ml-10">Welcome to Volunteer Manager</p>
       </div>
