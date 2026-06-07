@@ -1,0 +1,75 @@
+{
+  "name": "VolunteerPosition",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "administration",
+        "programs",
+        "outreach",
+        "events",
+        "education",
+        "support_services",
+        "other"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "responsibilities": {
+      "type": "string"
+    },
+    "qualifications": {
+      "type": "string"
+    },
+    "training_required": {
+      "type": "string"
+    },
+    "commitment_type": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "ongoing",
+        "seasonal"
+      ]
+    },
+    "hours_per_week": {
+      "type": "number"
+    },
+    "supervisor": {
+      "type": "string"
+    },
+    "max_volunteers": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "filled",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "skills_needed": {
+      "type": "string"
+    },
+    "benefits": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "department"
+  ]
+}

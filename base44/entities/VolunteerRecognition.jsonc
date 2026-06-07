@@ -1,0 +1,43 @@
+{
+  "name": "VolunteerRecognition",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "milestone_hours",
+        "outstanding_service",
+        "volunteer_of_month",
+        "special_achievement",
+        "years_of_service"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "date_awarded": {
+      "type": "string",
+      "format": "date"
+    },
+    "awarded_by": {
+      "type": "string"
+    },
+    "milestone_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "type",
+    "title"
+  ]
+}

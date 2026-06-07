@@ -1,0 +1,49 @@
+{
+  "name": "VolunteerApproval",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "new_registration",
+        "profile_change",
+        "hour_adjustment"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "changes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "review_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_type",
+    "description"
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "name": "Volunteer",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "First name (or Department/Division for corporate)"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Last name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "gender": {
+      "type": "string"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
+    },
+    "volunteer_type": {
+      "type": "string",
+      "enum": [
+        "community",
+        "skilled",
+        "practicum",
+        "corporate",
+        "internal_placement"
+      ]
+    },
+    "company_name": {
+      "type": "string",
+      "description": "For corporate volunteers"
+    },
+    "corporate_members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "school_name": {
+      "type": "string"
+    },
+    "programs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skills": {
+      "type": "string"
+    },
+    "availability": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "occasional",
+        "inactive",
+        "suspended"
+      ],
+      "default": "pending"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "crc": {
+      "type": "string"
+    },
+    "irc": {
+      "type": "string"
+    },
+    "allergies": {
+      "type": "string"
+    },
+    "food_restriction": {
+      "type": "string"
+    },
+    "how_heard": {
+      "type": "string"
+    },
+    "ell_level": {
+      "type": "string"
+    },
+    "pictures_consent": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "total_hours": {
+      "type": "number",
+      "default": 0
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "pin_code": {
+      "type": "string"
+    },
+    "is_deceased": {
+      "type": "boolean",
+      "default": false
+    },
+    "deceased_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "volunteer_type"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "VolunteerTrainingPathway",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "duration_hours": {
+            "type": "number"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "total_hours": {
+      "type": "number"
+    },
+    "applicable_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "community",
+          "skilled",
+          "practicum",
+          "corporate",
+          "internal_placement"
+        ]
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "draft",
+        "archived"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

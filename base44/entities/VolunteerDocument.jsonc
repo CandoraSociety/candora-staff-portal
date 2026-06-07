@@ -1,0 +1,50 @@
+{
+  "name": "VolunteerDocument",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "waiver",
+        "agreement",
+        "background_check",
+        "confidentiality",
+        "code_of_conduct",
+        "volunteer_policies",
+        "other"
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "signed": {
+      "type": "boolean",
+      "default": false
+    },
+    "signed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "document_type",
+    "title"
+  ]
+}

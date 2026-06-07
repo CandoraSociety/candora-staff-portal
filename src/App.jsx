@@ -35,6 +35,18 @@ import NexusCareerPlans from '@/pages/nexushr/NexusCareerPlans';
 import NexusPayGrid from '@/pages/nexushr/NexusPayGrid';
 import NexusServiceAwards from '@/pages/nexushr/NexusServiceAwards';
 
+// Volunteer Manager
+import VolunteerMgrLayout from '@/components/volunteermgr/VolunteerMgrLayout';
+import VolunteerMgrDashboard from '@/pages/volunteermgr/VolunteerMgrDashboard';
+import VolunteerMgrVolunteers from '@/pages/volunteermgr/VolunteerMgrVolunteers';
+import VolunteerMgrEvents from '@/pages/volunteermgr/VolunteerMgrEvents';
+import VolunteerMgrPositions from '@/pages/volunteermgr/VolunteerMgrPositions';
+import VolunteerMgrTimeLogs from '@/pages/volunteermgr/VolunteerMgrTimeLogs';
+import VolunteerMgrTraining from '@/pages/volunteermgr/VolunteerMgrTraining';
+import VolunteerMgrRecognition from '@/pages/volunteermgr/VolunteerMgrRecognition';
+import VolunteerMgrDocuments from '@/pages/volunteermgr/VolunteerMgrDocuments';
+import VolunteerMgrApprovals from '@/pages/volunteermgr/VolunteerMgrApprovals';
+
 // Admin pages
 import ManageCards from '@/pages/admin/ManageCards';
 import ManageWidgets from '@/pages/admin/ManageWidgets';
@@ -83,6 +95,19 @@ const AuthenticatedApp = () => {
           <Route path="/admin/users" element={<UsersAccess />} />
           <Route path="/admin/announcements" element={<Announcements />} />
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
+        </Route>
+
+        {/* Volunteer Manager - standalone layout */}
+        <Route element={<VolunteerMgrLayout />}>
+          <Route path="/volunteermgr" element={<VolunteerMgrDashboard />} />
+          <Route path="/volunteermgr/volunteers" element={<VolunteerMgrVolunteers />} />
+          <Route path="/volunteermgr/events" element={<VolunteerMgrEvents />} />
+          <Route path="/volunteermgr/positions" element={<VolunteerMgrPositions />} />
+          <Route path="/volunteermgr/timelogs" element={<VolunteerMgrTimeLogs />} />
+          <Route path="/volunteermgr/training" element={<VolunteerMgrTraining />} />
+          <Route path="/volunteermgr/recognition" element={<VolunteerMgrRecognition />} />
+          <Route path="/volunteermgr/documents" element={<VolunteerMgrDocuments />} />
+          <Route path="/volunteermgr/approvals" element={<VolunteerMgrApprovals />} />
         </Route>
 
         {/* NexusHR - standalone layout */}

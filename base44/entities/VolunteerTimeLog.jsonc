@@ -1,0 +1,49 @@
+{
+  "name": "VolunteerTimeLog",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "position_id": {
+      "type": "string"
+    },
+    "position_title": {
+      "type": "string"
+    },
+    "sign_in_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sign_out_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_hours": {
+      "type": "number"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "signed_in",
+        "completed",
+        "adjusted"
+      ],
+      "default": "signed_in"
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "volunteer_name"
+  ]
+}

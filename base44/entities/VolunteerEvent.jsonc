@@ -1,0 +1,55 @@
+{
+  "name": "VolunteerEvent",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "volunteers_needed": {
+      "type": "number"
+    },
+    "volunteers_signed_up": {
+      "type": "number",
+      "default": 0
+    },
+    "positions_needed": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "upcoming"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "contact_person": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "date"
+  ]
+}

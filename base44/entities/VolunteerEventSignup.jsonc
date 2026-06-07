@@ -1,0 +1,39 @@
+{
+  "name": "VolunteerEventSignup",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_title": {
+      "type": "string"
+    },
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "position": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "signed_up",
+        "confirmed",
+        "attended",
+        "no_show",
+        "cancelled"
+      ],
+      "default": "signed_up"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "volunteer_id"
+  ]
+}
