@@ -1,0 +1,38 @@
+{
+  "name": "ShiftAssignment",
+  "type": "object",
+  "properties": {
+    "template_id": {
+      "type": "string"
+    },
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "completed",
+        "no_show",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "template_id",
+    "volunteer_id",
+    "date"
+  ]
+}

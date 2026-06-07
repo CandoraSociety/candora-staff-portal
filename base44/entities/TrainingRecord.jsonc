@@ -1,0 +1,43 @@
+{
+  "name": "TrainingRecord",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "pathway_id": {
+      "type": "string"
+    },
+    "pathway_title": {
+      "type": "string"
+    },
+    "completed_modules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "completed"
+      ],
+      "default": "in_progress"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "pathway_id"
+  ]
+}

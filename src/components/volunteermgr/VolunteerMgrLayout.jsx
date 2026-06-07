@@ -5,15 +5,17 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Briefcase, Calendar, Clock,
-  Award, GraduationCap, FileText, CheckSquare, ChevronLeft,
-  ChevronRight, LogOut, Upload, Mail, Cake, Trophy
+  Award, GraduationCap, FileText, CheckSquare,
+  ChevronLeft, ChevronRight, LogOut, Upload, Mail,
+  Cake, Trophy, CalendarDays, ExternalLink
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/volunteermgr', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/volunteermgr', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/volunteermgr/volunteers', label: 'Volunteers', icon: Users },
   { path: '/volunteermgr/positions', label: 'Positions', icon: Briefcase },
   { path: '/volunteermgr/events', label: 'Events', icon: Calendar },
+  { path: '/volunteermgr/schedule', label: 'Schedule', icon: CalendarDays },
   { path: '/volunteermgr/timelogs', label: 'Time Logs', icon: Clock },
   { path: '/volunteermgr/training', label: 'Training', icon: GraduationCap },
   { path: '/volunteermgr/recognition', label: 'Recognition', icon: Award },
@@ -21,10 +23,14 @@ const navItems = [
   { path: '/volunteermgr/approvals', label: 'Approvals', icon: CheckSquare },
   { path: '/volunteermgr/import', label: 'Import', icon: Upload },
   { path: '/volunteermgr/email', label: 'Email', icon: Mail },
-  { path: '/volunteermgr/import', label: 'Import', icon: Upload },
-  { path: '/volunteermgr/email', label: 'Email', icon: Mail },
   { path: '/volunteermgr/birthdays', label: 'Birthdays', icon: Cake },
   { path: '/volunteermgr/milestones', label: 'Milestones', icon: Trophy },
+];
+
+
+const externalLinks = [
+  { href: '/portal', label: 'Volunteer Portal', icon: ExternalLink },
+  { href: '/staff-portal', label: 'Staff Portal', icon: ExternalLink },
 ];
 
 function VolunteerSidebar({ collapsed, setCollapsed }) {
@@ -35,45 +41,66 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
     queryFn: () => base44.auth.me(),
   });
 
+  const isActive = (item) => {
+    if (item.exact) return location.pathname === item.path;
+    return location.pathname.startsWith(item.path);
+  };
+
   return (
     <aside className={cn(
-      'h-screen flex flex-col bg-card border-r border-border transition-all duration-300',
+      'h-screen flex flex-col transition-all duration-300 shrink-0',
+      'bg-[hsl(230,60%,12%)]',
       collapsed ? 'w-16' : 'w-60'
     )}>
-      <div className="border-b border-border">
-        <Link
-          to="/"
-          className={cn(
-            'flex items-center gap-2 px-3 py-3 w-full hover:bg-primary/10 transition-colors group',
-            collapsed ? 'justify-center' : ''
-          )}
-        >
-          <ChevronLeft className="w-4 h-4 shrink-0 text-primary group-hover:text-primary" />
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs text-muted-foreground leading-none">← Back to</span>
-              <span className="font-bold text-sm text-primary truncate">Dashboard</span>
-            </div>
+      {/* Logo area */}
+      <div className="border-b border-[hsl(230,50%,18%)] p-3">
+        <Link to="/" className={cn('flex items-center gap-2 group', collapsed ? 'justify-center' : '')}>
+          {collapsed ? (
+            <img
+              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/562a66657_Candoracirclelogo_noanniversary.png"
+              alt="Candora"
+              className="w-9 h-9 object-contain"
+            />
+          ) : (
+            <img
+              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
+              alt="The Candora Society"
+              className="h-10 object-contain"
+            />
           )}
         </Link>
-        <div className={cn('flex items-center h-10 px-3 border-t border-border/50', collapsed ? 'justify-center' : 'justify-between')}>
-          {!collapsed && <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Volunteer Manager</span>}
-          <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-muted text-muted-foreground">
+        <div className={cn('flex items-center mt-2', collapsed ? 'justify-center' : 'justify-between')}>
+          {!collapsed && (
+            <span className="text-[10px] uppercase tracking-widest text-[hsl(45,60%,70%)] font-semibold">
+              Volunteer Manager
+            </span>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 rounded hover:bg-[hsl(230,55%,20%)] text-[hsl(45,60%,70%)] transition-colors"
+          >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-2 space-y-0.5 px-2">
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
         {navItems.map(item => {
           const Icon = item.icon;
-          const active = location.pathname === item.path;
+          const active = isActive(item);
           return (
-            <Link key={item.path} to={item.path} className={cn(
-              'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
-              active ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted hover:text-foreground',
-              collapsed && 'justify-center'
-            )}>
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
+                active
+                  ? 'bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] font-semibold'
+                  : 'text-[hsl(45,60%,80%)] hover:bg-[hsl(230,55%,20%)] hover:text-[hsl(45,92%,90%)]',
+                collapsed && 'justify-center'
+              )}
+            >
               <Icon className="w-4 h-4 shrink-0" />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
@@ -81,14 +108,41 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
         })}
       </nav>
 
-      <div className={cn('p-2 border-t border-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
-        {!collapsed && user && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.full_name || user.email}</p>}
+      {/* External links */}
+      <div className="px-2 py-2 border-t border-[hsl(230,50%,18%)] space-y-0.5">
+        {externalLinks.map(link => (
+          <a
+            key={link.href}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
+              'text-[hsl(45,60%,65%)] hover:bg-[hsl(230,55%,20%)] hover:text-[hsl(45,92%,90%)]',
+              collapsed && 'justify-center'
+            )}
+          >
+            <link.icon className="w-4 h-4 shrink-0" />
+            {!collapsed && <span className="truncate">{link.label} ↗</span>}
+          </a>
+        ))}
+      </div>
+
+      {/* User + sign out */}
+      <div className={cn('p-2 border-t border-[hsl(230,50%,18%)] space-y-0.5', collapsed && 'flex flex-col items-center')}>
+        {!collapsed && user && (
+          <p className="text-[11px] text-[hsl(45,40%,60%)] px-2 mb-1 truncate">{user.full_name || user.email}</p>
+        )}
         <button
           onClick={() => base44.auth.logout()}
-          className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors', collapsed && 'justify-center w-auto')}
+          className={cn(
+            'flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm transition-colors',
+            'text-[hsl(45,60%,65%)] hover:bg-[hsl(230,55%,20%)] hover:text-[hsl(45,92%,90%)]',
+            collapsed && 'justify-center w-auto'
+          )}
         >
           <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && 'Sign out'}
+          {!collapsed && 'Sign Out'}
         </button>
       </div>
     </aside>

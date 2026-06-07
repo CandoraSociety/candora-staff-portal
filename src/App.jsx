@@ -7,6 +7,10 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
+// Public portal pages
+import VolunteerPortal from '@/pages/portal/VolunteerPortal';
+import StaffPortal from '@/pages/portal/StaffPortal';
+
 // Auth pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -56,6 +60,7 @@ import VolunteerMgrApprovals from '@/pages/volunteermgr/VolunteerMgrApprovals';
 import VolunteerMgrProfile from '@/pages/volunteermgr/VolunteerMgrProfile';
 import VolunteerMgrBirthdays from '@/pages/volunteermgr/VolunteerMgrBirthdays';
 import VolunteerMgrMilestones from '@/pages/volunteermgr/VolunteerMgrMilestones';
+import VolunteerMgrSchedule from '@/pages/volunteermgr/VolunteerMgrSchedule';
 
 // Admin pages
 import ManageCards from '@/pages/admin/ManageCards';
@@ -91,6 +96,10 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      {/* Public portal routes — no auth required */}
+      <Route path="/portal" element={<VolunteerPortal />} />
+      <Route path="/staff-portal" element={<StaffPortal />} />
+
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -124,6 +133,7 @@ const AuthenticatedApp = () => {
           <Route path="/volunteermgr/email" element={<VolunteerMgrEmail />} />
           <Route path="/volunteermgr/birthdays" element={<VolunteerMgrBirthdays />} />
           <Route path="/volunteermgr/milestones" element={<VolunteerMgrMilestones />} />
+          <Route path="/volunteermgr/schedule" element={<VolunteerMgrSchedule />} />
         </Route>
 
         {/* NexusHR - standalone layout */}

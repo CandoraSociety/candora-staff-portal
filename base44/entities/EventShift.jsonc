@@ -1,0 +1,45 @@
+{
+  "name": "EventShift",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "role_title": {
+      "type": "string"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "HH:MM"
+    },
+    "volunteer_id": {
+      "type": "string"
+    },
+    "volunteer_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "completed",
+        "no_show"
+      ],
+      "default": "scheduled"
+    }
+  },
+  "required": [
+    "event_id",
+    "role_title",
+    "start_time",
+    "end_time"
+  ]
+}

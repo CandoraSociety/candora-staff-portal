@@ -1,0 +1,79 @@
+{
+  "name": "StaffVolunteerRequest",
+  "type": "object",
+  "properties": {
+    "submission_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "requester_name": {
+      "type": "string"
+    },
+    "requester_email": {
+      "type": "string",
+      "format": "email"
+    },
+    "requester_department": {
+      "type": "string"
+    },
+    "program": {
+      "type": "string"
+    },
+    "position_title": {
+      "type": "string"
+    },
+    "volunteers_needed": {
+      "type": "number",
+      "default": 1
+    },
+    "location": {
+      "type": "string"
+    },
+    "when_needed": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "duties": {
+      "type": "string"
+    },
+    "personal_qualities": {
+      "type": "string"
+    },
+    "english_level": {
+      "type": "string",
+      "enum": [
+        "Level 1",
+        "Level 2",
+        "Intermediate",
+        "Advanced",
+        "Not Required"
+      ]
+    },
+    "criminal_record_check": {
+      "type": "boolean"
+    },
+    "intervention_record_check": {
+      "type": "boolean"
+    },
+    "additional_notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_review",
+        "fulfilled",
+        "closed"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "requester_name",
+    "position_title",
+    "volunteers_needed"
+  ]
+}
