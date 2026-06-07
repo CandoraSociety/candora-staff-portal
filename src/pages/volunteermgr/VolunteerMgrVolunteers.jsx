@@ -94,7 +94,11 @@ export default function VolunteerMgrVolunteers() {
           <h1 className="text-2xl font-bold font-display">Volunteers</h1>
           <p className="text-sm text-muted-foreground mt-1">{volunteers.length} total volunteers</p>
         </div>
-        <Button onClick={openNew} className="gap-2"><Plus className="w-4 h-4" /> Add Volunteer</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => window.location.href = '/volunteermgr/import'} className="gap-2"><Upload className="w-4 h-4" /> Import</Button>
+          <Button variant="outline" onClick={() => window.location.href = '/volunteermgr/email'} className="gap-2"><Mail className="w-4 h-4" /> Email</Button>
+          <Button onClick={openNew} className="gap-2"><Plus className="w-4 h-4" /> Add Volunteer</Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">

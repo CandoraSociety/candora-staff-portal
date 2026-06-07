@@ -8,6 +8,7 @@ import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, Clipbo
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { getUnawardedMilestones } from '@/lib/milestones';
+import BirthdayCard from '@/components/volunteermgr/BirthdayCard';
 
 function StatCard({ icon: Icon, title, value, trend, color = 'text-primary', bgColor = 'bg-primary/10' }) {
   return (
@@ -271,6 +272,12 @@ export default function VolunteerMgrDashboard() {
           }
         </SectionCard>
       </div>
+
+      <BirthdayCard
+        volunteer={birthdayCardVolunteer}
+        open={!!birthdayCardVolunteer}
+        onOpenChange={o => { if (!o) setBirthdayCardVolunteer(null); }}
+      />
     </div>
   );
 }
