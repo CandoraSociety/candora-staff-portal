@@ -54,8 +54,6 @@ import VolunteerMgrRecognition from '@/pages/volunteermgr/VolunteerMgrRecognitio
 import VolunteerMgrDocuments from '@/pages/volunteermgr/VolunteerMgrDocuments';
 import VolunteerMgrApprovals from '@/pages/volunteermgr/VolunteerMgrApprovals';
 import VolunteerMgrProfile from '@/pages/volunteermgr/VolunteerMgrProfile';
-import VolunteerMgrImport from '@/pages/volunteermgr/VolunteerMgrImport';
-import VolunteerMgrEmail from '@/pages/volunteermgr/VolunteerMgrEmail';
 import VolunteerMgrBirthdays from '@/pages/volunteermgr/VolunteerMgrBirthdays';
 import VolunteerMgrMilestones from '@/pages/volunteermgr/VolunteerMgrMilestones';
 
@@ -124,10 +122,7 @@ const AuthenticatedApp = () => {
           <Route path="/volunteermgr/events/:id" element={<VolunteerMgrEventDetail />} />
           <Route path="/volunteermgr/import" element={<VolunteerMgrImport />} />
           <Route path="/volunteermgr/email" element={<VolunteerMgrEmail />} />
-          <Route path="/volunteermgr/import" element={<VolunteerMgrImport />} />
-          <Route path="/volunteermgr/email" element={<VolunteerMgrEmail />} />
           <Route path="/volunteermgr/birthdays" element={<VolunteerMgrBirthdays />} />
-          <Route path="/volunteermgr/milestones" element={<VolunteerMgrMilestones />} /> element={<VolunteerMgrBirthdays />} />
           <Route path="/volunteermgr/milestones" element={<VolunteerMgrMilestones />} />
         </Route>
 
