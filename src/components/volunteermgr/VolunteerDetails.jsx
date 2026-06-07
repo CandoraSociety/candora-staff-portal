@@ -69,6 +69,10 @@ export default function VolunteerDetails({ volunteer, isDeceased }) {
           <div className="space-y-3">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Volunteer Information</h3>
             <div className="space-y-1">
+              <div className="flex justify-between items-center py-1.5 border-b">
+                <span className="text-sm text-muted-foreground">Volunteer Type</span>
+                <Badge variant="default" className="capitalize">{volunteer.volunteer_type?.replace(/_/g, ' ')}</Badge>
+              </div>
               <Field icon={Building} label="Company" value={volunteer.company_name} />
               <Field icon={GraduationCap} label="School" value={volunteer.school_name} />
               {volunteer.start_date && (
