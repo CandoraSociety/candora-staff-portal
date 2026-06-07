@@ -40,9 +40,16 @@ export default function UsersAccess() {
 
   if (!access.isAdmin) return <p className="text-muted-foreground">Access denied</p>;
 
+  const isExecutiveDirector = access.userRole === 'executive_director';
+
   const deptMap = Object.fromEntries(departments.map(d => [d.id, d]));
   
-  const filteredUsers = users.filter(u => {
+  // Executive Director sees everyone; all other admins see everyone except Executive Directors
+  const visibleUsers = isExecutiveDirector
+    ? users
+    : users.filter(u => u.role !== 'executive_director');
+
+  const filteredUsers = visibleUsers.filter(u => {
     if (!search) return true;
     const q = search.toLowerCase();
     return u.full_name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
