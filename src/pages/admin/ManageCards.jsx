@@ -71,6 +71,9 @@ export default function ManageCards() {
                   <p className="text-xs text-muted-foreground truncate">{card.description}</p>
                 </div>
                 <Badge variant="secondary" className="text-[10px] hidden sm:inline-flex">{cat.label}</Badge>
+                {(!card.url || card.url === '#') && (
+                  <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-300 hidden sm:inline-flex">Placeholder</Badge>
+                )}
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" className="h-8 w-8"
                     onClick={() => toggleMutation.mutate({ id: card.id, is_enabled: !card.is_enabled })}>
