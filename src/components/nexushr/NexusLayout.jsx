@@ -39,11 +39,28 @@ function NexusSidebar({ collapsed, setCollapsed }) {
       'h-screen flex flex-col bg-card border-r border-border transition-all duration-300',
       collapsed ? 'w-16' : 'w-60'
     )}>
-      <div className={cn('flex items-center h-14 px-3 border-b border-border', collapsed ? 'justify-center' : 'justify-between')}>
-        {!collapsed && <span className="font-bold text-sm text-foreground">HR Management</span>}
-        <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-muted text-muted-foreground">
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </button>
+      <div className="border-b border-border">
+        <Link
+          to="/"
+          className={cn(
+            'flex items-center gap-2 px-3 py-3 w-full hover:bg-primary/10 transition-colors group',
+            collapsed ? 'justify-center' : ''
+          )}
+        >
+          <ChevronLeft className="w-4 h-4 shrink-0 text-primary group-hover:text-primary" />
+          {!collapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs text-muted-foreground leading-none">← Back to</span>
+              <span className="font-bold text-sm text-primary truncate">Dashboard</span>
+            </div>
+          )}
+        </Link>
+        <div className={cn('flex items-center h-10 px-3 border-t border-border/50', collapsed ? 'justify-center' : 'justify-between')}>
+          {!collapsed && <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">HR Management</span>}
+          <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-muted text-muted-foreground">
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2 space-y-0.5 px-2">
@@ -64,13 +81,6 @@ function NexusSidebar({ collapsed, setCollapsed }) {
       </nav>
 
       <div className={cn('p-2 border-t border-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
-        <Link
-          to="/"
-          className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors', collapsed && 'justify-center w-auto')}
-        >
-          <ChevronLeft className="w-4 h-4 shrink-0" />
-          {!collapsed && 'Back to Portal'}
-        </Link>
         {!collapsed && user && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.full_name || user.email}</p>}
         <button
           onClick={() => base44.auth.logout()}
