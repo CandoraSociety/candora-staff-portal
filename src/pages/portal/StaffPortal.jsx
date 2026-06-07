@@ -2,7 +2,8 @@ import { useState } from 'react';
 import StaffVolunteerRequestForm from '@/components/portal/StaffVolunteerRequestForm';
 import StaffReportingForm from '@/components/portal/StaffReportingForm';
 import { Button } from '@/components/ui/button';
-import { ClipboardList, FileText } from 'lucide-react';
+import { ClipboardList, FileText, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function StaffPortal() {
   const [view, setView] = useState('request'); // 'request' | 'report'
@@ -22,6 +23,12 @@ export default function StaffPortal() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/">
+            <Button variant="ghost" size="sm" className="text-[hsl(45,60%,80%)] hover:text-white hover:bg-[hsl(230,55%,20%)] mr-2">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Main Portal
+            </Button>
+          </Link>
           <Button
             variant={view === 'request' ? 'default' : 'ghost'}
             size="sm"
