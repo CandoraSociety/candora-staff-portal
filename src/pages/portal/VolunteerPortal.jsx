@@ -9,13 +9,17 @@ export default function VolunteerPortal() {
   return (
     <div className="min-h-screen bg-[hsl(230,60%,12%)] flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[hsl(230,50%,18%)]">
+      <header className="flex items-center justify-center px-6 py-4 border-b border-[hsl(230,50%,18%)]">
         <img
           src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
           alt="The Candora Society"
-          className="h-12 object-contain"
+          className="h-16 object-contain"
         />
-        <div className="flex items-center gap-2">
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 flex flex-col items-center justify-start pt-8 px-4">
+        <div className="flex items-center gap-2 mb-6">
           <Button
             variant={view === 'signin' ? 'default' : 'ghost'}
             size="sm"
@@ -33,10 +37,6 @@ export default function VolunteerPortal() {
             Register
           </Button>
         </div>
-      </header>
-
-      {/* Content */}
-      <main className="flex-1 flex items-start justify-center pt-12 px-4">
         {view === 'signin' ? (
           <PortalSignIn />
         ) : (
