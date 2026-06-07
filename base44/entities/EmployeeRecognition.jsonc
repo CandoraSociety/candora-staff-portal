@@ -1,0 +1,55 @@
+{
+  "name": "EmployeeRecognition",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "Employee record ID"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Employee name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "milestone_hours",
+        "outstanding_service",
+        "employee_of_month",
+        "special_achievement",
+        "years_of_service"
+      ],
+      "description": "Recognition type"
+    },
+    "title": {
+      "type": "string",
+      "description": "Award title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of achievement"
+    },
+    "date_awarded": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of award"
+    },
+    "awarded_by": {
+      "type": "string",
+      "description": "Person who awarded"
+    },
+    "milestone_key": {
+      "type": "string",
+      "description": "Unique key for milestone tracking (e.g., '5_years', '100_hours')"
+    },
+    "is_placeholder": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "employee_id",
+    "type",
+    "title"
+  ]
+}

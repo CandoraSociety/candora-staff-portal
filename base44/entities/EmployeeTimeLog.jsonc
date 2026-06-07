@@ -1,0 +1,54 @@
+{
+  "name": "EmployeeTimeLog",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "Employee record ID"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Employee name for display"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department/program area"
+    },
+    "sign_in_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sign in timestamp"
+    },
+    "sign_out_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sign out timestamp"
+    },
+    "total_hours": {
+      "type": "number",
+      "description": "Total hours for this session"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of work"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "signed_in",
+        "completed",
+        "adjusted"
+      ],
+      "default": "signed_in"
+    }
+  },
+  "required": [
+    "employee_id",
+    "employee_name"
+  ]
+}

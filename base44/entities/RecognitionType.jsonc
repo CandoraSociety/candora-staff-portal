@@ -1,0 +1,26 @@
+{
+  "name": "RecognitionType",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Recognition type name"
+    },
+    "emoji": {
+      "type": "string",
+      "description": "Icon/emoji for display"
+    },
+    "is_system": {
+      "type": "boolean",
+      "default": false,
+      "description": "System-calculated types (milestones)"
+    },
+    "is_placeholder": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

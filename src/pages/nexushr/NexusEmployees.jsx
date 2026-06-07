@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, Plus, Search, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/shared/PageHeader';
-import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
+import StatusBadge from '@/components/shared/StatusBadge';
+import { format } from 'date-fns';
 import EmployeeForm from '@/components/employees/EmployeeForm';
 import EmployeeDetail from '@/components/employees/EmployeeDetail';
 
 export default function NexusEmployees() {
-  const { isHRAdmin, isManager } = useAccessLevel();
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [viewingEmployee, setViewingEmployee] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 200) });
+  const { data: employees = [] } = useQuery({ 
+    queryKey: ['employees'], 
+    queryFn: () => base44.entities.Employee.list('-created_date', 500) 
+  });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Employee.create(data),
@@ -37,8 +41,6 @@ export default function NexusEmployees() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['employees'] }); setViewingEmployee(null); },
   });
 
-  if (!isManager) return <AccessDenied />;
-
   const filtered = employees.filter(e =>
     `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
   );
@@ -47,7 +49,7 @@ export default function NexusEmployees() {
     <div className="space-y-6">
       <PageHeader
         title="Employees"
-        actions={isHRAdmin && <Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
+        actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
       />
 
       <div className="relative">
@@ -56,7 +58,7 @@ export default function NexusEmployees() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={Users} title="No employees found" description="Add your first employee to get started." />
+        <EmptyState icon={Eye} title="No employees found" description="Add your first employee to get started." />
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -75,11 +77,11 @@ export default function NexusEmployees() {
                   <tr key={emp.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setViewingEmployee(emp)}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                          {emp.first_name?.[0]}{emp.last_name?.[0]}
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${emp.is_deceased ? 'bg-gray-200 text-gray-600' : 'bg-primary/10 text-primary'}`}>
+                          {emp.is_deceased ? '🕊️' : `${emp.first_name?.[0]}${emp.last_name?.[0]}`}
                         </div>
                         <div>
-                          <p className="font-medium">{emp.first_name} {emp.last_name}</p>
+                          <p className={`font-medium ${emp.is_deceased ? 'text-gray-500' : ''}`}>{emp.first_name} {emp.last_name}</p>
                           <p className="text-muted-foreground text-xs">{emp.email}</p>
                         </div>
                       </div>
@@ -106,7 +108,6 @@ export default function NexusEmployees() {
         <DialogContent className="max-w-2xl">
           <EmployeeDetail
             employee={viewingEmployee}
-            isHRAdmin={isHRAdmin}
             onEdit={() => { setEditingEmployee(viewingEmployee); setViewingEmployee(null); }}
             onDelete={() => deleteMutation.mutate(viewingEmployee.id)}
           />

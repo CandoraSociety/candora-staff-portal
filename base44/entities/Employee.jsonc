@@ -45,7 +45,8 @@
         "on_leave",
         "terminated",
         "suspended",
-        "probation"
+        "probation",
+        "occasional"
       ],
       "default": "active",
       "description": "Employment status"
@@ -84,6 +85,15 @@
       "type": "string",
       "description": "Home address"
     },
+    "city": {
+      "type": "string",
+      "description": "City"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth"
+    },
     "emergency_contact_name": {
       "type": "string"
     },
@@ -107,6 +117,21 @@
         "did_not_pass"
       ],
       "description": "Probationary period status"
+    },
+    "is_deceased": {
+      "type": "boolean",
+      "default": false,
+      "description": "In memoriam status"
+    },
+    "deceased_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of passing"
+    },
+    "total_hours": {
+      "type": "number",
+      "default": 0,
+      "description": "Total volunteer/work hours"
     }
   },
   "required": [

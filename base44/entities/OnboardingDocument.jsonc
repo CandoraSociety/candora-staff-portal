@@ -1,0 +1,41 @@
+{
+  "name": "OnboardingDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Document title"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "waiver",
+        "code_of_conduct",
+        "confidentiality",
+        "policy",
+        "handbook",
+        "orientation",
+        "other"
+      ],
+      "description": "Type of onboarding document"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded file URL"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include in welcome emails"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description"
+    }
+  },
+  "required": [
+    "title",
+    "document_type",
+    "file_url"
+  ]
+}
