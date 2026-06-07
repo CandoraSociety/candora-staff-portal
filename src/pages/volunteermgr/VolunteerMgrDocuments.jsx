@@ -8,11 +8,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, FileText, ExternalLink, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, FileText, ExternalLink, Search, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import moment from 'moment';
 
 const docTypes = ['waiver', 'agreement', 'background_check', 'confidentiality', 'code_of_conduct', 'volunteer_policies', 'other'];
+
+const docTypeLabels = {
+  waiver: 'Waivers',
+  agreement: 'Agreements',
+  background_check: 'Background Checks',
+  confidentiality: 'Confidentiality',
+  code_of_conduct: 'Code of Conduct',
+  volunteer_policies: 'Volunteer Policies',
+  other: 'Other',
+};
 
 const emptyForm = { volunteer_id: '', volunteer_name: '', document_type: 'waiver', title: '', file_url: '', signed: false, signed_date: '', expiry_date: '', notes: '' };
 
@@ -38,6 +49,11 @@ export default function VolunteerMgrDocuments() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['vol-documents'] }); setFormOpen(false); setForm(emptyForm); },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.VolunteerDocument.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vol-documents'] }),
+  });
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -58,6 +74,36 @@ export default function VolunteerMgrDocuments() {
     (d.title || '').toLowerCase().includes(search.toLowerCase())
   );
 
+  const byType = docTypes.reduce((acc, t) => {
+    acc[t] = filtered.filter(d => d.document_type === t);
+    return acc;
+  }, {});
+
+  const DocRow = ({ doc }) => (
+    <Card className="shadow-sm">
+      <CardContent className="p-4 flex items-center gap-4">
+        <FileText className="w-5 h-5 text-primary shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm">{doc.title}</p>
+          <p className="text-xs text-muted-foreground">{doc.volunteer_name}</p>
+          {doc.expiry_date && <p className="text-xs text-muted-foreground">Expires: {moment(doc.expiry_date).format('MMM D, YYYY')}</p>}
+          {doc.notes && <p className="text-xs text-muted-foreground italic">{doc.notes}</p>}
+        </div>
+        <div className="flex items-center gap-1">
+          <Badge variant={doc.signed ? 'default' : 'outline'} className="text-xs">{doc.signed ? 'Signed' : 'Unsigned'}</Badge>
+          {doc.file_url && (
+            <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="ghost" title="Open file"><ExternalLink className="w-3.5 h-3.5" /></Button>
+            </a>
+          )}
+          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => deleteMutation.mutate(doc.id)}>
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -73,29 +119,28 @@ export default function VolunteerMgrDocuments() {
         <Input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      <div className="grid gap-3">
-        {filtered.map(doc => (
-          <Card key={doc.id} className="shadow-sm">
-            <CardContent className="p-4 flex items-center gap-4">
-              <FileText className="w-5 h-5 text-primary shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{doc.title}</p>
-                <p className="text-xs text-muted-foreground">{doc.volunteer_name} · {doc.document_type?.replace(/_/g, ' ')}</p>
-                {doc.expiry_date && <p className="text-xs text-muted-foreground">Exp: {moment(doc.expiry_date).format('MMM D, YYYY')}</p>}
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">{doc.signed ? 'Signed' : 'Unsigned'}</Badge>
-                {doc.file_url && (
-                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="ghost"><ExternalLink className="w-3.5 h-3.5" /></Button>
-                  </a>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      <Tabs defaultValue="all">
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="all">All ({filtered.length})</TabsTrigger>
+          {docTypes.map(t => byType[t].length > 0 && (
+            <TabsTrigger key={t} value={t}>{docTypeLabels[t]} ({byType[t].length})</TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="all" className="mt-4 space-y-3">
+          {filtered.length === 0 && <div className="text-center py-12 text-muted-foreground">No documents found.</div>}
+          {filtered.map(doc => <DocRow key={doc.id} doc={doc} />)}
+        </TabsContent>
+
+        {docTypes.map(t => (
+          <TabsContent key={t} value={t} className="mt-4 space-y-3">
+            {byType[t].length === 0
+              ? <div className="text-center py-12 text-muted-foreground">No {docTypeLabels[t].toLowerCase()} on file.</div>
+              : byType[t].map(doc => <DocRow key={doc.id} doc={doc} />)
+            }
+          </TabsContent>
         ))}
-        {filtered.length === 0 && <div className="text-center py-12 text-muted-foreground">No documents found.</div>}
-      </div>
+      </Tabs>
 
       <Dialog open={formOpen} onOpenChange={o => { setFormOpen(o); if (!o) setForm(emptyForm); }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
