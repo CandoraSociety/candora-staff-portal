@@ -53,7 +53,7 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
       collapsed ? 'w-16' : 'w-60'
     )}>
       {/* Logo area */}
-      <div className="border-b border-[hsl(230,50%,18%)] p-3">
+      <div className="border-b border-[hsl(230,50%,18%)] px-3 pt-4 pb-3">
         <Link to="/" className={cn('flex items-center gap-2 group', collapsed ? 'justify-center' : '')}>
           {collapsed ? (
             <img
@@ -65,7 +65,7 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
             <img
               src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
               alt="The Candora Society"
-              className="h-16 object-contain"
+              className="h-24 object-contain"
             />
           )}
         </Link>
