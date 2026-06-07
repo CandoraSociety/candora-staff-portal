@@ -1,213 +1,354 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Clock, Plus, Upload } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Clock, Plus, Upload, Search, Filter, Download } from 'lucide-react';
 import moment from 'moment';
-
-const statusColors = {
-  signed_in: 'bg-green-50 text-green-700 border-green-200',
-  completed: 'bg-blue-50 text-blue-700 border-blue-200',
-  adjusted: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-};
-
-const emptyForm = { volunteer_id: '', volunteer_name: '', position_title: '', date: '', total_hours: 0, status: 'completed', notes: '' };
+import TimeLogsStats from '@/components/timelogs/TimeLogsStats';
+import { toast } from 'sonner';
 
 export default function VolunteerMgrTimeLogs() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [formOpen, setFormOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
+  const [formData, setFormData] = useState({
+    volunteer_id: '',
+    position_title: '',
+    date: moment().format('YYYY-MM-DD'),
+    sign_in_time: '',
+    sign_out_time: '',
+    total_hours: '',
+    notes: ''
+  });
   const queryClient = useQueryClient();
 
-  const { data: timeLogs = [] } = useQuery({
-    queryKey: ['vol-timelogs'],
+  const { data: timeLogs = [], isLoading } = useQuery({
+    queryKey: ['volunteer-timelogs'],
     queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 500),
   });
 
   const { data: volunteers = [] } = useQuery({
-    queryKey: ['vol-volunteers'],
-    queryFn: () => base44.entities.Volunteer.list('-created_date', 200),
+    queryKey: ['volunteers-list'],
+    queryFn: () => base44.entities.Volunteer.list(),
   });
 
   const saveMutation = useMutation({
-    mutationFn: (data) => base44.entities.VolunteerTimeLog.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });
-      queryClient.invalidateQueries({ queryKey: ['vol-timelogs-all'] });
-      setFormOpen(false);
-      setForm(emptyForm);
+    mutationFn: async (data) => {
+      const volunteer = volunteers.find(v => v.id === data.volunteer_id);
+      return base44.entities.VolunteerTimeLog.create({
+        volunteer_id: data.volunteer_id,
+        volunteer_name: volunteer ? `${volunteer.first_name} ${volunteer.last_name}` : 'Unknown',
+        position_title: data.position_title || 'General',
+        date: data.date,
+        sign_in_time: data.sign_in_time ? new Date(data.sign_in_time).toISOString() : null,
+        sign_out_time: data.sign_out_time ? new Date(data.sign_out_time).toISOString() : null,
+        total_hours: parseFloat(data.total_hours) || 0,
+        status: data.sign_out_time ? 'completed' : 'signed_in',
+        notes: data.notes
+      });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['volunteer-timelogs'] });
+      setAddDialogOpen(false);
+      setFormData({
+        volunteer_id: '',
+        position_title: '',
+        date: moment().format('YYYY-MM-DD'),
+        sign_in_time: '',
+        sign_out_time: '',
+        total_hours: '',
+        notes: ''
+      });
+      toast.success('Time log added successfully');
+    }
   });
 
   const importMutation = useMutation({
     mutationFn: async (file) => {
-      // Step 1: Upload file using Base44's UploadFile integration
-      const uploadResponse = await base44.integrations.Core.UploadFile({ file });
-      const fileUrl = uploadResponse.file_url;
-      
-      // Step 2: Call the import function with the file URL
-      const importResult = await base44.functions.invoke('importTimeLogsFromSpreadsheet', { file_url: fileUrl });
-      
-      return importResult.data;
+      const formData = new FormData();
+      formData.append('file', file);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      return base44.functions.invoke('importTimeLogsFromSpreadsheet', { file_url });
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });
-      queryClient.invalidateQueries({ queryKey: ['vol-timelogs-all'] });
-      setImportOpen(false);
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['volunteer-timelogs'] });
+      setImportDialogOpen(false);
       setImportFile(null);
-      if (data.summary) {
-        alert(data.summary);
-      } else {
-        alert(`Successfully imported ${data.imported || 0} time logs`);
-      }
+      toast.success(`Imported ${response.imported || 0} time logs`);
     },
     onError: (error) => {
-      console.error('Import error:', error);
-      alert('Import failed: ' + (error.message || 'Unknown error'));
-    },
+      toast.error('Import failed: ' + error.message);
+    }
   });
 
-  const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
-  const selectVolunteer = (volId) => {
-    const vol = volunteers.find(v => v.id === volId);
-    setForm(p => ({ ...p, volunteer_id: volId, volunteer_name: vol ? `${vol.first_name} ${vol.last_name}` : '' }));
+  const filteredLogs = timeLogs.filter(log => {
+    if (statusFilter !== 'all' && log.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return log.volunteer_name?.toLowerCase().includes(q) ||
+             log.position_title?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const statusColors = {
+    signed_in: 'bg-green-50 text-green-700 border-green-200',
+    completed: 'bg-blue-50 text-blue-700 border-blue-200',
+    adjusted: 'bg-yellow-50 text-yellow-700 border-yellow-200'
   };
 
-  const filtered = timeLogs.filter(log => {
-    const matchesSearch = (log.volunteer_name || '').toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const handleSave = () => {
+    if (!formData.volunteer_id) {
+      toast.error('Please select a volunteer');
+      return;
+    }
+    saveMutation.mutate(formData);
+  };
 
-  const totalHoursToday = timeLogs.filter(l => l.date === moment().format('YYYY-MM-DD') && l.total_hours).reduce((s, l) => s + l.total_hours, 0);
-  const activeSignIns = timeLogs.filter(l => l.status === 'signed_in').length;
+  const handleImport = () => {
+    if (!importFile) {
+      toast.error('Please select a file');
+      return;
+    }
+    importMutation.mutate(importFile);
+  };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-display">Time Logs</h1>
-          <p className="text-sm text-muted-foreground mt-1">{timeLogs.length} total entries</p>
+          <h1 className="text-2xl font-display font-bold">Time Logs</h1>
+          <p className="text-sm text-muted-foreground">Track volunteer hours and attendance</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2"><Upload className="w-4 h-4" /> Import Time Logs</Button>
-          <Button onClick={() => setFormOpen(true)} className="gap-2"><Plus className="w-4 h-4" /> Log Hours</Button>
+          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Upload className="w-4 h-4" />
+                Import
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Import Time Logs</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV file with columns: volunteer_email, date, sign_in_time, sign_out_time, total_hours, position_title
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>CSV File</Label>
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setImportFile(e.target.files[0])}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleImport} disabled={!importFile || importMutation.isPending}>
+                  {importMutation.isPending ? 'Importing...' : 'Import'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Time Log
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add Time Log</DialogTitle>
+                <DialogDescription>Record volunteer hours manually</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Volunteer</Label>
+                  <Select value={formData.volunteer_id} onValueChange={(v) => setFormData({ ...formData, volunteer_id: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select volunteer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {volunteers.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.first_name} {v.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Position / Role</Label>
+                  <Input
+                    placeholder="e.g., Kitchen Helper, Driver"
+                    value={formData.position_title}
+                    onChange={(e) => setFormData({ ...formData, position_title: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Total Hours</Label>
+                    <Input
+                      type="number"
+                      step="0.25"
+                      placeholder="0.00"
+                      value={formData.total_hours}
+                      onChange={(e) => setFormData({ ...formData, total_hours: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Sign In Time</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formData.sign_in_time}
+                      onChange={(e) => setFormData({ ...formData, sign_in_time: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Sign Out Time</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formData.sign_out_time}
+                      onChange={(e) => setFormData({ ...formData, sign_out_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Notes</Label>
+                  <Input
+                    placeholder="Additional details"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSave} disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold">{activeSignIns}</p><p className="text-xs text-muted-foreground">Currently Signed In</p></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold">{totalHoursToday.toFixed(1)}</p><p className="text-xs text-muted-foreground">Hours Today</p></CardContent></Card>
-        <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold">{timeLogs.length}</p><p className="text-xs text-muted-foreground">Total Entries</p></CardContent></Card>
-      </div>
+      {/* Stats */}
+      <TimeLogsStats timeLogs={timeLogs} />
 
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search by volunteer name..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="signed_in">Signed In</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="adjusted">Adjusted</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        {filtered.map(log => (
-          <Card key={log.id} className="shadow-sm">
-            <CardContent className="p-3 flex items-center gap-4">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{log.volunteer_name}</p>
-                <p className="text-xs text-muted-foreground">{log.position_title}</p>
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <Label>Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by volunteer or position..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              <div className="text-xs text-muted-foreground text-right">
-                <p>{moment(log.date || log.sign_in_time).format('MMM D, YYYY')}</p>
-                {log.sign_in_time && <p className="flex items-center gap-1 justify-end"><Clock className="w-3 h-3" />{moment(log.sign_in_time).format('h:mm A')}{log.sign_out_time && ` → ${moment(log.sign_out_time).format('h:mm A')}`}</p>}
-              </div>
-              {log.total_hours != null && <span className="text-sm font-semibold w-12 text-right">{log.total_hours.toFixed(1)}h</span>}
-              <Badge className={`text-xs border ${statusColors[log.status] || ''}`}>{log.status?.replace(/_/g, ' ')}</Badge>
-            </CardContent>
-          </Card>
-        ))}
-        {filtered.length === 0 && <div className="text-center py-12 text-muted-foreground">No time logs found.</div>}
-      </div>
-
-      <Dialog open={formOpen} onOpenChange={o => { setFormOpen(o); if (!o) setForm(emptyForm); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Log Volunteer Hours</DialogTitle></DialogHeader>
-          <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(form); }} className="space-y-4">
-            <div>
-              <Label>Volunteer *</Label>
-              <Select value={form.volunteer_id} onValueChange={selectVolunteer}>
-                <SelectTrigger><SelectValue placeholder="Select volunteer..." /></SelectTrigger>
-                <SelectContent>
-                  {volunteers.map(v => <SelectItem key={v.id} value={v.id}>{v.first_name} {v.last_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
-            <div><Label>Position / Role</Label><Input value={form.position_title} onChange={e => update('position_title', e.target.value)} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Date *</Label><Input type="date" value={form.date} onChange={e => update('date', e.target.value)} required /></div>
-              <div><Label>Hours *</Label><Input type="number" min="0" step="0.5" value={form.total_hours} onChange={e => update('total_hours', Number(e.target.value))} required /></div>
-            </div>
-            <div>
+            <div className="w-48">
               <Label>Status</Label>
-              <Select value={form.status} onValueChange={v => update('status', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="signed_in">Signed In</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="adjusted">Adjusted</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} /></div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Save'}</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={importOpen} onOpenChange={o => { setImportOpen(o); if (!o) setImportFile(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Import Time Logs from CSV</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Upload a CSV file with columns: volunteer_id, volunteer_name, position_id, position_title, sign_in_time, sign_out_time, total_hours, date, notes, status</p>
-              <Input 
-                type="file" 
-                accept=".csv" 
-                onChange={e => setImportFile(e.target.files?.[0] || null)} 
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setImportOpen(false)}>Cancel</Button>
-              <Button 
-                onClick={() => importFile && importMutation.mutate(importFile)} 
-                disabled={!importFile || importMutation.isPending}
-              >
-                {importMutation.isPending ? 'Importing...' : 'Import'}
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
+
+      {/* Time Logs List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">
+            {filteredLogs.length} time log{filteredLogs.length !== 1 ? 's' : ''}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">Loading...</div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-20" />
+              <p>No time logs found</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredLogs.slice(0, 100).map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between p-4 bg-muted/40 rounded-lg border border-border/50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <p className="font-medium">{log.volunteer_name}</p>
+                      <Badge variant="outline" className={statusColors[log.status]}>
+                        {log.status?.replace(/_/g, ' ')}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                      <span>{log.position_title || 'General'}</span>
+                      <span>•</span>
+                      <span>{moment(log.date || log.sign_in_time).format('MMM D, YYYY')}</span>
+                      {log.total_hours && (
+                        <>
+                          <span>•</span>
+                          <span className="text-primary font-medium">{log.total_hours}h</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-muted-foreground">
+                    {log.sign_in_time && (
+                      <p>{moment(log.sign_in_time).format('h:mm A')}</p>
+                    )}
+                    {log.sign_out_time && (
+                      <p>{moment(log.sign_out_time).format('h:mm A')}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
