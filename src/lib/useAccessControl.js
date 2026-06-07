@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-const ADMIN_ROLES = ['super_admin', 'executive_director'];
+const ADMIN_ROLES = ['super_admin', 'executive_director', 'admin'];
 
 const ROLE_HIERARCHY = {
   super_admin: 7,
@@ -19,7 +19,7 @@ export function useAccessControl(user, permissions = []) {
     const userDeptId = user?.department_id;
 
     const isAdmin = ADMIN_ROLES.includes(userRole);
-    const isSuperAdmin = userRole === 'super_admin';
+    const isSuperAdmin = userRole === 'super_admin' || userRole === 'admin';
 
     function canAccessCard(card) {
       if (!card?.is_enabled) return false;
