@@ -51,30 +51,14 @@ export default function VolunteerMgrTimeLogs() {
 
   const importMutation = useMutation({
     mutationFn: async (file) => {
-      const formData = new FormData();
-      formData.append('file', file);
+      // Step 1: Upload file using Base44's UploadFile integration
+      const uploadResponse = await base44.integrations.Core.UploadFile({ file });
+      const fileUrl = uploadResponse.file_url;
       
-      // Use the SDK's internal auth - get token from session
-      const response = await fetch('/api/functions/importTimeLogsFromSpreadsheet', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      });
+      // Step 2: Call the import function with the file URL
+      const importResult = await base44.functions.invoke('importTimeLogsFromSpreadsheet', { file_url: fileUrl });
       
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Response body:', responseText);
-      
-      if (!response.ok) {
-        try {
-          const errorData = JSON.parse(responseText);
-          throw new Error(errorData.error || 'Import failed');
-        } catch {
-          throw new Error(`Import failed with status ${response.status}: ${responseText.substring(0, 200)}`);
-        }
-      }
-      
-      return JSON.parse(responseText);
+      return importResult;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vol-timelogs'] });

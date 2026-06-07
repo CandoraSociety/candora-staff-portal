@@ -7,11 +7,16 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const formData = await req.formData();
-    const file = formData.get('file');
-    if (!file) return Response.json({ error: 'No file uploaded' }, { status: 400 });
+    // Get file URL from request
+    const { file_url } = await req.json();
+    if (!file_url) return Response.json({ error: 'No file URL provided' }, { status: 400 });
 
-    const text = await file.text();
+    // Download the file from the URL
+    const fileResponse = await fetch(file_url);
+    if (!fileResponse.ok) {
+      return Response.json({ error: 'Failed to download file' }, { status: 400 });
+    }
+    const text = await fileResponse.text();
     
     // Parse CSV with proper handling of quoted fields and escaped quotes
     const parseResult = Papa.parse(text, { 
