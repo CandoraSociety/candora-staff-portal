@@ -63,7 +63,14 @@ function NexusSidebar({ collapsed, setCollapsed }) {
         })}
       </nav>
 
-      <div className={cn('p-2 border-t border-border', collapsed && 'flex justify-center')}>
+      <div className={cn('p-2 border-t border-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
+        <Link
+          to="/"
+          className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors', collapsed && 'justify-center w-auto')}
+        >
+          <ChevronLeft className="w-4 h-4 shrink-0" />
+          {!collapsed && 'Back to Portal'}
+        </Link>
         {!collapsed && user && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.full_name || user.email}</p>}
         <button
           onClick={() => base44.auth.logout()}
