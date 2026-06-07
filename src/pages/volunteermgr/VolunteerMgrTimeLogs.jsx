@@ -32,7 +32,7 @@ export default function VolunteerMgrTimeLogs() {
 
   const { data: timeLogs = [], isLoading } = useQuery({
     queryKey: ['volunteer-timelogs'],
-    queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 500),
+    queryFn: () => base44.entities.VolunteerTimeLog.list('-date', 5000),
   });
 
   const { data: volunteers = [] } = useQuery({
