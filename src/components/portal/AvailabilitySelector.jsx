@@ -175,22 +175,26 @@ export default function AvailabilitySelector({ value, onChange, showBlockedDates
             
             {blockedDates.length > 0 && (
               <div className="flex-1 flex flex-wrap gap-1">
-                {blockedDates.slice(0, 5).map(date => (
-                  <Badge key={date} variant="outline" className="text-xs flex items-center gap-1">
-                    {format(new Date(date), 'MMM d')}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newBlocked = blockedDates.filter(d => d !== date);
-                        setBlockedDates(newBlocked);
-                        onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
-                      }}
-                      className="hover:text-destructive"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+                {blockedDates.slice(0, 5).map(date => {
+                  const [year, month, day] = date.split('-');
+                  const displayDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  return (
+                    <Badge key={date} variant="outline" className="text-xs flex items-center gap-1">
+                      {format(displayDate, 'MMM d')}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newBlocked = blockedDates.filter(d => d !== date);
+                          setBlockedDates(newBlocked);
+                          onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
+                        }}
+                        className="hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
                 {blockedDates.length > 5 && (
                   <span className="text-xs text-muted-foreground">+{blockedDates.length - 5} more</span>
                 )}
