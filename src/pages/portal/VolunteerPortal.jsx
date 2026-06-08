@@ -18,20 +18,20 @@ export default function VolunteerPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-blue-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900/5 via-yellow-50 to-blue-900/10 flex flex-col">
       {/* Header with Logo and Branded Styling */}
       <header className="px-6 py-8">
         <div className="max-w-2xl mx-auto text-center space-y-4">
-          <div className="bg-white rounded-2xl p-8 border-3 border-yellow-400 shadow-xl">
+          <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-2xl p-8 border-3 border-yellow-400 shadow-xl">
             <div className="mx-auto mb-4 flex justify-center">
               <img 
                 src="https://media.base44.com/images/public/6a249282cb496579542673b7/60b9d3b2a_Candoracirclelogo_noanniversary.png"
                 alt="Candora Society Logo"
-                className="h-32 w-auto object-contain"
+                className="h-32 w-auto object-contain bg-white rounded-full p-2"
               />
             </div>
-            <h1 className="text-4xl font-display font-bold text-blue-900 mb-1">Volunteer Portal</h1>
-            <p className="text-base text-blue-700 font-semibold">Candora Society</p>
+            <h1 className="text-4xl font-display font-bold text-yellow-400 mb-1">Volunteer Portal</h1>
+            <p className="text-base text-yellow-300 font-semibold">Candora Society</p>
           </div>
           <p className="text-sm text-blue-900 max-w-md mx-auto font-medium">
             Welcome! Sign in to track your hours or register to join our volunteer community.
@@ -45,16 +45,16 @@ export default function VolunteerPortal() {
           <div className="max-w-lg w-full space-y-4">
             {/* Sign In Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-50 to-white"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-900 to-blue-800"
               onClick={() => setView('signin')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center group-hover:from-blue-800 group-hover:to-blue-700 transition-all shadow-md">
-                  <Clock className="w-8 h-8 text-yellow-400" />
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center group-hover:bg-yellow-50 transition-all shadow-md">
+                  <Clock className="w-8 h-8 text-blue-900" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold font-display">Sign In / Sign Out</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h2 className="text-xl font-bold font-display text-yellow-400">Sign In / Sign Out</h2>
+                  <p className="text-sm text-yellow-300 mt-1">
                     Track your volunteer hours
                   </p>
                 </div>
@@ -63,7 +63,7 @@ export default function VolunteerPortal() {
 
             {/* Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-yellow-200 group bg-gradient-to-br from-yellow-50 to-white"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-900 to-blue-800"
               onClick={() => setView('register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
@@ -71,8 +71,8 @@ export default function VolunteerPortal() {
                   <UserPlus className="w-8 h-8 text-blue-900" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold font-display">Become a Volunteer</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h2 className="text-xl font-bold font-display text-yellow-400">Become a Volunteer</h2>
+                  <p className="text-sm text-yellow-300 mt-1">
                     Register to start your journey
                   </p>
                 </div>
@@ -81,16 +81,16 @@ export default function VolunteerPortal() {
 
             {/* Cohort Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-50 to-white"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-900 to-blue-800"
               onClick={() => setView('cohort-register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center group-hover:from-blue-800 group-hover:to-blue-700 transition-all shadow-md">
-                  <Building2 className="w-8 h-8 text-yellow-400" />
+                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center group-hover:bg-yellow-50 transition-all shadow-md">
+                  <Building2 className="w-8 h-8 text-blue-900" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold font-display">Group / Cohort Registration</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h2 className="text-xl font-bold font-display text-yellow-400">Group / Cohort Registration</h2>
+                  <p className="text-sm text-yellow-300 mt-1">
                     Register your organization, church, or school group
                   </p>
                 </div>
