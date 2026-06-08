@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X } from 'lucide-react';
 import moment from 'moment';
 
@@ -438,7 +438,7 @@ export default function VolunteerMgrApprovals() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" showCloseButton={false}>
           <DialogHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -468,14 +468,25 @@ export default function VolunteerMgrApprovals() {
 
           {selectedRequest?.type === 'cohort' && (
             <div className="space-y-6">
-              {/* Contact Information */}
+              {/* Organization Information */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Contact Information</h3>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Organization Information</h3>
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Organization Name</p>
+                    <p className="font-medium">{selectedRequest.data.organization_name}</p>
+                  </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Organization Type</p>
                     <p className="font-medium">{selectedRequest.data.organization_type?.replace(/_/g, ' ')}</p>
                   </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-muted-foreground">Contact Person</p>
                     <p className="font-medium">{selectedRequest.data.contact_name}</p>
@@ -491,9 +502,9 @@ export default function VolunteerMgrApprovals() {
                 </div>
               </div>
 
-              {/* Volunteer Details */}
+              {/* Volunteer Group Details */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Volunteer Details</h3>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Volunteer Group Details</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-muted-foreground">Number of Volunteers</p>
@@ -501,72 +512,106 @@ export default function VolunteerMgrApprovals() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Preferred Start Date</p>
-                    <p className="font-medium">{selectedRequest.data.preferred_start_date ? moment(selectedRequest.data.preferred_start_date).format('MMM D, YYYY') : 'Not specified'}</p>
+                    <p className="font-medium">{selectedRequest.data.preferred_start_date ? moment(selectedRequest.data.preferred_start_date).format('MMMM D, YYYY') : 'Not specified'}</p>
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Availability</p>
+                  <p className="text-xs text-muted-foreground">General Availability</p>
                   <p className="font-medium">{selectedRequest.data.availability || 'Not specified'}</p>
                 </div>
+              </div>
+
+              {/* Areas of Interest */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Areas of Interest</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedRequest.data.areas_of_interest?.length > 0 ? (
+                    selectedRequest.data.areas_of_interest.map(area => (
+                      <Badge key={area} variant="secondary" className="text-sm">{area}</Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Not specified</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Skills and Motivation */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Skills & Motivation</h3>
                 <div>
-                  <p className="text-xs text-muted-foreground">Areas of Interest</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedRequest.data.areas_of_interest?.length > 0 ? (
-                      selectedRequest.data.areas_of_interest.map(area => (
-                        <Badge key={area} variant="secondary">{area}</Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground">Not specified</span>
+                  <p className="text-xs text-muted-foreground mb-1">Skills or Focus Areas</p>
+                  <p className="font-medium text-sm">{selectedRequest.data.skills_or_focus || 'Not specified'}</p>
+                </div>
+                <div className="mt-3">
+                  <p className="text-xs text-muted-foreground mb-1">Motivation</p>
+                  <p className="font-medium text-sm">{selectedRequest.data.motivation || 'Not specified'}</p>
+                </div>
+              </div>
+
+              {/* Vulnerable Sector Check */}
+              {selectedRequest.data.vulnerable_sector_check && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800 font-semibold text-sm">✓ Vulnerable Sector Check</p>
+                  <p className="text-yellow-700 text-sm mt-1">Organization acknowledges that volunteers may be required to complete a Vulnerable Sector Check</p>
+                </div>
+              )}
+
+              {/* Donation Information */}
+              {selectedRequest.data.include_donation && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Donation Information</h3>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-blue-900 font-semibold text-sm">Donation Included</p>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p><strong>Amount:</strong> ${selectedRequest.data.donation_amount}</p>
+                      <p className="mt-1"><strong>Message:</strong> {selectedRequest.data.donation_message || 'No message provided'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Admin Information */}
+              {(selectedRequest.data.notes || selectedRequest.data.status || selectedRequest.data.approved_by) && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Admin Information</h3>
+                  {selectedRequest.data.notes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Notes</p>
+                      <p className="font-medium text-sm bg-muted p-3 rounded">{selectedRequest.data.notes}</p>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <Badge className={`mt-1 ${statusColors[selectedRequest.data.status]}`}>{selectedRequest.data.status}</Badge>
+                    </div>
+                    {selectedRequest.data.approved_by && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Approved By</p>
+                        <p className="font-medium text-sm">{selectedRequest.data.approved_by}</p>
+                      </div>
+                    )}
+                    {selectedRequest.data.approval_date && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Approval Date</p>
+                        <p className="font-medium text-sm">{moment(selectedRequest.data.approval_date).format('MMMM D, YYYY')}</p>
+                      </div>
                     )}
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Skills or Focus</p>
-                  <p className="font-medium">{selectedRequest.data.skills_or_focus || 'Not specified'}</p>
-                </div>
-              </div>
-
-              {/* Motivation */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Motivation</h3>
-                <p className="font-medium text-sm">{selectedRequest.data.motivation || 'Not specified'}</p>
-              </div>
-
-              {/* Additional Information */}
-              {(selectedRequest.data.include_donation || selectedRequest.data.vulnerable_sector_check) && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Additional Information</h3>
-                  {selectedRequest.data.include_donation && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="font-semibold text-blue-900 text-sm">Donation Included</p>
-                      <p className="text-blue-700 text-sm">${selectedRequest.data.donation_amount} - {selectedRequest.data.donation_message || 'No message'}</p>
-                    </div>
-                  )}
-                  {selectedRequest.data.vulnerable_sector_check && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-yellow-800 font-medium text-sm">✓ Vulnerable Sector Check consent provided</p>
-                    </div>
-                  )}
-                </div>
               )}
 
-              {/* Admin Notes */}
-              {selectedRequest.data.notes && (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Admin Notes</h3>
-                  <p className="font-medium text-sm bg-muted p-3 rounded">{selectedRequest.data.notes}</p>
-                </div>
-              )}
-
-              {/* Status */}
+              {/* Portal Card Status */}
               {selectedRequest.data.card_created && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-800 font-medium text-sm">✓ Portal Card Created (ID: {selectedRequest.data.card_id})</p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 font-semibold text-sm">✓ Portal Card Created</p>
+                  <p className="text-green-700 text-sm mt-1">Card ID: {selectedRequest.data.card_id}</p>
                 </div>
               )}
 
-              <div className="text-xs text-muted-foreground pt-4 border-t">
-                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              {/* Submission Date */}
+              <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
+                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
               </div>
             </div>
           )}
@@ -583,8 +628,9 @@ export default function VolunteerMgrApprovals() {
                   <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
-              <div className="text-xs text-muted-foreground pt-4 border-t">
-                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
+                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).format('MMMM D, YYYY')}</p>}
               </div>
             </div>
           )}
@@ -592,12 +638,12 @@ export default function VolunteerMgrApprovals() {
           {selectedRequest?.type === 'profile' && (
             <div className="space-y-6">
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Changes Requested</h3>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Summary of Changes</h3>
                 <p className="font-medium text-sm">{selectedRequest.data.change_summary}</p>
               </div>
               <div className="space-y-3">
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Detailed Changes</h3>
-                <pre className="bg-muted p-4 rounded text-xs overflow-auto max-h-80 whitespace-pre-wrap">
+                <pre className="bg-muted p-4 rounded text-xs overflow-auto max-h-96 whitespace-pre-wrap font-mono">
                   {JSON.stringify(selectedRequest.data.changes_requested, null, 2)}
                 </pre>
               </div>
@@ -607,8 +653,9 @@ export default function VolunteerMgrApprovals() {
                   <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
-              <div className="text-xs text-muted-foreground pt-4 border-t">
-                Submitted on {moment(selectedRequest.data.submitted_date).format('MMMM D, YYYY [at] h:mm A')}
+              <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
+                <p>Submitted: {moment(selectedRequest.data.submitted_date).format('MMMM D, YYYY [at] h:mm A')}</p>
+                {selectedRequest.data.reviewed_by && <p>Reviewed by: {selectedRequest.data.reviewed_by}</p>}
               </div>
             </div>
           )}
@@ -617,7 +664,7 @@ export default function VolunteerMgrApprovals() {
             <div className="space-y-6">
               <div className="space-y-3">
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Request Type</h3>
-                <Badge>{typeConfig[selectedRequest.data.request_type]?.label || selectedRequest.data.request_type}</Badge>
+                <Badge className="text-sm">{typeConfig[selectedRequest.data.request_type]?.label || selectedRequest.data.request_type}</Badge>
               </div>
               <div className="space-y-3">
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Description</h3>
@@ -629,8 +676,9 @@ export default function VolunteerMgrApprovals() {
                   <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
-              <div className="text-xs text-muted-foreground pt-4 border-t">
-                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
+                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).format('MMMM D, YYYY')}</p>}
               </div>
             </div>
           )}
