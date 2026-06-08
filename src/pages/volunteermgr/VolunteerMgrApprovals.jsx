@@ -417,28 +417,28 @@ export default function VolunteerMgrApprovals() {
       {resolvedPracticumRequests.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Practicum Placements ({resolvedPracticumRequests.length})</h2>
-          {resolvedPracticumRequests.map(renderPracticumCard)}
+          {resolvedPracticumRequests.map(req => renderPracticumCard(req, false))}
         </div>
       )}
 
       {resolvedCohortRequests.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Cohort Requests ({resolvedCohortRequests.length})</h2>
-          {resolvedCohortRequests.map(renderCohortCard)}
+          {resolvedCohortRequests.map(req => renderCohortCard(req, false))}
         </div>
       )}
 
       {resolvedProfileChanges.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Profile Changes ({resolvedProfileChanges.length})</h2>
-          {resolvedProfileChanges.map(renderProfileChangeCard)}
+          {resolvedProfileChanges.map(change => renderProfileChangeCard(change, false))}
         </div>
       )}
 
       {resolvedApprovals.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Other ({resolvedApprovals.length})</h2>
-          {resolvedApprovals.map(renderCard)}
+          {resolvedApprovals.map(req => renderCard(req, false))}
         </div>
       )}
 
