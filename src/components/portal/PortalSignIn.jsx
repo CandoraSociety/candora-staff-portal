@@ -232,7 +232,13 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
               <Button
                 variant="outline"
                 className="gap-2"
-                onClick={() => onAuthenticated(foundVolunteer.id, foundVolunteer)}
+                onClick={() => {
+                  onAuthenticated(foundVolunteer.id, foundVolunteer);
+                  // Navigate to profile view
+                  window.location.hash = 'profile';
+                  const event = new CustomEvent('navigate-to-profile', { detail: { volunteerId: foundVolunteer.id } });
+                  window.dispatchEvent(event);
+                }}
               >
                 <User className="w-4 h-4" />
                 My Profile
@@ -240,7 +246,13 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
               <Button
                 variant="outline"
                 className="gap-2"
-                onClick={() => onAuthenticated(foundVolunteer.id, foundVolunteer)}
+                onClick={() => {
+                  onAuthenticated(foundVolunteer.id, foundVolunteer);
+                  // Navigate to shifts view
+                  window.location.hash = 'shifts';
+                  const event = new CustomEvent('navigate-to-shifts', { detail: { volunteerId: foundVolunteer.id } });
+                  window.dispatchEvent(event);
+                }}
               >
                 <Calendar className="w-4 h-4" />
                 View Shifts
