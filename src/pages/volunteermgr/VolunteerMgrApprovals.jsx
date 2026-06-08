@@ -893,13 +893,33 @@ export default function VolunteerMgrApprovals() {
                   {waitlistedPracticumRequests.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-semibold text-amber-700 uppercase">Practicum</h3>
-                      {waitlistedPracticumRequests.map(req => renderPracticumCard(req, true))}
+                      {waitlistedPracticumRequests.map(req => (
+                        <Card 
+                          key={req.id} 
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => setSelectedRequest({ type: 'practicum', data: req })}
+                        >
+                          <CardContent className="p-3">
+                            <p className="font-medium text-sm">{req.volunteer_name}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   )}
                   {waitlistedApprovals.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-semibold text-amber-700 uppercase">Other</h3>
-                      {waitlistedApprovals.map(req => renderCard(req, true))}
+                      {waitlistedApprovals.map(req => (
+                        <Card 
+                          key={req.id} 
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => setSelectedRequest({ type: 'approval', data: req })}
+                        >
+                          <CardContent className="p-3">
+                            <p className="font-medium text-sm">{req.volunteer_name || 'Unknown Volunteer'}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   )}
                 </CardContent>
