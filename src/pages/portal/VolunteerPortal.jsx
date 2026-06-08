@@ -18,28 +18,17 @@ export default function VolunteerPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/10 via-primary/5 to-background flex flex-col">
-      {/* Header with Logo */}
+    <div className="min-h-screen bg-gradient-to-br from-primary/20 via-primary/10 to-background flex flex-col">
+      {/* Header with Branded Styling */}
       <header className="px-6 py-8">
         <div className="max-w-2xl mx-auto text-center space-y-4">
-          <div className="flex justify-center mb-4">
-            <img 
-              src="https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=400&h=400&fit=crop" 
-              alt="Candora Society Logo"
-              className="h-32 w-auto object-contain"
-            />
+          <div className="bg-gradient-to-r from-primary/30 via-primary/20 to-primary/30 rounded-2xl p-6 border-2 border-primary/40 shadow-lg">
+            <h1 className="text-4xl font-display font-bold text-foreground mb-1">Candora Society</h1>
+            <p className="text-base text-muted-foreground font-semibold">Volunteer Portal</p>
           </div>
-          <div>
-            <h1 className="text-3xl font-display font-bold text-foreground mb-2">Candora Society</h1>
-            <p className="text-lg text-muted-foreground font-medium">Volunteer Portal</p>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 max-w-lg mx-auto border border-primary/20">
-            <p className="text-sm text-foreground leading-relaxed">
-              Welcome! Thank you for your interest in volunteering with Candora Society. 
-              Your time and talent make a meaningful difference in our community. 
-              Please sign in to track your hours or register to begin your volunteer journey with us.
-            </p>
-          </div>
+          <p className="text-sm text-foreground max-w-md mx-auto">
+            Welcome! Sign in to track your hours or register to join our volunteer community.
+          </p>
         </div>
       </header>
 
@@ -49,12 +38,12 @@ export default function VolunteerPortal() {
           <div className="max-w-lg w-full space-y-4">
             {/* Sign In Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-primary/30 hover:border-primary/50 hover:shadow-primary/20 group bg-gradient-to-br from-primary/5 to-transparent"
               onClick={() => setView('signin')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Clock className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center group-hover:from-primary/40 group-hover:to-primary/30 transition-all shadow-md">
+                  <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Sign In / Sign Out</h2>
@@ -67,12 +56,12 @@ export default function VolunteerPortal() {
 
             {/* Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-accent/30 group"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-accent/30 hover:border-accent/50 hover:shadow-accent/20 group bg-gradient-to-br from-accent/5 to-transparent"
               onClick={() => setView('register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <UserPlus className="w-7 h-7 text-accent" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent/30 to-accent/20 flex items-center justify-center group-hover:from-accent/40 group-hover:to-accent/30 transition-all shadow-md">
+                  <UserPlus className="w-8 h-8 text-accent" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Become a Volunteer</h2>
@@ -85,12 +74,12 @@ export default function VolunteerPortal() {
 
             {/* Cohort Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-primary/30 hover:border-primary/50 hover:shadow-primary/20 group bg-gradient-to-br from-primary/5 to-transparent"
               onClick={() => setView('cohort-register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <Building2 className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center group-hover:from-primary/40 group-hover:to-primary/30 transition-all shadow-md">
+                  <Building2 className="w-8 h-8 text-primary" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Group / Cohort Registration</h2>
@@ -120,8 +109,10 @@ export default function VolunteerPortal() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-6 text-muted-foreground text-xs">
-        © {new Date().getFullYear()} The Candora Society — VolunteerTrack
+      <footer className="text-center py-6 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-t border-primary/20">
+        <p className="text-xs text-muted-foreground font-medium">
+          © {new Date().getFullYear()} The Candora Society — VolunteerTrack
+        </p>
       </footer>
     </div>
   );
