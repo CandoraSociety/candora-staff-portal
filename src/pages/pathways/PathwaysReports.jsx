@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Plus, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { FileText, TrendingUp, Users, BarChart3 } from 'lucide-react';
 import moment from 'moment';
 
+const WORKERS = [
+  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
+  { email: 'lola@candorasociety.com', name: 'Lola' },
+  { email: 'john@candorasociety.com', name: 'John' },
+  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
+  { email: 'olena@candorasociety.com', name: 'Olena' },
+];
+
 export default function PathwaysReports() {
+  const [activeTab, setActiveTab] = useState('outcomes');
   const queryClient = useQueryClient();
   
   const { data: clients = [] } = useQuery({
@@ -24,88 +35,122 @@ export default function PathwaysReports() {
     queryFn: () => base44.entities.StaffMonthlyReport.list('-report_month', 50),
   });
   
-  const submitReportMutation = useMutation({
-    mutationFn: async (data) => base44.entities.StaffMonthlyReport.create(data),
+  const createReportMutation = useMutation({
+    mutationFn: async (data) => await base44.entities.StaffMonthlyReport.create(data),
     onSuccess: () => {
       toast.success('Report submitted');
       queryClient.invalidateQueries({ queryKey: ['pathways-staff-reports'] });
     },
   });
   
-  const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    new_this_month: clients.filter(c => moment(c.created_date).isSame(moment(), 'month')).length,
-    outcomes: clients.filter(c => c.program_status === 'complete').length,
+  const outcomes = {
+    dea_starters: clients.filter(c => c.service_type === 'casual' && c.status === 'active').length,
+    pathways_starters: clients.filter(c => c.service_type === 'pathways' && c.status === 'active').length,
+    dea_completers: clients.filter(c => c.service_type === 'casual' && c.program_status === 'complete').length,
+    pathways_completers: clients.filter(c => c.service_type === 'pathways' && c.program_status === 'complete').length,
+    employment_outcomes: clients.filter(c => ['E-RF', 'E-UF', 'E-PT'].includes(c.employment_status)).length,
+    _90day_outcomes: clients.filter(c => ['E-RF', 'E-UF', 'E-PT'].includes(c.followup_90day_status)).length,
   };
   
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
-        <p className="text-sm text-slate-600">Program outcomes and staff reporting</p>
+        <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
+        <p className="text-sm text-slate-600">Outcomes, data analysis, and staff monthly reports</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><p className="text-sm text-slate-600">Total Clients</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-sm text-slate-600">Active</p><p className="text-2xl font-bold">{stats.active}</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-sm text-slate-600">New This Month</p><p className="text-2xl font-bold">{stats.new_this_month}</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-sm text-slate-600">Completed</p><p className="text-2xl font-bold">{stats.outcomes}</p></CardContent></Card>
-      </div>
-      
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />Submit Monthly Report</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const fd = new FormData(e.target);
-            submitReportMutation.mutate({
-              report_month: fd.get('report_month'),
-              submitted_by: fd.get('submitted_by'),
-              trends: fd.get('trends'),
-              marketing_activities: fd.get('marketing_activities'),
-              success_stories: fd.get('success_stories'),
-              employer_engagements: fd.get('employer_engagements'),
-              challenges: fd.get('challenges'),
-              goals_next_month: fd.get('goals_next_month'),
-              additional_notes: fd.get('additional_notes'),
-            });
-          }} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Report Month</Label><Input name="report_month" type="month" required /></div>
-              <div><Label>Submitted By (Email)</Label><Input name="submitted_by" type="email" required /></div>
-            </div>
-            <div><Label>Trends & Observations</Label><Textarea name="trends" rows={3} /></div>
-            <div><Label>Marketing Activities</Label><Textarea name="marketing_activities" rows={2} /></div>
-            <div><Label>Success Stories</Label><Textarea name="success_stories" rows={3} /></div>
-            <div><Label>Employer Engagements</Label><Textarea name="employer_engagements" rows={2} /></div>
-            <div><Label>Challenges</Label><Textarea name="challenges" rows={2} /></div>
-            <div><Label>Goals for Next Month</Label><Textarea name="goals_next_month" rows={2} /></div>
-            <div><Label>Additional Notes</Label><Textarea name="additional_notes" rows={2} /></div>
-            <Button type="submit" className="bg-[#1a237e]"><Plus className="h-4 w-4 mr-2" />Submit Report</Button>
-          </form>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader><CardTitle>Submitted Reports</CardTitle></CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {reports.map((report) => (
-              <div key={report.id} className="p-3 border rounded-lg">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium">Month: {moment(report.report_month).format('MMMM YYYY')}</p>
-                    <p className="text-sm text-slate-600">Submitted by: {report.submitted_by_name || report.submitted_by}</p>
-                  </div>
-                  <Badge>{report.status}</Badge>
-                </div>
-              </div>
-            ))}
-            {reports.length === 0 && <p className="text-center text-slate-500 py-8">No reports submitted</p>}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
+          <TabsTrigger value="data">Data Reports</TabsTrigger>
+          <TabsTrigger value="staff">Staff Monthly</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="outcomes" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <OutcomeCard title="DEA Starters" value={outcomes.dea_starters} icon={Users} />
+            <OutcomeCard title="Pathways Starters" value={outcomes.pathways_starters} icon={Users} />
+            <OutcomeCard title="DEA Completers" value={outcomes.dea_completers} icon={FileText} />
+            <OutcomeCard title="Pathways Completers" value={outcomes.pathways_completers} icon={FileText} />
+            <OutcomeCard title="Employment Outcomes" value={outcomes.employment_outcomes} icon={TrendingUp} />
+            <OutcomeCard title="90-Day Outcomes" value={outcomes._90day_outcomes} icon={TrendingUp} />
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+        
+        <TabsContent value="data">
+          <Card>
+            <CardHeader><CardTitle>Data Reports</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Service Type</Label><Select><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="pathways">Pathways</SelectItem><SelectItem value="casual">DEA</SelectItem><SelectItem value="direct_to_employment">Direct to Employment</SelectItem></SelectContent></Select></div>
+                <div><Label>Status</Label><Select><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select></div>
+              </div>
+              <Button>Export to CSV</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="staff">
+          <Card>
+            <CardHeader><CardTitle>Submit Monthly Report</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Report Month</Label><Input type="month" id="rmonth" defaultValue={moment().format('YYYY-MM')} /></div>
+              </div>
+              <div><Label>Trends</Label><Textarea id="rtrends" rows={3} /></div>
+              <div><Label>Marketing Activities</Label><Textarea id="rmarketing" rows={3} /></div>
+              <div><Label>Success Stories</Label><Textarea id="rsuccess" rows={3} /></div>
+              <div><Label>Employer Engagements</Label><Textarea id="remployer" rows={3} /></div>
+              <div><Label>Challenges</Label><Textarea id="rchallenges" rows={3} /></div>
+              <div><Label>Goals Next Month</Label><Textarea id="rgoals" rows={3} /></div>
+              <Button onClick={() => {
+                createReportMutation.mutate({
+                  report_month: document.getElementById('rmonth').value,
+                  submitted_by: 'current_user@candorasociety.com',
+                  submitted_by_name: 'Current User',
+                  submitted_date: moment().format('YYYY-MM-DD'),
+                  status: 'draft',
+                  trends: document.getElementById('rtrends').value,
+                  marketing_activities: document.getElementById('rmarketing').value,
+                  success_stories: document.getElementById('rsuccess').value,
+                  employer_engagements: document.getElementById('remployer').value,
+                  challenges: document.getElementById('rchallenges').value,
+                  goals_next_month: document.getElementById('rgoals').value,
+                });
+              }}>Submit Report</Button>
+            </CardContent>
+          </Card>
+          
+          <Card className="mt-4">
+            <CardHeader><CardTitle>Submitted Reports</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {reports.map(r => (
+                  <div key={r.id} className="p-3 border rounded-lg">
+                    <p className="font-medium">{moment(r.report_month).format('MMMM YYYY')}</p>
+                    <p className="text-sm text-slate-600">Submitted: {r.submitted_by_name} on {moment(r.submitted_date).format('MMM D, YYYY')}</p>
+                    <Badge className="mt-1">{r.status}</Badge>
+                  </div>
+                ))}
+                {reports.length === 0 && <p className="text-center text-slate-500 py-8">No reports</p>}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+function OutcomeCard({ title, value, icon: Icon }) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-primary/10 rounded-lg"><Icon className="h-6 w-6 text-primary" /></div>
+          <div><p className="text-sm text-slate-600">{title}</p><p className="text-2xl font-bold">{value}</p></div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

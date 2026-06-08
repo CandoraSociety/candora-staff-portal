@@ -1,204 +1,203 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Link } from 'react-router-dom';
-import { Users, AlertCircle, Clock, CheckCircle, Search } from 'lucide-react';
+import { toast } from 'sonner';
+import { Users, AlertTriangle, Clock, CheckCircle, ChevronRight } from 'lucide-react';
 import moment from 'moment';
+import { Link } from 'react-router-dom';
+
+const WORKERS = [
+  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
+  { email: 'lola@candorasociety.com', name: 'Lola' },
+  { email: 'john@candorasociety.com', name: 'John' },
+  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
+  { email: 'olena@candorasociety.com', name: 'Olena' },
+];
 
 export default function PathwaysWorkerDashboard() {
-  const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('clients');
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { data: clients = [] } = useQuery({
-    queryKey: ['pathways-clients-all'],
-    queryFn: () => base44.entities.Client.list('-created_date', 1000),
+    queryKey: ['pathways-clients-assigned'],
+    queryFn: async () => {
+      const all = await base44.entities.Client.list('-created_date', 1000);
+      const user = await base44.auth.me();
+      if (user?.email === 'Dawn.williston@candorasociety.com') {
+        return all.filter(c => c.barriers_addressed === true);
+      }
+      return all.filter(c => c.assigned_worker === user?.email);
+    },
   });
   
-  const { data: compassTasks = [] } = useQuery({
+  const { data: tasks = [] } = useQuery({
     queryKey: ['pathways-compass-tasks'],
-    queryFn: () => base44.entities.CompassTask.filter({ status: 'pending' }, '-created_date', 100),
-  });
-  
-  // Filter clients by search
-  const filteredClients = useMemo(() => {
-    return clients.filter(c => 
-      c.first_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.last_name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [clients, search]);
-  
-  // Priority alerts
-  const today = moment();
-  const followupsDue = clients.filter(c => {
-    if (!c.followup_90day_date) return false;
-    const daysUntil = moment(c.followup_90day_date).diff(today, 'days');
-    return daysUntil <= 7 && daysUntil >= 0 && c.status !== 'closed';
+    queryFn: () => base44.entities.CompassTask.filter({ status: 'pending' }),
   });
   
   const stats = {
-    total: filteredClients.length,
-    active: filteredClients.filter(c => c.status === 'active').length,
-    new: filteredClients.filter(c => c.status === 'new').length,
-    closed: filteredClients.filter(c => c.status === 'closed').length,
+    total: clients.length,
+    active: clients.filter(c => c.status === 'active').length,
+    new: clients.filter(c => c.status === 'new').length,
+    overdue: clients.filter(c => {
+      if (!c.followup_90day_date) return false;
+      return moment(c.followup_90day_date).isBefore(moment(), 'day');
+    }).length,
   };
+  
+  const deaClosingSoon = clients.filter(c => {
+    if (c.service_type !== 'casual') return false;
+    const periodEnd = moment().add(2, 'weeks').endOf('isoWeek');
+    return moment().isSameOrAfter(periodEnd.subtract(3, 'days'));
+  });
+  
+  const followupsDue = clients.filter(c => {
+    if (!c.followup_90day_date || c.program_status !== 'complete') return false;
+    const daysUntil = moment(c.followup_90day_date).diff(moment(), 'days');
+    return daysUntil >= 0 && daysUntil <= 14;
+  });
+  
+  const filteredClients = clients.filter(c => 
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const myTasks = tasks.filter(t => t.assigned_worker === (WORKERS.find(w => w.name === 'Current')?.email));
   
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Career Counsellor Dashboard</h1>
-        <p className="text-sm text-slate-600">Manage your assigned clients and tasks</p>
+        <h1 className="text-2xl font-bold text-slate-800">Worker Dashboard</h1>
+        <p className="text-sm text-slate-600">Monitor your caseload and priority alerts</p>
       </div>
+      
+      {/* Alert Panels */}
+      {(deaClosingSoon.length > 0 || followupsDue.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {deaClosingSoon.length > 0 && (
+            <Card className="border-yellow-300 bg-yellow-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-yellow-800">
+                  <AlertTriangle className="h-5 w-5" /> DEA Closing Soon
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-yellow-700 mb-2">{deaClosingSoon.length} client(s) within 3 days of 2-week period end</p>
+                <div className="space-y-1">
+                  {deaClosingSoon.map(c => (
+                    <Link key={c.id} to={`/pathways/client/${c.id}`} className="block text-sm text-yellow-900 hover:underline">
+                      {c.first_name} {c.last_name}
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {followupsDue.length > 0 && (
+            <Card className="border-orange-300 bg-orange-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-orange-800">
+                  <Clock className="h-5 w-5" /> 90-Day Follow-Ups Due
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-orange-700 mb-2">{followupsDue.length} client(s) due within 14 days</p>
+                <div className="space-y-1">
+                  {followupsDue.map(c => (
+                    <Link key={c.id} to={`/pathways/client/${c.id}`} className="block text-sm text-orange-900 hover:underline">
+                      {c.first_name} {c.last_name} - Due: {moment(c.followup_90day_date).format('MMM D')}
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
       
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Total Clients</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Active</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">New Files</p>
-                <p className="text-2xl font-bold">{stats.new}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <Clock className="h-6 w-6 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Follow-ups Due</p>
-                <p className="text-2xl font-bold">{followupsDue.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard title="Total Clients" value={stats.total} color="blue" />
+        <StatCard title="Active" value={stats.active} color="green" />
+        <StatCard title="New" value={stats.new} color="yellow" />
+        <StatCard title="Overdue Follow-Ups" value={stats.overdue} color="red" />
       </div>
       
-      {/* Filters */}
-      <div className="flex gap-3 items-center">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search clients..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Clients</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
+      {/* Tab Switcher */}
+      <div className="flex gap-2 border-b">
+        <button onClick={() => setActiveTab('clients')} className={`px-4 py-2 ${activeTab === 'clients' ? 'border-b-2 border-primary font-medium' : 'text-slate-600'}`}>My Clients ({filteredClients.length})</button>
+        <button onClick={() => setActiveTab('compass')} className={`px-4 py-2 ${activeTab === 'compass' ? 'border-b-2 border-primary font-medium' : 'text-slate-600'}`}>Compass Queue ({myTasks.length})</button>
       </div>
       
-      {/* Client List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Assigned Clients</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {filteredClients
-              .filter(c => filter === 'all' || c.status === filter)
-              .slice(0, 20)
-              .map((client) => (
-                <Link key={client.id} to={`/pathways/client/${client.id}`}>
-                  <div className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg border transition-colors cursor-pointer">
-                    <div>
-                      <p className="font-medium">{client.first_name} {client.last_name}</p>
-                      <p className="text-sm text-slate-600">{client.email}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={client.status === 'active' ? 'default' : client.status === 'new' ? 'secondary' : 'outline'}>
-                        {client.status}
-                      </Badge>
-                      <Badge variant="outline">{client.service_type?.replace(/_/g, ' ')}</Badge>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            
-            {filteredClients.length === 0 && (
-              <div className="text-center py-12 text-slate-500">
-                <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No clients found</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Compass Tasks */}
-      {compassTasks.length > 0 && (
+      {activeTab === 'clients' && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Pending Compass Tasks ({compassTasks.length})
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>My Clients</CardTitle>
+              <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {compassTasks.slice(0, 10).map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-sm text-slate-600">{task.client_name}</p>
+              {filteredClients.map(c => (
+                <Link key={c.id} to={`/pathways/client/${c.id}`} className="block p-3 border rounded-lg hover:bg-slate-50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{c.first_name} {c.last_name}</p>
+                      <p className="text-sm text-slate-600">{c.email} • {c.phone}</p>
+                      <div className="flex gap-2 mt-1">
+                        <Badge>{c.status}</Badge>
+                        <Badge variant="outline">{c.service_type?.replace(/_/g, ' ')}</Badge>
+                        {c.employment_status?.startsWith('E-') && <Badge className="bg-green-100 text-green-800">Employed</Badge>}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-slate-400" />
                   </div>
-                  <Badge>{task.task_type}</Badge>
+                </Link>
+              ))}
+              {filteredClients.length === 0 && <p className="text-center text-slate-500 py-8">No clients found</p>}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {activeTab === 'compass' && (
+        <Card>
+          <CardHeader><CardTitle>My Compass Tasks ({myTasks.length})</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {myTasks.map(t => (
+                <div key={t.id} className="p-3 border rounded-lg">
+                  <p className="font-medium">{t.title}</p>
+                  <p className="text-sm text-slate-600">{t.instructions}</p>
+                  <Badge className="mt-2">{t.task_type}</Badge>
                 </div>
               ))}
+              {myTasks.length === 0 && <p className="text-center text-slate-500 py-8">No pending tasks</p>}
             </div>
           </CardContent>
         </Card>
       )}
     </div>
+  );
+}
+
+function StatCard({ title, value, color }) {
+  const colors = { blue: 'bg-blue-100 text-blue-600', green: 'bg-green-100 text-green-600', yellow: 'bg-yellow-100 text-yellow-600', red: 'bg-red-100 text-red-600' };
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <p className="text-sm text-slate-600">{title}</p>
+        <p className={`text-3xl font-bold ${colors[color].split(' ')[1]}`}>{value}</p>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,18 +1,17 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { Users, Filter, X } from 'lucide-react';
+import moment from 'moment';
 import { Link } from 'react-router-dom';
-import { PersonalInfoStep, CaseInfoStep, BarriersStep, ReferralsStep, BackgroundStep } from '@/components/pathways/intake/IntakeSteps';
+import IntakeSteps from '@/components/pathways/intake/IntakeSteps';
 
 const WORKERS = [
   { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
@@ -24,83 +23,257 @@ const WORKERS = [
 
 export default function PathwaysIntake() {
   const queryClient = useQueryClient();
-  const [step, setStep] = useState(1);
-  const [barriers, setBarriers] = useState([{ text: '', status: 'unresolved', notes: '', action_steps: '' }]);
-  const [sdpItems, setSdpItems] = useState([]);
-  const [internalReferrals, setInternalReferrals] = useState([]);
-  const [externalReferrals, setExternalReferrals] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    service_type: '',
+    program_status: '',
+    employment_status: '',
+    clb_level: '',
+    worker: '',
+    age_min: '',
+    age_max: '',
+    duration_min: '',
+    duration_max: '',
+  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({});
   
-  const [formData, setFormData] = useState({
-    first_name: '', last_name: '', email: '', phone: '', address: '', city: '', state: '', zip: '',
-    date_of_birth: '', sex: '', compass_hsid: '', compass_verified: false, compass_verified_date: '',
-    compass_verified_by: '', compass_notes: '', residency_status: '', clb_level: '',
-    employment_status: '', has_vehicle: '', referral_source: '', service_type: '',
-    assigned_worker: '', career_objectives: '', employment_history: '', intake_notes: '',
-    intake_date: new Date().toISOString().split('T')[0], status: 'new', program_status: 'in_progress',
-    service_start_date: new Date().toISOString().split('T')[0],
+  const { data: clients = [] } = useQuery({
+    queryKey: ['pathways-clients-unassigned'],
+    queryFn: () => base44.entities.Client.list('-created_date', 500),
+  });
+  
+  const unassignedClients = clients.filter(c => !c.assigned_worker);
+  
+  const filteredClients = unassignedClients.filter(c => {
+    if (filters.service_type && c.service_type !== filters.service_type) return false;
+    if (filters.program_status && c.program_status !== filters.program_status) return false;
+    if (filters.employment_status && c.employment_status !== filters.employment_status) return false;
+    if (filters.clb_level && c.clb_level !== filters.clb_level) return false;
+    if (filters.worker && c.assigned_worker !== filters.worker) return false;
+    if (filters.age_min || filters.age_max) {
+      const age = moment().diff(moment(c.date_of_birth), 'years');
+      if (filters.age_min && age < parseInt(filters.age_min)) return false;
+      if (filters.age_max && age > parseInt(filters.age_max)) return false;
+    }
+    if (filters.duration_min || filters.duration_max) {
+      const duration = moment().diff(moment(c.service_start_date), 'days');
+      if (filters.duration_min && duration < parseInt(filters.duration_min) * 30) return false;
+      if (filters.duration_max && duration > parseInt(filters.duration_max) * 30) return false;
+    }
+    return true;
   });
   
   const createClientMutation = useMutation({
-    mutationFn: async (data) => await base44.entities.Client.create(data),
-    onSuccess: () => {
-      toast.success('Client created successfully!');
-      queryClient.invalidateQueries({ queryKey: ['pathways-clients'] });
-      setStep(1);
-      setFormData({ first_name: '', last_name: '', email: '', phone: '', address: '', city: '', state: '', zip: '', date_of_birth: '', sex: '', compass_hsid: '', compass_verified: false, compass_verified_date: '', compass_verified_by: '', compass_notes: '', residency_status: '', clb_level: '', employment_status: '', has_vehicle: '', referral_source: '', service_type: '', assigned_worker: '', career_objectives: '', employment_history: '', intake_notes: '', intake_date: new Date().toISOString().split('T')[0], status: 'new', program_status: 'in_progress', service_start_date: new Date().toISOString().split('T')[0] });
-      setBarriers([{ text: '', status: 'unresolved', notes: '', action_steps: '' }]);
-      setSdpItems([]);
-      setInternalReferrals([]);
-      setExternalReferrals([]);
+    mutationFn: async (data) => {
+      // Check for duplicates
+      const existing = clients.find(c => 
+        (c.email && c.email === data.email) ||
+        (c.phone && c.phone === data.phone) ||
+        (c.compass_hsid && c.compass_hsid === data.compass_hsid)
+      );
+      
+      if (existing) {
+        throw new Error(`Duplicate detected: ${existing.first_name} ${existing.last_name} already exists with matching email/phone/HSID`);
+      }
+      
+      const client = await base44.entities.Client.create(data);
+      
+      // Auto-create Compass task
+      await base44.entities.CompassTask.create({
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: data.compass_hsid,
+        task_type: 'new_client',
+        title: 'Enter new client into Compass',
+        instructions: `Create new client file in Compass system.\nName: ${client.first_name} ${client.last_name}\nHSID: ${data.compass_hsid || 'TBD'}\nService Type: ${data.service_type}`,
+        assigned_worker: data.assigned_worker,
+        assigned_worker_name: WORKERS.find(w => w.email === data.assigned_worker)?.name || data.assigned_worker,
+        status: 'pending',
+      });
+      
+      return client;
     },
-    onError: (error) => toast.error('Failed: ' + error.message),
+    onSuccess: () => {
+      toast.success('Client registered and Compass task created');
+      queryClient.invalidateQueries({ queryKey: ['pathways-clients-unassigned'] });
+      setCurrentStep(1);
+      setFormData({});
+    },
   });
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const payload = { ...formData };
-    if (barriers[0]) { payload.barrier_1 = barriers[0].text; payload.barrier_1_status = barriers[0].status; payload.barrier_1_notes = barriers[0].notes; payload.barrier_1_action_steps = barriers[0].action_steps; }
-    if (barriers[1]) { payload.barrier_2 = barriers[1].text; payload.barrier_2_status = barriers[1].status; payload.barrier_2_notes = barriers[1].notes; payload.barrier_2_action_steps = barriers[1].action_steps; }
-    if (barriers[2]) { payload.barrier_3 = barriers[2].text; payload.barrier_3_status = barriers[2].status; payload.barrier_3_notes = barriers[2].notes; payload.barrier_3_action_steps = barriers[2].action_steps; }
-    payload.sdp_items = sdpItems;
-    payload.internal_referrals = internalReferrals;
-    payload.external_referrals = externalReferrals;
-    createClientMutation.mutate(payload);
+  const handleSubmit = (stepData) => {
+    setFormData({ ...formData, ...stepData });
+    if (currentStep < 5) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      createClientMutation.mutate({
+        ...formData,
+        ...stepData,
+        intake_date: moment().format('YYYY-MM-DD'),
+        status: 'active',
+      });
+    }
   };
   
-  const handleChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
-  
-  const totalSteps = 5;
+  const clearFilters = () => {
+    setFilters({
+      service_type: '',
+      program_status: '',
+      employment_status: '',
+      clb_level: '',
+      worker: '',
+      age_min: '',
+      age_max: '',
+      duration_min: '',
+      duration_max: '',
+    });
+  };
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link to="/pathways"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
-        <div><h1 className="text-2xl font-bold text-slate-800">Client Intake</h1><p className="text-sm text-slate-600">Step {step} of {totalSteps}</p></div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800">Client Intake</h1>
+        <p className="text-sm text-slate-600">Register new clients and view unassigned files</p>
       </div>
       
       <div className="flex gap-2">
-        {Array.from({ length: totalSteps }, (_, i) => i + 1).map(s => (
-          <div key={s} className={`h-2 flex-1 rounded-full ${s <= step ? 'bg-[#1a237e]' : 'bg-slate-200'}`} />
-        ))}
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="h-4 w-4 mr-2" /> Filters
+        </Button>
+        {Object.values(filters).some(f => f !== '') && (
+          <Button variant="ghost" onClick={clearFilters}>
+            <X className="h-4 w-4 mr-2" /> Clear
+          </Button>
+        )}
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {step === 1 && <PersonalInfoStep formData={formData} handleChange={handleChange} />}
-        {step === 2 && <CaseInfoStep formData={formData} handleChange={handleChange} workers={WORKERS} />}
-        {step === 3 && <BarriersStep barriers={barriers} setBarriers={setBarriers} />}
-        {step === 4 && <ReferralsStep sdpItems={sdpItems} setSdpItems={setSdpItems} internalReferrals={internalReferrals} setInternalReferrals={setInternalReferrals} externalReferrals={externalReferrals} setExternalReferrals={setExternalReferrals} />}
-        {step === 5 && <BackgroundStep formData={formData} handleChange={handleChange} />}
+      {showFilters && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Service Type</Label>
+                <Select value={filters.service_type} onValueChange={(v) => setFilters({ ...filters, service_type: v })}>
+                  <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>All</SelectItem>
+                    <SelectItem value="direct_to_employment">Direct to Employment</SelectItem>
+                    <SelectItem value="pathways">Pathways</SelectItem>
+                    <SelectItem value="casual">DEA</SelectItem>
+                    <SelectItem value="external_referral">External Referral</SelectItem>
+                    <SelectItem value="internal_referral">Internal Referral</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Program Status</Label>
+                <Select value={filters.program_status} onValueChange={(v) => setFilters({ ...filters, program_status: v })}>
+                  <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>All</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="complete">Complete</SelectItem>
+                    <SelectItem value="incomplete">Incomplete</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Employment Status</Label>
+                <Select value={filters.employment_status} onValueChange={(v) => setFilters({ ...filters, employment_status: v })}>
+                  <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>All</SelectItem>
+                    <SelectItem value="E-RF">Employed Full-Time</SelectItem>
+                    <SelectItem value="E-UF">Employed Part-Time</SelectItem>
+                    <SelectItem value="E-PT">Employed Temporary</SelectItem>
+                    <SelectItem value="UE">Unemployed</SelectItem>
+                    <SelectItem value="UE-LA">Layoff</SelectItem>
+                    <SelectItem value="UE-S">Seasonal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>CLB Level</Label>
+                <Select value={filters.clb_level} onValueChange={(v) => setFilters({ ...filters, clb_level: v })}>
+                  <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>All</SelectItem>
+                    <SelectItem value="clb_1">CLB 1</SelectItem>
+                    <SelectItem value="clb_4">CLB 4</SelectItem>
+                    <SelectItem value="clb_7">CLB 7</SelectItem>
+                    <SelectItem value="clb_10">CLB 10</SelectItem>
+                    <SelectItem value="native_english_french">Native</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Worker</Label>
+                <Select value={filters.worker} onValueChange={(v) => setFilters({ ...filters, worker: v })}>
+                  <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>All</SelectItem>
+                    {WORKERS.map(w => <SelectItem key={w.email} value={w.email}>{w.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Age Min</Label>
+                <Input type="number" value={filters.age_min} onChange={(e) => setFilters({ ...filters, age_min: e.target.value })} placeholder="18" />
+              </div>
+              <div>
+                <Label>Age Max</Label>
+                <Input type="number" value={filters.age_max} onChange={(e) => setFilters({ ...filters, age_max: e.target.value })} placeholder="65" />
+              </div>
+              <div>
+                <Label>Duration (months)</Label>
+                <Input type="number" value={filters.duration_min} onChange={(e) => setFilters({ ...filters, duration_min: e.target.value })} placeholder="0" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Client List */}
+        <Card>
+          <CardHeader><CardTitle>Unassigned Clients ({filteredClients.length})</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {filteredClients.map(c => (
+                <Link key={c.id} to={`/pathways/client/${c.id}`} className="block p-3 border rounded-lg hover:bg-slate-50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium">{c.first_name} {c.last_name}</p>
+                      <p className="text-sm text-slate-600">{c.email || c.phone}</p>
+                      <div className="flex gap-2 mt-1">
+                        <Badge>{c.service_type?.replace(/_/g, ' ')}</Badge>
+                        {c.clb_level && <Badge variant="outline">{c.clb_level.replace('_', ' ').toUpperCase()}</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              {filteredClients.length === 0 && <p className="text-center text-slate-500 py-8">No unassigned clients</p>}
+            </div>
+          </CardContent>
+        </Card>
         
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1}>Previous</Button>
-          {step < totalSteps ? (
-            <Button type="button" onClick={() => setStep(s => Math.min(totalSteps, s + 1))}>Next</Button>
-          ) : (
-            <Button type="submit" className="bg-[#1a237e] hover:bg-[#2c3799]" disabled={createClientMutation.isPending}>{createClientMutation.isPending ? 'Creating...' : 'Create Client'}</Button>
-          )}
-          <Link to="/pathways"><Button type="button" variant="outline">Cancel</Button></Link>
-        </div>
-      </form>
+        {/* Intake Form */}
+        <Card>
+          <CardHeader><CardTitle>New Client Registration</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              {[1, 2, 3, 4, 5].map(step => (
+                <div key={step} className={`flex-1 h-2 rounded ${step <= currentStep ? 'bg-primary' : 'bg-slate-200'}`} />
+              ))}
+            </div>
+            <p className="text-sm text-slate-600 mb-4">Step {currentStep} of 5</p>
+            <IntakeSteps step={currentStep} data={formData} onSubmit={handleSubmit} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

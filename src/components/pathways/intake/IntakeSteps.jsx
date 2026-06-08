@@ -136,3 +136,24 @@ export function BackgroundStep({ formData, handleChange }) {
     </Card>
   );
 }
+
+// Combined component that renders the appropriate step
+export default function IntakeSteps({ step, data, onSubmit }) {
+  const handleChange = (field, value) => {
+    onSubmit({ ...data, [field]: value });
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(data);
+  };
+  
+  switch(step) {
+    case 1: return <PersonalInfoStep formData={data} handleChange={handleChange} />;
+    case 2: return <CaseInfoStep formData={data} handleChange={handleChange} />;
+    case 3: return <BarriersStep formData={data} handleChange={handleChange} />;
+    case 4: return <ReferralsStep formData={data} handleChange={handleChange} />;
+    case 5: return <BackgroundStep formData={data} handleChange={handleChange} />;
+    default: return null;
+  }
+}
