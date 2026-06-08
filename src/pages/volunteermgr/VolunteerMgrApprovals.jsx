@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X } from 'lucide-react';
-import moment from 'moment';
+import moment from 'moment-timezone';
 
 const typeConfig = {
   new_registration: { icon: UserPlus, label: 'New Registration', color: 'bg-blue-50 text-blue-700' },
