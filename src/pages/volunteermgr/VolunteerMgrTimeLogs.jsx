@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Clock, Plus, Upload, Search, Filter, Download, FileDown } from 'lucide-react';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import TimeLogsStats from '@/components/timelogs/TimeLogsStats';
 import { toast } from 'sonner';
 
