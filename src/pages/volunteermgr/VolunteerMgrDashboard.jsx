@@ -100,6 +100,7 @@ export default function VolunteerMgrDashboard() {
   const pendingAvailabilityUpdates = availabilityUpdates.filter(a => !a.notification_sent);
 
   const activeVolunteers = volunteers.filter(v => v.status === 'active' && !v.is_deceased);
+  const waitlistVolunteers = volunteers.filter(v => v.status === 'waitlist');
   const openPositions = positions.filter(p => p.status === 'open');
   const upcomingEvents = events.filter(e => e.status === 'upcoming');
   const pendingApprovals = approvals.filter(a => a.status === 'pending');
@@ -193,10 +194,10 @@ export default function VolunteerMgrDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           icon={Users} title="Active Volunteers" value={activeVolunteers.length}
-          trend={`${volunteers.length} total`}
+          trend={`${volunteers.length} total, ${waitlistVolunteers.length} waitlist`}
           color="text-blue-600" bgColor="bg-blue-100"
         />
         <StatCard
