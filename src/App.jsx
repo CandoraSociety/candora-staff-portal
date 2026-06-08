@@ -97,15 +97,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      {/* Public portal routes — no auth required */}
-      <Route path="/volunteer-portal" element={<VolunteerPortal />} />
-      <Route path="/staff-portal" element={<StaffPortal />} />
-
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      
+      {/* Authenticated routes only */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
@@ -169,9 +161,20 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          <Routes>
+            {/* Public routes - outside auth check */}
+            <Route path="/volunteer-portal" element={<VolunteerPortal />} />
+            <Route path="/staff-portal" element={<StaffPortal />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Authenticated routes */}
+            <Route path="/*" element={<AuthenticatedApp />} />
+          </Routes>
+          <Toaster />
         </Router>
-        <Toaster />
       </QueryClientProvider>
     </AuthProvider>
   )
