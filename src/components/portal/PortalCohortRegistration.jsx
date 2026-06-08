@@ -50,7 +50,7 @@ const emptyForm = {
   skills_or_focus: '',
   motivation: '',
   include_donation: false,
-  donation_amount: 50,
+  donation_amount: 100,
   donation_message: '',
 };
 
@@ -288,7 +288,7 @@ export default function PortalCohortRegistration({ onComplete }) {
                 <div>
                   <Label>Donation Amount</Label>
                   <div className="grid grid-cols-4 gap-2 mt-1">
-                    {[25, 50, 100, 250].map(amount => (
+                    {[100, 250, 500, 1000].map(amount => (
                       <Button
                         key={amount}
                         type="button"
