@@ -95,7 +95,7 @@ export default function VolunteerMgrApprovals() {
     try {
       if (requestType === 'practicum') {
         await base44.entities.VolunteerApproval.update(data.id, {
-          status: 'pending',
+          status: 'waitlisted',
           reviewed_by: 'admin@candorasociety.com',
           review_date: moment().format('YYYY-MM-DD'),
           review_notes: reviewNotes[data.id] || (details ? `Waitlisted: ${details}` : 'Waitlisted'),
@@ -119,7 +119,7 @@ export default function VolunteerMgrApprovals() {
         }
       } else {
         await base44.entities.VolunteerApproval.update(data.id, {
-          status: 'pending',
+          status: 'waitlisted',
           reviewed_by: 'admin@candorasociety.com',
           review_date: moment().format('YYYY-MM-DD'),
           review_notes: reviewNotes[data.id] || (details ? `Waitlisted: ${details}` : 'Waitlisted'),
@@ -326,13 +326,13 @@ export default function VolunteerMgrApprovals() {
     },
   });
 
-  const pendingApprovals = approvals.filter(a => a.status === 'pending' && !a.review_notes?.includes('Waitlisted'));
-  const waitlistedApprovals = approvals.filter(a => a.status === 'pending' && a.review_notes?.includes('Waitlisted'));
+  const pendingApprovals = approvals.filter(a => a.status === 'pending');
+  const waitlistedApprovals = approvals.filter(a => a.status === 'waitlisted');
   const pendingProfileChanges = profileChanges.filter(c => c.status === 'pending');
   const pendingCohortRequests = cohortRequests.filter(c => c.status === 'pending');
   const resolvedCohortRequests = cohortRequests.filter(c => c.status !== 'pending');
-  const pendingPracticumRequests = practicumRequests.filter(p => p.status === 'pending' && !p.review_notes?.includes('Waitlisted'));
-  const waitlistedPracticumRequests = practicumRequests.filter(p => p.status === 'pending' && p.review_notes?.includes('Waitlisted'));
+  const pendingPracticumRequests = practicumRequests.filter(p => p.status === 'pending');
+  const waitlistedPracticumRequests = practicumRequests.filter(p => p.status === 'waitlisted');
   const resolvedPracticumRequests = practicumRequests.filter(p => p.status !== 'pending');
   const resolvedProfileChanges = profileChanges.filter(c => c.status !== 'pending');
   const resolvedApprovals = approvals.filter(a => a.status !== 'pending');
@@ -674,7 +674,7 @@ export default function VolunteerMgrApprovals() {
 
   const totalPending = pendingApprovals.length + pendingProfileChanges.length + pendingCohortRequests.length + pendingPracticumRequests.length;
   const totalWaitlisted = waitlistedApprovals.length + waitlistedPracticumRequests.length;
-  const totalResolved = resolvedApprovals.length + resolvedProfileChanges.length + resolvedCohortRequests.length;
+  const totalResolved = resolvedApprovals.length + resolvedProfileChanges.length + resolvedCohortRequests.length + resolvedPracticumRequests.length;
 
   return (
     <div className="space-y-6">
@@ -682,6 +682,13 @@ export default function VolunteerMgrApprovals() {
         <h1 className="text-2xl font-bold font-display">Approvals</h1>
         <p className="text-sm text-muted-foreground mt-1">{totalPending} pending, {totalWaitlisted} waitlisted, {totalResolved} resolved</p>
       </div>
+
+      {waitlistedPracticumRequests.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Waitlisted Practicum ({waitlistedPracticumRequests.length})</h2>
+          {waitlistedPracticumRequests.map(renderPracticumCard)}
+        </div>
+      )}
 
       {pendingPracticumRequests.length > 0 && (
         <div className="space-y-4">
@@ -704,24 +711,17 @@ export default function VolunteerMgrApprovals() {
         </div>
       )}
 
-      {pendingApprovals.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Other Approvals ({pendingApprovals.length})</h2>
-          {pendingApprovals.map(renderCard)}
-        </div>
-      )}
-
       {waitlistedApprovals.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-amber-600 uppercase tracking-wider">Waitlisted ({waitlistedApprovals.length})</h2>
+          <h2 className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Waitlisted ({waitlistedApprovals.length})</h2>
           {waitlistedApprovals.map(renderCard)}
         </div>
       )}
 
-      {waitlistedPracticumRequests.length > 0 && (
+      {pendingApprovals.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-amber-600 uppercase tracking-wider">Waitlisted Practicum ({waitlistedPracticumRequests.length})</h2>
-          {waitlistedPracticumRequests.map(renderPracticumCard)}
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Other Approvals ({pendingApprovals.length})</h2>
+          {pendingApprovals.map(renderCard)}
         </div>
       )}
 

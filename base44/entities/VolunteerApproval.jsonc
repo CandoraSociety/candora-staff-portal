@@ -16,7 +16,8 @@
       "enum": [
         "new_registration",
         "profile_change",
-        "hour_adjustment"
+        "hour_adjustment",
+        "practicum_placement"
       ]
     },
     "description": {
@@ -30,7 +31,8 @@
       "enum": [
         "pending",
         "approved",
-        "rejected"
+        "rejected",
+        "waitlisted"
       ],
       "default": "pending"
     },
