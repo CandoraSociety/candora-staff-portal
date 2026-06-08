@@ -29,6 +29,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
     institution_other: '',
     faculty: '',
     program: '',
+    year_of_study: '',
     practicum_start_date: '',
     practicum_end_date: '',
     total_hours_required: '',
@@ -47,7 +48,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
       const institutionName = form.institution === 'Other' ? form.institution_other : form.institution;
       
       // Create practicum cohort request
-      await base44.entities.VolunteerCohortRequest.create({
+      const cohortRequest = await base44.entities.VolunteerCohortRequest.create({
         organization_name: institutionName,
         organization_type: 'faculty',
         contact_name: form.student_name,
@@ -60,7 +61,16 @@ export default function PortalPracticumRegistration({ onComplete }) {
         skills_or_focus: form.learning_goals,
         motivation: `Practicum placement for ${form.program} program at ${institutionName}`,
         status: 'pending',
-        notes: `Faculty: ${form.faculty} | Program: ${form.program} | Coordinator: ${form.coordinator_name} (${form.coordinator_email}, ${form.coordinator_phone}) | Additional requirements: ${form.additional_requirements}`,
+        notes: `Faculty: ${form.faculty} | Program: ${form.program} | Year: ${form.year_of_study} | Coordinator: ${form.coordinator_name} (${form.coordinator_email}, ${form.coordinator_phone}) | Additional requirements: ${form.additional_requirements}`,
+      });
+
+      // Create approval record for practicum
+      await base44.entities.VolunteerApproval.create({
+        volunteer_id: cohortRequest.id,
+        volunteer_name: form.student_name,
+        request_type: 'practicum_placement',
+        description: `Practicum placement request from ${institutionName} (${form.faculty}, ${form.program}). Duration: ${form.total_hours_required} hours from ${form.practicum_start_date} to ${form.practicum_end_date}. Year of study: ${form.year_of_study}. Coordinator: ${form.coordinator_name}`,
+        status: 'pending',
       });
 
       // Notify coordinator
@@ -68,7 +78,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
         type: 'practicum_request',
         volunteerName: form.student_name,
         volunteerEmail: form.student_email,
-        details: `Practicum placement request from ${institutionName} (${form.faculty}, ${form.program}). Duration: ${form.total_hours_required} hours from ${form.practicum_start_date} to ${form.practicum_end_date}. Coordinator: ${form.coordinator_name}`,
+        details: `Practicum placement request from ${institutionName} (${form.faculty}, ${form.program}, Year ${form.year_of_study}). Duration: ${form.total_hours_required} hours from ${form.practicum_start_date} to ${form.practicum_end_date}. Coordinator: ${form.coordinator_name}`,
       });
     },
     onSuccess: () => setSubmitted(true),
@@ -84,6 +94,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
       institution_other: '',
       faculty: '',
       program: '',
+      year_of_study: '',
       practicum_start_date: '',
       practicum_end_date: '',
       total_hours_required: '',
@@ -167,6 +178,22 @@ export default function PortalPracticumRegistration({ onComplete }) {
           <Label>Program / Course *</Label>
           <Input value={form.program} onChange={e => update('program', e.target.value)} className="mt-1" placeholder="e.g., Bachelor of Nursing, Social Work" />
         </div>
+        <div>
+          <Label>Year of Study *</Label>
+          <select
+            value={form.year_of_study}
+            onChange={e => update('year_of_study', e.target.value)}
+            className="w-full mt-1 px-3 py-2 border rounded-md bg-background"
+          >
+            <option value="">Select year...</option>
+            <option value="Year 1">Year 1</option>
+            <option value="Year 2">Year 2</option>
+            <option value="Year 3">Year 3</option>
+            <option value="Year 4">Year 4</option>
+            <option value="Year 5+">Year 5+</option>
+            <option value="Graduate Student">Graduate Student</option>
+          </select>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Practicum Start Date *</Label>
@@ -237,7 +264,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
           <Button
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
             onClick={() => submitMutation.mutate()}
-            disabled={submitMutation.isPending || !form.student_name || !form.student_email || !form.institution || !form.faculty || !form.program || !form.practicum_start_date || !form.practicum_end_date || !form.total_hours_required || !form.coordinator_name || !form.coordinator_email}
+            disabled={submitMutation.isPending || !form.student_name || !form.student_email || !form.institution || !form.faculty || !form.program || !form.year_of_study || !form.practicum_start_date || !form.practicum_end_date || !form.total_hours_required || !form.coordinator_name || !form.coordinator_email}
           >
             {submitMutation.isPending ? 'Submitting...' : 'Submit Request'}
           </Button>
