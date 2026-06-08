@@ -99,7 +99,7 @@ export default function VolunteerMgrDashboard() {
   
   const pendingAvailabilityUpdates = availabilityUpdates.filter(a => !a.notification_sent);
 
-  const activeVolunteers = volunteers.filter(v => v.status === 'active');
+  const activeVolunteers = volunteers.filter(v => v.status === 'active' && !v.is_deceased);
   const openPositions = positions.filter(p => p.status === 'open');
   const upcomingEvents = events.filter(e => e.status === 'upcoming');
   const pendingApprovals = approvals.filter(a => a.status === 'pending');

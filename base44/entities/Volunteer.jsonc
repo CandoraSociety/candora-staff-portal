@@ -86,7 +86,8 @@
         "active",
         "occasional",
         "inactive",
-        "suspended"
+        "suspended",
+        "waitlist"
       ],
       "default": "pending"
     },
