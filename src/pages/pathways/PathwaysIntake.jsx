@@ -97,8 +97,8 @@ export default function PathwaysIntake() {
   };
   
   return (
-    <div className="space-y-6 p-6">
-      <div className="bg-white border-b border-slate-200 px-4 py-4 overflow-visible">
+    <div className="space-y-6">
+      <div className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex justify-between items-center min-w-0">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
