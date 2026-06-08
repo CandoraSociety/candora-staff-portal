@@ -59,6 +59,19 @@
       "type": "string",
       "description": "Why the organization wants to volunteer"
     },
+    "include_donation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the cohort wants to include a donation"
+    },
+    "donation_amount": {
+      "type": "number",
+      "description": "Donation amount in dollars"
+    },
+    "donation_message": {
+      "type": "string",
+      "description": "Optional dedication message for the donation"
+    },
     "status": {
       "type": "string",
       "enum": [

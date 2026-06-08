@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Users, Building2 } from 'lucide-react';
+import { CheckCircle, Users, Building2, Heart } from 'lucide-react';
 
 const AREAS_OF_INTEREST = [
   "Auntie Bev's Social Venture (Kitchen)",
@@ -49,6 +49,9 @@ const emptyForm = {
   areas_of_interest: [],
   skills_or_focus: '',
   motivation: '',
+  include_donation: false,
+  donation_amount: 50,
+  donation_message: '',
 };
 
 export default function PortalCohortRegistration({ onComplete }) {
@@ -253,6 +256,75 @@ export default function PortalCohortRegistration({ onComplete }) {
             className="mt-1" 
             placeholder="Tell us about your organization's motivation for volunteering..."
           />
+        </div>
+
+        <div className="border rounded-lg p-4 bg-gradient-to-r from-primary/5 to-primary/10">
+          <div className="flex items-start gap-3 mb-3">
+            <Heart className="w-5 h-5 text-primary mt-0.5" />
+            <div className="flex-1">
+              <Label className="text-base font-semibold">Would you like to include a donation with your volunteer registration?</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Your donation helps support our programs and community impact.
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="include_donation"
+                checked={form.include_donation}
+                onChange={e => update('include_donation', e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              <label htmlFor="include_donation" className="text-sm font-medium cursor-pointer">
+                Yes, we'd like to make a donation
+              </label>
+            </div>
+
+            {form.include_donation && (
+              <>
+                <div>
+                  <Label>Donation Amount</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-1">
+                    {[25, 50, 100, 250].map(amount => (
+                      <Button
+                        key={amount}
+                        type="button"
+                        variant={form.donation_amount === amount ? 'default' : 'outline'}
+                        className="w-full"
+                        onClick={() => update('donation_amount', amount)}
+                      >
+                        ${amount}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Label className="text-xs text-muted-foreground">Other amount:</Label>
+                    <Input
+                      type="number"
+                      value={form.donation_amount}
+                      onChange={e => update('donation_amount', parseInt(e.target.value) || 0)}
+                      className="w-24"
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Dedication Message (Optional)</Label>
+                  <Textarea 
+                    value={form.donation_message} 
+                    onChange={e => update('donation_message', e.target.value)} 
+                    rows={2} 
+                    className="mt-1" 
+                    placeholder="e.g., 'In honor of...' or 'To support...'"
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <Button
