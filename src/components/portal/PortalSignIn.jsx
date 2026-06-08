@@ -7,16 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar, X } from 'lucide-react';
+import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar, X, FileText } from 'lucide-react';
 import moment from 'moment';
 import PortalProfile from './PortalProfile';
 import PortalShiftSignup from './PortalShiftSignup';
+import PortalDocuments from './PortalDocuments';
 
 export default function PortalSignIn({ onBack, onAuthenticated }) {
   if (!onBack) onBack = () => {};
   if (!onAuthenticated) onAuthenticated = () => {};
   const [showProfile, setShowProfile] = useState(false);
   const [showShifts, setShowShifts] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
@@ -250,6 +252,14 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
                 View Shifts
               </Button>
             </div>
+            <Button
+              variant="outline"
+              className="w-full gap-2 mt-2"
+              onClick={() => setShowDocuments(true)}
+            >
+              <FileText className="w-4 h-4" />
+              Resources & Documents
+            </Button>
             <Button variant="ghost" className="w-full text-muted-foreground" onClick={onBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
@@ -282,6 +292,15 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowShifts(false)}>
             <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <PortalShiftSignup volunteerId={foundVolunteer.id} onBack={() => setShowShifts(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* Documents Popup */}
+        {showDocuments && foundVolunteer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowDocuments(false)}>
+            <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <PortalDocuments volunteerId={foundVolunteer.id} onBack={() => setShowDocuments(false)} />
             </div>
           </div>
         )}
