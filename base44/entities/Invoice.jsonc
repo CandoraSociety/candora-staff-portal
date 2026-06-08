@@ -1,0 +1,55 @@
+{
+  "name": "Invoice",
+  "type": "object",
+  "properties": {
+    "invoice_number": {
+      "type": "string"
+    },
+    "billing_month": {
+      "type": "string"
+    },
+    "config_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "finalized",
+        "submitted"
+      ],
+      "default": "draft"
+    },
+    "base_amount": {
+      "type": "number"
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "subtotal_deliverables": {
+      "type": "number"
+    },
+    "subtotal_direct_costs": {
+      "type": "number"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "generated_by": {
+      "type": "string"
+    },
+    "finalized_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "billing_month"
+  ]
+}

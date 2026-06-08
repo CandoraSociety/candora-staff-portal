@@ -1,0 +1,53 @@
+{
+  "name": "StaffMonthlyReport",
+  "type": "object",
+  "properties": {
+    "report_month": {
+      "type": "string",
+      "format": "date"
+    },
+    "submitted_by": {
+      "type": "string"
+    },
+    "submitted_by_name": {
+      "type": "string"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted"
+      ],
+      "default": "draft"
+    },
+    "trends": {
+      "type": "string"
+    },
+    "marketing_activities": {
+      "type": "string"
+    },
+    "success_stories": {
+      "type": "string"
+    },
+    "employer_engagements": {
+      "type": "string"
+    },
+    "challenges": {
+      "type": "string"
+    },
+    "goals_next_month": {
+      "type": "string"
+    },
+    "additional_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_month",
+    "submitted_by"
+  ]
+}
