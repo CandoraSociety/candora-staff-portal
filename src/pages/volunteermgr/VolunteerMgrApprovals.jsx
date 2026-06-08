@@ -902,29 +902,42 @@ export default function VolunteerMgrApprovals() {
                   </div>
 
                   {/* Availability */}
-                  {volunteerData.availability_schedule && (
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Availability</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(volunteerData.availability_schedule).filter(([_, slots]) => slots && slots.length > 0).map(([day, slots]) => (
-                          <div key={day}>
-                            <p className="text-xs text-muted-foreground capitalize">{day}</p>
-                            <p className="font-medium text-sm">{slots.join(', ')}</p>
-                          </div>
-                        ))}
-                      </div>
-                      {volunteerData.blocked_dates?.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-xs text-muted-foreground mb-1">Blocked Dates</p>
-                          <div className="flex flex-wrap gap-2">
-                            {volunteerData.blocked_dates.map((block, idx) => (
-                              <Badge key={idx} variant="outline">{moment(block.date).format('MMM D, YYYY')}{block.reason ? ` - ${block.reason}` : ''}</Badge>
-                            ))}
-                          </div>
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Availability</h3>
+                    {volunteerData.availability_schedule && Object.keys(volunteerData.availability_schedule).length > 0 ? (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-2">Weekly Schedule:</p>
+                        <div className="space-y-1">
+                          {Object.entries(volunteerData.availability_schedule).map(([day, slots]) => (
+                            <div key={day} className="flex justify-between py-1 border-b border-muted">
+                              <span className="capitalize text-sm font-medium">{day}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {slots && slots.length > 0 ? slots.join(', ') : 'Not available'}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No weekly schedule provided</p>
+                    )}
+                    {volunteerData.blocked_dates?.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-muted-foreground mb-2">Blocked Dates:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {volunteerData.blocked_dates.map((block, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {moment(block.date).format('MMM D, YYYY')}
+                              {block.reason ? ` — ${block.reason}` : ''}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {!volunteerData.availability_schedule && (!volunteerData.blocked_dates || volunteerData.blocked_dates.length === 0) && (
+                      <p className="text-sm text-muted-foreground">No availability information provided</p>
+                    )}
+                  </div>
 
                   {/* Vulnerable Sector Check */}
                   {volunteerData.vulnerable_sector_check && (
