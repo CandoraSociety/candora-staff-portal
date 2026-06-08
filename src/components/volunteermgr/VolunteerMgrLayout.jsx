@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -35,25 +35,35 @@ const externalLinks = [
 
 function VolunteerSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
+  const [pendingApprovalsCount, setPendingApprovalsCount] = React.useState(0);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: pendingApprovalsCount = 0 } = useQuery({
-    queryKey: ['vol-approvals-pending-count'],
-    queryFn: async () => {
+  // Initial fetch
+  React.useEffect(() => {
+    const fetchCount = async () => {
       const [approvals, profileChanges, cohortRequests, practicumRequests] = await Promise.all([
         base44.entities.VolunteerApproval.filter({ status: 'pending' }),
         base44.entities.VolunteerProfileChange.filter({ status: 'pending' }),
         base44.entities.VolunteerCohortRequest.filter({ status: 'pending' }),
         base44.entities.VolunteerApproval.filter({ request_type: 'practicum_placement', status: 'pending' }),
       ]);
-      return approvals.length + profileChanges.length + cohortRequests.length + practicumRequests.length;
-    },
-    refetchInterval: 30000,
-  });
+      setPendingApprovalsCount(approvals.length + profileChanges.length + cohortRequests.length + practicumRequests.length);
+    };
+    fetchCount();
+
+    // Real-time subscriptions
+    const unsubscribers = [
+      base44.entities.VolunteerApproval.subscribe(() => fetchCount()),
+      base44.entities.VolunteerProfileChange.subscribe(() => fetchCount()),
+      base44.entities.VolunteerCohortRequest.subscribe(() => fetchCount()),
+    ];
+
+    return () => unsubscribers.forEach(unsub => unsub());
+  }, []);
 
   const isActive = (item) => {
     if (item.exact) return location.pathname === item.path;
