@@ -8,36 +8,24 @@ import { X } from 'lucide-react';
 import AvailabilitySelector from './AvailabilitySelector';
 
 export default function PortalAvailability({ volunteerId, onBack }) {
-  const [availabilityData, setAvailabilityData] = useState({
-    weekly_schedule: {
-      monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
-    },
-    blocked_dates: []
+  const [schedule, setSchedule] = useState({
+    monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [blockedDates, setBlockedDates] = useState([]);
 
-  // Fetch existing availability on mount
+  // Fetch existing availability
+  const { data: existing } = useQuery({
+    queryKey: ['vol-availability', volunteerId],
+    queryFn: () => base44.entities.VolunteerAvailability.filter({ volunteer_id: volunteerId }).then(r => r[0]),
+  });
+
+  // Load existing data
   useEffect(() => {
-    const fetchAvailability = async () => {
-      try {
-        const results = await base44.entities.VolunteerAvailability.filter({ volunteer_id: volunteerId });
-        if (results && results.length > 0 && results[0].weekly_schedule) {
-          setAvailabilityData({
-            weekly_schedule: results[0].weekly_schedule,
-            blocked_dates: results[0].blocked_dates || []
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch availability:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (volunteerId) {
-      fetchAvailability();
+    if (existing) {
+      if (existing.weekly_schedule) setSchedule(existing.weekly_schedule);
+      if (existing.blocked_dates) setBlockedDates(existing.blocked_dates);
     }
-  }, [volunteerId]);
+  }, [existing]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -46,29 +34,18 @@ export default function PortalAvailability({ volunteerId, onBack }) {
         volunteer_id: volunteerId,
         volunteer_name: `${volunteer.first_name} ${volunteer.last_name}`,
         volunteer_email: volunteer.email,
-        weekly_schedule: availabilityData.weekly_schedule,
-        blocked_dates: availabilityData.blocked_dates,
+        weekly_schedule: schedule,
+        blocked_dates: blockedDates,
       });
     },
     onSuccess: () => {
-      toast.success('Availability updated successfully!');
+      toast.success('Availability updated! The coordinator has been notified.');
       if (onBack) onBack();
     },
     onError: (error) => {
-      toast.error('Failed to update: ' + error.message);
+      toast.error('Failed to update availability: ' + error.message);
     },
   });
-
-  if (isLoading) {
-    return (
-      <Card className="w-full max-w-2xl shadow-2xl border-0">
-        <CardContent className="p-6 text-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground mt-2">Loading your availability...</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-2xl shadow-2xl border-0">
@@ -83,11 +60,14 @@ export default function PortalAvailability({ volunteerId, onBack }) {
       <CardContent className="p-6 space-y-4">
         <div>
           <p className="text-sm text-muted-foreground mb-3">
-            Click time slots to select when you're available each week. Use the calendar to block specific dates.
+            Click on time slots to select when you're available each week. Add blocked dates for specific days you're unavailable.
           </p>
           <AvailabilitySelector
-            value={availabilityData}
-            onChange={(data) => setAvailabilityData(data)}
+            value={{ weekly_schedule: schedule, blocked_dates: blockedDates }}
+            onChange={(data) => {
+              setSchedule(data.weekly_schedule);
+              setBlockedDates(data.blocked_dates);
+            }}
           />
         </div>
 
@@ -100,7 +80,7 @@ export default function PortalAvailability({ volunteerId, onBack }) {
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending}
           >
-            {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {saveMutation.isPending ? 'Saving...' : 'Save Availability'}
           </Button>
         </div>
       </CardContent>
