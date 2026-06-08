@@ -70,6 +70,19 @@ import UsersAccess from '@/pages/admin/UsersAccess';
 import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
 
+// Pathways CM - Case Management
+import PathwaysLayout from '@/components/pathways/PathwaysLayout';
+import PathwaysHome from '@/pages/pathways/PathwaysHome';
+import PathwaysIntake from '@/pages/pathways/PathwaysIntake';
+import PathwaysWorkerDashboard from '@/pages/pathways/PathwaysWorkerDashboard';
+import PathwaysMasterList from '@/pages/pathways/PathwaysMasterList';
+import PathwaysClientProfile from '@/pages/pathways/PathwaysClientProfile';
+import PathwaysReports from '@/pages/pathways/PathwaysReports';
+import PathwaysSupervisor from '@/pages/pathways/PathwaysSupervisor';
+import PathwaysResources from '@/pages/pathways/PathwaysResources';
+import PathwaysCompass from '@/pages/pathways/PathwaysCompass';
+import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
@@ -156,6 +169,20 @@ const AuthenticatedApp = () => {
           <Route path="/nexushr/recognition" element={<NexusRecognition />} />
           <Route path="/nexushr/onboarding" element={<NexusOnboarding />} />
           <Route path="/nexushr/email-employees" element={<NexusEmailEmployees />} />
+        </Route>
+
+        {/* Pathways CM - standalone layout */}
+        <Route element={<PathwaysLayout />}>
+          <Route path="/pathways" element={<PathwaysHome />} />
+          <Route path="/pathways/intake" element={<PathwaysIntake />} />
+          <Route path="/pathways/dashboard" element={<PathwaysWorkerDashboard />} />
+          <Route path="/pathways/master" element={<PathwaysMasterList />} />
+          <Route path="/pathways/client/:id" element={<PathwaysClientProfile />} />
+          <Route path="/pathways/reports" element={<PathwaysReports />} />
+          <Route path="/pathways/supervisor" element={<PathwaysSupervisor />} />
+          <Route path="/pathways/resources" element={<PathwaysResources />} />
+          <Route path="/pathways/compass" element={<PathwaysCompass />} />
+          <Route path="/pathways/billing" element={<PathwaysBilling />} />
         </Route>
       </Route>
 
