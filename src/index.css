@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -10,40 +10,39 @@
     --font-display: 'Nunito', sans-serif;
     --tracking-display: 0.05em;
 
-    /* Candora Brand Colors - Navy & Gold */
-    --background: 230 30% 98%;
-    --foreground: 231 64% 15%;
+    --background: 220 30% 97%;
+    --foreground: 230 50% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 231 64% 15%;
+    --card-foreground: 230 50% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 231 64% 15%;
-    --primary: 231 64% 29%;  /* Navy Blue #1a237e */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 44 100% 88%;  /* Pale Gold */
-    --secondary-foreground: 231 64% 20%;
+    --popover-foreground: 230 50% 12%;
+    --primary: 45 92% 53%;
+    --primary-foreground: 230 60% 15%;
+    --secondary: 230 40% 92%;
+    --secondary-foreground: 230 50% 20%;
     --muted: 230 25% 93%;
     --muted-foreground: 230 20% 46%;
-    --accent: 42 100% 54%;  /* Sunflower Gold #FBB800 */
-    --accent-foreground: 231 64% 15%;
+    --accent: 230 65% 30%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --border: 230 25% 88%;
     --input: 230 25% 88%;
-    --ring: 231 64% 29%;
-    --chart-1: 231 64% 29%;
-    --chart-2: 42 100% 54%;
+    --ring: 45 92% 53%;
+    --chart-1: 45 92% 53%;
+    --chart-2: 230 65% 35%;
     --chart-3: 230 55% 55%;
-    --chart-4: 44 80% 65%;
+    --chart-4: 45 80% 65%;
     --chart-5: 230 45% 65%;
     --radius: 0.625rem;
-    --sidebar-background: 231 64% 12%;
-    --sidebar-foreground: 44 60% 90%;
-    --sidebar-primary: 42 100% 54%;
-    --sidebar-primary-foreground: 231 64% 12%;
+    --sidebar-background: 230 60% 12%;
+    --sidebar-foreground: 45 60% 90%;
+    --sidebar-primary: 45 92% 53%;
+    --sidebar-primary-foreground: 230 60% 12%;
     --sidebar-accent: 230 55% 20%;
-    --sidebar-accent-foreground: 44 60% 95%;
+    --sidebar-accent-foreground: 45 60% 95%;
     --sidebar-border: 230 50% 18%;
-    --sidebar-ring: 42 100% 54%;
+    --sidebar-ring: 45 92% 53%;
     --success: 152 55% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 35 92% 55%;
@@ -51,44 +50,37 @@
   }
 
   .dark {
-    --background: 231 50% 8%;
-    --foreground: 44 50% 92%;
-    --card: 231 45% 11%;
-    --card-foreground: 44 50% 92%;
-    --popover: 231 45% 11%;
-    --popover-foreground: 44 50% 92%;
-    --primary: 42 100% 54%;
-    --primary-foreground: 231 64% 12%;
-    --secondary: 231 40% 18%;
-    --secondary-foreground: 44 40% 90%;
-    --muted: 231 35% 18%;
-    --muted-foreground: 231 15% 58%;
-    --accent: 42 100% 54%;
-    --accent-foreground: 231 64% 12%;
+    --background: 230 50% 8%;
+    --foreground: 45 50% 92%;
+    --card: 230 45% 11%;
+    --card-foreground: 45 50% 92%;
+    --popover: 230 45% 11%;
+    --popover-foreground: 45 50% 92%;
+    --primary: 45 92% 53%;
+    --primary-foreground: 230 60% 12%;
+    --secondary: 230 40% 18%;
+    --secondary-foreground: 45 40% 90%;
+    --muted: 230 35% 18%;
+    --muted-foreground: 230 15% 58%;
+    --accent: 230 65% 45%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 231 40% 20%;
-    --input: 231 40% 20%;
-    --ring: 42 100% 54%;
-    --sidebar-background: 231 65% 8%;
-    --sidebar-foreground: 44 50% 88%;
-    --sidebar-primary: 42 100% 54%;
-    --sidebar-primary-foreground: 231 60% 10%;
-    --sidebar-accent: 231 55% 16%;
-    --sidebar-accent-foreground: 44 50% 92%;
-    --sidebar-border: 231 50% 16%;
-    --sidebar-ring: 42 100% 54%;
+    --border: 230 40% 20%;
+    --input: 230 40% 20%;
+    --ring: 45 92% 53%;
+    --sidebar-background: 230 65% 8%;
+    --sidebar-foreground: 45 50% 88%;
+    --sidebar-primary: 45 92% 53%;
+    --sidebar-primary-foreground: 230 60% 10%;
+    --sidebar-accent: 230 55% 16%;
+    --sidebar-accent-foreground: 45 50% 92%;
+    --sidebar-border: 230 50% 16%;
+    --sidebar-ring: 45 92% 53%;
   }
 }
 
 @layer base {
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground font-sans; }
-}
-
-/* Print-friendly styles */
-@media print {
-  .no-print { display: none !important; }
-  body { background: white; }
-  .print-break { page-break-before: always; }
 }

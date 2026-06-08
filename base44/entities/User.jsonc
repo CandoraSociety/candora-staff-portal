@@ -5,13 +5,32 @@
     "role": {
       "type": "string",
       "enum": [
-        "admin",
-        "user"
+        "super_admin",
+        "executive_director",
+        "manager",
+        "team_lead",
+        "frontline_staff",
+        "board",
+        "extended"
       ],
-      "description": "The role of the user in the app"
+      "default": "frontline_staff"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID of the user's primary department"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
     }
-  },
-  "required": [
-    "role"
-  ]
+  }
 }
