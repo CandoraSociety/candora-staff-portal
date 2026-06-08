@@ -149,14 +149,22 @@ export default function AvailabilitySelector({ value, onChange, showBlockedDates
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="multiple"
-                  selected={blockedDates.map(d => new Date(d))}
+                  selected={blockedDates.map(d => {
+                    const [year, month, day] = d.split('-');
+                    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                  })}
                   onSelect={(dates) => {
                     if (!dates) {
                       setBlockedDates([]);
                       onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: [] });
                       return;
                     }
-                    const newBlocked = dates.map(d => format(d, 'yyyy-MM-dd'));
+                    const newBlocked = dates.map(d => {
+                      const year = d.getFullYear();
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const day = String(d.getDate()).padStart(2, '0');
+                      return `${year}-${month}-${day}`;
+                    });
                     setBlockedDates(newBlocked);
                     onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
                   }}
