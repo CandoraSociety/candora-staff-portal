@@ -9,6 +9,7 @@ import EmploymentActionPlan from './EmploymentActionPlan';
 import InternalPlacementStep from './InternalPlacementStep';
 import ExposuresSupportsStep from './ExposuresSupportsStep';
 import CasualNotesPanel from './CasualNotesPanel';
+import ActionPlanRoadmap from './ActionPlanRoadmap';
 
 const STEPS = [
   { id: 'bit', title: 'Barrier Identification', description: 'Identify barriers affecting employment' },
@@ -16,6 +17,7 @@ const STEPS = [
   { id: 'employment_action_plan', title: 'Employment Action Plan', description: 'Build customized employment plan' },
   { id: 'internal_placement', title: 'Internal Placement', description: 'Set up placement details', pathwaysOnly: true },
   { id: 'exposures', title: 'Exposure Courses & Supports', description: 'Log courses and financial supports' },
+  { id: 'roadmap', title: 'Action Plan Roadmap', description: 'Track progress visually', pathwaysOnly: true },
 ];
 
 export default function ProgramFlowWizard({ client, onSave }) {
@@ -38,6 +40,7 @@ export default function ProgramFlowWizard({ client, onSave }) {
       case 'employment_action_plan': return client?.action_plan_submitted;
       case 'internal_placement': return client?.placement_request_sent;
       case 'exposures': return client?.exposure_course || client?.employment_supports;
+      case 'roadmap': return true; // Roadmap is always accessible
       default: return false;
     }
   };
@@ -54,6 +57,8 @@ export default function ProgramFlowWizard({ client, onSave }) {
         return <InternalPlacementStep client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
       case 'exposures':
         return <ExposuresSupportsStep client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+      case 'roadmap':
+        return <ActionPlanRoadmap client={client} onSave={onSave} />;
       default:
         return null;
     }
