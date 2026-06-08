@@ -893,13 +893,13 @@ export default function VolunteerMgrApprovals() {
                   {waitlistedPracticumRequests.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-semibold text-amber-700 uppercase">Practicum</h3>
-                      {waitlistedPracticumRequests.map(renderPracticumCard)}
+                      {waitlistedPracticumRequests.map(req => renderPracticumCard(req, true))}
                     </div>
                   )}
                   {waitlistedApprovals.length > 0 && (
                     <div className="space-y-3">
                       <h3 className="text-xs font-semibold text-amber-700 uppercase">Other</h3>
-                      {waitlistedApprovals.map(renderCard)}
+                      {waitlistedApprovals.map(req => renderCard(req, true))}
                     </div>
                   )}
                 </CardContent>
