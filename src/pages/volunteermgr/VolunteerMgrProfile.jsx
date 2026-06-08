@@ -4,19 +4,23 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp, GraduationCap, User, Calendar, Shield, AlertCircle, Utensils, Image, Building, BookOpen, Heart } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Clock, Award, FileText, Pencil, ChevronDown, ChevronUp, GraduationCap, User, Calendar, Shield, AlertCircle, Utensils, Image, Building, BookOpen, Heart, Ban } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import VolunteerTypeBadge from '@/components/volunteermgr/VolunteerTypeBadge';
 import VolunteerHourStats from '@/components/volunteermgr/VolunteerHourStats';
 import VolunteerDetails from '@/components/volunteermgr/VolunteerDetails';
+import AvailabilitySelector from '@/components/portal/AvailabilitySelector';
 import { calculateMilestones } from '@/lib/milestones';
+import { format } from 'date-fns';
 
 export default function VolunteerMgrProfile() {
   const { id } = useParams();
   const [membersOpen, setMembersOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [availabilityEdit, setAvailabilityEdit] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: volunteers = [] } = useQuery({
@@ -50,9 +54,30 @@ export default function VolunteerMgrProfile() {
     enabled: !!id,
   });
 
+  const { data: availabilityData } = useQuery({
+    queryKey: ['availability', id],
+    queryFn: async () => {
+      const all = await base44.entities.VolunteerAvailability.filter({ volunteer_id: id });
+      return all.length > 0 ? all[0] : null;
+    },
+    enabled: !!id,
+  });
+
   const handleStatusChange = async (newStatus) => {
     await base44.entities.Volunteer.update(id, { status: newStatus });
     queryClient.invalidateQueries({ queryKey: ['volunteers'] });
+  };
+
+  const saveAvailability = async (data) => {
+    await base44.functions.invoke('updateVolunteerAvailability', {
+      volunteer_id: id,
+      volunteer_name: `${volunteer.first_name} ${volunteer.last_name}`,
+      volunteer_email: volunteer.email,
+      weekly_schedule: data.weekly_schedule,
+      blocked_dates: data.blocked_dates,
+    });
+    queryClient.invalidateQueries({ queryKey: ['availability', id] });
+    setAvailabilityEdit(false);
   };
 
   const statusColors = {
@@ -334,6 +359,103 @@ export default function VolunteerMgrProfile() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Availability
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAvailabilityOpen(!availabilityOpen)}
+                className="h-7 text-xs"
+              >
+                {availabilityOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+              {availabilityOpen && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAvailabilityEdit(!availabilityEdit)}
+                  className="h-7 text-xs gap-1"
+                >
+                  <Pencil className="w-3 h-3" /> {availabilityEdit ? 'Cancel' : 'Edit'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {availabilityOpen ? (
+            availabilityEdit ? (
+              <AvailabilitySelector
+                value={{
+                  weekly_schedule: availabilityData?.weekly_schedule || {},
+                  blocked_dates: availabilityData?.blocked_dates || [],
+                }}
+                onChange={saveAvailability}
+                showBlockedDates={true}
+              />
+            ) : (
+              <div className="space-y-4">
+                {availabilityData?.weekly_schedule && Object.keys(availabilityData.weekly_schedule).length > 0 ? (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Weekly Schedule</p>
+                    <div className="grid gap-2">
+                      {Object.entries(availabilityData.weekly_schedule)
+                        .filter(([_, slots]) => slots.length > 0)
+                        .map(([day, slots]) => (
+                          <div key={day} className="flex items-center gap-2 text-sm">
+                            <span className="font-medium capitalize w-24">{day}:</span>
+                            <span className="text-muted-foreground">{slots.join(', ')}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No weekly schedule set.</p>
+                )}
+                {availabilityData?.blocked_dates && availabilityData.blocked_dates.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <Ban className="w-3 h-3" /> Blocked Dates
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {availabilityData.blocked_dates.map((date) => (
+                        <Badge key={date} variant="outline" className="text-xs">
+                          {format(new Date(date.split('-').map((v, i) => i === 1 ? parseInt(v) - 1 : parseInt(v)).join('-')), 'MMM d, yyyy')}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(!availabilityData?.weekly_schedule || Object.keys(availabilityData.weekly_schedule).length === 0) &&
+                  (!availabilityData?.blocked_dates || availabilityData.blocked_dates.length === 0) && (
+                  <p className="text-sm text-muted-foreground">No availability information provided yet.</p>
+                )}
+              </div>
+            )
+          ) : (
+            <div className="text-sm">
+              {availabilityData?.weekly_schedule && Object.keys(availabilityData.weekly_schedule).length > 0 ? (
+                <span className="text-muted-foreground">
+                  {Object.entries(availabilityData.weekly_schedule)
+                    .filter(([_, slots]) => slots.length > 0)
+                    .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1, 3))
+                    .join(', ')}
+                </span>
+              ) : availabilityData?.blocked_dates && availabilityData.blocked_dates.length > 0 ? (
+                <span className="text-muted-foreground">{availabilityData.blocked_dates.length} blocked date(s)</span>
+              ) : (
+                <span className="text-muted-foreground">Not set</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
