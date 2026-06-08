@@ -11,6 +11,10 @@ import { addDays, differenceInDays } from 'date-fns';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientFinancials from '@/components/client/ClientFinancials';
+import ClientEmployment from '@/components/client/ClientEmployment';
+import ClientPlacements from '@/components/client/ClientPlacements';
+import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
+import ClientStatusHistory from '@/components/client/ClientStatusHistory';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
 import StatusChangeDialog from '@/components/client/StatusChangeDialog';
 import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
@@ -261,8 +265,12 @@ export default function PathwaysClientProfile() {
           <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="program_flow">Program Flow</TabsTrigger>
             <TabsTrigger value="overview">Client Overview</TabsTrigger>
+            <TabsTrigger value="employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
+            <TabsTrigger value="placements">Placements</TabsTrigger>
+            <TabsTrigger value="stream_switches">Stream Switches</TabsTrigger>
+            <TabsTrigger value="status_history">Status History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="program_flow">
@@ -279,6 +287,22 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="financials">
             <ClientFinancials client={client} />
+          </TabsContent>
+
+          <TabsContent value="employment">
+            <ClientEmployment client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="placements">
+            <ClientPlacements client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="stream_switches">
+            <ClientStreamSwitches client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="status_history">
+            <ClientStatusHistory client={client} />
           </TabsContent>
         </Tabs>
       </div>
