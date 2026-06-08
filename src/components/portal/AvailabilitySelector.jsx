@@ -151,7 +151,12 @@ export default function AvailabilitySelector({ value, onChange, showBlockedDates
                   mode="multiple"
                   selected={blockedDates.map(d => new Date(d))}
                   onSelect={(dates) => {
-                    const newBlocked = dates ? dates.map(d => format(d, 'yyyy-MM-dd')) : [];
+                    if (!dates) {
+                      setBlockedDates([]);
+                      onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: [] });
+                      return;
+                    }
+                    const newBlocked = dates.map(d => format(d, 'yyyy-MM-dd'));
                     setBlockedDates(newBlocked);
                     onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
                   }}
