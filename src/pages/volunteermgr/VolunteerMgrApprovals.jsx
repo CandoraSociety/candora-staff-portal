@@ -121,12 +121,7 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={req.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => {
-        console.log('Cohort card clicked:', req.id, 'isClickable:', isClickable);
-        if (isClickable) {
-          setSelectedRequest({ type: 'cohort', data: req });
-        }
-      }}
+      onClick={() => isClickable && setSelectedRequest({ type: 'cohort', data: req })}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -149,6 +144,12 @@ export default function VolunteerMgrApprovals() {
           {req.motivation && <p><strong>Motivation:</strong> {req.motivation}</p>}
         </div>
         <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+
+        {req.status === 'pending' && (
+          <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'cohort', data: req }); }}>
+            View Details
+          </Button>
+        )}
 
         {req.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -204,12 +205,7 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={req.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => {
-        console.log('Practicum card clicked:', req.id, 'isClickable:', isClickable);
-        if (isClickable) {
-          setSelectedRequest({ type: 'practicum', data: req });
-        }
-      }}
+      onClick={() => isClickable && setSelectedRequest({ type: 'practicum', data: req })}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -223,6 +219,12 @@ export default function VolunteerMgrApprovals() {
         </div>
         <p className="text-sm text-muted-foreground">{req.description}</p>
         <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+
+        {req.status === 'pending' && (
+          <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'practicum', data: req }); }}>
+            View Details
+          </Button>
+        )}
 
         {req.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -282,12 +284,7 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={change.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => {
-        console.log('Profile change card clicked:', change.id, 'isClickable:', isClickable);
-        if (isClickable) {
-          setSelectedRequest({ type: 'profile', data: change });
-        }
-      }}
+      onClick={() => isClickable && setSelectedRequest({ type: 'profile', data: change })}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -303,6 +300,12 @@ export default function VolunteerMgrApprovals() {
           <strong>Changes requested:</strong> {change.change_summary}
         </p>
         <p className="text-xs text-muted-foreground">Submitted: {moment.utc(change.submitted_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+
+        {change.status === 'pending' && (
+          <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'profile', data: change }); }}>
+            View Details
+          </Button>
+        )}
 
         {change.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -341,12 +344,7 @@ export default function VolunteerMgrApprovals() {
       <Card 
         key={req.id} 
         className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-        onClick={() => {
-          console.log('Approval card clicked:', req.id, 'isClickable:', isClickable);
-          if (isClickable) {
-            setSelectedRequest({ type: 'approval', data: req });
-          }
-        }}
+        onClick={() => isClickable && setSelectedRequest({ type: 'approval', data: req })}
       >
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-4">
@@ -358,6 +356,12 @@ export default function VolunteerMgrApprovals() {
           </div>
           <p className="text-sm text-muted-foreground">{req.description}</p>
           <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+
+          {req.status === 'pending' && (
+            <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'approval', data: req }); }}>
+              View Details
+            </Button>
+          )}
 
           {req.status === 'pending' && (
             <div className="space-y-2 pt-2 border-t">
