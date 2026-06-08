@@ -599,7 +599,7 @@ export default function VolunteerMgrApprovals() {
 
               {/* Submission Date */}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
+                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
               </div>
             </div>
           )}
@@ -617,8 +617,8 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).format('MMMM D, YYYY')}</p>}
+                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
               </div>
             </div>
           )}
@@ -642,7 +642,7 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.submitted_date).format('MMMM D, YYYY [at] h:mm A')}</p>
+                <p>Submitted: {moment(selectedRequest.data.submitted_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
                 {selectedRequest.data.reviewed_by && <p>Reviewed by: {selectedRequest.data.reviewed_by}</p>}
               </div>
             </div>
@@ -665,8 +665,8 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).format('MMMM D, YYYY')}</p>}
+                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
               </div>
             </div>
           )}
