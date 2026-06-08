@@ -2,7 +2,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Menu, X, Bell, FileText, Users, Briefcase, DollarSign, BarChart3, Settings, Home, ClipboardList, BookOpen, Compass } from 'lucide-react';
+import { Menu, X, Bell, FileText, Users, Briefcase, DollarSign, BarChart3, Settings, Home, ClipboardList, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function PathwaysLayout() {
@@ -23,9 +23,10 @@ export default function PathwaysLayout() {
     { path: '/pathways/master', label: 'Master List', icon: FileText },
     { path: '/pathways/compass', label: 'Compass', icon: Compass, badge: taskCount > 0 ? taskCount : null },
     { path: '/pathways/reports', label: 'Reports', icon: BarChart3 },
-    { path: '/pathways/supervisor', label: 'Supervisor', icon: Settings },
-    { path: '/pathways/resources', label: 'Resources', icon: BookOpen },
     { path: '/pathways/billing', label: 'Billing', icon: DollarSign },
+    { path: '/pathways/training', label: 'Training', icon: Briefcase },
+    { path: '/pathways/employers', label: 'Employers', icon: Users },
+    { path: '/pathways/supervisor', label: 'Supervisor', icon: Settings },
   ];
   
   useEffect(() => {

@@ -82,6 +82,8 @@ import PathwaysSupervisor from '@/pages/pathways/PathwaysSupervisor';
 import PathwaysResources from '@/pages/pathways/PathwaysResources';
 import PathwaysCompass from '@/pages/pathways/PathwaysCompass';
 import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
+import PathwaysEmployers from '@/pages/pathways/PathwaysEmployers';
+import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -183,6 +185,8 @@ const AuthenticatedApp = () => {
           <Route path="/pathways/resources" element={<PathwaysResources />} />
           <Route path="/pathways/compass" element={<PathwaysCompass />} />
           <Route path="/pathways/billing" element={<PathwaysBilling />} />
+          <Route path="/pathways/employers" element={<PathwaysEmployers />} />
+          <Route path="/pathways/training" element={<PathwaysInternalTraining />} />
         </Route>
       </Route>
 
