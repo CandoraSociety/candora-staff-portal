@@ -638,16 +638,115 @@ export default function VolunteerMgrApprovals() {
 
           {selectedRequest?.type === 'practicum' && (
             <div className="space-y-6">
+              {/* Student Information */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Request Details</h3>
-                <p className="text-sm">{selectedRequest.data.description}</p>
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Student Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Student Name</p>
+                    <p className="font-medium">{selectedRequest.data.volunteer_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="font-medium">{selectedRequest.data.volunteer_email || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium">{selectedRequest.data.student_phone || 'Not provided'}</p>
+                  </div>
+                </div>
               </div>
+
+              {/* Institution Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Institution Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Institution</p>
+                    <p className="font-medium">{selectedRequest.data.institution_name || selectedRequest.data.organization_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Faculty / Department</p>
+                    <p className="font-medium">{selectedRequest.data.faculty || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Program / Course</p>
+                    <p className="font-medium">{selectedRequest.data.program || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Year of Study</p>
+                    <p className="font-medium">{selectedRequest.data.year_of_study || 'Not provided'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Practicum Details */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Practicum Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Start Date</p>
+                    <p className="font-medium">{selectedRequest.data.practicum_start_date ? moment(selectedRequest.data.practicum_start_date).format('MMMM D, YYYY') : 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">End Date</p>
+                    <p className="font-medium">{selectedRequest.data.practicum_end_date ? moment(selectedRequest.data.practicum_end_date).format('MMMM D, YYYY') : 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Hours Required</p>
+                    <p className="font-medium">{selectedRequest.data.total_hours_required || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Placement Area Preferences</p>
+                  <p className="font-medium text-sm">{selectedRequest.data.placement_preferences || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Learning Goals</p>
+                  <p className="font-medium text-sm">{selectedRequest.data.learning_goals || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Additional Requirements</p>
+                  <p className="font-medium text-sm">{selectedRequest.data.additional_requirements || 'Not provided'}</p>
+                </div>
+              </div>
+
+              {/* Coordinator Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Coordinator Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Coordinator Name</p>
+                    <p className="font-medium">{selectedRequest.data.coordinator_name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Coordinator Email</p>
+                    <p className="font-medium">{selectedRequest.data.coordinator_email || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Coordinator Phone</p>
+                    <p className="font-medium">{selectedRequest.data.coordinator_phone || 'Not provided'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vulnerable Sector Check */}
+              {selectedRequest.data.vulnerable_sector_check && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800 font-semibold text-sm">✓ Vulnerable Sector Check Acknowledged</p>
+                  <p className="text-yellow-700 text-sm mt-1">Student consents to undergoing a Vulnerable Sector Check as part of practicum requirements</p>
+                </div>
+              )}
+
+              {/* Review Notes */}
               {selectedRequest.data.review_notes && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
                   <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
+
+              {/* Submission Date */}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
                 <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
                 {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
@@ -690,6 +789,25 @@ export default function VolunteerMgrApprovals() {
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Description</h3>
                 <p className="text-sm">{selectedRequest.data.description}</p>
               </div>
+              {/* Show additional fields based on request type */}
+              {selectedRequest.data.request_type === 'hour_adjustment' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date of Service</p>
+                      <p className="font-medium">{selectedRequest.data.service_date ? moment(selectedRequest.data.service_date).format('MMMM D, YYYY') : 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Hours Requested</p>
+                      <p className="font-medium">{selectedRequest.data.hours_adjustment || 'Not provided'}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Reason for Adjustment</p>
+                    <p className="font-medium text-sm">{selectedRequest.data.adjustment_reason || 'Not provided'}</p>
+                  </div>
+                </>
+              )}
               {selectedRequest.data.review_notes && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
