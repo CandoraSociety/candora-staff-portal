@@ -121,7 +121,12 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={req.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => isClickable && setSelectedRequest({ type: 'cohort', data: req })}
+      onClick={() => {
+        console.log('Cohort card clicked:', req.id, 'isClickable:', isClickable);
+        if (isClickable) {
+          setSelectedRequest({ type: 'cohort', data: req });
+        }
+      }}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -199,7 +204,12 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={req.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => isClickable && setSelectedRequest({ type: 'practicum', data: req })}
+      onClick={() => {
+        console.log('Practicum card clicked:', req.id, 'isClickable:', isClickable);
+        if (isClickable) {
+          setSelectedRequest({ type: 'practicum', data: req });
+        }
+      }}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -272,7 +282,12 @@ export default function VolunteerMgrApprovals() {
     <Card 
       key={change.id} 
       className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-      onClick={() => isClickable && setSelectedRequest({ type: 'profile', data: change })}
+      onClick={() => {
+        console.log('Profile change card clicked:', change.id, 'isClickable:', isClickable);
+        if (isClickable) {
+          setSelectedRequest({ type: 'profile', data: change });
+        }
+      }}
     >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
@@ -326,7 +341,12 @@ export default function VolunteerMgrApprovals() {
       <Card 
         key={req.id} 
         className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-        onClick={() => isClickable && setSelectedRequest({ type: 'approval', data: req })}
+        onClick={() => {
+          console.log('Approval card clicked:', req.id, 'isClickable:', isClickable);
+          if (isClickable) {
+            setSelectedRequest({ type: 'approval', data: req });
+          }
+        }}
       >
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-4">
