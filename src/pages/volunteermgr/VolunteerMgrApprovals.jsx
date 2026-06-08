@@ -10,6 +10,7 @@ import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X 
 import moment from 'moment-timezone';
 import { toast } from 'sonner';
 import RejectionDialog from '@/components/volunteermgr/RejectionDialog';
+import WaitlistDialog from '@/components/volunteermgr/WaitlistDialog';
 
 const typeConfig = {
   new_registration: { icon: UserPlus, label: 'New Registration', color: 'bg-blue-50 text-blue-700' },
@@ -37,6 +38,7 @@ export default function VolunteerMgrApprovals() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [volunteerData, setVolunteerData] = useState(null);
   const [rejectionDialog, setRejectionDialog] = useState({ open: false, type: null, data: null });
+  const [waitlistDialog, setWaitlistDialog] = useState({ open: false, type: null, data: null });
   const queryClient = useQueryClient();
 
   // Fetch full volunteer data when viewing a new_registration approval
@@ -85,6 +87,66 @@ export default function VolunteerMgrApprovals() {
       toast.error('Approval failed: ' + (error.message || 'Unknown error'));
     },
   });
+
+  const handleWaitlist = async (requestType, reason, details, sendEmail, emailBody) => {
+    const { data } = waitlistDialog;
+    
+    try {
+      if (requestType === 'practicum') {
+        await base44.entities.VolunteerApproval.update(data.id, {
+          status: 'approved',
+          reviewed_by: 'admin@candorasociety.com',
+          review_date: moment().format('YYYY-MM-DD'),
+          review_notes: reviewNotes[data.id] || (details ? `Waitlisted: ${details}` : 'Waitlisted'),
+        });
+        if (data.volunteer_id) {
+          await base44.entities.Volunteer.update(data.volunteer_id, { 
+            status: 'waitlist',
+            notes: details || '',
+            start_date: moment().format('YYYY-MM-DD')
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+        
+        if (sendEmail && data.volunteer_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.volunteer_email,
+            subject: 'Candora Society Practicum Application - Waitlist Status',
+            body: emailBody || `Dear ${data.volunteer_name},\n\nThank you for your interest in a practicum placement with The Candora Society. We appreciate your enthusiasm and commitment.\n\nDue to current capacity, we are placing your application on our waitlist. This means we will keep your information on file and contact you as soon as a suitable opportunity becomes available.\n\nWe truly value your interest in making a difference with us and look forward to connecting with you soon.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
+      } else {
+        await base44.entities.VolunteerApproval.update(data.id, {
+          status: 'approved',
+          reviewed_by: 'admin@candorasociety.com',
+          review_date: moment().format('YYYY-MM-DD'),
+          review_notes: reviewNotes[data.id] || (details ? `Waitlisted: ${details}` : 'Waitlisted'),
+        });
+        if (data.volunteer_id) {
+          await base44.entities.Volunteer.update(data.volunteer_id, { 
+            status: 'waitlist',
+            notes: details || ''
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals'] });
+        
+        if (sendEmail && data.volunteer_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.volunteer_email,
+            subject: 'Candora Society Volunteer Application - Waitlist Status',
+            body: emailBody || `Dear ${data.volunteer_name},\n\nThank you for your interest in volunteering with The Candora Society. We appreciate your enthusiasm and commitment.\n\nDue to current capacity, we are placing your application on our waitlist. This means we will keep your information on file and contact you as soon as a suitable opportunity becomes available.\n\nWe truly value your interest in making a difference with us and look forward to connecting with you soon.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
+      }
+      
+      toast.success('Request placed on waitlist' + (sendEmail ? ' and email sent' : ''));
+      setWaitlistDialog({ open: false, type: null, data: null });
+    } catch (error) {
+      toast.error('Failed to waitlist: ' + (error.message || 'Unknown error'));
+    }
+  };
 
   const handleRejection = async (requestType, reason, details, sendEmail, emailBody) => {
     const { data } = rejectionDialog;
@@ -427,11 +489,22 @@ export default function VolunteerMgrApprovals() {
                     review_date: moment().format('YYYY-MM-DD'),
                     review_notes: reviewNotes[req.id] || '',
                   });
+                  if (req.volunteer_id) {
+                    base44.entities.Volunteer.update(req.volunteer_id, { status: 'active', start_date: moment().format('YYYY-MM-DD') });
+                  }
                   queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
                   queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
                 }}
               >
                 <CheckCircle className="w-3.5 h-3.5" /> Approve
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={() => setWaitlistDialog({ open: true, type: 'practicum', data: req })}
+              >
+                <Clock className="w-3.5 h-3.5" /> Waitlist
               </Button>
               <Button 
                 size="sm" 
@@ -580,7 +653,7 @@ export default function VolunteerMgrApprovals() {
                   <CheckCircle className="w-3.5 h-3.5" /> Approve
                 </Button>
                 <Button size="sm" variant="outline" className="gap-1 bg-amber-500 hover:bg-amber-600 text-white"
-                  onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id], volunteerStatus: 'waitlist' })}>
+                  onClick={() => setWaitlistDialog({ open: true, type: 'approval', data: req })}>
                   <Clock className="w-3.5 h-3.5" /> Waitlist
                 </Button>
                 <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
@@ -668,6 +741,22 @@ export default function VolunteerMgrApprovals() {
           {resolvedApprovals.map(req => renderCard(req, false))}
         </div>
       )}
+
+      {/* Waitlist Dialog */}
+      <WaitlistDialog
+        open={waitlistDialog.open}
+        onClose={() => setWaitlistDialog({ open: false, type: null, data: null })}
+        onWaitlist={handleWaitlist}
+        requestType={waitlistDialog.type}
+        requestName={
+          waitlistDialog.type === 'practicum' ? waitlistDialog.data?.volunteer_name :
+          waitlistDialog.data?.volunteer_name
+        }
+        requesterEmail={
+          waitlistDialog.type === 'practicum' ? waitlistDialog.data?.volunteer_email :
+          waitlistDialog.data?.volunteer_email
+        }
+      />
 
       {/* Rejection Dialog */}
       <RejectionDialog
