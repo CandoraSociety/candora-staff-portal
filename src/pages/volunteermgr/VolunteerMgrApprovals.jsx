@@ -438,32 +438,20 @@ export default function VolunteerMgrApprovals() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" showCloseButton={false}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <DialogTitle className="text-xl">
-                  {selectedRequest?.type === 'cohort' && selectedRequest?.data?.organization_name}
-                  {selectedRequest?.type === 'practicum' && selectedRequest?.data?.volunteer_name}
-                  {selectedRequest?.type === 'profile' && selectedRequest?.data?.volunteer_name}
-                  {selectedRequest?.type === 'approval' && selectedRequest?.data?.volunteer_name}
-                </DialogTitle>
-                <DialogDescription className="mt-1">
-                  {selectedRequest?.type === 'cohort' && 'Cohort Registration Request'}
-                  {selectedRequest?.type === 'practicum' && 'Practicum Placement Request'}
-                  {selectedRequest?.type === 'profile' && 'Profile Change Request'}
-                  {selectedRequest?.type === 'approval' && 'Volunteer Approval Request'}
-                </DialogDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 h-8 w-8"
-                onClick={() => setSelectedRequest(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <DialogTitle className="text-xl">
+              {selectedRequest?.type === 'cohort' && selectedRequest?.data?.organization_name}
+              {selectedRequest?.type === 'practicum' && selectedRequest?.data?.volunteer_name}
+              {selectedRequest?.type === 'profile' && selectedRequest?.data?.volunteer_name}
+              {selectedRequest?.type === 'approval' && selectedRequest?.data?.volunteer_name}
+            </DialogTitle>
+            <DialogDescription className="mt-1">
+              {selectedRequest?.type === 'cohort' && 'Cohort Registration Request'}
+              {selectedRequest?.type === 'practicum' && 'Practicum Placement Request'}
+              {selectedRequest?.type === 'profile' && 'Profile Change Request'}
+              {selectedRequest?.type === 'approval' && 'Volunteer Approval Request'}
+            </DialogDescription>
           </DialogHeader>
 
           {selectedRequest?.type === 'cohort' && (
