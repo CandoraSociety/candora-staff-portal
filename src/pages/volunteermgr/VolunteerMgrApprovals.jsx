@@ -438,146 +438,202 @@ export default function VolunteerMgrApprovals() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <DialogTitle className="text-lg">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle className="text-xl">
                   {selectedRequest?.type === 'cohort' && selectedRequest?.data?.organization_name}
                   {selectedRequest?.type === 'practicum' && selectedRequest?.data?.volunteer_name}
                   {selectedRequest?.type === 'profile' && selectedRequest?.data?.volunteer_name}
                   {selectedRequest?.type === 'approval' && selectedRequest?.data?.volunteer_name}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="mt-1">
                   {selectedRequest?.type === 'cohort' && 'Cohort Registration Request'}
                   {selectedRequest?.type === 'practicum' && 'Practicum Placement Request'}
                   {selectedRequest?.type === 'profile' && 'Profile Change Request'}
                   {selectedRequest?.type === 'approval' && 'Volunteer Approval Request'}
                 </DialogDescription>
               </div>
-              <button onClick={() => setSelectedRequest(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 h-8 w-8"
+                onClick={() => setSelectedRequest(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </DialogHeader>
 
           {selectedRequest?.type === 'cohort' && (
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-muted-foreground">Organization Type</p>
-                  <p className="font-medium">{selectedRequest.data.organization_type?.replace(/_/g, ' ')}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Contact Person</p>
-                  <p className="font-medium">{selectedRequest.data.contact_name}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Contact Email</p>
-                  <p className="font-medium">{selectedRequest.data.contact_email}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Contact Phone</p>
-                  <p className="font-medium">{selectedRequest.data.contact_phone || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Number of Volunteers</p>
-                  <p className="font-medium">{selectedRequest.data.number_of_volunteers}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Preferred Start Date</p>
-                  <p className="font-medium">{selectedRequest.data.preferred_start_date ? moment(selectedRequest.data.preferred_start_date).format('MMM D, YYYY') : 'Not specified'}</p>
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Organization Type</p>
+                    <p className="font-medium">{selectedRequest.data.organization_type?.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Contact Person</p>
+                    <p className="font-medium">{selectedRequest.data.contact_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="font-medium">{selectedRequest.data.contact_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="font-medium">{selectedRequest.data.contact_phone || 'Not provided'}</p>
+                  </div>
                 </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">Availability</p>
-                <p className="font-medium">{selectedRequest.data.availability || 'Not specified'}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Areas of Interest</p>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {selectedRequest.data.areas_of_interest?.map(area => (
-                    <Badge key={area} variant="secondary">{area}</Badge>
-                  ))}
+
+              {/* Volunteer Details */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Volunteer Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Number of Volunteers</p>
+                    <p className="font-medium">{selectedRequest.data.number_of_volunteers}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Preferred Start Date</p>
+                    <p className="font-medium">{selectedRequest.data.preferred_start_date ? moment(selectedRequest.data.preferred_start_date).format('MMM D, YYYY') : 'Not specified'}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Availability</p>
+                  <p className="font-medium">{selectedRequest.data.availability || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Areas of Interest</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedRequest.data.areas_of_interest?.length > 0 ? (
+                      selectedRequest.data.areas_of_interest.map(area => (
+                        <Badge key={area} variant="secondary">{area}</Badge>
+                      ))
+                    ) : (
+                      <span className="text-muted-foreground">Not specified</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Skills or Focus</p>
+                  <p className="font-medium">{selectedRequest.data.skills_or_focus || 'Not specified'}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">Skills or Focus</p>
-                <p className="font-medium">{selectedRequest.data.skills_or_focus || 'Not specified'}</p>
+
+              {/* Motivation */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Motivation</h3>
+                <p className="font-medium text-sm">{selectedRequest.data.motivation || 'Not specified'}</p>
               </div>
-              <div>
-                <p className="text-muted-foreground">Motivation</p>
-                <p className="font-medium">{selectedRequest.data.motivation || 'Not specified'}</p>
-              </div>
-              {selectedRequest.data.include_donation && (
-                <div className="border-t pt-4">
-                  <p className="text-muted-foreground">Donation</p>
-                  <p className="font-medium">${selectedRequest.data.donation_amount} - {selectedRequest.data.donation_message || 'No message'}</p>
+
+              {/* Additional Information */}
+              {(selectedRequest.data.include_donation || selectedRequest.data.vulnerable_sector_check) && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Additional Information</h3>
+                  {selectedRequest.data.include_donation && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="font-semibold text-blue-900 text-sm">Donation Included</p>
+                      <p className="text-blue-700 text-sm">${selectedRequest.data.donation_amount} - {selectedRequest.data.donation_message || 'No message'}</p>
+                    </div>
+                  )}
+                  {selectedRequest.data.vulnerable_sector_check && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-yellow-800 font-medium text-sm">✓ Vulnerable Sector Check consent provided</p>
+                    </div>
+                  )}
                 </div>
               )}
-              {selectedRequest.data.vulnerable_sector_check && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-yellow-800 font-medium">✓ Vulnerable Sector Check consent provided</p>
-                </div>
-              )}
+
+              {/* Admin Notes */}
               {selectedRequest.data.notes && (
-                <div className="border-t pt-4">
-                  <p className="text-muted-foreground">Admin Notes</p>
-                  <p className="font-medium">{selectedRequest.data.notes}</p>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Admin Notes</h3>
+                  <p className="font-medium text-sm bg-muted p-3 rounded">{selectedRequest.data.notes}</p>
                 </div>
               )}
+
+              {/* Status */}
               {selectedRequest.data.card_created && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-800 font-medium">✓ Portal Card Created (ID: {selectedRequest.data.card_id})</p>
+                  <p className="text-green-800 font-medium text-sm">✓ Portal Card Created (ID: {selectedRequest.data.card_id})</p>
                 </div>
               )}
+
+              <div className="text-xs text-muted-foreground pt-4 border-t">
+                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              </div>
             </div>
           )}
 
           {selectedRequest?.type === 'practicum' && (
-            <div className="space-y-4 text-sm">
-              <p className="text-muted-foreground">Description</p>
-              <p className="font-medium">{selectedRequest.data.description}</p>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Request Details</h3>
+                <p className="text-sm">{selectedRequest.data.description}</p>
+              </div>
               {selectedRequest.data.review_notes && (
-                <div className="border-t pt-4">
-                  <p className="text-muted-foreground">Review Notes</p>
-                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
+                  <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
+              <div className="text-xs text-muted-foreground pt-4 border-t">
+                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              </div>
             </div>
           )}
 
           {selectedRequest?.type === 'profile' && (
-            <div className="space-y-4 text-sm">
-              <p className="text-muted-foreground">Changes Requested</p>
-              <p className="font-medium">{selectedRequest.data.change_summary}</p>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Changes Requested</h3>
+                <p className="font-medium text-sm">{selectedRequest.data.change_summary}</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Detailed Changes</h3>
+                <pre className="bg-muted p-4 rounded text-xs overflow-auto max-h-80 whitespace-pre-wrap">
+                  {JSON.stringify(selectedRequest.data.changes_requested, null, 2)}
+                </pre>
+              </div>
               {selectedRequest.data.review_notes && (
-                <div className="border-t pt-4">
-                  <p className="text-muted-foreground">Review Notes</p>
-                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
+                  <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
+              <div className="text-xs text-muted-foreground pt-4 border-t">
+                Submitted on {moment(selectedRequest.data.submitted_date).format('MMMM D, YYYY [at] h:mm A')}
+              </div>
             </div>
           )}
 
           {selectedRequest?.type === 'approval' && (
-            <div className="space-y-4 text-sm">
-              <p className="text-muted-foreground">Description</p>
-              <p className="font-medium">{selectedRequest.data.description}</p>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Request Type</h3>
+                <Badge>{typeConfig[selectedRequest.data.request_type]?.label || selectedRequest.data.request_type}</Badge>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Description</h3>
+                <p className="text-sm">{selectedRequest.data.description}</p>
+              </div>
               {selectedRequest.data.review_notes && (
-                <div className="border-t pt-4">
-                  <p className="text-muted-foreground">Review Notes</p>
-                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
+                  <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
+              <div className="text-xs text-muted-foreground pt-4 border-t">
+                Submitted on {moment(selectedRequest.data.created_date).format('MMMM D, YYYY [at] h:mm A')}
+              </div>
             </div>
           )}
-
-          <DialogFooter>
-            <p className="text-xs text-muted-foreground">
-              Created {selectedRequest?.data?.created_date ? moment(selectedRequest.data.created_date).fromNow() : selectedRequest?.data?.submitted_date ? moment(selectedRequest.data.submitted_date).fromNow() : 'Unknown'}
-            </p>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
