@@ -26,49 +26,22 @@ import Compass from '@/pages/Compass';
 import MonthlyBillingSubmissions from '@/pages/MonthlyBillingSubmissions';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
-
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-display font-bold text-lg">P</span>
-          </div>
-          <div className="w-8 h-8 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
-  }
-
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/intake" element={<IntakePage />} />
+      <Route path="/dashboard" element={<WorkerDashboard />} />
+      <Route path="/client/:id" element={<ClientProfile />} />
+      <Route path="/master" element={<MasterList />} />
+      <Route path="/reports" element={<Reports />} />
+      <Route path="/supervisor" element={<SupervisorPortal />} />
+      <Route path="/resources" element={<Resources />} />
+      <Route path="/compass" element={<Compass />} />
+      <Route path="/billing" element={<MonthlyBillingSubmissions />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/intake" element={<IntakePage />} />
-        <Route path="/dashboard" element={<WorkerDashboard />} />
-        <Route path="/client/:id" element={<ClientProfile />} />
-        <Route path="/master" element={<MasterList />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/supervisor" element={<SupervisorPortal />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/compass" element={<Compass />} />
-        <Route path="/billing" element={<MonthlyBillingSubmissions />} />
-      </Route>
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
