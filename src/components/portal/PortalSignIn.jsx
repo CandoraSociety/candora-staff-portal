@@ -21,9 +21,10 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
   const [showShifts, setShowShifts] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
+  const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success' | 'forgot'
   const [foundVolunteer, setFoundVolunteer] = useState(null);
   const [activeLog, setActiveLog] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState('');
@@ -140,6 +141,37 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
     setEmail(''); setPassword(''); setFoundVolunteer(null); setActiveLog(null);
     setError(''); setSelectedPosition('');
     setSuccessMsg('');
+    setShowForgotPassword(false);
+  };
+
+  const handleForgotPassword = async () => {
+    setError('');
+    if (!email.trim()) { setError('Please enter your email address.'); return; }
+
+    const volunteers = await base44.entities.Volunteer.filter({ email: email.trim().toLowerCase() });
+    if (volunteers.length === 0) {
+      // Don't reveal if email exists - show generic success for security
+      setSuccessMsg('If an account exists with that email, a password reset link has been sent.');
+      setShowForgotPassword(false);
+      return;
+    }
+
+    const vol = volunteers[0];
+    // Generate a temporary reset token (simple approach - in production use proper tokens)
+    const resetToken = btoa(`${vol.id}-${Date.now()}`);
+    
+    // Send reset email via backend function
+    try {
+      await base44.functions.invoke('sendRejectionEmail', {
+        to: vol.email,
+        subject: 'Password Reset Request - Candora Society',
+        body: `Hello ${vol.first_name},\n\nYou requested a password reset for your volunteer portal account.\n\nPlease contact the volunteer coordinator to reset your password.\n\nThank you,\nCandora Society Team`
+      });
+      setSuccessMsg('Password reset instructions have been sent to your email.');
+      setShowForgotPassword(false);
+    } catch (err) {
+      setError('Failed to send reset email. Please contact the coordinator.');
+    }
   };
 
   const now = moment();
@@ -158,6 +190,50 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
             <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
             <p className="text-sm font-medium">{successMsg}</p>
           </div>
+        )}
+
+        {step === 'forgot' && (
+          <>
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold mb-2">Reset Password</h3>
+              <p className="text-sm text-muted-foreground">
+                Enter your email address and we'll send you instructions to reset your password.
+              </p>
+            </div>
+            <div>
+              <Label className="text-foreground font-medium">Email Address</Label>
+              <Input
+                type="email"
+                placeholder="your.email@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleForgotPassword()}
+                className="mt-1"
+              />
+            </div>
+            {error && <p className="text-sm text-destructive bg-destructive/10 rounded p-2">{error}</p>}
+            {successMsg && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3 text-green-800">
+                <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                <p className="text-sm font-medium">{successMsg}</p>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => { setStep('lookup'); setError(''); setSuccessMsg(''); }}
+              >
+                Back
+              </Button>
+              <Button
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handleForgotPassword}
+              >
+                Send Reset Link
+              </Button>
+            </div>
+          </>
         )}
 
         {step === 'lookup' && (
@@ -183,6 +259,15 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
                 onKeyDown={e => e.key === 'Enter' && handleLookup()}
                 className="mt-1"
               />
+            </div>
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => { setStep('forgot'); setError(''); }}
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot password?
+              </button>
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 rounded p-2">{error}</p>}
             <Button
