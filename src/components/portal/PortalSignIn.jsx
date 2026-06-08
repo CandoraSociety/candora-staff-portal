@@ -10,9 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar } from 'lucide-react';
 import moment from 'moment';
 
-export default function PortalSignIn({ onBack, onAuthenticated }) {
+export default function PortalSignIn({ onBack, onAuthenticated, onViewProfile, onViewShifts }) {
   if (!onBack) onBack = () => {};
   if (!onAuthenticated) onAuthenticated = () => {};
+  if (!onViewProfile) onViewProfile = () => {};
+  if (!onViewShifts) onViewShifts = () => {};
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
@@ -234,10 +236,7 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
                 className="gap-2"
                 onClick={() => {
                   onAuthenticated(foundVolunteer.id, foundVolunteer);
-                  // Navigate to profile view
-                  window.location.hash = 'profile';
-                  const event = new CustomEvent('navigate-to-profile', { detail: { volunteerId: foundVolunteer.id } });
-                  window.dispatchEvent(event);
+                  onViewProfile();
                 }}
               >
                 <User className="w-4 h-4" />
@@ -248,10 +247,7 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
                 className="gap-2"
                 onClick={() => {
                   onAuthenticated(foundVolunteer.id, foundVolunteer);
-                  // Navigate to shifts view
-                  window.location.hash = 'shifts';
-                  const event = new CustomEvent('navigate-to-shifts', { detail: { volunteerId: foundVolunteer.id } });
-                  window.dispatchEvent(event);
+                  onViewShifts();
                 }}
               >
                 <Calendar className="w-4 h-4" />
