@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,9 +15,9 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 
 const emptyForm = {
-  title: '', description: '', date: '', start_time: '', end_time: '',
-  location: '', volunteers_needed: 0, positions_needed: '', status: 'upcoming',
-  notes: '', contact_person: '',
+title: '', description: '', date: '', start_time: '', end_time: '',
+location: '', volunteers_needed: 0, positions_needed: '', status: 'upcoming',
+notes: '', contact_person: '', enable_waitlist: false,
 };
 
 const statusColors = {
@@ -32,6 +32,7 @@ export default function VolunteerMgrEvents() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [waitlistDialog, setWaitlistDialog] = useState({ open: false, event: null, waitlist: [] });
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -93,7 +94,44 @@ export default function VolunteerMgrEvents() {
     setFormOpen(true);
   };
 
+  const openWaitlist = async (event) => {
+    const signups = await base44.entities.VolunteerEventSignup.filter({ event_id: event.id, status: 'waitlist' }, '-created_date');
+    setWaitlistDialog({ open: true, event, waitlist: signups });
+  };
+
   const update = (f, v) => setForm((p) => ({ ...p, [f]: v }));
+
+  const handlePromoteFromWaitlist = async (signupId, volunteerId) => {
+    await base44.entities.VolunteerEventSignup.update(signupId, { status: 'signed_up' });
+    const event = await base44.entities.VolunteerEvent.get(waitlistDialog.event.id);
+    await base44.entities.VolunteerEvent.update(event.id, { 
+      volunteers_signed_up: (event.volunteers_signed_up || 0) + 1,
+      waitlist_count: Math.max(0, (event.waitlist_count || 0) - 1)
+    });
+    const signup = await base44.entities.VolunteerEventSignup.get(signupId);
+    if (signup?.volunteer_id) {
+      const volunteer = await base44.entities.Volunteer.get(signup.volunteer_id);
+      if (volunteer?.email) {
+        await base44.integrations.Core.SendEmail({
+          to: volunteer.email,
+          subject: `You're Confirmed: ${event.title}`,
+          body: `Hi ${volunteer.first_name || 'Volunteer'},\n\nGreat news! A spot has opened up and you are now confirmed for "${event.title}" on ${event.date}.\n\nPlease let us know if you can still make it.\n\nThank you!\nThe Candora Volunteer Team`,
+        });
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ['vol-events'] });
+    openWaitlist(waitlistDialog.event);
+  };
+
+  const handleRemoveFromWaitlist = async (signupId) => {
+    await base44.entities.VolunteerEventSignup.update(signupId, { status: 'cancelled' });
+    const event = await base44.entities.VolunteerEvent.get(waitlistDialog.event.id);
+    await base44.entities.VolunteerEvent.update(event.id, { 
+      waitlist_count: Math.max(0, (event.waitlist_count || 0) - 1)
+    });
+    queryClient.invalidateQueries({ queryKey: ['vol-events'] });
+    openWaitlist(waitlistDialog.event);
+  };
 
   return (
     <div className="space-y-6">
@@ -136,22 +174,35 @@ export default function VolunteerMgrEvents() {
                 <p className="text-xs text-muted-foreground line-clamp-2">{event.description}</p>
               )}
 
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {event.location && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />{event.location}
-                  </span>
-                )}
-                {event.start_time && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />{event.start_time} - {event.end_time}
-                  </span>
-                )}
-                {event.volunteers_needed > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    {event.volunteers_signed_up || 0}/{event.volunteers_needed}
-                  </span>
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  {event.location && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />{event.location}
+                    </span>
+                  )}
+                  {event.start_time && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />{event.start_time} - {event.end_time}
+                    </span>
+                  )}
+                  {event.volunteers_needed > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {event.volunteers_signed_up || 0}/{event.volunteers_needed} signed up
+                    </span>
+                  )}
+                </div>
+                {event.enable_waitlist && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="w-full text-xs h-7"
+                    onClick={(e) => { e.stopPropagation(); openWaitlist(event); }}
+                  >
+                    <Users className="w-3 h-3 mr-1" />
+                    Manage Waitlist ({event.waitlist_count || 0})
+                  </Button>
                 )}
               </div>
 
@@ -290,6 +341,21 @@ export default function VolunteerMgrEvents() {
               <Label>Notes</Label>
               <Textarea value={form.notes} onChange={(e) => update('notes', e.target.value)} rows={2} />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="enable-waitlist">Enable Waitlist</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="enable-waitlist"
+                  checked={form.enable_waitlist}
+                  onChange={(e) => update('enable_waitlist', e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Allow volunteers to join waitlist when event is full
+                </span>
+              </div>
+            </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
@@ -297,6 +363,68 @@ export default function VolunteerMgrEvents() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Waitlist Management Dialog */}
+      <Dialog open={waitlistDialog.open} onOpenChange={() => setWaitlistDialog({ open: false, event: null, waitlist: [] })}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Waitlist for {waitlistDialog.event?.title}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {waitlistDialog.waitlist.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No volunteers on the waitlist</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {waitlistDialog.waitlist.map((signup) => (
+                  <Card key={signup.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{signup.volunteer_name}</p>
+                          <p className="text-sm text-muted-foreground">{signup.volunteer_email}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Added: {moment(signup.created_date).format('MMM D, YYYY h:mm A')}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handlePromoteFromWaitlist(signup.id, signup.volunteer_id)}
+                          >
+                            Promote
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                            onClick={() => handleRemoveFromWaitlist(signup.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWaitlistDialog({ open: false, event: null, waitlist: [] })}>
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

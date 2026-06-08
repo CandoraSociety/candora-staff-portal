@@ -46,6 +46,16 @@
     },
     "contact_person": {
       "type": "string"
+    },
+    "allow_waitlist": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to allow waitlist signups when event is full"
+    },
+    "max_waitlist": {
+      "type": "number",
+      "default": 10,
+      "description": "Maximum number of volunteers on waitlist"
     }
   },
   "required": [

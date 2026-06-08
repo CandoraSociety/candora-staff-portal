@@ -28,6 +28,11 @@
       ],
       "default": "signed_up"
     },
+    "is_waitlist": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this signup is on the waitlist"
+    },
     "notes": {
       "type": "string"
     }

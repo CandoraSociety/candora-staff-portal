@@ -25,21 +25,35 @@ export default function PortalShiftSignup({ volunteerId, onBack }) {
   });
 
   const signupMutation = useMutation({
-    mutationFn: async (eventId) => {
+    mutationFn: async ({ eventId, isWaitlist }) => {
       const event = events.find(e => e.id === eventId);
-      return base44.entities.VolunteerEventSignup.create({
+      const signup = await base44.entities.VolunteerEventSignup.create({
         volunteer_id: volunteerId,
         event_id: eventId,
         event_title: event?.title || 'Unknown Event',
         event_date: event?.date,
-        status: 'confirmed',
+        status: isWaitlist ? 'waitlist' : 'confirmed',
+        is_waitlist: isWaitlist || false,
         signup_date: new Date().toISOString(),
       });
+      
+      // Update event counts
+      if (isWaitlist) {
+        await base44.entities.VolunteerEvent.update(eventId, {
+          waitlist_count: (event.waitlist_count || 0) + 1
+        });
+      } else {
+        await base44.entities.VolunteerEvent.update(eventId, {
+          volunteers_signed_up: (event.volunteers_signed_up || 0) + 1
+        });
+      }
+      
+      return signup;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['volunteer-events-upcoming'] });
       queryClient.invalidateQueries({ queryKey: ['my-signups'] });
-      setSuccessMsg('Successfully signed up for the event!');
+      setSuccessMsg(variables.isWaitlist ? 'Added to waitlist! You will be notified if a spot opens up.' : 'Successfully signed up for the event!');
       setSelectedEvent(null);
       setTimeout(() => setSuccessMsg(''), 3000);
     },
@@ -60,11 +74,15 @@ export default function PortalShiftSignup({ volunteerId, onBack }) {
   });
 
   const isSignedUp = (eventId) => {
-    return mySignups.some(s => s.event_id === eventId && s.status === 'confirmed');
+    return mySignups.some(s => s.event_id === eventId && (s.status === 'confirmed' || s.is_waitlist));
   };
 
   const getMySignup = (eventId) => {
-    return mySignups.find(s => s.event_id === eventId && s.status === 'confirmed');
+    return mySignups.find(s => s.event_id === eventId && (s.status === 'confirmed' || s.is_waitlist));
+  };
+
+  const isOnWaitlist = (eventId) => {
+    return mySignups.some(s => s.event_id === eventId && s.is_waitlist);
   };
 
   const handleSignup = (eventId) => {
@@ -173,9 +191,14 @@ export default function PortalShiftSignup({ volunteerId, onBack }) {
                           </Badge>
                         )}
                         {!signedUp && !isPast && (
-                          <Badge variant={isFull ? 'destructive' : 'outline'}>
+                          <Badge variant={isFull ? (event.enable_waitlist ? 'secondary' : 'destructive') : 'outline'}>
                             <Users className="w-3 h-3 mr-1" />
-                            {isFull ? 'Full' : `${spotsLeft} spots left`}
+                            {isFull ? (event.enable_waitlist ? 'Waitlist Available' : 'Full') : `${spotsLeft} spots left`}
+                          </Badge>
+                        )}
+                        {isOnWaitlist(event.id) && (
+                          <Badge className="bg-amber-500 text-white">
+                            On Waitlist
                           </Badge>
                         )}
                       </div>
@@ -185,19 +208,27 @@ export default function PortalShiftSignup({ volunteerId, onBack }) {
                       {signedUp ? (
                         <Button
                           variant="outline"
-                          className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          className={mySignup.is_waitlist ? "border-amber-500 text-amber-700 hover:bg-amber-50" : "border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"}
                           onClick={() => handleCancel(mySignup.id)}
                           disabled={cancelSignupMutation.isPending}
                         >
-                          Cancel Signup
+                          {mySignup.is_waitlist ? 'Leave Waitlist' : 'Cancel Signup'}
                         </Button>
                       ) : isPast ? (
                         <Button disabled className="w-full">
                           Event Ended
                         </Button>
+                      ) : isFull && event.enable_waitlist ? (
+                        <Button
+                          className="w-full bg-amber-500 text-white hover:bg-amber-600"
+                          onClick={() => signupMutation.mutate({ eventId: event.id, isWaitlist: true })}
+                          disabled={signupMutation.isPending}
+                        >
+                          Join Waitlist
+                        </Button>
                       ) : isFull ? (
                         <Button disabled className="w-full" variant="secondary">
-                          Waitlist Only
+                          Full
                         </Button>
                       ) : (
                         <Button
