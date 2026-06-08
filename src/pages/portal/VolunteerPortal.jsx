@@ -23,11 +23,15 @@ export default function VolunteerPortal() {
       <header className="px-6 py-8">
         <div className="max-w-2xl mx-auto text-center space-y-4">
           <div className="bg-gradient-to-br from-accent/20 via-primary/10 to-accent/10 rounded-2xl p-6 border-2 border-accent/30 shadow-xl">
-            <div className="w-20 h-20 rounded-xl bg-accent flex items-center justify-center mx-auto mb-3 shadow-lg">
-              <span className="text-white font-display font-bold text-4xl">C</span>
+            <div className="mx-auto mb-4 flex justify-center">
+              <img 
+                src="https://media.base44.com/images/public/6a249282cb496579542673b7/ab2ecbe13_generated_image.png"
+                alt="Candora Society Logo"
+                className="h-24 w-auto object-contain"
+              />
             </div>
-            <h1 className="text-4xl font-display font-bold text-foreground mb-1">Candora Society</h1>
-            <p className="text-base text-muted-foreground font-semibold">Volunteer Portal</p>
+            <h1 className="text-4xl font-display font-bold text-foreground mb-1">Volunteer Portal</h1>
+            <p className="text-base text-muted-foreground font-semibold">Candora Society</p>
           </div>
           <p className="text-sm text-foreground max-w-md mx-auto">
             Welcome! Sign in to track your hours or register to join our volunteer community.
