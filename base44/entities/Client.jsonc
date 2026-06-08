@@ -213,6 +213,44 @@
         "no_contact"
       ]
     },
+    "service_navigation_supports": {
+      "type": "boolean"
+    },
+    "service_navigation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "barriers_addressed": {
+      "type": "boolean"
+    },
+    "bit_completed": {
+      "type": "boolean"
+    },
+    "bit_review_dates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date"
+      }
+    },
+    "bit_checkin_frequency": {
+      "type": "string"
+    },
+    "bit_review_checkins": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "barrier_action_plan_completed": {
+      "type": "boolean"
+    },
+    "action_plan_submitted": {
+      "type": "boolean"
+    },
+    "action_plan_compass_entered": {
+      "type": "boolean"
+    },
     "barrier_1": {
       "type": "string"
     },
@@ -228,6 +266,26 @@
       "type": "string"
     },
     "barrier_1_action_steps": {
+      "type": "string"
+    },
+    "barrier_1_other": {
+      "type": "string"
+    },
+    "barrier_1_challenges": {
+      "type": "string"
+    },
+    "barrier_1_timeline_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_1_timeline_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_1_responsible": {
+      "type": "string"
+    },
+    "barrier_1_resources": {
       "type": "string"
     },
     "barrier_2": {
@@ -247,6 +305,26 @@
     "barrier_2_action_steps": {
       "type": "string"
     },
+    "barrier_2_other": {
+      "type": "string"
+    },
+    "barrier_2_challenges": {
+      "type": "string"
+    },
+    "barrier_2_timeline_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_2_timeline_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_2_responsible": {
+      "type": "string"
+    },
+    "barrier_2_resources": {
+      "type": "string"
+    },
     "barrier_3": {
       "type": "string"
     },
@@ -264,6 +342,88 @@
     "barrier_3_action_steps": {
       "type": "string"
     },
+    "barrier_3_other": {
+      "type": "string"
+    },
+    "barrier_3_challenges": {
+      "type": "string"
+    },
+    "barrier_3_timeline_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_3_timeline_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "barrier_3_responsible": {
+      "type": "string"
+    },
+    "barrier_3_resources": {
+      "type": "string"
+    },
+    "exposure_course": {
+      "type": "boolean"
+    },
+    "paid_external_placement": {
+      "type": "boolean"
+    },
+    "employment_supports": {
+      "type": "boolean"
+    },
+    "internal_placement": {
+      "type": "string",
+      "enum": [
+        "none",
+        "cleaning_arc",
+        "food_services_onsite",
+        "food_services_offsite",
+        "reception",
+        "childcare"
+      ]
+    },
+    "internal_placement_details": {
+      "type": "string"
+    },
+    "placement_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "placement_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "placement_supervisor": {
+      "type": "string"
+    },
+    "placement_schedule": {
+      "type": "string"
+    },
+    "placement_request_sent": {
+      "type": "boolean"
+    },
+    "external_employer": {
+      "type": "boolean"
+    },
+    "employer_name": {
+      "type": "string"
+    },
+    "employer_contact": {
+      "type": "string"
+    },
+    "job_title": {
+      "type": "string"
+    },
+    "job_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "job_wage": {
+      "type": "number"
+    },
+    "job_hours": {
+      "type": "string"
+    },
     "sdp_items": {
       "type": "array",
       "items": {
@@ -272,6 +432,12 @@
     },
     "sdp_item_details": {
       "type": "object"
+    },
+    "sdp_other_desc": {
+      "type": "string"
+    },
+    "sdp_notes": {
+      "type": "string"
     },
     "internal_referrals": {
       "type": "array",
@@ -284,17 +450,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "internal_placement": {
-      "type": "string",
-      "enum": [
-        "none",
-        "cleaning_arc",
-        "food_services_onsite",
-        "food_services_offsite",
-        "reception",
-        "childcare"
-      ]
     },
     "career_objectives": {
       "type": "string"
@@ -329,7 +484,13 @@
           "reason": {
             "type": "string"
           },
+          "reason_other": {
+            "type": "string"
+          },
           "date": {
+            "type": "string"
+          },
+          "notes": {
             "type": "string"
           }
         }
@@ -355,6 +516,22 @@
       "items": {
         "type": "object"
       }
+    },
+    "dea_closing_dismissed": {
+      "type": "boolean"
+    },
+    "file_closed": {
+      "type": "boolean"
+    },
+    "closed_reason": {
+      "type": "string"
+    },
+    "closed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closed_notes": {
+      "type": "string"
     }
   },
   "required": [

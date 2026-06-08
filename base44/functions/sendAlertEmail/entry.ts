@@ -17,7 +17,25 @@ Deno.serve(async (req) => {
       changed_fields.push('barriers');
     }
     
-    if (changed_fields.length === 0) {
+    // Check for service navigation change
+    if (data.service_navigation_supports === true && old_data?.service_navigation_supports !== true) {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: SERVICE_NAVIGATOR_EMAIL,
+        subject: `Service Navigation Started: ${data.first_name} ${data.last_name}`,
+        body: `
+Service navigation support has been initiated:
+
+Client: ${data.first_name} ${data.last_name}
+Date: ${data.service_navigation_date || new Date().toISOString().split('T')[0]}
+Assigned Worker: ${data.assigned_worker_name || data.assigned_worker}
+
+Please coordinate service navigation activities.
+        `.trim()
+      });
+      alerts.push({ type: 'service_navigation', email: SERVICE_NAVIGATOR_EMAIL });
+    }
+    
+    if (changed_fields.length === 0 && alerts.length === 0) {
       return Response.json({ success: true, message: 'No relevant changes' });
     }
     
