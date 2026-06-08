@@ -326,6 +326,83 @@ export default function VolunteerMgrApprovals() {
     },
   });
 
+  const undoApprovalMutation = useMutation({
+    mutationFn: async ({ id, type }) => {
+      if (type === 'cohort') {
+        await base44.entities.VolunteerCohortRequest.update(id, {
+          status: 'pending',
+          approved_by: null,
+          approval_date: null,
+          card_created: false,
+          card_id: null,
+        });
+      } else if (type === 'practicum') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          review_notes: null,
+        });
+        const req = practicumRequests.find(r => r.id === id);
+        if (req?.volunteer_id) {
+          await base44.entities.Volunteer.update(req.volunteer_id, { status: 'pending' });
+        }
+      } else if (type === 'approval') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          review_notes: null,
+        });
+        const req = approvals.find(r => r.id === id);
+        if (req?.volunteer_id && req?.request_type === 'new_registration') {
+          await base44.entities.Volunteer.update(req.volunteer_id, { status: 'pending' });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-cohort-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-volunteers'] });
+      toast.success('Approval undone - request restored to pending');
+    },
+  });
+
+  const undoWaitlistMutation = useMutation({
+    mutationFn: async ({ id, type }) => {
+      if (type === 'practicum') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          review_notes: null,
+        });
+        const req = practicumRequests.find(r => r.id === id);
+        if (req?.volunteer_id) {
+          await base44.entities.Volunteer.update(req.volunteer_id, { status: 'pending' });
+        }
+      } else if (type === 'approval') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          review_notes: null,
+        });
+        const req = approvals.find(r => r.id === id);
+        if (req?.volunteer_id) {
+          await base44.entities.Volunteer.update(req.volunteer_id, { status: 'pending' });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-volunteers'] });
+      toast.success('Waitlist undone - request restored to pending');
+    },
+  });
+
   const pendingApprovals = approvals.filter(a => a.status === 'pending');
   const waitlistedApprovals = approvals.filter(a => a.status === 'waitlisted');
   const pendingProfileChanges = profileChanges.filter(c => c.status === 'pending');
@@ -384,6 +461,22 @@ export default function VolunteerMgrApprovals() {
             }}
           >
             <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
+          </Button>
+        )}
+
+        {req.status === 'approved' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this approval? The request will be restored to pending status.')) {
+                undoApprovalMutation.mutate({ id: req.id, type: 'cohort' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Approval
           </Button>
         )}
 
@@ -467,6 +560,38 @@ export default function VolunteerMgrApprovals() {
             }}
           >
             <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
+          </Button>
+        )}
+
+        {req.status === 'approved' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this approval? The request will be restored to pending status.')) {
+                undoApprovalMutation.mutate({ id: req.id, type: 'practicum' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Approval
+          </Button>
+        )}
+
+        {req.status === 'waitlisted' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this waitlist? The request will be restored to pending status.')) {
+                undoWaitlistMutation.mutate({ id: req.id, type: 'practicum' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Waitlist
           </Button>
         )}
 
@@ -636,6 +761,38 @@ export default function VolunteerMgrApprovals() {
               }}
             >
               <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
+            </Button>
+          )}
+
+          {req.status === 'approved' && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full mt-2 text-primary hover:text-primary/90"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (confirm('Undo this approval? The request will be restored to pending status.')) {
+                  undoApprovalMutation.mutate({ id: req.id, type: 'approval' });
+                }
+              }}
+            >
+              <Clock className="w-3.5 h-3.5 mr-1" /> Undo Approval
+            </Button>
+          )}
+
+          {req.status === 'waitlisted' && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full mt-2 text-primary hover:text-primary/90"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (confirm('Undo this waitlist? The request will be restored to pending status.')) {
+                  undoWaitlistMutation.mutate({ id: req.id, type: 'approval' });
+                }
+              }}
+            >
+              <Clock className="w-3.5 h-3.5 mr-1" /> Undo Waitlist
             </Button>
           )}
 
