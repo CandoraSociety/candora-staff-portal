@@ -576,8 +576,12 @@ export default function VolunteerMgrApprovals() {
               />
               <div className="flex gap-2">
                 <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
-                  onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id] })}>
+                  onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id], volunteerStatus: 'active' })}>
                   <CheckCircle className="w-3.5 h-3.5" /> Approve
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1 bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id], volunteerStatus: 'waitlist' })}>
+                  <Clock className="w-3.5 h-3.5" /> Waitlist
                 </Button>
                 <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
                   onClick={() => setRejectionDialog({ open: true, type: 'approval', data: req })}>
