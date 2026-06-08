@@ -49,7 +49,7 @@ export default function VolunteerPortal() {
                   <Clock className="w-8 h-8 text-slate-900" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold font-display text-yellow-400">Sign In / Sign Out</h2>
+                  <h2 className="text-xl font-bold font-display text-yellow-400">Sign In to Your Account</h2>
                   <p className="text-sm text-yellow-200/70 mt-1">
                     Track your volunteer hours
                   </p>

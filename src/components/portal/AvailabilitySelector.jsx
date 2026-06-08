@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarIcon, X, Clock, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 const DAYS_OF_WEEK = [
   { key: 'monday', label: 'Monday' },
@@ -26,12 +27,19 @@ const TIME_SLOTS = [
   '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'
 ];
 
-export default function AvailabilitySelector({ value, onChange }) {
+export default function AvailabilitySelector({ value, onChange, showBlockedDates = true }) {
   const [weeklySchedule, setWeeklySchedule] = useState(value?.weekly_schedule || {
     monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
   });
   const [blockedDates, setBlockedDates] = useState(value?.blocked_dates || []);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  // Sync with parent value changes
+  useEffect(() => {
+    if (value?.weekly_schedule) setWeeklySchedule(value.weekly_schedule);
+    if (value?.blocked_dates) setBlockedDates(value.blocked_dates);
+  }, [value]);
 
   const toggleTimeSlot = (day, time) => {
     const daySlots = weeklySchedule[day] || [];
@@ -44,7 +52,7 @@ export default function AvailabilitySelector({ value, onChange }) {
     onChange?.({ weekly_schedule: newSchedule, blocked_dates: blockedDates });
   };
 
-  const toggleBlockedDate = (date) => {
+  const handleCalendarSelect = (date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const newBlocked = blockedDates.includes(dateStr)
       ? blockedDates.filter(d => d !== dateStr)
@@ -123,55 +131,61 @@ export default function AvailabilitySelector({ value, onChange }) {
       </div>
 
       {/* Blocked Dates */}
-      <div className="border-t pt-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Ban className="w-4 h-4 text-destructive" />
-          <Label className="font-semibold">Blocked Dates (Unavailable)</Label>
-        </div>
-        
-        <div className="flex gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <CalendarIcon className="w-4 h-4" />
-                {blockedDates.length > 0 ? `${blockedDates.length} blocked` : 'Select dates'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="multiple"
-                selected={blockedDates.map(d => new Date(d))}
-                onSelect={(dates) => {
-                  const newBlocked = dates ? dates.map(d => format(d, 'yyyy-MM-dd')) : [];
-                  setBlockedDates(newBlocked);
-                  onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
-                }}
-                className="rounded-md border"
-              />
-            </PopoverContent>
-          </Popover>
+      {showBlockedDates && (
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Ban className="w-4 h-4 text-destructive" />
+            <Label className="font-semibold">Blocked Dates (Unavailable)</Label>
+          </div>
           
-          {blockedDates.length > 0 && (
-            <div className="flex-1 flex flex-wrap gap-1">
-              {blockedDates.slice(0, 5).map(date => (
-                <Badge key={date} variant="outline" className="text-xs">
-                  {format(new Date(date), 'MMM d')}
-                  <button
-                    type="button"
-                    onClick={() => toggleBlockedDate(new Date(date))}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </Badge>
-              ))}
-              {blockedDates.length > 5 && (
-                <span className="text-xs text-muted-foreground">+{blockedDates.length - 5} more</span>
-              )}
-            </div>
-          )}
+          <div className="flex gap-2 flex-wrap">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {blockedDates.length > 0 ? `${blockedDates.length} blocked` : 'Select dates'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="multiple"
+                  selected={blockedDates.map(d => new Date(d))}
+                  onSelect={(dates) => {
+                    const newBlocked = dates ? dates.map(d => format(d, 'yyyy-MM-dd')) : [];
+                    setBlockedDates(newBlocked);
+                    onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
+                  }}
+                  className="rounded-md border"
+                />
+              </PopoverContent>
+            </Popover>
+            
+            {blockedDates.length > 0 && (
+              <div className="flex-1 flex flex-wrap gap-1">
+                {blockedDates.slice(0, 5).map(date => (
+                  <Badge key={date} variant="outline" className="text-xs flex items-center gap-1">
+                    {format(new Date(date), 'MMM d')}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newBlocked = blockedDates.filter(d => d !== date);
+                        setBlockedDates(newBlocked);
+                        onChange?.({ weekly_schedule: weeklySchedule, blocked_dates: newBlocked });
+                      }}
+                      className="hover:text-destructive"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {blockedDates.length > 5 && (
+                  <span className="text-xs text-muted-foreground">+{blockedDates.length - 5} more</span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
