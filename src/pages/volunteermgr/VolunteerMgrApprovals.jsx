@@ -218,6 +218,51 @@ export default function VolunteerMgrApprovals() {
     },
   });
 
+  const undoRejectionMutation = useMutation({
+    mutationFn: async ({ id, type }) => {
+      if (type === 'cohort') {
+        await base44.entities.VolunteerCohortRequest.update(id, {
+          status: 'pending',
+          approved_by: null,
+          approval_date: null,
+          rejection_reason: null,
+          rejection_details: null,
+        });
+      } else if (type === 'practicum') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          rejection_reason: null,
+          rejection_details: null,
+        });
+      } else if (type === 'profile') {
+        await base44.entities.VolunteerProfileChange.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          rejection_reason: null,
+          rejection_details: null,
+        });
+      } else if (type === 'approval') {
+        await base44.entities.VolunteerApproval.update(id, {
+          status: 'pending',
+          reviewed_by: null,
+          review_date: null,
+          rejection_reason: null,
+          rejection_details: null,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-cohort-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-profile-changes'] });
+      toast.success('Rejection undone - request restored to pending');
+    },
+  });
+
   const pendingApprovals = approvals.filter(a => a.status === 'pending');
   const pendingProfileChanges = profileChanges.filter(c => c.status === 'pending');
   const pendingCohortRequests = cohortRequests.filter(c => c.status === 'pending');
@@ -258,6 +303,22 @@ export default function VolunteerMgrApprovals() {
         {req.status === 'pending' && (
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'cohort', data: req }); }}>
             View Details
+          </Button>
+        )}
+
+        {req.status === 'rejected' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this rejection? The request will be restored to pending status.')) {
+                undoRejectionMutation.mutate({ id: req.id, type: 'cohort' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
           </Button>
         )}
 
@@ -325,6 +386,22 @@ export default function VolunteerMgrApprovals() {
         {req.status === 'pending' && (
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'practicum', data: req }); }}>
             View Details
+          </Button>
+        )}
+
+        {req.status === 'rejected' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this rejection? The request will be restored to pending status.')) {
+                undoRejectionMutation.mutate({ id: req.id, type: 'practicum' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
           </Button>
         )}
 
@@ -399,6 +476,22 @@ export default function VolunteerMgrApprovals() {
           </Button>
         )}
 
+        {change.status === 'rejected' && (
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="w-full mt-2 text-primary hover:text-primary/90"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (confirm('Undo this rejection? The request will be restored to pending status.')) {
+                undoRejectionMutation.mutate({ id: change.id, type: 'profile' });
+              }
+            }}
+          >
+            <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
+          </Button>
+        )}
+
         {change.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
             <Textarea
@@ -451,6 +544,22 @@ export default function VolunteerMgrApprovals() {
           {req.status === 'pending' && (
             <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'approval', data: req }); }}>
               View Details
+            </Button>
+          )}
+
+          {req.status === 'rejected' && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full mt-2 text-primary hover:text-primary/90"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (confirm('Undo this rejection? The request will be restored to pending status.')) {
+                  undoRejectionMutation.mutate({ id: req.id, type: 'approval' });
+                }
+              }}
+            >
+              <Clock className="w-3.5 h-3.5 mr-1" /> Undo Rejection
             </Button>
           )}
 
