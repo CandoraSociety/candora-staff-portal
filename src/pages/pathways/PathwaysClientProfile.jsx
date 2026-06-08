@@ -14,6 +14,7 @@ import ClientFinancials from '@/components/client/ClientFinancials';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
 import StatusChangeDialog from '@/components/client/StatusChangeDialog';
 import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
+import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
 
 const STREAM_LABELS = {
   direct_to_employment: 'DEA',
@@ -258,10 +259,15 @@ export default function PathwaysClientProfile() {
       <div className="p-6">
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
+            <TabsTrigger value="program_flow">Program Flow</TabsTrigger>
             <TabsTrigger value="overview">Client Overview</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="program_flow">
+            <ProgramFlowWizard client={client} onSave={handleSave} />
+          </TabsContent>
 
           <TabsContent value="overview">
             <ClientProfileOverview client={client} onSave={handleSave} />
