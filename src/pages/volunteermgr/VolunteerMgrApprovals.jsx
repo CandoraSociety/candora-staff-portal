@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X } from 'lucide-react';
 import moment from 'moment';
 
 const typeConfig = {
@@ -24,6 +25,7 @@ const statusColors = {
 
 export default function VolunteerMgrApprovals() {
   const [reviewNotes, setReviewNotes] = useState({});
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: approvals = [] } = useQuery({
@@ -109,8 +111,12 @@ export default function VolunteerMgrApprovals() {
   const resolvedProfileChanges = profileChanges.filter(c => c.status !== 'pending');
   const resolvedApprovals = approvals.filter(a => a.status !== 'pending');
 
-  const renderCohortCard = (req) => (
-    <Card key={req.id} className="shadow-sm">
+  const renderCohortCard = (req, isClickable = true) => (
+    <Card 
+      key={req.id} 
+      className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={() => isClickable && setSelectedRequest({ type: 'cohort', data: req })}
+    >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -139,9 +145,13 @@ export default function VolunteerMgrApprovals() {
               placeholder="Review notes (optional)..."
               rows={2}
               value={reviewNotes[req.id] || ''}
-              onChange={e => setReviewNotes(p => ({ ...p, [req.id]: e.target.value }))}
+              onChange={(e) => {
+                e.stopPropagation();
+                setReviewNotes(p => ({ ...p, [req.id]: e.target.value }));
+              }}
+              onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <Button 
                 size="sm" 
                 className="gap-1 bg-green-600 hover:bg-green-700"
@@ -179,8 +189,12 @@ export default function VolunteerMgrApprovals() {
     </Card>
   );
 
-  const renderPracticumCard = (req) => (
-    <Card key={req.id} className="shadow-sm">
+  const renderPracticumCard = (req, isClickable = true) => (
+    <Card 
+      key={req.id} 
+      className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={() => isClickable && setSelectedRequest({ type: 'practicum', data: req })}
+    >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -200,9 +214,13 @@ export default function VolunteerMgrApprovals() {
               placeholder="Review notes (optional)..."
               rows={2}
               value={reviewNotes[req.id] || ''}
-              onChange={e => setReviewNotes(p => ({ ...p, [req.id]: e.target.value }))}
+              onChange={(e) => {
+                e.stopPropagation();
+                setReviewNotes(p => ({ ...p, [req.id]: e.target.value }));
+              }}
+              onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <Button 
                 size="sm" 
                 className="gap-1 bg-green-600 hover:bg-green-700"
@@ -244,8 +262,12 @@ export default function VolunteerMgrApprovals() {
     </Card>
   );
 
-  const renderProfileChangeCard = (change) => (
-    <Card key={change.id} className="shadow-sm">
+  const renderProfileChangeCard = (change, isClickable = true) => (
+    <Card 
+      key={change.id} 
+      className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={() => isClickable && setSelectedRequest({ type: 'profile', data: change })}
+    >
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -267,9 +289,13 @@ export default function VolunteerMgrApprovals() {
               placeholder="Review notes (optional)..."
               rows={2}
               value={reviewNotes[change.id] || ''}
-              onChange={e => setReviewNotes(p => ({ ...p, [change.id]: e.target.value }))}
+              onChange={(e) => {
+                e.stopPropagation();
+                setReviewNotes(p => ({ ...p, [change.id]: e.target.value }));
+              }}
+              onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
                 onClick={() => updateProfileChangeMutation.mutate({ id: change.id, status: 'approved', notes: reviewNotes[change.id] })}>
                 <CheckCircle className="w-3.5 h-3.5" /> Approve
@@ -286,12 +312,16 @@ export default function VolunteerMgrApprovals() {
     </Card>
   );
 
-  const renderCard = (req) => {
+  const renderCard = (req, isClickable = true) => {
     const config = typeConfig[req.request_type] || { icon: AlertCircle, label: req.request_type, color: 'bg-muted' };
     const Icon = config.icon;
 
     return (
-      <Card key={req.id} className="shadow-sm">
+      <Card 
+        key={req.id} 
+        className={`shadow-sm ${isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+        onClick={() => isClickable && setSelectedRequest({ type: 'approval', data: req })}
+      >
         <CardContent className="p-4 space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -309,9 +339,13 @@ export default function VolunteerMgrApprovals() {
                 placeholder="Review notes (optional)..."
                 rows={2}
                 value={reviewNotes[req.id] || ''}
-                onChange={e => setReviewNotes(p => ({ ...p, [req.id]: e.target.value }))}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setReviewNotes(p => ({ ...p, [req.id]: e.target.value }));
+                }}
+                onClick={(e) => e.stopPropagation()}
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                 <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
                   onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id] })}>
                   <CheckCircle className="w-3.5 h-3.5" /> Approve
@@ -401,6 +435,151 @@ export default function VolunteerMgrApprovals() {
           {resolvedApprovals.map(renderCard)}
         </div>
       )}
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <DialogTitle className="text-lg">
+                  {selectedRequest?.type === 'cohort' && selectedRequest?.data?.organization_name}
+                  {selectedRequest?.type === 'practicum' && selectedRequest?.data?.volunteer_name}
+                  {selectedRequest?.type === 'profile' && selectedRequest?.data?.volunteer_name}
+                  {selectedRequest?.type === 'approval' && selectedRequest?.data?.volunteer_name}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedRequest?.type === 'cohort' && 'Cohort Registration Request'}
+                  {selectedRequest?.type === 'practicum' && 'Practicum Placement Request'}
+                  {selectedRequest?.type === 'profile' && 'Profile Change Request'}
+                  {selectedRequest?.type === 'approval' && 'Volunteer Approval Request'}
+                </DialogDescription>
+              </div>
+              <button onClick={() => setSelectedRequest(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </DialogHeader>
+
+          {selectedRequest?.type === 'cohort' && (
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-muted-foreground">Organization Type</p>
+                  <p className="font-medium">{selectedRequest.data.organization_type?.replace(/_/g, ' ')}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Contact Person</p>
+                  <p className="font-medium">{selectedRequest.data.contact_name}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Contact Email</p>
+                  <p className="font-medium">{selectedRequest.data.contact_email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Contact Phone</p>
+                  <p className="font-medium">{selectedRequest.data.contact_phone || 'Not provided'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Number of Volunteers</p>
+                  <p className="font-medium">{selectedRequest.data.number_of_volunteers}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Preferred Start Date</p>
+                  <p className="font-medium">{selectedRequest.data.preferred_start_date ? moment(selectedRequest.data.preferred_start_date).format('MMM D, YYYY') : 'Not specified'}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Availability</p>
+                <p className="font-medium">{selectedRequest.data.availability || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Areas of Interest</p>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {selectedRequest.data.areas_of_interest?.map(area => (
+                    <Badge key={area} variant="secondary">{area}</Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Skills or Focus</p>
+                <p className="font-medium">{selectedRequest.data.skills_or_focus || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Motivation</p>
+                <p className="font-medium">{selectedRequest.data.motivation || 'Not specified'}</p>
+              </div>
+              {selectedRequest.data.include_donation && (
+                <div className="border-t pt-4">
+                  <p className="text-muted-foreground">Donation</p>
+                  <p className="font-medium">${selectedRequest.data.donation_amount} - {selectedRequest.data.donation_message || 'No message'}</p>
+                </div>
+              )}
+              {selectedRequest.data.vulnerable_sector_check && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-yellow-800 font-medium">✓ Vulnerable Sector Check consent provided</p>
+                </div>
+              )}
+              {selectedRequest.data.notes && (
+                <div className="border-t pt-4">
+                  <p className="text-muted-foreground">Admin Notes</p>
+                  <p className="font-medium">{selectedRequest.data.notes}</p>
+                </div>
+              )}
+              {selectedRequest.data.card_created && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-800 font-medium">✓ Portal Card Created (ID: {selectedRequest.data.card_id})</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedRequest?.type === 'practicum' && (
+            <div className="space-y-4 text-sm">
+              <p className="text-muted-foreground">Description</p>
+              <p className="font-medium">{selectedRequest.data.description}</p>
+              {selectedRequest.data.review_notes && (
+                <div className="border-t pt-4">
+                  <p className="text-muted-foreground">Review Notes</p>
+                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedRequest?.type === 'profile' && (
+            <div className="space-y-4 text-sm">
+              <p className="text-muted-foreground">Changes Requested</p>
+              <p className="font-medium">{selectedRequest.data.change_summary}</p>
+              {selectedRequest.data.review_notes && (
+                <div className="border-t pt-4">
+                  <p className="text-muted-foreground">Review Notes</p>
+                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selectedRequest?.type === 'approval' && (
+            <div className="space-y-4 text-sm">
+              <p className="text-muted-foreground">Description</p>
+              <p className="font-medium">{selectedRequest.data.description}</p>
+              {selectedRequest.data.review_notes && (
+                <div className="border-t pt-4">
+                  <p className="text-muted-foreground">Review Notes</p>
+                  <p className="font-medium">{selectedRequest.data.review_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <p className="text-xs text-muted-foreground">
+              Created {selectedRequest?.data?.created_date ? moment(selectedRequest.data.created_date).fromNow() : selectedRequest?.data?.submitted_date ? moment(selectedRequest.data.submitted_date).fromNow() : 'Unknown'}
+            </p>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
