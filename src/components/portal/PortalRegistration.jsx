@@ -147,11 +147,11 @@ export default function PortalRegistration({ onComplete }) {
             <div><Label>Phone</Label><PhoneInput value={form.phone} onChange={v => update('phone', v)} className="mt-1" /></div>
             <div><Label>Date of Birth</Label><Input type="date" value={form.birth_date} onChange={e => update('birth_date', e.target.value)} className="mt-1" /></div>
             <div>
-              <Label>Gender</Label>
+              <Label>Sex</Label>
               <Select value={form.gender} onValueChange={v => update('gender', v)}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
-                  {['Female', 'Male', 'Non-binary', 'Prefer not to say', 'Other'].map(g => (
+                  {['Male', 'Female', 'Prefer not to say'].map(g => (
                     <SelectItem key={g} value={g}>{g}</SelectItem>
                   ))}
                 </SelectContent>

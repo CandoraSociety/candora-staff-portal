@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar, X, FileText } from 'lucide-react';
+import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar, X, FileText, ClipboardCheck } from 'lucide-react';
 import moment from 'moment';
 import PortalProfile from './PortalProfile';
 import PortalShiftSignup from './PortalShiftSignup';
 import PortalDocuments from './PortalDocuments';
+import PortalAvailability from './PortalAvailability';
 
 export default function PortalSignIn({ onBack, onAuthenticated }) {
   if (!onBack) onBack = () => {};
@@ -19,6 +20,7 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
   const [showProfile, setShowProfile] = useState(false);
   const [showShifts, setShowShifts] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [showAvailability, setShowAvailability] = useState(false);
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
@@ -255,6 +257,14 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
             <Button
               variant="outline"
               className="w-full gap-2 mt-2"
+              onClick={() => setShowAvailability(true)}
+            >
+              <ClipboardCheck className="w-4 h-4" />
+              Edit My Availability
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full gap-2 mt-2"
               onClick={() => setShowDocuments(true)}
             >
               <FileText className="w-4 h-4" />
@@ -301,6 +311,15 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowDocuments(false)}>
             <div className="max-w-5xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
               <PortalDocuments volunteerId={foundVolunteer.id} onBack={() => setShowDocuments(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* Availability Popup */}
+        {showAvailability && foundVolunteer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowAvailability(false)}>
+            <div className="max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <PortalAvailability volunteerId={foundVolunteer.id} onBack={() => setShowAvailability(false)} />
             </div>
           </div>
         )}

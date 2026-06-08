@@ -10,7 +10,7 @@ export default function PhoneInput({ value, onChange, placeholder, className }) 
 
   const handleChange = (e) => {
     const formatted = formatPhone(e.target.value);
-    onChange({ target: { value: formatted } });
+    onChange(formatted);
   };
 
   return (
