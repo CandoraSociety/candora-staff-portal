@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -341,21 +341,6 @@ export default function VolunteerMgrEvents() {
               <Label>Notes</Label>
               <Textarea value={form.notes} onChange={(e) => update('notes', e.target.value)} rows={2} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="enable-waitlist">Enable Waitlist</Label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="enable-waitlist"
-                  checked={form.enable_waitlist}
-                  onChange={(e) => update('enable_waitlist', e.target.checked)}
-                  className="h-4 w-4"
-                />
-                <span className="text-sm text-muted-foreground">
-                  Allow volunteers to join waitlist when event is full
-                </span>
-              </div>
-            </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={saveMutation.isPending}>
@@ -363,68 +348,6 @@ export default function VolunteerMgrEvents() {
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Waitlist Management Dialog */}
-      <Dialog open={waitlistDialog.open} onOpenChange={() => setWaitlistDialog({ open: false, event: null, waitlist: [] })}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Waitlist for {waitlistDialog.event?.title}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {waitlistDialog.waitlist.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>No volunteers on the waitlist</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {waitlistDialog.waitlist.map((signup) => (
-                  <Card key={signup.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{signup.volunteer_name}</p>
-                          <p className="text-sm text-muted-foreground">{signup.volunteer_email}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Added: {moment(signup.created_date).format('MMM D, YYYY h:mm A')}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            className="bg-green-600 hover:bg-green-700"
-                            onClick={() => handlePromoteFromWaitlist(signup.id, signup.volunteer_id)}
-                          >
-                            Promote
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                            onClick={() => handleRemoveFromWaitlist(signup.id)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWaitlistDialog({ open: false, event: null, waitlist: [] })}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
