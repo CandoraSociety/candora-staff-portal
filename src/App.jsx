@@ -89,13 +89,23 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
+    } else if (authError.type === 'auth_required') {
+      navigateToLogin();
+      return null;
     }
-    // Don't auto-redirect on auth_required - let ProtectedRoute handle it
   }
 
   return (
     <Routes>
-      {/* Authenticated routes only */}
+      {/* Public portal routes — no auth required */}
+      <Route path="/volunteer-portal" element={<VolunteerPortal />} />
+      <Route path="/staff-portal" element={<StaffPortal />} />
+
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
@@ -159,20 +169,9 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <Routes>
-            {/* Public routes - outside auth check */}
-            <Route path="/volunteer-portal" element={<VolunteerPortal />} />
-            <Route path="/staff-portal" element={<StaffPortal />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* All other routes (authenticated) */}
-            <Route path="/*" element={<AuthenticatedApp />} />
-          </Routes>
-          <Toaster />
+          <AuthenticatedApp />
         </Router>
+        <Toaster />
       </QueryClientProvider>
     </AuthProvider>
   )

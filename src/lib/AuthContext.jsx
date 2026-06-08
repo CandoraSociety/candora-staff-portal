@@ -103,7 +103,14 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
-      // Don't set authError here - let ProtectedRoute handle auth requirements per route
+      
+      // If user auth fails, it might be an expired token
+      if (error.status === 401 || error.status === 403) {
+        setAuthError({
+          type: 'auth_required',
+          message: 'Authentication required'
+        });
+      }
     }
   };
 
@@ -123,13 +130,6 @@ export const AuthProvider = ({ children }) => {
   const navigateToLogin = () => {
     // Use the SDK's redirectToLogin method
     base44.auth.redirectToLogin(window.location.href);
-  };
-
-  const skipAuthRedirect = () => {
-    // Clear auth error without redirecting - for public routes
-    setAuthError(null);
-    setIsLoadingAuth(false);
-    setIsLoadingPublicSettings(false);
   };
 
   return (
