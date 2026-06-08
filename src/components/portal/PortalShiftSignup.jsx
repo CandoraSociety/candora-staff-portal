@@ -254,9 +254,9 @@ export default function PortalShiftSignup({ volunteerId, onBack }) {
           </div>
         )}
 
-        <Button variant="ghost" onClick={onBack} className="w-full text-muted-foreground">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
+        <Button variant="outline" onClick={onBack} className="w-full mt-4 gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Sign In
         </Button>
       </CardContent>
     </Card>

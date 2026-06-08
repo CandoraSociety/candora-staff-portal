@@ -89,22 +89,14 @@ export default function VolunteerPortal() {
         {view === 'profile' && selectedVolunteerId && (
           <PortalProfile 
             volunteerId={selectedVolunteerId}
-            onBack={() => {
-              setView('home');
-              setSelectedVolunteerId(null);
-              setAuthenticatedVolunteer(null);
-            }}
+            onBack={() => setView('signin')}
           />
         )}
 
         {view === 'shifts' && selectedVolunteerId && (
           <PortalShiftSignup
             volunteerId={selectedVolunteerId}
-            onBack={() => {
-              setView('home');
-              setSelectedVolunteerId(null);
-              setAuthenticatedVolunteer(null);
-            }}
+            onBack={() => setView('signin')}
           />
         )}
       </main>

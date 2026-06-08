@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { User, Edit2, Save, X, CheckCircle, Clock, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { User, Edit2, Save, X, CheckCircle, Clock, Mail, Phone, MapPin, Calendar, Award, TrendingUp } from 'lucide-react';
 import moment from 'moment';
 
 export default function PortalProfile({ volunteerId, onBack }) {
@@ -31,6 +31,21 @@ export default function PortalProfile({ volunteerId, onBack }) {
     }),
     enabled: !!volunteerId,
   });
+
+  const { data: timeLogs = [] } = useQuery({
+    queryKey: ['volunteer-timelogs', volunteerId],
+    queryFn: () => base44.entities.VolunteerTimeLog.filter({ volunteer_id: volunteerId }),
+    enabled: !!volunteerId,
+  });
+
+  const { data: recognition = [] } = useQuery({
+    queryKey: ['volunteer-recognition', volunteerId],
+    queryFn: () => base44.entities.VolunteerRecognition.filter({ volunteer_id: volunteerId }),
+    enabled: !!volunteerId,
+  });
+
+  // Calculate total hours from time logs
+  const totalHoursLogged = timeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
 
   const submitChangeMutation = useMutation({
     mutationFn: async (changes) => {
@@ -162,17 +177,35 @@ export default function PortalProfile({ volunteerId, onBack }) {
           </div>
         )}
 
-        {/* Profile Header */}
+        {/* Profile Header with Stats */}
         <div className="flex items-center gap-4 pb-4 border-b">
           <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center text-3xl font-bold text-accent">
             {volunteer.first_name?.[0]}{volunteer.last_name?.[0]}
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-xl font-bold font-display">{volunteer.first_name} {volunteer.last_name}</h3>
             <Badge className="mt-1">{volunteer.volunteer_type}</Badge>
             <p className="text-sm text-muted-foreground mt-1">
               Volunteer since {volunteer.start_date ? moment(volunteer.start_date).format('MMM YYYY') : 'N/A'}
             </p>
+          </div>
+        </div>
+
+        {/* Hours & Recognition Summary */}
+        <div className="grid grid-cols-2 gap-4 py-4 border-b">
+          <div className="bg-primary/5 rounded-lg p-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-primary mb-1">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{(volunteer.total_hours || 0).toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">Total Hours</p>
+          </div>
+          <div className="bg-accent/5 rounded-lg p-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-accent mb-1">
+              <Award className="w-5 h-5" />
+            </div>
+            <p className="text-2xl font-bold text-foreground">{recognition.length}</p>
+            <p className="text-xs text-muted-foreground">Awards</p>
           </div>
         </div>
 
@@ -343,6 +376,43 @@ export default function PortalProfile({ volunteerId, onBack }) {
           )}
         </div>
 
+        {/* Recognition Awards */}
+        {recognition && recognition.length > 0 && (
+          <div className="space-y-4 pt-4 border-t">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              Recognition & Awards
+            </h4>
+            <div className="space-y-3">
+              {recognition
+                .sort((a, b) => moment(b.date_awarded).diff(moment(a.date_awarded)))
+                .map(award => (
+                  <div key={award.id} className="bg-accent/5 border border-accent/20 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-semibold text-foreground">{award.title}</h5>
+                        <p className="text-sm text-muted-foreground mt-1">{award.description}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {moment(award.date_awarded).format('MMM D, YYYY')}
+                          </span>
+                          {award.awarded_by && (
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {award.awarded_by}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Award className="w-8 h-8 text-accent opacity-50" />
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         {isEditing && (
           <div className="flex gap-3 pt-4 border-t">
@@ -366,8 +436,9 @@ export default function PortalProfile({ volunteerId, onBack }) {
           </div>
         )}
 
-        <Button variant="ghost" onClick={onBack} className="w-full text-muted-foreground mt-4">
-          Back to Home
+        <Button variant="outline" onClick={onBack} className="w-full mt-4 gap-2">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Sign In
         </Button>
       </CardContent>
     </Card>
