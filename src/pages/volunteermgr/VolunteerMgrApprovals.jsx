@@ -520,6 +520,14 @@ export default function VolunteerMgrApprovals() {
                 </div>
               </div>
 
+              {/* Vulnerable Sector Check */}
+              {selectedRequest.data.vulnerable_sector_check && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800 font-semibold text-sm">✓ Vulnerable Sector Check Acknowledged</p>
+                  <p className="text-yellow-700 text-sm mt-1">Organization acknowledges that volunteers may be required to complete a Vulnerable Sector Check</p>
+                </div>
+              )}
+
               {/* Volunteer Group Details */}
               <div className="space-y-3">
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Volunteer Group Details</h3>
@@ -566,13 +574,7 @@ export default function VolunteerMgrApprovals() {
                 </div>
               </div>
 
-              {/* Vulnerable Sector Check */}
-              {selectedRequest.data.vulnerable_sector_check && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 font-semibold text-sm">✓ Vulnerable Sector Check</p>
-                  <p className="text-yellow-700 text-sm mt-1">Organization acknowledges that volunteers may be required to complete a Vulnerable Sector Check</p>
-                </div>
-              )}
+              
 
               {/* Donation Information */}
               {selectedRequest.data.include_donation && (
