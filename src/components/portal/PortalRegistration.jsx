@@ -98,10 +98,6 @@ export default function PortalRegistration({ onComplete }) {
       });
     },
     onSuccess: () => setSubmitted(true),
-    onError: (error) => {
-      console.error('Submission error:', error);
-      alert('There was an error submitting your application. Please try again.');
-    },
   });
 
   if (submitted) {

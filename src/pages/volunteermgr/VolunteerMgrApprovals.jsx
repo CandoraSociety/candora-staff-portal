@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +27,19 @@ const statusColors = {
 export default function VolunteerMgrApprovals() {
   const [reviewNotes, setReviewNotes] = useState({});
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [volunteerData, setVolunteerData] = useState(null);
   const queryClient = useQueryClient();
+
+  // Fetch full volunteer data when viewing a new_registration approval
+  useEffect(() => {
+    if (selectedRequest?.type === 'approval' && selectedRequest.data.request_type === 'new_registration' && selectedRequest.data.volunteer_id) {
+      base44.entities.Volunteer.get(selectedRequest.data.volunteer_id)
+        .then(setVolunteerData)
+        .catch(() => setVolunteerData(null));
+    } else {
+      setVolunteerData(null);
+    }
+  }, [selectedRequest]);
 
   const { data: approvals = [] } = useQuery({
     queryKey: ['vol-approvals-all'],
@@ -785,11 +797,160 @@ export default function VolunteerMgrApprovals() {
                 <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Request Type</h3>
                 <Badge className="text-sm">{typeConfig[selectedRequest.data.request_type]?.label || selectedRequest.data.request_type}</Badge>
               </div>
-              <div className="space-y-3">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Description</h3>
-                <p className="text-sm">{selectedRequest.data.description}</p>
-              </div>
-              {/* Show additional fields based on request type */}
+
+              {/* New Registration - Show full volunteer form data */}
+              {selectedRequest.data.request_type === 'new_registration' && volunteerData && (
+                <>
+                  {/* Personal Information */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Personal Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Full Name</p>
+                        <p className="font-medium">{volunteerData.first_name} {volunteerData.last_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Email</p>
+                        <p className="font-medium">{volunteerData.email || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="font-medium">{volunteerData.phone || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date of Birth</p>
+                        <p className="font-medium">{volunteerData.birth_date ? moment(volunteerData.birth_date).format('MMMM D, YYYY') : 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Sex</p>
+                        <p className="font-medium">{volunteerData.gender || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Volunteer Type</p>
+                        <p className="font-medium">{volunteerData.volunteer_type?.replace('_', ' ') || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">English Proficiency</p>
+                        <p className="font-medium">{volunteerData.ell_level || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Address Information */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Address Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Address</p>
+                        <p className="font-medium">{volunteerData.address || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">City</p>
+                        <p className="font-medium">{volunteerData.city || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Emergency Contact */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Emergency Contact</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Contact Name</p>
+                        <p className="font-medium">{volunteerData.emergency_contact_name || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Contact Phone</p>
+                        <p className="font-medium">{volunteerData.emergency_contact_phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Volunteer Preferences */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Volunteer Preferences</h3>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Areas of Interest</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {volunteerData.programs?.length > 0 ? (
+                          volunteerData.programs.map(area => (
+                            <Badge key={area} variant="secondary" className="text-sm">{area}</Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">Not specified</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">How They Heard</p>
+                        <p className="font-medium">{volunteerData.how_heard || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Photo Consent</p>
+                        <p className="font-medium">{volunteerData.pictures_consent === 'yes' ? 'Yes' : 'No'}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Skills & Experience</p>
+                      <p className="font-medium text-sm">{volunteerData.skills || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Motivation</p>
+                      <p className="font-medium text-sm">{volunteerData.notes || 'Not provided'}</p>
+                    </div>
+                  </div>
+
+                  {/* Availability */}
+                  {volunteerData.availability_schedule && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Availability</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {Object.entries(volunteerData.availability_schedule).filter(([_, slots]) => slots && slots.length > 0).map(([day, slots]) => (
+                          <div key={day}>
+                            <p className="text-xs text-muted-foreground capitalize">{day}</p>
+                            <p className="font-medium text-sm">{slots.join(', ')}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {volunteerData.blocked_dates?.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">Blocked Dates</p>
+                          <div className="flex flex-wrap gap-2">
+                            {volunteerData.blocked_dates.map((block, idx) => (
+                              <Badge key={idx} variant="outline">{moment(block.date).format('MMM D, YYYY')}{block.reason ? ` - ${block.reason}` : ''}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Vulnerable Sector Check */}
+                  {volunteerData.vulnerable_sector_check && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <p className="text-yellow-800 font-semibold text-sm">✓ Vulnerable Sector Check Acknowledged</p>
+                      <p className="text-yellow-700 text-sm mt-1">Volunteer consents to undergoing a Vulnerable Sector Check if required</p>
+                    </div>
+                  )}
+
+                  {/* Donation Information */}
+                  {volunteerData.include_donation && (
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Donation Information</h3>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-blue-900 font-semibold text-sm">Donation Included</p>
+                        <div className="mt-2 text-sm text-blue-700">
+                          <p><strong>Amount:</strong> ${volunteerData.donation_amount}</p>
+                          <p className="mt-1"><strong>Message:</strong> {volunteerData.donation_message || 'No message provided'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Hour Adjustment */}
               {selectedRequest.data.request_type === 'hour_adjustment' && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
@@ -808,12 +969,14 @@ export default function VolunteerMgrApprovals() {
                   </div>
                 </>
               )}
+
               {selectedRequest.data.review_notes && (
                 <div className="space-y-3">
                   <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground border-b pb-1">Review Notes</h3>
                   <p className="text-sm bg-muted p-3 rounded">{selectedRequest.data.review_notes}</p>
                 </div>
               )}
+
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
                 <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
                 {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
