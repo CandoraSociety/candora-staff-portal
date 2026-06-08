@@ -8,6 +8,9 @@
     "volunteer_name": {
       "type": "string"
     },
+    "volunteer_email": {
+      "type": "string"
+    },
     "request_type": {
       "type": "string",
       "enum": [
@@ -40,6 +43,20 @@
     },
     "review_notes": {
       "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "enum": [
+        "not_in_good_standing",
+        "account_exists",
+        "more_info_needed",
+        "other"
+      ],
+      "description": "Preset rejection reason"
+    },
+    "rejection_details": {
+      "type": "string",
+      "description": "Additional details for rejection (required for 'other' reason)"
     }
   },
   "required": [

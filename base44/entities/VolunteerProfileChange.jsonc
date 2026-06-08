@@ -36,9 +36,26 @@
       "type": "string",
       "description": "Email of staff who reviewed"
     },
+    "review_date": {
+      "type": "string",
+      "format": "date"
+    },
     "review_notes": {
       "type": "string",
       "description": "Notes from reviewer"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "enum": [
+        "not_in_good_standing",
+        "more_info_needed",
+        "other"
+      ],
+      "description": "Preset rejection reason"
+    },
+    "rejection_details": {
+      "type": "string",
+      "description": "Additional details for rejection"
     },
     "submitted_date": {
       "type": "string",

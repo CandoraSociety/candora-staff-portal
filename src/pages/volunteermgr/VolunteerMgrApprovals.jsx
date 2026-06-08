@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X } from 'lucide-react';
 import moment from 'moment-timezone';
 import { toast } from 'sonner';
+import RejectionDialog from '@/components/volunteermgr/RejectionDialog';
 
 const typeConfig = {
   new_registration: { icon: UserPlus, label: 'New Registration', color: 'bg-blue-50 text-blue-700' },
@@ -16,6 +17,13 @@ const typeConfig = {
   hour_adjustment: { icon: Clock, label: 'Hour Adjustment', color: 'bg-purple-50 text-purple-700' },
   cohort_registration: { icon: Building2, label: 'Cohort Registration', color: 'bg-indigo-50 text-indigo-700' },
   practicum_placement: { icon: Building2, label: 'Practicum Placement', color: 'bg-emerald-50 text-emerald-700' },
+};
+
+const rejectionReasons = {
+  not_in_good_standing: 'Volunteer is not in good standing',
+  account_exists: 'Account already exists',
+  more_info_needed: 'More information needed',
+  other: 'Other',
 };
 
 const statusColors = {
@@ -28,6 +36,7 @@ export default function VolunteerMgrApprovals() {
   const [reviewNotes, setReviewNotes] = useState({});
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [volunteerData, setVolunteerData] = useState(null);
+  const [rejectionDialog, setRejectionDialog] = useState({ open: false, type: null, data: null });
   const queryClient = useQueryClient();
 
   // Fetch full volunteer data when viewing a new_registration approval
@@ -76,6 +85,57 @@ export default function VolunteerMgrApprovals() {
       toast.error('Approval failed: ' + (error.message || 'Unknown error'));
     },
   });
+
+  const handleRejection = async (reason) => {
+    const { type, data } = rejectionDialog;
+    
+    try {
+      if (type === 'cohort') {
+        await base44.entities.VolunteerCohortRequest.update(data.id, {
+          status: 'rejected',
+          approved_by: 'admin@candorasociety.com',
+          approval_date: moment().format('YYYY-MM-DD'),
+          rejection_reason: reason,
+          notes: reviewNotes[data.id] || '',
+        });
+        queryClient.invalidateQueries({ queryKey: ['vol-cohort-requests'] });
+      } else if (type === 'practicum') {
+        await base44.entities.VolunteerApproval.update(data.id, {
+          status: 'rejected',
+          reviewed_by: 'admin@candorasociety.com',
+          review_date: moment().format('YYYY-MM-DD'),
+          rejection_reason: reason,
+          review_notes: reviewNotes[data.id] || '',
+        });
+        queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+      } else if (type === 'profile') {
+        await base44.entities.VolunteerProfileChange.update(data.id, {
+          status: 'rejected',
+          reviewed_by: 'admin@candorasociety.com',
+          review_date: moment().format('YYYY-MM-DD'),
+          rejection_reason: reason,
+          review_notes: reviewNotes[data.id] || '',
+        });
+        queryClient.invalidateQueries({ queryKey: ['vol-profile-changes'] });
+      } else if (type === 'approval') {
+        await base44.entities.VolunteerApproval.update(data.id, {
+          status: 'rejected',
+          reviewed_by: 'admin@candorasociety.com',
+          review_date: moment().format('YYYY-MM-DD'),
+          rejection_reason: reason,
+          review_notes: reviewNotes[data.id] || '',
+        });
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
+        queryClient.invalidateQueries({ queryKey: ['vol-approvals'] });
+      }
+      
+      toast.success('Request rejected');
+      setRejectionDialog({ open: false, type: null, data: null });
+    } catch (error) {
+      toast.error('Failed to reject: ' + (error.message || 'Unknown error'));
+    }
+  };
 
   const updateProfileChangeMutation = useMutation({
     mutationFn: async ({ id, status, notes }) => {
@@ -188,15 +248,7 @@ export default function VolunteerMgrApprovals() {
                 size="sm" 
                 variant="outline" 
                 className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={() => {
-                  base44.entities.VolunteerCohortRequest.update(req.id, {
-                    status: 'rejected',
-                    approved_by: 'admin@candorasociety.com',
-                    approval_date: moment().format('YYYY-MM-DD'),
-                    notes: reviewNotes[req.id] || '',
-                  });
-                  queryClient.invalidateQueries({ queryKey: ['vol-cohort-requests'] });
-                }}
+                onClick={() => setRejectionDialog({ open: true, type: 'cohort', data: req })}
               >
                 <XCircle className="w-3.5 h-3.5" /> Reject
               </Button>
@@ -239,7 +291,7 @@ export default function VolunteerMgrApprovals() {
         )}
 
         {req.status === 'pending' && (
-          <div className="space-y-2 pt-2 border-t">
+          <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
             <Textarea
               placeholder="Review notes (optional)..."
               rows={2}
@@ -248,9 +300,8 @@ export default function VolunteerMgrApprovals() {
                 e.stopPropagation();
                 setReviewNotes(p => ({ ...p, [req.id]: e.target.value }));
               }}
-              onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2">
               <Button 
                 size="sm" 
                 className="gap-1 bg-green-600 hover:bg-green-700"
@@ -271,16 +322,7 @@ export default function VolunteerMgrApprovals() {
                 size="sm" 
                 variant="outline" 
                 className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={() => {
-                  base44.entities.VolunteerApproval.update(req.id, {
-                    status: 'rejected',
-                    reviewed_by: 'admin@candorasociety.com',
-                    review_date: moment().format('YYYY-MM-DD'),
-                    review_notes: reviewNotes[req.id] || '',
-                  });
-                  queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
-                  queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
-                }}
+                onClick={() => setRejectionDialog({ open: true, type: 'practicum', data: req })}
               >
                 <XCircle className="w-3.5 h-3.5" /> Reject
               </Button>
@@ -320,7 +362,7 @@ export default function VolunteerMgrApprovals() {
         )}
 
         {change.status === 'pending' && (
-          <div className="space-y-2 pt-2 border-t">
+          <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
             <Textarea
               placeholder="Review notes (optional)..."
               rows={2}
@@ -329,15 +371,14 @@ export default function VolunteerMgrApprovals() {
                 e.stopPropagation();
                 setReviewNotes(p => ({ ...p, [change.id]: e.target.value }));
               }}
-              onClick={(e) => e.stopPropagation()}
             />
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2">
               <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
                 onClick={() => updateProfileChangeMutation.mutate({ id: change.id, status: 'approved', notes: reviewNotes[change.id] })}>
                 <CheckCircle className="w-3.5 h-3.5" /> Approve
               </Button>
               <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={() => updateProfileChangeMutation.mutate({ id: change.id, status: 'rejected', notes: reviewNotes[change.id] })}>
+                onClick={() => setRejectionDialog({ open: true, type: 'profile', data: change })}>
                 <XCircle className="w-3.5 h-3.5" /> Reject
               </Button>
             </div>
@@ -376,7 +417,7 @@ export default function VolunteerMgrApprovals() {
           )}
 
           {req.status === 'pending' && (
-            <div className="space-y-2 pt-2 border-t">
+            <div className="space-y-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
               <Textarea
                 placeholder="Review notes (optional)..."
                 rows={2}
@@ -385,15 +426,14 @@ export default function VolunteerMgrApprovals() {
                   e.stopPropagation();
                   setReviewNotes(p => ({ ...p, [req.id]: e.target.value }));
                 }}
-                onClick={(e) => e.stopPropagation()}
               />
-              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex gap-2">
                 <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
                   onClick={() => updateMutation.mutate({ id: req.id, status: 'approved', notes: reviewNotes[req.id] })}>
                   <CheckCircle className="w-3.5 h-3.5" /> Approve
                 </Button>
                 <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-                  onClick={() => updateMutation.mutate({ id: req.id, status: 'rejected', notes: reviewNotes[req.id] })}>
+                  onClick={() => setRejectionDialog({ open: true, type: 'approval', data: req })}>
                   <XCircle className="w-3.5 h-3.5" /> Reject
                 </Button>
               </div>
@@ -477,6 +517,20 @@ export default function VolunteerMgrApprovals() {
           {resolvedApprovals.map(req => renderCard(req, false))}
         </div>
       )}
+
+      {/* Rejection Dialog */}
+      <RejectionDialog
+        open={rejectionDialog.open}
+        onClose={() => setRejectionDialog({ open: false, type: null, data: null })}
+        onReject={handleRejection}
+        requestType={rejectionDialog.type}
+        requestName={
+          rejectionDialog.type === 'cohort' ? rejectionDialog.data?.organization_name :
+          rejectionDialog.type === 'practicum' ? rejectionDialog.data?.volunteer_name :
+          rejectionDialog.type === 'profile' ? rejectionDialog.data?.volunteer_name :
+          rejectionDialog.data?.volunteer_name
+        }
+      />
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedRequest} onOpenChange={() => setSelectedRequest(null)}>

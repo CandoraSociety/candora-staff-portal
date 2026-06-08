@@ -94,6 +94,20 @@
       "type": "string",
       "description": "Admin notes or special instructions"
     },
+    "rejection_reason": {
+      "type": "string",
+      "enum": [
+        "not_in_good_standing",
+        "account_exists",
+        "more_info_needed",
+        "other"
+      ],
+      "description": "Preset rejection reason"
+    },
+    "rejection_details": {
+      "type": "string",
+      "description": "Additional details for rejection"
+    },
     "card_created": {
       "type": "boolean",
       "default": false,

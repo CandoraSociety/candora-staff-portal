@@ -125,8 +125,14 @@
       "type": "string",
       "format": "date"
     },
-    "pin_code": {
-      "type": "string"
+    "password_hash": {
+      "type": "string",
+      "description": "Hashed password for portal login"
+    },
+    "must_change_password": {
+      "type": "boolean",
+      "default": true,
+      "description": "Force password change on next login"
     },
     "is_deceased": {
       "type": "boolean",
