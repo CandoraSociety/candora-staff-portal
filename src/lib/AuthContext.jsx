@@ -132,6 +132,13 @@ export const AuthProvider = ({ children }) => {
     base44.auth.redirectToLogin(window.location.href);
   };
 
+  const skipAuthRedirect = () => {
+    // Clear auth error without redirecting - for public routes
+    setAuthError(null);
+    setIsLoadingAuth(false);
+    setIsLoadingPublicSettings(false);
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 

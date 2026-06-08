@@ -89,10 +89,8 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
     }
+    // Don't auto-redirect on auth_required - let ProtectedRoute handle it
   }
 
   return (
@@ -170,7 +168,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
-            {/* Authenticated routes */}
+            {/* All other routes (authenticated) */}
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
           <Toaster />
