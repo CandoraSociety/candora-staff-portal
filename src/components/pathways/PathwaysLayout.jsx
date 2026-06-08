@@ -36,9 +36,9 @@ export default function PathwaysLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation Header */}
-      <nav className="sticky top-0 z-50 bg-[#1a237e] shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+      <nav className="sticky top-0 z-50 bg-[#1a237e] shadow-lg w-full">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-3">
               <img 
                 src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/bf0d54770_Candoracirclelogo_noanniversary.png" 
@@ -127,7 +127,7 @@ export default function PathwaysLayout() {
       </nav>
       
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
         <Outlet />
       </main>
     </div>
