@@ -1,275 +1,231 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Plus, FileText, BarChart3, LogOut } from 'lucide-react';
-import moment from 'moment';
+import { PlusCircle, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import IntakeForm from '@/components/intake/IntakeForm';
+import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
+import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
+import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
 
-const WORKERS = [
-  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
-  { email: 'lola@candorasociety.com', name: 'Lola' },
-  { email: 'john@candorasociety.com', name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
-  { email: 'olena@candorasociety.com', name: 'Olena' },
-];
+const EMPTY_FILTERS = {
+  service_type: '', program_status: '', employment_status: '',
+  clb_level: '', assigned_worker: '', age_min: '', age_max: '',
+  duration_min: '', duration_max: '', referral_source: '', residency_status: '', followup_90day_status: '',
+};
 
 const SERVICE_LABELS = {
   direct_to_employment: 'DEA',
   pathways: 'Pathways',
   casual: 'Casual',
-  external_referral: 'External Referral',
-  internal_referral: 'Internal Referral',
+  external_referral: 'Ext. Referral',
+  internal_referral: 'Int. Referral',
   not_eligible: 'Not Eligible',
 };
 
-const PROGRAM_STATUS_LABELS = {
-  in_progress: 'In Progress',
-  complete: 'Complete',
-  incomplete: 'Incomplete',
-  cancelled: 'Cancelled',
+const PROGRAM_STATUS_COLORS = {
+  in_progress: 'bg-blue-100 text-blue-700',
+  complete: 'bg-green-100 text-green-700',
+  incomplete: 'bg-yellow-100 text-yellow-700',
+  cancelled: 'bg-red-100 text-red-700',
 };
 
 export default function PathwaysIntake() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: '', last_name: '', email: '', phone: '', address: '', city: '', state: '', zip: '',
-    date_of_birth: '', sex: '', compass_hsid: '', service_type: '', assigned_worker: '',
-  });
-  
-  const { data: clients = [] } = useQuery({
-    queryKey: ['pathways-clients-unassigned'],
-    queryFn: () => base44.entities.Client.list('-created_date', 500),
-  });
-  
+  const [user, setUser] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [sortKey, setSortKey] = useState('intake_date_desc');
+  const [pendingData, setPendingData] = useState(null);
+  const [duplicates, setDuplicates] = useState([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const [me, clientList] = await Promise.all([
+        base44.auth.me().catch(() => null),
+        base44.entities.Client.list('-created_date', 1000),
+      ]);
+      setUser(me);
+      setClients(clientList);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
   const unassignedClients = clients.filter(c => !c.assigned_worker);
-  
-  const createClientMutation = useMutation({
-    mutationFn: async (data) => {
-      const existing = clients.find(c => 
-        (c.email && c.email.toLowerCase() === data.email?.toLowerCase()) ||
-        (c.phone && c.phone === data.phone) ||
-        (c.compass_hsid && c.compass_hsid === data.compass_hsid)
+
+  const workerNames = [...new Set(clients.map(c => c.assigned_worker_name).filter(Boolean))];
+
+  const displayed = applyFiltersAndSort(unassignedClients, search, filters, sortKey);
+
+  const findDuplicates = (data) => {
+    return clients.filter(c => {
+      if (editingClient && c.id === editingClient.id) return false;
+      return (
+        (data.email && c.email && data.email.toLowerCase() === c.email.toLowerCase()) ||
+        (data.phone && c.phone && data.phone.replace(/\D/g, '') === c.phone.replace(/\D/g, '')) ||
+        (data.compass_hsid && c.compass_hsid && data.compass_hsid === c.compass_hsid)
       );
-      if (existing) throw new Error(`Duplicate: ${existing.first_name} ${existing.last_name}`);
-      
-      const client = await base44.entities.Client.create(data);
-      await base44.entities.CompassTask.create({
-        client_id: client.id,
-        client_name: `${client.first_name} ${client.last_name}`,
-        compass_hsid: data.compass_hsid,
-        task_type: 'new_client',
-        title: 'Enter new client into Compass',
-        instructions: `Create new client in Compass.\nName: ${client.first_name} ${client.last_name}\nHSID: ${data.compass_hsid || 'TBD'}`,
-        assigned_worker: data.assigned_worker,
-        assigned_worker_name: WORKERS.find(w => w.email === data.assigned_worker)?.name,
-        status: 'pending',
-      });
-      return client;
-    },
-    onSuccess: () => {
-      toast.success('Client registered!');
-      queryClient.invalidateQueries({ queryKey: ['pathways-clients-unassigned'] });
-      setDialogOpen(false);
-      setFormData({ first_name: '', last_name: '', email: '', phone: '', address: '', city: '', state: '', zip: '',
-        date_of_birth: '', sex: '', compass_hsid: '', service_type: '', assigned_worker: '',
-      });
-    },
-  });
-  
-  const updateField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
-  const handleSubmit = () => {
-    createClientMutation.mutate({
-      ...formData,
-      intake_date: moment().format('YYYY-MM-DD'),
-      status: 'new',
     });
   };
-  
+
+  const handleSaveAttempt = (data) => {
+    const found = findDuplicates(data);
+    if (found.length > 0 && !editingClient) {
+      setPendingData(data);
+      setDuplicates(found);
+    } else {
+      doSave(data);
+    }
+  };
+
+  const doSave = async (data) => {
+    if (editingClient) {
+      const updated = await base44.entities.Client.update(editingClient.id, data);
+      setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+    } else {
+      const withDate = { ...data, intake_date: new Date().toISOString().split('T')[0] };
+      const created = await base44.entities.Client.create(withDate);
+      setClients(prev => [created, ...prev]);
+      const t = taskNewClient(created);
+      await createCompassTask({ client_id: created.id, ...t });
+    }
+    setShowForm(false);
+    setEditingClient(null);
+    setPendingData(null);
+    setDuplicates([]);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-0">
-      <div className="bg-white border-b border-slate-200 px-6 py-4 w-full">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
-            <p className="text-sm text-slate-600 mt-1">
-              {unassignedClients.length} awaiting assignment
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => navigate('/pathways/master')}>
-              <FileText className="h-4 w-4 mr-2" /> Master List
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/pathways/reports')}>
-              <BarChart3 className="h-4 w-4 mr-2" /> Reports
-            </Button>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button><Plus className="h-4 w-4 mr-2" /> New Client</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>New Client Registration</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>First Name *</Label>
-                      <Input value={formData.first_name} onChange={(e) => updateField('first_name', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Last Name *</Label>
-                      <Input value={formData.last_name} onChange={(e) => updateField('last_name', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <Input type="email" value={formData.email} onChange={(e) => updateField('email', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Phone</Label>
-                      <Input value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Date of Birth</Label>
-                      <Input type="date" value={formData.date_of_birth} onChange={(e) => updateField('date_of_birth', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Sex</Label>
-                      <Select value={formData.sex} onValueChange={(v) => updateField('sex', v)}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-2">
-                      <Label>Address</Label>
-                      <Input value={formData.address} onChange={(e) => updateField('address', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>City</Label>
-                      <Input value={formData.city} onChange={(e) => updateField('city', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Province</Label>
-                      <Input value={formData.state} onChange={(e) => updateField('state', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Postal Code</Label>
-                      <Input value={formData.zip} onChange={(e) => updateField('zip', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Compass HSID</Label>
-                      <Input value={formData.compass_hsid} onChange={(e) => updateField('compass_hsid', e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Service Type *</Label>
-                      <Select value={formData.service_type} onValueChange={(v) => updateField('service_type', v)}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="direct_to_employment">DEA</SelectItem>
-                          <SelectItem value="pathways">Pathways</SelectItem>
-                          <SelectItem value="casual">Casual</SelectItem>
-                          <SelectItem value="external_referral">External Referral</SelectItem>
-                          <SelectItem value="internal_referral">Internal Referral</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-2">
-                      <Label>Assigned Worker *</Label>
-                      <Select value={formData.assigned_worker} onValueChange={(v) => updateField('assigned_worker', v)}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>
-                          {WORKERS.map(w => (
-                            <SelectItem key={w.email} value={w.email}>{w.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <DialogFooter className="pt-4 border-t">
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                    <Button 
-                      onClick={handleSubmit} 
-                      disabled={!formData.first_name || !formData.last_name || !formData.service_type || !formData.assigned_worker}
-                    >
-                      Register Client
-                    </Button>
-                  </DialogFooter>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}><LogOut className="h-4 w-4" /></Button>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Page Header */}
+      <header className="bg-white border-b border-slate-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
+          <p className="text-sm text-slate-500">
+            {unassignedClients.length} awaiting assignment · Welcome, {user?.full_name}
+          </p>
         </div>
-      </div>
-      
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Unassigned Clients ({unassignedClients.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {unassignedClients.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">All clients have been assigned to a career counsellor.</p>
-          ) : (
-            <div className="border rounded-lg overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>HSID#</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Program Status</TableHead>
-                    <TableHead>Intake Date</TableHead>
-                    <TableHead>Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {unassignedClients.map(c => (
-                    <TableRow key={c.id} className="hover:bg-slate-50">
-                      <TableCell>
-                        <Link to={`/pathways/client/${c.id}`} className="font-semibold text-primary hover:underline">
-                          {c.first_name} {c.last_name}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{c.compass_hsid || '—'}</TableCell>
-                      <TableCell>{c.phone || '—'}</TableCell>
-                      <TableCell>
-                        <Badge>{SERVICE_LABELS[c.service_type] || c.service_type}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={c.program_status === 'complete' ? 'success' : 'default'}>
-                          {PROGRAM_STATUS_LABELS[c.program_status] || '—'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{c.intake_date ? moment(c.intake_date).format('MMM D, YYYY') : '—'}</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/pathways/client/${c.id}`)}>
-                          Open
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => navigate('/pathways/master')}>Master List</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/pathways/reports')}>Reports</Button>
+          {!showForm && (
+            <Button onClick={() => { setEditingClient(null); setShowForm(true); }} className="gap-2">
+              <PlusCircle className="w-4 h-4" /> New Client
+            </Button>
           )}
-        </CardContent>
-      </Card>
-      </div>
+          <Button variant="ghost" size="icon" onClick={() => base44.auth.logout('/login')}>
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {showForm ? (
+          <IntakeForm
+            client={editingClient}
+            onSave={handleSaveAttempt}
+            onCancel={() => { setShowForm(false); setEditingClient(null); }}
+          />
+        ) : (
+          <>
+            <ClientListControls
+              search={search} onSearch={setSearch}
+              filters={filters} onFilters={setFilters}
+              sortKey={sortKey} onSort={setSortKey}
+              workers={workerNames}
+            />
+
+            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Name</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Service</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Switches</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Program Status</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Career Counsellor</th>
+                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
+                      <th className="px-3 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {displayed.map(c => (
+                      <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-3 py-2.5 font-medium">
+                          <Link to={`/pathways/client/${c.id}`} className="text-blue-700 hover:underline">
+                            {c.first_name} {c.last_name}
+                          </Link>
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
+                        <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
+                        <td className="px-3 py-2.5 text-slate-600">{SERVICE_LABELS[c.service_type] || '—'}</td>
+                        <td className="px-3 py-2.5">
+                          {c.program_stream_switches?.length > 0 ? (
+                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                              {c.program_stream_switches.length}×
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          {c.program_status ? (
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || 'bg-slate-100 text-slate-600'}`}>
+                              {c.program_status.replace('_', ' ')}
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-600">{c.assigned_worker_name || '—'}</td>
+                        <td className="px-3 py-2.5 text-slate-500">
+                          {c.intake_date ? format(new Date(c.intake_date), 'MMM d, yyyy') : '—'}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <Link to={`/pathways/client/${c.id}`}>
+                            <Button variant="outline" size="sm">Open</Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                    {displayed.length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="text-center py-10 text-slate-400">
+                          {unassignedClients.length === 0
+                            ? 'All clients have been assigned to a career counsellor.'
+                            : 'No clients match your filters.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </main>
+
+      {/* Duplicate warning dialog */}
+      {duplicates.length > 0 && pendingData && (
+        <DuplicateWarningDialog
+          duplicates={duplicates}
+          onConfirm={() => doSave(pendingData)}
+          onCancel={() => { setDuplicates([]); setPendingData(null); }}
+        />
+      )}
     </div>
   );
 }
