@@ -84,3 +84,8 @@
   * { @apply border-border outline-ring/50; }
   body { @apply bg-background text-foreground font-sans; }
 }
+
+.candora-spin {
+  border-color: hsl(44,100%,88%);
+  border-top-color: hsl(231,64%,20%);
+}
