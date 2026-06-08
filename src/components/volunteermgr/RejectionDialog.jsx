@@ -20,19 +20,17 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
   const [sendEmail, setSendEmail] = useState(true);
   const [emailBody, setEmailBody] = useState('');
 
-  const handleReject = () => {
+  const handleReject = (withEmail) => {
     if (!reason) return;
-    onReject(requestType, reason, details, sendEmail, emailBody);
+    onReject(requestType, reason, details, withEmail, emailBody);
     setReason('');
     setDetails('');
-    setSendEmail(true);
     setEmailBody('');
   };
 
   const handleClose = () => {
     setReason('');
     setDetails('');
-    setSendEmail(true);
     setEmailBody('');
     onClose();
   };
@@ -116,27 +114,24 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
           )}
         </div>
 
-        <DialogFooter className="gap-2 flex-col sm:flex-row">
+        <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
           <Button 
             variant="destructive" 
-            onClick={() => { setSendEmail(false); handleReject(); }}
+            onClick={() => handleReject(false)}
             disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
-            className="w-full sm:w-auto"
           >
             Reject (No Email)
           </Button>
-          {requesterEmail && (
-            <Button 
-              variant="destructive" 
-              onClick={() => { setSendEmail(true); handleReject(); }}
-              disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
-              className="w-full sm:w-auto gap-2"
-            >
-              <Mail className="w-4 h-4" />
-              Reject & Send Email
-            </Button>
-          )}
+          <Button 
+            variant="default"
+            onClick={() => handleReject(true)}
+            disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
+            className="gap-2"
+          >
+            <Mail className="w-4 h-4" />
+            Reject & Send Email
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
