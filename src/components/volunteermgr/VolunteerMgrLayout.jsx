@@ -41,6 +41,20 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
     queryFn: () => base44.auth.me(),
   });
 
+  const { data: pendingApprovalsCount = 0 } = useQuery({
+    queryKey: ['vol-approvals-pending-count'],
+    queryFn: async () => {
+      const [approvals, profileChanges, cohortRequests, practicumRequests] = await Promise.all([
+        base44.entities.VolunteerApproval.filter({ status: 'pending' }),
+        base44.entities.VolunteerProfileChange.filter({ status: 'pending' }),
+        base44.entities.VolunteerCohortRequest.filter({ status: 'pending' }),
+        base44.entities.VolunteerApproval.filter({ request_type: 'practicum_placement', status: 'pending' }),
+      ]);
+      return approvals.length + profileChanges.length + cohortRequests.length + practicumRequests.length;
+    },
+    refetchInterval: 30000,
+  });
+
   const isActive = (item) => {
     if (item.exact) return location.pathname === item.path;
     return location.pathname.startsWith(item.path);
@@ -89,6 +103,7 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
         {navItems.map(item => {
           const Icon = item.icon;
           const active = isActive(item);
+          const hasNotifications = item.path === '/volunteermgr/approvals' && pendingApprovalsCount > 0;
           return (
             <Link
               key={item.path}
@@ -101,7 +116,12 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
                 collapsed && 'justify-center'
               )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <div className="relative">
+                <Icon className="w-4 h-4 shrink-0" />
+                {hasNotifications && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[hsl(230,60%,12%)]" />
+                )}
+              </div>
               {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           );
