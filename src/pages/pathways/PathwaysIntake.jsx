@@ -97,9 +97,9 @@ export default function PathwaysIntake() {
   };
   
   return (
-    <div className="space-y-6">
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="flex justify-between items-center">
+    <div className="space-y-0">
+      <div className="bg-white border-b border-slate-200 px-6 py-4 w-full">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
             <p className="text-sm text-slate-600 mt-1">
@@ -215,6 +215,7 @@ export default function PathwaysIntake() {
         </div>
       </div>
       
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Unassigned Clients ({unassignedClients.length})</CardTitle>
@@ -268,6 +269,7 @@ export default function PathwaysIntake() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

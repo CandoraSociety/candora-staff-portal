@@ -127,7 +127,7 @@ export default function PathwaysLayout() {
       </nav>
       
       {/* Main Content */}
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <main className="w-full">
         <Outlet />
       </main>
     </div>
