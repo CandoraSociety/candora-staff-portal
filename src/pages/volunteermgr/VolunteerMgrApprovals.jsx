@@ -86,51 +86,89 @@ export default function VolunteerMgrApprovals() {
     },
   });
 
-  const handleRejection = async (reason) => {
-    const { type, data } = rejectionDialog;
+  const handleRejection = async (requestType, reason, details, sendEmail, emailBody) => {
+    const { data } = rejectionDialog;
     
     try {
-      if (type === 'cohort') {
+      // Update the record with rejection details
+      if (requestType === 'cohort') {
         await base44.entities.VolunteerCohortRequest.update(data.id, {
           status: 'rejected',
           approved_by: 'admin@candorasociety.com',
           approval_date: moment().format('YYYY-MM-DD'),
           rejection_reason: reason,
+          rejection_details: details,
           notes: reviewNotes[data.id] || '',
         });
         queryClient.invalidateQueries({ queryKey: ['vol-cohort-requests'] });
-      } else if (type === 'practicum') {
+        
+        // Send email if requested
+        if (sendEmail && data.contact_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.contact_email,
+            subject: 'Candora Society Volunteer Request Update',
+            body: emailBody || `Dear ${data.organization_name},\n\nThank you for your interest in volunteering with The Candora Society. After careful review, we are unable to move forward with your request at this time.\n\nWe appreciate your understanding and wish you all the best.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
+      } else if (requestType === 'practicum') {
         await base44.entities.VolunteerApproval.update(data.id, {
           status: 'rejected',
           reviewed_by: 'admin@candorasociety.com',
           review_date: moment().format('YYYY-MM-DD'),
           rejection_reason: reason,
+          rejection_details: details,
           review_notes: reviewNotes[data.id] || '',
         });
         queryClient.invalidateQueries({ queryKey: ['vol-practicum-requests'] });
         queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
-      } else if (type === 'profile') {
+        
+        if (sendEmail && data.volunteer_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.volunteer_email,
+            subject: 'Practicum Placement Request Update',
+            body: emailBody || `Dear ${data.volunteer_name},\n\nThank you for your interest in a practicum placement with The Candora Society. After careful review, we are unable to move forward with your request at this time.\n\nWe appreciate your understanding and wish you all the best.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
+      } else if (requestType === 'profile') {
         await base44.entities.VolunteerProfileChange.update(data.id, {
           status: 'rejected',
           reviewed_by: 'admin@candorasociety.com',
           review_date: moment().format('YYYY-MM-DD'),
           rejection_reason: reason,
+          rejection_details: details,
           review_notes: reviewNotes[data.id] || '',
         });
         queryClient.invalidateQueries({ queryKey: ['vol-profile-changes'] });
-      } else if (type === 'approval') {
+        
+        if (sendEmail && data.volunteer_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.volunteer_email,
+            subject: 'Profile Change Request Update',
+            body: emailBody || `Dear ${data.volunteer_name},\n\nThank you for your profile update request. After review, we are unable to approve these changes at this time.\n\nPlease contact us if you have questions.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
+      } else if (requestType === 'approval') {
         await base44.entities.VolunteerApproval.update(data.id, {
           status: 'rejected',
           reviewed_by: 'admin@candorasociety.com',
           review_date: moment().format('YYYY-MM-DD'),
           rejection_reason: reason,
+          rejection_details: details,
           review_notes: reviewNotes[data.id] || '',
         });
         queryClient.invalidateQueries({ queryKey: ['vol-approvals-all'] });
         queryClient.invalidateQueries({ queryKey: ['vol-approvals'] });
+        
+        if (sendEmail && data.volunteer_email) {
+          await base44.functions.invoke('sendRejectionEmail', {
+            to: data.volunteer_email,
+            subject: 'Volunteer Application Update',
+            body: emailBody || `Dear ${data.volunteer_name},\n\nThank you for your interest in volunteering with The Candora Society. After careful review, we are unable to move forward with your application at this time.\n\nWe appreciate your understanding and wish you all the best.\n\nWarm regards,\nThe Candora Society Volunteer Team`,
+          });
+        }
       }
       
-      toast.success('Request rejected');
+      toast.success('Request rejected' + (sendEmail ? ' and email sent' : ''));
       setRejectionDialog({ open: false, type: null, data: null });
     } catch (error) {
       toast.error('Failed to reject: ' + (error.message || 'Unknown error'));
@@ -529,6 +567,12 @@ export default function VolunteerMgrApprovals() {
           rejectionDialog.type === 'practicum' ? rejectionDialog.data?.volunteer_name :
           rejectionDialog.type === 'profile' ? rejectionDialog.data?.volunteer_name :
           rejectionDialog.data?.volunteer_name
+        }
+        requesterEmail={
+          rejectionDialog.type === 'cohort' ? rejectionDialog.data?.contact_email :
+          rejectionDialog.type === 'practicum' ? rejectionDialog.data?.volunteer_email :
+          rejectionDialog.type === 'profile' ? rejectionDialog.data?.volunteer_email :
+          rejectionDialog.data?.volunteer_email
         }
       />
 
@@ -1052,6 +1096,26 @@ export default function VolunteerMgrApprovals() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Rejection Dialog */}
+      <RejectionDialog
+        open={rejectionDialog.open}
+        onClose={() => setRejectionDialog({ open: false, type: null, data: null })}
+        onReject={handleRejection}
+        requestType={rejectionDialog.type}
+        requestName={
+          rejectionDialog.type === 'cohort' ? rejectionDialog.data?.organization_name :
+          rejectionDialog.type === 'practicum' ? rejectionDialog.data?.volunteer_name :
+          rejectionDialog.type === 'profile' ? rejectionDialog.data?.volunteer_name :
+          rejectionDialog.data?.volunteer_name
+        }
+        requesterEmail={
+          rejectionDialog.type === 'cohort' ? rejectionDialog.data?.contact_email :
+          rejectionDialog.type === 'practicum' ? rejectionDialog.data?.volunteer_email :
+          rejectionDialog.type === 'profile' ? rejectionDialog.data?.volunteer_email :
+          rejectionDialog.data?.volunteer_email
+        }
+      />
     </div>
   );
 }

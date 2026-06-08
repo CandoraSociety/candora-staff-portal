@@ -22,7 +22,7 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
   const [showDocuments, setShowDocuments] = useState(false);
   const [showAvailability, setShowAvailability] = useState(false);
   const [email, setEmail] = useState('');
-  const [pin, setPin] = useState('');
+  const [password, setPassword] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
   const [foundVolunteer, setFoundVolunteer] = useState(null);
   const [activeLog, setActiveLog] = useState(null);
@@ -49,9 +49,21 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
 
     const vol = volunteers[0];
 
-    // Check PIN if set
-    if (vol.pin_code && pin !== vol.pin_code) {
-      setError('Incorrect PIN.');
+    // Check password
+    if (!vol.password_hash) {
+      setError('No password set. Please contact the coordinator.');
+      return;
+    }
+
+    // Hash the entered password
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const enteredHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (enteredHash !== vol.password_hash) {
+      setError('Incorrect password.');
       return;
     }
 
@@ -94,7 +106,7 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
     onSuccess: () => {
       setSuccessMsg(`Signed in successfully! Welcome, ${foundVolunteer.first_name}!`);
       setStep('success');
-      setEmail(''); setPin(''); setFoundVolunteer(null); setSelectedPosition('');
+      setEmail(''); setPassword(''); setFoundVolunteer(null); setSelectedPosition('');
     },
   });
 
@@ -119,13 +131,13 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
       const hours = Math.round(moment().diff(moment(activeLog.sign_in_time), 'minutes') / 60 * 100) / 100;
       setSuccessMsg(`Signed out successfully! Total time: ${hours} hours`);
       setStep('success');
-      setEmail(''); setPin(''); setFoundVolunteer(null); setActiveLog(null);
+      setEmail(''); setPassword(''); setFoundVolunteer(null); setActiveLog(null);
     },
   });
 
   const reset = () => {
     setStep('lookup');
-    setEmail(''); setPin(''); setFoundVolunteer(null); setActiveLog(null);
+    setEmail(''); setPassword(''); setFoundVolunteer(null); setActiveLog(null);
     setError(''); setSelectedPosition('');
     setSuccessMsg('');
   };
@@ -162,13 +174,12 @@ export default function PortalSignIn({ onBack, onAuthenticated }) {
               />
             </div>
             <div>
-              <Label className="text-foreground font-medium">PIN Code <span className="text-muted-foreground font-normal">(if assigned)</span></Label>
+              <Label className="text-foreground font-medium">Password</Label>
               <Input
                 type="password"
-                placeholder="Leave blank if no PIN"
-                maxLength={4}
-                value={pin}
-                onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLookup()}
                 className="mt-1"
               />

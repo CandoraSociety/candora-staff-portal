@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { XCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { XCircle, Mail } from 'lucide-react';
 
 const REJECTION_REASONS = {
   not_in_good_standing: 'Not in good standing with the organization',
@@ -13,33 +14,44 @@ const REJECTION_REASONS = {
   other: 'Other',
 };
 
-export default function RejectionDialog({ open, onClose, onReject, requestType, requestName }) {
+export default function RejectionDialog({ open, onClose, onReject, requestType, requestName, requesterEmail }) {
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
+  const [sendEmail, setSendEmail] = useState(true);
+  const [emailBody, setEmailBody] = useState('');
 
   const handleReject = () => {
     if (!reason) return;
-    onReject(requestType, reason, details);
+    onReject(requestType, reason, details, sendEmail, emailBody);
     setReason('');
     setDetails('');
+    setSendEmail(true);
+    setEmailBody('');
   };
 
   const handleClose = () => {
     setReason('');
     setDetails('');
+    setSendEmail(true);
+    setEmailBody('');
     onClose();
+  };
+
+  const getDefaultEmailBody = () => {
+    const name = requestName || 'the requester';
+    return `Dear ${name},\n\nThank you for your interest in volunteering with The Candora Society. After careful review, we are unable to move forward with your application at this time.\n\nWe appreciate your understanding and wish you all the best in your volunteer journey.\n\nWarm regards,\nThe Candora Society Volunteer Team`;
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <XCircle className="w-5 h-5" />
             Reject Request
           </DialogTitle>
           <DialogDescription>
-            {requestName && `Rejecting request for: ${requestName}`}
+            {requestName && `Request for: ${requestName}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -58,12 +70,12 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
             </Select>
           </div>
 
-          {reason === 'more_info_needed' && (
+          {['more_info_needed', 'other'].includes(reason) && (
             <div className="space-y-2">
-              <Label htmlFor="details">What information is needed? *</Label>
+              <Label htmlFor="details">Additional Details *</Label>
               <Textarea
                 id="details"
-                placeholder="Please specify what additional information you need..."
+                placeholder={reason === 'more_info_needed' ? 'What information is needed?' : 'Please provide details...'}
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
@@ -71,16 +83,35 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
             </div>
           )}
 
-          {reason === 'other' && (
-            <div className="space-y-2">
-              <Label htmlFor="details">Please specify *</Label>
-              <Textarea
-                id="details"
-                placeholder="Please provide details..."
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
-                rows={3}
-              />
+          {requesterEmail && (
+            <div className="border-t pt-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="send-email"
+                  checked={sendEmail}
+                  onCheckedChange={setSendEmail}
+                />
+                <Label htmlFor="send-email" className="flex items-center gap-2 cursor-pointer">
+                  <Mail className="w-4 h-4" />
+                  Send email notification to {requesterEmail}
+                </Label>
+              </div>
+
+              {sendEmail && (
+                <div className="space-y-2">
+                  <Label htmlFor="email-body">Email Message (editable)</Label>
+                  <Textarea
+                    id="email-body"
+                    value={emailBody || getDefaultEmailBody()}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    rows={6}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The rejection reason will NOT be included in the email. Add it manually if needed.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -92,7 +123,7 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
             onClick={handleReject}
             disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
           >
-            Reject Request
+            {sendEmail ? 'Reject & Send Email' : 'Reject Request'}
           </Button>
         </DialogFooter>
       </DialogContent>
