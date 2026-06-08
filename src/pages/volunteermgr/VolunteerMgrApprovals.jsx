@@ -412,7 +412,7 @@ export default function VolunteerMgrApprovals() {
   const waitlistedPracticumRequests = practicumRequests.filter(p => p.status === 'waitlisted');
   const resolvedPracticumRequests = practicumRequests.filter(p => p.status !== 'pending');
   const resolvedProfileChanges = profileChanges.filter(c => c.status !== 'pending');
-  const resolvedApprovals = approvals.filter(a => a.status !== 'pending');
+  const resolvedApprovals = approvals.filter(a => a.status === 'approved' || a.status === 'rejected');
 
   const renderCohortCard = (req, isClickable = true) => (
     <Card 
@@ -832,6 +832,14 @@ export default function VolunteerMgrApprovals() {
   const totalPending = pendingApprovals.length + pendingProfileChanges.length + pendingCohortRequests.length + pendingPracticumRequests.length;
   const totalWaitlisted = waitlistedApprovals.length + waitlistedPracticumRequests.length;
   const totalResolved = resolvedApprovals.length + resolvedProfileChanges.length + resolvedCohortRequests.length + resolvedPracticumRequests.length;
+  
+  console.log('Approvals debug:', {
+    total: approvals.length,
+    pending: pendingApprovals.length,
+    waitlisted: waitlistedApprovals.length,
+    resolved: resolvedApprovals.length,
+    waitlistedIds: waitlistedApprovals.map(a => ({ id: a.id, volunteer_name: a.volunteer_name, status: a.status })),
+  });
 
   return (
     <div className="space-y-6">
