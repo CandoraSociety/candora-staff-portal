@@ -25,9 +25,9 @@ export default function VolunteerPortal() {
           <div className="bg-white rounded-2xl p-8 border-3 border-yellow-400 shadow-xl">
             <div className="mx-auto mb-4 flex justify-center">
               <img 
-                src="https://media.base44.com/images/public/6a249282cb496579542673b7/060c9ccda_IMG_0660.png"
+                src="https://media.base44.com/images/public/6a249282cb496579542673b7/60b9d3b2a_Candoracirclelogo_noanniversary.png"
                 alt="Candora Society Logo"
-                className="h-28 w-auto object-contain"
+                className="h-32 w-auto object-contain"
               />
             </div>
             <h1 className="text-4xl font-display font-bold text-blue-900 mb-1">Volunteer Portal</h1>
