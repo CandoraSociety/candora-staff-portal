@@ -1,0 +1,101 @@
+{
+  "name": "VolunteerCohortRequest",
+  "type": "object",
+  "properties": {
+    "organization_name": {
+      "type": "string",
+      "description": "Name of the organization (corporation, church, school, etc.)"
+    },
+    "organization_type": {
+      "type": "string",
+      "enum": [
+        "corporation",
+        "church",
+        "faculty",
+        "service_agency",
+        "community_group",
+        "other"
+      ],
+      "description": "Type of organization"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Primary contact person name"
+    },
+    "contact_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Contact email"
+    },
+    "contact_phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "number_of_volunteers": {
+      "type": "number",
+      "description": "Expected number of volunteers in the cohort"
+    },
+    "preferred_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the cohort would like to start volunteering"
+    },
+    "availability": {
+      "type": "string",
+      "description": "General availability (e.g., 'Monthly on Fridays', 'One-time event')"
+    },
+    "areas_of_interest": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Program areas the cohort is interested in"
+    },
+    "skills_or_focus": {
+      "type": "string",
+      "description": "Special skills or focus areas the cohort brings"
+    },
+    "motivation": {
+      "type": "string",
+      "description": "Why the organization wants to volunteer"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of person who approved/rejected"
+    },
+    "approval_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes or special instructions"
+    },
+    "card_created": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a portal card was created for this cohort"
+    },
+    "card_id": {
+      "type": "string",
+      "description": "ID of the created portal card"
+    }
+  },
+  "required": [
+    "organization_name",
+    "organization_type",
+    "contact_name",
+    "contact_email",
+    "number_of_volunteers"
+  ]
+}

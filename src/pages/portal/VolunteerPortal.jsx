@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import PortalSignIn from '@/components/portal/PortalSignIn';
 import PortalRegistration from '@/components/portal/PortalRegistration';
+import PortalCohortRegistration from '@/components/portal/PortalCohortRegistration';
 import PortalProfile from '@/components/portal/PortalProfile';
 import PortalShiftSignup from '@/components/portal/PortalShiftSignup';
-import { Heart, Clock, UserPlus, User, Calendar } from 'lucide-react';
+import { Heart, Clock, UserPlus, Users, User, Calendar, Building2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function VolunteerPortal() {
@@ -70,6 +71,24 @@ export default function VolunteerPortal() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Cohort Register Card */}
+            <Card
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group"
+              onClick={() => setView('cohort-register')}
+            >
+              <CardContent className="p-8 flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Building2 className="w-7 h-7 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-display">Group / Cohort Registration</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Register your organization, church, or school group
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -82,6 +101,10 @@ export default function VolunteerPortal() {
 
         {view === 'register' && (
           <PortalRegistration onComplete={() => setView('home')} />
+        )}
+
+        {view === 'cohort-register' && (
+          <PortalCohortRegistration onComplete={() => setView('home')} />
         )}
       </main>
 
