@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { XCircle, Mail } from 'lucide-react';
+import { XCircle, Mail, Eye, Edit } from 'lucide-react';
 
 const REJECTION_REASONS = {
   not_in_good_standing: 'Not in good standing with the organization',
@@ -19,6 +19,8 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
   const [details, setDetails] = useState('');
   const [sendEmail, setSendEmail] = useState(true);
   const [emailBody, setEmailBody] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewEmailBody, setPreviewEmailBody] = useState('');
 
   const handleReject = (withEmail) => {
     if (!reason) return;
@@ -26,13 +28,32 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
     setReason('');
     setDetails('');
     setEmailBody('');
+    setPreviewEmailBody('');
   };
 
   const handleClose = () => {
     setReason('');
     setDetails('');
     setEmailBody('');
+    setPreviewEmailBody('');
+    setShowPreview(false);
     onClose();
+  };
+
+  const handlePreviewAndSend = () => {
+    const defaultBody = getDefaultEmailBody();
+    setPreviewEmailBody(emailBody || defaultBody);
+    setShowPreview(true);
+  };
+
+  const handleConfirmSend = () => {
+    setEmailBody(previewEmailBody);
+    onReject(requestType, reason, details, true, previewEmailBody);
+    setReason('');
+    setDetails('');
+    setEmailBody('');
+    setPreviewEmailBody('');
+    setShowPreview(false);
   };
 
   const getDefaultEmailBody = () => {
@@ -125,15 +146,78 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
           </Button>
           <Button 
             variant="default"
-            onClick={() => handleReject(true)}
+            onClick={handlePreviewAndSend}
             disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
             className="gap-2"
           >
-            <Mail className="w-4 h-4" />
-            Reject & Send Email
+            <Eye className="w-4 h-4" />
+            Preview & Send Email
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Email Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={() => setShowPreview(false)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Email Preview
+            </DialogTitle>
+            <DialogDescription>
+              Review and edit the email before sending to {requesterEmail}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="preview-to">To:</Label>
+              <div className="px-3 py-2 bg-muted rounded-md text-sm">{requesterEmail}</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="preview-subject">Subject:</Label>
+              <div className="px-3 py-2 bg-muted rounded-md text-sm font-medium">
+                {requestType === 'cohort' ? 'Candora Society Volunteer Request Update' :
+                 requestType === 'practicum' ? 'Practicum Placement Request Update' :
+                 requestType === 'profile' ? 'Profile Change Request Update' :
+                 'Volunteer Application Update'}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="preview-body">Email Message (editable):</Label>
+              <Textarea
+                id="preview-body"
+                value={previewEmailBody}
+                onChange={(e) => setPreviewEmailBody(e.target.value)}
+                rows={10}
+                className="font-mono text-sm"
+              />
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-amber-800 text-sm font-medium">Note:</p>
+              <p className="text-amber-700 text-xs mt-1">
+                The rejection reason ({reason ? REJECTION_REASONS[reason] : ''}) will NOT be automatically included in the email. 
+                Add it manually above if you want the recipient to know.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowPreview(false)}>Back to Edit</Button>
+            <Button 
+              variant="default"
+              onClick={handleConfirmSend}
+              className="gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Send Email & Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
