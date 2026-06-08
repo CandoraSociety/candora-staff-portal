@@ -1,163 +1,121 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { User, LogOut, Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { Menu, X } from 'lucide-react';
 
-const NAV_ITEMS = {
-  admin: [
-    { label: 'Intake',       path: '/pathways/intake' },
-    { label: 'Master List',  path: '/pathways/master' },
-    { label: 'Dashboard',    path: '/pathways/dashboard' },
-    { label: 'Reports',      path: '/pathways/reports' },
-    { label: 'Supervisor',   path: '/pathways/supervisor' },
-    { label: 'Resources',    path: '/pathways/resources' },
-    { label: 'Compass',      path: '/pathways/compass' },
-    { label: 'Billing',      path: '/pathways/billing' },
-  ],
-  intake: [
-    { label: 'Intake',       path: '/pathways/intake' },
-    { label: 'Master List',  path: '/pathways/master' },
-    { label: 'Reports',      path: '/pathways/reports' },
-    { label: 'Resources',    path: '/pathways/resources' },
-  ],
-  worker: [
-    { label: 'Dashboard',    path: '/pathways/dashboard' },
-    { label: 'Resources',    path: '/pathways/resources' },
-    { label: 'Compass',      path: '/pathways/compass' },
-  ],
-  supervisor: [
-    { label: 'Supervisor',   path: '/pathways/supervisor' },
-    { label: 'Resources',    path: '/pathways/resources' },
-  ],
-};
+const NAV_ITEMS = [
+  { label: "Intake",            path: "/pathways/intake" },
+  { label: "Master List",       path: "/pathways/master" },
+  { label: "My Dashboard",      path: "/pathways/dashboard" },
+  { label: "Reports",           path: "/pathways/reports" },
+  { label: "Billing",           path: "/pathways/billing" },
+  { label: "Supervisor Portal", path: "/pathways/supervisor" },
+  { label: "Resources",         path: "/pathways/resources" },
+  { label: "Compass",           path: "/pathways/compass" },
+];
 
-export default function PathwaysLayout() {
+function AppNav() {
+  const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingCompassCount, setPendingCompassCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
+    base44.entities.CompassTask.filter({ status: "pending" })
+      .then(tasks => setPendingCompassCount(tasks.length))
+      .catch(() => {});
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    base44.auth.logout('/login');
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  // Hide nav on client profile pages
+  if (location.pathname.startsWith("/pathways/client/")) return null;
+
+  const NavButton = ({ item }) => {
+    const active = location.pathname === item.path;
+    return (
+      <button
+        onClick={() => navigate(item.path)}
+        className={cn(
+          "px-3 py-1.5 text-sm rounded-md font-medium transition-colors relative",
+          active
+            ? "text-[hsl(231,64%,16%)] font-semibold"
+            : "text-white/80 hover:text-white hover:bg-white/10"
+        )}
+        style={active ? { background: "hsl(42,100%,54%)" } : {}}
+      >
+        {item.label}
+        {item.path === "/pathways/compass" && pendingCompassCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+            {pendingCompassCount}
+          </span>
+        )}
+      </button>
+    );
   };
 
-  const items = NAV_ITEMS[user?.role] ?? NAV_ITEMS.worker;
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 shadow-sm z-50">
-        <div className="h-full px-6 flex items-center justify-between">
+    <div className="sticky top-0 z-40" style={{ background: "hsl(231,64%,20%)" }}>
+      <div className="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-14">
 
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[hsl(231,64%,20%)] flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <span className="font-bold text-xl text-slate-900">Candora</span>
-          </div>
-
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {items.map((item) => {
-              const isActive =
-                location.pathname === item.path ||
-                location.pathname.startsWith(item.path + '/');
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-[hsl(231,64%,20%)] text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Right: User menu (desktop) + Hamburger (mobile) */}
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-sm text-slate-600">{user?.full_name}</span>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full hidden md:inline-flex">
-                  <User className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Mobile hamburger */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen((v) => !v)}
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
-          </div>
+        {/* Logo + Wordmark */}
+        <div className="flex items-center gap-3 shrink-0">
+          <img
+            src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+            alt="Candora logo"
+            className="h-9 w-9 object-contain rounded-full"
+          />
+          <span className="hidden md:block" style={{ fontFamily: "'Arial Black', 'Impact', sans-serif", fontSize: "15px", letterSpacing: "0.02em" }}>
+            <span style={{ fontWeight: 900, color: "hsl(42,100%,54%)" }}>CANDORA</span>
+            <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.85)", marginLeft: "4px" }}>Pathways</span>
+          </span>
         </div>
 
-        {/* Mobile Slide-down Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 px-4 pb-4 pt-2 space-y-1">
-            {items.map((item) => {
-              const isActive =
-                location.pathname === item.path ||
-                location.pathname.startsWith(item.path + '/');
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`block px-4 py-3 text-sm font-medium rounded-md ${
-                    isActive
-                      ? 'bg-[hsl(231,64%,20%)] text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-md"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        )}
-      </nav>
+        {/* Desktop Nav Items */}
+        <div className="hidden md:flex items-center gap-0.5 flex-1 mx-4">
+          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+        </div>
 
-      {/* Main Content — offset for fixed navbar */}
-      <main className="w-full pt-16">
+        {/* User Name */}
+        {user && (
+          <span className="text-xs text-white/50 hidden md:block ml-4 shrink-0">
+            {user.full_name || user.email}
+          </span>
+        )}
+
+        {/* Mobile Hamburger */}
+        <button
+          className="md:hidden text-white/80 hover:text-white p-2 rounded-md"
+          onClick={() => setMenuOpen(v => !v)}
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* Mobile Dropdown */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-white/10 px-4 py-3 flex flex-col gap-1" style={{ background: "hsl(231,55%,25%)" }}>
+          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+          {user && (
+            <p className="text-xs text-white/40 mt-2 pt-2 border-t border-white/10">
+              {user.full_name || user.email}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function PathwaysLayout() {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <AppNav />
+      <main className="w-full">
         <Outlet />
       </main>
     </div>
