@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -840,54 +840,74 @@ export default function VolunteerMgrApprovals() {
         <p className="text-sm text-muted-foreground mt-1">{totalPending} pending, {totalWaitlisted} waitlisted, {totalResolved} resolved</p>
       </div>
 
-      {waitlistedPracticumRequests.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Waitlisted Practicum ({waitlistedPracticumRequests.length})</h2>
-          {waitlistedPracticumRequests.map(renderPracticumCard)}
-        </div>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Content - Pending Items */}
+        <div className="lg:col-span-3 space-y-6">
+          {pendingPracticumRequests.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Practicum Placements ({pendingPracticumRequests.length})</h2>
+              {pendingPracticumRequests.map(renderPracticumCard)}
+            </div>
+          )}
 
-      {pendingPracticumRequests.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Practicum Placements ({pendingPracticumRequests.length})</h2>
-          {pendingPracticumRequests.map(renderPracticumCard)}
-        </div>
-      )}
+          {pendingCohortRequests.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Cohort Requests ({pendingCohortRequests.length})</h2>
+              {pendingCohortRequests.map(renderCohortCard)}
+            </div>
+          )}
 
-      {pendingCohortRequests.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Cohort Requests ({pendingCohortRequests.length})</h2>
-          {pendingCohortRequests.map(renderCohortCard)}
-        </div>
-      )}
+          {pendingProfileChanges.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Profile Changes ({pendingProfileChanges.length})</h2>
+              {pendingProfileChanges.map(renderProfileChangeCard)}
+            </div>
+          )}
 
-      {pendingProfileChanges.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Profile Changes ({pendingProfileChanges.length})</h2>
-          {pendingProfileChanges.map(renderProfileChangeCard)}
-        </div>
-      )}
+          {pendingApprovals.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Other Approvals ({pendingApprovals.length})</h2>
+              {pendingApprovals.map(renderCard)}
+            </div>
+          )}
 
-      {waitlistedApprovals.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-amber-700 uppercase tracking-wider">Waitlisted ({waitlistedApprovals.length})</h2>
-          {waitlistedApprovals.map(renderCard)}
+          {totalPending === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
+              <p>No pending approvals. All caught up!</p>
+            </div>
+          )}
         </div>
-      )}
 
-      {pendingApprovals.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Other Approvals ({pendingApprovals.length})</h2>
-          {pendingApprovals.map(renderCard)}
+        {/* Sidebar - Waitlisted Items */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-4 space-y-4">
+            {(waitlistedApprovals.length > 0 || waitlistedPracticumRequests.length > 0) && (
+              <Card className="bg-amber-50/50 border-amber-200">
+                <CardHeader className="pb-3 border-b border-amber-200">
+                  <CardTitle className="text-sm font-semibold text-amber-800 uppercase tracking-wider">
+                    Waitlisted ({totalWaitlisted})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+                  {waitlistedPracticumRequests.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-semibold text-amber-700 uppercase">Practicum</h3>
+                      {waitlistedPracticumRequests.map(renderPracticumCard)}
+                    </div>
+                  )}
+                  {waitlistedApprovals.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-semibold text-amber-700 uppercase">Other</h3>
+                      {waitlistedApprovals.map(renderCard)}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-      )}
-
-      {totalPending === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-          <p>No pending approvals. All caught up!</p>
-        </div>
-      )}
+      </div>
 
       {resolvedPracticumRequests.length > 0 && (
         <div className="space-y-4">
