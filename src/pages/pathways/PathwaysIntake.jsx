@@ -99,14 +99,14 @@ export default function PathwaysIntake() {
   return (
     <div className="space-y-6">
       <div className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="flex flex-col md:flex-row justify-between gap-4 md:items-center">
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
             <p className="text-sm text-slate-600 mt-1">
               {unassignedClients.length} awaiting assignment
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 justify-end">
+          <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => navigate('/pathways/master')}>
               <FileText className="h-4 w-4 mr-2" /> Master List
             </Button>
