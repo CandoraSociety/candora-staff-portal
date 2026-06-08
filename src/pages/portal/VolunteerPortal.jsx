@@ -18,22 +18,22 @@ export default function VolunteerPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent/10 via-primary/5 to-accent/5 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-yellow-50 to-blue-50 flex flex-col">
       {/* Header with Logo and Branded Styling */}
       <header className="px-6 py-8">
         <div className="max-w-2xl mx-auto text-center space-y-4">
-          <div className="bg-gradient-to-br from-accent/20 via-primary/10 to-accent/10 rounded-2xl p-6 border-2 border-accent/30 shadow-xl">
+          <div className="bg-white rounded-2xl p-8 border-3 border-yellow-400 shadow-xl">
             <div className="mx-auto mb-4 flex justify-center">
               <img 
-                src="https://media.base44.com/images/public/6a249282cb496579542673b7/ab2ecbe13_generated_image.png"
+                src="https://media.base44.com/images/public/6a249282cb496579542673b7/060c9ccda_IMG_0660.png"
                 alt="Candora Society Logo"
-                className="h-24 w-auto object-contain"
+                className="h-28 w-auto object-contain"
               />
             </div>
-            <h1 className="text-4xl font-display font-bold text-foreground mb-1">Volunteer Portal</h1>
-            <p className="text-base text-muted-foreground font-semibold">Candora Society</p>
+            <h1 className="text-4xl font-display font-bold text-blue-900 mb-1">Volunteer Portal</h1>
+            <p className="text-base text-blue-700 font-semibold">Candora Society</p>
           </div>
-          <p className="text-sm text-foreground max-w-md mx-auto">
+          <p className="text-sm text-blue-900 max-w-md mx-auto font-medium">
             Welcome! Sign in to track your hours or register to join our volunteer community.
           </p>
         </div>
@@ -45,12 +45,12 @@ export default function VolunteerPortal() {
           <div className="max-w-lg w-full space-y-4">
             {/* Sign In Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-accent/30 hover:border-accent/50 hover:shadow-accent/20 group bg-gradient-to-br from-accent/5 to-transparent"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-50 to-white"
               onClick={() => setView('signin')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent/30 to-accent/20 flex items-center justify-center group-hover:from-accent/40 group-hover:to-accent/30 transition-all shadow-md">
-                  <Clock className="w-8 h-8 text-accent" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center group-hover:from-blue-800 group-hover:to-blue-700 transition-all shadow-md">
+                  <Clock className="w-8 h-8 text-yellow-400" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Sign In / Sign Out</h2>
@@ -63,12 +63,12 @@ export default function VolunteerPortal() {
 
             {/* Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-primary/30 hover:border-primary/50 hover:shadow-primary/20 group bg-gradient-to-br from-primary/5 to-transparent"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-yellow-400 hover:border-yellow-500 hover:shadow-yellow-200 group bg-gradient-to-br from-yellow-50 to-white"
               onClick={() => setView('register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center group-hover:from-primary/40 group-hover:to-primary/30 transition-all shadow-md">
-                  <UserPlus className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-300 flex items-center justify-center group-hover:from-yellow-500 group-hover:to-yellow-400 transition-all shadow-md">
+                  <UserPlus className="w-8 h-8 text-blue-900" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Become a Volunteer</h2>
@@ -81,12 +81,12 @@ export default function VolunteerPortal() {
 
             {/* Cohort Register Card */}
             <Card
-              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-accent/30 hover:border-accent/50 hover:shadow-accent/20 group bg-gradient-to-br from-accent/5 to-transparent"
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 border-blue-900 hover:border-blue-800 hover:shadow-blue-200 group bg-gradient-to-br from-blue-50 to-white"
               onClick={() => setView('cohort-register')}
             >
               <CardContent className="p-8 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent/30 to-accent/20 flex items-center justify-center group-hover:from-accent/40 group-hover:to-accent/30 transition-all shadow-md">
-                  <Building2 className="w-8 h-8 text-accent" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center group-hover:from-blue-800 group-hover:to-blue-700 transition-all shadow-md">
+                  <Building2 className="w-8 h-8 text-yellow-400" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-xl font-bold font-display">Group / Cohort Registration</h2>
@@ -116,8 +116,8 @@ export default function VolunteerPortal() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-6 bg-gradient-to-r from-accent/20 via-primary/10 to-accent/20 border-t border-accent/30">
-        <p className="text-xs text-muted-foreground font-medium">
+      <footer className="text-center py-6 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 border-t border-yellow-400">
+        <p className="text-xs text-yellow-300 font-medium">
           © {new Date().getFullYear()} The Candora Society — VolunteerTrack
         </p>
       </footer>
