@@ -116,6 +116,29 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
 
 function NavItem({ item, collapsed, active }) {
   const Icon = item.icon;
+  
+  // Handle volunteer portal specially - full page redirect
+  if (item.path === '/volunteer-portal') {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => window.location.href = '/volunteer-portal'}
+            className={cn(
+              "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+              collapsed && "justify-center px-0",
+              "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+            {!collapsed && <span>{item.label}</span>}
+          </button>
+        </TooltipTrigger>
+        {collapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
+      </Tooltip>
+    );
+  }
+  
   return (
     <Tooltip>
       <TooltipTrigger asChild>
