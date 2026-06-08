@@ -2,9 +2,10 @@ import { useState } from 'react';
 import PortalSignIn from '@/components/portal/PortalSignIn';
 import PortalRegistration from '@/components/portal/PortalRegistration';
 import PortalCohortRegistration from '@/components/portal/PortalCohortRegistration';
+import PortalPracticumRegistration from '@/components/portal/PortalPracticumRegistration';
 import PortalProfile from '@/components/portal/PortalProfile';
 import PortalShiftSignup from '@/components/portal/PortalShiftSignup';
-import { Heart, Clock, UserPlus, Users, User, Calendar, Building2 } from 'lucide-react';
+import { Heart, Clock, UserPlus, Users, User, Calendar, Building2, GraduationCap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function VolunteerPortal() {
@@ -92,6 +93,24 @@ export default function VolunteerPortal() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Practicum Registration Card */}
+            <Card
+              className="cursor-pointer hover:shadow-2xl hover:shadow-yellow-400/30 transition-all duration-300 border border-slate-700 group bg-slate-800/80 backdrop-blur"
+              onClick={() => setView('practicum-register')}
+            >
+              <CardContent className="p-8 flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center group-hover:bg-yellow-300 transition-all shadow-lg">
+                  <GraduationCap className="w-8 h-8 text-slate-900" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-display text-yellow-400">Practicum Placement</h2>
+                  <p className="text-sm text-yellow-200/70 mt-1">
+                    Request a practicum placement for students
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -108,6 +127,10 @@ export default function VolunteerPortal() {
 
         {view === 'cohort-register' && (
           <PortalCohortRegistration onComplete={() => setView('home')} />
+        )}
+
+        {view === 'practicum-register' && (
+          <PortalPracticumRegistration onComplete={() => setView('home')} />
         )}
       </main>
 
