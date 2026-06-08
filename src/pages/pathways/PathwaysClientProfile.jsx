@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, History, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { addDays, differenceInDays } from 'date-fns';
-import ClientProfileOverview from '../../components/client/ClientProfileOverview';
-import ClientReferrals from '../../components/client/ClientReferrals';
-import ClientFinancials from '../../components/client/ClientFinancials';
-import CloseFileDialog from '../../components/client/CloseFileDialog';
-import StatusChangeDialog from '../../components/client/StatusChangeDialog';
-import DEAClosingDialog from '../../components/wizard/DEAClosingDialog';
+import ClientProfileOverview from '@/components/client/ClientProfileOverview';
+import ClientReferrals from '@/components/client/ClientReferrals';
+import ClientFinancials from '@/components/client/ClientFinancials';
+import CloseFileDialog from '@/components/client/CloseFileDialog';
+import StatusChangeDialog from '@/components/client/StatusChangeDialog';
+import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
 
 const STREAM_LABELS = {
   direct_to_employment: 'DEA',
