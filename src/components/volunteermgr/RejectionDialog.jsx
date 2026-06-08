@@ -58,7 +58,16 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
 
   const getDefaultEmailBody = () => {
     const name = requestName || 'the requester';
-    return `Dear ${name},\n\nThank you for your interest in volunteering with The Candora Society. After careful review, we are unable to move forward with your application at this time.\n\nWe appreciate your understanding and wish you all the best in your volunteer journey.\n\nWarm regards,\nThe Candora Society Volunteer Team`;
+    const baseMessage = `Dear ${name},\n\nThank you for your interest in volunteering with The Candora Society. After careful review, we are unable to move forward with your application at this time.`;
+    
+    // Automatically include account exists message only for that reason
+    const reasonMessage = reason === 'account_exists' 
+      ? `\n\nOur records show that a volunteer account already exists for you. If you have forgotten your login credentials or need assistance accessing your account, please contact our volunteer coordinator.`
+      : '';
+    
+    const closing = `\n\nWe appreciate your understanding and wish you all the best in your volunteer journey.\n\nWarm regards,\nThe Candora Society Volunteer Team`;
+    
+    return baseMessage + reasonMessage + closing;
   };
 
   return (
@@ -199,8 +208,9 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
               <p className="text-amber-800 text-sm font-medium">Note:</p>
               <p className="text-amber-700 text-xs mt-1">
-                The rejection reason ({reason ? REJECTION_REASONS[reason] : ''}) will NOT be automatically included in the email. 
-                Add it manually above if you want the recipient to know.
+                {reason === 'account_exists' 
+                  ? 'The "account already exists" message is automatically included in this email.'
+                  : 'The rejection reason will NOT be automatically included in the email. Add it manually above if you want the recipient to know.'}
               </p>
             </div>
           </div>
