@@ -1,50 +1,80 @@
 import { useState } from 'react';
 import PortalSignIn from '@/components/portal/PortalSignIn';
 import PortalRegistration from '@/components/portal/PortalRegistration';
-import { Button } from '@/components/ui/button';
+import { Heart, Clock, UserPlus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function VolunteerPortal() {
-  const [view, setView] = useState('signin'); // 'signin' | 'register'
+  const [view, setView] = useState('home');
 
   return (
-    <div className="min-h-screen bg-[hsl(230,60%,12%)] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[hsl(230,50%,18%)]">
-        <img
-          src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
-          alt="The Candora Society"
-          className="h-16 object-contain"
-        />
-        <div className="flex items-center gap-2">
-          <Button
-            variant={view === 'signin' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setView('signin')}
-            className={view === 'signin' ? 'bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)]' : 'text-[hsl(45,60%,80%)] hover:text-white hover:bg-[hsl(230,55%,20%)]'}
-          >
-            Sign In / Out
-          </Button>
-          <Button
-            variant={view === 'register' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setView('register')}
-            className={view === 'register' ? 'bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)]' : 'text-[hsl(45,60%,80%)] hover:text-white hover:bg-[hsl(230,55%,20%)]'}
-          >
-            Register
-          </Button>
+      <header className="px-6 py-4">
+        <div className="max-w-lg mx-auto flex items-center justify-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+            <Heart className="w-6 h-6 text-primary fill-primary" />
+          </div>
+          <div className="text-center">
+            <h1 className="text-xl font-display font-bold text-foreground">Candora Society</h1>
+            <p className="text-xs text-muted-foreground">Volunteer Portal</p>
+          </div>
         </div>
       </header>
 
       {/* Content */}
-      <main className="flex-1 flex items-start justify-center pt-12 px-4">
-        {view === 'signin' ? (
-          <PortalSignIn />
-        ) : (
-          <PortalRegistration onComplete={() => setView('signin')} />
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
+        {view === 'home' && (
+          <div className="max-w-lg w-full space-y-4">
+            {/* Sign In Card */}
+            <Card
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 group"
+              onClick={() => setView('signin')}
+            >
+              <CardContent className="p-8 flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Clock className="w-7 h-7 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-display">Sign In / Sign Out</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Track your volunteer hours
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Register Card */}
+            <Card
+              className="cursor-pointer hover:shadow-xl transition-all duration-300 border-2 hover:border-accent/30 group"
+              onClick={() => setView('register')}
+            >
+              <CardContent className="p-8 flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <UserPlus className="w-7 h-7 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-display">Become a Volunteer</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Register to start your journey
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {view === 'signin' && (
+          <PortalSignIn onBack={() => setView('home')} />
+        )}
+
+        {view === 'register' && (
+          <PortalRegistration onComplete={() => setView('home')} />
         )}
       </main>
 
-      <footer className="text-center py-4 text-[hsl(45,40%,55%)] text-xs">
+      {/* Footer */}
+      <footer className="text-center py-6 text-muted-foreground text-xs">
         © {new Date().getFullYear()} The Candora Society — VolunteerTrack
       </footer>
     </div>

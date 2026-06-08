@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, LogOut, Clock, CheckCircle } from 'lucide-react';
+import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
 import moment from 'moment';
 
-export default function PortalSignIn() {
+export default function PortalSignIn({ onBack }) {
+  if (!onBack) onBack = () => {};
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
-  const [step, setStep] = useState('lookup'); // 'lookup' | 'action'
+  const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
   const [foundVolunteer, setFoundVolunteer] = useState(null);
   const [activeLog, setActiveLog] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState('');
@@ -33,7 +34,7 @@ export default function PortalSignIn() {
 
     const volunteers = await base44.entities.Volunteer.filter({ email: email.trim().toLowerCase() });
     if (volunteers.length === 0) {
-      setError('No volunteer found with that email address.');
+      setError('No volunteer found with that email address. Please register first.');
       return;
     }
 
@@ -50,9 +51,13 @@ export default function PortalSignIn() {
       return;
     }
 
+    if (vol.status !== 'active') {
+      setError('Your account is not yet active. Please wait for approval.');
+      return;
+    }
+
     // Check for active sign-in
     const activeLogs = await base44.entities.VolunteerTimeLog.filter({ volunteer_id: vol.id, status: 'signed_in' });
-
 
     setFoundVolunteer(vol);
     setActiveLog(activeLogs[0] || null);
@@ -65,7 +70,7 @@ export default function PortalSignIn() {
       return base44.entities.VolunteerTimeLog.create({
         volunteer_id: foundVolunteer.id,
         volunteer_name: `${foundVolunteer.first_name} ${foundVolunteer.last_name}`,
-        position_id: selectedPosition || 'general',
+        position_id: selectedPosition || null,
         position_title: selectedPosition
           ? (positions.find(p => p.id === selectedPosition)?.title || 'General')
           : 'General Volunteering',
@@ -75,8 +80,8 @@ export default function PortalSignIn() {
       });
     },
     onSuccess: () => {
-      setSuccessMsg(`✓ Signed in successfully! Welcome, ${foundVolunteer.first_name}!`);
-      setStep('lookup');
+      setSuccessMsg(`Signed in successfully! Welcome, ${foundVolunteer.first_name}!`);
+      setStep('success');
       setEmail(''); setPin(''); setFoundVolunteer(null); setSelectedPosition('');
     },
   });
@@ -96,11 +101,12 @@ export default function PortalSignIn() {
 
       // Update volunteer total_hours
       const newTotal = (foundVolunteer.total_hours || 0) + hours;
-      await base44.entities.Volunteer.update(foundVolunteer.id, { total_hours: newTotal });
+      await base44.entities.Volunteer.update(foundVolunteer.id, { total_hours: Math.round(newTotal * 100) / 100 });
     },
     onSuccess: () => {
-      setSuccessMsg(`✓ Signed out successfully! Thank you, ${foundVolunteer.first_name}!`);
-      setStep('lookup');
+      const hours = Math.round(moment().diff(moment(activeLog.sign_in_time), 'minutes') / 60 * 100) / 100;
+      setSuccessMsg(`Signed out successfully! Total time: ${hours} hours`);
+      setStep('success');
       setEmail(''); setPin(''); setFoundVolunteer(null); setActiveLog(null);
     },
   });
@@ -109,13 +115,16 @@ export default function PortalSignIn() {
     setStep('lookup');
     setEmail(''); setPin(''); setFoundVolunteer(null); setActiveLog(null);
     setError(''); setSelectedPosition('');
+    setSuccessMsg('');
   };
+
+  const now = moment();
 
   return (
     <Card className="w-full max-w-md shadow-2xl border-0">
-      <CardHeader className="bg-[hsl(45,92%,53%)] rounded-t-lg text-center py-6">
-        <CardTitle className="text-[hsl(230,60%,12%)] text-2xl font-display font-black flex items-center justify-center gap-2">
-          <Clock className="w-6 h-6" />
+      <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-t-lg text-center py-6">
+        <CardTitle className="text-foreground text-2xl font-display font-bold flex items-center justify-center gap-2">
+          <Clock className="w-6 h-6 text-primary" />
           Volunteer Sign In / Out
         </CardTitle>
       </CardHeader>
@@ -147,14 +156,14 @@ export default function PortalSignIn() {
                 placeholder="Leave blank if no PIN"
                 maxLength={4}
                 value={pin}
-                onChange={e => setPin(e.target.value)}
+                onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
                 onKeyDown={e => e.key === 'Enter' && handleLookup()}
                 className="mt-1"
               />
             </div>
             {error && <p className="text-sm text-destructive bg-destructive/10 rounded p-2">{error}</p>}
             <Button
-              className="w-full bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)] font-semibold"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
               onClick={handleLookup}
             >
               Continue
@@ -165,11 +174,11 @@ export default function PortalSignIn() {
         {step === 'action' && foundVolunteer && (
           <>
             <div className="text-center py-2">
-              <div className="w-16 h-16 rounded-full bg-[hsl(45,92%,53%)]/20 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-[hsl(230,65%,30%)]">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2 text-2xl font-bold text-primary">
                 {foundVolunteer.first_name?.[0]}{foundVolunteer.last_name?.[0]}
               </div>
               <h3 className="text-lg font-bold font-display">{foundVolunteer.first_name} {foundVolunteer.last_name}</h3>
-              <Badge className="mt-1 bg-[hsl(230,40%,92%)] text-[hsl(230,50%,20%)]">{foundVolunteer.volunteer_type}</Badge>
+              <Badge className="mt-1">{foundVolunteer.volunteer_type}</Badge>
             </div>
 
             {activeLog ? (
@@ -180,7 +189,7 @@ export default function PortalSignIn() {
                   <p className="text-amber-700 text-xs">{activeLog.position_title}</p>
                 </div>
                 <Button
-                  className="w-full bg-[hsl(230,65%,30%)] text-white hover:bg-[hsl(230,65%,25%)] font-semibold gap-2"
+                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90 font-semibold gap-2"
                   onClick={() => signOutMutation.mutate()}
                   disabled={signOutMutation.isPending}
                 >
@@ -191,10 +200,10 @@ export default function PortalSignIn() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <Label className="font-medium">Position / Role</Label>
+                  <Label className="font-medium">Position / Role (optional)</Label>
                   <Select value={selectedPosition} onValueChange={setSelectedPosition}>
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select position (optional)" />
+                      <SelectValue placeholder="Select position" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="general">General Volunteering</SelectItem>
@@ -205,7 +214,7 @@ export default function PortalSignIn() {
                   </Select>
                 </div>
                 <Button
-                  className="w-full bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)] font-semibold gap-2"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold gap-2"
                   onClick={() => signInMutation.mutate()}
                   disabled={signInMutation.isPending}
                 >
@@ -215,10 +224,22 @@ export default function PortalSignIn() {
               </div>
             )}
 
-            <Button variant="ghost" className="w-full text-muted-foreground" onClick={reset}>
-              ← Back
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={onBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
             </Button>
           </>
+        )}
+
+        {step === 'success' && (
+          <div className="text-center py-8">
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+              onClick={onBack}
+            >
+              Back to Home
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

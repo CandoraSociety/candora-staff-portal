@@ -29,7 +29,7 @@ const navItems = [
 
 
 const externalLinks = [
-  { href: '/portal', label: 'Volunteer Portal', icon: ExternalLink },
+  { href: '/volunteer-portal', label: 'Volunteer Portal', icon: ExternalLink },
   { href: '/staff-portal', label: 'Staff Portal', icon: ExternalLink },
 ];
 

@@ -53,6 +53,13 @@ export default function PortalRegistration({ onComplete }) {
   const [form, setForm] = useState(emptyForm);
   const [submitted, setSubmitted] = useState(false);
 
+  const handleComplete = () => {
+    setSubmitted(false);
+    setForm(emptyForm);
+    setPage(1);
+    if (onComplete) onComplete();
+  };
+
   const update = (field, value) => setForm(p => ({ ...p, [field]: value }));
   const toggleArea = (area) => {
     setForm(p => ({
@@ -96,13 +103,13 @@ export default function PortalRegistration({ onComplete }) {
           </div>
           <h2 className="text-xl font-bold font-display">Application Submitted!</h2>
           <p className="text-muted-foreground text-sm">
-            Thank you, {form.first_name}! Your volunteer application has been received. The Candora Society team will review it and be in touch shortly.
+            Thank you, {form.first_name}! Your volunteer application has been received. Our team will review it within 15 business days.
           </p>
           <Button
-            className="bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)] font-semibold"
-            onClick={onComplete}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
+            onClick={handleComplete}
           >
-            Back to Sign In
+            Back to Home
           </Button>
         </CardContent>
       </Card>
@@ -111,14 +118,14 @@ export default function PortalRegistration({ onComplete }) {
 
   return (
     <Card className="w-full max-w-lg shadow-2xl border-0">
-      <CardHeader className="bg-[hsl(45,92%,53%)] rounded-t-lg py-4">
-        <CardTitle className="text-[hsl(230,60%,12%)] text-xl font-display font-black flex items-center gap-2">
-          <UserPlus className="w-5 h-5" />
+      <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-t-lg py-4">
+        <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
+          <UserPlus className="w-5 h-5 text-primary" />
           Volunteer Registration — Page {page} of 2
         </CardTitle>
         <div className="flex gap-1 mt-2">
           {[1, 2].map(n => (
-            <div key={n} className={`h-1.5 flex-1 rounded-full ${n <= page ? 'bg-[hsl(230,60%,20%)]' : 'bg-[hsl(45,60%,70%)]'}`} />
+            <div key={n} className={`h-1.5 flex-1 rounded-full ${n <= page ? 'bg-primary' : 'bg-muted'}`} />
           ))}
         </div>
       </CardHeader>
@@ -168,7 +175,7 @@ export default function PortalRegistration({ onComplete }) {
               </Select>
             </div>
             <Button
-              className="w-full bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)] font-semibold gap-1"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold gap-1"
               onClick={() => { if (!form.first_name || !form.last_name) return; setPage(2); }}
             >
               Next <ChevronRight className="w-4 h-4" />
@@ -226,7 +233,7 @@ export default function PortalRegistration({ onComplete }) {
                 <ChevronLeft className="w-4 h-4" /> Back
               </Button>
               <Button
-                className="flex-1 bg-[hsl(45,92%,53%)] text-[hsl(230,60%,12%)] hover:bg-[hsl(45,92%,45%)] font-semibold"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                 onClick={() => submitMutation.mutate()}
                 disabled={submitMutation.isPending}
               >
