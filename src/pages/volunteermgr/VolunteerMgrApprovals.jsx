@@ -143,7 +143,7 @@ export default function VolunteerMgrApprovals() {
           {req.skills_or_focus && <p><strong>Skills:</strong> {req.skills_or_focus}</p>}
           {req.motivation && <p><strong>Motivation:</strong> {req.motivation}</p>}
         </div>
-        <p className="text-xs text-muted-foreground">Submitted: {moment(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
 
         {req.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -212,7 +212,7 @@ export default function VolunteerMgrApprovals() {
           <Badge className={`text-xs border shrink-0 ${statusColors[req.status]}`}>{req.status}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">{req.description}</p>
-        <p className="text-xs text-muted-foreground">Submitted: {moment(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
 
         {req.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -287,7 +287,7 @@ export default function VolunteerMgrApprovals() {
         <p className="text-sm text-muted-foreground">
           <strong>Changes requested:</strong> {change.change_summary}
         </p>
-        <p className="text-xs text-muted-foreground">Submitted: {moment(change.submitted_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(change.submitted_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
 
         {change.status === 'pending' && (
           <div className="space-y-2 pt-2 border-t">
@@ -337,7 +337,7 @@ export default function VolunteerMgrApprovals() {
             <Badge className={`text-xs border shrink-0 ${statusColors[req.status]}`}>{req.status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{req.description}</p>
-          <p className="text-xs text-muted-foreground">Submitted: {moment(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+          <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
 
           {req.status === 'pending' && (
             <div className="space-y-2 pt-2 border-t">
@@ -623,8 +623,8 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
+                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
               </div>
             </div>
           )}
@@ -648,7 +648,7 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.submitted_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                <p>Submitted: {moment.utc(selectedRequest.data.submitted_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
                 {selectedRequest.data.reviewed_by && <p>Reviewed by: {selectedRequest.data.reviewed_by}</p>}
               </div>
             </div>
@@ -671,8 +671,8 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
+                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
               </div>
             </div>
           )}
