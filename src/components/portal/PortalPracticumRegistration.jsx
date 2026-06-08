@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, GraduationCap, ChevronLeft } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckCircle, GraduationCap, ChevronLeft, X } from 'lucide-react';
 
 const INSTITUTIONS = [
   'MacEwan University',
@@ -39,6 +40,7 @@ export default function PortalPracticumRegistration({ onComplete }) {
     placement_preferences: '',
     learning_goals: '',
     additional_requirements: '',
+    vulnerable_sector_check: false,
   });
 
   const update = (field, value) => setForm(p => ({ ...p, [field]: value }));
@@ -133,10 +135,15 @@ export default function PortalPracticumRegistration({ onComplete }) {
   return (
     <Card className="w-full max-w-lg shadow-2xl border-0">
       <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-t-lg py-4">
-        <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-primary" />
-          Practicum Placement Request
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-primary" />
+            Practicum Placement Request
+          </CardTitle>
+          <button onClick={onComplete} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
         <div>
@@ -255,6 +262,25 @@ export default function PortalPracticumRegistration({ onComplete }) {
             className="mt-1" 
             placeholder="Any special requirements, certifications, or accommodations needed"
           />
+        </div>
+
+        <div className="border rounded-lg p-4 bg-muted/50">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="vulnerable_sector_check_practicum"
+              checked={form.vulnerable_sector_check}
+              onCheckedChange={(checked) => update('vulnerable_sector_check', checked)}
+              className="mt-1"
+            />
+            <div className="flex-1 space-y-1">
+              <label htmlFor="vulnerable_sector_check_practicum" className="text-sm font-medium cursor-pointer">
+                Vulnerable Sector Check Consent
+              </label>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                By checking this box, I consent to undergoing a Vulnerable Sector Check as part of my practicum placement requirements. I understand this may be required before starting my placement.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-2 pt-2">

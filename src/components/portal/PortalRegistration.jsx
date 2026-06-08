@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, UserPlus, ChevronRight, ChevronLeft, Heart } from 'lucide-react';
+import { CheckCircle, UserPlus, ChevronRight, ChevronLeft, Heart, X } from 'lucide-react';
 import PhoneInput from './PhoneInput';
 import AvailabilitySelector from './AvailabilitySelector';
 
@@ -50,6 +50,7 @@ const emptyForm = {
   availability_schedule: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
   blocked_dates: [],
   pictures_consent: 'no', notes: '',
+  vulnerable_sector_check: false,
   include_donation: false,
   donation_amount: 25,
   donation_message: '',
@@ -126,10 +127,15 @@ export default function PortalRegistration({ onComplete }) {
   return (
     <Card className="w-full max-w-lg shadow-2xl border-0">
       <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-t-lg py-4">
-        <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-primary" />
-          Volunteer Registration — Page {page} of 2
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-primary" />
+            Volunteer Registration — Page {page} of 2
+          </CardTitle>
+          <button onClick={onComplete} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
         <div className="flex gap-1 mt-2">
           {[1, 2].map(n => (
             <div key={n} className={`h-1.5 flex-1 rounded-full ${n <= page ? 'bg-primary' : 'bg-muted'}`} />
@@ -247,6 +253,25 @@ export default function PortalRegistration({ onComplete }) {
                   <SelectItem value="no">No — Please do not take my photo</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="vulnerable_sector_check"
+                  checked={form.vulnerable_sector_check}
+                  onCheckedChange={(checked) => update('vulnerable_sector_check', checked)}
+                  className="mt-1"
+                />
+                <div className="flex-1 space-y-1">
+                  <label htmlFor="vulnerable_sector_check" className="text-sm font-medium cursor-pointer">
+                    Vulnerable Sector Check Consent
+                  </label>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    By checking this box, I consent to undergoing a Vulnerable Sector Check if required for my volunteer role. This may be requested during the approval process.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="border rounded-lg p-4 bg-gradient-to-r from-primary/5 to-primary/10">

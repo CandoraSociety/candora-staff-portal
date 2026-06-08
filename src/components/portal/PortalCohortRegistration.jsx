@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Users, Building2, Heart } from 'lucide-react';
+import { CheckCircle, Users, Building2, Heart, X } from 'lucide-react';
 import PhoneInput from './PhoneInput';
 import AvailabilitySelector from './AvailabilitySelector';
 
@@ -51,6 +51,7 @@ const emptyForm = {
   areas_of_interest: [],
   skills_or_focus: '',
   motivation: '',
+  vulnerable_sector_check: false,
   include_donation: false,
   donation_amount: 100,
   donation_message: '',
@@ -130,13 +131,20 @@ export default function PortalCohortRegistration({ onComplete }) {
   return (
     <Card className="w-full max-w-2xl shadow-2xl border-0">
       <CardHeader className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-t-lg py-4">
-        <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-primary" />
-          Group / Cohort Volunteer Registration
-        </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">
-          Register your organization, church, school group, or community team
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-foreground text-xl font-display font-bold flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              Group / Cohort Volunteer Registration
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Register your organization, church, school group, or community team
+            </p>
+          </div>
+          <button onClick={onComplete} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="p-6 space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -265,6 +273,25 @@ export default function PortalCohortRegistration({ onComplete }) {
             className="mt-1" 
             placeholder="Tell us about your organization's motivation for volunteering..."
           />
+        </div>
+
+        <div className="border rounded-lg p-4 bg-muted/50">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="vulnerable_sector_check_cohort"
+              checked={form.vulnerable_sector_check}
+              onCheckedChange={(checked) => update('vulnerable_sector_check', checked)}
+              className="mt-1"
+            />
+            <div className="flex-1 space-y-1">
+              <label htmlFor="vulnerable_sector_check_cohort" className="text-sm font-medium cursor-pointer">
+                Vulnerable Sector Check Consent
+              </label>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                By checking this box, I acknowledge that some or all members of our cohort may be required to undergo a Vulnerable Sector Check depending on the assigned volunteer roles.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="border rounded-lg p-4 bg-gradient-to-r from-primary/5 to-primary/10">
