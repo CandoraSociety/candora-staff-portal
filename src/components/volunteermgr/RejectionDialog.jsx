@@ -116,15 +116,27 @@ export default function RejectionDialog({ open, onClose, onReject, requestType, 
           )}
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-col sm:flex-row">
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
           <Button 
             variant="destructive" 
-            onClick={handleReject}
+            onClick={() => { setSendEmail(false); handleReject(); }}
             disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
+            className="w-full sm:w-auto"
           >
-            {sendEmail ? 'Reject & Send Email' : 'Reject Request'}
+            Reject (No Email)
           </Button>
+          {requesterEmail && (
+            <Button 
+              variant="destructive" 
+              onClick={() => { setSendEmail(true); handleReject(); }}
+              disabled={!reason || (['more_info_needed', 'other'].includes(reason) && !details.trim())}
+              className="w-full sm:w-auto gap-2"
+            >
+              <Mail className="w-4 h-4" />
+              Reject & Send Email
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
