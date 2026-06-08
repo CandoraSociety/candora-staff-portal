@@ -1,0 +1,95 @@
+{
+  "name": "VolunteerAvailability",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string",
+      "description": "ID of the volunteer"
+    },
+    "volunteer_name": {
+      "type": "string",
+      "description": "Volunteer's name"
+    },
+    "volunteer_email": {
+      "type": "string",
+      "description": "Volunteer's email"
+    },
+    "weekly_schedule": {
+      "type": "object",
+      "description": "Weekly availability (days of week with time slots)",
+      "properties": {
+        "monday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tuesday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wednesday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "thursday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "friday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "saturday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sunday": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "blocked_dates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Specific dates when volunteer is unavailable"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notification_sent": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "volunteer_name",
+    "volunteer_email"
+  ]
+}

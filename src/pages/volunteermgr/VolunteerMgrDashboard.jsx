@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift, TrendingUp, ChevronDown, CalendarClock } from 'lucide-react';
+import { Users, Briefcase, Calendar, Clock, CheckSquare, Cake, UserCheck, ClipboardList, Trophy, ChevronRight, Gift, TrendingUp, ChevronDown, CalendarClock, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 import { getUnawardedMilestones } from '@/lib/milestones';
@@ -92,6 +92,12 @@ export default function VolunteerMgrDashboard() {
     queryKey: ['vol-recognitions-all'],
     queryFn: () => base44.entities.VolunteerRecognition.list(),
   });
+  const { data: availabilityUpdates = [] } = useQuery({
+    queryKey: ['vol-availability-updates'],
+    queryFn: () => base44.entities.VolunteerAvailability.list('-last_updated', 50),
+  });
+  
+  const pendingAvailabilityUpdates = availabilityUpdates.filter(a => !a.notification_sent);
 
   const activeVolunteers = volunteers.filter(v => v.status === 'active');
   const openPositions = positions.filter(p => p.status === 'open');
@@ -187,7 +193,7 @@ export default function VolunteerMgrDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
           icon={Users} title="Active Volunteers" value={activeVolunteers.length}
           trend={`${volunteers.length} total`}
@@ -206,6 +212,25 @@ export default function VolunteerMgrDashboard() {
           trend={`Fiscal YTD: ${Math.round(fiscalYtdHours).toLocaleString()}`}
           color="text-yellow-600" bgColor="bg-yellow-100"
         />
+        <Card className="relative overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1 font-medium">Notifications</p>
+                <p className="text-3xl font-bold leading-none">{pendingAvailabilityUpdates.length}</p>
+                <p className="text-xs mt-1.5 font-medium text-blue-600">Availability updates</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 ml-3 relative">
+                <Bell className="w-5 h-5 text-blue-600" />
+                {pendingAvailabilityUpdates.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {pendingAvailabilityUpdates.length}
+                  </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Row 1: Milestone Alerts | Birthdays | Pending Approvals */}

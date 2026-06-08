@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, Users, Building2, Heart } from 'lucide-react';
+import PhoneInput from './PhoneInput';
+import AvailabilitySelector from './AvailabilitySelector';
 
 const AREAS_OF_INTEREST = [
   "Auntie Bev's Social Venture (Kitchen)",
@@ -181,9 +183,9 @@ export default function PortalCohortRegistration({ onComplete }) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Contact Phone</Label>
-            <Input 
+            <PhoneInput 
               value={form.contact_phone} 
-              onChange={e => update('contact_phone', e.target.value)} 
+              onChange={v => update('contact_phone', v)} 
               className="mt-1" 
             />
           </div>
@@ -209,15 +211,22 @@ export default function PortalCohortRegistration({ onComplete }) {
               className="mt-1" 
             />
           </div>
-          <div>
-            <Label>General Availability</Label>
-            <Input 
-              value={form.availability} 
-              onChange={e => update('availability', e.target.value)} 
-              className="mt-1" 
-              placeholder="e.g. Monthly on Fridays, One-time event"
-            />
-          </div>
+        </div>
+
+        <div>
+          <Label>General Availability</Label>
+          <Card className="mt-1 border">
+            <CardContent className="p-3">
+              <AvailabilitySelector
+                value={{ weekly_schedule: form.availability_schedule, blocked_dates: form.blocked_dates }}
+                onChange={(data) => {
+                  update('availability_schedule', data.weekly_schedule);
+                  update('blocked_dates', data.blocked_dates);
+                }}
+                showBlockedDates={false}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div>

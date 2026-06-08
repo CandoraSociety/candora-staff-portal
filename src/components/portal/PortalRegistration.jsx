@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { CheckCircle, UserPlus, ChevronRight, ChevronLeft, Heart } from 'lucide-react';
+import PhoneInput from './PhoneInput';
+import AvailabilitySelector from './AvailabilitySelector';
 
 const AREAS_OF_INTEREST = [
   "Auntie Bev's Social Venture (Kitchen)",
@@ -44,7 +46,9 @@ const emptyForm = {
   ell_level: '', school_name: '', company_name: '',
   address: '', city: '',
   emergency_contact_name: '', emergency_contact_phone: '',
-  programs: [], how_heard: '', skills: '', availability: '',
+  programs: [], how_heard: '', skills: '', 
+  availability_schedule: { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] },
+  blocked_dates: [],
   pictures_consent: 'no', notes: '',
   include_donation: false,
   donation_amount: 25,
@@ -140,7 +144,7 @@ export default function PortalRegistration({ onComplete }) {
               <div><Label>Last Name *</Label><Input value={form.last_name} onChange={e => update('last_name', e.target.value)} className="mt-1" /></div>
             </div>
             <div><Label>Email</Label><Input type="email" value={form.email} onChange={e => update('email', e.target.value)} className="mt-1" /></div>
-            <div><Label>Phone</Label><Input value={form.phone} onChange={e => update('phone', e.target.value)} className="mt-1" /></div>
+            <div><Label>Phone</Label><PhoneInput value={form.phone} onChange={v => update('phone', v)} className="mt-1" /></div>
             <div><Label>Date of Birth</Label><Input type="date" value={form.birth_date} onChange={e => update('birth_date', e.target.value)} className="mt-1" /></div>
             <div>
               <Label>Gender</Label>
@@ -192,7 +196,7 @@ export default function PortalRegistration({ onComplete }) {
             <div><Label>City</Label><Input value={form.city} onChange={e => update('city', e.target.value)} className="mt-1" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Emergency Contact Name</Label><Input value={form.emergency_contact_name} onChange={e => update('emergency_contact_name', e.target.value)} className="mt-1" /></div>
-              <div><Label>Emergency Contact Phone</Label><Input value={form.emergency_contact_phone} onChange={e => update('emergency_contact_phone', e.target.value)} className="mt-1" /></div>
+              <div><Label>Emergency Contact Phone</Label><PhoneInput value={form.emergency_contact_phone} onChange={v => update('emergency_contact_phone', v)} className="mt-1" /></div>
             </div>
             <div>
               <Label className="font-medium">Areas of Interest</Label>
@@ -219,7 +223,20 @@ export default function PortalRegistration({ onComplete }) {
               </Select>
             </div>
             <div><Label>Skills & Experience</Label><Textarea value={form.skills} onChange={e => update('skills', e.target.value)} rows={2} className="mt-1" placeholder="Any relevant skills or experience..." /></div>
-            <div><Label>Availability</Label><Input value={form.availability} onChange={e => update('availability', e.target.value)} className="mt-1" placeholder="e.g. Weekday mornings, Tuesdays..." /></div>
+            <div>
+              <Label>Availability</Label>
+              <Card className="mt-1 border">
+                <CardContent className="p-3">
+                  <AvailabilitySelector
+                    value={{ weekly_schedule: form.availability_schedule, blocked_dates: form.blocked_dates }}
+                    onChange={(data) => {
+                      update('availability_schedule', data.weekly_schedule);
+                      update('blocked_dates', data.blocked_dates);
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </div>
             <div><Label>Why do you want to volunteer?</Label><Textarea value={form.notes} onChange={e => update('notes', e.target.value)} rows={2} className="mt-1" placeholder="Tell us a bit about your motivation..." /></div>
             <div>
               <Label>Photo Consent</Label>
