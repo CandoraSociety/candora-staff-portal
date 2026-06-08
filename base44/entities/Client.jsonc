@@ -1,0 +1,365 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Client's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Client's last name"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth"
+    },
+    "sex": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female"
+      ],
+      "description": "Biological sex for demographic data"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "address": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "string",
+      "description": "City"
+    },
+    "state": {
+      "type": "string",
+      "description": "Province"
+    },
+    "zip": {
+      "type": "string",
+      "description": "Postal code"
+    },
+    "compass_hsid": {
+      "type": "string",
+      "description": "Compass HSID# (Government of Alberta database)"
+    },
+    "compass_verified": {
+      "type": "boolean",
+      "description": "Client file entered into Compass"
+    },
+    "compass_verified_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "compass_verified_by": {
+      "type": "string"
+    },
+    "compass_notes": {
+      "type": "string"
+    },
+    "residency_status": {
+      "type": "string",
+      "enum": [
+        "canadian_citizen",
+        "permanent_resident",
+        "protected_person",
+        "convention_refugee",
+        "refugee_claimant",
+        "temporary_resident",
+        "work_permit",
+        "study_permit",
+        "visitor",
+        "other"
+      ]
+    },
+    "clb_level": {
+      "type": "string",
+      "enum": [
+        "clb_1",
+        "clb_2",
+        "clb_3",
+        "clb_4",
+        "clb_5",
+        "clb_6",
+        "clb_7",
+        "clb_8",
+        "clb_9",
+        "clb_10",
+        "clb_11",
+        "clb_12",
+        "native_english_french"
+      ]
+    },
+    "employment_status": {
+      "type": "string",
+      "enum": [
+        "E-RF",
+        "E-UF",
+        "E-PT",
+        "UE",
+        "UE-LA",
+        "UE-S",
+        "NA"
+      ]
+    },
+    "has_vehicle": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no_has_license",
+        "no_no_license"
+      ]
+    },
+    "referral_source": {
+      "type": "string",
+      "enum": [
+        "self",
+        "family_friend",
+        "school",
+        "employer",
+        "external_agency",
+        "alberta_works",
+        "other"
+      ]
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "direct_to_employment",
+        "pathways",
+        "casual",
+        "external_referral",
+        "internal_referral",
+        "not_eligible"
+      ]
+    },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Email of assigned worker"
+    },
+    "assigned_worker_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "active",
+        "pending",
+        "closed"
+      ],
+      "default": "new"
+    },
+    "program_status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "complete",
+        "incomplete",
+        "cancelled"
+      ]
+    },
+    "service_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "employment_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "post_completion_employment_status": {
+      "type": "string",
+      "enum": [
+        "E-RF",
+        "E-UF",
+        "E-PT",
+        "UE",
+        "UE-LA",
+        "UE-S",
+        "NA",
+        "no_contact"
+      ]
+    },
+    "post_completion_employment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "followup_90day_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "followup_90day_status": {
+      "type": "string",
+      "enum": [
+        "E-RF",
+        "E-UF",
+        "E-PT",
+        "UE",
+        "UE-LA",
+        "UE-S",
+        "NA",
+        "no_contact"
+      ]
+    },
+    "barrier_1": {
+      "type": "string"
+    },
+    "barrier_1_status": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "in_progress",
+        "resolved"
+      ]
+    },
+    "barrier_1_notes": {
+      "type": "string"
+    },
+    "barrier_1_action_steps": {
+      "type": "string"
+    },
+    "barrier_2": {
+      "type": "string"
+    },
+    "barrier_2_status": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "in_progress",
+        "resolved"
+      ]
+    },
+    "barrier_2_notes": {
+      "type": "string"
+    },
+    "barrier_2_action_steps": {
+      "type": "string"
+    },
+    "barrier_3": {
+      "type": "string"
+    },
+    "barrier_3_status": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "in_progress",
+        "resolved"
+      ]
+    },
+    "barrier_3_notes": {
+      "type": "string"
+    },
+    "barrier_3_action_steps": {
+      "type": "string"
+    },
+    "sdp_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sdp_item_details": {
+      "type": "object"
+    },
+    "internal_referrals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "external_referrals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "internal_placement": {
+      "type": "string",
+      "enum": [
+        "none",
+        "cleaning_arc",
+        "food_services_onsite",
+        "food_services_offsite",
+        "reception",
+        "childcare"
+      ]
+    },
+    "career_objectives": {
+      "type": "string"
+    },
+    "employment_history": {
+      "type": "string"
+    },
+    "resume_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "intake_notes": {
+      "type": "string"
+    },
+    "intake_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "program_stream_switches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from_stream": {
+            "type": "string"
+          },
+          "to_stream": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "roadmap_item_status": {
+      "type": "object"
+    },
+    "roadmap_progress_notes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "casual_activity_log": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "dea_activities": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

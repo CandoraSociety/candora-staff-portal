@@ -1,0 +1,191 @@
+{
+  "name": "InternalTraining",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "placement_type": {
+      "type": "string",
+      "enum": [
+        "cleaning_arc",
+        "food_services_onsite",
+        "food_services_offsite",
+        "reception",
+        "childcare"
+      ]
+    },
+    "assigned_worker": {
+      "type": "string"
+    },
+    "assigned_worker_name": {
+      "type": "string"
+    },
+    "referral_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expected_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "actual_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "transportation": {
+      "type": "string",
+      "enum": [
+        "has_own_vehicle",
+        "no_vehicle_willing_to_bus",
+        "no_vehicle_not_willing_to_bus",
+        "transit_pass_provided",
+        "requires_transportation_support",
+        "offsite_not_applicable"
+      ]
+    },
+    "transportation_notes": {
+      "type": "string"
+    },
+    "training_goals": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "referred",
+        "active",
+        "completed",
+        "withdrawn",
+        "cancelled"
+      ],
+      "default": "referred"
+    },
+    "orientation_completed": {
+      "type": "boolean"
+    },
+    "orientation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "health_safety_completed": {
+      "type": "boolean"
+    },
+    "health_safety_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "midpoint_checkin_completed": {
+      "type": "boolean"
+    },
+    "midpoint_checkin_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "program_completion_completed": {
+      "type": "boolean"
+    },
+    "program_completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "training_plan_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "supervisor_notes": {
+      "type": "string"
+    },
+    "evaluation_completed": {
+      "type": "boolean"
+    },
+    "evaluation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "evaluation_reliability": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "evaluation_attitude": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "evaluation_skill_development": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "evaluation_teamwork": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "evaluation_communication": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "satisfactory",
+        "needs_improvement",
+        "unsatisfactory"
+      ]
+    },
+    "evaluation_would_hire": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "yes_with_conditions",
+        "no",
+        "not_applicable"
+      ]
+    },
+    "evaluation_strengths": {
+      "type": "string"
+    },
+    "evaluation_areas_for_growth": {
+      "type": "string"
+    },
+    "evaluation_overall_comments": {
+      "type": "string"
+    },
+    "referral_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "placement_type"
+  ]
+}
