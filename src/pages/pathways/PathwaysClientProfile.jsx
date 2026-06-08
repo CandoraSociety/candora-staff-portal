@@ -1,209 +1,303 @@
-import { useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, History, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Save, Upload, FileText, Users, DollarSign, ClipboardList } from 'lucide-react';
-import moment from 'moment';
+import { addDays, differenceInDays } from 'date-fns';
+import ClientProfileOverview from '../components/client/ClientProfileOverview';
+import ClientReferrals from '../components/client/ClientReferrals';
+import ClientFinancials from '../components/client/ClientFinancials';
+import CloseFileDialog from '../components/client/CloseFileDialog';
+import StatusChangeDialog from '../components/client/StatusChangeDialog';
+import DEAClosingDialog from '../components/wizard/DEAClosingDialog';
 
-const WORKERS = [
-  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
-  { email: 'lola@candorasociety.com', name: 'Lola' },
-  { email: 'john@candorasociety.com', name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
-  { email: 'olena@candorasociety.com', name: 'Olena' },
-];
+const STREAM_LABELS = {
+  direct_to_employment: 'DEA',
+  pathways: 'Pathways',
+  casual: 'Casual',
+  external_referral: 'External Referral',
+  internal_referral: 'Internal Referral',
+  not_eligible: 'Not Eligible'
+};
 
-const RESIDENCY_STATUS = ['canadian_citizen', 'permanent_resident', 'protected_person', 'convention_refugee', 'refugee_claimant', 'temporary_resident', 'work_permit', 'study_permit', 'visitor', 'other'];
-const CLB_LEVELS = ['clb_1', 'clb_2', 'clb_3', 'clb_4', 'clb_5', 'clb_6', 'clb_7', 'clb_8', 'clb_9', 'clb_10', 'clb_11', 'clb_12', 'native_english_french'];
-const EMPLOYMENT_STATUS = ['E-RF', 'E-UF', 'E-PT', 'UE', 'UE-LA', 'UE-S', 'NA'];
-const SERVICE_TYPES = ['direct_to_employment', 'pathways', 'casual', 'external_referral', 'internal_referral', 'not_eligible'];
-const PLACEMENT_TYPES = ['none', 'cleaning_arc', 'food_services_onsite', 'food_services_offsite', 'reception', 'childcare'];
+const STREAM_BADGE_COLORS = {
+  direct_to_employment: 'bg-blue-100 text-blue-800 border-blue-200',
+  pathways: 'bg-purple-100 text-purple-800 border-purple-200',
+  casual: 'bg-green-100 text-green-800 border-green-200',
+  external_referral: 'bg-orange-100 text-orange-800 border-orange-200',
+  internal_referral: 'bg-pink-100 text-pink-800 border-pink-200',
+  not_eligible: 'bg-gray-100 text-gray-800 border-gray-200'
+};
 
 export default function PathwaysClientProfile() {
   const { id } = useParams();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('overview');
-  
-  const { data: client, isLoading } = useQuery({
-    queryKey: ['pathways-client', id],
-    queryFn: () => base44.entities.Client.get(id),
-  });
-  
-  const { data: financials = [] } = useQuery({
-    queryKey: ['pathways-client-financials', id],
-    queryFn: () => base44.entities.FinancialRecord.filter({ client_id: id }),
-    enabled: !!id,
-  });
-  
-  const updateClientMutation = useMutation({
-    mutationFn: async (data) => await base44.entities.Client.update(id, data),
-    onSuccess: () => {
-      toast.success('Client updated');
-      queryClient.invalidateQueries({ queryKey: ['pathways-client', id] });
-    },
-  });
-  
-  if (isLoading) return <div className="p-8 text-center">Loading...</div>;
-  if (!client) return <Navigate to="/pathways/master" />;
-  
+  const navigate = useNavigate();
+  const [client, setClient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [closingSaving, setClosingSaving] = useState(false);
+  const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
+  const [statusHistoryKey, setStatusHistoryKey] = useState(0);
+  const [showDEAClosing, setShowDEAClosing] = useState(false);
+
+  useEffect(() => {
+    base44.entities.Client.list().then(clients => {
+      const found = clients.find(c => c.id === id);
+      setClient(found || null);
+      setLoading(false);
+      
+      // Check if DEA closing dialog should show
+      if (found?.service_type === 'direct_to_employment' && !found?.file_closed && !found?.dea_closing_dismissed) {
+        const endDate = found.completion_date
+          ? new Date(found.completion_date)
+          : found.service_start_date
+            ? addDays(new Date(found.service_start_date), 14)
+            : null;
+        if (endDate) {
+          const days = differenceInDays(endDate, new Date());
+          if (days <= 3) setShowDEAClosing(true);
+        }
+      }
+    });
+  }, [id]);
+
+  const handleSave = async (data) => {
+    try {
+      await base44.entities.Client.update(id, data);
+      setClient({ ...client, ...data });
+    } catch (error) {
+      toast.error('Failed to update client');
+    }
+  };
+
+  const handleCloseFile = async (closeData) => {
+    setClosingSaving(true);
+    try {
+      await base44.entities.Client.update(id, closeData);
+      await base44.entities.CompassTask.create({
+        client_id: id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        task_type: 'file_closed',
+        title: `File Closed - ${client.first_name} ${client.last_name}`,
+        instructions: `Reason: ${closeData.closed_reason}`,
+        status: 'pending'
+      });
+      setClient({ ...client, ...closeData });
+      toast.success('File closed');
+    } catch (error) {
+      toast.error('Failed to close file');
+    } finally {
+      setClosingSaving(false);
+    }
+  };
+
+  const handleReopenFile = async () => {
+    try {
+      await base44.entities.Client.update(id, { file_closed: false, status: 'active' });
+      setClient({ ...client, file_closed: false, status: 'active' });
+      toast.success('File reopened');
+    } catch (error) {
+      toast.error('Failed to reopen file');
+    }
+  };
+
+  const handleDEAContinue = async () => {
+    try {
+      await base44.entities.Client.update(id, { dea_closing_dismissed: true });
+      setShowDEAClosing(false);
+    } catch (error) {
+      toast.error('Failed to update');
+    }
+  };
+
+  const handleDEASwitchToPathways = async () => {
+    try {
+      const user = await base44.auth.me();
+      const switchRecord = {
+        from_stream: 'direct_to_employment',
+        to_stream: 'pathways',
+        reason: 'user_requested',
+        date: new Date().toISOString().split('T')[0],
+        notes: 'Switched from DEA to Pathways via closing dialog'
+      };
+      
+      await base44.entities.Client.update(id, {
+        service_type: 'pathways',
+        dea_closing_dismissed: true,
+        program_stream_switches: [...(client.program_stream_switches || []), switchRecord]
+      });
+      
+      await base44.entities.StatusChange.create({
+        client_id: id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        change_type: 'stream_switch',
+        change_date: new Date().toISOString().split('T')[0],
+        from_value: 'direct_to_employment',
+        to_value: 'pathways',
+        notes: 'Switched from DEA to Pathways',
+        logged_by: user.email,
+        logged_by_name: user.full_name || user.email,
+        billing_relevant: false
+      });
+      
+      await base44.entities.CompassTask.create({
+        client_id: id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        task_type: 'stream_switch',
+        title: `Stream Switch - ${client.first_name} ${client.last_name}`,
+        instructions: 'Client switched from DEA to Pathways',
+        status: 'pending'
+      });
+      
+      setClient({ ...client, service_type: 'pathways', dea_closing_dismissed: true });
+      setShowDEAClosing(false);
+      toast.success('Switched to Pathways');
+    } catch (error) {
+      toast.error('Failed to switch streams');
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (!client) return <div className="p-8 text-center">Client not found</div>;
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{client.first_name} {client.last_name}</h1>
-          <p className="text-sm text-slate-600">{client.email} • {client.phone}</p>
-          <div className="flex gap-2 mt-2">
-            <Badge>{client.status}</Badge>
-            <Badge variant="outline">{client.service_type?.replace(/_/g, ' ')}</Badge>
-            {client.employment_status?.startsWith('E-') && <Badge className="bg-green-100 text-green-800">Employed</Badge>}
+    <div className="min-h-screen bg-slate-50">
+      {/* Top Navigation Bar */}
+      <div className="sticky top-0 z-40 px-6 py-2 flex items-center gap-3" style={{ background: 'hsl(231,64%,20%)' }}>
+        <img
+          src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+          alt="Candora logo"
+          className="h-7 w-7 object-contain rounded-full"
+        />
+        <button
+          onClick={() => navigate('/pathways/master')}
+          className="text-sm text-white/70 hover:text-white font-medium"
+        >
+          Master List
+        </button>
+        <span className="text-white/30">·</span>
+        <button
+          onClick={() => navigate('/pathways/dashboard')}
+          className="text-sm text-white/70 hover:text-white font-medium"
+        >
+          My Dashboard
+        </button>
+        <span className="text-white/30">·</span>
+        <button
+          onClick={() => navigate('/pathways/intake')}
+          className="text-sm text-white/70 hover:text-white font-medium"
+        >
+          Intake
+        </button>
+        <span className="text-white/30">·</span>
+        <button
+          onClick={() => navigate('/pathways/compass')}
+          className="text-sm text-white/70 hover:text-white font-medium"
+        >
+          Compass
+        </button>
+      </div>
+
+      {/* Main Header */}
+      <div
+        className="border-b px-6 py-4 flex items-center justify-between gap-4"
+        style={{ background: 'hsl(44,100%,88%)', borderColor: 'hsl(42,100%,70%)' }}
+      >
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} style={{ color: 'hsl(231,64%,20%)' }}>
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold" style={{ color: 'hsl(231,64%,20%)' }}>
+                {client.first_name} {client.last_name}
+              </h1>
+              {client.service_type && (
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${STREAM_BADGE_COLORS[client.service_type] || ''}`}>
+                  {STREAM_LABELS[client.service_type] || client.service_type.replace(/_/g, ' ')}
+                </span>
+              )}
+              {client.file_closed && (
+                <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold border border-red-200">
+                  Closed
+                </span>
+              )}
+            </div>
+            <p className="text-sm" style={{ color: 'hsl(231,55%,40%)' }}>
+              {client.compass_hsid ? `HSID: ${client.compass_hsid}` : ''}
+              {client.file_closed && client.closed_reason
+                ? `${client.compass_hsid ? ' · ' : ''}Closed: ${client.closed_reason.replace(/_/g, ' ')}`
+                : ''}
+            </p>
           </div>
         </div>
-        <Button onClick={() => document.getElementById('save-btn')?.click()}><Save className="h-4 w-4 mr-2" />Save Changes</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowStatusChangeDialog(true)}>
+            <History className="w-4 h-4 mr-2" />
+            Log Status Change
+          </Button>
+          {client.file_closed ? (
+            <Button variant="outline" size="sm" onClick={handleReopenFile}>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reopen File
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setShowCloseDialog(true)}>
+              <XCircle className="w-4 h-4 mr-2" />
+              Close File
+            </Button>
+          )}
+        </div>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="overview"><FileText className="h-4 w-4 mr-2" />Overview</TabsTrigger>
-          <TabsTrigger value="financials"><DollarSign className="h-4 w-4 mr-2" />Financials</TabsTrigger>
-          <TabsTrigger value="referrals"><Users className="h-4 w-4 mr-2" />Referrals</TabsTrigger>
-          <TabsTrigger value="placements"><ClipboardList className="h-4 w-4 mr-2" />Placements</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview">
-          <Card>
-            <CardHeader><CardTitle>Personal Information</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><Label>First Name</Label><Input id="first_name" defaultValue={client.first_name} /></div>
-              <div><Label>Last Name</Label><Input id="last_name" defaultValue={client.last_name} /></div>
-              <div><Label>Email</Label><Input id="email" type="email" defaultValue={client.email} /></div>
-              <div><Label>Phone</Label><Input id="phone" defaultValue={client.phone} /></div>
-              <div><Label>Date of Birth</Label><Input id="dob" type="date" defaultValue={client.date_of_birth} /></div>
-              <div><Label>Sex</Label><Select defaultValue={client.sex}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent></Select></div>
-              <div className="md:col-span-3"><Label>Address</Label><Input id="address" defaultValue={client.address} /></div>
-              <div><Label>City</Label><Input id="city" defaultValue={client.city} /></div>
-              <div><Label>Province</Label><Input id="state" defaultValue={client.state} /></div>
-              <div><Label>Postal Code</Label><Input id="zip" defaultValue={client.zip} /></div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardHeader><CardTitle>Case Information</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><Label>Compass HSID</Label><Input id="hsid" defaultValue={client.compass_hsid} /></div>
-              <div className="flex items-center gap-2"><input type="checkbox" id="cv" defaultChecked={client.compass_verified} /><Label htmlFor="cv">Compass Verified</Label></div>
-              {client.compass_verified && (<><div><Label>Verified Date</Label><Input id="cvd" type="date" defaultValue={client.compass_verified_date} /></div><div><Label>Verified By</Label><Input id="cvb" defaultValue={client.compass_verified_by} /></div></>)}
-              <div><Label>Residency Status</Label><Select defaultValue={client.residency_status}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{RESIDENCY_STATUS.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>CLB Level</Label><Select defaultValue={client.clb_level}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CLB_LEVELS.map(s => <SelectItem key={s} value={s}>{s.replace('_', ' ').toUpperCase()}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Employment Status</Label><Select defaultValue={client.employment_status}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{EMPLOYMENT_STATUS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Service Type</Label><Select defaultValue={client.service_type}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{SERVICE_TYPES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Assigned Worker</Label><Select defaultValue={client.assigned_worker}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{WORKERS.map(w => <SelectItem key={w.email} value={w.email}>{w.name}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label>Status</Label><Select defaultValue={client.status}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="new">New</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select></div>
-              <div><Label>Program Status</Label><Select defaultValue={client.program_status}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="in_progress">In Progress</SelectItem><SelectItem value="complete">Complete</SelectItem><SelectItem value="incomplete">Incomplete</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select></div>
-              <div><Label>Service Start Date</Label><Input id="ssd" type="date" defaultValue={client.service_start_date} /></div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardHeader><CardTitle>Barriers (BIT)</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {['barrier_1', 'barrier_2', 'barrier_3'].map((key, idx) => (
-                <div key={key} className="p-4 border rounded-lg">
-                  <Label>Barrier {idx + 1}</Label>
-                  <Input className="mt-1" defaultValue={client[key]} placeholder="Describe barrier" />
-                  <div className="grid grid-cols-3 gap-2 mt-2">
-                    <Select defaultValue={client[`${key}_status`]}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="unresolved">Unresolved</SelectItem><SelectItem value="in_progress">In Progress</SelectItem><SelectItem value="resolved">Resolved</SelectItem></SelectContent></Select>
-                    <Input defaultValue={client[`${key}_notes`]} placeholder="Notes" />
-                    <Input defaultValue={client[`${key}_action_steps`]} placeholder="Action Steps" />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="financials">
-          <Card>
-            <CardHeader><CardTitle>Financial Records</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {financials.map(f => (
-                  <div key={f.id} className="p-4 border rounded-lg">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-medium">{f.record_type.replace(/_/g, ' ')}</p>
-                        <p className="text-sm text-slate-600">{f.description}</p>
-                        <p className="text-xs text-slate-500">{f.date} • {f.vendor}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">${f.total?.toFixed(2)}</p>
-                        <Badge>{f.registration_status}</Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {financials.length === 0 && <p className="text-center text-slate-500 py-8">No financial records</p>}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="referrals">
-          <Card>
-            <CardHeader><CardTitle>Internal Referrals</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {client.internal_referrals?.map((ref, idx) => (
-                  <Badge key={idx} variant="outline">{ref}</Badge>
-                ))}
-                {!client.internal_referrals?.length && <p className="text-slate-500">No internal referrals</p>}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardHeader><CardTitle>External Referrals</CardTitle></CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {client.external_referrals?.map((ref, idx) => (
-                  <Badge key={idx} variant="outline">{ref}</Badge>
-                ))}
-                {!client.external_referrals?.length && <p className="text-slate-500">No external referrals</p>}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="placements">
-          <Card>
-            <CardHeader><CardTitle>Internal Placement</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div><Label>Type</Label><p className="font-medium">{client.internal_placement?.replace(/_/g, ' ') || 'None'}</p></div>
-              <div><Label>Start Date</Label><p className="font-medium">{client.placement_start_date || 'N/A'}</p></div>
-              <div><Label>End Date</Label><p className="font-medium">{client.placement_end_date || 'N/A'}</p></div>
-              <div><Label>Supervisor</Label><p className="font-medium">{client.placement_supervisor || 'N/A'}</p></div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardHeader><CardTitle>External Employment</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div><Label>Employer</Label><p className="font-medium">{client.employer_name || 'N/A'}</p></div>
-              <div><Label>Job Title</Label><p className="font-medium">{client.job_title || 'N/A'}</p></div>
-              <div><Label>Start Date</Label><p className="font-medium">{client.job_start_date || 'N/A'}</p></div>
-              <div><Label>Wage</Label><p className="font-medium">${client.job_wage?.toFixed(2) || 'N/A'}</p></div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+      {/* Tabs */}
+      <div className="p-6">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
+            <TabsTrigger value="overview">Client Overview</TabsTrigger>
+            <TabsTrigger value="referrals">Referrals</TabsTrigger>
+            <TabsTrigger value="financials">Financials</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <ClientProfileOverview client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="referrals">
+            <ClientReferrals client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="financials">
+            <ClientFinancials client={client} />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Dialogs */}
+      <CloseFileDialog
+        open={showCloseDialog}
+        onOpenChange={setShowCloseDialog}
+        onConfirm={handleCloseFile}
+        client={client}
+      />
+
+      <StatusChangeDialog
+        open={showStatusChangeDialog}
+        onOpenChange={setShowStatusChangeDialog}
+        client={client}
+        onSaved={() => setStatusHistoryKey(prev => prev + 1)}
+      />
+
+      <DEAClosingDialog
+        open={showDEAClosing}
+        onContinue={handleDEAContinue}
+        onSwitchToPathways={handleDEASwitchToPathways}
+        onDismiss={() => setShowDEAClosing(false)}
+      />
     </div>
   );
 }
