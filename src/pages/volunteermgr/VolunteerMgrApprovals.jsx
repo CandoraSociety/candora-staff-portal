@@ -29,6 +29,32 @@ export default function VolunteerMgrApprovals() {
     queryFn: () => base44.entities.VolunteerApproval.list('-created_date', 100),
   });
 
+  const { data: profileChanges = [] } = useQuery({
+    queryKey: ['vol-profile-changes'],
+    queryFn: () => base44.entities.VolunteerProfileChange.list('-submitted_date', 100),
+  });
+
+  const updateProfileChangeMutation = useMutation({
+    mutationFn: async ({ id, status, notes }) => {
+      const change = profileChanges.find(c => c.id === id);
+      
+      await base44.entities.VolunteerProfileChange.update(id, {
+        status,
+        reviewed_by: 'admin@candorasociety.com',
+        review_notes: notes || '',
+      });
+
+      if (status === 'approved' && change?.changes_requested) {
+        // Apply the changes to the volunteer record
+        await base44.entities.Volunteer.update(change.volunteer_id, change.changes_requested);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vol-profile-changes'] });
+      queryClient.invalidateQueries({ queryKey: ['vol-volunteers'] });
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, notes }) => {
       await base44.entities.VolunteerApproval.update(id, {
@@ -53,8 +79,10 @@ export default function VolunteerMgrApprovals() {
     },
   });
 
-  const pending = approvals.filter(a => a.status === 'pending');
-  const resolved = approvals.filter(a => a.status !== 'pending');
+  const pendingApprovals = approvals.filter(a => a.status === 'pending');
+  const pendingProfileChanges = profileChanges.filter(c => c.status === 'pending');
+  const resolvedApprovals = approvals.filter(a => a.status !== 'pending');
+  const resolvedProfileChanges = profileChanges.filter(c => c.status !== 'pending');
 
   const renderCard = (req) => {
     const config = typeConfig[req.request_type] || { icon: AlertCircle, label: req.request_type, color: 'bg-muted' };
@@ -102,31 +130,90 @@ export default function VolunteerMgrApprovals() {
     );
   };
 
+  const renderProfileChangeCard = (change) => (
+    <Card key={change.id} className="shadow-sm">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-medium text-sm">{change.volunteer_name}</p>
+            <Badge className={`text-xs mt-1 ${typeConfig.profile_change.color}`}>
+              <Edit className="w-3 h-3 mr-1" />Profile Change Request
+            </Badge>
+          </div>
+          <Badge className={`text-xs border shrink-0 ${statusColors[change.status]}`}>{change.status}</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          <strong>Changes requested:</strong> {change.change_summary}
+        </p>
+        <p className="text-xs text-muted-foreground">Submitted {moment(change.submitted_date).fromNow()}</p>
+
+        {change.status === 'pending' && (
+          <div className="space-y-2 pt-2 border-t">
+            <Textarea
+              placeholder="Review notes (optional)..."
+              rows={2}
+              value={reviewNotes[change.id] || ''}
+              onChange={e => setReviewNotes(p => ({ ...p, [change.id]: e.target.value }))}
+            />
+            <div className="flex gap-2">
+              <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700"
+                onClick={() => updateProfileChangeMutation.mutate({ id: change.id, status: 'approved', notes: reviewNotes[change.id] })}>
+                <CheckCircle className="w-3.5 h-3.5" /> Approve
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={() => updateProfileChangeMutation.mutate({ id: change.id, status: 'rejected', notes: reviewNotes[change.id] })}>
+                <XCircle className="w-3.5 h-3.5" /> Reject
+              </Button>
+            </div>
+          </div>
+        )}
+        {change.review_notes && <p className="text-xs text-muted-foreground border-t pt-2"><strong>Notes:</strong> {change.review_notes}</p>}
+      </CardContent>
+    </Card>
+  );
+
+  const totalPending = pendingApprovals.length + pendingProfileChanges.length;
+  const totalResolved = resolvedApprovals.length + resolvedProfileChanges.length;
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-display">Approvals</h1>
-        <p className="text-sm text-muted-foreground mt-1">{pending.length} pending, {resolved.length} resolved</p>
+        <p className="text-sm text-muted-foreground mt-1">{totalPending} pending, {totalResolved} resolved</p>
       </div>
 
-      {pending.length > 0 && (
+      {pendingProfileChanges.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Pending ({pending.length})</h2>
-          {pending.map(renderCard)}
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Profile Changes ({pendingProfileChanges.length})</h2>
+          {pendingProfileChanges.map(renderProfileChangeCard)}
         </div>
       )}
 
-      {pending.length === 0 && (
+      {pendingApprovals.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Other Approvals ({pendingApprovals.length})</h2>
+          {pendingApprovals.map(renderCard)}
+        </div>
+      )}
+
+      {totalPending === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
           <p>No pending approvals. All caught up!</p>
         </div>
       )}
 
-      {resolved.length > 0 && (
+      {resolvedProfileChanges.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved ({resolved.length})</h2>
-          {resolved.map(renderCard)}
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Profile Changes ({resolvedProfileChanges.length})</h2>
+          {resolvedProfileChanges.map(renderProfileChangeCard)}
+        </div>
+      )}
+
+      {resolvedApprovals.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Resolved Other ({resolvedApprovals.length})</h2>
+          {resolvedApprovals.map(renderCard)}
         </div>
       )}
     </div>

@@ -1,0 +1,54 @@
+{
+  "name": "VolunteerProfileChange",
+  "type": "object",
+  "properties": {
+    "volunteer_id": {
+      "type": "string",
+      "description": "ID of the volunteer requesting changes"
+    },
+    "volunteer_name": {
+      "type": "string",
+      "description": "Volunteer's name for display"
+    },
+    "volunteer_email": {
+      "type": "string",
+      "description": "Volunteer's email"
+    },
+    "changes_requested": {
+      "type": "object",
+      "description": "Object containing the proposed changes to volunteer fields"
+    },
+    "change_summary": {
+      "type": "string",
+      "description": "Human-readable summary of changes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Email of staff who reviewed"
+    },
+    "review_notes": {
+      "type": "string",
+      "description": "Notes from reviewer"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "volunteer_id",
+    "volunteer_name",
+    "volunteer_email",
+    "changes_requested"
+  ]
+}

@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import PortalSignIn from '@/components/portal/PortalSignIn';
 import PortalRegistration from '@/components/portal/PortalRegistration';
-import { Heart, Clock, UserPlus } from 'lucide-react';
+import PortalProfile from '@/components/portal/PortalProfile';
+import PortalShiftSignup from '@/components/portal/PortalShiftSignup';
+import { Heart, Clock, UserPlus, User, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function VolunteerPortal() {
   const [view, setView] = useState('home');
+  const [selectedVolunteerId, setSelectedVolunteerId] = useState(null);
+  const [authenticatedVolunteer, setAuthenticatedVolunteer] = useState(null);
+
+  const handleAuthenticated = (volunteerId, volunteer) => {
+    setSelectedVolunteerId(volunteerId);
+    setAuthenticatedVolunteer(volunteer);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex flex-col">
@@ -65,11 +74,36 @@ export default function VolunteerPortal() {
         )}
 
         {view === 'signin' && (
-          <PortalSignIn onBack={() => setView('home')} />
+          <PortalSignIn 
+            onBack={() => setView('home')} 
+            onAuthenticated={handleAuthenticated}
+          />
         )}
 
         {view === 'register' && (
           <PortalRegistration onComplete={() => setView('home')} />
+        )}
+
+        {view === 'profile' && selectedVolunteerId && (
+          <PortalProfile 
+            volunteerId={selectedVolunteerId}
+            onBack={() => {
+              setView('home');
+              setSelectedVolunteerId(null);
+              setAuthenticatedVolunteer(null);
+            }}
+          />
+        )}
+
+        {view === 'shifts' && selectedVolunteerId && (
+          <PortalShiftSignup
+            volunteerId={selectedVolunteerId}
+            onBack={() => {
+              setView('home');
+              setSelectedVolunteerId(null);
+              setAuthenticatedVolunteer(null);
+            }}
+          />
         )}
       </main>
 

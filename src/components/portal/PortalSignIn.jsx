@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar } from 'lucide-react';
 import moment from 'moment';
 
-export default function PortalSignIn({ onBack }) {
+export default function PortalSignIn({ onBack, onAuthenticated }) {
   if (!onBack) onBack = () => {};
+  if (!onAuthenticated) onAuthenticated = () => {};
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
@@ -58,6 +59,9 @@ export default function PortalSignIn({ onBack }) {
 
     // Check for active sign-in
     const activeLogs = await base44.entities.VolunteerTimeLog.filter({ volunteer_id: vol.id, status: 'signed_in' });
+
+    // Notify parent of authenticated volunteer
+    onAuthenticated(vol.id, vol);
 
     setFoundVolunteer(vol);
     setActiveLog(activeLogs[0] || null);
@@ -224,6 +228,24 @@ export default function PortalSignIn({ onBack }) {
               </div>
             )}
 
+            <div className="grid grid-cols-2 gap-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => onAuthenticated(foundVolunteer.id, foundVolunteer)}
+              >
+                <User className="w-4 h-4" />
+                My Profile
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => onAuthenticated(foundVolunteer.id, foundVolunteer)}
+              >
+                <Calendar className="w-4 h-4" />
+                View Shifts
+              </Button>
+            </div>
             <Button variant="ghost" className="w-full text-muted-foreground" onClick={onBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
