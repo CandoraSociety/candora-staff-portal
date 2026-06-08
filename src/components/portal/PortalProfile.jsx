@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { User, Edit2, Save, X, CheckCircle, Clock, Mail, Phone, MapPin, Calendar, ArrowLeft, Award, TrendingUp } from 'lucide-react';
 import moment from 'moment';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function PortalProfile({ volunteerId, onBack }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -46,6 +47,74 @@ export default function PortalProfile({ volunteerId, onBack }) {
 
   // Calculate total hours from time logs
   const totalHoursLogged = timeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
+
+  // Calculate hour stats (matching admin view)
+  const hourStats = useMemo(() => {
+    const today = moment();
+    const currentYear = today.year();
+    const fiscalYearStart = today.month() >= 3
+      ? moment(`${currentYear}-04-01`)
+      : moment(`${currentYear - 1}-04-01`);
+    const prevFiscalYearStart = fiscalYearStart.clone().subtract(1, "year");
+    const prevFiscalYearEnd = fiscalYearStart.clone().subtract(1, "day");
+    const prevCalYear = currentYear - 1;
+    const calYTDStart = moment(`${currentYear}-01-01`);
+
+    const total = timeLogs.reduce((s, l) => s + (l.total_hours || 0), 0);
+    const calYTD = timeLogs.filter(l => {
+      if (!l.date) return false;
+      const d = moment(l.date);
+      return d.isSameOrAfter(calYTDStart) && d.isSameOrBefore(today);
+    }).reduce((s, l) => s + (l.total_hours || 0), 0);
+    const fiscalYTD = timeLogs.filter(l => {
+      if (!l.date) return false;
+      const d = moment(l.date);
+      return d.isSameOrAfter(fiscalYearStart) && d.isSameOrBefore(today);
+    }).reduce((s, l) => s + (l.total_hours || 0), 0);
+    const prevCal = timeLogs.filter(l => {
+      if (!l.date) return false;
+      return moment(l.date).year() === prevCalYear;
+    }).reduce((s, l) => s + (l.total_hours || 0), 0);
+    const prevFiscal = timeLogs.filter(l => {
+      if (!l.date) return false;
+      const d = moment(l.date);
+      return d.isSameOrAfter(prevFiscalYearStart) && d.isSameOrBefore(prevFiscalYearEnd);
+    }).reduce((s, l) => s + (l.total_hours || 0), 0);
+
+    return { total, calYTD, fiscalYTD, prevCal, prevFiscal };
+  }, [timeLogs]);
+
+  // Process data for pie chart (by position/program)
+  const pieData = useMemo(() => {
+    const programHours = {};
+    timeLogs.forEach(log => {
+      const program = log.position_title || 'General';
+      programHours[program] = (programHours[program] || 0) + (log.total_hours || 0);
+    });
+
+    const sorted = Object.entries(programHours)
+      .map(([name, value]) => ({ name, value: Math.round(value * 10) / 10 }))
+      .sort((a, b) => b.value - a.value);
+
+    const COLORS = ["#2d8a6e", "#f59e0b", "#3b82f6", "#ec4899", "#8b5cf6", "#10b981", "#f97316", "#06b6d4", "#ef4444", "#84cc16"];
+    
+    if (sorted.length <= 6) {
+      return sorted.map((item, idx) => ({ ...item, color: COLORS[idx % COLORS.length] }));
+    }
+
+    const top6 = sorted.slice(0, 6).map((item, idx) => ({ ...item, color: COLORS[idx % COLORS.length] }));
+    const other = sorted.slice(6);
+    const otherTotal = other.reduce((sum, item) => sum + item.value, 0);
+    
+    return [
+      ...top6,
+      { 
+        name: 'Other', 
+        value: Math.round(otherTotal * 10) / 10,
+        color: COLORS[6 % COLORS.length]
+      }
+    ];
+  }, [timeLogs]);
 
   const submitChangeMutation = useMutation({
     mutationFn: async (changes) => {
@@ -191,21 +260,46 @@ export default function PortalProfile({ volunteerId, onBack }) {
           </div>
         </div>
 
-        {/* Hours & Recognition Summary */}
-        <div className="grid grid-cols-2 gap-4 py-4 border-b">
-          <div className="bg-primary/5 rounded-lg p-4 text-center">
-            <div className="flex items-center justify-center gap-2 text-primary mb-1">
-              <TrendingUp className="w-5 h-5" />
+        {/* Hours Summary - All Categories */}
+        <div className="space-y-4 py-4 border-b">
+          <h4 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Hours Summary
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-primary/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-primary">{hourStats.total.toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Total Hours</p>
             </div>
-            <p className="text-2xl font-bold text-foreground">{(volunteer.total_hours || 0).toFixed(1)}</p>
-            <p className="text-xs text-muted-foreground">Total Hours</p>
+            <div className="bg-accent/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-accent">{hourStats.calYTD.toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Calendar YTD</p>
+              <p className="text-[10px] text-muted-foreground">Jan 1 - Today</p>
+            </div>
+            <div className="bg-secondary/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-secondary-foreground">{hourStats.fiscalYTD.toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Fiscal YTD</p>
+              <p className="text-[10px] text-muted-foreground">Apr 1 - Today</p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-muted-foreground">{hourStats.prevCal.toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Previous Year</p>
+            </div>
+            <div className="bg-primary/5 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-primary/80">{hourStats.prevFiscal.toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground mt-1">Prev Fiscal</p>
+            </div>
           </div>
+        </div>
+
+        {/* Recognition Summary */}
+        <div className="py-4 border-b">
           <div className="bg-accent/5 rounded-lg p-4 text-center">
             <div className="flex items-center justify-center gap-2 text-accent mb-1">
               <Award className="w-5 h-5" />
             </div>
             <p className="text-2xl font-bold text-foreground">{recognition.length}</p>
-            <p className="text-xs text-muted-foreground">Awards</p>
+            <p className="text-xs text-muted-foreground">Awards & Recognition</p>
           </div>
         </div>
 
@@ -410,6 +504,60 @@ export default function PortalProfile({ volunteerId, onBack }) {
                   </div>
                 ))}
             </div>
+          </div>
+        )}
+
+        {/* Hours Distribution Pie Chart */}
+        {pieData.length > 0 && (
+          <div className="space-y-4 pt-4 border-t">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Hours by Program Area
+            </h4>
+            <Card>
+              <CardContent className="p-4">
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius="60%"
+                        paddingAngle={2}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        content={({ active, payload }) => {
+                          if (!active || !payload || !payload.length) return null;
+                          const data = payload[0].payload;
+                          const total = pieData.reduce((sum, item) => sum + item.value, 0);
+                          const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                          return (
+                            <div className="bg-white border border-border rounded-lg shadow-lg p-3 min-w-[150px]">
+                              <p className="font-semibold text-sm">{data.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {percentage}% · {data.value}h
+                              </p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Legend 
+                        formatter={(value) => (
+                          <span className="text-xs text-muted-foreground">{value}</span>
+                        )}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
