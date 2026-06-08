@@ -1,156 +1,500 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { FileText, TrendingUp, Users, BarChart3 } from 'lucide-react';
-import moment from 'moment';
+import React, { useState, useEffect, useMemo } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Users, CheckCircle2, Briefcase, Target, Calendar, TrendingUp, 
+  Filter, FileBarChart, Play, Save, Trash2, DollarSign, Award
+} from "lucide-react";
+import { format, startOfMonth, endOfMonth, subMonths, startOfYear, differenceInMonths } from "date-fns";
+import ReportSummary from "@/components/reports/ReportSummary";
+import StaffMonthlyReports from "@/components/reports/StaffMonthlyReports";
 
-const WORKERS = [
-  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
-  { email: 'lola@candorasociety.com', name: 'Lola' },
-  { email: 'john@candorasociety.com', name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
-  { email: 'olena@candorasociety.com', name: 'Olena' },
-];
+const SERVICE_STREAMS = {
+  direct_to_employment: "DEA",
+  pathways: "Pathways",
+  casual: "Casual",
+  external_referral: "External Referral",
+  internal_referral: "Internal Referral",
+};
+
+const EMPLOYMENT_STATUS_LABELS = {
+  "E-RF": "Employed - Related Field Full-time",
+  "E-UF": "Employed - Unrelated Field Full-time",
+  "E-PT": "Employed - Part-time",
+  "UE": "Unemployed",
+  "UE-LA": "Unemployed - Layoff",
+  "UE-S": "Unemployed - Seasonal",
+  "NA": "Not Available",
+  "no_contact": "No Contact",
+};
+
+function calculateOutcomes(clients, dateRange) {
+  const { startDate, endDate, label } = dateRange;
+  
+  const pathwaysStarters = clients.filter(c => 
+    c.service_type === "pathways" && 
+    c.service_start_date && 
+    new Date(c.service_start_date) >= startDate && 
+    new Date(c.service_start_date) < endDate
+  );
+  
+  const deaStarters = clients.filter(c => 
+    c.service_type === "direct_to_employment" && 
+    c.service_start_date && 
+    new Date(c.service_start_date) >= startDate && 
+    new Date(c.service_start_date) < endDate
+  );
+  
+  const pathwaysCompleters = clients.filter(c => 
+    c.service_type === "pathways" && 
+    c.completion_date && 
+    new Date(c.completion_date) >= startDate && 
+    new Date(c.completion_date) < endDate
+  );
+  
+  const deaCompleters = clients.filter(c => 
+    c.service_type === "direct_to_employment" && 
+    c.completion_date && 
+    new Date(c.completion_date) >= startDate && 
+    new Date(c.completion_date) < endDate
+  );
+  
+  const employmentOutcomes = clients.filter(c => 
+    c.employment_start_date && 
+    new Date(c.employment_start_date) >= startDate && 
+    new Date(c.employment_start_date) < endDate
+  );
+  
+  const followups90Day = clients.filter(c => 
+    c.followup_90day_date && 
+    new Date(c.followup_90day_date) >= startDate && 
+    new Date(c.followup_90day_date) < endDate
+  );
+  
+  const followupsCompleted = followups90Day.filter(c => c.followup_90day_status);
+  const followupsPending = followups90Day.filter(c => !c.followup_90day_status);
+  
+  const employmentStatusBreakdown = {};
+  followups90Day.forEach(c => {
+    const status = c.followup_90day_status || "no_contact";
+    employmentStatusBreakdown[status] = (employmentStatusBreakdown[status] || 0) + 1;
+  });
+  
+  const activeClients = clients.filter(c => c.status === "active");
+  const activeByStream = {};
+  activeClients.forEach(c => {
+    const stream = c.service_type || "unknown";
+    activeByStream[stream] = (activeByStream[stream] || 0) + 1;
+  });
+  
+  const totalClients = clients.length;
+  const activeCount = activeClients.length;
+  const closedCount = clients.filter(c => c.status === "closed").length;
+  
+  return {
+    dateRangeLabel: label,
+    pathwaysStarters: pathwaysStarters.length,
+    deaStarters: deaStarters.length,
+    pathwaysCompleters: pathwaysCompleters.length,
+    deaCompleters: deaCompleters.length,
+    employmentOutcomes: employmentOutcomes.length,
+    followups90Day: {
+      total: followups90Day.length,
+      completed: followupsCompleted.length,
+      pending: followupsPending.length,
+      statusBreakdown: employmentStatusBreakdown,
+    },
+    activeByStream,
+    totalClients,
+    activeCount,
+    closedCount,
+  };
+}
 
 export default function PathwaysReports() {
-  const [activeTab, setActiveTab] = useState('outcomes');
-  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("data");
   
-  const { data: clients = [] } = useQuery({
-    queryKey: ['pathways-clients-all'],
-    queryFn: () => base44.entities.Client.list('-created_date', 1000),
+  const { data: clients = [], isLoading: clientsLoading } = useQuery({
+    queryKey: ['pathways-clients'],
+    queryFn: () => base44.entities.Client.list("-created_date", 1000),
   });
   
-  const { data: reports = [] } = useQuery({
-    queryKey: ['pathways-staff-reports'],
-    queryFn: () => base44.entities.StaffMonthlyReport.list('-report_month', 50),
+  const { data: financialRecords = [] } = useQuery({
+    queryKey: ['pathways-financials'],
+    queryFn: () => base44.entities.FinancialRecord.list("-date", 2000),
   });
-  
-  const createReportMutation = useMutation({
-    mutationFn: async (data) => await base44.entities.StaffMonthlyReport.create(data),
-    onSuccess: () => {
-      toast.success('Report submitted');
-      queryClient.invalidateQueries({ queryKey: ['pathways-staff-reports'] });
-    },
+
+  // Outcomes tab state
+  const [outcomesFilters, setOutcomesFilters] = useState({
+    assignedWorker: "all",
+    serviceType: "all",
+    status: "all",
+    dateRangeType: "fiscal",
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    startDate: "",
+    endDate: "",
   });
-  
-  const outcomes = {
-    dea_starters: clients.filter(c => c.service_type === 'casual' && c.status === 'active').length,
-    pathways_starters: clients.filter(c => c.service_type === 'pathways' && c.status === 'active').length,
-    dea_completers: clients.filter(c => c.service_type === 'casual' && c.program_status === 'complete').length,
-    pathways_completers: clients.filter(c => c.service_type === 'pathways' && c.program_status === 'complete').length,
-    employment_outcomes: clients.filter(c => ['E-RF', 'E-UF', 'E-PT'].includes(c.employment_status)).length,
-    _90day_outcomes: clients.filter(c => ['E-RF', 'E-UF', 'E-PT'].includes(c.followup_90day_status)).length,
+
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate, endDate, label;
+
+    if (outcomesFilters.dateRangeType === "all") {
+      startDate = new Date(2000, 0, 1);
+      endDate = new Date(2100, 0, 1);
+      label = "All Time";
+    } else if (outcomesFilters.dateRangeType === "calendar") {
+      startDate = new Date(outcomesFilters.year, 0, 1);
+      endDate = new Date(outcomesFilters.year + 1, 0, 1);
+      label = `Calendar Year ${outcomesFilters.year}`;
+    } else if (outcomesFilters.dateRangeType === "fiscal") {
+      const fiscalStart = outcomesFilters.year <= now.getFullYear() 
+        ? new Date(outcomesFilters.year, 3, 1) 
+        : new Date(outcomesFilters.year - 1, 3, 1);
+      const fiscalEnd = new Date(outcomesFilters.year + 1, 3, 1);
+      startDate = fiscalStart;
+      endDate = fiscalEnd;
+      label = `Fiscal Year ${outcomesFilters.year}-${String(fiscalEnd.getFullYear()).slice(2)}`;
+    } else if (outcomesFilters.dateRangeType === "month") {
+      const year = outcomesFilters.year;
+      const month = outcomesFilters.month - 1;
+      startDate = new Date(year, month, 1);
+      endDate = new Date(year, month + 1, 1);
+      label = `${startDate.toLocaleString('default', { month: 'long' })} ${year}`;
+    } else if (outcomesFilters.dateRangeType === "custom" && outcomesFilters.startDate && outcomesFilters.endDate) {
+      startDate = new Date(outcomesFilters.startDate);
+      endDate = new Date(outcomesFilters.endDate);
+      endDate.setDate(endDate.getDate() + 1);
+      label = `${outcomesFilters.startDate} to ${outcomesFilters.endDate}`;
+    } else {
+      const fiscalStart = new Date(now.getFullYear() - (now.getMonth() < 3 ? 1 : 0), 3, 1);
+      const fiscalEnd = new Date(now.getFullYear() + (now.getMonth() >= 3 ? 1 : 0), 3, 1);
+      startDate = fiscalStart;
+      endDate = fiscalEnd;
+      label = `Fiscal Year ${fiscalStart.getFullYear()}-${String(fiscalEnd.getFullYear()).slice(2)}`;
+    }
+
+    return { startDate, endDate, label };
   };
-  
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Reports</h1>
-        <p className="text-sm text-slate-600">Outcomes, data analysis, and staff monthly reports</p>
+
+  const assignedWorkers = useMemo(() => {
+    const workers = new Set(clients.map(c => c.assigned_worker_name).filter(Boolean));
+    return Array.from(workers).sort();
+  }, [clients]);
+
+  const filteredClients = useMemo(() => {
+    return clients.filter(c => {
+      if (outcomesFilters.assignedWorker !== "all" && c.assigned_worker_name !== outcomesFilters.assignedWorker) return false;
+      if (outcomesFilters.serviceType !== "all" && c.service_type !== outcomesFilters.serviceType) return false;
+      if (outcomesFilters.status !== "all" && c.status !== outcomesFilters.status) return false;
+      return true;
+    });
+  }, [clients, outcomesFilters]);
+
+  const dateRange = getDateRange();
+  const outcomes = calculateOutcomes(filteredClients, dateRange);
+
+  if (clientsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+    );
+  }
+
+  return (
+    <div className="px-6 py-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-7xl mx-auto">
+        <TabsList className="mb-6">
           <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
           <TabsTrigger value="data">Data Reports</TabsTrigger>
-          <TabsTrigger value="staff">Staff Monthly</TabsTrigger>
+          <TabsTrigger value="staff">Staff Monthly Reports</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="outcomes" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <OutcomeCard title="DEA Starters" value={outcomes.dea_starters} icon={Users} />
-            <OutcomeCard title="Pathways Starters" value={outcomes.pathways_starters} icon={Users} />
-            <OutcomeCard title="DEA Completers" value={outcomes.dea_completers} icon={FileText} />
-            <OutcomeCard title="Pathways Completers" value={outcomes.pathways_completers} icon={FileText} />
-            <OutcomeCard title="Employment Outcomes" value={outcomes.employment_outcomes} icon={TrendingUp} />
-            <OutcomeCard title="90-Day Outcomes" value={outcomes._90day_outcomes} icon={TrendingUp} />
+
+        {/* TAB 1: OUTCOMES */}
+        <TabsContent value="outcomes">
+          <div className="space-y-6">
+            {/* Filters */}
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Filters</span>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  <div className="flex-1 min-w-[180px] space-y-1">
+                    <label className="text-xs text-muted-foreground">Assigned Worker</label>
+                    <Select value={outcomesFilters.assignedWorker} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, assignedWorker: v }))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All workers" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Workers</SelectItem>
+                        {assignedWorkers.map(worker => (
+                          <SelectItem key={worker} value={worker}>{worker}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex-1 min-w-[180px] space-y-1">
+                    <label className="text-xs text-muted-foreground">Service Type</label>
+                    <Select value={outcomesFilters.serviceType} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, serviceType: v }))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All streams" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Streams</SelectItem>
+                        <SelectItem value="pathways">Pathways</SelectItem>
+                        <SelectItem value="direct_to_employment">DEA</SelectItem>
+                        <SelectItem value="casual">Casual</SelectItem>
+                        <SelectItem value="external_referral">External Referral</SelectItem>
+                        <SelectItem value="internal_referral">Internal Referral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex-1 min-w-[180px] space-y-1">
+                    <label className="text-xs text-muted-foreground">Client Status</label>
+                    <Select value={outcomesFilters.status} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, status: v }))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex-1 min-w-[180px] space-y-1">
+                    <label className="text-xs text-muted-foreground">Date Range</label>
+                    <Select value={outcomesFilters.dateRangeType} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, dateRangeType: v }))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Time</SelectItem>
+                        <SelectItem value="fiscal">Fiscal Year (Apr-Mar)</SelectItem>
+                        <SelectItem value="calendar">Calendar Year</SelectItem>
+                        <SelectItem value="month">Month</SelectItem>
+                        <SelectItem value="custom">Custom Range</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-3 pt-3 border-t flex-wrap">
+                  {(outcomesFilters.dateRangeType === "calendar" || outcomesFilters.dateRangeType === "fiscal" || outcomesFilters.dateRangeType === "month") && (
+                    <div className="flex-1 min-w-[180px] space-y-1">
+                      <Label className="text-xs">Year</Label>
+                      <Select value={String(outcomesFilters.year)} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, year: parseInt(v) }))}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 4 + i).map(year => (
+                            <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {outcomesFilters.dateRangeType === "month" && (
+                    <div className="flex-1 min-w-[180px] space-y-1">
+                      <Label className="text-xs">Month</Label>
+                      <Select value={String(outcomesFilters.month)} onValueChange={(v) => setOutcomesFilters(prev => ({ ...prev, month: parseInt(v) }))}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((month, i) => (
+                            <SelectItem key={i + 1} value={String(i + 1)}>{month}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  
+                  {outcomesFilters.dateRangeType === "custom" && (
+                    <>
+                      <div className="flex-1 min-w-[180px] space-y-1">
+                        <Label className="text-xs">Start Date</Label>
+                        <Input type="date" value={outcomesFilters.startDate} onChange={(e) => setOutcomesFilters(prev => ({ ...prev, startDate: e.target.value }))} className="h-9" />
+                      </div>
+                      <div className="flex-1 min-w-[180px] space-y-1">
+                        <Label className="text-xs">End Date</Label>
+                        <Input type="date" value={outcomesFilters.endDate} onChange={(e) => setOutcomesFilters(prev => ({ ...prev, endDate: e.target.value }))} className="h-9" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Metric Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pathways Starters</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{outcomes.pathwaysStarters}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Started in {outcomes.dateRangeLabel}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">DEA Starters</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{outcomes.deaStarters}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Started in {outcomes.dateRangeLabel}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Pathways Completers</CardTitle>
+                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{outcomes.pathwaysCompleters}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Completed in {outcomes.dateRangeLabel}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">DEA Completers</CardTitle>
+                  <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{outcomes.deaCompleters}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Completed in {outcomes.dateRangeLabel}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Employment Outcomes</CardTitle>
+                  <Briefcase className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{outcomes.employmentOutcomes}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Clients gained employment in {outcomes.dateRangeLabel}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Client Status</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4">
+                    <div>
+                      <div className="text-2xl font-bold text-green-600">{outcomes.activeCount}</div>
+                      <p className="text-xs text-muted-foreground">Active</p>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-slate-600">{outcomes.closedCount}</div>
+                      <p className="text-xs text-muted-foreground">Closed</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle>90-Day Follow-up Outcomes</CardTitle>
+                  </div>
+                  <Badge variant={outcomes.followups90Day.pending > 0 ? "secondary" : "default"}>
+                    {outcomes.followups90Day.completed}/{outcomes.followups90Day.total} Completed
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(outcomes.followups90Day.statusBreakdown).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">
+                        {EMPLOYMENT_STATUS_LABELS[status] || status}
+                      </span>
+                      <Badge variant="outline">{count}</Badge>
+                    </div>
+                  ))}
+                  {Object.keys(outcomes.followups90Day.statusBreakdown).length === 0 && (
+                    <p className="text-sm text-muted-foreground col-span-full">
+                      No 90-day follow-ups recorded for this period.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>Active Clients by Stream</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(outcomes.activeByStream).map(([stream, count]) => (
+                    <div key={stream} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <span className="text-sm font-medium text-slate-700">
+                        {SERVICE_STREAMS[stream] || stream}
+                      </span>
+                      <Badge variant="outline">{count}</Badge>
+                    </div>
+                  ))}
+                  {Object.keys(outcomes.activeByStream).length === 0 && (
+                    <p className="text-sm text-muted-foreground col-span-full">
+                      No active clients.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
-        
+
+        {/* TAB 2: DATA REPORTS */}
         <TabsContent value="data">
-          <Card>
-            <CardHeader><CardTitle>Data Reports</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Service Type</Label><Select><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="pathways">Pathways</SelectItem><SelectItem value="casual">DEA</SelectItem><SelectItem value="direct_to_employment">Direct to Employment</SelectItem></SelectContent></Select></div>
-                <div><Label>Status</Label><Select><SelectTrigger><SelectValue placeholder="All" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="closed">Closed</SelectItem></SelectContent></Select></div>
-              </div>
-              <Button>Export to CSV</Button>
-            </CardContent>
-          </Card>
+          <ReportSummary 
+            clients={clients}
+            financialRecords={financialRecords}
+          />
         </TabsContent>
-        
+
+        {/* TAB 3: STAFF MONTHLY REPORTS */}
         <TabsContent value="staff">
-          <Card>
-            <CardHeader><CardTitle>Submit Monthly Report</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Report Month</Label><Input type="month" id="rmonth" defaultValue={moment().format('YYYY-MM')} /></div>
-              </div>
-              <div><Label>Trends</Label><Textarea id="rtrends" rows={3} /></div>
-              <div><Label>Marketing Activities</Label><Textarea id="rmarketing" rows={3} /></div>
-              <div><Label>Success Stories</Label><Textarea id="rsuccess" rows={3} /></div>
-              <div><Label>Employer Engagements</Label><Textarea id="remployer" rows={3} /></div>
-              <div><Label>Challenges</Label><Textarea id="rchallenges" rows={3} /></div>
-              <div><Label>Goals Next Month</Label><Textarea id="rgoals" rows={3} /></div>
-              <Button onClick={() => {
-                createReportMutation.mutate({
-                  report_month: document.getElementById('rmonth').value,
-                  submitted_by: 'current_user@candorasociety.com',
-                  submitted_by_name: 'Current User',
-                  submitted_date: moment().format('YYYY-MM-DD'),
-                  status: 'draft',
-                  trends: document.getElementById('rtrends').value,
-                  marketing_activities: document.getElementById('rmarketing').value,
-                  success_stories: document.getElementById('rsuccess').value,
-                  employer_engagements: document.getElementById('remployer').value,
-                  challenges: document.getElementById('rchallenges').value,
-                  goals_next_month: document.getElementById('rgoals').value,
-                });
-              }}>Submit Report</Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardHeader><CardTitle>Submitted Reports</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {reports.map(r => (
-                  <div key={r.id} className="p-3 border rounded-lg">
-                    <p className="font-medium">{moment(r.report_month).format('MMMM YYYY')}</p>
-                    <p className="text-sm text-slate-600">Submitted: {r.submitted_by_name} on {moment(r.submitted_date).format('MMM D, YYYY')}</p>
-                    <Badge className="mt-1">{r.status}</Badge>
-                  </div>
-                ))}
-                {reports.length === 0 && <p className="text-center text-slate-500 py-8">No reports</p>}
-              </div>
-            </CardContent>
-          </Card>
+          <StaffMonthlyReports />
         </TabsContent>
       </Tabs>
     </div>
-  );
-}
-
-function OutcomeCard({ title, value, icon: Icon }) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-primary/10 rounded-lg"><Icon className="h-6 w-6 text-primary" /></div>
-          <div><p className="text-sm text-slate-600">{title}</p><p className="text-2xl font-bold">{value}</p></div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
