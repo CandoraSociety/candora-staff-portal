@@ -1,203 +1,449 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { Users, AlertTriangle, Clock, CheckCircle, ChevronRight } from 'lucide-react';
-import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import { LogOut, Users, Bell, Database, CalendarClock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { format, addDays, differenceInDays } from "date-fns";
+import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
+import { clientRowColor } from "@/lib/clientRowColor";
+import CompassTaskList from "@/components/compass/CompassTaskList";
 
-const WORKERS = [
-  { email: 'priscilla@candorasociety.com', name: 'Priscilla' },
-  { email: 'lola@candorasociety.com', name: 'Lola' },
-  { email: 'john@candorasociety.com', name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', name: 'Dawn' },
-  { email: 'olena@candorasociety.com', name: 'Olena' },
-];
+const EMPTY_FILTERS = {
+  service_type: "", program_status: "", employment_status: "",
+  clb_level: "", assigned_worker: "", age_min: "", age_max: "",
+  duration_min: "", duration_max: "",
+};
 
-export default function PathwaysWorkerDashboard() {
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('clients');
-  const [searchTerm, setSearchTerm] = useState('');
-  
-  const { data: clients = [] } = useQuery({
-    queryKey: ['pathways-clients-assigned'],
-    queryFn: async () => {
-      const all = await base44.entities.Client.list('-created_date', 1000);
-      const user = await base44.auth.me();
-      if (user?.email === 'Dawn.williston@candorasociety.com') {
-        return all.filter(c => c.barriers_addressed === true);
-      }
-      return all.filter(c => c.assigned_worker === user?.email);
-    },
-  });
-  
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['pathways-compass-tasks'],
-    queryFn: () => base44.entities.CompassTask.filter({ status: 'pending' }),
-  });
-  
-  const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    new: clients.filter(c => c.status === 'new').length,
-    overdue: clients.filter(c => {
-      if (!c.followup_90day_date) return false;
-      return moment(c.followup_90day_date).isBefore(moment(), 'day');
-    }).length,
-  };
-  
-  const deaClosingSoon = clients.filter(c => {
-    if (c.service_type !== 'casual') return false;
-    const periodEnd = moment().add(2, 'weeks').endOf('isoWeek');
-    return moment().isSameOrAfter(periodEnd.subtract(3, 'days'));
-  });
-  
-  const followupsDue = clients.filter(c => {
-    if (!c.followup_90day_date || c.program_status !== 'complete') return false;
-    const daysUntil = moment(c.followup_90day_date).diff(moment(), 'days');
-    return daysUntil >= 0 && daysUntil <= 14;
-  });
-  
-  const filteredClients = clients.filter(c => 
-    `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const myTasks = tasks.filter(t => t.assigned_worker === (WORKERS.find(w => w.name === 'Current')?.email));
-  
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Worker Dashboard</h1>
-        <p className="text-sm text-slate-600">Monitor your caseload and priority alerts</p>
-      </div>
-      
-      {/* Alert Panels */}
-      {(deaClosingSoon.length > 0 || followupsDue.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {deaClosingSoon.length > 0 && (
-            <Card className="border-yellow-300 bg-yellow-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-yellow-800">
-                  <AlertTriangle className="h-5 w-5" /> DEA Closing Soon
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-yellow-700 mb-2">{deaClosingSoon.length} client(s) within 3 days of 2-week period end</p>
-                <div className="space-y-1">
-                  {deaClosingSoon.map(c => (
-                    <Link key={c.id} to={`/pathways/client/${c.id}`} className="block text-sm text-yellow-900 hover:underline">
-                      {c.first_name} {c.last_name}
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {followupsDue.length > 0 && (
-            <Card className="border-orange-300 bg-orange-50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-orange-800">
-                  <Clock className="h-5 w-5" /> 90-Day Follow-Ups Due
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-orange-700 mb-2">{followupsDue.length} client(s) due within 14 days</p>
-                <div className="space-y-1">
-                  {followupsDue.map(c => (
-                    <Link key={c.id} to={`/pathways/client/${c.id}`} className="block text-sm text-orange-900 hover:underline">
-                      {c.first_name} {c.last_name} - Due: {moment(c.followup_90day_date).format('MMM D')}
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-      
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard title="Total Clients" value={stats.total} color="blue" />
-        <StatCard title="Active" value={stats.active} color="green" />
-        <StatCard title="New" value={stats.new} color="yellow" />
-        <StatCard title="Overdue Follow-Ups" value={stats.overdue} color="red" />
-      </div>
-      
-      {/* Tab Switcher */}
-      <div className="flex gap-2 border-b">
-        <button onClick={() => setActiveTab('clients')} className={`px-4 py-2 ${activeTab === 'clients' ? 'border-b-2 border-primary font-medium' : 'text-slate-600'}`}>My Clients ({filteredClients.length})</button>
-        <button onClick={() => setActiveTab('compass')} className={`px-4 py-2 ${activeTab === 'compass' ? 'border-b-2 border-primary font-medium' : 'text-slate-600'}`}>Compass Queue ({myTasks.length})</button>
-      </div>
-      
-      {activeTab === 'clients' && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>My Clients</CardTitle>
-              <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-64" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {filteredClients.map(c => (
-                <Link key={c.id} to={`/pathways/client/${c.id}`} className="block p-3 border rounded-lg hover:bg-slate-50">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{c.first_name} {c.last_name}</p>
-                      <p className="text-sm text-slate-600">{c.email} • {c.phone}</p>
-                      <div className="flex gap-2 mt-1">
-                        <Badge>{c.status}</Badge>
-                        <Badge variant="outline">{c.service_type?.replace(/_/g, ' ')}</Badge>
-                        {c.employment_status?.startsWith('E-') && <Badge className="bg-green-100 text-green-800">Employed</Badge>}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-slate-400" />
-                  </div>
-                </Link>
-              ))}
-              {filteredClients.length === 0 && <p className="text-center text-slate-500 py-8">No clients found</p>}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-      
-      {activeTab === 'compass' && (
-        <Card>
-          <CardHeader><CardTitle>My Compass Tasks ({myTasks.length})</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {myTasks.map(t => (
-                <div key={t.id} className="p-3 border rounded-lg">
-                  <p className="font-medium">{t.title}</p>
-                  <p className="text-sm text-slate-600">{t.instructions}</p>
-                  <Badge className="mt-2">{t.task_type}</Badge>
-                </div>
-              ))}
-              {myTasks.length === 0 && <p className="text-center text-slate-500 py-8">No pending tasks</p>}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+const SERVICE_LABELS = {
+  direct_to_employment: "DEA",
+  pathways: "Pathways",
+  casual: "Casual",
+  external_referral: "Ext. Referral",
+  internal_referral: "Int. Referral",
+  not_eligible: "Not Eligible",
+};
+
+const PROGRAM_STATUS_COLORS = {
+  in_progress: "bg-blue-100 text-blue-700",
+  complete: "bg-green-100 text-green-700",
+  incomplete: "bg-yellow-100 text-yellow-700",
+  cancelled: "bg-red-100 text-red-700",
+};
+
+const BARRIER_STATUS_COLORS = {
+  unresolved: "text-red-600",
+  in_progress: "text-amber-600",
+  resolved: "text-green-600",
+};
+
+function programStatusLabel(c) {
+  if (c.program_status === "complete" && !c.followup_90day_status) return "Complete (Follow-Up Period)";
+  if (c.program_status === "in_progress") return "In Progress";
+  if (c.program_status === "complete") return "Complete";
+  if (c.program_status === "incomplete") return "Incomplete";
+  if (c.program_status === "cancelled") return "Cancelled";
+  return c.program_status?.replace("_", " ") || null;
 }
 
-function StatCard({ title, value, color }) {
-  const colors = { blue: 'bg-blue-100 text-blue-600', green: 'bg-green-100 text-green-600', yellow: 'bg-yellow-100 text-yellow-600', red: 'bg-red-100 text-red-600' };
+const fmtDate = (d) => {
+  if (!d) return "—";
+  try { return format(new Date(d), "MMM d, yy"); } catch { return "—"; }
+};
+
+export default function PathwaysWorkerDashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [clients, setClients] = useState([]);
+  const [compassTasks, setCompassTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [sortKey, setSortKey] = useState("intake_date_desc");
+  const [activeTab, setActiveTab] = useState("clients");
+
+  const loadCompassTasks = async (workerEmail) => {
+    const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
+    setCompassTasks(allTasks.filter(t => t.assigned_worker === workerEmail));
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      const me = await base44.auth.me();
+      setUser(me);
+      const allClients = await base44.entities.Client.list("-created_date", 1000);
+      const isDawnInit = me.email === "Dawn.williston@candorasociety.com";
+      const myClients = isDawnInit
+        ? allClients.filter(c => c.barriers_addressed || c.assigned_worker === me.email)
+        : allClients.filter(c => c.assigned_worker === me.email);
+      setClients(myClients);
+      await loadCompassTasks(me.email);
+      setLoading(false);
+    };
+    init();
+  }, []);
+
+  const isDawn = user?.email === "Dawn.williston@candorasociety.com";
+  const displayed = applyFiltersAndSort(clients, search, filters, sortKey);
+  const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
+
+  // DEA Closing Alert
+  const deaClosingClients = clients.filter(c => {
+    if (c.service_type !== "direct_to_employment") return false;
+    if (c.file_closed) return false;
+    const endDate = c.completion_date
+      ? new Date(c.completion_date)
+      : c.service_start_date
+      ? addDays(new Date(c.service_start_date), 14)
+      : null;
+    if (!endDate) return false;
+    return differenceInDays(endDate, new Date()) <= 3;
+  });
+
+  // 90-Day Follow-Up Alert
+  const upcomingFollowups = clients.filter(c => {
+    if (c.followup_90day_status) return false;
+    const followupDate = c.followup_90day_date
+      ? new Date(c.followup_90day_date)
+      : c.completion_date
+        ? addDays(new Date(c.completion_date), 90)
+        : null;
+    if (!followupDate) return false;
+    return differenceInDays(followupDate, new Date()) <= 14;
+  }).sort((a, b) => {
+    const dateA = a.followup_90day_date || (a.completion_date ? format(addDays(new Date(a.completion_date), 90), "yyyy-MM-dd") : "");
+    const dateB = b.followup_90day_date || (b.completion_date ? format(addDays(new Date(b.completion_date), 90), "yyyy-MM-dd") : "");
+    return dateA.localeCompare(dateB);
+  });
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-sm text-slate-600">{title}</p>
-        <p className={`text-3xl font-bold ${colors[color].split(' ')[1]}`}>{value}</p>
-      </CardContent>
-    </Card>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header
+        className="px-4 py-3 flex items-center justify-between"
+        style={{ background: "hsl(231,64%,20%)" }}
+      >
+        <div>
+          <h1 className="text-xl font-bold text-white">
+            {isDawn ? "Service Navigator Dashboard" : "My Clients"}
+          </h1>
+          <p className="text-sm text-white/60">Welcome, {user?.full_name}</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => base44.auth.logout()}
+          className="text-white/70 hover:text-white hover:bg-white/10"
+        >
+          <LogOut className="w-4 h-4" />
+        </Button>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Tab switcher */}
+        <div className="flex gap-1 mb-5 bg-slate-100 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setActiveTab("clients")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "clients" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" /> My Clients
+          </button>
+          <button
+            onClick={() => setActiveTab("compass")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "compass" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <Database className="w-3.5 h-3.5" /> Compass Queue
+            {pendingCompassCount > 0 && (
+              <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingCompassCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Compass tab */}
+        {activeTab === "compass" && (
+          <CompassTaskList
+            tasks={compassTasks}
+            currentUser={user}
+            onRefresh={(updated) => setCompassTasks(updated)}
+          />
+        )}
+
+        {/* Clients tab */}
+        {activeTab === "clients" && (
+          clients.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-lg font-medium">No clients yet</p>
+              <p className="text-sm mt-1">
+                {isDawn
+                  ? "Clients with identified barriers will appear here."
+                  : "Clients assigned to you will appear here."}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* DEA Closing Alert */}
+              {deaClosingClients.length > 0 && (
+                <div className="mb-4 border border-blue-300 bg-blue-50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bell className="w-4 h-4 text-blue-600 animate-bounce" />
+                    <span className="text-sm font-bold text-blue-800">DEA Program Period Closing Soon</span>
+                    <span className="ml-auto text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full font-semibold">
+                      {deaClosingClients.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {deaClosingClients.map(c => {
+                      const endDate = c.completion_date
+                        ? new Date(c.completion_date)
+                        : addDays(new Date(c.service_start_date), 14);
+                      const days = differenceInDays(endDate, new Date());
+                      const isOverdue = days < 0;
+                      return (
+                        <div
+                          key={c.id}
+                          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm ${
+                            isOverdue ? "bg-red-50 border-red-300" : "bg-white border-blue-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <CalendarClock className="w-3.5 h-3.5 shrink-0 text-blue-500" />
+                            <Link
+                              to={`/pathways/client/${c.id}`}
+                              className="font-semibold hover:underline"
+                              style={{ color: "hsl(231,64%,28%)" }}
+                            >
+                              {c.first_name} {c.last_name}
+                            </Link>
+                            <span className="text-xs text-slate-500">
+                              — DEA period ends {format(endDate, "MMM d, yyyy")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className={`font-bold px-2 py-0.5 rounded-full ${
+                              isOverdue ? "bg-red-100 text-red-700"
+                              : days <= 1 ? "bg-amber-200 text-amber-800"
+                              : "bg-blue-100 text-blue-700"
+                            }`}>
+                              {isOverdue ? `${Math.abs(days)}d past end` : days === 0 ? "Ends today!" : `${days}d left`}
+                            </span>
+                            <Link to={`/pathways/client/${c.id}`}>
+                              <Button size="sm" variant="outline" className="text-xs h-6 px-2">Open File</Button>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 90-Day Follow-Up Alert */}
+              {upcomingFollowups.length > 0 && (
+                <div className="mb-4 border border-amber-300 bg-amber-50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Bell className="w-4 h-4 text-amber-600 animate-bounce" />
+                    <span className="text-sm font-bold text-amber-800">Upcoming 90-Day Follow-Ups</span>
+                    <span className="ml-auto text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+                      {upcomingFollowups.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {upcomingFollowups.map(c => {
+                      const followupDate = c.followup_90day_date
+                        ? new Date(c.followup_90day_date)
+                        : addDays(new Date(c.completion_date), 90);
+                      const days = differenceInDays(followupDate, new Date());
+                      const isOverdue = days < 0;
+                      const isUrgent = days >= 0 && days <= 5;
+                      return (
+                        <div
+                          key={c.id}
+                          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm ${
+                            isOverdue ? "bg-red-50 border-red-300"
+                            : isUrgent ? "bg-amber-100 border-amber-300 animate-pulse"
+                            : "bg-white border-amber-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Bell className={`w-3.5 h-3.5 shrink-0 ${isOverdue ? "text-red-500" : "text-amber-500"}`} />
+                            <Link
+                              to={`/pathways/client/${c.id}`}
+                              className="font-semibold hover:underline"
+                              style={{ color: "hsl(231,64%,28%)" }}
+                            >
+                              {c.first_name} {c.last_name}
+                            </Link>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-slate-500">Due: {format(followupDate, "MMM d, yyyy")}</span>
+                            <span className={`font-bold px-2 py-0.5 rounded-full ${
+                              isOverdue ? "bg-red-100 text-red-700"
+                              : isUrgent ? "bg-amber-200 text-amber-800"
+                              : "bg-blue-100 text-blue-700"
+                            }`}>
+                              {isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? "Today!" : `${days}d`}
+                            </span>
+                            <Link to={`/pathways/client/${c.id}`}>
+                              <Button size="sm" variant="outline" className="text-xs h-6 px-2">Go to Client</Button>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Client count */}
+              <div className="flex items-center gap-2 text-slate-600 mb-2">
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {displayed.length} of {clients.length} client{clients.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <ClientListControls
+                search={search} onSearch={setSearch}
+                filters={filters} onFilters={setFilters}
+                sortKey={sortKey} onSort={setSortKey}
+              />
+
+              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-slate-200" style={{ background: "hsl(231,64%,20%)" }}>
+                      <tr>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Service</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Switches</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">CLB</th>
+                        {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 1</th>}
+                        {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 2</th>}
+                        {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 3</th>}
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Status</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Start Date</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">90-Day Status</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Svc Nav</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Intake Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {displayed.map(c => (
+                        <tr
+                          key={c.id}
+                          onClick={() => navigate(`/pathways/client/${c.id}`)}
+                          className={`transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
+                        >
+                          <td className="px-3 py-2.5 font-medium whitespace-nowrap">
+                            <span className="font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
+                              {c.first_name} {c.last_name}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{SERVICE_LABELS[c.service_type] || "—"}</td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            {c.program_stream_switches?.length > 0 ? (
+                              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                                {c.program_stream_switches.length}×
+                              </span>
+                            ) : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 whitespace-nowrap">
+                            {c.program_status ? (
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
+                                {programStatusLabel(c)}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                Assessments / Action Plan Incomplete
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                            {c.clb_level?.replace("clb_", "CLB ").replace("native_english_french", "Native") || "—"}
+                          </td>
+                          {isDawn && (
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              {c.barrier_1 ? (
+                                <span>
+                                  <span className="text-slate-700">{c.barrier_1}</span>
+                                  {c.barrier_1_status && (
+                                    <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_1_status] || ""}`}>
+                                      ({c.barrier_1_status})
+                                    </span>
+                                  )}
+                                </span>
+                              ) : "—"}
+                            </td>
+                          )}
+                          {isDawn && (
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              {c.barrier_2 ? (
+                                <span>
+                                  <span className="text-slate-700">{c.barrier_2}</span>
+                                  {c.barrier_2_status && (
+                                    <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_2_status] || ""}`}>
+                                      ({c.barrier_2_status})
+                                    </span>
+                                  )}
+                                </span>
+                              ) : "—"}
+                            </td>
+                          )}
+                          {isDawn && (
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              {c.barrier_3 ? (
+                                <span>
+                                  <span className="text-slate-700">{c.barrier_3}</span>
+                                  {c.barrier_3_status && (
+                                    <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_3_status] || ""}`}>
+                                      ({c.barrier_3_status})
+                                    </span>
+                                  )}
+                                </span>
+                              ) : "—"}
+                            </td>
+                          )}
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">
+                            {c.post_completion_employment_status || "—"}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.post_completion_employment_date)}</td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">{c.followup_90day_status || "—"}</td>
+                          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.service_navigation_supports ? "Yes" : "—"}</td>
+                          <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
+                        </tr>
+                      ))}
+                      {displayed.length === 0 && (
+                        <tr>
+                          <td colSpan={isDawn ? 15 : 12} className="text-center py-10 text-slate-400">
+                            No clients match your filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )
+        )}
+      </main>
+    </div>
   );
 }
