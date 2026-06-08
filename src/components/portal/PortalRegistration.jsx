@@ -34,8 +34,6 @@ const CLB_LEVELS = ['CLB 1-2', 'CLB 3-4', 'CLB 5-6', 'CLB 7-8', 'Not Applicable'
 const VOLUNTEER_TYPES = [
   { value: 'community', label: 'Community Volunteer' },
   { value: 'skilled', label: 'Skilled Volunteer' },
-  { value: 'practicum', label: 'Practicum Student' },
-  { value: 'corporate', label: 'Corporate Group' },
 ];
 
 const HOW_HEARD = ['Social Media', 'Friend/Family', 'Community Event', 'Website', 'Flyer/Poster', 'School', 'Other'];
@@ -43,7 +41,7 @@ const HOW_HEARD = ['Social Media', 'Friend/Family', 'Community Event', 'Website'
 const emptyForm = {
   first_name: '', last_name: '', email: '', phone: '',
   birth_date: '', gender: '', volunteer_type: 'community',
-  ell_level: '', school_name: '', company_name: '',
+  ell_level: '',
   address: '', city: '',
   emergency_contact_name: '', emergency_contact_phone: '',
   programs: [], how_heard: '', skills: '', 
@@ -100,6 +98,10 @@ export default function PortalRegistration({ onComplete }) {
       });
     },
     onSuccess: () => setSubmitted(true),
+    onError: (error) => {
+      console.error('Submission error:', error);
+      alert('There was an error submitting your application. Please try again.');
+    },
   });
 
   if (submitted) {
@@ -172,12 +174,6 @@ export default function PortalRegistration({ onComplete }) {
                 </SelectContent>
               </Select>
             </div>
-            {form.volunteer_type === 'practicum' && (
-              <div><Label>School Name</Label><Input value={form.school_name} onChange={e => update('school_name', e.target.value)} className="mt-1" /></div>
-            )}
-            {form.volunteer_type === 'corporate' && (
-              <div><Label>Company / Organization Name</Label><Input value={form.company_name} onChange={e => update('company_name', e.target.value)} className="mt-1" /></div>
-            )}
             <div>
               <Label>English Proficiency Level</Label>
               <Select value={form.ell_level} onValueChange={v => update('ell_level', v)}>
@@ -350,7 +346,7 @@ export default function PortalRegistration({ onComplete }) {
               <Button
                 className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                 onClick={() => submitMutation.mutate()}
-                disabled={submitMutation.isPending}
+                disabled={submitMutation.isPending || !form.first_name || !form.last_name || form.programs.length === 0}
               >
                 {submitMutation.isPending ? 'Submitting...' : 'Submit Application'}
               </Button>
