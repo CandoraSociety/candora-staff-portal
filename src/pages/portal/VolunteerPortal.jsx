@@ -77,27 +77,11 @@ export default function VolunteerPortal() {
           <PortalSignIn 
             onBack={() => setView('home')} 
             onAuthenticated={handleAuthenticated}
-            onViewProfile={() => setView('profile')}
-            onViewShifts={() => setView('shifts')}
           />
         )}
 
         {view === 'register' && (
           <PortalRegistration onComplete={() => setView('home')} />
-        )}
-
-        {view === 'profile' && selectedVolunteerId && (
-          <PortalProfile 
-            volunteerId={selectedVolunteerId}
-            onBack={() => setView('signin')}
-          />
-        )}
-
-        {view === 'shifts' && selectedVolunteerId && (
-          <PortalShiftSignup
-            volunteerId={selectedVolunteerId}
-            onBack={() => setView('signin')}
-          />
         )}
       </main>
 

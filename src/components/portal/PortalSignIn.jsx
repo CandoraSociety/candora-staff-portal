@@ -7,14 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar } from 'lucide-react';
+import { LogIn, LogOut, Clock, CheckCircle, ArrowLeft, User, Calendar, X } from 'lucide-react';
 import moment from 'moment';
+import PortalProfile from './PortalProfile';
+import PortalShiftSignup from './PortalShiftSignup';
 
-export default function PortalSignIn({ onBack, onAuthenticated, onViewProfile, onViewShifts }) {
+export default function PortalSignIn({ onBack, onAuthenticated }) {
   if (!onBack) onBack = () => {};
   if (!onAuthenticated) onAuthenticated = () => {};
-  if (!onViewProfile) onViewProfile = () => {};
-  if (!onViewShifts) onViewShifts = () => {};
+  const [showProfile, setShowProfile] = useState(false);
+  const [showShifts, setShowShifts] = useState(false);
   const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [step, setStep] = useState('lookup'); // 'lookup' | 'action' | 'success'
@@ -234,10 +236,7 @@ export default function PortalSignIn({ onBack, onAuthenticated, onViewProfile, o
               <Button
                 variant="outline"
                 className="gap-2"
-                onClick={() => {
-                  onAuthenticated(foundVolunteer.id, foundVolunteer);
-                  onViewProfile();
-                }}
+                onClick={() => setShowProfile(true)}
               >
                 <User className="w-4 h-4" />
                 My Profile
@@ -245,10 +244,7 @@ export default function PortalSignIn({ onBack, onAuthenticated, onViewProfile, o
               <Button
                 variant="outline"
                 className="gap-2"
-                onClick={() => {
-                  onAuthenticated(foundVolunteer.id, foundVolunteer);
-                  onViewShifts();
-                }}
+                onClick={() => setShowShifts(true)}
               >
                 <Calendar className="w-4 h-4" />
                 View Shifts
@@ -269,6 +265,24 @@ export default function PortalSignIn({ onBack, onAuthenticated, onViewProfile, o
             >
               Back to Home
             </Button>
+          </div>
+        )}
+
+        {/* Profile Popup */}
+        {showProfile && foundVolunteer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowProfile(false)}>
+            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <PortalProfile volunteerId={foundVolunteer.id} onBack={() => setShowProfile(false)} />
+            </div>
+          </div>
+        )}
+
+        {/* Shifts Popup */}
+        {showShifts && foundVolunteer && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowShifts(false)}>
+            <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <PortalShiftSignup volunteerId={foundVolunteer.id} onBack={() => setShowShifts(false)} />
+            </div>
           </div>
         )}
       </CardContent>
