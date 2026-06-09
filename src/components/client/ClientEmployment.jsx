@@ -10,7 +10,7 @@ import { base44 } from '@/api/base44Client';
 
 const EMPLOYMENT_STATUS_OPTIONS = [
   { value: 'E-RF', label: 'Employed - Regular Full-time' },
-  { value: 'E-UF', label: 'Employed - Unions Full-time' },
+  { value: 'E-UF', label: 'E-UF - Employed, Unrelated Field' },
   { value: 'E-PT', label: 'Employed - Part-time' },
   { value: 'UE', label: 'Unemployed' },
   { value: 'UE-LFW', label: 'UE-LFW - Unemployed, Looking for Work' },

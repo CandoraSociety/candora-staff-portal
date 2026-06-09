@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 
 const EMPLOYMENT_CODES = [
   { value: 'E-RF',  label: 'E-RF — Employed, Regular Full-time' },
-  { value: 'E-UF',  label: 'E-UF — Employed, Union Full-time' },
+  { value: 'E-UF',  label: 'E-UF — Employed, Unrelated Field' },
   { value: 'E-PT',  label: 'E-PT — Employed, Part-time' },
   { value: 'UE',    label: 'UE — Unemployed' },
   { value: 'UE-LFW', label: 'UE-LFW — Unemployed, Looking for Work' },
