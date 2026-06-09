@@ -26,7 +26,9 @@ const allNavItems = [
 
 function NexusSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
-  const { isHRAdmin, isManager, user } = useAccessLevel();
+  const { isHRAdmin, isManager, user: accessUser } = useAccessLevel();
+  const [user, setUser] = React.useState(null);
+  React.useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
   const filteredItems = allNavItems.filter(item => {
     if (item.access === 'hr_admin') return isHRAdmin;
@@ -51,7 +53,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
           {!collapsed && (
             <div className="flex flex-col min-w-0">
               <span className="text-xs text-muted-foreground leading-none">← Back to</span>
-              <span className="font-bold text-sm text-primary truncate">Dashboard</span>
+              <span className="font-bold text-sm text-primary truncate">{user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}</span>
             </div>
           )}
         </Link>
@@ -82,6 +84,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
 
       <div className={cn('p-2 border-t border-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
         {!collapsed && user && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.full_name || user.email}</p>}
+        {!collapsed && !user && accessUser && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{accessUser.full_name || accessUser.email}</p>}
         <button
           onClick={() => base44.auth.logout()}
           className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors', collapsed && 'justify-center w-auto')}

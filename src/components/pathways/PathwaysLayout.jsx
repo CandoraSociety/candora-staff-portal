@@ -66,7 +66,7 @@ function AppNav() {
           to="/"
           className="hidden md:flex items-center gap-1 text-xs text-white/60 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-colors shrink-0 mr-1"
         >
-          <ChevronLeft className="w-3.5 h-3.5" /> Dashboard
+          <ChevronLeft className="w-3.5 h-3.5" /> {user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}
         </Link>
 
         {/* Logo + Wordmark */}
@@ -108,7 +108,7 @@ function AppNav() {
       {menuOpen && (
         <div className="md:hidden border-t border-white/10 px-4 py-3 flex flex-col gap-1" style={{ background: "hsl(231,55%,25%)" }}>
           <Link to="/" className="flex items-center gap-1 text-xs text-yellow-300 font-semibold py-1.5 px-2 rounded hover:bg-white/10">
-            <ChevronLeft className="w-3.5 h-3.5" /> Back to Main Dashboard
+            <ChevronLeft className="w-3.5 h-3.5" /> {user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}
           </Link>
           <div className="border-t border-white/10 my-1" />
           {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}

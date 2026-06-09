@@ -149,7 +149,7 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
           )}
         >
           <ChevronLeft className="w-4 h-4 shrink-0" />
-          {!collapsed && '← Main Dashboard'}
+          {!collapsed && (user ? `← ${user.full_name?.split(' ')[0]}'s Home` : '← Home')}
         </Link>
       </div>
 
