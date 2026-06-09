@@ -170,11 +170,13 @@ export default function PathwaysClientProfile() {
     <div className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
       <div className="sticky top-0 z-40 px-6 py-2 flex items-center gap-3" style={{ background: 'hsl(231,64%,20%)' }}>
-        <img
-          src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
-          alt="Candora logo"
-          className="h-7 w-7 object-contain rounded-full"
-        />
+        <button onClick={() => navigate('/')}>
+          <img
+            src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+            alt="Candora logo"
+            className="h-7 w-7 object-contain rounded-full hover:opacity-80 transition-opacity"
+          />
+        </button>
         <button
           onClick={() => navigate('/pathways')}
           className="text-sm text-white/90 hover:text-white font-semibold"
