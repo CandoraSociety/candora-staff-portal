@@ -310,7 +310,7 @@ export default function PathwaysClientProfile() {
           </TabsContent>
 
           <TabsContent value="status_history">
-            <ClientStatusHistory key={statusHistoryKey} client={client} />
+            <ClientStatusHistory key={statusHistoryKey} clientId={client.id} />
           </TabsContent>
         </Tabs>
       </div>

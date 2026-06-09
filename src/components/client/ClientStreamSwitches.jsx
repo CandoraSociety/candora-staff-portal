@@ -1,204 +1,234 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PlusCircle, ArrowRight, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
-import { Plus } from 'lucide-react';
+import { createCompassTask, taskStreamSwitch } from '@/lib/compassTasks';
 
-const STREAM_OPTIONS = [
-  { value: 'pathways', label: 'Pathways' },
-  { value: 'direct_to_employment', label: 'Direct to Employment' },
-  { value: 'casual', label: 'Casual' },
-  { value: 'external_referral', label: 'External Referral' },
-  { value: 'internal_referral', label: 'Internal Referral' },
-  { value: 'not_eligible', label: 'Not Eligible' },
+const STREAMS = [
+  { value: 'direct_to_employment', label: 'Direct to Employment (DEA)' },
+  { value: 'pathways',             label: 'Pathways' },
+  { value: 'casual',               label: 'Casual' },
+  { value: 'external_referral',    label: 'External Referral' },
+  { value: 'internal_referral',    label: 'Internal Referral' },
+  { value: 'not_eligible',         label: 'Not Eligible' },
 ];
 
-const REASON_OPTIONS = [
-  { value: 'client_request', label: 'Client Request' },
-  { value: 'better_fit', label: 'Better Program Fit' },
-  { value: 'employment_outcome', label: 'Employment Outcome' },
-  { value: 'barrier_resolution', label: 'Barrier Resolution' },
-  { value: 'other', label: 'Other' },
+const SWITCH_REASONS = [
+  { value: 'client_request',       label: 'Client Request' },
+  { value: 'program_fit',          label: 'Program Fit' },
+  { value: 'employer_readiness',   label: 'Employer Readiness' },
+  { value: 'language_barrier',     label: 'Language Barrier' },
+  { value: 'credential_recognition', label: 'Credential Recognition' },
+  { value: 'skills_gap',           label: 'Skills Gap' },
+  { value: 'employment_found',     label: 'Employment Found' },
+  { value: 'scheduling_conflict',  label: 'Scheduling Conflict' },
+  { value: 'personal_circumstances', label: 'Personal Circumstances' },
+  { value: 'program_completion',   label: 'Program Completion' },
+  { value: 'staff_recommendation', label: 'Staff Recommendation' },
+  { value: 'funding_change',       label: 'Funding Change' },
+  { value: 'other',                label: 'Other' },
 ];
+
+const streamLabel = (v) => STREAMS.find(s => s.value === v)?.label || v;
+const reasonLabel = (v) => SWITCH_REASONS.find(r => r.value === v)?.label || v;
+const today = new Date().toISOString().split('T')[0];
+
+const emptySwitch = (currentStream) => ({
+  from_stream: currentStream || '',
+  to_stream: '',
+  reason: '',
+  reason_other: '',
+  date: today,
+  notes: '',
+});
 
 export default function ClientStreamSwitches({ client, onSave }) {
   const [switches, setSwitches] = useState(client?.program_stream_switches || []);
-  const [showDialog, setShowDialog] = useState(false);
-  const [newSwitch, setNewSwitch] = useState({
-    from_stream: client?.service_type || '',
-    to_stream: '',
-    reason: '',
-    reason_other: '',
-    date: new Date().toISOString().split('T')[0],
-    notes: '',
-  });
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState(emptySwitch(client?.service_type));
+  const [saving, setSaving] = useState(false);
 
-  const handleAddSwitch = async () => {
+  const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleAdd = async () => {
+    if (!form.from_stream || !form.to_stream || !form.reason) {
+      toast.error('From stream, To stream, and Reason are required');
+      return;
+    }
+    setSaving(true);
     try {
-      const updatedSwitches = [...switches, newSwitch];
-      await onSave({
-        program_stream_switches: updatedSwitches,
-        service_type: newSwitch.to_stream,
+      const entry = { ...form };
+      if (entry.reason !== 'other') entry.reason_other = '';
+      const updated = [...switches, entry];
+
+      await onSave({ program_stream_switches: updated, service_type: form.to_stream });
+      setSwitches(updated);
+
+      // Log StatusChange
+      const me = await base44.auth.me().catch(() => null);
+      await base44.entities.StatusChange.create({
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        change_type: 'stream_switch',
+        change_date: form.date,
+        from_value: streamLabel(form.from_stream),
+        to_value: streamLabel(form.to_stream),
+        notes: [reasonLabel(form.reason), form.reason_other, form.notes].filter(Boolean).join(' — '),
+        logged_by: me?.email || null,
+        logged_by_name: me?.full_name || null,
+        billing_relevant: true,
       });
-      setSwitches(updatedSwitches);
-      setShowDialog(false);
-      setNewSwitch({
-        from_stream: newSwitch.to_stream,
-        to_stream: '',
-        reason: '',
-        reason_other: '',
-        date: new Date().toISOString().split('T')[0],
-        notes: '',
+
+      // Compass task
+      const reasonText = form.reason === 'other'
+        ? form.reason_other || 'Other'
+        : reasonLabel(form.reason);
+      await createCompassTask({
+        client_id: client.id,
+        task_type: 'stream_switch',
+        ...taskStreamSwitch(client, streamLabel(form.from_stream), streamLabel(form.to_stream), reasonText),
       });
+
+      setForm(emptySwitch(form.to_stream));
+      setAdding(false);
       toast.success('Stream switch logged');
-    } catch (error) {
-      toast.error('Failed to add stream switch');
+    } catch (err) {
+      toast.error('Failed to save stream switch');
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleDelete = async (idx) => {
+    const updated = switches.filter((_, i) => i !== idx);
+    await onSave({ program_stream_switches: updated });
+    setSwitches(updated);
+    toast.success('Switch removed');
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Program Stream History</h3>
-          <p className="text-sm text-muted-foreground">Current stream: <Badge>{client?.service_type}</Badge></p>
-        </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Switch
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Log Program Stream Switch</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>From Stream</Label>
-                  <Select value={newSwitch.from_stream} onValueChange={(v) => setNewSwitch(prev => ({ ...prev, from_stream: v }))}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STREAM_OPTIONS.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Program Stream Switch History</CardTitle>
+        {!adding && (
+          <Button size="sm" variant="outline" onClick={() => setAdding(true)}>
+            <PlusCircle className="w-4 h-4 mr-1" /> Switch Program Stream
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+
+        {/* Existing switches */}
+        {switches.length === 0 && !adding && (
+          <div className="text-center py-8 text-slate-400 text-sm">No stream switches recorded.</div>
+        )}
+        {switches.length > 0 && (
+          <div className="space-y-3">
+            {switches.map((sw, i) => (
+              <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-slate-600 font-medium">{streamLabel(sw.from_stream)}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-sm text-blue-700 font-semibold">{streamLabel(sw.to_stream)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-slate-500">{sw.date}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDelete(i)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <Label>To Stream</Label>
-                  <Select value={newSwitch.to_stream} onValueChange={(v) => setNewSwitch(prev => ({ ...prev, to_stream: v }))}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STREAM_OPTIONS.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  <span className="font-medium">Reason:</span>{' '}
+                  {sw.reason === 'other' ? sw.reason_other || 'Other' : reasonLabel(sw.reason)}
+                </p>
+                {sw.notes && <p className="text-xs text-slate-500 mt-0.5">{sw.notes}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add form */}
+        {adding && (
+          <div className="border-2 border-blue-200 bg-blue-50 rounded-lg p-4 space-y-4">
+            <p className="text-xs text-blue-600 font-medium">
+              Note: the client's current stream will be updated to the "To" stream automatically.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold">From Stream</Label>
+                <div className="mt-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-500">
+                  {streamLabel(form.from_stream) || '—'}
                 </div>
               </div>
-
               <div>
-                <Label>Reason</Label>
-                <Select value={newSwitch.reason} onValueChange={(v) => setNewSwitch(prev => ({ ...prev, reason: v }))}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
+                <Label className="text-xs font-semibold">To Stream <span className="text-red-500">*</span></Label>
+                <Select value={form.to_stream} onValueChange={v => set('to_stream', v)}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
                   <SelectContent>
-                    {REASON_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    {STREAMS.filter(s => s.value !== form.from_stream).map(s => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
-              {newSwitch.reason === 'other' && (
-                <div>
-                  <Label>Reason (Other)</Label>
-                  <Input
-                    value={newSwitch.reason_other}
-                    onChange={(e) => setNewSwitch(prev => ({ ...prev, reason_other: e.target.value }))}
-                    className="mt-2"
-                  />
-                </div>
-              )}
-
-              <div>
-                <Label>Date</Label>
-                <Input
-                  type="date"
-                  value={newSwitch.date}
-                  onChange={(e) => setNewSwitch(prev => ({ ...prev, date: e.target.value }))}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label>Notes</Label>
-                <Textarea
-                  value={newSwitch.notes}
-                  onChange={(e) => setNewSwitch(prev => ({ ...prev, notes: e.target.value }))}
-                  rows={3}
-                  className="mt-2"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button onClick={handleAddSwitch} className="flex-1">Add Switch</Button>
-                <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
-              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      {switches.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            No stream switches recorded
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {switches.map((sw, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">{sw.from_stream}</Badge>
-                    <span className="text-muted-foreground">→</span>
-                    <Badge>{sw.to_stream}</Badge>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {sw.date}
-                  </div>
-                </div>
-                <div className="mt-2 text-sm">
-                  <span className="font-medium">Reason:</span> {sw.reason}{sw.reason_other && ` - ${sw.reason_other}`}
-                </div>
-                {sw.notes && (
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    {sw.notes}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+            <div>
+              <Label className="text-xs font-semibold">Reason <span className="text-red-500">*</span></Label>
+              <Select value={form.reason} onValueChange={v => set('reason', v)}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectContent>
+                  {SWITCH_REASONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.reason === 'other' && (
+              <div>
+                <Label className="text-xs font-semibold">Please specify</Label>
+                <Input className="mt-1" value={form.reason_other} onChange={e => set('reason_other', e.target.value)} />
+              </div>
+            )}
+
+            <div>
+              <Label className="text-xs font-semibold">Date of Switch</Label>
+              <Input type="date" className="mt-1" value={form.date} onChange={e => set('date', e.target.value)} />
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold">Additional Notes <span className="text-slate-400 font-normal">(optional)</span></Label>
+              <Textarea rows={2} className="mt-1" value={form.notes} onChange={e => set('notes', e.target.value)} />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setAdding(false); setForm(emptySwitch(client?.service_type)); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleAdd}
+                disabled={saving || !form.from_stream || !form.to_stream || !form.reason}
+              >
+                {saving ? 'Saving…' : 'Save Switch'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

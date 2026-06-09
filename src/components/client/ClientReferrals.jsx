@@ -3,60 +3,69 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
-const INTERNAL_REFERRALS = [
-  'Cleaning ARC',
-  'Food Services Onsite',
-  'Food Services Offsite',
-  'Reception',
-  'Childcare',
-  'Employment Supports',
-  'Navigation Supports'
+const INTERNAL_REFERRAL_OPTIONS = [
+  { value: 'ell',                 label: 'ELL (English Language Learning)' },
+  { value: 'empoweru',            label: 'EmpowerU' },
+  { value: 'digital_literacy',    label: 'Digital Literacy' },
+  { value: 'family_programs',     label: 'Family Programs' },
+  { value: 'childcare_program',   label: 'Childcare Program' },
+  { value: 'settlement_services', label: 'Settlement Services' },
+  { value: 'other_internal',      label: 'Other (Internal)' },
 ];
 
-const EXTERNAL_REFERRALS = [
-  'Alberta Works',
-  'Centre for Newcomers',
-  'CCISS',
-  'Boyle Street',
-  'The Mustard Seed',
-  'Homeward Trust',
-  'Other'
+const EXTERNAL_REFERRAL_OPTIONS = [
+  { value: 'christcity_lighthouse', label: 'Christcity Lighthouse – Counselling' },
+  { value: 'other_external',        label: 'Other (External)' },
 ];
 
 export default function ClientReferrals({ client, onSave }) {
-  const [selectedInternal, setSelectedInternal] = useState(client.internal_referrals || []);
-  const [selectedExternal, setSelectedExternal] = useState(client.external_referrals || []);
+  const [form, setForm] = useState({
+    internal_referrals: client?.internal_referrals || [],
+    external_referrals: client?.external_referrals || [],
+  });
   const [saving, setSaving] = useState(false);
+  const [prevInternal] = useState(client?.internal_referrals || []);
+  const [prevExternal] = useState(client?.external_referrals || []);
+
+  const toggleItem = (field, value) => {
+    setForm(prev => {
+      const arr = prev[field];
+      return { ...prev, [field]: arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value] };
+    });
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Find newly added referrals
-      const newInternal = selectedInternal.filter(r => !client.internal_referrals?.includes(r));
-      const newExternal = selectedExternal.filter(r => !client.external_referrals?.includes(r));
+      const newInternal = form.internal_referrals.filter(v => !prevInternal.includes(v));
+      const newExternal = form.external_referrals.filter(v => !prevExternal.includes(v));
 
-      await onSave({ internal_referrals: selectedInternal, external_referrals: selectedExternal });
+      await onSave(form);
 
-      // Send alerts for new referrals
-      for (const referral of [...newInternal, ...newExternal]) {
-        try {
-          await base44.functions.invoke('sendAlertEmail', {
-            client_id: client.id,
-            client_name: `${client.first_name} ${client.last_name}`,
-            referral_type: 'internal',
-            referral_name: referral
-          });
-        } catch (error) {
-          console.error('Failed to send alert for', referral);
-        }
+      if (newInternal.length > 0) {
+        await base44.functions.invoke('sendAlertEmail', {
+          alert_type: 'internal_referrals',
+          client_name: `${client.first_name} ${client.last_name}`,
+          client_id: client.id,
+          referrals: newInternal,
+        });
+      }
+      if (newExternal.length > 0) {
+        await base44.functions.invoke('sendAlertEmail', {
+          alert_type: 'external_referrals',
+          client_name: `${client.first_name} ${client.last_name}`,
+          client_id: client.id,
+          referrals: newExternal,
+        });
       }
 
-      toast.success('Referrals updated');
-    } catch (error) {
-      toast.error('Failed to update referrals');
+      toast.success('Referrals saved');
+    } catch (err) {
+      toast.error('Failed to save referrals');
     } finally {
       setSaving(false);
     }
@@ -64,48 +73,65 @@ export default function ClientReferrals({ client, onSave }) {
 
   return (
     <div className="space-y-6">
+      {/* Internal Referrals */}
       <Card>
-        <CardHeader><CardTitle>Internal Referrals</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Internal Referrals</CardTitle>
+          <p className="text-sm text-slate-500 mt-1">
+            Select all internal referrals made. Staff responsible for each program will be notified automatically.
+          </p>
+        </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {INTERNAL_REFERRALS.map(ref => (
-              <div key={ref} className="flex items-center space-x-2">
+          <div className="space-y-3">
+            {INTERNAL_REFERRAL_OPTIONS.map(opt => (
+              <div key={opt.value} className="flex items-center gap-3">
                 <Checkbox
-                  id={`int-${ref}`}
-                  checked={selectedInternal.includes(ref)}
-                  onCheckedChange={(checked) => {
-                    setSelectedInternal(checked ? [...selectedInternal, ref] : selectedInternal.filter(r => r !== ref));
-                  }}
+                  id={`int-${opt.value}`}
+                  checked={form.internal_referrals.includes(opt.value)}
+                  onCheckedChange={() => toggleItem('internal_referrals', opt.value)}
                 />
-                <Label htmlFor={`int-${ref}`} className="text-sm">{ref}</Label>
+                <Label htmlFor={`int-${opt.value}`} className="text-sm font-normal cursor-pointer">
+                  {opt.label}
+                </Label>
               </div>
             ))}
           </div>
-          <Button onClick={handleSave} className="mt-4" disabled={saving}>
-            {saving ? 'Saving...' : 'Save Referrals'}
-          </Button>
         </CardContent>
       </Card>
 
+      {/* External Referrals */}
       <Card>
-        <CardHeader><CardTitle>External Referrals</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>External Referrals</CardTitle>
+          <p className="text-sm text-slate-500 mt-1">
+            Select all external referrals made. Where available, the external partner will be notified automatically.
+          </p>
+        </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {EXTERNAL_REFERRALS.map(ref => (
-              <div key={ref} className="flex items-center space-x-2">
+          <div className="space-y-3">
+            {EXTERNAL_REFERRAL_OPTIONS.map(opt => (
+              <div key={opt.value} className="flex items-center gap-3">
                 <Checkbox
-                  id={`ext-${ref}`}
-                  checked={selectedExternal.includes(ref)}
-                  onCheckedChange={(checked) => {
-                    setSelectedExternal(checked ? [...selectedExternal, ref] : selectedExternal.filter(r => r !== ref));
-                  }}
+                  id={`ext-${opt.value}`}
+                  checked={form.external_referrals.includes(opt.value)}
+                  onCheckedChange={() => toggleItem('external_referrals', opt.value)}
                 />
-                <Label htmlFor={`ext-${ref}`} className="text-sm">{ref}</Label>
+                <Label htmlFor={`ext-${opt.value}`} className="text-sm font-normal cursor-pointer">
+                  {opt.label}
+                </Label>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Save */}
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="w-4 h-4 mr-1" />
+          {saving ? 'Saving…' : 'Save Changes'}
+        </Button>
+      </div>
     </div>
   );
 }

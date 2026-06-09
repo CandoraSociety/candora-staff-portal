@@ -1,175 +1,286 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Building2, Briefcase, ClipboardList, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
+import TrainingProgressTracker from '@/components/placements/TrainingProgressTracker';
+import TrainingPlanEditor from '@/components/placements/TrainingPlanEditor';
+import TrainingEvaluation from '@/components/placements/TrainingEvaluation';
+import TrainingReferralForm from '@/components/placements/TrainingReferralForm';
 
-const PLACEMENT_TYPES = [
-  { value: 'cleaning_arc', label: 'Cleaning (ARC)' },
-  { value: 'food_services_onsite', label: 'Food Services (Onsite)' },
-  { value: 'food_services_offsite', label: 'Food Services (Offsite)' },
-  { value: 'reception', label: 'Reception' },
-  { value: 'childcare', label: 'Childcare' },
-];
+const PLACEMENT_TYPE_LABELS = {
+  cleaning_arc:          'Cleaning (ARC)',
+  food_services_onsite:  'Food Services (Onsite)',
+  food_services_offsite: 'Food Services (Offsite)',
+  reception:             'Reception',
+  childcare:             'Childcare',
+};
 
-const TRANSPORTATION_OPTIONS = [
-  { value: 'has_own_vehicle', label: 'Has Own Vehicle' },
-  { value: 'no_vehicle_willing_to_bus', label: 'No Vehicle - Willing to Bus' },
-  { value: 'no_vehicle_not_willing_to_bus', label: 'No Vehicle - Not Willing to Bus' },
-  { value: 'transit_pass_provided', label: 'Transit Pass Provided' },
-  { value: 'requires_transportation_support', label: 'Requires Transportation Support' },
-  { value: 'offsite_not_applicable', label: 'Offsite - Not Applicable' },
-];
+const TRANSPORTATION_LABELS = {
+  has_own_vehicle:                 'Has Own Vehicle',
+  no_vehicle_willing_to_bus:       'No Vehicle – Willing to Bus',
+  no_vehicle_not_willing_to_bus:   'No Vehicle – Not Willing to Bus',
+  transit_pass_provided:           'Transit Pass Provided',
+  requires_transportation_support: 'Requires Transportation Support',
+  offsite_not_applicable:          'Offsite – Not Applicable',
+};
 
-const EVALUATION_RATINGS = [
-  { value: 'excellent', label: 'Excellent' },
-  { value: 'good', label: 'Good' },
-  { value: 'satisfactory', label: 'Satisfactory' },
-  { value: 'needs_improvement', label: 'Needs Improvement' },
-  { value: 'unsatisfactory', label: 'Unsatisfactory' },
-];
+const STATUS_COLORS = {
+  referred:  'bg-blue-100 text-blue-700',
+  active:    'bg-green-100 text-green-700',
+  completed: 'bg-slate-100 text-slate-700',
+  withdrawn: 'bg-amber-100 text-amber-700',
+  cancelled: 'bg-red-100 text-red-700',
+};
 
-export default function ClientPlacements({ client }) {
-  const [internalTraining, setInternalTraining] = useState(null);
-  const [loading, setLoading] = useState(false);
+function InternalPlacementsSection({ client }) {
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [selected, setSelected] = useState(null);
 
-  const fetchInternalTraining = async () => {
+  const load = async () => {
     setLoading(true);
     try {
-      const records = await base44.entities.InternalTraining.filter({ client_id: client.id });
-      setInternalTraining(records[0] || null);
-    } catch (error) {
-      toast.error('Failed to load placement data');
+      const recs = await base44.entities.InternalTraining.filter({ client_id: client.id }, '-created_date');
+      setRecords(recs);
+      setSelected(recs[0] || null);
+    } catch {
+      toast.error('Failed to load internal training records');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => { load(); }, [client.id]);
+
+  const handleSaved = () => {
+    setShowForm(false);
+    load();
+  };
+
+  // Program Flow summary card
+  const hasPfPlacement = client.internal_placement && client.internal_placement !== 'none';
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Internal Placements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {!internalTraining ? (
-            <div className="text-muted-foreground">
-              No internal placement records found.
-              <Button onClick={fetchInternalTraining} variant="outline" size="sm" className="ml-2">
-                Load Records
+    <div className="space-y-4">
+      {/* Program Flow summary */}
+      {hasPfPlacement && (
+        <div className="border-2 border-blue-200 bg-blue-50 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="w-4 h-4 text-blue-600" />
+            <span className="font-semibold text-blue-800 text-sm">From Program Flow — Internal Placement</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <div>
+              <p className="text-xs text-slate-500 font-medium">Placement Type</p>
+              <p className="font-medium">{PLACEMENT_TYPE_LABELS[client.internal_placement] || client.internal_placement}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium">Start Date</p>
+              <p>{client.placement_start_date || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium">End Date</p>
+              <p>{client.placement_end_date || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium">Supervisor</p>
+              <p>{client.placement_supervisor || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium">Schedule</p>
+              <p>{client.placement_schedule || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-medium">Request Sent</p>
+              {client.placement_request_sent
+                ? <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold">Sent</span>
+                : <span className="inline-block bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-semibold">Pending</span>
+              }
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New referral form */}
+      {showForm && (
+        <TrainingReferralForm client={client} onSaved={handleSaved} onCancel={() => setShowForm(false)} />
+      )}
+
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <div className="w-6 h-6 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : records.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 flex flex-col items-center gap-3 text-slate-400">
+            <ClipboardList className="w-8 h-8" />
+            <p className="text-sm">No internal training referrals yet.</p>
+            {!showForm && (
+              <Button size="sm" onClick={() => setShowForm(true)}>
+                <Plus className="w-4 h-4 mr-1" /> New Referral
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {/* Record picker pills */}
+          {records.length > 1 && (
+            <div className="flex flex-wrap gap-2">
+              {records.map((rec, i) => (
+                <button
+                  key={rec.id}
+                  onClick={() => setSelected(rec)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    selected?.id === rec.id
+                      ? 'bg-slate-800 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {PLACEMENT_TYPE_LABELS[rec.placement_type] || rec.placement_type} — {rec.referral_date}
+                </button>
+              ))}
+              {!showForm && (
+                <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+                  <Plus className="w-4 h-4 mr-1" /> New Referral
+                </Button>
+              )}
+            </div>
+          )}
+
+          {selected && (
+            <div className="space-y-4">
+              {/* Summary bar */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Placement</p>
+                  <p className="font-medium">{PLACEMENT_TYPE_LABELS[selected.placement_type] || selected.placement_type}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Status</p>
+                  <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-semibold capitalize ${STATUS_COLORS[selected.status] || 'bg-slate-100 text-slate-600'}`}>
+                    {selected.status}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Transportation</p>
+                  <p className="text-xs">{TRANSPORTATION_LABELS[selected.transportation] || selected.transportation || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">Referred</p>
+                  <p>{selected.referral_date || '—'}</p>
+                </div>
+              </div>
+
+              {/* Training goals */}
+              {selected.training_goals && (
+                <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-sm text-slate-700">
+                  <p className="text-xs font-semibold text-blue-600 mb-1">Training Goals</p>
+                  {selected.training_goals}
+                </div>
+              )}
+
+              {/* Sub-tabs */}
+              <Tabs defaultValue="progress">
+                <TabsList>
+                  <TabsTrigger value="progress">Progress</TabsTrigger>
+                  <TabsTrigger value="plan">Training Plan</TabsTrigger>
+                  <TabsTrigger value="evaluation" className="relative">
+                    Evaluation
+                    {selected.evaluation_completed && (
+                      <span className="ml-1.5 w-2 h-2 rounded-full bg-green-500 inline-block" />
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="progress" className="mt-4">
+                  <TrainingProgressTracker training={selected} readOnly />
+                </TabsContent>
+                <TabsContent value="plan" className="mt-4">
+                  <TrainingPlanEditor training={selected} readOnly />
+                </TabsContent>
+                <TabsContent value="evaluation" className="mt-4">
+                  <TrainingEvaluation training={selected} readOnly />
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+
+          {records.length === 1 && !showForm && (
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={() => setShowForm(true)}>
+                <Plus className="w-4 h-4 mr-1" /> New Referral
               </Button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Placement Type</Label>
-                  <div className="mt-1 font-medium">{internalTraining.placement_type}</div>
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Badge className="mt-1">{internalTraining.status}</Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Start Date</Label>
-                  <div className="mt-1">{internalTraining.start_date || 'Not set'}</div>
-                </div>
-                <div>
-                  <Label>Expected End Date</Label>
-                  <div className="mt-1">{internalTraining.expected_end_date || 'Not set'}</div>
-                </div>
-              </div>
-
-              <div>
-                <Label>Supervisor</Label>
-                <div className="mt-1">{internalTraining.supervisor || 'Not assigned'}</div>
-              </div>
-
-              <div>
-                <Label>Transportation</Label>
-                <div className="mt-1">{internalTraining.transportation || 'Not specified'}</div>
-              </div>
-
-              {internalTraining.transportation_notes && (
-                <div>
-                  <Label>Transportation Notes</Label>
-                  <div className="mt-1 text-sm">{internalTraining.transportation_notes}</div>
-                </div>
-              )}
-
-              {internalTraining.evaluation_completed && (
-                <div className="border-t pt-4 mt-4">
-                  <h4 className="font-semibold mb-3">Evaluation Summary</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>Reliability: {internalTraining.evaluation_reliability}</div>
-                    <div>Attitude: {internalTraining.evaluation_attitude}</div>
-                    <div>Skill Development: {internalTraining.evaluation_skill_development}</div>
-                    <div>Teamwork: {internalTraining.evaluation_teamwork}</div>
-                    <div>Communication: {internalTraining.evaluation_communication}</div>
-                    <div>Would Hire: {internalTraining.evaluation_would_hire}</div>
-                  </div>
-                </div>
-              )}
-            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
+    </div>
+  );
+}
 
+function ExternalPlacementsSection({ client }) {
+  const hasExternal = client?.paid_external_placement || client?.external_employer;
+
+  if (!hasExternal) {
+    return (
       <Card>
-        <CardHeader>
-          <CardTitle>External Placements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {client?.external_employer ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Employer Name</Label>
-                  <div className="mt-1 font-medium">{client.employer_name}</div>
-                </div>
-                <div>
-                  <Label>Job Title</Label>
-                  <div className="mt-1">{client.job_title || 'Not specified'}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Employer Contact</Label>
-                  <div className="mt-1">{client.employer_contact || 'Not provided'}</div>
-                </div>
-                <div>
-                  <Label>Start Date</Label>
-                  <div className="mt-1">{client.job_start_date || 'Not set'}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Wage ($/hr)</Label>
-                  <div className="mt-1">${client.job_wage || '0.00'}</div>
-                </div>
-                <div>
-                  <Label>Hours</Label>
-                  <div className="mt-1">{client.job_hours || 'Not specified'}</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-muted-foreground">
-              No external placement records found.
-            </div>
-          )}
+        <CardContent className="py-10 flex flex-col items-center gap-3 text-slate-400">
+          <Briefcase className="w-8 h-8" />
+          <p className="text-sm">No external placement recorded.</p>
+          <p className="text-xs text-center text-slate-400">External placement details are set in the Program Flow wizard.</p>
         </CardContent>
       </Card>
+    );
+  }
+
+  return (
+    <div className="border-2 border-purple-200 bg-purple-50 rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Briefcase className="w-4 h-4 text-purple-600" />
+        <span className="font-semibold text-purple-800 text-sm">From Program Flow — External Placement</span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+        {client.employer_name && (
+          <div>
+            <p className="text-xs text-slate-500 font-medium">Employer</p>
+            <p className="font-medium">{client.employer_name}</p>
+          </div>
+        )}
+        <div>
+          <p className="text-xs text-slate-500 font-medium">Paid External Placement</p>
+          {client.paid_external_placement
+            ? <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold">Yes</span>
+            : <span className="inline-block bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full font-semibold">No</span>
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ClientPlacements({ client }) {
+  return (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-lg font-bold text-slate-800">Placements</h3>
+        <p className="text-sm text-slate-500 mt-0.5">
+          View and manage internal training referrals and external placement details for this client.
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Internal Placements</p>
+        <InternalPlacementsSection client={client} />
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">External Placement</p>
+        <ExternalPlacementsSection client={client} />
+      </div>
     </div>
   );
 }
