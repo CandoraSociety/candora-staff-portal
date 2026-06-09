@@ -179,7 +179,7 @@ export default function PathwaysClientProfile() {
           onClick={() => navigate('/pathways')}
           className="text-sm text-white/90 hover:text-white font-semibold"
         >
-          Home
+          Pathways Home
         </button>
         <span className="text-white/30">·</span>
         <button
