@@ -70,13 +70,10 @@ export default function PathwaysClientProfile() {
     });
   }, [id]);
 
-  const handleSave = async (data) => {
-    try {
-      await base44.entities.Client.update(id, data);
-      setClient({ ...client, ...data });
-    } catch (error) {
-      toast.error('Failed to update client');
-    }
+  const handleSave = async (updates) => {
+    const updated = await base44.entities.Client.update(id, updates);
+    setClient(prev => ({ ...prev, ...updates }));
+    return updated;
   };
 
   const handleCloseFile = async (closeData) => {
@@ -261,7 +258,7 @@ export default function PathwaysClientProfile() {
 
       {/* Tabs */}
       <div className="p-6">
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="program_flow" className="space-y-6">
           <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="program_flow">Program Flow</TabsTrigger>
             <TabsTrigger value="overview">Client Overview</TabsTrigger>
@@ -269,12 +266,23 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="placements">Placements</TabsTrigger>
-            <TabsTrigger value="stream_switches">Stream Switches</TabsTrigger>
+            <TabsTrigger value="stream_switches" className="relative">
+              Stream Switches
+              {client.program_stream_switches?.length > 0 && (
+                <span className="ml-1.5 bg-amber-400 text-amber-900 text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">
+                  {client.program_stream_switches.length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="status_history">Status History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="program_flow">
-            <ProgramFlowWizard client={client} onSave={handleSave} />
+            <ProgramFlowWizard
+              client={client}
+              onSave={handleSave}
+              onClientUpdate={(updates) => setClient(prev => ({ ...prev, ...updates }))}
+            />
           </TabsContent>
 
           <TabsContent value="overview">
@@ -302,7 +310,7 @@ export default function PathwaysClientProfile() {
           </TabsContent>
 
           <TabsContent value="status_history">
-            <ClientStatusHistory client={client} />
+            <ClientStatusHistory key={statusHistoryKey} client={client} />
           </TabsContent>
         </Tabs>
       </div>
