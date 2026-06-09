@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Filter, X } from 'lucide-react';
 import moment from 'moment';
+import CRTClientData from '@/components/crt/CRTClientData';
 
 const DATE_FIELDS = [
   { value: 'any', label: 'Any date field' },
@@ -274,53 +275,7 @@ export default function CRT() {
         </TabsList>
 
         <TabsContent value="client_data">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Client Data Export</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 mb-4">
-                Tabular view of all client demographic and outcome data for CRT export
-              </p>
-              {filteredClients.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-slate-50">
-                        <th className="text-left py-2 px-3">Client Name</th>
-                        <th className="text-left py-2 px-3">Service Type</th>
-                        <th className="text-left py-2 px-3">Program Status</th>
-                        <th className="text-left py-2 px-3">Employment Status</th>
-                        <th className="text-left py-2 px-3">Intake Date</th>
-                        <th className="text-left py-2 px-3">Completion Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredClients.map(client => (
-                        <tr key={client.id} className="border-b last:border-0">
-                          <td className="py-2 px-3 font-medium">
-                            {client.first_name} {client.last_name}
-                          </td>
-                          <td className="py-2 px-3 capitalize">{client.service_type?.replace('_', ' ')}</td>
-                          <td className="py-2 px-3">
-                            <Badge variant="outline">{client.program_status}</Badge>
-                          </td>
-                          <td className="py-2 px-3">{client.employment_status}</td>
-                          <td className="py-2 px-3">{client.intake_date || '-'}</td>
-                          <td className="py-2 px-3">{client.completion_date || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-slate-500">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-slate-400" />
-                  <p>No clients match the current filters</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <CRTClientData clients={filteredClients} />
         </TabsContent>
 
         <TabsContent value="outcomes">
