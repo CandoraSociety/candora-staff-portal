@@ -258,13 +258,7 @@ export default function ReportSummary({
 
 
 
-  const toggleDemographicOption = (optionKey) => {
-    setDemographicOptions(prev =>
-      prev.includes(optionKey)
-        ? prev.filter(o => o !== optionKey)
-        : [...prev, optionKey]
-    );
-  };
+
 
   const stats = useMemo(() => {
     if (!results) return null;
