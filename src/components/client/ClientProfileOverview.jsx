@@ -59,7 +59,7 @@ const PROGRAM_STATUSES = [
   { value: 'cancelled',   label: 'Cancelled' },
 ];
 
-const EMPLOYMENT_CODES = ['E-RF','E-UF','E-PT','UE','UE-LA','UE-S','NA'];
+const EMPLOYMENT_CODES = ['E-RF','E-UF','E-PT','UE','UE-LFW','UE-S','NA'];
 
 // Read-only display field
 function Field({ label, value }) {
@@ -278,6 +278,7 @@ export default function ClientProfileOverview({ client, onSave }) {
                   <SelectContent>
                     {EMPLOYMENT_CODES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
                     <SelectItem value="no_contact">No Contact</SelectItem>
+                    <SelectItem value="UTC">UTC — Unable to Contact</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

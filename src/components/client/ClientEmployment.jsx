@@ -13,7 +13,7 @@ const EMPLOYMENT_STATUS_OPTIONS = [
   { value: 'E-UF', label: 'Employed - Unions Full-time' },
   { value: 'E-PT', label: 'Employed - Part-time' },
   { value: 'UE', label: 'Unemployed' },
-  { value: 'UE-LA', label: 'Unemployed - Looking Actively' },
+  { value: 'UE-LFW', label: 'UE-LFW - Unemployed, Looking for Work' },
   { value: 'UE-S', label: 'Unemployed - Student' },
   { value: 'NA', label: 'Not Applicable' },
 ];
@@ -270,19 +270,20 @@ export default function ClientEmployment({ client, onSave }) {
               <CardTitle>90-Day Follow-Up</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Employment Status</Label>
-                <Select value={data.followup_90day_status} onValueChange={(v) => setData(prev => ({ ...prev, followup_90day_status: v }))}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EMPLOYMENT_STATUS_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+            <Label>Employment Status</Label>
+            <Select value={data.followup_90day_status} onValueChange={(v) => setData(prev => ({ ...prev, followup_90day_status: v }))}>
+            <SelectTrigger className="mt-2">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EMPLOYMENT_STATUS_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+              <SelectItem value="UTC">UTC — Unable to Contact</SelectItem>
+            </SelectContent>
+            </Select>
+            </div>
               <div>
                 <Label>Date</Label>
                 <Input

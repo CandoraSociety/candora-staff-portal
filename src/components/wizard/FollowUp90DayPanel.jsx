@@ -16,10 +16,11 @@ const EMPLOYMENT_CODES = [
   { value: 'E-UF',       label: 'E-UF — Employed, Union Full-time' },
   { value: 'E-PT',       label: 'E-PT — Employed, Part-time' },
   { value: 'UE',         label: 'UE — Unemployed' },
-  { value: 'UE-LA',      label: 'UE-LA — Unemployed, Looking Actively' },
+  { value: 'UE-LFW',     label: 'UE-LFW — Unemployed, Looking for Work' },
   { value: 'UE-S',       label: 'UE-S — Unemployed, Student' },
   { value: 'NA',         label: 'NA — Not Applicable' },
   { value: 'no_contact', label: 'No Contact' },
+  { value: 'UTC',        label: 'UTC — Unable to Contact' },
 ];
 
 export default function FollowUp90DayPanel({ client, onClientUpdate }) {

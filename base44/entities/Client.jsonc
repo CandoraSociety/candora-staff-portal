@@ -105,7 +105,7 @@
         "E-UF",
         "E-PT",
         "UE",
-        "UE-LA",
+        "UE-LFW",
         "UE-S",
         "NA"
       ]
@@ -186,10 +186,11 @@
         "E-UF",
         "E-PT",
         "UE",
-        "UE-LA",
+        "UE-LFW",
         "UE-S",
         "NA",
-        "no_contact"
+        "no_contact",
+        "UTC"
       ]
     },
     "post_completion_employment_date": {
@@ -207,10 +208,11 @@
         "E-UF",
         "E-PT",
         "UE",
-        "UE-LA",
+        "UE-LFW",
         "UE-S",
         "NA",
-        "no_contact"
+        "no_contact",
+        "UTC"
       ]
     },
     "service_navigation_supports": {
