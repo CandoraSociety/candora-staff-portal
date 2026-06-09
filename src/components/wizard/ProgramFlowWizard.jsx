@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle, ArrowRight, RotateCcw } from 'lucide-react';
+import { CheckCircle2, Map, ChevronDown } from 'lucide-react';
 import BarrierIdentificationTool from './BarrierIdentificationTool';
 import BarrierActionPlan from './BarrierActionPlan';
 import EmploymentActionPlan from './EmploymentActionPlan';
@@ -11,17 +9,38 @@ import ExposuresSupportsStep from './ExposuresSupportsStep';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
 
-const STEPS = [
-  { id: 'bit', title: 'Barrier Identification', description: 'Identify barriers affecting employment' },
-  { id: 'barrier_action_plan', title: 'Barrier Resolution Plan', description: 'Create action steps for each barrier' },
-  { id: 'employment_action_plan', title: 'Employment Action Plan', description: 'Build customized employment plan' },
-  { id: 'internal_placement', title: 'Internal Placement', description: 'Set up placement details', pathwaysOnly: true },
-  { id: 'exposures', title: 'Exposure Courses & Supports', description: 'Log courses and financial supports' },
-  { id: 'roadmap', title: 'Action Plan Roadmap', description: 'Track progress visually', pathwaysOnly: true },
+const ALL_STEPS = [
+  { key: 'bit',                    label: 'Barrier Identification',      short: 'BIT' },
+  { key: 'barrier_action_plan',    label: 'Barrier Resolution Plan',     short: 'Barrier Resolution' },
+  { key: 'employment_action_plan', label: 'Employment Action Plan',      short: 'Emp. Action Plan' },
+  { key: 'internal_placement',     label: 'Placement',                   short: 'Placement', pathwaysOnly: true },
+  { key: 'exposures',              label: 'Exposure Courses & Supports', short: 'Supports' },
+  { key: 'roadmap',                label: 'Program Progress',            short: 'Program Progress' },
 ];
 
-export default function ProgramFlowWizard({ client, onSave }) {
+function getStepStatus(key, client) {
+  switch (key) {
+    case 'bit':
+      return client?.bit_completed ? 'done' : 'active';
+    case 'barrier_action_plan':
+      if (!client?.barriers_addressed) return 'skipped';
+      return client?.barrier_action_plan_completed ? 'done' : (client?.bit_completed ? 'active' : 'pending');
+    case 'employment_action_plan':
+      return client?.action_plan_submitted ? 'done' : (client?.bit_completed ? 'active' : 'pending');
+    case 'internal_placement':
+      return client?.placement_request_sent ? 'done' : 'active';
+    case 'exposures':
+      return (client?.exposure_course || client?.paid_external_placement || client?.employment_supports || client?.external_employer) ? 'done' : 'active';
+    case 'roadmap':
+      return client?.action_plan_submitted ? 'active' : 'pending';
+    default:
+      return 'pending';
+  }
+}
+
+export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate }) {
   const [activeStep, setActiveStep] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isPathways = client?.service_type === 'pathways';
   const isDEA = client?.service_type === 'direct_to_employment';
@@ -31,131 +50,123 @@ export default function ProgramFlowWizard({ client, onSave }) {
     return <CasualNotesPanel client={client} onSave={onSave} />;
   }
 
-  const filteredSteps = STEPS.filter(step => !step.pathwaysOnly || isPathways);
+  const steps = ALL_STEPS.filter(s => !s.pathwaysOnly || isPathways);
 
-  const isStepCompleted = (step) => {
-    switch (step.id) {
-      case 'bit': return client?.bit_completed;
-      case 'barrier_action_plan': return client?.barrier_action_plan_completed;
-      case 'employment_action_plan': return client?.action_plan_submitted;
-      case 'internal_placement': return client?.placement_request_sent;
-      case 'exposures': return client?.exposure_course || client?.employment_supports;
-      case 'roadmap': return true; // Roadmap is always accessible
-      default: return false;
-    }
-  };
-
-  const renderStepContent = () => {
-    switch (activeStep) {
+  const renderStepContent = (key) => {
+    const goNext = () => {
+      const idx = steps.findIndex(s => s.key === key);
+      if (idx < steps.length - 1) setActiveStep(steps[idx + 1].key);
+      else setActiveStep(null);
+    };
+    switch (key) {
       case 'bit':
-        return <BarrierIdentificationTool client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+        return <BarrierIdentificationTool client={client} onSave={onSave} onComplete={goNext} />;
       case 'barrier_action_plan':
-        return <BarrierActionPlan client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+        return <BarrierActionPlan client={client} onSave={onSave} onComplete={goNext} />;
       case 'employment_action_plan':
-        return <EmploymentActionPlan client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+        return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} />;
       case 'internal_placement':
-        return <InternalPlacementStep client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+        return <InternalPlacementStep client={client} onSave={onSave} onComplete={goNext} />;
       case 'exposures':
-        return <ExposuresSupportsStep client={client} onSave={onSave} onComplete={() => setActiveStep(null)} />;
+        return <ExposuresSupportsStep client={client} onSave={onSave} />;
       case 'roadmap':
-        return <ActionPlanRoadmap client={client} onSave={onSave} />;
+        return (
+          <ActionPlanRoadmap
+            client={client}
+            selectedItems={client?.sdp_items || []}
+            itemDetails={client?.sdp_item_details || {}}
+            otherDesc={client?.sdp_other_desc}
+            onClientUpdate={onClientUpdate || onSave}
+          />
+        );
       default:
         return null;
     }
   };
 
-  if (activeStep) {
-    return (
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{STEPS.find(s => s.id === activeStep)?.title}</CardTitle>
-              <CardDescription>
-                {STEPS.find(s => s.id === activeStep)?.description}
-              </CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setActiveStep(null)}>
-              Exit
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {renderStepContent()}
-        </CardContent>
-      </Card>
-    );
-  }
+  const currentStepLabel = steps.find(s => s.key === activeStep)?.label || 'Select a step';
 
   return (
-    <div className="space-y-6">
-      <div className="text-sm text-muted-foreground">
-        Complete each step in order to build a comprehensive employment action plan.
-        {isDEA && ' (DEA Stream)'}
+    <div className="flex gap-6">
+      {/* Sidebar — desktop */}
+      <aside className="hidden md:block w-56 shrink-0">
+        <div className="sticky top-6 space-y-1">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 px-2">
+            Program Steps
+          </div>
+          {steps.map((step, idx) => {
+            const status = getStepStatus(step.key, client);
+            const isActive = activeStep === step.key;
+            const isSkipped = status === 'skipped';
+
+            return (
+              <button
+                key={step.key}
+                onClick={() => !isSkipped && setActiveStep(step.key)}
+                disabled={isSkipped}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
+                  ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : isSkipped ? 'text-slate-400 cursor-default' : 'hover:bg-slate-100 text-slate-700'}`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {step.key === 'roadmap' ? (
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0
+                      ${isActive ? 'border-primary-foreground' : status === 'done' ? 'border-green-500 bg-green-50' : 'border-slate-300 bg-slate-50'}`}>
+                      <Map className="w-3 h-3" />
+                    </span>
+                  ) : (
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0
+                      ${isActive ? 'border-primary-foreground bg-primary/5' : status === 'done' ? 'border-green-500 bg-green-50' : 'border-slate-300 bg-slate-50'}`}>
+                      {status !== 'done' && idx + 1}
+                    </span>
+                  )}
+                  <span className="truncate text-xs">{step.short}</span>
+                </div>
+                {status === 'done' && !isActive && (
+                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* Mobile step selector */}
+      <div className="md:hidden w-full mb-2">
+        <button
+          onClick={() => setMobileOpen(p => !p)}
+          className="w-full flex items-center justify-between px-4 py-2 border rounded-lg bg-white text-sm font-medium"
+        >
+          <span>{currentStepLabel}</span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${mobileOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {mobileOpen && (
+          <div className="border rounded-lg mt-1 bg-white shadow divide-y">
+            {steps.map((step) => {
+              const status = getStepStatus(step.key, client);
+              return (
+                <button
+                  key={step.key}
+                  className="w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-50"
+                  onClick={() => { setActiveStep(step.key); setMobileOpen(false); }}
+                >
+                  {step.label}
+                  {status === 'done' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="space-y-4">
-        {filteredSteps.map((step, index) => {
-          const completed = isStepCompleted(step);
-          const isNext = index === filteredSteps.findIndex(s => !isStepCompleted(s));
-
-          return (
-            <Card
-              key={step.id}
-              className={`transition-all ${
-                completed ? 'bg-green-50 border-green-200' :
-                isNext ? 'border-primary shadow-md' : ''
-              }`}
-            >
-              <CardContent className="flex items-center justify-between p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-2">
-                    {completed ? (
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
-                    ) : isNext ? (
-                      <Circle className="w-6 h-6 text-primary fill-primary/10" />
-                    ) : (
-                      <Circle className="w-6 h-6 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{step.title}</h3>
-                      {completed && (
-                        <Badge variant="secondary" className="text-xs">
-                          Completed
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{step.description}</p>
-                  </div>
-                </div>
-
-                {!completed && (
-                  <Button
-                    onClick={() => setActiveStep(step.id)}
-                    disabled={!isNext}
-                    className={isNext ? '' : 'opacity-50'}
-                  >
-                    {isNext ? 'Start' : 'Locked'}
-                    {isNext && <ArrowRight className="w-4 h-4 ml-2" />}
-                  </Button>
-                )}
-
-                {completed && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveStep(step.id)}
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Review
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {!activeStep ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-sm">Select a step from the sidebar to get started.</p>
+          </div>
+        ) : (
+          renderStepContent(activeStep)
+        )}
       </div>
     </div>
   );

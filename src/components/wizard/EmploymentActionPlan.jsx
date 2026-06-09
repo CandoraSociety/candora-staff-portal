@@ -1,74 +1,171 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle2, Copy, ChevronRight, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { base44 } from '@/api/base44Client';
+import { createCompassTask, taskActionPlan } from '@/lib/compassTasks';
 
-const WORKSHOP_OPTIONS = [
-  'resume_writing',
-  'interview_skills',
-  'job_search_strategies',
-  'workplace_communication',
-  'computer_skills',
-  'financial_literacy'
+// ─── Action Plan Options ────────────────────────────────────────────────────
+
+const ALL_ITEMS = [
+  { key: 'job_search_workshop',         label: 'Job Search Workshop',           category: 'Workshops' },
+  { key: 'resume_writing_workshop',     label: 'Resume Writing Workshop',        category: 'Workshops' },
+  { key: 'interview_skills_workshop',   label: 'Interview Skills Workshop',      category: 'Workshops' },
+  { key: 'workplace_readiness_workshop',label: 'Workplace Readiness Workshop',   category: 'Workshops' },
+  { key: 'financial_literacy_workshop', label: 'Financial Literacy Workshop',    category: 'Workshops' },
+  { key: 'digital_literacy_workshop',   label: 'Digital Literacy Workshop',      category: 'Workshops' },
+  { key: 'empoweru',                    label: 'EmpowerU',                       category: 'Programs' },
+  { key: 'ell_classes',                 label: 'ELL Classes',                    category: 'Programs' },
+  { key: 'skills_assessment',           label: 'Skills Assessment',              category: 'Programs' },
+  { key: 'internal_placement',          label: 'Internal Placement',             category: 'Placement/Training', pathwaysOnly: true },
+  { key: 'exposure_course',             label: 'Exposure Course',                category: 'Placement/Training' },
+  { key: 'paid_external_placement',     label: 'Paid External Placement',        category: 'Placement/Training', notDEA: true },
+  { key: 'employment_supports',         label: 'Employment Supports',            category: 'Supports' },
+  { key: 'job_applications',            label: 'Job Applications',               category: 'Job Search' },
+  { key: 'networking',                  label: 'Networking',                     category: 'Job Search' },
+  { key: 'barrier_support',             label: 'Barrier Support',                category: 'Supports' },
+  { key: 'other',                       label: 'Other',                          category: 'Other' },
 ];
 
-const PROGRAM_OPTIONS = [
-  'ell_classes',
-  'upgrading',
-  'certification_program',
-  'vocational_training',
-  'mentorship'
+const DEA_ACTIVITY_TYPES = [
+  'Job Search Workshop',
+  'Resume Writing Workshop',
+  'Interview Skills Workshop',
+  'Workplace Readiness Workshop',
+  'Financial Literacy Workshop',
+  'Digital Literacy Workshop',
+  'EmpowerU',
+  'ELL Classes',
+  'Skills Assessment',
+  'Exposure Course',
+  'Employment Supports',
+  'Job Applications',
+  'Networking',
+  'Barrier Support',
+  'Other',
 ];
 
-const PLACEMENT_OPTIONS = [
-  'internal_placement',
-  'external_placement',
-  'job_shadowing',
-  'work_experience'
-];
-
-const JOB_SEARCH_OPTIONS = [
-  'online_applications',
-  'networking',
-  'job_fair',
-  'employment_agency',
-  'direct_employer_contact'
-];
-
-const SUPPORT_OPTIONS = [
-  'transportation_support',
-  'childcare_support',
-  'mental_health_support',
-  'addiction_support',
-  'housing_support'
-];
+const CATEGORIES = ['Workshops', 'Programs', 'Placement/Training', 'Job Search', 'Supports', 'Other'];
 
 export default function EmploymentActionPlan({ client, onSave, onComplete }) {
-  const [selectedItems, setSelectedItems] = useState(client?.sdp_items || []);
-  const [notes, setNotes] = useState(client?.sdp_notes || '');
-  const [compassEntered, setCompassEntered] = useState(client?.action_plan_compass_entered || false);
-  const [saving, setSaving] = useState(false);
+  const isPathways = client?.service_type === 'pathways';
+  const isDEA = client?.service_type === 'direct_to_employment';
+  const isCompleted = !!client?.action_plan_submitted;
 
-  const handleToggle = (item) => {
-    setSelectedItems(prev => 
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
+  const [submitted, setSubmitted] = useState(isCompleted);
+  const [editing, setEditing] = useState(!isCompleted);
+  const [saving, setSaving] = useState(false);
+  const [compassDismissed, setCompassDismissed] = useState(!!client?.action_plan_compass_entered);
+  const [compassEntered, setCompassEntered] = useState(!!client?.action_plan_compass_entered);
+  const [copiedCompass, setCopiedCompass] = useState(false);
+
+  // Pathways/other state
+  const defaultSelected = useMemo(() => {
+    if (client?.sdp_items?.length > 0) return client.sdp_items;
+    return client?.barriers_addressed && client?.barrier_1 ? ['barrier_support'] : [];
+  }, []);
+  const [selectedItems, setSelectedItems] = useState(defaultSelected);
+  const [itemDetails, setItemDetails] = useState(client?.sdp_item_details || {});
+  const [otherDesc, setOtherDesc] = useState(client?.sdp_other_desc || '');
+  const [sdpNotes, setSdpNotes] = useState(client?.sdp_notes || '');
+
+  // DEA state
+  const [deaActivities, setDeaActivities] = useState(
+    client?.dea_activities?.length > 0
+      ? client.dea_activities
+      : [{ id: '1', type: '', notes: '' }, { id: '2', type: '', notes: '' }, { id: '3', type: '', notes: '' }]
+  );
+
+  const availableItems = ALL_ITEMS.filter(item => {
+    if (isDEA && item.notDEA) return false;
+    if (isDEA && item.pathwaysOnly) return false;
+    if (!isPathways && item.pathwaysOnly) return false;
+    return true;
+  });
+
+  const toggleItem = (key) =>
+    setSelectedItems(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+
+  const addDeaActivity = () =>
+    setDeaActivities(prev => [...prev, { id: Date.now().toString(), type: '', notes: '' }]);
+
+  const updateDea = (id, field, val) =>
+    setDeaActivities(prev => prev.map(a => a.id === id ? { ...a, [field]: val } : a));
+
+  const removeDea = (id) =>
+    setDeaActivities(prev => prev.filter(a => a.id !== id));
+
+  const deaEndDate = useMemo(() => {
+    if (!client?.service_start_date) return 'TBD';
+    const d = new Date(client.service_start_date);
+    d.setDate(d.getDate() + 14);
+    return d.toLocaleDateString('en-CA');
+  }, [client?.service_start_date]);
+
+  const generateCompassText = () => {
+    const name = `${client.first_name} ${client.last_name}`;
+    if (isDEA) {
+      const acts = deaActivities.filter(a => a.type).map((a, i) => `  EDA ${i + 1}: ${a.type}${a.notes ? ` — ${a.notes}` : ''}`).join('\n');
+      const barrierLines = [1, 2, 3].map(n => client[`barrier_${n}`] ? `  • ${client[`barrier_${n}`]}` : null).filter(Boolean).join('\n');
+      const sdpNotesLine = sdpNotes ? `\nAdditional Notes:\n  ${sdpNotes}` : '';
+      return `DEA Employment Action Plan — ${name}\nTimeline: ${client?.service_start_date || 'TBD'} to ${deaEndDate}\n\nEmployment Development Activities:\n${acts || '  (none)'}${barrierLines ? `\n\nBarriers:\n${barrierLines}` : ''}${sdpNotesLine}`;
+    }
+    const itemLines = selectedItems.map(k => {
+      const item = ALL_ITEMS.find(i => i.key === k);
+      return `  • ${item?.label || k}`;
+    }).join('\n');
+    const barrierLines = [1, 2, 3].map(n => {
+      if (!client[`barrier_${n}`]) return null;
+      const tl = client[`barrier_${n}_timeline_start`] ? ` (${client[`barrier_${n}_timeline_start`]} – ${client[`barrier_${n}_timeline_end`] || 'TBD'})` : '';
+      return `  • ${client[`barrier_${n}`]}${tl}`;
+    }).filter(Boolean).join('\n');
+    const expLine = selectedItems.includes('exposure_course') ? '\nExposure Course: Yes' : '';
+    const placeLine = selectedItems.includes('internal_placement') ? `\nInternal Placement: ${client?.internal_placement || 'TBD'}${client?.placement_start_date ? ` — ${client.placement_start_date}` : ''}` : '';
+    const otherLine = selectedItems.includes('other') && otherDesc ? `\nOther: ${otherDesc}` : '';
+    const notesLine = sdpNotes ? `\nAdditional Notes:\n  ${sdpNotes}` : '';
+    return `Employment Action Plan — ${name}\n\nSelected Activities:\n${itemLines || '  (none)'}${expLine}${placeLine}${otherLine}${barrierLines ? `\n\nBarriers:\n${barrierLines}` : ''}${notesLine}`;
   };
 
-  const handleSave = async () => {
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(generateCompassText());
+    setCopiedCompass(true);
+    setTimeout(() => setCopiedCompass(false), 2000);
+  };
+
+  const handleMarkEntered = async () => {
+    await onSave({ action_plan_compass_entered: true });
+    setCompassEntered(true);
+    setCompassDismissed(true);
+    toast.success('Marked as entered in Compass');
+  };
+
+  const handleSave = async (andComplete = false) => {
     setSaving(true);
     try {
-      await onSave({
-        sdp_items: selectedItems,
-        sdp_notes: notes,
-        action_plan_submitted: true
+      const updates = isDEA
+        ? { dea_activities: deaActivities, sdp_notes: sdpNotes, action_plan_submitted: true }
+        : { sdp_items: selectedItems, sdp_item_details: itemDetails, sdp_other_desc: otherDesc, sdp_notes: sdpNotes, action_plan_submitted: true };
+
+      const updatedClient = await onSave(updates);
+
+      const task = taskActionPlan(updatedClient || { ...client, ...updates });
+      await createCompassTask({
+        client_id: client.id,
+        task_type: 'action_plan',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
+        ...task,
       });
+
       toast.success('Employment action plan saved');
-      onComplete?.();
+      setSubmitted(true);
+      setEditing(false);
+      if (andComplete) onComplete?.();
     } catch (error) {
       toast.error('Failed to save');
     } finally {
@@ -76,157 +173,157 @@ export default function EmploymentActionPlan({ client, onSave, onComplete }) {
     }
   };
 
-  const handleCompassEntered = async () => {
-    await onSave({ action_plan_compass_entered: true });
-    setCompassEntered(true);
-    toast.success('Marked as entered in Compass');
-  };
+  // ── Read-only summary ─────────────────────────────────────────────────────
+  if (submitted && !editing) {
+    const items = isDEA ? [] : selectedItems;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="font-semibold">Employment Action Plan Submitted</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit</Button>
+        </div>
+        {isDEA ? (
+          <div className="text-sm text-muted-foreground">{deaActivities.filter(a => a.type).length} DEA activities logged</div>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {items.map(k => <span key={k} className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs">{ALL_ITEMS.find(i => i.key === k)?.label || k}</span>)}
+          </div>
+        )}
+        <Button className="w-full" onClick={() => onComplete?.()}>
+          Continue to Next Step <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
+    );
+  }
 
-  const generateCompassText = () => {
-    const lines = [`Employment Action Plan for ${client.first_name} ${client.last_name}`, ''];
-    
-    if (selectedItems.length === 0) {
-      lines.push('No action items selected.');
-    } else {
-      lines.push('Selected Activities:');
-      selectedItems.forEach(item => {
-        lines.push(`- ${item.replace(/_/g, ' ')}`);
-      });
-    }
-    
-    if (notes) {
-      lines.push('', `Notes: ${notes}`);
-    }
-    
-    return lines.join('\n');
-  };
-
+  // ── Edit form ─────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div className="text-sm text-muted-foreground">
-        Build a customized employment action plan. Select activities and supports that align with the client's goals.
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Workshops</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {WORKSHOP_OPTIONS.map(item => (
-              <div key={item} className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.includes(item)}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <Label className="text-sm font-normal">{item.replace(/_/g, ' ')}</Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Programs</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {PROGRAM_OPTIONS.map(item => (
-              <div key={item} className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.includes(item)}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <Label className="text-sm font-normal">{item.replace(/_/g, ' ')}</Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Placement</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {PLACEMENT_OPTIONS.map(item => (
-              <div key={item} className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.includes(item)}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <Label className="text-sm font-normal">{item.replace(/_/g, ' ')}</Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Job Search</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {JOB_SEARCH_OPTIONS.map(item => (
-              <div key={item} className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.includes(item)}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <Label className="text-sm font-normal">{item.replace(/_/g, ' ')}</Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Supports</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {SUPPORT_OPTIONS.map(item => (
-              <div key={item} className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.includes(item)}
-                  onCheckedChange={() => handleToggle(item)}
-                />
-                <Label className="text-sm font-normal">{item.replace(/_/g, ' ')}</Label>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Notes</CardTitle>
+      {/* Intake Summary */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xs font-semibold text-blue-800">Intake Summary (Auto-populated)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            placeholder="Add any additional notes about the action plan..."
-          />
+        <CardContent className="text-xs text-blue-900 grid grid-cols-2 gap-x-4 gap-y-1">
+          <div><span className="font-medium">Employment Status:</span> {client?.employment_status || 'N/A'}</div>
+          <div><span className="font-medium">CLB Level:</span> {client?.clb_level || 'N/A'}</div>
+          <div><span className="font-medium">Service Stream:</span> {client?.service_type || 'N/A'}</div>
+          <div><span className="font-medium">Career Objectives:</span> {client?.career_objectives || 'N/A'}</div>
+          {client?.employment_history && <div className="col-span-2"><span className="font-medium">Employment History:</span> {client.employment_history}</div>}
+          {client?.intake_notes && <div className="col-span-2"><span className="font-medium">Intake Notes:</span> {client.intake_notes}</div>}
         </CardContent>
       </Card>
 
-      {!compassEntered && (
-        <Card className="bg-slate-50">
-          <CardHeader>
-            <CardTitle className="text-sm">Compass Entry</CardTitle>
+      {/* DEA mode */}
+      {isDEA && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Employment Development Activities (EDA)</CardTitle>
+            <div className="text-xs text-muted-foreground">Timeline: {client?.service_start_date || 'TBD'} → {deaEndDate} (14-day program)</div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <pre className="bg-white p-4 rounded text-sm whitespace-pre-wrap border">
-              {generateCompassText()}
-            </pre>
-            <Button onClick={handleCompassEntered} variant="outline">
-              Mark as Entered in Compass
+          <CardContent className="space-y-3">
+            {deaActivities.map((act, idx) => (
+              <div key={act.id} className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground mt-2 w-16 shrink-0">EDA {idx + 1}</span>
+                <Select value={act.type} onValueChange={v => updateDea(act.id, 'type', v)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Activity Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEA_ACTIVITY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input value={act.notes} onChange={e => updateDea(act.id, 'notes', e.target.value)} placeholder="Notes..." className="flex-1 text-sm" />
+                {deaActivities.length > 3 && (
+                  <button type="button" onClick={() => removeDea(act.id)} className="text-muted-foreground hover:text-destructive mt-2">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <Button type="button" variant="outline" size="sm" onClick={addDeaActivity}>
+              <Plus className="w-3 h-3 mr-1" /> Add Activity
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <Button onClick={handleSave} disabled={saving} className="w-full">
-        {saving ? 'Saving...' : 'Save Action Plan'}
-      </Button>
+      {/* Pathways/other mode — category checkboxes */}
+      {!isDEA && (
+        <div className="space-y-4">
+          {CATEGORIES.map(cat => {
+            const catItems = availableItems.filter(i => i.category === cat);
+            if (catItems.length === 0) return null;
+            return (
+              <Card key={cat}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">{cat}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {catItems.map(item => (
+                    <div key={item.key}>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="accent-primary w-4 h-4"
+                          checked={selectedItems.includes(item.key)}
+                          onChange={() => toggleItem(item.key)}
+                        />
+                        <span className="text-sm">{item.label}</span>
+                      </label>
+                      {item.key === 'other' && selectedItems.includes('other') && (
+                        <Input value={otherDesc} onChange={e => setOtherDesc(e.target.value)} className="mt-2 text-sm" placeholder="Describe other activity..." />
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Notes */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Additional Notes</CardTitle></CardHeader>
+        <CardContent>
+          <Textarea value={sdpNotes} onChange={e => setSdpNotes(e.target.value)} rows={3} placeholder="Add notes about the action plan..." className="text-sm" />
+        </CardContent>
+      </Card>
+
+      {/* Compass text */}
+      {!compassDismissed ? (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm text-amber-800">Compass Entry Text</CardTitle>
+            <Button size="sm" variant="outline" onClick={handleCopy} className="h-7 text-xs">
+              <Copy className="w-3 h-3 mr-1" /> {copiedCompass ? 'Copied!' : 'Copy'}
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <pre className="text-xs whitespace-pre-wrap bg-white rounded border p-3">{generateCompassText()}</pre>
+            <Button variant="outline" size="sm" onClick={handleMarkEntered} className="text-green-700 border-green-300">
+              <CheckCircle2 className="w-3 h-3 mr-1" /> Mark as Entered in Compass
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex items-center gap-2 text-green-600 text-sm">
+          <CheckCircle2 className="w-4 h-4" /> Marked as entered in Compass
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={() => handleSave(false)} disabled={saving}>
+          {saving ? 'Saving...' : 'Save'}
+        </Button>
+        <Button onClick={() => handleSave(true)} disabled={saving}>
+          Finish &amp; Continue <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
     </div>
   );
 }
