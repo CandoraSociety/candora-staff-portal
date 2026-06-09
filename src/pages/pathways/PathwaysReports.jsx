@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   Users, CheckCircle2, Briefcase, Target, Calendar, TrendingUp, 
-  Filter, FileBarChart, Play, Save, Trash2, DollarSign, Award
+  Filter, FileBarChart, Play, Save, Trash2, DollarSign, Award, X
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths, startOfYear, differenceInMonths } from "date-fns";
 import ReportSummary from "@/components/reports/ReportSummary";
@@ -25,14 +25,15 @@ const SERVICE_STREAMS = {
 };
 
 const EMPLOYMENT_STATUS_LABELS = {
-  "E-RF": "Employed - Related Field Full-time",
-  "E-UF": "Employed - Unrelated Field Full-time",
-  "E-PT": "Employed - Part-time",
-  "UE": "Unemployed",
-  "UE-LA": "Unemployed - Layoff",
-  "UE-S": "Unemployed - Seasonal",
-  "NA": "Not Available",
+  "E-RF": "E-RF — Employed, Related Field",
+  "E-UF": "E-UF — Employed, Unrelated Field",
+  "E-PT": "E-PT — Employed, Part-time",
+  "UE": "UE — Unemployed",
+  "UE-LFW": "UE-LFW — Looking for Work",
+  "UE-S": "UE-S — Unemployed, Seasonal",
+  "NA": "NA — Not Available",
   "no_contact": "No Contact",
+  "UTC": "UTC — Unable to Contact",
 };
 
 function calculateOutcomes(clients, dateRange) {
@@ -142,6 +143,24 @@ export default function PathwaysReports() {
     startDate: "",
     endDate: "",
   });
+
+  const hasActiveFilters = outcomesFilters.assignedWorker !== "all" || 
+    outcomesFilters.serviceType !== "all" || 
+    outcomesFilters.status !== "all" || 
+    outcomesFilters.dateRangeType !== "fiscal";
+
+  const clearOutcomesFilters = () => {
+    setOutcomesFilters({
+      assignedWorker: "all",
+      serviceType: "all",
+      status: "all",
+      dateRangeType: "fiscal",
+      year: new Date().getFullYear(),
+      month: new Date().getMonth() + 1,
+      startDate: "",
+      endDate: "",
+    });
+  };
 
   const getDateRange = () => {
     const now = new Date();
@@ -343,6 +362,23 @@ export default function PathwaysReports() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h2 className="text-xl font-bold">Program Outcomes</h2>
+                <p className="text-sm text-muted-foreground">{outcomes.dateRangeLabel}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">{outcomes.totalClients} Clients</Badge>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" onClick={clearOutcomesFilters}>
+                    <X className="w-3 h-3 mr-1" />
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
+            </div>
 
             {/* Metric Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

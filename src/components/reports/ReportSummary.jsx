@@ -26,14 +26,15 @@ const SERVICE_LABELS = {
 };
 
 const EMP_STATUS_LABELS = {
-  "E-RF": "Employed – Related Field (E-RF)",
-  "E-UF": "Employed – Unrelated Field (E-UF)",
-  "E-PT": "Employed – Part Time (E-PT)",
-  "UE": "Unemployed (UE)",
-  "UE-LA": "Unemployed – Looking Actively (UE-LA)",
-  "UE-S": "Unemployed – Student (UE-S)",
-  "NA": "Not Applicable (NA)",
+  "E-RF": "E-RF — Employed, Related Field",
+  "E-UF": "E-UF — Employed, Unrelated Field",
+  "E-PT": "E-PT — Employed, Part Time",
+  "UE": "UE — Unemployed",
+  "UE-LFW": "UE-LFW — Looking for Work",
+  "UE-S": "UE-S — Unemployed, Student",
+  "NA": "NA — Not Applicable",
   "no_contact": "No Contact",
+  "UTC": "UTC — Unable to Contact",
 };
 
 const SERVICE_TYPE_OPTIONS = [
@@ -227,6 +228,7 @@ export default function ReportSummary({ clients, financialRecords }) {
     REPORT_SECTIONS.find(s => s.key === "client_demographics")?.subOptions?.filter(o => o.default).map(o => o.key) || []
   );
   const [results, setResults] = useState(null);
+  const [showDemographicSubOptions, setShowDemographicSubOptions] = useState(false);
 
   const { dateFrom, dateTo } = useMemo(() => {
     const range = getDateRange(datePreset, customDateFrom, customDateTo);
