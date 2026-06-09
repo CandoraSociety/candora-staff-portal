@@ -61,26 +61,18 @@ function AppNav() {
     <div className="sticky top-0 z-40" style={{ background: "hsl(231,64%,20%)" }}>
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-14">
 
-        {/* Back to main app */}
-        <Link
-          to="/"
-          className="hidden md:flex items-center gap-1 text-xs text-white/60 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-colors shrink-0 mr-1"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" /> {user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}
-        </Link>
-
-        {/* Logo + Wordmark */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Logo + Wordmark — clicks back to home */}
+        <Link to="/" className="flex items-center gap-3 shrink-0 group" title={user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}>
           <img
             src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
             alt="Candora logo"
-            className="h-9 w-9 object-contain rounded-full"
+            className="h-9 w-9 object-contain rounded-full group-hover:opacity-80 transition-opacity"
           />
           <span className="hidden md:block" style={{ fontFamily: "'Arial Black', 'Impact', sans-serif", fontSize: "15px", letterSpacing: "0.02em" }}>
             <span style={{ fontWeight: 900, color: "hsl(42,100%,54%)" }}>CANDORA</span>
             <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.85)", marginLeft: "4px" }}>Pathways</span>
           </span>
-        </div>
+        </Link>
 
         {/* Desktop Nav Items */}
         <div className="hidden md:flex items-center gap-0.5 flex-1 mx-4">
