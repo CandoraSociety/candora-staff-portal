@@ -211,29 +211,37 @@ function getDisplayValue(client, key) {
   return String(v);
 }
 
-export default function ReportSummary({ clients, financialRecords }) {
+export default function ReportSummary({ 
+  clients, 
+  financialRecords, 
+  results,
+  selectedSections: parentSelectedSections,
+  demographicOptions: parentDemographicOptions,
+  onClear,
+  onExportCSV,
+  dateRange,
+  appliedFilters,
+  allClients,
+  demographicFilters 
+}) {
   const reportRef = useRef(null);
-  const [datePreset, setDatePreset] = useState("fiscal_year");
-  const [customDateFrom, setCustomDateFrom] = useState("");
-  const [customDateTo, setCustomDateTo] = useState("");
-  const [dateField, setDateField] = useState("service_start_date");
-  const [templates, setTemplates] = useState(loadTemplates());
-  const [templateName, setTemplateName] = useState("");
-  const [savingTemplate, setSavingTemplate] = useState(false);
-  const [filters, setFilters] = useState({});
-  const [selectedSections, setSelectedSections] = useState(
+  
+  // Use parent props if provided, otherwise use local state (backward compatibility)
+  const [localSelectedSections, setLocalSelectedSections] = useState(
     REPORT_SECTIONS.filter(s => s.default).map(s => s.key)
   );
-  const [demographicOptions, setDemographicOptions] = useState(
+  const [localDemographicOptions, setLocalDemographicOptions] = useState(
     REPORT_SECTIONS.find(s => s.key === "client_demographics")?.subOptions?.filter(o => o.default).map(o => o.key) || []
   );
-  const [results, setResults] = useState(null);
-  const [showDemographicSubOptions, setShowDemographicSubOptions] = useState(false);
+  
+  const selectedSections = parentSelectedSections || localSelectedSections;
+  const demographicOptions = parentDemographicOptions || localDemographicOptions;
 
   const { dateFrom, dateTo } = useMemo(() => {
-    const range = getDateRange(datePreset, customDateFrom, customDateTo);
+    if (dateRange) return dateRange;
+    const range = getDateRange("fiscal_year", "", "");
     return range;
-  }, [datePreset, customDateFrom, customDateTo]);
+  }, [dateRange]);
 
   const financialMap = useMemo(() => {
     const map = {};
@@ -248,106 +256,7 @@ export default function ReportSummary({ clients, financialRecords }) {
     return map;
   }, [financialRecords]);
 
-  const runReport = () => {
-    let data = (clients || []).map(c => ({
-      ...c,
-      _fin_exposure: financialMap[c.id]?.exposure || 0,
-      _fin_placement: financialMap[c.id]?.placement || 0,
-      _fin_supports: financialMap[c.id]?.supports || 0,
-    }));
 
-    Object.entries(filters).forEach(([key, filterValue]) => {
-      if (!filterValue || filterValue === "" || (Array.isArray(filterValue) && filterValue.length === 0)) return;
-      data = data.filter(c => {
-        const clientValue = c[key];
-        if (Array.isArray(filterValue)) return filterValue.includes(clientValue);
-        if (typeof filterValue === "boolean") return clientValue === filterValue;
-        return clientValue?.toString().toLowerCase().includes(filterValue.toLowerCase());
-      });
-    });
-
-    if (datePreset !== "none" && (dateFrom || dateTo)) {
-      data = data.filter(c => {
-        const d = c[dateField];
-        if (!d) return false;
-        if (dateFrom && d < dateFrom) return false;
-        if (dateTo && d > dateTo) return false;
-        return true;
-      });
-    }
-
-    setResults(data);
-  };
-
-  const exportCSV = () => {
-    if (!results) return;
-    const fields = ALL_FIELDS.filter(f => f.category === "demographic" || f.category === "date");
-    const headers = fields.map(f => f.label);
-    const rows = results.map(c => fields.map(f => {
-      const v = getDisplayValue(c, f.key);
-      return `"${v.replace(/"/g, '""')}"`;
-    }).join(","));
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `report_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("CSV exported!");
-  };
-
-  const saveTemplate = () => {
-    if (!templateName.trim()) return;
-    const t = { id: Date.now(), name: templateName.trim(), dateField, datePreset, filters };
-    const updated = [...templates, t];
-    setTemplates(updated);
-    saveTemplates(updated);
-    setTemplateName("");
-    setSavingTemplate(false);
-    toast.success("Template saved!");
-  };
-
-  const loadTemplate = (t) => {
-    setDateField(t.dateField || "intake_date");
-    setDatePreset(t.datePreset || "none");
-    setFilters(t.filters || {});
-    toast.info(`Loaded template: ${t.name}`);
-  };
-
-  const deleteTemplate = (id) => {
-    const updated = templates.filter(t => t.id !== id);
-    setTemplates(updated);
-    saveTemplates(updated);
-    toast.success("Template deleted");
-  };
-
-  const selectAllFilterOptions = (filterKey, options) => {
-    setFilters(prev => {
-      const current = prev[filterKey] || [];
-      const allSelected = options.every(o => current.includes(o));
-      return { ...prev, [filterKey]: allSelected ? [] : [...options] };
-    });
-  };
-
-  const toggleFilter = (filterKey, value) => {
-    setFilters(prev => {
-      const current = prev[filterKey] || [];
-      const updated = current.includes(value)
-        ? current.filter(v => v !== value)
-        : [...current, value];
-      return { ...prev, [filterKey]: updated };
-    });
-  };
-
-  const toggleSection = (sectionKey) => {
-    setSelectedSections(prev =>
-      prev.includes(sectionKey)
-        ? prev.filter(s => s !== sectionKey)
-        : [...prev, sectionKey]
-    );
-  };
 
   const toggleDemographicOption = (optionKey) => {
     setDemographicOptions(prev =>
