@@ -110,13 +110,13 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                 <div className="flex items-center gap-2 min-w-0">
                   {step.key === 'roadmap' ? (
                     <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0
-                      ${isActive ? 'border-primary-foreground' : status === 'done' ? 'border-green-500 bg-green-50' : 'border-slate-300 bg-slate-50'}`}>
+                      ${isActive ? 'border-primary-foreground bg-primary/5' : status === 'done' ? 'border-green-500 bg-green-50' : status === 'pending' ? 'border-slate-300 bg-slate-50' : 'border-slate-300 bg-slate-50'}`}>
                       <Map className="w-3 h-3" />
                     </span>
                   ) : (
                     <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold shrink-0
-                      ${isActive ? 'border-primary-foreground bg-primary/5' : status === 'done' ? 'border-green-500 bg-green-50' : 'border-slate-300 bg-slate-50'}`}>
-                      {status !== 'done' && idx + 1}
+                      ${isActive ? 'border-primary bg-primary/5 text-primary' : status === 'done' ? 'border-green-500 bg-green-50 text-green-600' : status === 'pending' ? 'border-slate-300 bg-slate-50 text-slate-400' : 'border-slate-300 bg-slate-50 text-slate-400'}`}>
+                      {status === 'done' ? '' : idx + 1}
                     </span>
                   )}
                   <span className="truncate text-xs">{step.short}</span>
