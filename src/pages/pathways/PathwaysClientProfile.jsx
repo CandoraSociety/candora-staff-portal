@@ -176,6 +176,13 @@ export default function PathwaysClientProfile() {
           className="h-7 w-7 object-contain rounded-full"
         />
         <button
+          onClick={() => navigate('/pathways')}
+          className="text-sm text-white/90 hover:text-white font-semibold"
+        >
+          Home
+        </button>
+        <span className="text-white/30">·</span>
+        <button
           onClick={() => navigate('/pathways/master')}
           className="text-sm text-white/70 hover:text-white font-medium"
         >
