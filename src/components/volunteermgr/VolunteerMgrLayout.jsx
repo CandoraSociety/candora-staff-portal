@@ -138,6 +138,21 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
         })}
       </nav>
 
+      {/* Back to main app */}
+      <div className="px-2 py-2 border-t border-[hsl(230,50%,18%)]">
+        <Link
+          to="/"
+          className={cn(
+            'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
+            'text-[hsl(45,92%,53%)] hover:bg-[hsl(230,55%,20%)] font-semibold',
+            collapsed && 'justify-center'
+          )}
+        >
+          <ChevronLeft className="w-4 h-4 shrink-0" />
+          {!collapsed && '← Main Dashboard'}
+        </Link>
+      </div>
+
       {/* External links */}
       <div className="px-2 py-2 border-t border-[hsl(230,50%,18%)] space-y-0.5">
         {externalLinks.map(link => (

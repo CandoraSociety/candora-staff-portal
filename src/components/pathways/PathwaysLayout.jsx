@@ -1,8 +1,8 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronLeft } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: "Intake",            path: "/pathways/intake" },
@@ -61,6 +61,14 @@ function AppNav() {
     <div className="sticky top-0 z-40" style={{ background: "hsl(231,64%,20%)" }}>
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-14">
 
+        {/* Back to main app */}
+        <Link
+          to="/"
+          className="hidden md:flex items-center gap-1 text-xs text-white/60 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition-colors shrink-0 mr-1"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" /> Dashboard
+        </Link>
+
         {/* Logo + Wordmark */}
         <div className="flex items-center gap-3 shrink-0">
           <img
@@ -99,6 +107,10 @@ function AppNav() {
       {/* Mobile Dropdown */}
       {menuOpen && (
         <div className="md:hidden border-t border-white/10 px-4 py-3 flex flex-col gap-1" style={{ background: "hsl(231,55%,25%)" }}>
+          <Link to="/" className="flex items-center gap-1 text-xs text-yellow-300 font-semibold py-1.5 px-2 rounded hover:bg-white/10">
+            <ChevronLeft className="w-3.5 h-3.5" /> Back to Main Dashboard
+          </Link>
+          <div className="border-t border-white/10 my-1" />
           {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
           {user && (
             <p className="text-xs text-white/40 mt-2 pt-2 border-t border-white/10">
