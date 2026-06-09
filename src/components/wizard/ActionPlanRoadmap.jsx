@@ -1,92 +1,102 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Calendar, CheckCircle2, XCircle, Clock, ArrowRight, MapPin, Flag } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
+import { CheckCheck, X, Clock, Circle, Map, CalendarCheck } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import RoadmapItemPanel from './RoadmapItemPanel';
 import BITReviewCheckinPanel from './BITReviewCheckinPanel';
+import RoadmapProgressNotes from './RoadmapProgressNotes';
+import ProgramStatusPanel from './ProgramStatusPanel';
+import { base44 } from '@/api/base44Client';
 
-const ITEM_CONFIG = {
-  resume_writing: { label: 'Resume Writing', icon: '📄', color: 'bg-purple-500' },
-  interview_skills: { label: 'Interview Skills', icon: '🎯', color: 'bg-purple-500' },
-  job_search_strategies: { label: 'Job Search Strategies', icon: '🔍', color: 'purple-500' },
-  workplace_communication: { label: 'Workplace Communication', icon: '💬', color: 'bg-purple-500' },
-  computer_skills: { label: 'Computer Skills', icon: '💻', color: 'bg-purple-500' },
-  financial_literacy: { label: 'Financial Literacy', icon: '💰', color: 'bg-purple-500' },
-  ell_classes: { label: 'ELL Classes', icon: '📚', color: 'bg-blue-500' },
-  upgrading: { label: 'Upgrading', icon: '📈', color: 'bg-blue-500' },
-  certification_program: { label: 'Certification Program', icon: '🎓', color: 'bg-blue-500' },
-  vocational_training: { label: 'Vocational Training', icon: '🛠️', color: 'bg-blue-500' },
-  mentorship: { label: 'Mentorship', icon: '🤝', color: 'bg-blue-500' },
-  internal_placement: { label: 'Internal Placement', icon: '🏢', color: 'bg-green-500' },
-  external_placement: { label: 'External Placement', icon: '🏭', color: 'bg-green-500' },
-  job_shadowing: { label: 'Job Shadowing', icon: '👀', color: 'bg-green-500' },
-  work_experience: { label: 'Work Experience', icon: '💼', color: 'bg-green-500' },
-  online_applications: { label: 'Online Applications', icon: '🌐', color: 'bg-orange-500' },
-  networking: { label: 'Networking', icon: '🤝', color: 'bg-orange-500' },
-  job_fair: { label: 'Job Fair', icon: '🎪', color: 'bg-orange-500' },
-  employment_agency: { label: 'Employment Agency', icon: '🏛️', color: 'bg-orange-500' },
-  direct_employer_contact: { label: 'Direct Employer Contact', icon: '📞', color: 'bg-orange-500' },
-  transportation_support: { label: 'Transportation Support', icon: '🚌', color: 'bg-slate-500' },
-  childcare_support: { label: 'Childcare Support', icon: '👶', color: 'bg-slate-500' },
-  mental_health_support: { label: 'Mental Health Support', icon: '🧠', color: 'bg-slate-500' },
-  addiction_support: { label: 'Addiction Support', icon: '🤲', color: 'bg-slate-500' },
-  housing_support: { label: 'Housing Support', icon: '🏠', color: 'bg-slate-500' },
+// ─── Item labels ──────────────────────────────────────────────────────────────
+const ITEM_LABELS = {
+  job_search_workshop: 'Job Search Workshop',
+  resume_writing_workshop: 'Resume Writing Workshop',
+  interview_skills_workshop: 'Interview Skills Workshop',
+  workplace_readiness_workshop: 'Workplace Readiness Workshop',
+  financial_literacy_workshop: 'Financial Literacy Workshop',
+  digital_literacy_workshop: 'Digital Literacy Workshop',
+  empoweru: 'EmpowerU',
+  ell_classes: 'ELL Classes',
+  skills_assessment: 'Skills Assessment',
+  internal_placement: 'Internal Placement',
+  exposure_course: 'Exposure Course',
+  paid_external_placement: 'Paid External Placement',
+  employment_supports: 'Employment Supports',
+  job_applications: 'Job Applications',
+  networking: 'Networking',
+  barrier_support: 'Barrier Support',
+  other: 'Other',
 };
 
-const STATUS_CONFIG = {
-  planned: { label: 'Planned', color: 'bg-slate-200', ring: 'ring-slate-400', icon: Clock },
-  in_progress: { label: 'In Progress', color: 'bg-blue-400', ring: 'ring-blue-600', icon: ArrowRight },
-  completed: { label: 'Completed', color: 'bg-green-500', ring: 'ring-green-700', icon: CheckCircle2 },
-  cancelled: { label: 'Cancelled', color: 'bg-red-400', ring: 'ring-red-600', icon: XCircle },
-};
-
-function parseDate(dateStr) {
-  if (!dateStr) return null;
-  return parseISO(dateStr + 'T12:00:00');
-}
-
-function msPct(min, max, val) {
-  if (!val) return null;
-  return ((val - min) / (max - min)) * 100;
-}
-
+// ─── Color coding ─────────────────────────────────────────────────────────────
 function getItemColor(key) {
-  if (key.startsWith('barrier_')) return 'bg-amber-500';
-  const config = ITEM_CONFIG[key];
-  return config?.color || 'bg-slate-400';
+  if (key.startsWith('barrier_')) return '#f59e0b';
+  if (key === 'internal_placement' || key === 'paid_external_placement') return '#22c55e';
+  if (key.includes('workshop') || key === 'empoweru' || key === 'ell_classes' || key === 'skills_assessment') return '#a855f7';
+  return '#64748b';
 }
 
-function buildItems(selectedItems, itemDetails, roadmapStatus, client) {
-  const items = (selectedItems || []).map(key => ({
+// ─── Status config ────────────────────────────────────────────────────────────
+const STATUS_CFG = {
+  planned:   { label: 'Not Started', ring: '#94a3b8', badge: 'bg-slate-100 text-slate-500' },
+  started:   { label: 'In Progress', ring: '#3b82f6', badge: 'bg-blue-100 text-blue-700' },
+  completed: { label: 'Completed',   ring: '#22c55e', badge: 'bg-green-100 text-green-700' },
+  cancelled: { label: 'Cancelled',   ring: '#ef4444', badge: 'bg-red-100 text-red-700' },
+};
+
+// ─── Date utilities ───────────────────────────────────────────────────────────
+function parseDate(str) {
+  if (!str) return null;
+  const [y, m, d] = str.split('-').map(Number);
+  if (!y) return null;
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  try { return format(d, 'MMM d, yyyy'); } catch { return ''; }
+}
+
+// ─── Build items ──────────────────────────────────────────────────────────────
+function buildItems(client) {
+  const roadmapStatus = client?.roadmap_item_status || {};
+  const itemDetails = client?.sdp_item_details || {};
+  const selectedItems = client?.sdp_items || [];
+
+  const items = selectedItems.map(key => ({
     key,
-    label: ITEM_CONFIG[key]?.label || key.replace(/_/g, ' '),
-    icon: ITEM_CONFIG[key]?.icon || '📌',
+    label: ITEM_LABELS[key] || key.replace(/_/g, ' '),
     color: getItemColor(key),
-    detail: itemDetails?.[key] || {},
-    status: roadmapStatus?.[key]?.status || 'planned',
-    statusData: roadmapStatus?.[key] || {},
+    detail: itemDetails[key] || {},
+    status: roadmapStatus[key]?.status || 'planned',
+    statusData: roadmapStatus[key] || {},
     isBarrier: false,
   }));
 
   for (let n = 1; n <= 3; n++) {
     if (client?.[`barrier_${n}`]) {
+      const tl_start = client[`barrier_${n}_timeline_start`];
+      const tl_end   = client[`barrier_${n}_timeline_end`];
       items.push({
         key: `barrier_${n}`,
         label: `Barrier: ${client[`barrier_${n}`]}`,
-        icon: '⚠️',
-        color: 'bg-amber-500',
+        color: '#f59e0b',
         isBarrier: true,
         detail: {
           status: client[`barrier_${n}_status`],
           action_steps: client[`barrier_${n}_action_steps`],
           notes: client[`barrier_${n}_notes`],
+          timeline_start: tl_start,
+          timeline_end: tl_end,
         },
-        status: roadmapStatus?.[`barrier_${n}`]?.status || 'planned',
-        statusData: roadmapStatus?.[`barrier_${n}`] || {},
+        status: roadmapStatus[`barrier_${n}`]?.status || 'planned',
+        statusData: {
+          ...(roadmapStatus[`barrier_${n}`] || {}),
+          timeline_start: tl_start,
+          timeline_end: tl_end,
+        },
       });
     }
   }
@@ -94,277 +104,601 @@ function buildItems(selectedItems, itemDetails, roadmapStatus, client) {
   return items;
 }
 
-export default function ActionPlanRoadmap({ client, onSave }) {
-  const [view, setView] = useState('timeline');
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showBITPanel, setShowBITPanel] = useState(false);
+// ─── CSS animations ───────────────────────────────────────────────────────────
+const ANIM_STYLES = `
+@keyframes typeShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+@keyframes completedPulse {
+  0%, 100% { opacity: 0.85; }
+  50%       { opacity: 1; }
+}
+`;
 
-  const items = useMemo(() => 
-    buildItems(client?.sdp_items, client?.sdp_item_details, client?.roadmap_item_status, client),
-    [client]
-  );
+export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, otherDesc, onClientUpdate }) {
+  const [view, setView]             = useState('timeline');
+  const [openItem, setOpenItem]     = useState(null);
+  const [openBITReview, setOpenBITReview] = useState(null);
+  const [saving, setSaving]         = useState(false);
 
-  const intakeDate = parseDate(client?.intake_date) || parseDate(client?.service_start_date) || new Date();
-  const projectedEnd = intakeDate ? new Date(intakeDate.getTime() + 90 * 24 * 60 * 60 * 1000) : new Date();
-  
-  const allDates = items
-    .flatMap(item => [
-      parseDate(item.statusData?.start_date),
-      parseDate(item.statusData?.completed_date),
-    ])
-    .filter(Boolean);
+  const isDEA = client?.service_type === 'direct_to_employment';
 
-  const maxDateFromItems = allDates.length > 0 
-    ? allDates.reduce((max, d) => (d > max ? d : max))
-    : projectedEnd;
+  const items = useMemo(() => buildItems(client), [client]);
+  const nonBarrier = items.filter(i => !i.isBarrier);
+  const barriers   = items.filter(i => i.isBarrier);
 
-  const maxDate = maxDateFromItems > projectedEnd ? maxDateFromItems : projectedEnd;
-  const maxDateWithBuffer = new Date(maxDate.getTime() + 28 * 24 * 60 * 60 * 1000);
+  // ── Timeline math ──────────────────────────────────────────────────────────
+  const intakeDate      = parseDate(client?.intake_date);
+  const serviceStart    = parseDate(client?.service_start_date);
+  const completionDate  = parseDate(client?.completion_date);
+  const followup90Date  = parseDate(client?.followup_90day_date);
 
-  const minMs = intakeDate.getTime();
-  const maxMs = maxDateWithBuffer.getTime();
-  const todayMs = new Date().setHours(12, 0, 0, 0);
+  const leftAnchor = intakeDate || serviceStart || new Date();
 
-  const pct = (date) => {
-    if (!date) return null;
-    const ms = date instanceof Date ? date.getTime() : parseISO(date + 'T12:00:00').getTime();
-    return Math.max(0, Math.min(100, msPct(minMs, maxMs, ms)));
+  const projectedEnd = serviceStart
+    ? new Date(serviceStart.getTime() + (isDEA ? 14 : 112) * 86400000)
+    : new Date(leftAnchor.getTime() + (isDEA ? 14 : 112) * 86400000);
+
+  const followup90Calc = completionDate
+    ? new Date(completionDate.getTime() + 91 * 86400000)
+    : null;
+
+  const allItemDates = items.flatMap(i => [
+    parseDate(i.statusData?.timeline_start),
+    parseDate(i.statusData?.timeline_end),
+    parseDate(i.statusData?.started_date),
+    parseDate(i.statusData?.completed_date),
+  ]).filter(Boolean);
+
+  const latestItem = allItemDates.length > 0 ? allItemDates.reduce((a, b) => b > a ? b : a) : null;
+  const maxDateRaw = [projectedEnd, latestItem, followup90Date, followup90Calc].filter(Boolean).reduce((a, b) => b > a ? b : a, projectedEnd);
+  const maxDate    = new Date(maxDateRaw.getTime() + 28 * 86400000);
+
+  const minMs = leftAnchor.getTime();
+  const maxMs = maxDate.getTime();
+  const rangeMs = maxMs - minMs;
+
+  const pct = (d) => {
+    if (!d) return null;
+    return Math.max(0, Math.min(100, ((d.getTime() - minMs) / rangeMs) * 100));
   };
 
-  const months = [];
-  const current = startOfMonth(intakeDate);
-  const end = endOfMonth(maxDateWithBuffer);
-  while (current <= end) {
-    months.push(current);
-    current.setMonth(current.getMonth() + 1);
-  }
+  const todayPct = pct(new Date());
 
-  const handleSaveItem = async (itemKey, data) => {
-    const currentStatus = client?.roadmap_item_status || {};
-    await onSave({
-      roadmap_item_status: {
-        ...currentStatus,
-        [itemKey]: { ...currentStatus[itemKey], ...data },
-      },
-    });
-    setSelectedItem(null);
-  };
-
-  const handleSaveBITCheckin = async (checkinData) => {
-    const currentCheckins = client?.bit_review_checkins || [];
-    await onSave({
-      bit_review_checkins: [...currentCheckins, checkinData],
-    });
-    setShowBITPanel(false);
-  };
-
+  // ── Milestones ─────────────────────────────────────────────────────────────
   const milestones = [
-    { label: 'Intake', date: client?.intake_date, field: 'intake_date' },
-    { label: 'Program Start', date: client?.service_start_date, field: 'service_start_date' },
-    { label: 'Projected End', date: format(projectedEnd, 'yyyy-MM-dd'), isProjection: true },
-    { label: '90-Day Follow-up', date: client?.followup_90day_date, field: 'followup_90day_date' },
+    { key: 'intake',        date: intakeDate,      label: 'Intake',     color: '#8b5cf6', forcePct: 0 },
+    { key: 'service_start', date: serviceStart,    label: 'Start',      color: '#10b981' },
+    { key: 'projected_end', date: projectedEnd,    label: 'Proj.End',   color: '#3b82f6', dashed: true },
+    { key: 'completion',    date: completionDate,  label: 'End',        color: '#16a34a' },
+    { key: 'followup90',    date: followup90Date || followup90Calc, label: '90d', color: '#a855f7' },
   ].filter(m => m.date);
 
+  // ── Month axis ─────────────────────────────────────────────────────────────
+  const months = [];
+  const cur = startOfMonth(leftAnchor);
+  const endM = endOfMonth(maxDate);
+  const monthCur = new Date(cur);
+  while (monthCur <= endM) {
+    months.push(new Date(monthCur));
+    monthCur.setMonth(monthCur.getMonth() + 1);
+  }
+
+  // ── BIT review dots ────────────────────────────────────────────────────────
+  const bitReviewDates = client?.bit_review_dates || [];
+  const bitCheckins    = client?.bit_review_checkins || [];
+
+  // ── Items missing dates ────────────────────────────────────────────────────
+  const missingDates = items.filter(i => {
+    const hasDates = i.detail?.timeline_start || i.statusData?.timeline_start || i.statusData?.started_date;
+    return !hasDates && i.status !== 'cancelled';
+  });
+
+  // ── Save handlers ──────────────────────────────────────────────────────────
+  const handleSaveItem = async (key, saveData) => {
+    setSaving(true);
+    try {
+      const currentStatus = { ...(client?.roadmap_item_status || {}) };
+      currentStatus[key] = {
+        ...currentStatus[key],
+        status: saveData.status,
+        started_date: saveData.startedDate || saveData.started_date,
+        completed_date: saveData.completedDate || saveData.completed_date,
+        case_manager_notes: saveData.notes,
+      };
+
+      const extraFields = {};
+      const n = key.match(/^barrier_(\d)$/)?.[1];
+      if (n) {
+        if (saveData.startDate) extraFields[`barrier_${n}_timeline_start`] = saveData.startDate;
+        if (saveData.endDate)   extraFields[`barrier_${n}_timeline_end`]   = saveData.endDate;
+        const bStatus = saveData.status === 'completed' ? 'resolved' : saveData.status === 'started' ? 'in_progress' : 'unresolved';
+        extraFields[`barrier_${n}_status`] = bStatus;
+      } else {
+        const details = { ...(client?.sdp_item_details || {}) };
+        details[key] = { ...(details[key] || {}) };
+        if (saveData.startDate) details[key].timeline_start = saveData.startDate;
+        if (saveData.endDate)   details[key].timeline_end   = saveData.endDate;
+        extraFields.sdp_item_details = details;
+      }
+
+      // Add progress note
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+      const progressNotes = [...(client?.roadmap_progress_notes || [])];
+      if (saveData.status === 'started' || saveData.status === 'completed') {
+        progressNotes.unshift({
+          id: Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          event_type: saveData.status,
+          item_label: items.find(i => i.key === key)?.label || key,
+          item_key: key,
+          note: saveData.notes || '',
+          logged_by: me?.email || '',
+          logged_by_name: me?.full_name || '',
+          compass_entered: false,
+        });
+      }
+
+      const updated = await base44.entities.Client.update(client.id, {
+        roadmap_item_status: currentStatus,
+        roadmap_progress_notes: progressNotes,
+        ...extraFields,
+      });
+
+      onClientUpdate?.(updated);
+      setOpenItem(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveBITCheckin = async (idx, checkinData) => {
+    setSaving(true);
+    try {
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+      const checkins = [...(client?.bit_review_checkins || [])];
+      checkins[idx] = {
+        ...(checkins[idx] || {}),
+        ...checkinData,
+        index: idx,
+        logged_by: me?.email || '',
+        logged_by_name: me?.full_name || '',
+        logged_at: new Date().toISOString(),
+      };
+      const updated = await base44.entities.Client.update(client.id, { bit_review_checkins: checkins });
+      onClientUpdate?.(updated);
+      setOpenBITReview(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ── Empty state ─────────────────────────────────────────────────────────────
+  const hasItems = items.length > 0;
+  if (!client?.action_plan_submitted || !hasItems) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
+        <Map className="w-10 h-10 opacity-30" />
+        <p className="text-sm">No action plan submitted yet. Complete Step 3 to generate the roadmap.</p>
+      </div>
+    );
+  }
+
   return (
-    <TooltipProvider>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="list">List</TabsTrigger>
-              <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            </TabsList>
-          </Tabs>
+    <div className="space-y-4">
+      <style>{ANIM_STYLES}</style>
 
-          {client?.bit_completed && (
-            <Button onClick={() => setShowBITPanel(true)} variant="outline" size="sm">
-              <Calendar className="w-4 h-4 mr-2" />
-              BIT Check-in
-            </Button>
-          )}
-        </div>
+      {/* Top bar */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <Tabs value={view} onValueChange={setView}>
+          <TabsList>
+            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="list">List</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
+      </div>
 
-        {view === 'timeline' && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="relative" style={{ height: `${Math.max(items.length * 48 + 80, 300)}px` }}>
-                {/* Month Axis */}
-                <div className="absolute top-0 left-0 right-0 h-12 border-b flex">
-                  {months.map((month, i) => (
-                    <div
-                      key={i}
-                      className="border-r text-xs text-muted-foreground px-2 py-1"
-                      style={{
-                        left: pct(month),
-                        width: pct(new Date(month.getFullYear(), month.getMonth() + 1, 0)) - pct(month),
-                      }}
+      {/* ── TIMELINE VIEW ─────────────────────────────────────────────────── */}
+      {view === 'timeline' && (
+        <div className="space-y-2">
+          <div className="overflow-x-auto">
+            <div style={{ minWidth: 700 }}>
+              {/* Month axis */}
+              <div className="flex ml-40 border-b border-slate-200 mb-1">
+                {months.map((m, i) => {
+                  const leftP = pct(m) ?? 0;
+                  const nextM = new Date(m); nextM.setMonth(nextM.getMonth() + 1);
+                  const w = Math.max(0, (pct(nextM) ?? 100) - leftP);
+                  return (
+                    <div key={i} className="text-[10px] text-slate-400 px-1 shrink-0" style={{ width: `${w}%` }}>
+                      {format(m, 'MMM yy')}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Milestone label row */}
+              <div className="relative ml-40 h-6 mb-1">
+                {milestones.map(m => {
+                  const p = m.forcePct !== undefined ? m.forcePct : (pct(m.date) ?? 0);
+                  return (
+                    <span
+                      key={m.key}
+                      className="absolute text-[10px] font-semibold -translate-x-1/2 cursor-default select-none"
+                      style={{ left: `${p}%`, color: m.color }}
+                      title={fmtDate(m.date)}
                     >
-                      {format(month, 'MMM yyyy')}
-                    </div>
-                  ))}
-                </div>
+                      ▼ {m.label}
+                    </span>
+                  );
+                })}
+              </div>
 
-                {/* Milestone Lines */}
-                {milestones.map((m, i) => (
-                  <div
-                    key={i}
-                    className="absolute top-12 bottom-0 w-px border-l border-dashed"
-                    style={{ left: `${pct(parseDate(m.date))}%` }}
-                  >
-                    <div className="text-xs text-muted-foreground -rotate-45 origin-top-left mt-2">
-                      {m.label}
-                    </div>
-                  </div>
-                ))}
+              {/* Chart area */}
+              <div className="relative ml-40">
+                {/* Milestone lines */}
+                {milestones.map(m => {
+                  const p = m.forcePct !== undefined ? m.forcePct : (pct(m.date) ?? 0);
+                  return (
+                    <div
+                      key={m.key}
+                      className="absolute top-0 bottom-0 w-px pointer-events-none"
+                      style={{
+                        left: `${p}%`,
+                        borderLeft: m.dashed ? `1px dashed ${m.color}` : `1px solid ${m.color}`,
+                        opacity: 0.6,
+                      }}
+                    />
+                  );
+                })}
 
-                {/* Today Line */}
-                {todayMs >= minMs && todayMs <= maxMs && (
+                {/* Today line */}
+                {todayPct !== null && todayPct >= 0 && todayPct <= 100 && (
                   <div
-                    className="absolute top-12 bottom-0 w-px bg-red-500 z-10"
-                    style={{ left: `${msPct(minMs, maxMs, todayMs)}%` }}
+                    className="absolute top-0 bottom-0 w-[2px] z-10 pointer-events-none"
+                    style={{ left: `calc(${todayPct}% + 4px)`, backgroundColor: '#fbbf24' }}
                   />
                 )}
 
-                {/* Item Rows */}
-                {items.map((item, i) => {
-                  const status = STATUS_CONFIG[item.status] || STATUS_CONFIG.planned;
-                  const Icon = status.icon;
-                  const startDate = parseDate(item.statusData?.start_date);
-                  const endDate = parseDate(item.statusData?.completed_date);
-                  const left = startDate ? pct(startDate) : 0;
-                  const width = endDate && startDate ? pct(endDate) - left : 40;
+                {/* Non-barrier rows */}
+                {nonBarrier.map(item => (
+                  <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                ))}
 
-                  return (
-                    <div key={item.key} className="absolute h-12 flex items-center" style={{ top: 48 + i * 48 }}>
-                      <div className="w-48 text-xs truncate pr-2">{item.label}</div>
-                      <div className="flex-1 relative h-8">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={`absolute h-6 rounded-full ${status.color} ring-2 cursor-pointer hover:opacity-80 transition-opacity`}
-                              style={{
-                                left: `${left}%`,
-                                width: `${Math.max(width, 5)}%`,
-                              }}
-                              onClick={() => setSelectedItem(item)}
-                            >
-                              {item.status === 'in_progress' && (
-                                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
-                              )}
-                              {(item.status === 'completed' || item.status === 'cancelled') && (
-                                <Icon className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="font-semibold">{item.label}</p>
-                            <p className="text-xs">Status: {status.label}</p>
-                            {item.statusData?.start_date && (
-                              <p className="text-xs">Start: {item.statusData.start_date}</p>
-                            )}
-                            {item.statusData?.completed_date && (
-                              <p className="text-xs">End: {item.statusData.completed_date}</p>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                {/* Barrier section */}
+                {barriers.length > 0 && (
+                  <>
+                    <div className="h-px bg-amber-300 my-1" />
+                    <div className="text-[9px] font-bold text-amber-600 tracking-widest mb-0.5 -ml-40 pl-1">BARRIERS</div>
+                    {barriers.map(item => (
+                      <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                    ))}
+                  </>
+                )}
+
+                {/* BIT reviews row */}
+                {bitReviewDates.length > 0 && (
+                  <div className="relative h-8 flex items-center mb-1">
+                    <div className="absolute -ml-40 w-40 pr-2 text-[11px] text-right font-medium text-rose-600">BIT Reviews</div>
+                    <div className="w-full h-6 rounded-md relative" style={{ backgroundColor: '#f8fafc', outline: '1px solid #e2e8f0' }}>
+                      {bitReviewDates.map((dateStr, idx) => {
+                        const d = parseDate(dateStr);
+                        const p = pct(d);
+                        if (p === null) return null;
+                        const checkin = bitCheckins[idx];
+                        const done = checkin?.completed;
+                        return (
+                          <button
+                            key={idx}
+                            className="absolute top-0.5 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-white shadow flex items-center justify-center text-[9px] font-bold text-white z-10"
+                            style={{ left: `${p}%`, backgroundColor: done ? '#4ade80' : '#f87171' }}
+                            onClick={() => setOpenBITReview(openBITReview === idx ? null : idx)}
+                            title={`BIT Review ${idx + 1} — ${done ? 'Completed' : 'Pending'}`}
+                          >
+                            {idx + 1}
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
+                )}
+
+                {/* BIT checkin panel */}
+                {openBITReview !== null && (
+                  <div className="mb-2">
+                    <BITReviewCheckinPanel
+                      reviewIndex={openBITReview}
+                      scheduledDate={bitReviewDates[openBITReview]}
+                      checkin={bitCheckins[openBITReview]}
+                      clientId={client.id}
+                      onSave={(data) => handleSaveBITCheckin(openBITReview, data)}
+                      onCancel={() => setOpenBITReview(null)}
+                      saving={saving}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap gap-4 ml-40 mt-3 text-[10px] text-slate-500">
+                {[['#f59e0b','Barrier'],['#22c55e','Placement'],['#a855f7','Workshops/Programs'],['#64748b','Other'],['#fbbf24','Today']].map(([c,l]) => (
+                  <span key={l} className="flex items-center gap-1">
+                    <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: c }} />
+                    {l}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Items missing dates */}
+          {missingDates.length > 0 && (
+            <div className="border border-amber-200 bg-amber-50 rounded-lg p-3">
+              <div className="text-xs font-semibold text-amber-800 mb-2">Items need dates:</div>
+              <div className="flex flex-wrap gap-2">
+                {missingDates.map(item => {
+                  const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
+                  return (
+                    <button
+                      key={item.key}
+                      className="text-xs px-2 py-1 rounded border flex items-center gap-1"
+                      style={{ borderColor: cfg.ring, color: cfg.ring }}
+                      onClick={() => setOpenItem(openItem === item.key ? null : item.key)}
+                    >
+                      + Add dates — {item.label}
+                    </button>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {view === 'list' && (
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              {items.map(item => {
-                const status = STATUS_CONFIG[item.status] || STATUS_CONFIG.planned;
-                const StatusIcon = status.icon;
+      {/* ── LIST VIEW ─────────────────────────────────────────────────────── */}
+      {view === 'list' && (
+        <div className="space-y-2">
+          {nonBarrier.map(item => (
+            <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+          ))}
+          {barriers.length > 0 && (
+            <>
+              <div className="text-xs font-bold text-amber-600 tracking-widest mt-3 mb-1">BARRIERS</div>
+              {barriers.map(item => (
+                <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+              ))}
+            </>
+          )}
+          {bitReviewDates.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <div className="text-xs font-bold text-rose-600 tracking-widest">BIT REVIEWS</div>
+              {bitReviewDates.map((dateStr, idx) => {
+                const checkin = bitCheckins[idx];
+                const done = checkin?.completed;
                 return (
-                  <Button
-                    key={item.key}
-                    variant="outline"
-                    className="w-full justify-start h-auto py-3"
-                    onClick={() => setSelectedItem(item)}
-                  >
-                    <span className="text-lg mr-2">{item.icon}</span>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium">{item.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.statusData?.start_date && `Start: ${item.statusData.start_date}`}
-                        {item.statusData?.completed_date && ` • End: ${item.statusData.completed_date}`}
+                  <div key={idx}>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg border-2 text-sm flex items-center justify-between ${done ? 'border-green-300 bg-green-50' : 'border-rose-200 bg-rose-50'}`}
+                      onClick={() => setOpenBITReview(openBITReview === idx ? null : idx)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <CalendarCheck className={`w-4 h-4 ${done ? 'text-green-600' : 'text-rose-500'}`} />
+                        <span>BIT Review {idx + 1}</span>
+                        <span className="text-xs text-muted-foreground">— scheduled: {dateStr}</span>
                       </div>
-                    </div>
-                    <Badge className={status.color}>{status.label}</Badge>
-                    <StatusIcon className="w-4 h-4 ml-2" />
-                  </Button>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${done ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'}`}>{done ? 'Completed' : 'Pending'}</span>
+                    </button>
+                    {openBITReview === idx && (
+                      <div className="mt-1">
+                        <BITReviewCheckinPanel
+                          reviewIndex={idx}
+                          scheduledDate={dateStr}
+                          checkin={checkin}
+                          clientId={client.id}
+                          onSave={(data) => handleSaveBITCheckin(idx, data)}
+                          onCancel={() => setOpenBITReview(null)}
+                          saving={saving}
+                        />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
+      )}
 
-        {view === 'calendar' && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-7 gap-1">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="text-xs font-medium text-center p-2">{day}</div>
-                ))}
-                {eachDayOfInterval({ start: startOfMonth(new Date()), end: endOfMonth(new Date()) }).map(day => {
-                  const dayItems = items.filter(item => {
-                    const start = parseDate(item.statusData?.start_date);
-                    const end = parseDate(item.statusData?.completed_date);
-                    if (start && end) {
-                      return isWithinInterval(day, { start, end });
-                    }
-                    return false;
-                  });
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={`min-h-20 border p-1 ${isSameDay(day, new Date()) ? 'bg-slate-100' : ''}`}
-                    >
-                      <div className="text-xs font-medium mb-1">{format(day, 'd')}</div>
-                      <div className="space-y-1">
-                        {dayItems.slice(0, 3).map(item => (
-                          <div
-                            key={item.key}
-                            className={`text-xs px-1 py-0.5 rounded truncate ${item.color} text-white`}
-                          >
-                            {item.icon} {item.label.split(' ')[0]}
-                          </div>
-                        ))}
-                        {dayItems.length > 3 && (
-                          <div className="text-xs text-muted-foreground">+{dayItems.length - 3} more</div>
-                        )}
+      {/* ── CALENDAR VIEW ─────────────────────────────────────────────────── */}
+      {view === 'calendar' && (
+        <div>
+          <div className="text-sm font-semibold text-slate-600 mb-2">{format(new Date(), 'MMMM yyyy')}</div>
+          <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-lg overflow-hidden">
+            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+              <div key={d} className="bg-slate-100 text-[10px] font-semibold text-center py-1 text-slate-500">{d}</div>
+            ))}
+            {eachDayOfInterval({ start: startOfMonth(new Date()), end: endOfMonth(new Date()) }).map(day => {
+              const isToday = isSameDay(day, new Date());
+              const dayItems = items.filter(item => {
+                const s = parseDate(item.statusData?.timeline_start || item.detail?.timeline_start || item.statusData?.started_date);
+                const e = parseDate(item.statusData?.timeline_end || item.detail?.timeline_end || item.statusData?.completed_date);
+                if (s && e) return isWithinInterval(day, { start: s, end: e });
+                if (s) return isSameDay(day, s);
+                return false;
+              });
+              const bitDays = bitReviewDates.filter(dr => isSameDay(day, parseDate(dr)));
+              return (
+                <div key={day.toISOString()} className={`bg-white min-h-[80px] p-1 ${isToday ? 'bg-blue-50' : ''}`}>
+                  <div className="text-[10px] font-semibold mb-0.5 text-slate-600">{format(day, 'd')}</div>
+                  {dayItems.slice(0, 3).map(item => {
+                    const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
+                    return (
+                      <div
+                        key={item.key}
+                        className="text-[9px] px-1 py-px rounded truncate mb-px"
+                        style={{ backgroundColor: item.color + '33', borderLeft: `2px solid ${cfg.ring}`, color: item.color }}
+                      >
+                        {item.label}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                    );
+                  })}
+                  {dayItems.length > 3 && <div className="text-[9px] text-muted-foreground">+{dayItems.length - 3}</div>}
+                  {bitDays.map((_, i) => (
+                    <div key={i} className="text-[9px] px-1 py-px rounded bg-rose-100 text-rose-700">BIT {bitReviewDates.indexOf(bitDays[i]) + 1}</div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-3 mt-3 text-[10px] text-slate-500">
+            {[['#f59e0b','Barriers'],['#22c55e','Placement'],['#a855f7','Workshops'],['#64748b','Other']].map(([c,l]) => (
+              <span key={l} className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ backgroundColor: c }} />{l}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
-        {selectedItem && (
-          <RoadmapItemPanel
-            item={selectedItem}
-            onSave={(data) => handleSaveItem(selectedItem.key, data)}
-            onClose={() => setSelectedItem(null)}
-          />
-        )}
+      {/* Progress notes */}
+      <RoadmapProgressNotes
+        notes={client?.roadmap_progress_notes || []}
+        clientId={client.id}
+        onNotesUpdate={async (notes) => {
+          const updated = await base44.entities.Client.update(client.id, { roadmap_progress_notes: notes });
+          onClientUpdate?.(updated);
+        }}
+      />
+    </div>
+  );
+}
 
-        {showBITPanel && (
-          <BITReviewCheckinPanel
-            onSave={handleSaveBITCheckin}
-            onClose={() => setShowBITPanel(false)}
-          />
-        )}
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate }) {
+  const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
+  const isOpen = openItem === item.key;
+  const trackBg = item.isBarrier ? '#fffbeb' : '#f8fafc';
+
+  const startD = parseDate(item.statusData?.timeline_start || item.detail?.timeline_start || item.statusData?.started_date);
+  const endD   = parseDate(item.statusData?.timeline_end   || item.detail?.timeline_end   || item.statusData?.completed_date);
+  const startP = startD ? (pct(startD) ?? 0) : 0;
+  const endP   = endD   ? (pct(endD) ?? Math.min(startP + 10, 100)) : Math.min(startP + 10, 100);
+  const barW   = Math.max(endP - startP, 4);
+
+  const isCancelled  = item.status === 'cancelled';
+  const isStarted    = item.status === 'started';
+  const isCompleted  = item.status === 'completed';
+  const labelColor   = isCancelled ? '#94a3b8' : item.color;
+
+  return (
+    <>
+      <div className="relative h-8 flex items-center mb-1 group">
+        <div
+          className="absolute w-40 pr-2 text-[11px] text-right truncate cursor-pointer"
+          style={{
+            left: -160,
+            color: labelColor,
+            textDecoration: isCancelled ? 'line-through' : 'none',
+          }}
+          onClick={() => setOpenItem(isOpen ? null : item.key)}
+          title={item.label}
+        >
+          {item.label}
+        </div>
+        <div
+          className="w-full h-6 rounded-md relative cursor-pointer"
+          style={{ backgroundColor: trackBg, outline: `2px solid ${cfg.ring}` }}
+          onClick={() => setOpenItem(isOpen ? null : item.key)}
+        >
+          {/* Bar fill */}
+          <div
+            className="absolute top-0.5 bottom-0.5 rounded"
+            style={{
+              left: `${startP}%`,
+              width: `${barW}%`,
+              backgroundColor: item.color,
+              opacity: isCancelled ? 0.5 : 0.85,
+              ...(isStarted ? {
+                background: `linear-gradient(90deg, ${item.color}cc 0%, ${item.color}ff 50%, ${item.color}cc 100%)`,
+                backgroundSize: '200% 100%',
+                animation: 'typeShimmer 2s linear infinite',
+              } : {}),
+              ...(isCompleted ? { animation: 'completedPulse 2s ease-in-out infinite' } : {}),
+            }}
+          >
+            {isCompleted && <CheckCheck className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
+            {isCancelled  && <X         className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
+          </div>
+        </div>
       </div>
-    </TooltipProvider>
+      {isOpen && (
+        <div className="mb-2 ml-0">
+          <RoadmapItemPanel
+            item={item}
+            currentStatus={item.status}
+            onSave={(data) => onSave(item.key, data)}
+            onCancel={() => setOpenItem(null)}
+            saving={saving}
+            projectedEndDate={projectedEndDate}
+            serviceStartDate={serviceStartDate}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate }) {
+  const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
+  const isOpen = openItem === item.key;
+
+  const Icon = item.status === 'completed' ? CheckCheck
+             : item.status === 'cancelled' ? X
+             : item.status === 'started'   ? Clock
+             : Circle;
+
+  const startedDate   = item.statusData?.started_date;
+  const completedDate = item.statusData?.completed_date;
+
+  return (
+    <>
+      <button
+        className="w-full text-left px-3 py-2.5 rounded-lg border-2 text-sm flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
+        style={{ borderColor: cfg.ring }}
+        onClick={() => setOpenItem(isOpen ? null : item.key)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className="w-4 h-4 shrink-0" style={{ color: cfg.ring }} />
+          <span className="truncate font-medium" style={{ color: item.color }}>{item.label}</span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {startedDate && !completedDate && <span className="text-xs text-muted-foreground">Started: {startedDate}</span>}
+          {completedDate && <span className="text-xs text-muted-foreground">Completed: {completedDate}</span>}
+          <span className={`text-xs px-2 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
+        </div>
+      </button>
+      {isOpen && (
+        <div className="mt-1">
+          <RoadmapItemPanel
+            item={item}
+            currentStatus={item.status}
+            onSave={(data) => onSave(item.key, data)}
+            onCancel={() => setOpenItem(null)}
+            saving={saving}
+            projectedEndDate={projectedEndDate}
+            serviceStartDate={serviceStartDate}
+          />
+        </div>
+      )}
+    </>
   );
 }

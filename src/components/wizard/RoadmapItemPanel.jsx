@@ -4,103 +4,159 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { X } from 'lucide-react';
+import { Lock, Unlock, AlertTriangle, Bell } from 'lucide-react';
+import Celebration from '@/components/Celebration';
 
-const STATUS_OPTIONS = [
-  { value: 'planned', label: 'Planned' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
+const STATUS_OPTS = [
+  { key: 'planned',   label: 'Not Started', color: '#94a3b8' },
+  { key: 'started',   label: 'In Progress', color: '#3b82f6' },
+  { key: 'completed', label: 'Completed',   color: '#22c55e' },
+  { key: 'cancelled', label: 'Cancelled',   color: '#ef4444' },
 ];
 
-export default function RoadmapItemPanel({ item, onSave, onClose }) {
-  const [status, setStatus] = useState(item.status || 'planned');
-  const [startDate, setStartDate] = useState(item.statusData?.start_date || '');
-  const [completedDate, setCompletedDate] = useState(item.statusData?.completed_date || '');
-  const [notes, setNotes] = useState(item.statusData?.notes || '');
-  const [saving, setSaving] = useState(false);
+export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel, saving, projectedEndDate, serviceStartDate }) {
+  const existing = item.statusData || {};
+
+  const [status,        setStatus]        = useState(currentStatus || 'planned');
+  const [startDate,     setStartDate]     = useState(existing.timeline_start || item.detail?.timeline_start || '');
+  const [endDate,       setEndDate]       = useState(existing.timeline_end   || item.detail?.timeline_end   || '');
+  const [notes,         setNotes]         = useState(existing.case_manager_notes || '');
+  const [startedDate,   setStartedDate]   = useState(existing.started_date   || '');
+  const [completedDate, setCompletedDate] = useState(existing.completed_date || new Date().toISOString().split('T')[0]);
+  const [unlockRange,   setUnlockRange]   = useState(false);
+  const [celebrate,     setCelebrate]     = useState(false);
+  const [showCompassPrompt, setShowCompassPrompt] = useState(false);
+  const [showLateDatePrompt, setShowLateDatePrompt] = useState(false);
+
+  const minDate = serviceStartDate ? serviceStartDate.toISOString().split('T')[0] : undefined;
+  const maxDate = (!unlockRange && projectedEndDate) ? projectedEndDate.toISOString().split('T')[0] : undefined;
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave({
-        status,
-        start_date: startDate,
-        completed_date: completedDate,
-        notes,
-      });
-    } catch (error) {
-      console.error('Failed to save:', error);
-    } finally {
-      setSaving(false);
+    // Late date warning
+    if (!unlockRange && projectedEndDate) {
+      const end = endDate || completedDate;
+      if (end && new Date(end + 'T12:00:00') > projectedEndDate) {
+        if (!showLateDatePrompt) { setShowLateDatePrompt(true); return; }
+      }
     }
+    // Compass reminder
+    if ((status === 'started' || status === 'completed') && !showCompassPrompt) {
+      setShowCompassPrompt(true);
+      return;
+    }
+
+    if (status === 'completed') setCelebrate(true);
+
+    await onSave({ startDate, endDate, notes, status, startedDate, completedDate });
   };
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <div>
-          <CardTitle className="text-lg">{item.label}</CardTitle>
-          <p className="text-sm text-muted-foreground">Update item status and dates</p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-4 h-4" />
-        </Button>
+    <Card className="border-2" style={{ borderColor: STATUS_OPTS.find(s => s.key === status)?.color || '#94a3b8' }}>
+      {celebrate && <Celebration trigger={celebrate} onComplete={() => setCelebrate(false)} />}
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold">{item.label}</CardTitle>
+        {item.isBarrier && (
+          <div className="mt-1 p-2 rounded bg-amber-50 border border-amber-200 text-xs space-y-1">
+            <div className="flex items-center gap-1 font-medium text-amber-800">
+              <AlertTriangle className="w-3 h-3" /> Barrier Info (read-only)
+            </div>
+            {item.detail?.status && (
+              <div>Status: <span className="font-medium">{item.detail.status}</span></div>
+            )}
+            {item.detail?.action_steps && (
+              <div>Steps: {Array.isArray(item.detail.action_steps) ? item.detail.action_steps.join(', ') : item.detail.action_steps}</div>
+            )}
+            {item.detail?.notes && <div>Notes: {item.detail.notes}</div>}
+          </div>
+        )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 text-sm">
+        {/* Status buttons */}
         <div>
-          <Label>Status</Label>
-          <RadioGroup value={status} onValueChange={setStatus} className="flex gap-4 mt-2">
-            {STATUS_OPTIONS.map(opt => (
-              <div key={opt.value} className="flex items-center gap-2">
-                <RadioGroupItem value={opt.value} id={opt.value} />
-                <Label htmlFor={opt.value} className="font-normal">{opt.label}</Label>
-              </div>
+          <Label className="text-xs font-semibold">Status</Label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {STATUS_OPTS.map(opt => (
+              <button
+                key={opt.key}
+                type="button"
+                className="px-3 py-1 rounded-full text-xs font-medium border-2 transition-colors"
+                style={{
+                  borderColor: opt.color,
+                  backgroundColor: status === opt.key ? opt.color : 'transparent',
+                  color: status === opt.key ? '#fff' : opt.color,
+                }}
+                onClick={() => setStatus(opt.key)}
+              >
+                {opt.label}
+              </button>
             ))}
-          </RadioGroup>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Start Date</Label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mt-2"
-            />
-          </div>
-          <div>
-            <Label>Completed Date</Label>
-            <Input
-              type="date"
-              value={completedDate}
-              onChange={(e) => setCompletedDate(e.target.value)}
-              className="mt-2"
-              disabled={status !== 'completed'}
-            />
           </div>
         </div>
 
+        {/* Date range */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs font-semibold">Planned Start</Label>
+            <Input type="date" value={startDate} min={!unlockRange ? minDate : undefined} max={!unlockRange ? maxDate : undefined}
+              onChange={e => setStartDate(e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs font-semibold">Planned End</Label>
+            <Input type="date" value={endDate} min={!unlockRange ? minDate : undefined} max={!unlockRange ? maxDate : undefined}
+              onChange={e => setEndDate(e.target.value)} className="mt-1" />
+          </div>
+        </div>
+
+        {/* Unlock range */}
+        <button type="button" onClick={() => setUnlockRange(p => !p)}
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          {unlockRange ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+          {unlockRange ? 'Lock dates to program range' : 'Allow dates outside program range'}
+        </button>
+
+        {/* Actual start (in progress) */}
+        {status === 'started' && (
+          <div className="border-l-2 border-blue-400 pl-3">
+            <Label className="text-xs font-semibold text-blue-700">Actual Start Date</Label>
+            <Input type="date" value={startedDate} onChange={e => setStartedDate(e.target.value)} className="mt-1" />
+          </div>
+        )}
+
+        {/* Completion date */}
+        {status === 'completed' && (
+          <div className="border-l-2 border-green-500 pl-3">
+            <Label className="text-xs font-semibold text-green-700">Completion Date</Label>
+            <Input type="date" value={completedDate} onChange={e => setCompletedDate(e.target.value)} className="mt-1" />
+          </div>
+        )}
+
+        {/* Notes */}
         <div>
-          <Label>Notes</Label>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            className="mt-2"
-            placeholder="Add notes about progress, challenges, or outcomes..."
-          />
+          <Label className="text-xs font-semibold">Case Manager Notes <span className="font-normal text-muted-foreground">(internal only)</span></Label>
+          <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="mt-1 text-xs" placeholder="Progress, challenges, outcomes..." />
         </div>
+
+        {/* Late date warning */}
+        {showLateDatePrompt && (
+          <div className="bg-orange-50 border border-orange-300 rounded p-2 text-xs text-orange-800">
+            <AlertTriangle className="w-3 h-3 inline mr-1" />
+            The end date is outside the program range. Click Save again to confirm.
+          </div>
+        )}
+
+        {/* Compass reminder */}
+        {showCompassPrompt && (
+          <div className="bg-amber-50 border border-amber-300 rounded p-2 text-xs text-amber-800 flex items-start gap-1">
+            <Bell className="w-3 h-3 mt-0.5 shrink-0" />
+            Remember to update this in Compass. Click Save again to confirm.
+          </div>
+        )}
 
         <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
-            {saving ? 'Saving...' : 'Save Changes'}
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
           </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       </CardContent>
     </Card>

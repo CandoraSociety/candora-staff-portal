@@ -4,82 +4,62 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 
-export default function BITReviewCheckinPanel({ onSave, onClose }) {
-  const [completed, setCompleted] = useState(false);
-  const [actualDate, setActualDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
-  const [saving, setSaving] = useState(false);
+export default function BITReviewCheckinPanel({ reviewIndex, scheduledDate, checkin, clientId, onSave, onCancel, saving }) {
+  const [completed, setCompleted] = useState(checkin?.completed || false);
+  const [date,      setDate]      = useState(checkin?.actual_date || checkin?.scheduled_date || scheduledDate || new Date().toISOString().split('T')[0]);
+  const [notes,     setNotes]     = useState(checkin?.notes || '');
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave({
-        completed,
-        actual_date: actualDate,
-        notes,
-        checkin_date: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Failed to save:', error);
-    } finally {
-      setSaving(false);
-    }
+  const handleSave = () => {
+    onSave({
+      completed,
+      actual_date:    completed ? date : '',
+      scheduled_date: !completed ? date : (checkin?.scheduled_date || scheduledDate || ''),
+      notes,
+    });
   };
 
   return (
-    <Card className="fixed bottom-0 left-0 right-0 z-50 animate-in slide-in-from-bottom">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <div>
-          <CardTitle className="text-lg">BIT Review Check-in</CardTitle>
-          <p className="text-sm text-muted-foreground">Log a barrier identification review</p>
-        </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+    <Card className="border-2 border-rose-200">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm text-rose-700">BIT Review {reviewIndex + 1}</CardTitle>
+        <button type="button" onClick={onCancel} className="text-muted-foreground hover:text-foreground">
           <X className="w-4 h-4" />
-        </Button>
+        </button>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            checked={completed}
-            onCheckedChange={setCompleted}
-            id="completed"
-          />
-          <Label htmlFor="completed" className="font-normal">
-            Review completed
-          </Label>
+      <CardContent className="space-y-3 text-sm">
+        {/* Status toggle */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className={`px-3 py-1 rounded-full text-xs font-medium border-2 transition-colors ${!completed ? 'bg-slate-500 text-white border-slate-500' : 'border-slate-300 text-slate-500'}`}
+            onClick={() => setCompleted(false)}
+          >
+            Pending
+          </button>
+          <button
+            type="button"
+            className={`px-3 py-1 rounded-full text-xs font-medium border-2 transition-colors ${completed ? 'bg-green-500 text-white border-green-500' : 'border-green-300 text-green-600'}`}
+            onClick={() => setCompleted(true)}
+          >
+            Completed
+          </button>
         </div>
 
         <div>
-          <Label>Actual Date</Label>
-          <Input
-            type="date"
-            value={actualDate}
-            onChange={(e) => setActualDate(e.target.value)}
-            className="mt-2"
-          />
+          <Label className="text-xs font-semibold">{completed ? 'Date Check-in Occurred' : 'Scheduled Date'}</Label>
+          <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1" />
         </div>
 
         <div>
-          <Label>Notes</Label>
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            className="mt-2"
-            placeholder="Document what was discussed, progress on barriers, any changes needed..."
-          />
+          <Label className="text-xs font-semibold">Progress Notes</Label>
+          <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="mt-1 text-xs" placeholder="Document progress, barriers discussed, follow-ups..." />
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saving} className="flex-1">
-            {saving ? 'Saving...' : 'Save Check-in'}
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
+          <Button size="sm" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Check-in'}</Button>
+          <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       </CardContent>
     </Card>
