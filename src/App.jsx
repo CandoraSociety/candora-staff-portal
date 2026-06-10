@@ -88,6 +88,8 @@ import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining'
 // Candora File Manager
 import FileManagerLayout from '@/components/filemanager/FileManagerLayout';
 import FileManagerHome from '@/pages/filemanager/FileManagerHome';
+import FileBrowser from '@/pages/filemanager/FileBrowser';
+import FileUploadPage from '@/pages/filemanager/FileUpload';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -217,6 +219,8 @@ const AuthenticatedApp = () => {
         {/* Candora File Manager - standalone layout */}
         <Route element={<FileManagerLayout />}>
           <Route path="/filemanager" element={<FileManagerHome />} />
+          <Route path="/filemanager/files" element={<FileBrowser />} />
+          <Route path="/filemanager/upload" element={<FileUploadPage />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
