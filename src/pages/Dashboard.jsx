@@ -8,9 +8,10 @@ import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
 import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
-import { Button } from '@/components/ui/button';
 import { FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
@@ -57,7 +58,21 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <WelcomeWidget user={user} />
+      {/* Hero Section with Logo */}
+      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-accent via-accent/90 to-accent-foreground p-12">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
+        </div>
+        <div className="relative z-10 flex items-center gap-8">
+          <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
+          <div>
+            <h1 className="text-4xl font-display font-bold text-white mb-2">Welcome to Candora</h1>
+            <p className="text-primary text-lg font-semibold">{user?.full_name || 'Guest'}</p>
+            <p className="text-white/80 mt-1">Your integrated management platform</p>
+          </div>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/filemanager">
