@@ -1,0 +1,61 @@
+{
+  "name": "MediaCoverage",
+  "type": "object",
+  "properties": {
+    "headline": {
+      "type": "string"
+    },
+    "outlet": {
+      "type": "string"
+    },
+    "outlet_type": {
+      "type": "string",
+      "enum": [
+        "newspaper",
+        "tv",
+        "radio",
+        "online",
+        "podcast",
+        "magazine",
+        "blog",
+        "other"
+      ]
+    },
+    "coverage_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "url": {
+      "type": "string"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "default": "positive"
+    },
+    "press_release_id": {
+      "type": "string"
+    },
+    "media_contact_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "headline",
+    "outlet",
+    "coverage_date"
+  ]
+}

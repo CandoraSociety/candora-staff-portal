@@ -1,0 +1,62 @@
+{
+  "name": "MediaContact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "outlet": {
+      "type": "string",
+      "description": "News outlet, station, or publication"
+    },
+    "outlet_type": {
+      "type": "string",
+      "enum": [
+        "newspaper",
+        "tv",
+        "radio",
+        "online",
+        "podcast",
+        "magazine",
+        "blog",
+        "other"
+      ]
+    },
+    "beat": {
+      "type": "string",
+      "description": "What topics they cover (e.g. community, non-profit)"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "twitter": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "last_contacted": {
+      "type": "string",
+      "format": "date"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "cold",
+        "warm",
+        "strong"
+      ],
+      "default": "cold"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "name": "Donation",
+  "type": "object",
+  "properties": {
+    "donor_id": {
+      "type": "string"
+    },
+    "donor_name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "donation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "donation_type": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "recurring_monthly",
+        "recurring_annual",
+        "in_kind",
+        "pledge"
+      ],
+      "default": "one_time"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "campaign_name": {
+      "type": "string"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "cheque",
+        "credit_card",
+        "e_transfer",
+        "online",
+        "other"
+      ]
+    },
+    "receipt_issued": {
+      "type": "boolean",
+      "default": false
+    },
+    "receipt_number": {
+      "type": "string"
+    },
+    "receipt_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "in_kind_description": {
+      "type": "string"
+    },
+    "in_kind_value": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "recorded_by": {
+      "type": "string"
+    },
+    "recorded_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "donor_id",
+    "amount",
+    "donation_date"
+  ]
+}

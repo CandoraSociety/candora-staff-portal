@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Image, Mail, Megaphone, Calendar, Globe,
-  Search, ClipboardList, BookOpen, Share2, ChevronLeft,
-  ChevronRight, LogOut, Inbox
+  Search, BookOpen, Share2, ChevronLeft,
+  ChevronRight, LogOut, Inbox, Heart, Newspaper, FileText, LinkIcon
 } from 'lucide-react';
 
 const navItems = [
@@ -16,6 +16,11 @@ const navItems = [
   { path: '/marketing/social', label: 'Social Media', icon: Share2 },
   { path: '/marketing/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/marketing/calendar', label: 'Calendar', icon: Calendar },
+  { path: '/marketing/content', label: 'Content Planner', icon: FileText },
+  { path: '/marketing/donors', label: 'Donors', icon: Heart },
+  { path: '/marketing/donation-pages', label: 'Donation Pages', icon: LinkIcon },
+  { path: '/marketing/media', label: 'Media & Press', icon: Newspaper },
+  { path: '/marketing/annual-report', label: 'Annual Report', icon: BookOpen },
   { path: '/marketing/seo', label: 'SEO Tools', icon: Search },
   { path: '/marketing/website', label: 'Website & Domains', icon: Globe },
   { path: '/marketing/resources', label: 'Resources', icon: BookOpen },

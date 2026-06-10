@@ -1,0 +1,113 @@
+{
+  "name": "Donor",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string",
+      "description": "Company or organization name if applicable"
+    },
+    "donor_type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "corporate",
+        "foundation",
+        "government",
+        "other"
+      ],
+      "default": "individual"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "province": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "giving_level": {
+      "type": "string",
+      "enum": [
+        "prospect",
+        "new",
+        "recurring",
+        "major",
+        "lapsed",
+        "inactive"
+      ],
+      "default": "prospect"
+    },
+    "total_donated": {
+      "type": "number",
+      "default": 0
+    },
+    "first_donation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "last_donation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "preferred_communication": {
+      "type": "string",
+      "enum": [
+        "email",
+        "phone",
+        "mail",
+        "none"
+      ]
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "default": false
+    },
+    "receipt_preference": {
+      "type": "string",
+      "enum": [
+        "email",
+        "mail",
+        "none"
+      ],
+      "default": "email"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "do_not_contact": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "last_name"
+  ]
+}

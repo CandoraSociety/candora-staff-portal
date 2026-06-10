@@ -97,6 +97,11 @@ import MarketingSEO from '@/pages/marketing/MarketingSEO';
 import MarketingWebsite from '@/pages/marketing/MarketingWebsite';
 import MarketingResources from '@/pages/marketing/MarketingResources';
 import MarketingRequests from '@/pages/marketing/MarketingRequests';
+import MarketingDonors from '@/pages/marketing/MarketingDonors';
+import MarketingMedia from '@/pages/marketing/MarketingMedia';
+import MarketingContent from '@/pages/marketing/MarketingContent';
+import MarketingDonationPages from '@/pages/marketing/MarketingDonationPages';
+import MarketingAnnualReport from '@/pages/marketing/MarketingAnnualReport';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -198,6 +203,11 @@ const AuthenticatedApp = () => {
           <Route path="/marketing/website" element={<MarketingWebsite />} />
           <Route path="/marketing/resources" element={<MarketingResources />} />
           <Route path="/marketing/requests" element={<MarketingRequests />} />
+          <Route path="/marketing/donors" element={<MarketingDonors />} />
+          <Route path="/marketing/media" element={<MarketingMedia />} />
+          <Route path="/marketing/content" element={<MarketingContent />} />
+          <Route path="/marketing/donation-pages" element={<MarketingDonationPages />} />
+          <Route path="/marketing/annual-report" element={<MarketingAnnualReport />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
