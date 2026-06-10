@@ -3,60 +3,52 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, X } from "lucide-react";
-import { useAuth } from "@/lib/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { ACCESS_LEVELS } from "@/lib/fileHelpers";
+import CategorySelector from "./CategorySelector";
 
-export default function SaveVaultDialog({ file, open, onOpenChange, onSave }) {
-  const { user } = useAuth();
-  const [displayName, setDisplayName] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [category, setCategory] = React.useState("to_be_sorted");
-  const [accessLevel, setAccessLevel] = React.useState("universal");
+export default function SaveVaultDialog({ open, onOpenChange, onSave, fileUrl, originalName }) {
+  const [displayName, setDisplayName] = useState(originalName?.replace(/\.[^/.]+$/, "") || "");
+  const [category, setCategory] = useState("to_be_sorted");
+  const [accessLevel, setAccessLevel] = useState("universal");
+  const [description, setDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  React.useEffect(() => {
-    if (file) {
-      setDisplayName(file.display_name || file.original_name || "");
-      setDescription(file.description || "");
-      setCategory(file.category || "to_be_sorted");
-      setAccessLevel(file.access_level || "universal");
-    }
-  }, [file]);
-
-  const handleSave = () => {
-    if (onSave) {
-      onSave({ displayName, description, category, accessLevel });
-    }
-    onOpenChange(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onSave({ displayName, category, accessLevel, description });
+    setIsSaving(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Save to Vault</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 mt-2">
+        <DialogHeader><DialogTitle>Save to Vault</DialogTitle></DialogHeader>
+        <div className="space-y-4">
           <div>
             <Label>Display Name</Label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-          </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} className="h-20" />
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="File name" />
           </div>
           <div>
             <Label>Category</Label>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} />
+            <CategorySelector value={category} onChange={setCategory} className="w-full" />
           </div>
           <div>
             <Label>Access Level</Label>
-            <Input value={accessLevel} onChange={(e) => setAccessLevel(e.target.value)} />
+            <Select value={accessLevel} onValueChange={setAccessLevel}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{ACCESS_LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
-          <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}><X className="h-4 w-4 mr-2" /> Cancel</Button>
-            <Button onClick={handleSave}><Check className="h-4 w-4 mr-2" /> Save</Button>
+          <div>
+            <Label>Description (optional)</Label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" />
           </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isSaving || !displayName}>{isSaving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save to Vault"}</Button>
         </div>
       </DialogContent>
     </Dialog>
