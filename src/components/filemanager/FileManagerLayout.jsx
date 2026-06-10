@@ -46,15 +46,17 @@ function AppNav() {
   });
 
   const NavButton = ({ item }) => {
+    const itemPath = item.path.split('?')[0];
+    const itemQuery = item.path.includes('?') ? item.path.split('?')[1] : null;
     const isActive = item.search 
-      ? location.pathname === item.path && location.search.includes('access=')
-      : location.pathname === item.path;
+      ? location.pathname === itemPath && location.search.includes('access=')
+      : location.pathname === itemPath && (itemQuery ? location.search === `?${itemQuery}` : true);
     
     const Icon = item.icon;
     
     return (
-      <button
-        onClick={() => navigate(item.path)}
+      <Link
+        to={item.path}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md font-medium transition-colors",
           isActive
@@ -64,7 +66,7 @@ function AppNav() {
       >
         <Icon className="h-4 w-4 shrink-0" />
         {!collapsed && <span>{item.label}</span>}
-      </button>
+      </Link>
     );
   };
 

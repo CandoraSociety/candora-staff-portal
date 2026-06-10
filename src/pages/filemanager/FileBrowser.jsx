@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, Plus, SortAsc, Grid, List, Upload } from "lucide-react";
+import { Loader2, Plus, SortAsc, Grid, List, Upload, FolderOpen, Globe, User, Shield, DollarSign, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FileCard from "@/components/files/FileCard";
 import FileListItem from "@/components/files/FileListItem";
@@ -16,9 +16,11 @@ import { useAuth } from "@/lib/AuthContext";
 export default function FileBrowser() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialAccess = urlParams.get("access") || "all";
   const [viewMode, setViewMode] = useState("grid");
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({ fileType: "all", category: "all", access: "all", sort: "-created_date" });
+  const [filters, setFilters] = useState({ fileType: "all", category: "all", access: initialAccess, sort: "-created_date" });
   const [showSorting, setShowSorting] = useState(false);
   const [filesToSort, setFilesToSort] = useState([]);
 
@@ -44,6 +46,15 @@ export default function FileBrowser() {
   };
 
   const unsortedFiles = useMemo(() => files.filter((f) => f.category === "to_be_sorted"), [files]);
+
+  const accessLabels = {
+    all: "All Files",
+    universal: "Universal Files",
+    personal: "My Files",
+    manager: "Manager Files",
+    finance: "Finance Files",
+    corporate: "Corporate Files",
+  };
 
   const filteredFiles = useMemo(() => {
     let result = [...files];
@@ -76,7 +87,7 @@ export default function FileBrowser() {
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">File Browser</h1>
+          <h1 className="text-2xl font-bold">{accessLabels[filters.access] || "All Files"}</h1>
           <p className="text-sm text-muted-foreground mt-1">{filteredFiles.length} files{unsortedFiles.length > 0 && ` · ${unsortedFiles.length} need sorting`}</p>
         </div>
         <div className="flex items-center gap-2">
