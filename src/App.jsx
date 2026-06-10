@@ -97,6 +97,7 @@ import Notes from '@/pages/filemanager/Notes';
 import Workspace from '@/pages/filemanager/Workspace';
 import Collections from '@/pages/filemanager/Collections';
 import CollectionDetail from '@/pages/filemanager/CollectionDetail';
+import SearchPage from '@/pages/filemanager/SearchPage';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -235,6 +236,7 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/workspace" element={<Workspace />} />
           <Route path="/filemanager/collections" element={<Collections />} />
           <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
+          <Route path="/filemanager/search" element={<SearchPage />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}

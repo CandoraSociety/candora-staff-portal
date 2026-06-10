@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { path: "/filemanager/files?access=manager", label: "Manager Files", icon: Shield, roles: ["admin", "manager"] },
   { path: "/filemanager/files?access=finance", label: "Finance Files", icon: DollarSign, roles: ["admin", "finance"] },
   { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, roles: ["admin", "corporate"] },
-  { path: "/filemanager/files", label: "Search", icon: Search, roles: null, search: true },
+  { path: "/filemanager/search", label: "Search", icon: Search, roles: null },
   { path: "/filemanager/upload", label: "Upload", icon: Upload, roles: null },
   { path: "/filemanager/bulk", label: "Bulk Import", icon: PackagePlus, roles: null },
   { path: "/filemanager/collections", label: "Collections", icon: FolderHeart, roles: null },
