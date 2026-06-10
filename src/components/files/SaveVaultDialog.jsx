@@ -4,51 +4,67 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { ACCESS_LEVELS } from "@/lib/fileHelpers";
-import CategorySelector from "./CategorySelector";
 
-export default function SaveVaultDialog({ open, onOpenChange, onSave, fileUrl, originalName }) {
-  const [displayName, setDisplayName] = useState(originalName?.replace(/\.[^/.]+$/, "") || "");
-  const [category, setCategory] = useState("to_be_sorted");
-  const [accessLevel, setAccessLevel] = useState("universal");
-  const [description, setDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+export default function SaveVaultDialog({ open, onOpenChange, onSave, defaultName = "" }) {
+  const [name, setName] = useState(defaultName);
+  const [category, setCategory] = useState("general");
+  const [access, setAccess] = useState("personal");
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    await onSave({ displayName, category, accessLevel, description });
-    setIsSaving(false);
+  const handleSave = () => {
+    if (!name.trim()) return;
+    onSave({ saveName: name, saveCategory: category, saveAccess: access });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Save to Vault</DialogTitle></DialogHeader>
-        <div className="space-y-4">
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Save to Vault</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-4">
           <div>
-            <Label>Display Name</Label>
-            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="File name" />
+            <Label>File Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter file name" className="mt-1" />
           </div>
           <div>
             <Label>Category</Label>
-            <CategorySelector value={category} onChange={setCategory} className="w-full" />
-          </div>
-          <div>
-            <Label>Access Level</Label>
-            <Select value={accessLevel} onValueChange={setAccessLevel}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{ACCESS_LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="administrative">Administrative</SelectItem>
+                <SelectItem value="financial">Financial</SelectItem>
+                <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="programs">Programs</SelectItem>
+                <SelectItem value="marketing">Marketing</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div>
-            <Label>Description (optional)</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description" />
+            <Label>Access Level</Label>
+            <Select value={access} onValueChange={setAccess}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select access" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="personal">Personal</SelectItem>
+                <SelectItem value="universal">Universal</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="finance">Finance</SelectItem>
+                <SelectItem value="corporate">Corporate</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isSaving || !displayName}>{isSaving ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</> : "Save to Vault"}</Button>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!name.trim()}>
+            Save
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
