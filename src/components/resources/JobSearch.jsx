@@ -31,11 +31,15 @@ export default function JobSearch() {
   const [location, setLocation] = useState('Edmonton, Alberta');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [prevResults, setPrevResults] = useState(null);
+  const [prevJobType, setPrevJobType] = useState(null);
   const [error, setError] = useState(null);
 
   const search = async () => {
     setLoading(true);
     setError(null);
+    setPrevResults(results);
+    setPrevJobType(jobType);
     setResults(null);
     const res = await base44.integrations.Core.InvokeLLM({
       prompt: `Search the web for actual current job postings for "${jobType}" near ${location}, Canada. Find real job listings from Indeed Canada, Job Bank Canada, ZipRecruiter, or other Canadian job boards.\n\nReturn up to 15 real job postings currently available. For each listing include:\n- The exact job title as posted\n- The employer/company name\n- The location (city, province)\n- Salary or wage if shown\n- A brief description of the role (1-2 sentences)\n- The direct URL to the job posting\n- The source job board name\n\nAlso include 3-5 related job titles the person might also search for.\n\nOnly include real, currently posted jobs. Do not fabricate listings.`,
@@ -107,9 +111,9 @@ export default function JobSearch() {
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
       )}
 
-      {results && (
-        <Button variant="outline" size="sm" onClick={() => setResults(null)} className="gap-2">
-          ← Back to Search
+      {results && prevResults && (
+        <Button variant="outline" size="sm" onClick={() => { setResults(prevResults); setJobType(prevJobType); setPrevResults(null); setPrevJobType(null); }} className="gap-2">
+          ← Back to "{prevJobType}"
         </Button>
       )}
 
@@ -205,7 +209,7 @@ export default function JobSearch() {
                 {results.related_titles.map((item, i) => (
                   <button
                     key={i}
-                    onClick={() => { setJobType(item.title); setResults(null); }}
+                    onClick={() => { setPrevResults(results); setPrevJobType(jobType); setJobType(item.title); setResults(null); }}
                     className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-left hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
                   >
                     <p className="text-sm font-semibold text-amber-800">{item.title}</p>
