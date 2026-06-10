@@ -11,33 +11,42 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 
-export default function CreateCollectionDialog({ open, onOpenChange }) {
+const COLOR_OPTIONS = [
+  { value: "#3b82f6", label: "Blue" },
+  { value: "#10b981", label: "Green" },
+  { value: "#f59e0b", label: "Amber" },
+  { value: "#ef4444", label: "Red" },
+  { value: "#8b5cf6", label: "Purple" },
+  { value: "#ec4899", label: "Pink" },
+];
+
+export default function CreateCollectionDialog({ open, onOpenChange, onCreate }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("active");
-  const [color, setColor] = useState("blue");
+  const [color, setColor] = useState("#3b82f6");
   const [isCreating, setIsCreating] = useState(false);
 
   const createCollectionMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.Collection.create({
+      const newCollection = await base44.entities.Collection.create({
         name,
         description,
-        status,
         color,
+        status: "active",
         file_ids: [],
         owner_email: user?.email,
       });
+      return newCollection;
     },
-    onSuccess: () => {
+    onSuccess: (newCollection) => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });
       toast.success("Collection created");
       setName("");
       setDescription("");
-      setStatus("active");
-      setColor("blue");
+      setColor("#3b82f6");
+      onCreate?.(newCollection);
       onOpenChange(false);
     },
   });
@@ -61,29 +70,20 @@ export default function CreateCollectionDialog({ open, onOpenChange }) {
             <Label>Description (optional)</Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Purpose of this collection" className="h-20" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Color Tag</Label>
-              <Select value={color} onValueChange={setColor}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="blue">Blue</SelectItem>
-                  <SelectItem value="green">Green</SelectItem>
-                  <SelectItem value="red">Red</SelectItem>
-                  <SelectItem value="yellow">Yellow</SelectItem>
-                  <SelectItem value="purple">Purple</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label>Color</Label>
+            <div className="flex gap-2">
+              {COLOR_OPTIONS.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setColor(c.value)}
+                  className={`h-8 w-8 rounded-full border-2 transition-transform ${
+                    color === c.value ? "border-primary scale-110" : "border-border"
+                  }`}
+                  style={{ background: c.value }}
+                  title={c.label}
+                />
+              ))}
             </div>
           </div>
         </div>
