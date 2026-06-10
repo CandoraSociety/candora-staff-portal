@@ -91,6 +91,10 @@ import FileManagerHome from '@/pages/filemanager/FileManagerHome';
 import FileBrowser from '@/pages/filemanager/FileBrowser';
 import FileUploadPage from '@/pages/filemanager/FileUpload';
 import FileViewer from '@/pages/filemanager/FileViewer';
+import FileEditor from '@/pages/filemanager/FileEditor';
+import BulkUpload from '@/pages/filemanager/BulkUpload';
+import Notes from '@/pages/filemanager/Notes';
+import Workspace from '@/pages/filemanager/Workspace';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -223,6 +227,10 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/files" element={<FileBrowser />} />
           <Route path="/filemanager/upload" element={<FileUploadPage />} />
           <Route path="/filemanager/view" element={<FileViewer />} />
+          <Route path="/filemanager/editor" element={<FileEditor />} />
+          <Route path="/filemanager/bulk" element={<BulkUpload />} />
+          <Route path="/filemanager/notes" element={<Notes />} />
+          <Route path="/filemanager/workspace" element={<Workspace />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
