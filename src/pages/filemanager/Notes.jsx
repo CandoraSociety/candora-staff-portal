@@ -1,28 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, Edit, Pin } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Pin, Trash2, Copy, Archive, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 import QuickNoteModal from "@/components/notes/QuickNoteModal";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Notes() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [showQuickNote, setShowQuickNote] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
 
-  const { data: notes = [] } = useQuery({
-    queryKey: ["notes", user?.email],
-    queryFn: async () => {
-      const all = await base44.entities.Note.list("-created_date", 100);
-      return all.filter((n) => n.owner_email === user?.email);
-    },
-    enabled: !!user,
+  const urlParams = new URLSearchParams(window.location.search);
+  const noteIdFromUrl = urlParams.get("id");
+
+  const { data: notes = [], isLoading } = useQuery({
+    queryKey: ["notes"],
+    queryFn: () => base44.entities.Note.filter({ owner_email: user?.email }, "-created_date"),
   });
 
   const deleteNoteMutation = useMutation({
@@ -30,54 +34,204 @@ export default function Notes() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       toast.success("Note deleted");
+      setEditingNote(null);
     },
   });
 
-  const filteredNotes = notes.filter((n) => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
+  const togglePinMutation = useMutation({
+    mutationFn: ({ id, is_pinned }) => base44.entities.Note.update(id, { is_pinned }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  useEffect(() => {
+    if (noteIdFromUrl && notes.length > 0) {
+      const note = notes.find((n) => n.id === noteIdFromUrl);
+      if (note) setEditingNote(note);
+    }
+  }, [noteIdFromUrl, notes]);
+
+  const filteredNotes = notes.filter(
+    (n) =>
+      n.title.toLowerCase().includes(search.toLowerCase()) ||
+      n.content.toLowerCase().includes(search.toLowerCase()) ||
+      (n.tags || []).some((t) => t.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const pinnedNotes = filteredNotes.filter((n) => n.is_pinned);
+  const otherNotes = filteredNotes.filter((n) => !n.is_pinned);
+
+  const handleDelete = (note) => {
+    if (window.confirm(`Delete "${note.title}"?`)) {
+      deleteNoteMutation.mutate(note.id);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+      </div>
+    );
+  }
+
+  if (editingNote) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => { setEditingNote(null); navigate("/notes"); }}>
+            <Archive className="h-4 w-4" />
+          </Button>
+          <Input
+            value={editingNote.title}
+            onChange={(e) => setEditingNote({ ...editingNote, title: e.target.value })}
+            placeholder="Note title..."
+            className="text-lg font-semibold border-0"
+          />
+          <div className="ml-auto flex items-center gap-2">
+            <Button onClick={() => togglePinMutation.mutate({ id: editingNote.id, is_pinned: !editingNote.is_pinned })}>
+              <Pin className={`h-4 w-4 mr-1 ${editingNote.is_pinned ? "fill-current" : ""}`} />
+              {editingNote.is_pinned ? "Pinned" : "Pin"}
+            </Button>
+            <Button onClick={() => {
+              navigator.clipboard.writeText(editingNote.content.replace(/<[^>]*>/g, ""));
+              toast.success("Content copied");
+            }}>
+              <Copy className="h-4 w-4 mr-1" /> Copy
+            </Button>
+            <Button variant="outline" onClick={() => handleDelete(editingNote)}>
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+            <Button onClick={async () => {
+              await base44.entities.Note.update(editingNote.id, editingNote);
+              toast.success("Note saved");
+              queryClient.invalidateQueries({ queryKey: ["notes"] });
+            }}>
+              Save
+            </Button>
+          </div>
+        </div>
+        <ReactQuill
+          value={editingNote.content}
+          onChange={(content) => setEditingNote({ ...editingNote, content })}
+          theme="snow"
+          className="bg-white rounded-lg"
+          style={{ minHeight: "60vh" }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">My Notes</h1>
-          <p className="text-sm text-muted-foreground mt-1">{notes.length} notes</p>
+          <h1 className="text-2xl font-bold">Notes</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {notes.length} note{notes.length !== 1 ? "s" : ""}
+          </p>
         </div>
-        <Button onClick={() => { setEditingNote(null); setShowModal(true); }} className="gap-2"><Plus className="h-4 w-4" /> New Note</Button>
+        <Button onClick={() => setShowQuickNote(true)} className="gap-2">
+          <Plus className="h-4 w-4" /> New Note
+        </Button>
       </div>
 
-      <div className="relative w-full max-w-sm">
+      <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search notes..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search notes..."
+          className="pl-10"
+        />
       </div>
 
-      {filteredNotes.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground">No notes yet</p>
-          <Button onClick={() => setShowModal(true)} className="mt-4 gap-2"><Plus className="h-4 w-4" /> Create your first note</Button>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredNotes.map((note) => (
-            <Card key={note.id} className="group hover:shadow-md transition-all">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <CardTitle className="text-base">{note.title}</CardTitle>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setEditingNote(note)} className="h-8 w-8 rounded flex items-center justify-center hover:bg-muted"><Edit className="h-4 w-4 text-muted-foreground" /></button>
-                    <button onClick={() => deleteNoteMutation.mutate(note.id)} className="h-8 w-8 rounded flex items-center justify-center hover:bg-muted"><Trash2 className="h-4 w-4 text-destructive" /></button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground line-clamp-3" dangerouslySetInnerHTML={{ __html: note.content.replace(/<[^>]*>/g, "") }} />
-                {note.tags?.length > 0 && <div className="flex flex-wrap gap-1 mt-3">{note.tags.map((t, i) => <span key={i} className="text-xs px-2 py-0.5 bg-muted rounded">{t}</span>)}</div>}
-              </CardContent>
-            </Card>
-          ))}
+      {pinnedNotes.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Pin className="h-4 w-4" /> Pinned
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {pinnedNotes.map((note) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                onClick={() => setEditingNote(note)}
+                onDelete={() => handleDelete(note)}
+                onTogglePin={() => togglePinMutation.mutate({ id: note.id, is_pinned: false })}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      <QuickNoteModal open={showModal} onOpenChange={setShowModal} editingNote={editingNote} onClose={() => { setShowModal(false); setEditingNote(null); queryClient.invalidateQueries({ queryKey: ["notes"] }); }} />
+      {otherNotes.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            All Notes
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {otherNotes.map((note) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                onClick={() => setEditingNote(note)}
+                onDelete={() => handleDelete(note)}
+                onTogglePin={() => togglePinMutation.mutate({ id: note.id, is_pinned: true })}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredNotes.length === 0 && (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground">No notes found. Create your first note!</p>
+          <Button onClick={() => setShowQuickNote(true)} className="mt-4 gap-2">
+            <Plus className="h-4 w-4" /> Create Note
+          </Button>
+        </div>
+      )}
+
+      <QuickNoteModal
+        open={showQuickNote}
+        onOpenChange={setShowQuickNote}
+        editingNote={editingNote}
+      />
     </div>
+  );
+}
+
+function NoteCard({ note, onClick, onDelete, onTogglePin }) {
+  return (
+    <Card className="p-4 cursor-pointer hover:shadow-md transition-all group" onClick={onClick}>
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="font-semibold text-sm flex items-center gap-2">
+          {note.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+          {note.title}
+        </h3>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); onTogglePin(); }} className="text-muted-foreground hover:text-foreground">
+            <Pin className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground line-clamp-3">
+        {note.content.replace(/<[^>]*>/g, "")}
+      </p>
+      {note.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-3">
+          {note.tags.slice(0, 3).map((tag, i) => (
+            <Badge key={i} variant="secondary" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

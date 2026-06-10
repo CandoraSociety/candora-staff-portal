@@ -1,140 +1,124 @@
-import React, { useState, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
+import { base44 } from "@/api/base44Client";
+import { Loader2 } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
-export default function QuickNoteModal({ open, onOpenChange, editingNote, onClose }) {
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["clean"],
+  ],
+};
+
+export default function QuickNoteModal({ open, onOpenChange, editingNote }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState(editingNote?.title || "");
   const [content, setContent] = useState(editingNote?.content || "");
-  const [tags, setTags] = useState(editingNote?.tags || []);
-  const [tagInput, setTagInput] = useState("");
-  const quillRef = useRef(null);
+  const [tags, setTags] = useState(editingNote?.tags?.join(", ") || "");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const createNoteMutation = useMutation({
-    mutationFn: async (noteData) => {
+  const saveNoteMutation = useMutation({
+    mutationFn: async () => {
       if (editingNote) {
-        return base44.entities.Note.update(editingNote.id, noteData);
+        await base44.entities.Note.update(editingNote.id, {
+          title,
+          content,
+          tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        });
+      } else {
+        await base44.entities.Note.create({
+          title,
+          content,
+          tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+          owner_email: user?.email,
+        });
       }
-      return base44.entities.Note.create(noteData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       toast.success(editingNote ? "Note updated" : "Note created");
-      onClose();
+      setTitle("");
+      setContent("");
+      setTags("");
+      onOpenChange(false);
     },
     onError: () => {
       toast.error("Failed to save note");
     },
   });
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
   const handleSave = () => {
-    if (!title.trim()) {
-      toast.error("Please enter a title");
-      return;
-    }
-    createNoteMutation.mutate({
-      title,
-      content,
-      tags,
-      owner_email: user?.email,
-    });
-  };
-
-  const handleOpenChange = (newOpen) => {
-    if (!newOpen) {
-      setTitle("");
-      setContent("");
-      setTags([]);
-      setTagInput("");
-      onOpenChange(false);
-    } else {
-      onOpenChange(true);
-    }
+    if (!title.trim() || !content.trim()) return;
+    setIsSaving(true);
+    saveNoteMutation.mutate();
+    setIsSaving(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingNote ? "Edit Note" : "New Note"}</DialogTitle>
         </DialogHeader>
-        
-        <div className="flex-1 overflow-y-auto space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="note-title">Title</Label>
+
+        <div className="space-y-4">
+          <div>
+            <Label>Title</Label>
             <Input
-              id="note-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter note title"
+              placeholder="Note title"
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label>Content</Label>
-            <div className="border rounded-md">
-              <ReactQuill
-                ref={quillRef}
-                value={content}
-                onChange={setContent}
-                className="bg-white"
-                theme="snow"
-              />
-            </div>
+            <ReactQuill
+              theme="snow"
+              value={content}
+              onChange={setContent}
+              modules={modules}
+              className="bg-white"
+              placeholder="Write your note here..."
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                placeholder="Add a tag"
-              />
-              <Button type="button" variant="outline" onClick={handleAddTag}>Add</Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => (
-                  <span key={tag} className="text-xs px-2 py-1 bg-muted rounded-full flex items-center gap-1">
-                    {tag}
-                    <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive">
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+          <div>
+            <Label>Tags (comma-separated)</Label>
+            <Input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="work, important, follow-up"
+            />
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={createNoteMutation.isPending}>
-            {editingNote ? "Update" : "Create"} Note
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
           </Button>
-        </DialogFooter>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || !title.trim() || !content.trim()}
+          >
+            {isSaving ? (
+              <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Saving...</>
+            ) : (
+              "Save Note"
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
