@@ -69,6 +69,22 @@ export default function FileEditor() {
     enabled: mode === "select",
   });
 
+  const initCanvas = useCallback((img, fileMeta) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const context = canvas.getContext("2d");
+    context.drawImage(img, 0, 0);
+    setCtx(context);
+    const data = context.getImageData(0, 0, canvas.width, canvas.height);
+    setHistory([data]);
+    setHistoryIndex(0);
+    setSourceFile(fileMeta);
+    setFileKind("image");
+    setMode("editing");
+  }, []);
+
   const openFile = useCallback((url, fileMeta) => {
     const ext = getFileExtension(fileMeta?.original_name || url);
     if (IMAGE_EXTS.includes(ext)) {
@@ -91,22 +107,6 @@ export default function FileEditor() {
       setMode("editing");
     }
   }, [initCanvas]);
-
-  const initCanvas = useCallback((img, fileMeta) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = img.naturalWidth || img.width;
-    canvas.height = img.naturalHeight || img.height;
-    const context = canvas.getContext("2d");
-    context.drawImage(img, 0, 0);
-    setCtx(context);
-    const data = context.getImageData(0, 0, canvas.width, canvas.height);
-    setHistory([data]);
-    setHistoryIndex(0);
-    setSourceFile(fileMeta);
-    setFileKind("image");
-    setMode("editing");
-  }, []);
 
   useEffect(() => {
     if (vaultFile && mode === "loading") {
