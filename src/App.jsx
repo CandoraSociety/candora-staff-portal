@@ -85,6 +85,10 @@ import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
 import PathwaysEmployers from '@/pages/pathways/PathwaysEmployers';
 import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining';
 
+// Candora File Manager
+import FileManagerLayout from '@/components/filemanager/FileManagerLayout';
+import FileManagerHome from '@/pages/filemanager/FileManagerHome';
+
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import MarketingHome from '@/pages/marketing/MarketingHome';
@@ -208,6 +212,11 @@ const AuthenticatedApp = () => {
           <Route path="/marketing/content" element={<MarketingContent />} />
           <Route path="/marketing/donation-pages" element={<MarketingDonationPages />} />
           <Route path="/marketing/annual-report" element={<MarketingAnnualReport />} />
+        </Route>
+
+        {/* Candora File Manager - standalone layout */}
+        <Route element={<FileManagerLayout />}>
+          <Route path="/filemanager" element={<FileManagerHome />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
