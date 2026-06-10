@@ -95,6 +95,7 @@ import FileEditor from '@/pages/filemanager/FileEditor';
 import BulkUpload from '@/pages/filemanager/BulkUpload';
 import Notes from '@/pages/filemanager/Notes';
 import Workspace from '@/pages/filemanager/Workspace';
+import Collections from '@/pages/filemanager/Collections';
 import CollectionDetail from '@/pages/filemanager/CollectionDetail';
 
 // Marketing & Fundraising Manager
@@ -232,6 +233,7 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/bulk" element={<BulkUpload />} />
           <Route path="/filemanager/notes" element={<Notes />} />
           <Route path="/filemanager/workspace" element={<Workspace />} />
+          <Route path="/filemanager/collections" element={<Collections />} />
           <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
         </Route>
 
