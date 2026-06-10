@@ -95,6 +95,7 @@ import FileEditor from '@/pages/filemanager/FileEditor';
 import BulkUpload from '@/pages/filemanager/BulkUpload';
 import Notes from '@/pages/filemanager/Notes';
 import Workspace from '@/pages/filemanager/Workspace';
+import CollectionDetail from '@/pages/filemanager/CollectionDetail';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -231,6 +232,7 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/bulk" element={<BulkUpload />} />
           <Route path="/filemanager/notes" element={<Notes />} />
           <Route path="/filemanager/workspace" element={<Workspace />} />
+          <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
