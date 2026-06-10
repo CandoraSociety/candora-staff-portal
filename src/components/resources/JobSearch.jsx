@@ -25,23 +25,6 @@ const JOB_BOARDS = [
   },
 ];
 
-function QuickLinks({ query, location }) {
-  return (
-    <div className="flex gap-2 flex-wrap mt-1">
-      {JOB_BOARDS.map(board => (
-        <a
-          key={board.name}
-          href={board.url(query, location)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-blue-600 hover:underline"
-        >
-          {board.name.split(' ')[0]}
-        </a>
-      ))}
-    </div>
-  );
-}
 
 export default function JobSearch() {
   const [jobType, setJobType] = useState('');
@@ -55,18 +38,24 @@ export default function JobSearch() {
     setError(null);
     setResults(null);
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are helping a job seeker in Alberta, Canada find employment. They are looking for: "${jobType}" near ${location}.\n\nGenerate a list of 10 specific, realistic job search queries they should use on job boards. For each query:\n- Provide the exact search term to use\n- A brief note on what type of role it targets\n- The NOC (National Occupational Classification) code if applicable\n\nAlso suggest 5 related job titles they might not have considered that use similar skills.\n\nKeep results practical and relevant to the Alberta labour market.`,
+      prompt: `Search the web for actual current job postings for "${jobType}" near ${location}, Canada. Find real job listings from Indeed Canada, Job Bank Canada, ZipRecruiter, or other Canadian job boards.\n\nReturn up to 15 real job postings currently available. For each listing include:\n- The exact job title as posted\n- The employer/company name\n- The location (city, province)\n- Salary or wage if shown\n- A brief description of the role (1-2 sentences)\n- The direct URL to the job posting\n- The source job board name\n\nAlso include 3-5 related job titles the person might also search for.\n\nOnly include real, currently posted jobs. Do not fabricate listings.`,
+      add_context_from_internet: true,
+      model: 'gemini_3_flash',
       response_json_schema: {
         type: 'object',
         properties: {
-          search_queries: {
+          listings: {
             type: 'array',
             items: {
               type: 'object',
               properties: {
-                query: { type: 'string' },
+                title: { type: 'string' },
+                company: { type: 'string' },
+                location: { type: 'string' },
+                salary: { type: 'string' },
                 description: { type: 'string' },
-                noc_code: { type: 'string' },
+                url: { type: 'string' },
+                source: { type: 'string' },
               },
             },
           },
@@ -122,7 +111,7 @@ export default function JobSearch() {
         <div className="space-y-5">
           {/* Direct Job Board Links */}
           <div>
-            <h4 className="text-sm font-semibold text-slate-700 mb-2">Search on Job Boards</h4>
+            <h4 className="text-sm font-semibold text-slate-700 mb-2">Browse All on Job Boards</h4>
             <div className="flex flex-wrap gap-2">
               {JOB_BOARDS.map(board => (
                 <a
@@ -139,24 +128,62 @@ export default function JobSearch() {
             </div>
           </div>
 
-          {/* Recommended Search Queries */}
-          {results.search_queries?.length > 0 && (
+          {/* Live Job Listings */}
+          {results.listings?.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Recommended Search Terms</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">
+                Current Job Postings
+                <span className="ml-2 text-xs font-normal text-slate-400">({results.listings.length} found)</span>
+              </h4>
               <div className="space-y-2">
-                {results.search_queries.map((item, i) => (
-                  <div key={i} className="flex gap-3 items-start bg-white border border-slate-200 rounded-lg p-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-slate-800">{item.query}</span>
-                        {item.noc_code && (
-                          <span className="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded font-mono">
-                            NOC {item.noc_code}
-                          </span>
+                {results.listings.map((job, i) => (
+                  <div key={i} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {job.url ? (
+                            <a
+                              href={job.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-semibold text-blue-700 hover:underline"
+                            >
+                              {job.title}
+                            </a>
+                          ) : (
+                            <span className="text-sm font-semibold text-slate-800">{job.title}</span>
+                          )}
+                          {job.source && (
+                            <span className="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded">
+                              {job.source}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-600 mt-0.5">{job.company}</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          {job.location && (
+                            <span className="text-xs text-slate-500">{job.location}</span>
+                          )}
+                          {job.salary && (
+                            <span className="text-xs font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+                              {job.salary}
+                            </span>
+                          )}
+                        </div>
+                        {job.description && (
+                          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{job.description}</p>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
-                      <QuickLinks query={item.query} location={location} />
+                      {job.url && (
+                        <a
+                          href={job.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-slate-400 hover:text-blue-600 transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -167,7 +194,7 @@ export default function JobSearch() {
           {/* Related Roles */}
           {results.related_titles?.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Related Roles to Consider</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">Related Roles to Also Search</h4>
               <div className="grid md:grid-cols-2 gap-2">
                 {results.related_titles.map((item, i) => (
                   <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
