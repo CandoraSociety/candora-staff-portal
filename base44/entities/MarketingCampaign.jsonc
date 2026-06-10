@@ -1,0 +1,102 @@
+{
+  "name": "MarketingCampaign",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "campaign_type": {
+      "type": "string",
+      "enum": [
+        "marketing",
+        "fundraising",
+        "event_promotion",
+        "program_promotion",
+        "awareness",
+        "annual"
+      ],
+      "description": "Type of campaign"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "active",
+        "paused",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning"
+    },
+    "description": {
+      "type": "string"
+    },
+    "goals": {
+      "type": "string"
+    },
+    "target_audience": {
+      "type": "string"
+    },
+    "budget": {
+      "type": "number"
+    },
+    "budget_spent": {
+      "type": "number",
+      "default": 0
+    },
+    "fundraising_goal": {
+      "type": "number"
+    },
+    "fundraising_raised": {
+      "type": "number",
+      "default": 0
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_annual": {
+      "type": "boolean",
+      "default": false
+    },
+    "annual_month": {
+      "type": "number",
+      "description": "Month (1-12) for annual recurrence"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "campaign_type"
+  ]
+}

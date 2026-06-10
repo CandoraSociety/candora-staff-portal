@@ -1,0 +1,101 @@
+{
+  "name": "MarketingRequest",
+  "type": "object",
+  "properties": {
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "poster",
+        "social_media_post",
+        "email_campaign",
+        "event_promotion",
+        "program_promotion",
+        "video",
+        "photo",
+        "print_material",
+        "website_update",
+        "other"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "description": "Short title of the request"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what is needed"
+    },
+    "requester_name": {
+      "type": "string"
+    },
+    "requester_email": {
+      "type": "string"
+    },
+    "requester_department": {
+      "type": "string"
+    },
+    "program_event_name": {
+      "type": "string"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "specs": {
+      "type": "string",
+      "description": "Dimensions, format, colour requirements, etc."
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Any reference files uploaded"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "in_review",
+        "in_progress",
+        "completed",
+        "declined"
+      ],
+      "default": "submitted"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "completed_file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "submitted_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_type",
+    "title",
+    "requester_name",
+    "requester_email"
+  ]
+}

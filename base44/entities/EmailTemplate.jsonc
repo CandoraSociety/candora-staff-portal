@@ -1,0 +1,47 @@
+{
+  "name": "EmailTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "newsletter",
+        "fundraising",
+        "event",
+        "announcement",
+        "follow_up",
+        "other"
+      ]
+    },
+    "html_content": {
+      "type": "string",
+      "description": "Full HTML content of the email"
+    },
+    "preview_text": {
+      "type": "string"
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "subject"
+  ]
+}

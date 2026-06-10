@@ -1,0 +1,79 @@
+{
+  "name": "MarketingAsset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Asset name/title"
+    },
+    "asset_type": {
+      "type": "string",
+      "enum": [
+        "logo",
+        "banner",
+        "photo",
+        "video",
+        "document",
+        "template",
+        "icon",
+        "font",
+        "other"
+      ],
+      "description": "Type of asset"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "brand",
+        "program",
+        "event",
+        "fundraising",
+        "social_media",
+        "print",
+        "web",
+        "other"
+      ]
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of the uploaded file"
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "e.g. PNG, SVG, PDF, MP4"
+    },
+    "file_size": {
+      "type": "number"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "program_event": {
+      "type": "string",
+      "description": "Associated program or event name"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "uploaded_by": {
+      "type": "string"
+    },
+    "uploaded_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "asset_type"
+  ]
+}

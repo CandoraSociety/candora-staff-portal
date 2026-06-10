@@ -1,0 +1,58 @@
+{
+  "name": "EmailList",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "subscribers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "subscribed": {
+            "type": "boolean"
+          },
+          "unsubscribed_date": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "total_subscribers": {
+      "type": "number",
+      "default": 0
+    },
+    "total_unsubscribed": {
+      "type": "number",
+      "default": 0
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

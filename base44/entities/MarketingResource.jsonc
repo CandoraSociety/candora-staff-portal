@@ -1,0 +1,57 @@
+{
+  "name": "MarketingResource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "print_vendor",
+        "design_tool",
+        "social_platform",
+        "email_service",
+        "photography",
+        "videography",
+        "web_service",
+        "seo_tool",
+        "advertising",
+        "other"
+      ]
+    },
+    "website": {
+      "type": "string"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "account_info": {
+      "type": "string",
+      "description": "Login/account details or notes"
+    },
+    "description": {
+      "type": "string"
+    },
+    "services_offered": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "resource_type"
+  ]
+}

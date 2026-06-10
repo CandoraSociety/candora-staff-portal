@@ -85,6 +85,19 @@ import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
 import PathwaysEmployers from '@/pages/pathways/PathwaysEmployers';
 import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining';
 
+// Marketing & Fundraising Manager
+import MarketingLayout from '@/components/marketing/MarketingLayout';
+import MarketingHome from '@/pages/marketing/MarketingHome';
+import MarketingAssets from '@/pages/marketing/MarketingAssets';
+import MarketingEmail from '@/pages/marketing/MarketingEmail';
+import MarketingSocial from '@/pages/marketing/MarketingSocial';
+import MarketingCampaigns from '@/pages/marketing/MarketingCampaigns';
+import MarketingCalendar from '@/pages/marketing/MarketingCalendar';
+import MarketingSEO from '@/pages/marketing/MarketingSEO';
+import MarketingWebsite from '@/pages/marketing/MarketingWebsite';
+import MarketingResources from '@/pages/marketing/MarketingResources';
+import MarketingRequests from '@/pages/marketing/MarketingRequests';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
@@ -171,6 +184,20 @@ const AuthenticatedApp = () => {
           <Route path="/nexushr/recognition" element={<NexusRecognition />} />
           <Route path="/nexushr/onboarding" element={<NexusOnboarding />} />
           <Route path="/nexushr/email-employees" element={<NexusEmailEmployees />} />
+        </Route>
+
+        {/* Marketing & Fundraising Manager - standalone layout */}
+        <Route element={<MarketingLayout />}>
+          <Route path="/marketing" element={<MarketingHome />} />
+          <Route path="/marketing/assets" element={<MarketingAssets />} />
+          <Route path="/marketing/email" element={<MarketingEmail />} />
+          <Route path="/marketing/social" element={<MarketingSocial />} />
+          <Route path="/marketing/campaigns" element={<MarketingCampaigns />} />
+          <Route path="/marketing/calendar" element={<MarketingCalendar />} />
+          <Route path="/marketing/seo" element={<MarketingSEO />} />
+          <Route path="/marketing/website" element={<MarketingWebsite />} />
+          <Route path="/marketing/resources" element={<MarketingResources />} />
+          <Route path="/marketing/requests" element={<MarketingRequests />} />
         </Route>
 
         {/* Pathways CM - standalone layout */}
