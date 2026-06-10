@@ -1,5 +1,5 @@
-import React from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
@@ -8,8 +8,8 @@ import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
 import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
+import PortalTransition from '@/components/PortalTransition';
 import { FolderOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
