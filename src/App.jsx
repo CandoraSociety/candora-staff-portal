@@ -99,6 +99,7 @@ import Workspace from '@/pages/filemanager/Workspace';
 import Collections from '@/pages/filemanager/Collections';
 import CollectionDetail from '@/pages/filemanager/CollectionDetail';
 import SearchPage from '@/pages/filemanager/SearchPage';
+import DevTasks from '@/pages/DevTasks';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -239,6 +240,9 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
           <Route path="/filemanager/search" element={<SearchPage />} />
         </Route>
+
+        {/* Dev Tasks - standalone page */}
+        <Route path="/dev-tasks" element={<DevTasks />} />
 
         {/* Pathways CM - standalone layout */}
         <Route element={<PathwaysLayout />}>

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, AppWindow, Settings, Users, Bell, 
   Building2, Shield, ChevronLeft, ChevronRight, LogOut,
-  Megaphone
+  Megaphone, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -21,6 +21,7 @@ const ADMIN_ITEMS = [
   { path: '/admin/users', label: 'Users & Access', icon: Users, adminOnly: true },
   { path: '/admin/announcements', label: 'Announcements', icon: Megaphone, adminOnly: true },
   { path: '/admin/settings', label: 'Org Settings', icon: Settings, adminOnly: true },
+  { path: '/dev-tasks', label: 'Dev Tasks', icon: CheckCircle2, adminOnly: true },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
