@@ -20,6 +20,24 @@ export const FILE_CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
+export const PHOTO_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "bmp", "tiff", "svg"];
+export const DOCUMENT_EXTS = ["pdf", "doc", "docx", "txt", "rtf", "odt"];
+export const SPREADSHEET_EXTS = ["xls", "xlsx", "csv", "ods"];
+export const PRESENTATION_EXTS = ["ppt", "pptx", "key", "odp"];
+export const VIDEO_EXTS = ["mp4", "avi", "mov", "wmv", "flv", "mkv"];
+export const AUDIO_EXTS = ["mp3", "wav", "ogg", "flac", "aac"];
+export const ARCHIVE_EXTS = ["zip", "rar", "7z", "tar", "gz"];
+
+export const CATEGORIES = {
+  photo: PHOTO_EXTS,
+  document: DOCUMENT_EXTS,
+  spreadsheet: SPREADSHEET_EXTS,
+  presentation: PRESENTATION_EXTS,
+  video: VIDEO_EXTS,
+  audio: AUDIO_EXTS,
+  archive: ARCHIVE_EXTS,
+};
+
 export const ACCESS_LEVELS = [
   { value: "personal", label: "Personal", description: "Only you can access" },
   { value: "universal", label: "Universal", description: "All staff can access" },
