@@ -108,6 +108,12 @@ export default function JobSearch() {
       )}
 
       {results && (
+        <Button variant="outline" size="sm" onClick={() => setResults(null)} className="gap-2">
+          ← Back to Search
+        </Button>
+      )}
+
+      {results && (
         <div className="space-y-5">
           {/* Direct Job Board Links */}
           <div>
