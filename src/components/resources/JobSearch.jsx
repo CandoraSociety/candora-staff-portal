@@ -197,23 +197,15 @@ export default function JobSearch() {
               <h4 className="text-sm font-semibold text-slate-700 mb-2">Related Roles to Also Search</h4>
               <div className="grid md:grid-cols-2 gap-2">
                 {results.related_titles.map((item, i) => (
-                  <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                  <button
+                    key={i}
+                    onClick={() => { setJobType(item.title); setResults(null); }}
+                    className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-left hover:bg-amber-100 hover:border-amber-300 transition-colors cursor-pointer"
+                  >
+                    <p className="text-sm font-semibold text-amber-800">{item.title}</p>
                     <p className="text-xs text-slate-500 mt-0.5">{item.reason}</p>
-                    <div className="flex gap-2 flex-wrap mt-1.5">
-                      {JOB_BOARDS.map(board => (
-                        <a
-                          key={board.name}
-                          href={board.url(item.title, location)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          {board.name.split(' ')[0]}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
+                    <p className="text-xs text-amber-600 mt-1.5 font-medium">Click to search →</p>
+                  </button>
                 ))}
               </div>
             </div>
