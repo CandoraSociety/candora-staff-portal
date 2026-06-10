@@ -1,108 +1,206 @@
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
-import { Menu, X, ChevronLeft } from 'lucide-react';
+import { 
+  Menu, X, ChevronLeft, Home, FolderOpen, Globe, User, Shield, 
+  DollarSign, Building2, Search, Upload, PackagePlus, FolderHeart, 
+  LayoutDashboard, StickyNote, CheckSquare, Pencil, LogOut 
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
-  { label: "My Files",    path: "/filemanager" },
+  { path: "/filemanager", label: "Dashboard", icon: Home, roles: null },
+  { path: "/filemanager/files", label: "All Files", icon: FolderOpen, roles: null },
+  { path: "/filemanager/files?access=universal", label: "Universal Files", icon: Globe, roles: null },
+  { path: "/filemanager/files?access=personal", label: "My Files", icon: User, roles: null },
+  { path: "/filemanager/files?access=manager", label: "Manager Files", icon: Shield, roles: ["admin", "manager"] },
+  { path: "/filemanager/files?access=finance", label: "Finance Files", icon: DollarSign, roles: ["admin", "finance"] },
+  { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, roles: ["admin", "corporate"] },
+  { path: "/filemanager/files", label: "Search", icon: Search, roles: null, search: true },
+  { path: "/filemanager/upload", label: "Upload", icon: Upload, roles: null },
+  { path: "/filemanager/bulk", label: "Bulk Import", icon: PackagePlus, roles: null },
+  { path: "/filemanager/collections", label: "Collections", icon: FolderHeart, roles: null },
+  { path: "/filemanager/workspace", label: "My Workspace", icon: LayoutDashboard, roles: null },
+  { path: "/filemanager/notes", label: "Notes", icon: StickyNote, roles: null },
+  { path: "/filemanager/editor", label: "File Editor", icon: Pencil, roles: null },
 ];
 
 function AppNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState(null);
+  const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me() });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, [location.pathname]);
+  const handleLogout = async () => {
+    await base44.auth.logout();
+    window.location.href = '/';
+  };
 
-  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+  const visibleItems = NAV_ITEMS.filter(item => {
+    if (!item.roles) return true;
+    if (!user) return false;
+    return item.roles.includes(user.role);
+  });
 
   const NavButton = ({ item }) => {
-    const active = location.pathname === item.path;
+    const isActive = item.search 
+      ? location.pathname === item.path && location.search.includes('access=')
+      : location.pathname === item.path;
+    
+    const Icon = item.icon;
+    
     return (
       <button
         onClick={() => navigate(item.path)}
         className={cn(
-          "px-3 py-1.5 text-sm rounded-md font-medium transition-colors relative",
-          active
-            ? "text-[hsl(231,64%,16%)] font-semibold"
-            : "text-white/80 hover:text-white hover:bg-white/10"
+          "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md font-medium transition-colors",
+          isActive
+            ? "bg-primary text-primary-foreground"
+            : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
         )}
-        style={active ? { background: "hsl(42,100%,54%)" } : {}}
       >
-        {item.label}
+        <Icon className="h-4 w-4 shrink-0" />
+        {!collapsed && <span>{item.label}</span>}
       </button>
     );
   };
 
   return (
-    <div className="sticky top-0 z-40" style={{ background: "hsl(231,64%,20%)" }}>
-      <div className="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-14">
+    <>
+      {/* Mobile overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMenuOpen(false)} />
+      )}
 
-        {/* Logo + Wordmark */}
-        <Link to="/" className="flex items-center gap-3 shrink-0 group" title={user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}>
-          <img
-            src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
-            alt="Candora logo"
-            className="h-9 w-9 object-contain rounded-full group-hover:opacity-80 transition-opacity"
-          />
-          <span className="hidden md:block" style={{ fontFamily: "'Arial Black', 'Impact', sans-serif", fontSize: "15px", letterSpacing: "0.02em" }}>
-            <span style={{ fontWeight: 900, color: "hsl(42,100%,54%)" }}>CANDORA</span>
-            <span style={{ fontWeight: 400, color: "rgba(255,255,255,0.85)", marginLeft: "4px" }}>File Manager</span>
-          </span>
-        </Link>
-
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-0.5 flex-1 mx-4">
-          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed top-0 left-0 h-full bg-sidebar border-r border-sidebar-border z-50 transition-all duration-300",
+        collapsed ? "w-[70px]" : "w-64",
+        "hidden lg:block"
+      )}>
+        {/* Logo */}
+        <div className="h-14 flex items-center gap-3 px-4 border-b border-sidebar-border">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
+            <img
+              src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+              alt="Candora"
+              className="h-8 w-8 object-contain rounded-full"
+            />
+            {!collapsed && (
+              <span className="font-display font-bold text-sidebar-primary text-sm">CANDORA</span>
+            )}
+          </Link>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 ml-auto text-sidebar-foreground/50 hover:text-sidebar-foreground"
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+          </Button>
         </div>
 
-        {/* User Name */}
-        {user && (
-          <span className="text-xs text-white/50 hidden md:block ml-4 shrink-0">
-            {user.full_name || user.email}
-          </span>
-        )}
+        {/* Navigation */}
+        <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
+          {visibleItems.map((item) => (
+            <NavButton key={item.path} item={item} />
+          ))}
+        </nav>
 
-        {/* Mobile Hamburger */}
-        <button
-          className="md:hidden text-white/80 hover:text-white p-2 rounded-md"
-          onClick={() => setMenuOpen(v => !v)}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Dropdown */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-white/10 px-4 py-3 flex flex-col gap-1" style={{ background: "hsl(231,55%,25%)" }}>
-          <Link to="/" className="flex items-center gap-1 text-xs text-yellow-300 font-semibold py-1.5 px-2 rounded hover:bg-white/10">
-            <ChevronLeft className="w-3.5 h-3.5" /> {user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}
-          </Link>
-          <div className="border-t border-white/10 my-1" />
-          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+        {/* User Profile */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-sidebar-border bg-sidebar">
           {user && (
-            <p className="text-xs text-white/40 mt-2 pt-2 border-t border-white/10">
-              {user.full_name || user.email}
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
+                <span className="text-xs font-semibold text-sidebar-primary">
+                  {user.full_name?.charAt(0) || user.email.charAt(0)}
+                </span>
+              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-sidebar-foreground truncate">
+                    {user.full_name || user.email}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/50 capitalize">{user.role}</p>
+                </div>
+              )}
+              {!collapsed && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-sidebar-foreground/50 hover:text-destructive" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
+      </aside>
+
+      {/* Mobile Sidebar */}
+      {menuOpen && (
+        <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar lg:hidden z-50">
+          <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
+            <Link to="/" className="flex items-center gap-2">
+              <img
+                src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+                alt="Candora"
+                className="h-8 w-8 object-contain rounded-full"
+              />
+              <span className="font-display font-bold text-sidebar-primary text-sm">CANDORA</span>
+            </Link>
+            <Button variant="ghost" size="icon" onClick={() => setMenuOpen(false)}>
+              <X className="h-5 w-5 text-sidebar-foreground" />
+            </Button>
+          </div>
+          <nav className="p-3 space-y-1">
+            {visibleItems.map((item) => (
+              <NavButton key={item.path} item={item} />
+            ))}
+          </nav>
+          {user && (
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-sidebar-foreground">{user.full_name || user.email}</p>
+                  <p className="text-xs text-sidebar-foreground/50 capitalize">{user.role}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 text-sidebar-foreground/50 hover:text-destructive" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </aside>
       )}
-    </div>
+
+      {/* Main Content */}
+      <div className={cn(
+        "transition-all duration-300",
+        collapsed ? "lg:ml-[70px]" : "lg:ml-64"
+      )}>
+        {/* Mobile Header */}
+        <header className="lg:hidden h-14 flex items-center justify-between px-4 border-b bg-background">
+          <Link to="/" className="flex items-center gap-2">
+            <img
+              src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+              alt="Candora"
+              className="h-8 w-8 object-contain rounded-full"
+            />
+            <span className="font-display font-bold text-primary text-sm">CANDORA</span>
+          </Link>
+          <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-6 max-w-7xl mx-auto">
+          <Outlet />
+        </main>
+      </div>
+    </>
   );
 }
 
-export default function FileManagerLayout() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <AppNav />
-      <main className="w-full">
-        <Outlet />
-      </main>
-    </div>
-  );
-}
+export default AppNav;
