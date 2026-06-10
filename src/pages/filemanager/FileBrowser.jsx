@@ -18,7 +18,7 @@ export default function FileBrowser() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState("grid");
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({ category: "all", access: "all", fileType: "all", sort: "-created_date" });
+  const [filters, setFilters] = useState({ fileType: "all", category: "all", access: "all", sort: "-created_date" });
   const [showSorting, setShowSorting] = useState(false);
   const [filesToSort, setFilesToSort] = useState([]);
 
@@ -50,6 +50,14 @@ export default function FileBrowser() {
     if (search) {
       const q = search.toLowerCase();
       result = result.filter((f) => (f.display_name || f.original_name || "").toLowerCase().includes(q) || (f.description || "").toLowerCase().includes(q));
+    }
+    if (filters.fileType !== "all") {
+      const exts = { pdf: ["pdf"], doc: ["doc", "docx"], xls: ["xls", "xlsx"], ppt: ["ppt", "pptx"], image: ["png", "jpg", "jpeg", "gif", "webp", "svg"] };
+      const allowedExts = exts[filters.fileType] || [];
+      result = result.filter((f) => {
+        const ext = (f.file_type || f.original_name?.split(".").pop()?.toLowerCase() || "");
+        return allowedExts.includes(ext);
+      });
     }
     if (filters.category !== "all") result = result.filter((f) => f.category === filters.category);
     if (filters.access !== "all") result = result.filter((f) => f.access_level === filters.access);

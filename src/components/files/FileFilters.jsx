@@ -34,6 +34,18 @@ const ACCESS_LEVELS = [
 export default function FileFilters({ filters, onFilterChange }) {
   return (
     <div className="flex items-center gap-2 flex-wrap">
+      <Select value={filters.fileType} onValueChange={(v) => onFilterChange({ ...filters, fileType: v })}>
+        <SelectTrigger className="w-32 h-8 text-xs"><SelectValue placeholder="File Type" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="pdf">PDF</SelectItem>
+          <SelectItem value="doc">Word</SelectItem>
+          <SelectItem value="xls">Excel</SelectItem>
+          <SelectItem value="ppt">PowerPoint</SelectItem>
+          <SelectItem value="image">Images</SelectItem>
+          <SelectItem value="other">Other</SelectItem>
+        </SelectContent>
+      </Select>
       <Select value={filters.category} onValueChange={(v) => onFilterChange({ ...filters, category: v })}>
         <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
         <SelectContent>
