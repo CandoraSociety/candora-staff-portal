@@ -11,6 +11,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [croppedArea, setCroppedArea] = useState(null);
 
   const onCropChange = useCallback((crop) => {
     setCrop(crop);
@@ -25,26 +26,43 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   }, []);
 
   const onCropCompleted = useCallback((croppedArea, croppedAreaPixels) => {
+    console.log('Crop completed:', { croppedArea, croppedAreaPixels });
+    setCroppedArea(croppedArea);
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleCrop = async () => {
-    if (!croppedAreaPixels) {
-      console.error('No cropped area pixels available');
+    console.log('Starting crop:', { imageSrc, croppedArea, croppedAreaPixels, rotation });
+    
+    const pixelsToUse = croppedAreaPixels || croppedArea;
+    
+    if (!pixelsToUse) {
+      console.error('No cropped area available');
+      alert('Please adjust the image (drag or zoom) before saving');
+      return;
+    }
+    
+    if (!pixelsToUse.width || !pixelsToUse.height) {
+      console.error('Invalid crop dimensions:', pixelsToUse);
+      alert('Invalid crop area. Please try again.');
       return;
     }
     
     setIsSaving(true);
     try {
-      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      const croppedImage = await getCroppedImg(imageSrc, pixelsToUse, rotation);
+      console.log('Cropped image result:', croppedImage);
       if (croppedImage) {
         await onCropComplete(croppedImage);
         onClose();
+      } else {
+        throw new Error('No image returned from crop');
       }
     } catch (error) {
       console.error('Error cropping image:', error);
       console.error('Error details:', error.message);
-      alert('Failed to crop image. Please try again.');
+      console.error('Error stack:', error.stack);
+      alert('Failed to crop image: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -52,9 +70,10 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 
   const resetCrop = () => {
     setCrop({ x: 0, y: 0 });
-    setZoom(1);
+    setZoom(1.5);
     setRotation(0);
     setCroppedAreaPixels(null);
+    setCroppedArea(null);
   };
 
   return (
@@ -139,7 +158,11 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
+  console.log('getCroppedImg called with:', { imageSrc, pixelCrop, rotation });
+  
   const image = await createImage(imageSrc);
+  console.log('Image loaded:', { width: image.width, height: image.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight });
+  
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -147,15 +170,14 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('No 2d context');
   }
 
-  const scaleX = image.naturalWidth / image.width;
-  const scaleY = image.naturalHeight / image.height;
-  
   const pixelCropScaled = {
-    x: pixelCrop.x * scaleX,
-    y: pixelCrop.y * scaleY,
-    width: pixelCrop.width * scaleX,
-    height: pixelCrop.height * scaleY,
+    x: pixelCrop.x,
+    y: pixelCrop.y,
+    width: pixelCrop.width,
+    height: pixelCrop.height,
   };
+
+  console.log('Crop area:', pixelCropScaled);
 
   canvas.width = pixelCropScaled.width;
   canvas.height = pixelCropScaled.height;
@@ -172,8 +194,11 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     image.height
   );
 
+  console.log('Canvas drawn, converting to blob...');
+
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
+      console.log('Blob created:', blob);
       if (!blob) {
         reject(new Error('Canvas is empty'));
         return;
@@ -183,9 +208,13 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
         const base64data = reader.result;
+        console.log('Base64 data created, length:', base64data?.length);
         resolve(base64data);
       };
-      reader.onerror = reject;
+      reader.onerror = (e) => {
+        console.error('FileReader error:', e);
+        reject(e);
+      };
     }, 'image/jpeg', 0.95);
   });
 }
