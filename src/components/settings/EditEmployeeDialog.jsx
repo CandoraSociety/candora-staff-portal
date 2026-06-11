@@ -3,8 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { Save, X } from 'lucide-react';
+
+const departments = [
+  'Administration', 'Operations', 'Finance', 'Human Resources',
+  'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'
+];
 
 export default function EditEmployeeDialog({ open, employeeRecord, currentUser, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -12,6 +18,7 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
     last_name: employeeRecord?.last_name || currentUser?.full_name?.split(' ')?.slice(1).join(' ') || '',
     email: employeeRecord?.email || currentUser?.email || '',
     phone: employeeRecord?.phone || '',
+    department: employeeRecord?.department || '',
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -85,6 +92,21 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
               value={formData.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="department">Department</Label>
+            <Select value={formData.department} onValueChange={(value) => handleChange('department', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="No department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={null}>No department</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
