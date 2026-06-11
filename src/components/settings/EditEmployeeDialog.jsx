@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,20 +7,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import { Save, X } from 'lucide-react';
 
-const departments = [
+const DEPARTMENTS = [
   'Administration', 'Operations', 'Finance', 'Human Resources',
   'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'
 ];
 
-export default function EditEmployeeDialog({ open, employeeRecord, currentUser, onClose, onSave }) {
-  const [formData, setFormData] = useState({
-    first_name: employeeRecord?.first_name || currentUser?.full_name?.split(' ')[0] || '',
-    last_name: employeeRecord?.last_name || currentUser?.full_name?.split(' ')?.slice(1).join(' ') || '',
+function buildInitialForm(employeeRecord, currentUser) {
+  // Only fall back to full_name if there's no employee record at all and full_name looks like a real name (has a space)
+  const fullName = currentUser?.full_name || '';
+  const hasSpace = fullName.includes(' ');
+  return {
+    first_name: employeeRecord?.first_name || (hasSpace ? fullName.split(' ')[0] : ''),
+    last_name: employeeRecord?.last_name || (hasSpace ? fullName.split(' ').slice(1).join(' ') : ''),
     email: employeeRecord?.email || currentUser?.email || '',
     phone: employeeRecord?.phone || '',
     department: employeeRecord?.department || '',
-  });
+    custom_department: '',
+  };
+}
+
+export default function EditEmployeeDialog({ open, employeeRecord, currentUser, onClose, onSave }) {
+  const [formData, setFormData] = useState(() => buildInitialForm(employeeRecord, currentUser));
   const [isSaving, setIsSaving] = useState(false);
+
+  // Re-initialise whenever the dialog opens with fresh data
+  useEffect(() => {
+    if (open) {
+      setFormData(buildInitialForm(employeeRecord, currentUser));
+    }
+  }, [open, employeeRecord, currentUser]);
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -29,14 +44,22 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const dept = formData.department === 'Other' && formData.custom_department.trim()
+        ? formData.custom_department.trim()
+        : formData.department;
+
+      const payload = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone,
+        department: dept || null,
+      };
+
       if (employeeRecord) {
-        await base44.entities.Employee.update(employeeRecord.id, formData);
+        await base44.entities.Employee.update(employeeRecord.id, payload);
       } else {
-        await base44.entities.Employee.create({
-          ...formData,
-          department: 'Other',
-          position: '',
-        });
+        await base44.entities.Employee.create({ ...payload, position: '' });
       }
       onSave();
     } catch (error) {
@@ -48,7 +71,7 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Contact Information</DialogTitle>
@@ -95,18 +118,26 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="department">Department</Label>
+            <Label>Department</Label>
             <Select value={formData.department} onValueChange={(value) => handleChange('department', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="No department" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={null}>No department</SelectItem>
-                {departments.map(dept => (
+                {DEPARTMENTS.map(dept => (
                   <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {formData.department === 'Other' && (
+              <Input
+                placeholder="Please specify your department"
+                value={formData.custom_department}
+                onChange={(e) => handleChange('custom_department', e.target.value)}
+                className="mt-2"
+              />
+            )}
           </div>
         </div>
 
