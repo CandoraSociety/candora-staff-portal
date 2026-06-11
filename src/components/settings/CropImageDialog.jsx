@@ -92,7 +92,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             }}
             showGrid={false}
             cropShape="round"
-            objectFit="contain"
+            objectFit="cover"
           />
         </div>
 
@@ -154,29 +154,18 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Missing crop area or image');
   }
 
+  // Load image at its natural size by forcing naturalWidth/naturalHeight
   const image = await createImage(imageSrc);
+
+  // react-easy-crop with objectFit="contain" gives pixelCrop in natural image coordinates
+  // Clamp output to 400px max
+  const outputSize = Math.min(Math.round(pixelCrop.width), 400);
+
   const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('Could not get canvas context');
-  }
-
-  // Scale pixelCrop (which is in rendered/display pixels) to natural image pixels
-  const scaleX = image.naturalWidth / image.width;
-  const scaleY = image.naturalHeight / image.height;
-
-  const srcX = pixelCrop.x * scaleX;
-  const srcY = pixelCrop.y * scaleY;
-  const srcW = pixelCrop.width * scaleX;
-  const srcH = pixelCrop.height * scaleY;
-
-  const maxSize = 400;
-  const outputSize = Math.min(Math.round(srcW), maxSize);
-
   canvas.width = outputSize;
   canvas.height = outputSize;
 
+  const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
@@ -186,7 +175,11 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     ctx.translate(-outputSize / 2, -outputSize / 2);
   }
 
-  ctx.drawImage(image, srcX, srcY, srcW, srcH, 0, 0, outputSize, outputSize);
+  ctx.drawImage(
+    image,
+    pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
+    0, 0, outputSize, outputSize
+  );
 
   return canvas.toDataURL('image/jpeg', 0.85);
 }
