@@ -28,8 +28,8 @@ export default function EventsMgrLayout() {
                 <Calendar className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-display font-bold text-sidebar-foreground">Events Manager</h1>
-                <p className="text-xs text-sidebar-foreground/70">Events • Programs • Projects</p>
+                <h1 className="font-display font-bold text-sidebar-foreground">Events/Projects/Programs</h1>
+                <p className="text-xs text-sidebar-foreground/70">Manager</p>
               </div>
             </Link>
           </div>
