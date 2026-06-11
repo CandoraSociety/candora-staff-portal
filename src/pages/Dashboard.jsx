@@ -10,7 +10,7 @@ import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { FolderOpen, Sparkles, Settings } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings, Search } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
@@ -108,6 +108,11 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Global Search Bar */}
+      <div className="max-w-2xl">
+        <GlobalSearch user={user} access={access} />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

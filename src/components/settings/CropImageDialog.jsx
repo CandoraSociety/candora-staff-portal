@@ -7,7 +7,7 @@ import { X, Check, ZoomIn } from 'lucide-react';
 
 export default function CropImageDialog({ open, imageSrc, onCropComplete, onClose }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(1.5);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
@@ -28,14 +28,20 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   }, []);
 
   const handleCrop = async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixels) {
+      console.error('No cropped area pixels available');
+      return;
+    }
     
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      onCropComplete(croppedImage);
-      onClose();
+      if (croppedImage) {
+        onCropComplete(croppedImage);
+        onClose();
+      }
     } catch (error) {
       console.error('Error cropping image:', error);
+      alert('Failed to crop image. Please try again.');
     }
   };
 
@@ -79,7 +85,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             </div>
             <Slider
               value={[zoom]}
-              min={1}
+              min={0.5}
               max={3}
               step={0.1}
               onValueChange={(value) => onZoomChange(value[0])}
