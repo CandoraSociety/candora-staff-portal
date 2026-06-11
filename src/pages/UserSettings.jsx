@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
+import CropImageDialog from '@/components/settings/CropImageDialog';
 
 export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
@@ -34,6 +35,8 @@ export default function UserSettings() {
   const [showActivity, setShowActivity] = useState(preferences?.show_recent_activity ?? true);
   const [showAnnouncements, setShowAnnouncements] = useState(preferences?.show_announcements ?? true);
   const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -41,12 +44,22 @@ export default function UserSettings() {
 
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setProfilePicture(file_url);
-      
-      await base44.auth.updateMe({ avatar_url: file_url });
-      queryClient.invalidateQueries(['currentUser']);
+      setImageToCrop(file_url);
+      setCropDialogOpen(true);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
+    }
+  };
+
+  const handleCropComplete = async (croppedImageUrl) => {
+    try {
+      setProfilePicture(croppedImageUrl);
+      await base44.auth.updateMe({ avatar_url: croppedImageUrl });
+      queryClient.invalidateQueries(['currentUser']);
+      setCropDialogOpen(false);
+      setImageToCrop(null);
+    } catch (error) {
+      console.error('Error saving cropped image:', error);
     }
   };
 
@@ -141,6 +154,9 @@ export default function UserSettings() {
               )}
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Tip: After uploading, you can drag to reposition and zoom to get the perfect crop
+          </p>
         </CardContent>
       </Card>
 
@@ -248,6 +264,16 @@ export default function UserSettings() {
           Save Changes
         </Button>
       </div>
+
+      <CropImageDialog
+        open={cropDialogOpen}
+        imageSrc={imageToCrop}
+        onCropComplete={handleCropComplete}
+        onClose={() => {
+          setCropDialogOpen(false);
+          setImageToCrop(null);
+        }}
+      />
     </div>
   );
 }
