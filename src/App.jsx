@@ -111,6 +111,7 @@ import GrantsFundingDB from '@/pages/grants/GrantsFundingDB';
 import GrantsProposals from '@/pages/grants/GrantsProposals';
 import GrantsSubmissions from '@/pages/grants/GrantsSubmissions';
 import GrantsReports from '@/pages/grants/GrantsReports';
+import GrantsFiles from '@/pages/grants/GrantsFiles';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -227,6 +228,7 @@ const AuthenticatedApp = () => {
           <Route path="/grants/funding-db" element={<GrantsFundingDB />} />
           <Route path="/grants/proposals" element={<GrantsSubmissions />} />
           <Route path="/grants/reports" element={<GrantsReports />} />
+          <Route path="/grants/files" element={<GrantsFiles />} />
         </Route>
 
         {/* Marketing & Fundraising Manager - standalone layout */}
