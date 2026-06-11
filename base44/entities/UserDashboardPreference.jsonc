@@ -1,0 +1,52 @@
+{
+  "name": "UserDashboardPreference",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Reference to User"
+    },
+    "visible_portal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of PortalCard IDs this user wants to see on their dashboard"
+    },
+    "hidden_portal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of PortalCard IDs this user has hidden"
+    },
+    "custom_welcome_message": {
+      "type": "string",
+      "description": "Optional custom welcome message for this user"
+    },
+    "show_stats_widget": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_recent_activity": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_announcements": {
+      "type": "boolean",
+      "default": true
+    },
+    "layout_preference": {
+      "type": "string",
+      "enum": [
+        "grid",
+        "list",
+        "mixed"
+      ],
+      "default": "grid"
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

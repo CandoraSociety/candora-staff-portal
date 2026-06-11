@@ -1,0 +1,253 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+
+export default function UserSettings() {
+  const { user: currentUser } = useOutletContext();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: preferences } = useQuery({
+    queryKey: ['dashboardPreferences', currentUser?.id],
+    queryFn: () => base44.entities.UserDashboardPreference.filter({ user_id: currentUser?.id }).then(data => data[0]),
+    enabled: !!currentUser?.id,
+  });
+
+  const { data: allPortals = [] } = useQuery({
+    queryKey: ['allPortals'],
+    queryFn: () => base44.entities.PortalCard.list(),
+  });
+
+  const [profilePicture, setProfilePicture] = useState(currentUser?.avatar_url || '');
+  const [layout, setLayout] = useState(preferences?.layout_preference || 'grid');
+  const [showStats, setShowStats] = useState(preferences?.show_stats_widget ?? true);
+  const [showActivity, setShowActivity] = useState(preferences?.show_recent_activity ?? true);
+  const [showAnnouncements, setShowAnnouncements] = useState(preferences?.show_announcements ?? true);
+  const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProfilePicture(file_url);
+      
+      await base44.auth.updateMe({ avatar_url: file_url });
+      queryClient.invalidateQueries(['currentUser']);
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    try {
+      if (preferences) {
+        await base44.entities.UserDashboardPreference.update(preferences.id, {
+          layout_preference: layout,
+          show_stats_widget: showStats,
+          show_recent_activity: showActivity,
+          show_announcements: showAnnouncements,
+          visible_portal_ids: visiblePortals,
+        });
+      } else {
+        await base44.entities.UserDashboardPreference.create({
+          user_id: currentUser.id,
+          layout_preference: layout,
+          show_stats_widget: showStats,
+          show_recent_activity: showActivity,
+          show_announcements: showAnnouncements,
+          visible_portal_ids: visiblePortals,
+        });
+      }
+      queryClient.invalidateQueries(['dashboardPreferences']);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+    }
+  };
+
+  const togglePortal = (portalId) => {
+    setVisiblePortals(prev => 
+      prev.includes(portalId) 
+        ? prev.filter(id => id !== portalId)
+        : [...prev, portalId]
+    );
+  };
+
+  const accessiblePortals = allPortals.filter(card => {
+    if (!currentUser?.role) return false;
+    if (!card.allowed_roles || card.allowed_roles.length === 0) return true;
+    return card.allowed_roles.includes(currentUser.role);
+  });
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div>
+        <h1 className="text-3xl font-display font-bold">My Settings</h1>
+        <p className="text-muted-foreground mt-1">Customize your dashboard and profile</p>
+      </div>
+
+      {/* Profile Picture */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Picture</CardTitle>
+          <CardDescription>Upload a photo to personalize your profile</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-6">
+            <Avatar className="w-24 h-24">
+              <AvatarImage src={profilePicture} />
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="space-y-2">
+              <Label htmlFor="profile-upload" className="cursor-pointer">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                  <Upload className="w-4 h-4" />
+                  <span>Upload new photo</span>
+                </div>
+                <Input
+                  id="profile-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </Label>
+              {profilePicture && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setProfilePicture('');
+                    base44.auth.updateMe({ avatar_url: '' });
+                    queryClient.invalidateQueries(['currentUser']);
+                  }}
+                >
+                  <X className="w-3 h-3 mr-1" />
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Dashboard Layout */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dashboard Layout</CardTitle>
+          <CardDescription>Choose how your dashboard content is displayed</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-3">
+            <Button
+              variant={layout === 'grid' ? 'default' : 'outline'}
+              onClick={() => setLayout('grid')}
+              className="flex-1"
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Grid
+            </Button>
+            <Button
+              variant={layout === 'list' ? 'default' : 'outline'}
+              onClick={() => setLayout('list')}
+              className="flex-1"
+            >
+              <List className="w-4 h-4 mr-2" />
+              List
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Widget Visibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Widget Visibility</CardTitle>
+          <CardDescription>Choose which widgets to show on your dashboard</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Statistics Widget</Label>
+              <p className="text-xs text-muted-foreground">Show quick stats and metrics</p>
+            </div>
+            <Switch checked={showStats} onCheckedChange={setShowStats} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Recent Activity</Label>
+              <p className="text-xs text-muted-foreground">Show your recent files and notes</p>
+            </div>
+            <Switch checked={showActivity} onCheckedChange={setShowActivity} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Announcements</Label>
+              <p className="text-xs text-muted-foreground">Show organization announcements</p>
+            </div>
+            <Switch checked={showAnnouncements} onCheckedChange={setShowAnnouncements} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Portal Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Portal Shortcuts</CardTitle>
+          <CardDescription>Select which portals appear on your dashboard</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {accessiblePortals.map(portal => (
+              <div
+                key={portal.id}
+                className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                  visiblePortals.includes(portal.id)
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onClick={() => togglePortal(portal.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: portal.color || '#e2e8f0' }}>
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{portal.name}</p>
+                    <p className="text-xs text-muted-foreground">{portal.category}</p>
+                  </div>
+                </div>
+                {visiblePortals.includes(portal.id) && (
+                  <Badge variant="default" className="text-xs">Visible</Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={() => navigate('/')}>
+          Cancel
+        </Button>
+        <Button onClick={handleSavePreferences}>
+          <Save className="w-4 h-4 mr-2" />
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+}

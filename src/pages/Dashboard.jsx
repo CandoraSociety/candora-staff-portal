@@ -9,7 +9,7 @@ import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import PortalTransition from '@/components/PortalTransition';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
@@ -38,7 +38,22 @@ export default function Dashboard() {
     enabled: access.isAdmin,
   });
 
-  const accessibleCards = cards.filter(card => access.canAccessCard(card));
+  const { data: userPreferences } = useQuery({
+    queryKey: ['userPreferences', user?.id],
+    queryFn: async () => {
+      const prefs = await base44.entities.UserDashboardPreference.filter({ user_id: user?.id });
+      return prefs[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const accessibleCards = cards.filter(card => {
+    if (!access.canAccessCard(card)) return false;
+    if (userPreferences?.favorite_portal_urls?.length > 0) {
+      return userPreferences.favorite_portal_urls.includes(card.url);
+    }
+    return true;
+  });
 
   const userAnnouncements = announcements.filter(a => {
     if (!a.is_active) return false;
@@ -65,11 +80,32 @@ export default function Dashboard() {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
         </div>
         <div className="relative z-10 flex items-center gap-8">
-          <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
+          {userPreferences?.profile_picture_url ? (
+            <img 
+              src={userPreferences.profile_picture_url} 
+              alt={user?.full_name || 'User'} 
+              className="h-32 w-32 rounded-full border-4 border-primary/30 object-cover shadow-lg"
+            />
+          ) : (
+            <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
+          )}
           <div>
-            <h1 className="text-4xl font-display font-bold text-white mb-2">Welcome to Candora</h1>
-            <p className="text-primary text-lg font-semibold">{user?.full_name || 'Guest'}</p>
-            <p className="text-white/80 mt-1">Your integrated management platform</p>
+            <div className="flex items-start justify-between w-full">
+              <div>
+                <h1 className="text-4xl font-display font-bold text-white mb-2">
+                  {userPreferences?.profile_picture_url ? 'Welcome Back' : 'Welcome to Candora'}
+                </h1>
+                <p className="text-primary text-lg font-semibold">{user?.full_name || 'Guest'}</p>
+                <p className="text-white/80 mt-1">Your integrated management platform</p>
+              </div>
+              <Link 
+                to="/user/settings" 
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Customize
+              </Link>
+            </div>
           </div>
         </div>
       </div>

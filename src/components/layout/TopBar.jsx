@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, Menu } from 'lucide-react';
+import { Bell, Search, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { base44 } from '@/api/base44Client';
 import { ROLES } from '@/lib/constants';
+import { Link } from 'react-router-dom';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
   const initials = (user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -50,6 +51,11 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem className="text-xs text-muted-foreground">{user?.email}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <Link to="/user/settings" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
+              <Settings className="w-4 h-4" />
+              Settings
+            </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => base44.auth.logout('/login')}>
               Sign Out

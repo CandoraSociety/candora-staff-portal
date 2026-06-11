@@ -26,11 +26,28 @@
       "type": "string"
     },
     "avatar_url": {
-      "type": "string"
+      "type": "string",
+      "description": "URL to user's profile picture"
     },
     "is_active": {
       "type": "boolean",
       "default": true
+    },
+    "dashboard_layout": {
+      "type": "string",
+      "enum": [
+        "default",
+        "compact",
+        "expanded"
+      ],
+      "default": "default"
+    },
+    "favorite_portal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of PortalCard IDs the user has favorited"
     }
   }
 }
