@@ -63,7 +63,7 @@ export default function GrantsSubmissions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold">Submissions Archive</h1>
+        <h1 className="text-3xl font-display font-bold text-accent">Submissions Archive</h1>
         <p className="text-muted-foreground mt-1">Browse all submitted and awarded proposals</p>
       </div>
 
@@ -95,7 +95,7 @@ export default function GrantsSubmissions() {
       ) : (
         <div className="space-y-8">
           {[
-            { key: 'pending',  label: 'Pending Decision', statuses: ['submitted'],           badgeClass: 'bg-primary/10 text-primary' },
+            { key: 'pending',  label: 'Pending Decision', statuses: ['submitted'],           badgeClass: 'bg-accent/10 text-accent' },
             { key: 'awarded',  label: 'Awarded',           statuses: ['awarded', 'reporting'], badgeClass: 'bg-green-100 text-green-700' },
             { key: 'rejected', label: 'Rejected',          statuses: ['declined'],            badgeClass: 'bg-destructive/10 text-destructive' },
           ].map(group => {

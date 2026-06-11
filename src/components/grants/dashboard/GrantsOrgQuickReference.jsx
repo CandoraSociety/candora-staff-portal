@@ -48,7 +48,7 @@ export default function GrantsOrgQuickReference({ orgInfo }) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-primary" />
+          <Building2 className="h-4 w-4 text-accent" />
           Org Quick Reference
         </CardTitle>
       </CardHeader>

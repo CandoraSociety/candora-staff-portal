@@ -24,7 +24,7 @@ export default function GrantsUpcomingReports({ reports = [], projects = [] }) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-primary" />
+          <BarChart3 className="h-4 w-4 text-accent" />
           Upcoming Reports
         </CardTitle>
       </CardHeader>

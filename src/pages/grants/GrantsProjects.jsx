@@ -15,9 +15,9 @@ import GroupManagerModal from '@/components/projects/GroupManagerModal';
 import AssignGroupModal from '@/components/projects/AssignGroupModal';
 
 const STATUS_COLORS = {
-  draft: 'bg-gray-100 text-gray-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  submitted: 'bg-purple-100 text-purple-700',
+  draft: 'bg-secondary text-secondary-foreground',
+  in_progress: 'bg-accent/10 text-accent',
+  submitted: 'bg-primary/15 text-amber-800',
   awarded: 'bg-green-100 text-green-700',
   declined: 'bg-red-100 text-red-700',
   cancelled: 'bg-gray-100 text-gray-500',
@@ -146,7 +146,7 @@ export default function GrantsProjects() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-heading font-bold">Projects</h1>
+          <h1 className="text-2xl font-heading font-bold text-accent">Projects</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{projects.length} total projects</p>
         </div>
         <div className="flex items-center gap-2">
@@ -183,12 +183,12 @@ export default function GrantsProjects() {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-1 flex-wrap border-b pb-2">
+      <div className="flex gap-1 flex-wrap border-b border-accent/20 pb-2">
         {STATUS_TABS.map(s => (
           <button
             key={s}
             onClick={() => setStatusTab(s)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-t-md capitalize transition-colors ${statusTab === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-3 py-1.5 text-xs font-medium rounded-t-md capitalize transition-colors ${statusTab === s ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
             {s === 'all' ? `All (${projects.length})` : `${s.replace('_', ' ')} (${projects.filter(p => p.status === s).length})`}
           </button>

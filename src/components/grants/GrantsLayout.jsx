@@ -22,15 +22,15 @@ export default function GrantsLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border">
+      <header className="sticky top-0 z-50 bg-accent text-accent-foreground shadow-md">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo → app home */}
             <Link to="/" className="flex items-center gap-3">
               <img src={LOGO_URL} alt="Candora" className="h-9 w-9 rounded-lg object-contain" />
-              <span className="font-display font-bold text-sm text-foreground leading-tight">
+              <span className="font-display font-bold text-sm text-primary leading-tight">
                 Grant / Proposal<br />
-                <span className="text-muted-foreground font-normal text-xs">Manager</span>
+                <span className="text-accent-foreground/60 font-normal text-xs">Manager</span>
               </span>
             </Link>
 
@@ -44,7 +44,7 @@ export default function GrantsLayout() {
                     "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                     isActive(item)
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      : "text-accent-foreground/70 hover:text-accent-foreground hover:bg-white/10"
                   )}
                 >
                   <item.icon className="w-4 h-4" />
@@ -54,15 +54,15 @@ export default function GrantsLayout() {
             </nav>
 
             <div className="flex items-center gap-2">
-              <Link to="/grants/reports" className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
-                <Bell className="w-5 h-5 text-muted-foreground" />
+              <Link to="/grants/reports" className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
+                <Bell className="w-5 h-5 text-accent-foreground/70" />
               </Link>
             </div>
           </div>
         </div>
 
         {/* Mobile nav */}
-        <div className="md:hidden border-t border-border px-4 py-2 flex gap-1 overflow-x-auto">
+        <div className="md:hidden border-t border-white/10 px-4 py-2 flex gap-1 overflow-x-auto">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.path}
@@ -71,7 +71,7 @@ export default function GrantsLayout() {
                 "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all",
                 isActive(item)
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-secondary"
+                  : "text-accent-foreground/70 hover:bg-white/10"
               )}
             >
               <item.icon className="w-3.5 h-3.5" />

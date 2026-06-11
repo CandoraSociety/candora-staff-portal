@@ -15,9 +15,9 @@ import AIAssistant from '@/components/project/AIAssistant';
 import ProjectProgress from '@/components/project/ProjectProgress';
 
 const STATUS_COLORS = {
-  draft: 'bg-gray-100 text-gray-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  submitted: 'bg-purple-100 text-purple-700',
+  draft: 'bg-secondary text-secondary-foreground',
+  in_progress: 'bg-accent/10 text-accent',
+  submitted: 'bg-primary/15 text-amber-800',
   awarded: 'bg-green-100 text-green-700',
   declined: 'bg-red-100 text-red-700',
   cancelled: 'bg-gray-100 text-gray-500',
@@ -117,7 +117,7 @@ export default function GrantsProjectDetail() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-        <TabsList className="flex-wrap h-auto gap-1 bg-muted p-1">
+        <TabsList className="flex-wrap h-auto gap-1 bg-accent/10 p-1">
           <TabsTrigger value="proposal">Proposal Builder</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="submission">Final Submission</TabsTrigger>

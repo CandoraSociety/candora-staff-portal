@@ -41,7 +41,7 @@ export default function GrantsHome() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight">Grant / Proposal Manager</h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-accent">Grant / Proposal Manager</h1>
           <p className="text-muted-foreground text-sm mt-1">Overview of your grants and proposals</p>
         </div>
         <Link to="/grants/projects">
@@ -52,15 +52,15 @@ export default function GrantsHome() {
       <GrantsCountdownBanner deadlines={allDeadlines} />
 
       <Link to="/filemanager/files" className="block">
-        <div className="flex items-center gap-4 bg-card border rounded-xl px-5 py-4 hover:shadow-md transition-shadow group">
-          <div className="p-2.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+        <div className="flex items-center gap-4 bg-accent/5 border border-accent/20 rounded-xl px-5 py-4 hover:shadow-md hover:border-accent/40 transition-all group">
+          <div className="p-2.5 rounded-lg bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
             <FolderOpen className="w-5 h-5" />
           </div>
           <div className="flex-1">
             <p className="font-semibold text-sm">File Storage</p>
             <p className="text-xs text-muted-foreground">Funder agreements, signed contracts &amp; past reports</p>
           </div>
-          <span className="text-xs text-primary font-medium group-hover:underline">Browse files →</span>
+          <span className="text-xs text-accent font-medium group-hover:underline">Browse files →</span>
         </div>
       </Link>
 

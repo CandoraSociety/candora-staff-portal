@@ -54,7 +54,7 @@ export default function GrantsActiveProposalsList({ projects = [] }) {
       {inProgress.length > 0 && (
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">In Progress</p>
+            <p className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">In Progress</p>
             <div className="space-y-0.5">
               {inProgress.slice(0, 5).map(p => <ProjectRow key={p.id} project={p} />)}
             </div>
@@ -64,7 +64,7 @@ export default function GrantsActiveProposalsList({ projects = [] }) {
       {submitted.length > 0 && (
         <Card>
           <CardContent className="pt-4 pb-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Submitted — Awaiting Decision</p>
+            <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">Submitted — Awaiting Decision</p>
             <div className="space-y-0.5">
               {submitted.slice(0, 5).map(p => <ProjectRow key={p.id} project={p} />)}
             </div>
