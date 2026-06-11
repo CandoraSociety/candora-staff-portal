@@ -9,6 +9,7 @@ import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import PortalTransition from '@/components/PortalTransition';
+import GlobalSearch from '@/components/search/GlobalSearch';
 import { FolderOpen, Sparkles, Settings } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
@@ -67,6 +68,11 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Search Bar */}
+      <div className="max-w-2xl">
+        <GlobalSearch user={user} access={access} />
+      </div>
+
       {/* Hero Section with Logo */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-accent via-accent/90 to-accent-foreground p-12">
         <div className="absolute inset-0 opacity-10">
