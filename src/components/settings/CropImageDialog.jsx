@@ -92,7 +92,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             }}
             showGrid={false}
             cropShape="round"
-            objectFit="cover"
+            objectFit="contain"
           />
         </div>
 
@@ -154,34 +154,42 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Missing crop area or image');
   }
 
-  // Load image at its natural size by forcing naturalWidth/naturalHeight
   const image = await createImage(imageSrc);
 
-  // react-easy-crop with objectFit="contain" gives pixelCrop in natural image coordinates
-  // Clamp output to 400px max
-  const outputSize = Math.min(Math.round(pixelCrop.width), 400);
+  // This is the official react-easy-crop canvas approach
+  // See: https://github.com/ValentinH/react-easy-crop#onCropComplete
+  const rotRad = (rotation * Math.PI) / 180;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  // Bounding box of the rotated image
+  const bboxWidth = Math.abs(Math.cos(rotRad) * image.naturalWidth) + Math.abs(Math.sin(rotRad) * image.naturalHeight);
+  const bboxHeight = Math.abs(Math.sin(rotRad) * image.naturalWidth) + Math.abs(Math.cos(rotRad) * image.naturalHeight);
 
-  const ctx = canvas.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
+  // Create a canvas large enough for the rotated image
+  const rotCanvas = document.createElement('canvas');
+  rotCanvas.width = bboxWidth;
+  rotCanvas.height = bboxHeight;
+  const rotCtx = rotCanvas.getContext('2d');
 
-  if (rotation) {
-    ctx.translate(outputSize / 2, outputSize / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-outputSize / 2, -outputSize / 2);
-  }
+  rotCtx.translate(bboxWidth / 2, bboxHeight / 2);
+  rotCtx.rotate(rotRad);
+  rotCtx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
 
-  ctx.drawImage(
-    image,
+  // Now crop from the rotated canvas
+  const outputSize = Math.min(pixelCrop.width, 400);
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = outputSize;
+  cropCanvas.height = outputSize;
+  const cropCtx = cropCanvas.getContext('2d');
+  cropCtx.imageSmoothingEnabled = true;
+  cropCtx.imageSmoothingQuality = 'high';
+
+  cropCtx.drawImage(
+    rotCanvas,
     pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
     0, 0, outputSize, outputSize
   );
 
-  return canvas.toDataURL('image/jpeg', 0.85);
+  return cropCanvas.toDataURL('image/jpeg', 0.85);
 }
 
 function createImage(url) {
