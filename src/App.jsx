@@ -105,6 +105,8 @@ import DevTasks from '@/pages/DevTasks';
 import GrantsLayout from '@/components/grants/GrantsLayout';
 import GrantsHome from '@/pages/grants/GrantsHome';
 import GrantsProjects from '@/pages/grants/GrantsProjects';
+import GrantsNewProject from '@/pages/grants/GrantsNewProject';
+import GrantsProjectDetail from '@/pages/grants/GrantsProjectDetail';
 import GrantsFunders from '@/pages/grants/GrantsFunders';
 import GrantsFundingDB from '@/pages/grants/GrantsFundingDB';
 import GrantsProposals from '@/pages/grants/GrantsProposals';
@@ -223,6 +225,8 @@ const AuthenticatedApp = () => {
         <Route element={<GrantsLayout />}>
           <Route path="/grants" element={<GrantsHome />} />
           <Route path="/grants/projects" element={<GrantsProjects />} />
+          <Route path="/grants/projects/new" element={<GrantsNewProject />} />
+          <Route path="/grants/projects/:id" element={<GrantsProjectDetail />} />
           <Route path="/grants/funders" element={<GrantsFunders />} />
           <Route path="/grants/funding-db" element={<GrantsFundingDB />} />
           <Route path="/grants/proposals" element={<GrantsProposals />} />

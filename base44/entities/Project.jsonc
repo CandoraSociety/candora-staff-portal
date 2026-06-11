@@ -69,6 +69,10 @@
     "amount_requested": {
       "type": "number"
     },
+    "amount_requested_text": {
+      "type": "string",
+      "description": "Free text amount if not numeric"
+    },
     "amount_awarded": {
       "type": "number"
     },
@@ -87,6 +91,10 @@
       "type": "string",
       "format": "date"
     },
+    "submission_deadline_text": {
+      "type": "string",
+      "description": "Free text deadline if not a date"
+    },
     "submission_date": {
       "type": "string",
       "format": "date"
@@ -94,6 +102,14 @@
     "decision_date": {
       "type": "string",
       "format": "date"
+    },
+    "expected_notification_date": {
+      "type": "string",
+      "description": "Expected decision/notification date (free text or date)"
+    },
+    "expected_notification_notes": {
+      "type": "string",
+      "description": "Notes about expected notification timing"
     },
     "lead_staff": {
       "type": "string",
