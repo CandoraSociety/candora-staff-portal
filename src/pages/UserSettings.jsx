@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List } from 'lucide-react';
+import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, ChevronUp, User, Briefcase, Calendar } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 
@@ -17,11 +17,18 @@ export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [employeeInfoExpanded, setEmployeeInfoExpanded] = useState(false);
 
   const { data: preferences } = useQuery({
     queryKey: ['dashboardPreferences', currentUser?.id],
     queryFn: () => base44.entities.UserDashboardPreference.filter({ user_id: currentUser?.id }).then(data => data[0]),
     enabled: !!currentUser?.id,
+  });
+
+  const { data: employeeRecord } = useQuery({
+    queryKey: ['employeeRecord', currentUser?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: currentUser?.email }).then(data => data[0]),
+    enabled: !!currentUser?.email,
   });
 
   const { data: allPortals = [] } = useQuery({
@@ -130,14 +137,14 @@ export default function UserSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-6">
-              <Avatar className="w-24 h-24 relative">
+              <Avatar className="w-32 h-32 relative">
                 <AvatarImage src={profilePicture} />
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
                   {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
                 {isSavingProfile && (
                   <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   </div>
                 )}
               </Avatar>
@@ -179,6 +186,63 @@ export default function UserSettings() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Employee Info */}
+        {employeeRecord && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Employee Information</CardTitle>
+                  <CardDescription>Your employment details</CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEmployeeInfoExpanded(!employeeInfoExpanded)}
+                  className="gap-2"
+                >
+                  {employeeInfoExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {employeeInfoExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
+            </CardHeader>
+            {employeeInfoExpanded && (
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Full Name</p>
+                      <p className="font-medium">{employeeRecord.first_name} {employeeRecord.last_name}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Position</p>
+                      <p className="font-medium">{employeeRecord.position}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Start Date</p>
+                      <p className="font-medium">{employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                    <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Department</p>
+                      <p className="font-medium">{employeeRecord.department}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
 
       {/* Dashboard Layout */}
       <Card>

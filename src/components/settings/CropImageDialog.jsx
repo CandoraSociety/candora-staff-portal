@@ -94,7 +94,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             }}
             showGrid={false}
             cropShape="round"
-            objectFit="contain"
+            objectFit="cover"
             cropSize={{ width: 300, height: 300 }}
           />
         </div>
@@ -165,6 +165,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Could not process image');
   }
 
+  // Use natural dimensions for full resolution output
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
 
@@ -178,6 +179,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   ctx.rotate((rotation * Math.PI) / 180);
   ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
+  // Draw with proper scaling to preserve the exact crop area
   ctx.drawImage(
     image,
     pixelCrop.x * scaleX,
