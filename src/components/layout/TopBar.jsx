@@ -38,9 +38,9 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.avatar_url} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={user?.avatar_url} className="object-cover" />
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>

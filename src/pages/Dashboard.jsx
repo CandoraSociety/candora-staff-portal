@@ -8,6 +8,7 @@ import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
 import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import StatsWidget from '@/components/dashboard/StatsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
+import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import { FolderOpen, Sparkles, Settings, Search } from 'lucide-react';
@@ -68,10 +69,8 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="max-w-2xl">
-        <GlobalSearch user={user} access={access} />
-      </div>
+      {/* Employee Info Card */}
+      <EmployeeInfoCard user={user} />
 
       {/* Hero Section with Logo */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-accent via-accent/90 to-accent-foreground p-12">
@@ -102,11 +101,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Global Search Bar */}
-      <div className="max-w-2xl">
-        <GlobalSearch user={user} access={access} />
-      </div>
-      
+      {/* Portal Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/filemanager">
           <div className="group p-6 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
