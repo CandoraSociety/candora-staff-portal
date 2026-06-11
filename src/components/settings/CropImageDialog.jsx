@@ -10,6 +10,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   const [zoom, setZoom] = useState(1.5);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const onCropChange = useCallback((crop) => {
     setCrop(crop);
@@ -33,15 +34,19 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
       return;
     }
     
+    setIsSaving(true);
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
       if (croppedImage) {
-        onCropComplete(croppedImage);
+        await onCropComplete(croppedImage);
         onClose();
       }
     } catch (error) {
       console.error('Error cropping image:', error);
+      console.error('Error details:', error.message);
       alert('Failed to crop image. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -74,6 +79,9 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             onZoomChange={onZoomChange}
             onRotationChange={onRotationChange}
             showGrid={false}
+            cropShape="round"
+            objectFit="horizontal-cover"
+            cropSize={{ width: 300, height: 300 }}
           />
         </div>
 
@@ -116,9 +124,13 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             <X className="w-4 h-4 mr-2" />
             Cancel
           </Button>
-          <Button onClick={handleCrop}>
-            <Check className="w-4 h-4 mr-2" />
-            Crop and Save
+          <Button onClick={handleCrop} disabled={isSaving}>
+            {isSaving ? (
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
+            ) : (
+              <Check className="w-4 h-4 mr-2" />
+            )}
+            {isSaving ? 'Saving...' : 'Crop and Save'}
           </Button>
         </div>
       </DialogContent>
@@ -135,40 +147,45 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('No 2d context');
   }
 
-  const maxSize = Math.max(image.width, image.height);
-  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  
+  const pixelCropScaled = {
+    x: pixelCrop.x * scaleX,
+    y: pixelCrop.y * scaleY,
+    width: pixelCrop.width * scaleX,
+    height: pixelCrop.height * scaleY,
+  };
 
-  canvas.width = safeArea;
-  canvas.height = safeArea;
+  canvas.width = pixelCropScaled.width;
+  canvas.height = pixelCropScaled.height;
 
-  ctx.translate(safeArea / 2, safeArea / 2);
+  ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((rotation * Math.PI) / 180);
-  ctx.translate(-safeArea / 2, -safeArea / 2);
+  ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
   ctx.drawImage(
     image,
-    safeArea / 2 - image.width * 0.5,
-    safeArea / 2 - image.height * 0.5
+    -pixelCropScaled.x,
+    -pixelCropScaled.y,
+    image.width,
+    image.height
   );
 
-  const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  ctx.putImageData(
-    data,
-    Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-    Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
-  );
-
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        console.error('Canvas is empty');
+        reject(new Error('Canvas is empty'));
         return;
       }
-      resolve(URL.createObjectURL(blob));
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        const base64data = reader.result;
+        resolve(base64data);
+      };
+      reader.onerror = reject;
     }, 'image/jpeg', 0.95);
   });
 }
