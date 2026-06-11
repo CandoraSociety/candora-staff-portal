@@ -42,17 +42,36 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
         "fixed left-0 top-0 h-screen bg-card border-r border-border flex flex-col z-40 transition-all duration-300",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}>
-        {/* Logo */}
-        <div className={cn(
-          "flex items-center h-20 border-b border-border",
-          collapsed ? "justify-center" : "justify-center gap-3"
-        )}>
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-foreground font-display font-bold text-xl">C</span>
+        {/* Logo and Collapse Toggle */}
+        <div className="h-20 border-b border-border">
+          <div className={cn(
+            "flex items-center justify-between px-3 h-full",
+            collapsed ? "justify-center" : ""
+          )}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-primary-foreground font-display font-bold text-lg">C</span>
+              </div>
+              {!collapsed && (
+                <span className="font-display font-bold text-foreground text-xl truncate">Candora</span>
+              )}
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setCollapsed(!collapsed)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
+                >
+                  {collapsed ? (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{collapsed ? 'Expand' : 'Collapse'}</TooltipContent>
+            </Tooltip>
           </div>
-          {!collapsed && (
-            <span className="font-display font-bold text-foreground text-xl truncate">Candora</span>
-          )}
         </div>
 
         {/* Navigation */}
@@ -76,24 +95,8 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           )}
         </nav>
 
-        {/* Footer - always visible at bottom */}
-        <div className="border-t border-border p-3 space-y-1 flex-shrink-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                className={cn(
-                  "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium bg-muted/50 hover:bg-muted transition-colors mb-1",
-                  collapsed && "justify-center px-0"
-                )}
-              >
-                {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                {!collapsed && <span className="font-semibold">Collapse</span>}
-              </button>
-            </TooltipTrigger>
-            {collapsed && <TooltipContent side="right">Expand</TooltipContent>}
-          </Tooltip>
-
+        {/* Footer */}
+        <div className="border-t border-border p-3 flex-shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
