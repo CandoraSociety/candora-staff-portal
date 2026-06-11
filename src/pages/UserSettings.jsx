@@ -104,14 +104,15 @@ export default function UserSettings() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-display font-bold">My Settings</h1>
-        <p className="text-muted-foreground mt-1">Customize your dashboard and profile</p>
-      </div>
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col max-w-4xl mx-auto">
+      <div className="flex-shrink-0 space-y-6">
+        <div>
+          <h1 className="text-3xl font-display font-bold">My Settings</h1>
+          <p className="text-muted-foreground mt-1">Customize your dashboard and profile</p>
+        </div>
 
-      {/* Profile Picture */}
-      <Card>
+        {/* Profile Picture */}
+        <Card>
         <CardHeader>
           <CardTitle>Profile Picture</CardTitle>
           <CardDescription>Upload a photo to personalize your profile</CardDescription>
@@ -253,16 +254,18 @@ export default function UserSettings() {
             ))}
           </div>
         </CardContent>
-      </Card>
+        </Card>
 
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={() => navigate('/')}>
-          Cancel
-        </Button>
-        <Button onClick={handleSavePreferences}>
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
-        </Button>
+        <div className="flex-shrink-0 sticky bottom-0 bg-background pt-4 pb-6 border-t mt-auto">
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Cancel
+          </Button>
+          <Button onClick={handleSavePreferences}>
+            <Save className="w-4 h-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
       </div>
 
       <CropImageDialog
@@ -274,6 +277,7 @@ export default function UserSettings() {
           setImageToCrop(null);
         }}
       />
+      </div>
     </div>
   );
 }
