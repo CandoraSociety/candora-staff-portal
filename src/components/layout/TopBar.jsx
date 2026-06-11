@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, Search, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
@@ -39,6 +39,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors">
               <Avatar className="w-8 h-8">
+                <AvatarImage src={user?.avatar_url} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                   {initials}
                 </AvatarFallback>
