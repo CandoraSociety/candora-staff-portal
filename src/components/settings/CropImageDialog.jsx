@@ -148,49 +148,47 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  return new Promise(async (resolve, reject) => {
+    try {
+      const image = await createImage(imageSrc);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
 
-  if (!ctx) {
-    throw new Error('No 2d context');
-  }
-
-  canvas.width = pixelCrop.width;
-  canvas.height = pixelCrop.height;
-
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((rotation * Math.PI) / 180);
-  ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
-  );
-
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error('Canvas is empty'));
+      if (!ctx) {
+        reject(new Error('No 2d context'));
         return;
       }
-      
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = () => {
-        resolve(reader.result);
-      };
-      reader.onerror = (e) => {
-        reject(e);
-      };
-    }, 'image/jpeg', 0.95);
+
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+
+      canvas.width = pixelCrop.width * scaleX;
+      canvas.height = pixelCrop.height * scaleY;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+      ctx.drawImage(
+        image,
+        pixelCrop.x * scaleX,
+        pixelCrop.y * scaleY,
+        pixelCrop.width * scaleX,
+        pixelCrop.height * scaleY,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      resolve(dataUrl);
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 
