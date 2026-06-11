@@ -76,8 +76,24 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           )}
         </nav>
 
-        {/* Footer */}
-        <div className="border-t border-border p-3 space-y-1">
+        {/* Footer - always visible at bottom */}
+        <div className="border-t border-border p-3 space-y-1 flex-shrink-0">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className={cn(
+                  "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm font-medium bg-muted/50 hover:bg-muted transition-colors mb-1",
+                  collapsed && "justify-center px-0"
+                )}
+              >
+                {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                {!collapsed && <span className="font-semibold">Collapse</span>}
+              </button>
+            </TooltipTrigger>
+            {collapsed && <TooltipContent side="right">Expand</TooltipContent>}
+          </Tooltip>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -92,22 +108,6 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
               </button>
             </TooltipTrigger>
             {collapsed && <TooltipContent side="right">Sign Out</TooltipContent>}
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                className={cn(
-                  "flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
-                  collapsed && "justify-center px-0"
-                )}
-              >
-                {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                {!collapsed && <span>Collapse</span>}
-              </button>
-            </TooltipTrigger>
-            {collapsed && <TooltipContent side="right">Expand</TooltipContent>}
           </Tooltip>
         </div>
       </aside>
