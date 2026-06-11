@@ -163,9 +163,23 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
 
-  // Set canvas to the actual crop size at natural resolution
-  canvas.width = Math.floor(pixelCrop.width * scaleX);
-  canvas.height = Math.floor(pixelCrop.height * scaleY);
+  // Calculate crop dimensions at natural resolution
+  const cropWidth = Math.floor(pixelCrop.width * scaleX);
+  const cropHeight = Math.floor(pixelCrop.height * scaleY);
+
+  // Resize to max 800x800 for profile pictures to avoid file size limits
+  const maxSize = 800;
+  let finalWidth = cropWidth;
+  let finalHeight = cropHeight;
+  
+  if (cropWidth > maxSize || cropHeight > maxSize) {
+    const scale = Math.min(maxSize / cropWidth, maxSize / cropHeight);
+    finalWidth = Math.floor(cropWidth * scale);
+    finalHeight = Math.floor(cropHeight * scale);
+  }
+
+  canvas.width = finalWidth;
+  canvas.height = finalHeight;
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
@@ -178,7 +192,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
 
-  // Draw the cropped portion - scale the crop coordinates to natural image size
+  // Draw the cropped and resized portion
   ctx.drawImage(
     image,
     Math.floor(pixelCrop.x * scaleX),
@@ -191,7 +205,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     canvas.height
   );
 
-  return canvas.toDataURL('image/jpeg', 0.95);
+  return canvas.toDataURL('image/jpeg', 0.85);
 }
 
 function createImage(url) {
