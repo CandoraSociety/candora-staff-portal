@@ -1,9 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Briefcase, Calendar, Mail } from 'lucide-react';
+import { Mail, Phone, Building2 } from 'lucide-react';
 
 export default function EmployeeInfoCard({ user }) {
   const { data: employeeRecord } = useQuery({
@@ -12,50 +11,52 @@ export default function EmployeeInfoCard({ user }) {
     enabled: !!user?.email,
   });
 
-  console.log('EmployeeInfoCard:', { user, employeeRecord });
-  
   if (!user) return null;
 
+  const name = employeeRecord
+    ? `${employeeRecord.first_name} ${employeeRecord.last_name}`.trim()
+    : user?.full_name || 'User';
+  const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
   return (
-    <Card className="bg-gradient-to-br from-card to-accent/5 border-accent/20">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          <Avatar className="w-20 h-20 flex-shrink-0">
-            <AvatarImage src={user?.avatar_url} className="object-cover" />
-            <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
-              {(user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 space-y-2">
-            <div>
-              <h3 className="font-semibold text-lg text-foreground">{employeeRecord?.first_name || user?.full_name || 'User'}</h3>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-            </div>
-            {employeeRecord ? (
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-foreground">{employeeRecord.position}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-foreground">
-                    {employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}
-                  </span>
-                </div>
-                {employeeRecord.department && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{employeeRecord.department}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground pt-2">Employee record not found</p>
-            )}
-          </div>
+    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg p-6 flex items-center gap-5 min-h-[120px]">
+      {/* Decorative circles */}
+      <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/5 pointer-events-none" />
+      <div className="absolute -bottom-6 -right-4 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />
+
+      <Avatar className="w-16 h-16 flex-shrink-0 ring-2 ring-white/30">
+        <AvatarImage src={user?.avatar_url} className="object-cover" />
+        <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex-1 min-w-0 relative z-10">
+        <h3 className="font-bold text-xl leading-tight truncate">{name}</h3>
+        {employeeRecord?.position && (
+          <p className="text-sm font-medium text-accent-foreground/80 mt-0.5">{employeeRecord.position}</p>
+        )}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+          {employeeRecord?.department && (
+            <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
+              <Building2 className="w-3 h-3" />
+              {employeeRecord.department}
+            </span>
+          )}
+          {user?.email && (
+            <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
+              <Mail className="w-3 h-3" />
+              {user.email}
+            </span>
+          )}
+          {employeeRecord?.phone && (
+            <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
+              <Phone className="w-3 h-3" />
+              {employeeRecord.phone}
+            </span>
+          )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
