@@ -38,7 +38,9 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
     
     setIsSaving(true);
     try {
+      console.log('Starting crop with pixels:', croppedAreaPixels);
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      console.log('Cropped image result:', croppedImage ? 'success' : 'null');
       if (croppedImage) {
         await onCropComplete(croppedImage);
         onClose();
@@ -47,7 +49,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      alert('Failed to crop image: ' + error.message);
+      alert('Failed to crop image: ' + (error.message || 'Unknown error'));
     } finally {
       setIsSaving(false);
     }
@@ -148,48 +150,53 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const image = await createImage(imageSrc);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+  try {
+    console.log('Creating image from src:', imageSrc ? 'has src' : 'no src');
+    const image = await createImage(imageSrc);
+    console.log('Image loaded:', image.naturalWidth, 'x', image.naturalHeight);
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-      if (!ctx) {
-        reject(new Error('No 2d context'));
-        return;
-      }
-
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
-
-      canvas.width = pixelCrop.width * scaleX;
-      canvas.height = pixelCrop.height * scaleY;
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-      ctx.drawImage(
-        image,
-        pixelCrop.x * scaleX,
-        pixelCrop.y * scaleY,
-        pixelCrop.width * scaleX,
-        pixelCrop.height * scaleY,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      resolve(dataUrl);
-    } catch (error) {
-      reject(error);
+    if (!ctx) {
+      throw new Error('No 2d context');
     }
-  });
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    console.log('Scale factors:', scaleX, scaleY);
+    console.log('Pixel crop:', pixelCrop);
+
+    canvas.width = Math.round(pixelCrop.width * scaleX);
+    canvas.height = Math.round(pixelCrop.height * scaleY);
+    console.log('Canvas size:', canvas.width, 'x', canvas.height);
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+    ctx.drawImage(
+      image,
+      pixelCrop.x * scaleX,
+      pixelCrop.y * scaleY,
+      pixelCrop.width * scaleX,
+      pixelCrop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    console.log('Cropped image created successfully');
+    return dataUrl;
+  } catch (error) {
+    console.error('getCroppedImg error:', error);
+    throw error;
+  }
 }
 
 function createImage(url) {
