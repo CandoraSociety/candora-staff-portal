@@ -162,10 +162,17 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Could not get canvas context');
   }
 
-  // react-easy-crop's pixelCrop is in natural image pixel coordinates — use directly
+  // Scale pixelCrop (which is in rendered/display pixels) to natural image pixels
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+
+  const srcX = pixelCrop.x * scaleX;
+  const srcY = pixelCrop.y * scaleY;
+  const srcW = pixelCrop.width * scaleX;
+  const srcH = pixelCrop.height * scaleY;
+
   const maxSize = 400;
-  const cropSize = Math.min(pixelCrop.width, pixelCrop.height);
-  const outputSize = Math.min(cropSize, maxSize);
+  const outputSize = Math.min(Math.round(srcW), maxSize);
 
   canvas.width = outputSize;
   canvas.height = outputSize;
@@ -179,17 +186,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     ctx.translate(-outputSize / 2, -outputSize / 2);
   }
 
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    outputSize,
-    outputSize
-  );
+  ctx.drawImage(image, srcX, srcY, srcW, srcH, 0, 0, outputSize, outputSize);
 
   return canvas.toDataURL('image/jpeg', 0.85);
 }
