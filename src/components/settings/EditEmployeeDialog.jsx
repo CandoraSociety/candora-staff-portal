@@ -53,7 +53,7 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
         last_name: formData.last_name,
         email: formData.email,
         phone: formData.phone,
-        department: dept || null,
+        department: dept || '',
       };
 
       if (employeeRecord) {
