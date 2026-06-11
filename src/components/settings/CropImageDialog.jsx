@@ -162,56 +162,36 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Could not get canvas context');
   }
 
-  // pixelCrop from react-easy-crop is already in the coordinate space of the displayed image
-  // We need to scale it to the natural image resolution
-  const scaleX = image.naturalWidth / image.width;
-  const scaleY = image.naturalHeight / image.height;
-
-  // Calculate the crop area in natural image coordinates
-  const cropX = (pixelCrop.x / image.width) * image.naturalWidth;
-  const cropY = (pixelCrop.y / image.height) * image.naturalHeight;
-  const cropW = (pixelCrop.width / image.width) * image.naturalWidth;
-  const cropH = (pixelCrop.height / image.height) * image.naturalHeight;
-
-  // Resize to max 400x400 for profile pictures (keeps file size small)
+  // react-easy-crop's pixelCrop is in natural image pixel coordinates — use directly
   const maxSize = 400;
-  let finalWidth = Math.round(cropW);
-  let finalHeight = Math.round(cropH);
-  
-  if (finalWidth > maxSize || finalHeight > maxSize) {
-    const scale = Math.min(maxSize / finalWidth, maxSize / finalHeight);
-    finalWidth = Math.round(finalWidth * scale);
-    finalHeight = Math.round(finalHeight * scale);
-  }
+  const cropSize = Math.min(pixelCrop.width, pixelCrop.height);
+  const outputSize = Math.min(cropSize, maxSize);
 
-  canvas.width = finalWidth;
-  canvas.height = finalHeight;
+  canvas.width = outputSize;
+  canvas.height = outputSize;
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // Apply rotation if needed
   if (rotation) {
-    const rotateRad = (rotation * Math.PI) / 180;
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(rotateRad);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.translate(outputSize / 2, outputSize / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-outputSize / 2, -outputSize / 2);
   }
 
-  // Draw the cropped portion - use the scaled coordinates
   ctx.drawImage(
     image,
-    cropX,
-    cropY,
-    cropW,
-    cropH,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
     0,
     0,
-    canvas.width,
-    canvas.height
+    outputSize,
+    outputSize
   );
 
-  return canvas.toDataURL('image/jpeg', 0.75);
+  return canvas.toDataURL('image/jpeg', 0.85);
 }
 
 function createImage(url) {
