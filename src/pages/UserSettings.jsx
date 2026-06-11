@@ -137,9 +137,9 @@ export default function UserSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-6">
-              <Avatar className="w-32 h-32 relative">
+              <Avatar className="w-40 h-40 relative">
                 <AvatarImage src={profilePicture} />
-                <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+                <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
                   {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
                 {isSavingProfile && (
@@ -188,61 +188,67 @@ export default function UserSettings() {
         </Card>
 
         {/* Employee Info */}
-        {employeeRecord && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Employee Information</CardTitle>
-                  <CardDescription>Your employment details</CardDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEmployeeInfoExpanded(!employeeInfoExpanded)}
-                  className="gap-2"
-                >
-                  {employeeInfoExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  {employeeInfoExpanded ? 'Collapse' : 'Expand'}
-                </Button>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Employee Information</CardTitle>
+                <CardDescription>Your employment details</CardDescription>
               </div>
-            </CardHeader>
-            {employeeInfoExpanded && (
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Full Name</p>
-                      <p className="font-medium">{employeeRecord.first_name} {employeeRecord.last_name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Position</p>
-                      <p className="font-medium">{employeeRecord.position}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Start Date</p>
-                      <p className="font-medium">{employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                    <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Department</p>
-                      <p className="font-medium">{employeeRecord.department}</p>
-                    </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEmployeeInfoExpanded(!employeeInfoExpanded)}
+                className="gap-2"
+              >
+                {employeeInfoExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {employeeInfoExpanded ? 'Collapse' : 'Expand'}
+              </Button>
+            </div>
+          </CardHeader>
+          {employeeInfoExpanded && (
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                  <User className="w-5 h-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Full Name</p>
+                    <p className="font-medium">{employeeRecord?.first_name || currentUser?.full_name || 'N/A'}</p>
                   </div>
                 </div>
-              </CardContent>
-            )}
-          </Card>
-        )}
+                {employeeRecord ? (
+                  <>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Position</p>
+                        <p className="font-medium">{employeeRecord.position}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Start Date</p>
+                        <p className="font-medium">{employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Department</p>
+                        <p className="font-medium">{employeeRecord.department}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="col-span-2 p-4 text-center text-sm text-muted-foreground">
+                    Employee record not found. Contact your administrator to add your employment details.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
+        </Card>
 
       {/* Dashboard Layout */}
       <Card>
