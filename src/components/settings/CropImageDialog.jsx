@@ -85,12 +85,11 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             onImageLoaded={() => {
               setImageLoaded(true);
               setCrop({ x: 0, y: 0 });
-              setZoom(1);
+              setZoom(1.5);
             }}
             showGrid={false}
             cropShape="round"
-            objectFit="cover"
-            cropSize={{ width: 300, height: 300 }}
+            objectFit="contain"
           />
         </div>
 
@@ -148,15 +147,11 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  console.log('getCroppedImg called with:', { imageSrc: imageSrc?.substring(0, 50), pixelCrop, rotation });
-  
   if (!pixelCrop || !imageSrc) {
     throw new Error('Missing crop area or image');
   }
 
   const image = await createImage(imageSrc);
-  console.log('Image loaded:', { naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight });
-  
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -164,17 +159,18 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Could not get canvas context');
   }
 
+  // Calculate the scale between natural image size and displayed size
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
-  console.log('Scale factors:', { scaleX, scaleY });
 
+  // Set canvas to the actual crop size at natural resolution
   canvas.width = Math.floor(pixelCrop.width * scaleX);
   canvas.height = Math.floor(pixelCrop.height * scaleY);
-  console.log('Canvas size:', { width: canvas.width, height: canvas.height });
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
+  // Apply rotation if needed
   if (rotation) {
     const rotateRad = (rotation * Math.PI) / 180;
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -182,21 +178,20 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
 
+  // Draw the cropped portion - scale the crop coordinates to natural image size
   ctx.drawImage(
     image,
-    pixelCrop.x * scaleX,
-    pixelCrop.y * scaleY,
-    pixelCrop.width * scaleX,
-    pixelCrop.height * scaleY,
+    Math.floor(pixelCrop.x * scaleX),
+    Math.floor(pixelCrop.y * scaleY),
+    Math.floor(pixelCrop.width * scaleX),
+    Math.floor(pixelCrop.height * scaleY),
     0,
     0,
     canvas.width,
     canvas.height
   );
 
-  const result = canvas.toDataURL('image/jpeg', 0.95);
-  console.log('Result data URL length:', result?.length);
-  return result;
+  return canvas.toDataURL('image/jpeg', 0.95);
 }
 
 function createImage(url) {
