@@ -1,0 +1,58 @@
+{
+  "name": "ProposalTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "funder_type": {
+      "type": "string",
+      "description": "e.g. Federal, Provincial, Foundation"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "section_title": {
+            "type": "string"
+          },
+          "section_key": {
+            "type": "string"
+          },
+          "is_required": {
+            "type": "boolean"
+          },
+          "word_limit": {
+            "type": "number"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "required_documents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

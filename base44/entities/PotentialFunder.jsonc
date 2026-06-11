@@ -1,0 +1,94 @@
+{
+  "name": "PotentialFunder",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "funder_type": {
+      "type": "string",
+      "enum": [
+        "federal_government",
+        "provincial_government",
+        "municipal_government",
+        "foundation",
+        "corporate",
+        "individual",
+        "other"
+      ]
+    },
+    "website": {
+      "type": "string"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "focus_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "e.g. employment, immigration, youth"
+    },
+    "typical_grant_size": {
+      "type": "string"
+    },
+    "application_info": {
+      "type": "string"
+    },
+    "alignment_score": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "How well this funder aligns with our mandate"
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "identified",
+        "researching",
+        "qualified",
+        "outreach",
+        "application_in_progress",
+        "converted",
+        "not_a_fit"
+      ],
+      "default": "identified"
+    },
+    "source": {
+      "type": "string",
+      "description": "Where we found this funder"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

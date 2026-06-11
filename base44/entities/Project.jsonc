@@ -1,0 +1,156 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Project/grant title"
+    },
+    "project_number": {
+      "type": "string",
+      "description": "Internal project number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_progress",
+        "submitted",
+        "awarded",
+        "declined",
+        "cancelled",
+        "closed"
+      ],
+      "default": "draft"
+    },
+    "project_type": {
+      "type": "string",
+      "enum": [
+        "grant_application",
+        "proposal",
+        "contract",
+        "partnership",
+        "other"
+      ]
+    },
+    "funding_source_id": {
+      "type": "string",
+      "description": "Reference to FundingSource"
+    },
+    "funding_source_name": {
+      "type": "string"
+    },
+    "funding_stream_id": {
+      "type": "string",
+      "description": "Reference to FundingStream"
+    },
+    "funding_stream_name": {
+      "type": "string"
+    },
+    "group_id": {
+      "type": "string",
+      "description": "Reference to ProjectGroup"
+    },
+    "group_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "objectives": {
+      "type": "string"
+    },
+    "target_population": {
+      "type": "string"
+    },
+    "expected_outcomes": {
+      "type": "string"
+    },
+    "amount_requested": {
+      "type": "number"
+    },
+    "amount_awarded": {
+      "type": "number"
+    },
+    "budget_notes": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "submission_deadline": {
+      "type": "string",
+      "format": "date"
+    },
+    "submission_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "decision_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "lead_staff": {
+      "type": "string",
+      "description": "Email of lead staff"
+    },
+    "lead_staff_name": {
+      "type": "string"
+    },
+    "team_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "is_multi_year": {
+      "type": "boolean",
+      "default": false
+    },
+    "reporting_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "reporting_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "semi_annual",
+        "annual",
+        "final_only",
+        "none"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "declined_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ]
+}

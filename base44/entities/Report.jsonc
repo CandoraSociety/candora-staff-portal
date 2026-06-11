@@ -1,0 +1,89 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project"
+    },
+    "funder_reporting_hub_id": {
+      "type": "string",
+      "description": "Reference to FunderReportingHub"
+    },
+    "title": {
+      "type": "string"
+    },
+    "report_type": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "interim",
+        "final",
+        "financial",
+        "narrative",
+        "outcome",
+        "other"
+      ],
+      "default": "progress"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "draft_complete",
+        "under_review",
+        "submitted",
+        "accepted",
+        "revision_requested"
+      ],
+      "default": "not_started"
+    },
+    "reporting_period_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "reporting_period_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "content": {
+      "type": "string",
+      "description": "Rich text report content"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "assigned_to_name": {
+      "type": "string"
+    },
+    "reviewer": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "title",
+    "report_type"
+  ]
+}

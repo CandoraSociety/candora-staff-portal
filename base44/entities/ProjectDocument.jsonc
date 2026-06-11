@@ -1,0 +1,56 @@
+{
+  "name": "ProjectDocument",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project"
+    },
+    "name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "proposal",
+        "budget",
+        "report",
+        "correspondence",
+        "supporting",
+        "contract",
+        "amendment",
+        "other"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string"
+    },
+    "file_size": {
+      "type": "number"
+    },
+    "version": {
+      "type": "string"
+    },
+    "is_final": {
+      "type": "boolean",
+      "default": false
+    },
+    "uploaded_by": {
+      "type": "string"
+    },
+    "uploaded_by_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project_id",
+    "name",
+    "file_url"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "FunderReportingHub",
+  "type": "object",
+  "properties": {
+    "funding_source_id": {
+      "type": "string",
+      "description": "Reference to FundingSource"
+    },
+    "funding_source_name": {
+      "type": "string"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project"
+    },
+    "project_title": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Reporting hub label (e.g. 'IRCC 2024-2025 Reporting')"
+    },
+    "reporting_contact_name": {
+      "type": "string"
+    },
+    "reporting_contact_email": {
+      "type": "string"
+    },
+    "portal_url": {
+      "type": "string",
+      "description": "Online reporting portal URL"
+    },
+    "portal_login_notes": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

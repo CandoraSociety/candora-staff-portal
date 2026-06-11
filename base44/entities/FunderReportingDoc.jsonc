@@ -1,0 +1,50 @@
+{
+  "name": "FunderReportingDoc",
+  "type": "object",
+  "properties": {
+    "hub_id": {
+      "type": "string",
+      "description": "Reference to FunderReportingHub"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project"
+    },
+    "name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "template",
+        "guideline",
+        "submitted_report",
+        "approval",
+        "correspondence",
+        "other"
+      ]
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "reporting_period": {
+      "type": "string"
+    },
+    "uploaded_by": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "hub_id",
+    "name"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "OrganizationInfo",
+  "type": "object",
+  "properties": {
+    "org_name": {
+      "type": "string"
+    },
+    "legal_name": {
+      "type": "string"
+    },
+    "charitable_number": {
+      "type": "string"
+    },
+    "registration_number": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "province": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "executive_director_name": {
+      "type": "string"
+    },
+    "executive_director_email": {
+      "type": "string"
+    },
+    "mission_statement": {
+      "type": "string"
+    },
+    "vision_statement": {
+      "type": "string"
+    },
+    "mandate_description": {
+      "type": "string"
+    },
+    "programs_summary": {
+      "type": "string"
+    },
+    "staff_count": {
+      "type": "number"
+    },
+    "volunteer_count": {
+      "type": "number"
+    },
+    "annual_budget": {
+      "type": "number"
+    },
+    "fiscal_year_end": {
+      "type": "string",
+      "description": "e.g. March 31"
+    },
+    "bank_info_notes": {
+      "type": "string"
+    },
+    "signing_authority_name": {
+      "type": "string"
+    },
+    "signing_authority_title": {
+      "type": "string"
+    },
+    "gst_number": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "org_name"
+  ]
+}

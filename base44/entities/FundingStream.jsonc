@@ -1,0 +1,69 @@
+{
+  "name": "FundingStream",
+  "type": "object",
+  "properties": {
+    "funding_source_id": {
+      "type": "string",
+      "description": "Reference to FundingSource"
+    },
+    "funding_source_name": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Program or stream name"
+    },
+    "description": {
+      "type": "string"
+    },
+    "stream_type": {
+      "type": "string",
+      "enum": [
+        "operating",
+        "project",
+        "capital",
+        "capacity_building",
+        "research",
+        "other"
+      ]
+    },
+    "typical_amount_min": {
+      "type": "number"
+    },
+    "typical_amount_max": {
+      "type": "number"
+    },
+    "eligibility_notes": {
+      "type": "string"
+    },
+    "application_url": {
+      "type": "string"
+    },
+    "application_cycle": {
+      "type": "string",
+      "enum": [
+        "rolling",
+        "annual",
+        "biannual",
+        "quarterly",
+        "one_time",
+        "unknown"
+      ]
+    },
+    "typical_deadline_month": {
+      "type": "number",
+      "description": "1-12"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "funding_source_id"
+  ]
+}

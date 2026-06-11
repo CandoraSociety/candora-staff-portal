@@ -1,0 +1,64 @@
+{
+  "name": "FunderReportingDeadline",
+  "type": "object",
+  "properties": {
+    "hub_id": {
+      "type": "string",
+      "description": "Reference to FunderReportingHub"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project"
+    },
+    "title": {
+      "type": "string"
+    },
+    "deadline_type": {
+      "type": "string",
+      "enum": [
+        "progress_report",
+        "interim_report",
+        "final_report",
+        "financial_report",
+        "outcome_report",
+        "other"
+      ],
+      "default": "progress_report"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reporting_period_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "reporting_period_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "in_progress",
+        "submitted",
+        "accepted",
+        "overdue"
+      ],
+      "default": "upcoming"
+    },
+    "report_id": {
+      "type": "string",
+      "description": "Reference to Report once created"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "hub_id",
+    "title",
+    "due_date"
+  ]
+}

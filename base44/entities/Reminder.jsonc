@@ -1,0 +1,64 @@
+{
+  "name": "Reminder",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "Reference to Project (optional)"
+    },
+    "funder_id": {
+      "type": "string",
+      "description": "Reference to FundingSource or PotentialFunder"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "remind_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When to send the reminder"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "dismissed",
+        "snoozed"
+      ],
+      "default": "pending"
+    },
+    "reminder_type": {
+      "type": "string",
+      "enum": [
+        "deadline",
+        "follow_up",
+        "report_due",
+        "meeting",
+        "renewal",
+        "other"
+      ],
+      "default": "deadline"
+    },
+    "notify_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "snoozed_until": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "remind_at"
+  ]
+}
