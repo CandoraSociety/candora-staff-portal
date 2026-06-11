@@ -12,7 +12,9 @@ export default function EmployeeInfoCard({ user }) {
     enabled: !!user?.email,
   });
 
-  if (!employeeRecord) return null;
+  console.log('EmployeeInfoCard:', { user, employeeRecord });
+  
+  if (!user) return null;
 
   return (
     <Card className="bg-gradient-to-br from-card to-accent/5 border-accent/20">
@@ -26,27 +28,31 @@ export default function EmployeeInfoCard({ user }) {
           </Avatar>
           <div className="flex-1 space-y-2">
             <div>
-              <h3 className="font-semibold text-lg text-foreground">{employeeRecord.first_name} {employeeRecord.last_name}</h3>
+              <h3 className="font-semibold text-lg text-foreground">{employeeRecord?.first_name || user?.full_name || 'User'}</h3>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Briefcase className="w-4 h-4 text-muted-foreground" />
-                <span className="text-foreground">{employeeRecord.position}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-foreground">
-                  {employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}
-                </span>
-              </div>
-              {employeeRecord.department && (
+            {employeeRecord ? (
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="flex items-center gap-2 text-sm">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-foreground">{employeeRecord.department}</span>
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-foreground">{employeeRecord.position}</span>
                 </div>
-              )}
-            </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-foreground">
+                    {employeeRecord.hire_date ? new Date(employeeRecord.hire_date).toLocaleDateString() : 'N/A'}
+                  </span>
+                </div>
+                {employeeRecord.department && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-foreground">{employeeRecord.department}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground pt-2">Employee record not found</p>
+            )}
           </div>
         </div>
       </CardContent>

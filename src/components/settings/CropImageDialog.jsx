@@ -36,23 +36,18 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   const handleCrop = async () => {
     setIsSaving(true);
     try {
+      console.log('Starting crop with pixelCrop:', croppedAreaPixels);
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      console.log('Cropped image result:', croppedImage?.substring(0, 50));
       if (croppedImage) {
-        // Convert data URL to blob and upload
-        const response = await fetch(croppedImage);
-        const blob = await response.blob();
-        const file = new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });
-        
-        // Upload the file and get URL
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        await onCropComplete(file_url);
+        await onCropComplete(croppedImage);
         onClose();
       } else {
         alert('Could not create the cropped image. Please try again.');
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      alert('Could not save the image. Please try a different photo.');
+      alert('Error: ' + (error.message || 'Could not save the image'));
     } finally {
       setIsSaving(false);
     }
@@ -153,28 +148,33 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  if (!pixelCrop) {
-    throw new Error('No crop area selected');
+  console.log('getCroppedImg called with:', { imageSrc: imageSrc?.substring(0, 50), pixelCrop, rotation });
+  
+  if (!pixelCrop || !imageSrc) {
+    throw new Error('Missing crop area or image');
   }
 
   const image = await createImage(imageSrc);
+  console.log('Image loaded:', { naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight });
+  
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
   if (!ctx) {
-    throw new Error('Could not process image');
+    throw new Error('Could not get canvas context');
   }
 
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
+  console.log('Scale factors:', { scaleX, scaleY });
 
   canvas.width = Math.floor(pixelCrop.width * scaleX);
   canvas.height = Math.floor(pixelCrop.height * scaleY);
+  console.log('Canvas size:', { width: canvas.width, height: canvas.height });
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // Handle rotation if needed
   if (rotation) {
     const rotateRad = (rotation * Math.PI) / 180;
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -194,7 +194,9 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     canvas.height
   );
 
-  return canvas.toDataURL('image/jpeg', 0.95);
+  const result = canvas.toDataURL('image/jpeg', 0.95);
+  console.log('Result data URL length:', result?.length);
+  return result;
 }
 
 function createImage(url) {
