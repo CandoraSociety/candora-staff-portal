@@ -42,8 +42,8 @@ export default function GrantsActiveProposalsList({ projects = [] }) {
     return (
       <Card>
         <CardContent className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">No projects yet.</p>
-          <Link to="/grants/projects" className="text-xs text-primary hover:underline mt-1 block">Create your first project →</Link>
+          <p className="text-sm text-muted-foreground">No proposals yet.</p>
+          <Link to="/grants/projects/new" className="text-xs text-primary hover:underline mt-1 block">Create your first proposal →</Link>
         </CardContent>
       </Card>
     );

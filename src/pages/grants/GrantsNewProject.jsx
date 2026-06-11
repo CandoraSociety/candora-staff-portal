@@ -87,7 +87,7 @@ export default function GrantsNewProject() {
       <div className="flex items-center gap-3">
         <Link to="/grants/projects"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
         <div>
-          <h1 className="text-xl font-heading font-bold">New Project</h1>
+          <h1 className="text-xl font-heading font-bold">New Proposal</h1>
           <p className="text-xs text-muted-foreground">Create a new grant application or proposal</p>
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function GrantsNewProject() {
           <CardHeader className="pb-3"><CardTitle className="text-base">Basic Info</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Project Title *</Label>
+              <Label>Proposal Title *</Label>
               <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder="e.g. IRCC Settlement Services 2025-2026" className="mt-1" required />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -207,8 +207,8 @@ export default function GrantsNewProject() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Link to="/grants/projects"><Button variant="outline" type="button">Cancel</Button></Link>
-          <Button type="submit" disabled={saving}>{saving ? 'Creating…' : 'Create Project'}</Button>
+          <Link to="/grants/projects"><Button variant="outline" type="button">Back to Proposals</Button></Link>
+          <Button type="submit" disabled={saving}>{saving ? 'Creating…' : 'Create Proposal'}</Button>
         </div>
       </form>
     </div>

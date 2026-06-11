@@ -62,7 +62,7 @@ export default function GrantsProjectDetail() {
   };
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!project) return <div className="text-center py-12 text-muted-foreground">Project not found.</div>;
+  if (!project) return <div className="text-center py-12 text-muted-foreground">Proposal not found.</div>;
 
   return (
     <div className="space-y-5 h-full flex flex-col">

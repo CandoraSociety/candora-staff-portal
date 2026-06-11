@@ -146,12 +146,12 @@ export default function GrantsProjects() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-accent">Projects</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{projects.length} total projects</p>
+          <h1 className="text-2xl font-heading font-bold text-accent">Proposals</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{projects.length} total proposals</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setShowGroupManager(true)}><FolderOpen className="h-4 w-4 mr-1.5" />Groups</Button>
-          <Link to="/grants/projects/new"><Button className="gap-2"><Plus className="h-4 w-4" />New Project</Button></Link>
+          <Link to="/grants/projects/new"><Button className="gap-2"><Plus className="h-4 w-4" />New Proposal</Button></Link>
         </div>
       </div>
 
@@ -197,7 +197,7 @@ export default function GrantsProjects() {
 
       {/* Content */}
       {filtered.length === 0 ? (
-        <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground text-sm">No projects found.</p></CardContent></Card>
+        <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground text-sm">No proposals found.</p></CardContent></Card>
       ) : groupView ? (
         <div>
           {Object.entries(groupedProjects).map(([key, items]) => renderGroupSection(key, items))}

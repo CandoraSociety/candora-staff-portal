@@ -44,8 +44,8 @@ export default function GrantsHome() {
           <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-accent">Grant / Proposal Manager</h1>
           <p className="text-muted-foreground text-sm mt-1">Overview of your grants and proposals</p>
         </div>
-        <Link to="/grants/projects">
-          <Button className="gap-2 shadow-sm"><Plus className="w-4 h-4" />New Project</Button>
+        <Link to="/grants/projects/new">
+          <Button className="gap-2 shadow-sm"><Plus className="w-4 h-4" />New Proposal</Button>
         </Link>
       </div>
 
