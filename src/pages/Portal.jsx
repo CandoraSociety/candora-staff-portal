@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { AppWindow, Search, Filter } from 'lucide-react';
+import { AppWindow, Search, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PortalCardItem from '@/components/portal/PortalCardItem';
@@ -83,6 +83,26 @@ export default function Portal() {
           </p>
         </div>
       )}
+
+      {/* Built-in portals */}
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">Built-in Portals</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <Link to="/grants">
+            <div className="group p-5 rounded-xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-md transition-all cursor-pointer h-full">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">Grant / Proposal Manager</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Track funding applications, proposals, and funder reporting.</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
