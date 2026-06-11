@@ -113,53 +113,53 @@ export default function UserSettings() {
 
         {/* Profile Picture */}
         <Card>
-        <CardHeader>
-          <CardTitle>Profile Picture</CardTitle>
-          <CardDescription>Upload a photo to personalize your profile</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-6">
-            <Avatar className="w-24 h-24">
-              <AvatarImage src={profilePicture} />
-              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <Label htmlFor="profile-upload" className="cursor-pointer">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                  <Upload className="w-4 h-4" />
-                  <span>Upload new photo</span>
-                </div>
-                <Input
-                  id="profile-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </Label>
-              {profilePicture && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setProfilePicture('');
-                    base44.auth.updateMe({ avatar_url: '' });
-                    queryClient.invalidateQueries(['currentUser']);
-                  }}
-                >
-                  <X className="w-3 h-3 mr-1" />
-                  Remove
-                </Button>
-              )}
+          <CardHeader>
+            <CardTitle>Profile Picture</CardTitle>
+            <CardDescription>Upload a photo to personalize your profile</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-6">
+              <Avatar className="w-24 h-24">
+                <AvatarImage src={profilePicture} />
+                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                  {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-2">
+                <Label htmlFor="profile-upload" className="cursor-pointer">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload new photo</span>
+                  </div>
+                  <Input
+                    id="profile-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </Label>
+                {profilePicture && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setProfilePicture('');
+                      base44.auth.updateMe({ avatar_url: '' });
+                      queryClient.invalidateQueries(['currentUser']);
+                    }}
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tip: After uploading, you can drag to reposition and zoom to get the perfect crop
-          </p>
-        </CardContent>
-      </Card>
+            <p className="text-xs text-muted-foreground">
+              Tip: After uploading, you can drag to reposition and zoom to get the perfect crop
+            </p>
+          </CardContent>
+        </Card>
 
       {/* Dashboard Layout */}
       <Card>

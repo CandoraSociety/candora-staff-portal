@@ -80,20 +80,12 @@ export default function Dashboard() {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
         </div>
         <div className="relative z-10 flex items-center gap-8">
-          {user?.avatar_url ? (
-            <img 
-              src={user.avatar_url} 
-              alt={user?.full_name || 'User'} 
-              className="h-32 w-32 rounded-full border-4 border-primary/30 object-cover shadow-lg"
-            />
-          ) : (
-            <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
-          )}
+          <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
           <div>
             <div className="flex items-start justify-between w-full">
               <div>
                 <h1 className="text-4xl font-display font-bold text-white mb-2">
-                  {user?.avatar_url ? 'Welcome Back' : 'Welcome to Candora'}
+                  Welcome Back
                 </h1>
                 <p className="text-primary text-lg font-semibold">{user?.full_name || 'Guest'}</p>
                 <p className="text-white/80 mt-1">Your integrated management platform</p>
