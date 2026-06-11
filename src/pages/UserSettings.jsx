@@ -17,7 +17,7 @@ export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [employeeInfoExpanded, setEmployeeInfoExpanded] = useState(false);
+  const [employeeInfoExpanded, setEmployeeInfoExpanded] = useState(true);
 
   const { data: preferences } = useQuery({
     queryKey: ['dashboardPreferences', currentUser?.id],
@@ -136,10 +136,10 @@ export default function UserSettings() {
             <CardDescription>Upload a photo to personalize your profile</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-6">
-              <Avatar className="w-40 h-40 relative">
-                <AvatarImage src={profilePicture} />
-                <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <Avatar className="w-48 h-48 relative flex-shrink-0">
+                <AvatarImage src={profilePicture} className="object-cover" />
+                <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
                   {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
                 {isSavingProfile && (

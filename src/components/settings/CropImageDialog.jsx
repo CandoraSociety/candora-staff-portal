@@ -174,29 +174,15 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // Apply rotation around the center
-  const rotateRad = (rotation * Math.PI) / 180;
-  const cos = Math.cos(rotateRad);
-  const sin = Math.sin(rotateRad);
-  
-  // For rotation, we need to account for the rotated corners
-  const absCos = Math.abs(cos);
-  const absSin = Math.abs(sin);
-  const rotatedWidth = canvas.width * absCos + canvas.height * absSin;
-  const rotatedHeight = canvas.width * absSin + canvas.height * absCos;
-  
-  // Create a temporary canvas for rotation
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
-  const tempCtx = tempCanvas.getContext('2d');
-  
-  if (!tempCtx) {
-    throw new Error('Could not process image');
+  // Handle rotation if needed
+  if (rotation) {
+    const rotateRad = (rotation * Math.PI) / 180;
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(rotateRad);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
 
-  // Draw the cropped portion
-  tempCtx.drawImage(
+  ctx.drawImage(
     image,
     pixelCrop.x * scaleX,
     pixelCrop.y * scaleY,
@@ -207,12 +193,6 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     canvas.width,
     canvas.height
   );
-
-  // Now apply rotation to the main canvas
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate(rotateRad);
-  ctx.translate(-canvas.width / 2, -canvas.height / 2);
-  ctx.drawImage(tempCanvas, 0, 0);
 
   return canvas.toDataURL('image/jpeg', 0.95);
 }
