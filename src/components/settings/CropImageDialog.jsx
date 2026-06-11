@@ -159,23 +159,26 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('Could not get canvas context');
   }
 
-  // Calculate the scale between natural image size and displayed size
+  // pixelCrop from react-easy-crop is already in the coordinate space of the displayed image
+  // We need to scale it to the natural image resolution
   const scaleX = image.naturalWidth / image.width;
   const scaleY = image.naturalHeight / image.height;
 
-  // Calculate crop dimensions at natural resolution
-  const cropWidth = Math.floor(pixelCrop.width * scaleX);
-  const cropHeight = Math.floor(pixelCrop.height * scaleY);
+  // Calculate the crop area in natural image coordinates
+  const cropX = (pixelCrop.x / image.width) * image.naturalWidth;
+  const cropY = (pixelCrop.y / image.height) * image.naturalHeight;
+  const cropW = (pixelCrop.width / image.width) * image.naturalWidth;
+  const cropH = (pixelCrop.height / image.height) * image.naturalHeight;
 
-  // Resize to max 800x800 for profile pictures to avoid file size limits
-  const maxSize = 800;
-  let finalWidth = cropWidth;
-  let finalHeight = cropHeight;
+  // Resize to max 500x500 for profile pictures (reasonable size)
+  const maxSize = 500;
+  let finalWidth = Math.round(cropW);
+  let finalHeight = Math.round(cropH);
   
-  if (cropWidth > maxSize || cropHeight > maxSize) {
-    const scale = Math.min(maxSize / cropWidth, maxSize / cropHeight);
-    finalWidth = Math.floor(cropWidth * scale);
-    finalHeight = Math.floor(cropHeight * scale);
+  if (finalWidth > maxSize || finalHeight > maxSize) {
+    const scale = Math.min(maxSize / finalWidth, maxSize / finalHeight);
+    finalWidth = Math.round(finalWidth * scale);
+    finalHeight = Math.round(finalHeight * scale);
   }
 
   canvas.width = finalWidth;
@@ -192,20 +195,20 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     ctx.translate(-canvas.width / 2, -canvas.height / 2);
   }
 
-  // Draw the cropped and resized portion
+  // Draw the cropped portion - use the scaled coordinates
   ctx.drawImage(
     image,
-    Math.floor(pixelCrop.x * scaleX),
-    Math.floor(pixelCrop.y * scaleY),
-    Math.floor(pixelCrop.width * scaleX),
-    Math.floor(pixelCrop.height * scaleY),
+    cropX,
+    cropY,
+    cropW,
+    cropH,
     0,
     0,
     canvas.width,
     canvas.height
   );
 
-  return canvas.toDataURL('image/jpeg', 0.85);
+  return canvas.toDataURL('image/jpeg', 0.9);
 }
 
 function createImage(url) {
