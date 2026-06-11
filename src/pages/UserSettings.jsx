@@ -37,6 +37,7 @@ export default function UserSettings() {
   const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -52,14 +53,18 @@ export default function UserSettings() {
   };
 
   const handleCropComplete = async (croppedImageUrl) => {
+    setIsSavingProfile(true);
     try {
-      setProfilePicture(croppedImageUrl);
       await base44.auth.updateMe({ avatar_url: croppedImageUrl });
+      setProfilePicture(croppedImageUrl);
       queryClient.invalidateQueries(['currentUser']);
       setCropDialogOpen(false);
       setImageToCrop(null);
     } catch (error) {
       console.error('Error saving cropped image:', error);
+      alert('Failed to save profile picture. Please try again.');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -83,9 +88,11 @@ export default function UserSettings() {
           visible_portal_ids: visiblePortals,
         });
       }
-      queryClient.invalidateQueries(['dashboardPreferences']);
+      queryClient.invalidateQueries(['dashboardPreferences', currentUser?.id]);
+      alert('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving preferences:', error);
+      alert('Failed to save settings. Please try again.');
     }
   };
 
@@ -119,11 +126,16 @@ export default function UserSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-6">
-              <Avatar className="w-24 h-24">
+              <Avatar className="w-24 h-24 relative">
                 <AvatarImage src={profilePicture} />
                 <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
                   {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
+                {isSavingProfile && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </Avatar>
               <div className="space-y-2">
                 <Label htmlFor="profile-upload" className="cursor-pointer">
@@ -137,6 +149,7 @@ export default function UserSettings() {
                     accept="image/*"
                     onChange={handleFileUpload}
                     className="hidden"
+                    disabled={isSavingProfile}
                   />
                 </Label>
                 {profilePicture && (
@@ -148,6 +161,7 @@ export default function UserSettings() {
                       base44.auth.updateMe({ avatar_url: '' });
                       queryClient.invalidateQueries(['currentUser']);
                     }}
+                    disabled={isSavingProfile}
                   >
                     <X className="w-3 h-3 mr-1" />
                     Remove
@@ -156,7 +170,7 @@ export default function UserSettings() {
               </div>
             </div>
             <p className="text-xs text-muted-foreground">
-              Tip: After uploading, you can drag to reposition and zoom to get the perfect crop
+              Tip: After uploading, you can drag to reposition and zoom to get the perfect crop. Your photo saves automatically.
             </p>
           </CardContent>
         </Card>

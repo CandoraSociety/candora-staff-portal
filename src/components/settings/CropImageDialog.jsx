@@ -7,11 +7,12 @@ import { X, Check, ZoomIn } from 'lucide-react';
 
 export default function CropImageDialog({ open, imageSrc, onCropComplete, onClose }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1.5);
+  const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [croppedArea, setCroppedArea] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const onCropChange = useCallback((crop) => {
     setCrop(crop);
@@ -70,7 +71,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 
   const resetCrop = () => {
     setCrop({ x: 0, y: 0 });
-    setZoom(1.5);
+    setZoom(1);
     setRotation(0);
     setCroppedAreaPixels(null);
     setCroppedArea(null);
@@ -97,6 +98,11 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             onCropComplete={onCropCompleted}
             onZoomChange={onZoomChange}
             onRotationChange={onRotationChange}
+            onImageLoaded={() => {
+              setImageLoaded(true);
+              setCrop({ x: 0, y: 0 });
+              setZoom(1);
+            }}
             showGrid={false}
             cropShape="round"
             objectFit="horizontal-cover"
@@ -158,10 +164,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  console.log('getCroppedImg called with:', { imageSrc, pixelCrop, rotation });
-  
   const image = await createImage(imageSrc);
-  console.log('Image loaded:', { width: image.width, height: image.height, naturalWidth: image.naturalWidth, naturalHeight: image.naturalHeight });
   
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -170,17 +173,8 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('No 2d context');
   }
 
-  const pixelCropScaled = {
-    x: pixelCrop.x,
-    y: pixelCrop.y,
-    width: pixelCrop.width,
-    height: pixelCrop.height,
-  };
-
-  console.log('Crop area:', pixelCropScaled);
-
-  canvas.width = pixelCropScaled.width;
-  canvas.height = pixelCropScaled.height;
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((rotation * Math.PI) / 180);
@@ -188,17 +182,14 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
 
   ctx.drawImage(
     image,
-    -pixelCropScaled.x,
-    -pixelCropScaled.y,
-    image.width,
-    image.height
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height
   );
-
-  console.log('Canvas drawn, converting to blob...');
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
-      console.log('Blob created:', blob);
       if (!blob) {
         reject(new Error('Canvas is empty'));
         return;
@@ -207,12 +198,9 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
-        const base64data = reader.result;
-        console.log('Base64 data created, length:', base64data?.length);
-        resolve(base64data);
+        resolve(reader.result);
       };
       reader.onerror = (e) => {
-        console.error('FileReader error:', e);
         reject(e);
       };
     }, 'image/jpeg', 0.95);
