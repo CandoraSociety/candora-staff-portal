@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { X, Check, ZoomIn } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 export default function CropImageDialog({ open, imageSrc, onCropComplete, onClose }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -37,7 +38,14 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
     try {
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
       if (croppedImage) {
-        await onCropComplete(croppedImage);
+        // Convert data URL to blob and upload
+        const response = await fetch(croppedImage);
+        const blob = await response.blob();
+        const file = new File([blob], 'profile-picture.jpg', { type: 'image/jpeg' });
+        
+        // Upload the file and get URL
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        await onCropComplete(file_url);
         onClose();
       } else {
         alert('Could not create the cropped image. Please try again.');
