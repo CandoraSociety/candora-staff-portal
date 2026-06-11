@@ -32,7 +32,7 @@ export default function GrantsCountdownBanner({ deadlines = [] }) {
           </p>
         )}
       </div>
-      <Link to="/grants/reminders" className={`text-xs font-medium flex-shrink-0 ${isUrgent ? 'text-red-700 hover:text-red-900' : 'text-amber-700 hover:text-amber-900'}`}>
+      <Link to="/grants" className={`text-xs font-medium flex-shrink-0 ${isUrgent ? 'text-red-700 hover:text-red-900' : 'text-amber-700 hover:text-amber-900'}`}>
         View all →
       </Link>
     </div>
