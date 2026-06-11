@@ -107,13 +107,9 @@ import GrantsHome from '@/pages/grants/GrantsHome';
 import GrantsProjects from '@/pages/grants/GrantsProjects';
 import GrantsNewProject from '@/pages/grants/GrantsNewProject';
 import GrantsProjectDetail from '@/pages/grants/GrantsProjectDetail';
-import GrantsFunders from '@/pages/grants/GrantsFunders';
 import GrantsFundingDB from '@/pages/grants/GrantsFundingDB';
 import GrantsProposals from '@/pages/grants/GrantsProposals';
 import GrantsReports from '@/pages/grants/GrantsReports';
-import GrantsReminders from '@/pages/grants/GrantsReminders';
-import GrantsTemplates from '@/pages/grants/GrantsTemplates';
-import GrantsOrgInfo from '@/pages/grants/GrantsOrgInfo';
 
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
@@ -227,13 +223,9 @@ const AuthenticatedApp = () => {
           <Route path="/grants/projects" element={<GrantsProjects />} />
           <Route path="/grants/projects/new" element={<GrantsNewProject />} />
           <Route path="/grants/projects/:id" element={<GrantsProjectDetail />} />
-          <Route path="/grants/funders" element={<GrantsFunders />} />
           <Route path="/grants/funding-db" element={<GrantsFundingDB />} />
           <Route path="/grants/proposals" element={<GrantsProposals />} />
           <Route path="/grants/reports" element={<GrantsReports />} />
-          <Route path="/grants/reminders" element={<GrantsReminders />} />
-          <Route path="/grants/templates" element={<GrantsTemplates />} />
-          <Route path="/grants/org-info" element={<GrantsOrgInfo />} />
         </Route>
 
         {/* Marketing & Fundraising Manager - standalone layout */}
