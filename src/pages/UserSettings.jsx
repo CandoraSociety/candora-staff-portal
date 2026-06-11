@@ -57,7 +57,8 @@ export default function UserSettings() {
     try {
       await base44.auth.updateMe({ avatar_url: croppedImageUrl });
       setProfilePicture(croppedImageUrl);
-      queryClient.invalidateQueries(['currentUser']);
+      queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: croppedImageUrl } : old);
+      await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setCropDialogOpen(false);
       setImageToCrop(null);
     } catch (error) {
@@ -156,10 +157,11 @@ export default function UserSettings() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={async () => {
                       setProfilePicture('');
-                      base44.auth.updateMe({ avatar_url: '' });
-                      queryClient.invalidateQueries(['currentUser']);
+                      await base44.auth.updateMe({ avatar_url: '' });
+                      queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
+                      await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
                     }}
                     disabled={isSavingProfile}
                   >
@@ -271,16 +273,16 @@ export default function UserSettings() {
         </Card>
 
         <div className="flex-shrink-0 sticky bottom-0 bg-background pt-4 pb-6 border-t mt-auto">
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => navigate('/')}>
-            Cancel
-          </Button>
-          <Button onClick={handleSavePreferences}>
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              Cancel
+            </Button>
+            <Button onClick={handleSavePreferences}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
         </div>
-      </div>
 
       <CropImageDialog
         open={cropDialogOpen}

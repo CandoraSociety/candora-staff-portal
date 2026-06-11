@@ -27,32 +27,18 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   }, []);
 
   const onCropCompleted = useCallback((croppedArea, croppedAreaPixels) => {
-    console.log('Crop completed:', { croppedArea, croppedAreaPixels });
-    setCroppedArea(croppedArea);
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleCrop = async () => {
-    console.log('Starting crop:', { imageSrc, croppedArea, croppedAreaPixels, rotation });
-    
-    const pixelsToUse = croppedAreaPixels || croppedArea;
-    
-    if (!pixelsToUse) {
-      console.error('No cropped area available');
+    if (!croppedAreaPixels) {
       alert('Please adjust the image (drag or zoom) before saving');
-      return;
-    }
-    
-    if (!pixelsToUse.width || !pixelsToUse.height) {
-      console.error('Invalid crop dimensions:', pixelsToUse);
-      alert('Invalid crop area. Please try again.');
       return;
     }
     
     setIsSaving(true);
     try {
-      const croppedImage = await getCroppedImg(imageSrc, pixelsToUse, rotation);
-      console.log('Cropped image result:', croppedImage);
+      const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
       if (croppedImage) {
         await onCropComplete(croppedImage);
         onClose();
@@ -61,8 +47,6 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      console.error('Error details:', error.message);
-      console.error('Error stack:', error.stack);
       alert('Failed to crop image: ' + error.message);
     } finally {
       setIsSaving(false);
@@ -105,7 +89,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             }}
             showGrid={false}
             cropShape="round"
-            objectFit="horizontal-cover"
+            objectFit="contain"
             cropSize={{ width: 300, height: 300 }}
           />
         </div>
@@ -165,7 +149,6 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   const image = await createImage(imageSrc);
-  
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
@@ -173,11 +156,8 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     throw new Error('No 2d context');
   }
 
-  const scaleX = image.naturalWidth / image.width;
-  const scaleY = image.naturalHeight / image.height;
-
-  canvas.width = pixelCrop.width * scaleX;
-  canvas.height = pixelCrop.height * scaleY;
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((rotation * Math.PI) / 180);
@@ -185,10 +165,14 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
 
   ctx.drawImage(
     image,
-    pixelCrop.x * scaleX,
-    pixelCrop.y * scaleY,
-    pixelCrop.width * scaleX,
-    pixelCrop.height * scaleY
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
   );
 
   return new Promise((resolve, reject) => {
