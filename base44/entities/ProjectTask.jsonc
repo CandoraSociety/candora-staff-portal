@@ -1,32 +1,25 @@
 {
-  "name": "Project",
+  "name": "ProjectTask",
   "type": "object",
   "properties": {
-    "name": {
+    "project_id": {
+      "type": "string"
+    },
+    "title": {
       "type": "string"
     },
     "description": {
       "type": "string"
     },
-    "project_type": {
-      "type": "string",
-      "enum": [
-        "program_launch",
-        "operational_improvement",
-        "fundraising_grant",
-        "other"
-      ]
-    },
     "status": {
       "type": "string",
       "enum": [
-        "planning",
+        "not_started",
         "in_progress",
-        "on_hold",
         "completed",
-        "archived"
+        "blocked"
       ],
-      "default": "planning"
+      "default": "not_started"
     },
     "priority": {
       "type": "string",
@@ -38,46 +31,38 @@
       ],
       "default": "medium"
     },
-    "owner_id": {
+    "assigned_to": {
       "type": "string"
     },
-    "team_members": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+    "assigned_to_name": {
+      "type": "string"
     },
-    "start_date": {
+    "due_date": {
       "type": "string",
       "format": "date"
     },
-    "end_date": {
+    "completed_date": {
       "type": "string",
       "format": "date"
     },
-    "budget": {
+    "estimated_hours": {
       "type": "number"
     },
-    "progress_percent": {
+    "actual_hours": {
       "type": "number"
-    },
-    "cloud_folder_id": {
-      "type": "string"
-    },
-    "linked_program_id": {
-      "type": "string"
-    },
-    "lessons_learned": {
-      "type": "string"
     },
     "tags": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "notes": {
+      "type": "string"
     }
   },
   "required": [
-    "name"
+    "project_id",
+    "title"
   ]
 }

@@ -1,0 +1,85 @@
+{
+  "name": "Contact",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "event",
+        "website",
+        "referral",
+        "import",
+        "other"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_subscribed": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    },
+    "last_contacted": {
+      "type": "string",
+      "format": "date"
+    },
+    "event_attendance": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "total_events_attended": {
+      "type": "number",
+      "default": 0
+    },
+    "donor_status": {
+      "type": "string",
+      "enum": [
+        "prospect",
+        "donor",
+        "major_donor",
+        "monthly_donor"
+      ],
+      "default": "prospect"
+    },
+    "volunteer_status": {
+      "type": "string",
+      "enum": [
+        "interested",
+        "active",
+        "inactive"
+      ],
+      "default": "interested"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "email"
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "name": "ProjectMilestone",
+  "name": "ProjectObjective",
   "type": "object",
   "properties": {
     "project_id": {
@@ -11,6 +11,19 @@
     "description": {
       "type": "string"
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "on_hold"
+      ],
+      "default": "not_started"
+    },
+    "success_criteria": {
+      "type": "string"
+    },
     "target_date": {
       "type": "string",
       "format": "date"
@@ -19,18 +32,8 @@
       "type": "string",
       "format": "date"
     },
-    "status": {
-      "type": "string",
-      "enum": [
-        "pending",
-        "completed",
-        "missed"
-      ],
-      "default": "pending"
-    },
-    "is_critical": {
-      "type": "boolean",
-      "default": false
+    "owner": {
+      "type": "string"
     },
     "notes": {
       "type": "string"

@@ -113,6 +113,15 @@ import GrantsSubmissions from '@/pages/grants/GrantsSubmissions';
 import GrantsReports from '@/pages/grants/GrantsReports';
 import GrantsFiles from '@/pages/grants/GrantsFiles';
 
+// Events/Projects/Programs Manager
+import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
+import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
+import EventsMgrEvents from '@/pages/eventsmgr/EventsMgrEvents';
+import EventsMgrPrograms from '@/pages/eventsmgr/EventsMgrPrograms';
+import EventsMgrProjects from '@/pages/eventsmgr/EventsMgrProjects';
+import EventsMgrContacts from '@/pages/eventsmgr/EventsMgrContacts';
+import EventsMgrResources from '@/pages/eventsmgr/EventsMgrResources';
+
 // Marketing & Fundraising Manager
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import MarketingHome from '@/pages/marketing/MarketingHome';
@@ -229,6 +238,16 @@ const AuthenticatedApp = () => {
           <Route path="/grants/proposals" element={<GrantsSubmissions />} />
           <Route path="/grants/reports" element={<GrantsReports />} />
           <Route path="/grants/files" element={<GrantsFiles />} />
+        </Route>
+
+        {/* Events/Projects/Programs Manager - standalone layout */}
+        <Route element={<EventsMgrLayout />}>
+          <Route path="/eventsmgr" element={<EventsMgrDashboard />} />
+          <Route path="/eventsmgr/events" element={<EventsMgrEvents />} />
+          <Route path="/eventsmgr/programs" element={<EventsMgrPrograms />} />
+          <Route path="/eventsmgr/projects" element={<EventsMgrProjects />} />
+          <Route path="/eventsmgr/contacts" element={<EventsMgrContacts />} />
+          <Route path="/eventsmgr/resources" element={<EventsMgrResources />} />
         </Route>
 
         {/* Marketing & Fundraising Manager - standalone layout */}

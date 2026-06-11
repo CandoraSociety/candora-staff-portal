@@ -1,0 +1,125 @@
+{
+  "name": "PublicEventSubmission",
+  "type": "object",
+  "properties": {
+    "submitter_name": {
+      "type": "string"
+    },
+    "submitter_email": {
+      "type": "string"
+    },
+    "organization_name": {
+      "type": "string"
+    },
+    "organization_type": {
+      "type": "string",
+      "enum": [
+        "nonprofit",
+        "business",
+        "government",
+        "individual",
+        "other"
+      ]
+    },
+    "website": {
+      "type": "string"
+    },
+    "event_name": {
+      "type": "string"
+    },
+    "event_description": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "location": {
+      "type": "string"
+    },
+    "expected_attendance": {
+      "type": "number"
+    },
+    "ticket_tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agreed_to_fee_structure": {
+      "type": "boolean",
+      "default": false
+    },
+    "billing_name": {
+      "type": "string"
+    },
+    "billing_address": {
+      "type": "string"
+    },
+    "billing_city": {
+      "type": "string"
+    },
+    "billing_state": {
+      "type": "string"
+    },
+    "billing_zip": {
+      "type": "string"
+    },
+    "billing_country": {
+      "type": "string",
+      "default": "CA"
+    },
+    "payout_transit": {
+      "type": "string"
+    },
+    "payout_institution": {
+      "type": "string"
+    },
+    "payout_account": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "needs_revision"
+      ],
+      "default": "pending"
+    },
+    "linked_event_id": {
+      "type": "string"
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "submitter_name",
+    "submitter_email",
+    "event_name",
+    "start_date"
+  ]
+}

@@ -3,8 +3,7 @@
   "type": "object",
   "properties": {
     "project_id": {
-      "type": "string",
-      "description": "Reference to Project"
+      "type": "string"
     },
     "name": {
       "type": "string"
@@ -12,13 +11,12 @@
     "document_type": {
       "type": "string",
       "enum": [
-        "proposal",
-        "budget",
+        "charter",
+        "plan",
         "report",
-        "correspondence",
-        "supporting",
-        "contract",
-        "amendment",
+        "meeting_notes",
+        "deliverable",
+        "reference",
         "other"
       ]
     },
@@ -34,15 +32,15 @@
     "version": {
       "type": "string"
     },
-    "is_final": {
-      "type": "boolean",
-      "default": false
-    },
     "uploaded_by": {
       "type": "string"
     },
     "uploaded_by_name": {
       "type": "string"
+    },
+    "uploaded_date": {
+      "type": "string",
+      "format": "date-time"
     },
     "notes": {
       "type": "string"

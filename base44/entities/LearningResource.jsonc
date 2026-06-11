@@ -1,0 +1,83 @@
+{
+  "name": "LearningResource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "video",
+        "article",
+        "course",
+        "webinar",
+        "podcast",
+        "guide",
+        "template",
+        "other"
+      ]
+    },
+    "url": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "duration_minutes": {
+      "type": "number"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ]
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "author": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "is_free": {
+      "type": "boolean",
+      "default": true
+    },
+    "price": {
+      "type": "number"
+    },
+    "rating": {
+      "type": "number"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "added_by": {
+      "type": "string"
+    },
+    "added_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "resource_type"
+  ]
+}

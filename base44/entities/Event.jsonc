@@ -1,0 +1,334 @@
+{
+  "name": "Event",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "event_mode": {
+      "type": "string",
+      "enum": [
+        "existing",
+        "new"
+      ],
+      "default": "existing"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "annual_org_event",
+        "external_public",
+        "internal_workshop",
+        "community_event",
+        "training",
+        "fundraiser",
+        "conference",
+        "other"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning"
+    },
+    "organizer_id": {
+      "type": "string"
+    },
+    "team_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "location": {
+      "type": "string"
+    },
+    "expected_attendance": {
+      "type": "number"
+    },
+    "actual_attendance": {
+      "type": "number"
+    },
+    "budget": {
+      "type": "number"
+    },
+    "budget_spent": {
+      "type": "number"
+    },
+    "budget_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "estimated": {
+            "type": "number"
+          },
+          "actual": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "organization": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "invited",
+              "confirmed",
+              "attended",
+              "no_show",
+              "cancelled"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "timeline_tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "pre_event",
+              "day_of",
+              "post_event"
+            ]
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "marketing_plan": {
+      "type": "object",
+      "properties": {
+        "goals": {
+          "type": "string"
+        },
+        "target_audience": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_messages": {
+          "type": "string"
+        },
+        "promotional_items": {
+          "type": "string"
+        },
+        "social_media_plan": {
+          "type": "string"
+        },
+        "email_plan": {
+          "type": "string"
+        },
+        "press_outreach": {
+          "type": "string"
+        }
+      }
+    },
+    "creative_brief": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "type": "string"
+        },
+        "color_palette": {
+          "type": "string"
+        },
+        "tone": {
+          "type": "string"
+        },
+        "branding_notes": {
+          "type": "string"
+        },
+        "design_assets_needed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "av_requirements": {
+          "type": "string"
+        },
+        "decor_notes": {
+          "type": "string"
+        },
+        "entertainment": {
+          "type": "string"
+        }
+      }
+    },
+    "post_event": {
+      "type": "object",
+      "properties": {
+        "attendance_notes": {
+          "type": "string"
+        },
+        "budget_notes": {
+          "type": "string"
+        },
+        "feedback_summary": {
+          "type": "string"
+        },
+        "media_coverage": {
+          "type": "string"
+        },
+        "follow_up_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sponsor_debrief": {
+          "type": "string"
+        }
+      }
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "default": false
+    },
+    "recurrence_pattern": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly",
+        "yearly",
+        "custom"
+      ]
+    },
+    "template_id": {
+      "type": "string"
+    },
+    "cloud_folder_id": {
+      "type": "string"
+    },
+    "corporate_memory": {
+      "type": "string"
+    },
+    "checklist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "assigned_to": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_ticketed": {
+      "type": "boolean",
+      "default": false
+    },
+    "organizer_name": {
+      "type": "string"
+    },
+    "organizer_email": {
+      "type": "string"
+    },
+    "cover_image_url": {
+      "type": "string"
+    },
+    "platform_fee_percent": {
+      "type": "number",
+      "default": 5
+    },
+    "platform_fee_flat": {
+      "type": "number",
+      "default": 1.5
+    },
+    "is_external": {
+      "type": "boolean",
+      "default": false
+    },
+    "submission_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "start_date"
+  ]
+}

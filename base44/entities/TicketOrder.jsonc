@@ -1,0 +1,62 @@
+{
+  "name": "TicketOrder",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "ticket_type_id": {
+      "type": "string"
+    },
+    "buyer_name": {
+      "type": "string"
+    },
+    "buyer_email": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "unit_price": {
+      "type": "number"
+    },
+    "platform_fee_percent": {
+      "type": "number"
+    },
+    "platform_fee_flat": {
+      "type": "number"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "platform_revenue": {
+      "type": "number"
+    },
+    "stripe_session_id": {
+      "type": "string"
+    },
+    "stripe_payment_intent_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "cancelled",
+        "refunded"
+      ],
+      "default": "pending"
+    },
+    "confirmation_code": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "event_id",
+    "ticket_type_id",
+    "buyer_name",
+    "buyer_email",
+    "quantity"
+  ]
+}

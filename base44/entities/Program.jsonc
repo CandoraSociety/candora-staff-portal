@@ -1,0 +1,199 @@
+{
+  "name": "Program",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "active",
+        "paused",
+        "archived"
+      ],
+      "default": "planning"
+    },
+    "program_mode": {
+      "type": "string",
+      "enum": [
+        "existing",
+        "design"
+      ],
+      "default": "existing"
+    },
+    "owner_id": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "adult_learning",
+        "community_services",
+        "youth_programs",
+        "health_wellness",
+        "other"
+      ]
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budget": {
+      "type": "number"
+    },
+    "cloud_folder_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "actual": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "identified",
+              "in_progress",
+              "resolved"
+            ]
+          }
+        }
+      }
+    },
+    "improvement_plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "in_progress",
+              "completed"
+            ]
+          }
+        }
+      }
+    },
+    "needs_assessment": {
+      "type": "string"
+    },
+    "design_vision": {
+      "type": "string"
+    },
+    "design_target_population": {
+      "type": "string"
+    },
+    "design_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "design_resources_needed": {
+      "type": "string"
+    },
+    "design_implementation_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string"
+          },
+          "done": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "design_risks": {
+      "type": "string"
+    },
+    "design_evaluation_plan": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
