@@ -157,8 +157,10 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
 function createImage(url) {
   return new Promise((resolve, reject) => {
     const image = new Image();
+    image.crossOrigin = 'anonymous';
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', reject);
-    image.src = url;
+    // Add cache-bust to force browser to respect crossOrigin on a cached image
+    image.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
   });
 }
