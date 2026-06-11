@@ -56,7 +56,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
           </DialogDescription>
         </DialogHeader>
 
-        <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ height: 400 }}>
+        <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ height: 500 }}>
           {imageSrc && (
             <Cropper
               image={imageSrc}
@@ -67,6 +67,8 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
               cropShape="round"
               showGrid={false}
               onCropChange={setCrop}
+              minZoom={0.3}
+              maxZoom={3}
               onZoomChange={setZoom}
               onRotationChange={setRotation}
               onCropComplete={onCropCompleted}
@@ -82,7 +84,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
             </div>
             <Slider
               value={[zoom]}
-              min={1}
+              min={0.3}
               max={3}
               step={0.05}
               onValueChange={(value) => setZoom(value[0])}
