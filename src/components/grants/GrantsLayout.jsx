@@ -1,119 +1,90 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import React from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FolderOpen, Users, FileText, BarChart3,
-  Bell, BookOpen, Settings, ChevronLeft, Menu, X, BookMarked,
-  Search, Library
+  Bell, BookMarked, Settings, Library
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
 const NAV_ITEMS = [
-  { label: "Home", path: "/grants", icon: LayoutDashboard, exact: true },
-  { label: "Projects", path: "/grants/projects", icon: FolderOpen },
-  { label: "Funders", path: "/grants/funders", icon: Users },
-  { label: "Funding Database", path: "/grants/funding-db", icon: Library },
-  { label: "Proposals", path: "/grants/proposals", icon: FileText },
-  { label: "Reports", path: "/grants/reports", icon: BarChart3 },
-  { label: "Reminders", path: "/grants/reminders", icon: Bell },
-  { label: "Templates", path: "/grants/templates", icon: BookMarked },
-  { label: "Org Info", path: "/grants/org-info", icon: Settings },
+  { label: "Home",             path: "/grants",            icon: LayoutDashboard, exact: true },
+  { label: "Projects",         path: "/grants/projects",   icon: FolderOpen },
+  { label: "Funders",          path: "/grants/funders",    icon: Users },
+  { label: "Funding DB",       path: "/grants/funding-db", icon: Library },
+  { label: "Proposals",        path: "/grants/proposals",  icon: FileText },
+  { label: "Reports",          path: "/grants/reports",    icon: BarChart3 },
+  { label: "Reminders",        path: "/grants/reminders",  icon: Bell },
+  { label: "Templates",        path: "/grants/templates",  icon: BookMarked },
+  { label: "Org Info",         path: "/grants/org-info",   icon: Settings },
 ];
 
 export default function GrantsLayout() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
-  });
-
-  const isActive = (item) => {
-    if (item.exact) return location.pathname === item.path;
-    return location.pathname.startsWith(item.path);
-  };
-
-  const NavLink = ({ item }) => (
-    <Link
-      to={item.path}
-      onClick={() => setSidebarOpen(false)}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-        isActive(item)
-          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-      }`}
-    >
-      <item.icon className="h-4 w-4 flex-shrink-0" />
-      {item.label}
-    </Link>
-  );
-
-  const Sidebar = () => (
-    <div className="flex flex-col h-full bg-sidebar">
-      {/* Logo / Home */}
-      <div className="p-4 border-b border-sidebar-border flex items-center gap-3">
-        <Link to="/" title="Candora Home">
-          <img src={LOGO_URL} alt="Candora" className="h-9 w-9 rounded-lg object-contain" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <p className="text-sidebar-primary font-display font-bold text-sm leading-tight">Grant / Proposal</p>
-          <p className="text-sidebar-foreground/60 text-xs">Manager</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(item => <NavLink key={item.path} item={item} />)}
-      </nav>
-
-      {/* Footer */}
-      <div className="p-3 border-t border-sidebar-border">
-        <Link
-          to="/grants"
-          className="flex items-center gap-2 px-3 py-2 text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors rounded-lg"
-        >
-          <span className="truncate">{user?.full_name || 'Staff'}</span>
-        </Link>
-      </div>
-    </div>
-  );
+  const isActive = (item) =>
+    item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-56 flex-col flex-shrink-0 border-r border-sidebar-border">
-        <Sidebar />
-      </aside>
+    <div className="min-h-screen bg-background">
+      {/* Top Header */}
+      <header className="sticky top-0 z-50 bg-card/90 backdrop-blur-xl border-b border-border">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4 h-14">
+            {/* Logo → app home */}
+            <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 mr-2">
+              <img src={LOGO_URL} alt="Candora" className="h-8 w-8 rounded-lg object-contain" />
+              <span className="font-display font-bold text-sm text-foreground hidden sm:block leading-tight">
+                Grant / Proposal<br />
+                <span className="text-muted-foreground font-normal text-xs">Manager</span>
+              </span>
+            </Link>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative w-56 h-full flex flex-col">
-            <Sidebar />
-          </aside>
+            {/* Nav links */}
+            <nav className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap",
+                    isActive(item)
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  )}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
         </div>
-      )}
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile top bar */}
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-card">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-            <Menu className="h-5 w-5" />
-          </Button>
-          <span className="font-display font-bold text-sm text-foreground">Grant / Proposal Manager</span>
-        </header>
+        {/* Mobile scrollable nav */}
+        <div className="md:hidden border-t border-border px-3 py-1.5 flex gap-1 overflow-x-auto">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all",
+                isActive(item)
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary"
+              )}
+            >
+              <item.icon className="w-3.5 h-3.5" />
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Outlet />
-        </main>
-      </div>
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Outlet />
+      </main>
     </div>
   );
 }
