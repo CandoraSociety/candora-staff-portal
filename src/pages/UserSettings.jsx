@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, ChevronUp, User, Briefcase, Calendar } from 'lucide-react';
+import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
+import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
 
 export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
@@ -45,6 +46,7 @@ export default function UserSettings() {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -106,6 +108,8 @@ export default function UserSettings() {
       alert('Failed to save settings. Please try again.');
     }
   };
+
+
 
   const togglePortal = (portalId) => {
     setVisiblePortals(prev => 
@@ -195,15 +199,26 @@ export default function UserSettings() {
                 <CardTitle>Employee Information</CardTitle>
                 <CardDescription>Your employment details</CardDescription>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setEmployeeInfoExpanded(!employeeInfoExpanded)}
-                className="gap-2"
-              >
-                {employeeInfoExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                {employeeInfoExpanded ? 'Collapse' : 'Expand'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditEmployeeOpen(true)}
+                  className="gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEmployeeInfoExpanded(!employeeInfoExpanded)}
+                  className="gap-2"
+                >
+                  {employeeInfoExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {employeeInfoExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </div>
             </div>
           </CardHeader>
           {employeeInfoExpanded && (
@@ -242,7 +257,7 @@ export default function UserSettings() {
                   </>
                 ) : (
                   <div className="col-span-2 p-4 text-center text-sm text-muted-foreground">
-                    Employee record not found. Contact your administrator to add your employment details.
+                    Employee record not found. Click "Edit" to add your employment details.
                   </div>
                 )}
               </div>
@@ -364,6 +379,17 @@ export default function UserSettings() {
         onClose={() => {
           setCropDialogOpen(false);
           setImageToCrop(null);
+        }}
+      />
+
+      <EditEmployeeDialog
+        open={editEmployeeOpen}
+        employee={employeeRecord}
+        currentUser={currentUser}
+        onClose={() => setEditEmployeeOpen(false)}
+        onSave={() => {
+          queryClient.invalidateQueries(['employeeRecord', currentUser?.email]);
+          setEditEmployeeOpen(false);
         }}
       />
       </div>
