@@ -36,11 +36,14 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   const handleCrop = async () => {
     setIsSaving(true);
     try {
-      console.log('Starting crop with pixelCrop:', croppedAreaPixels);
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      console.log('Cropped image result:', croppedImage?.substring(0, 50));
       if (croppedImage) {
-        await onCropComplete(croppedImage);
+        // Convert data URL to blob and upload as file
+        const response = await fetch(croppedImage);
+        const blob = await response.blob();
+        const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        await onCropComplete(file_url);
         onClose();
       } else {
         alert('Could not create the cropped image. Please try again.');
@@ -170,8 +173,8 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   const cropW = (pixelCrop.width / image.width) * image.naturalWidth;
   const cropH = (pixelCrop.height / image.height) * image.naturalHeight;
 
-  // Resize to max 500x500 for profile pictures (reasonable size)
-  const maxSize = 500;
+  // Resize to max 400x400 for profile pictures (keeps file size small)
+  const maxSize = 400;
   let finalWidth = Math.round(cropW);
   let finalHeight = Math.round(cropH);
   
@@ -208,7 +211,7 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     canvas.height
   );
 
-  return canvas.toDataURL('image/jpeg', 0.9);
+  return canvas.toDataURL('image/jpeg', 0.75);
 }
 
 function createImage(url) {
