@@ -27,29 +27,24 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   }, []);
 
   const onCropCompleted = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedArea(croppedArea);
     setCroppedAreaPixels(croppedAreaPixels);
+    console.log('Crop updated:', croppedArea);
   }, []);
 
   const handleCrop = async () => {
-    if (!croppedAreaPixels) {
-      alert('Please adjust the image (drag or zoom) before saving');
-      return;
-    }
-    
     setIsSaving(true);
     try {
-      console.log('Starting crop with pixels:', croppedAreaPixels);
       const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      console.log('Cropped image result:', croppedImage ? 'success' : 'null');
       if (croppedImage) {
         await onCropComplete(croppedImage);
         onClose();
       } else {
-        throw new Error('No image returned from crop');
+        alert('Could not create the cropped image. Please try again.');
       }
     } catch (error) {
       console.error('Error cropping image:', error);
-      alert('Failed to crop image: ' + (error.message || 'Unknown error'));
+      alert('Could not save the image. Please try a different photo.');
     } finally {
       setIsSaving(false);
     }
@@ -150,53 +145,44 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
 }
 
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
-  try {
-    console.log('Creating image from src:', imageSrc ? 'has src' : 'no src');
-    const image = await createImage(imageSrc);
-    console.log('Image loaded:', image.naturalWidth, 'x', image.naturalHeight);
-    
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx) {
-      throw new Error('No 2d context');
-    }
-
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    console.log('Scale factors:', scaleX, scaleY);
-    console.log('Pixel crop:', pixelCrop);
-
-    canvas.width = Math.round(pixelCrop.width * scaleX);
-    canvas.height = Math.round(pixelCrop.height * scaleY);
-    console.log('Canvas size:', canvas.width, 'x', canvas.height);
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
-
-    ctx.drawImage(
-      image,
-      pixelCrop.x * scaleX,
-      pixelCrop.y * scaleY,
-      pixelCrop.width * scaleX,
-      pixelCrop.height * scaleY,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    console.log('Cropped image created successfully');
-    return dataUrl;
-  } catch (error) {
-    console.error('getCroppedImg error:', error);
-    throw error;
+  if (!pixelCrop) {
+    throw new Error('No crop area selected');
   }
+
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('Could not process image');
+  }
+
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+
+  canvas.width = Math.round(pixelCrop.width * scaleX);
+  canvas.height = Math.round(pixelCrop.height * scaleY);
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((rotation * Math.PI) / 180);
+  ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x * scaleX,
+    pixelCrop.y * scaleY,
+    pixelCrop.width * scaleX,
+    pixelCrop.height * scaleY,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  return canvas.toDataURL('image/jpeg', 0.95);
 }
 
 function createImage(url) {

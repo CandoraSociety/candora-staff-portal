@@ -55,15 +55,18 @@ export default function UserSettings() {
   const handleCropComplete = async (croppedImageUrl) => {
     setIsSavingProfile(true);
     try {
-      await base44.auth.updateMe({ avatar_url: croppedImageUrl });
+      console.log('Saving avatar:', croppedImageUrl?.length);
+      const result = await base44.auth.updateMe({ avatar_url: croppedImageUrl });
+      console.log('Update result:', result);
       setProfilePicture(croppedImageUrl);
       queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: croppedImageUrl } : old);
       await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setCropDialogOpen(false);
       setImageToCrop(null);
+      alert('Profile picture updated successfully!');
     } catch (error) {
       console.error('Error saving cropped image:', error);
-      alert('Failed to save profile picture. Please try again.');
+      alert('Failed to save: ' + (error.message || 'Unknown error'));
     } finally {
       setIsSavingProfile(false);
     }
