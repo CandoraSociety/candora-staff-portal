@@ -3,25 +3,99 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Check, X, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { CATEGORIES } from './stickerCatalogue';
 
-// Convert an SVG string to a data URL
-function svgToDataUrl(svgStr) {
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr);
-}
+// Twemoji CDN — reliable CORS-friendly 72x72 PNGs
+const tw = (cp) => `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/${cp}.png`;
 
-// ── Individual draggable sticker ─────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    label: '🎩 Hats',
+    items: [
+      { id: 'tophat',     label: 'Top Hat',   src: tw('1f3a9') },
+      { id: 'crown',      label: 'Crown',     src: tw('1f451') },
+      { id: 'graduation', label: 'Grad Cap',  src: tw('1f393') },
+      { id: 'beret',      label: 'Beret',     src: tw('1fa96') },
+      { id: 'hardhat',    label: 'Hard Hat',  src: tw('26d1') },
+      { id: 'santa',      label: 'Santa Hat', src: tw('1f385') },
+      { id: 'party',      label: 'Party Hat', src: tw('1f973') },
+    ],
+  },
+  {
+    label: '👓 Eyewear',
+    items: [
+      { id: 'sunglasses', label: 'Sunglasses', src: tw('1f576') },
+      { id: 'glasses',    label: 'Glasses',    src: tw('1f453') },
+      { id: 'goggles',    label: 'Goggles',    src: tw('1f97d') },
+    ],
+  },
+  {
+    label: '🥸 Facial Hair',
+    items: [
+      { id: 'moustache', label: 'Moustache',  src: tw('1f9f4') },
+      { id: 'beard',     label: 'Full Beard', src: tw('1f9d4') },
+    ],
+  },
+  {
+    label: '🪢 Accessories',
+    items: [
+      { id: 'necktie',  label: 'Neck Tie', src: tw('1f454') },
+      { id: 'scarf',    label: 'Scarf',    src: tw('1f9e3') },
+      { id: 'handbag',  label: 'Handbag',  src: tw('1f45c') },
+      { id: 'medal',    label: 'Medal',    src: tw('1f3c5') },
+      { id: 'backpack', label: 'Backpack', src: tw('1f392') },
+      { id: 'gloves',   label: 'Gloves',   src: tw('1f9e4') },
+    ],
+  },
+  {
+    label: '💎 Jewelry',
+    items: [
+      { id: 'ring',        label: 'Ring',  src: tw('1f48d') },
+      { id: 'gem',         label: 'Gem',   src: tw('1f48e') },
+      { id: 'heart_charm', label: 'Heart', src: tw('1f496') },
+      { id: 'chain',       label: 'Link',  src: tw('1f517') },
+      { id: 'id_badge',    label: 'Badge', src: tw('1f4db') },
+    ],
+  },
+  {
+    label: '💉 Piercings',
+    items: [
+      { id: 'nose_ring', label: 'Nose Ring',   src: tw('1f48d') },
+      { id: 'ear_stud',  label: 'Ear Stud',    src: tw('1f48e') },
+      { id: 'lip_ring',  label: 'Lip Ring',    src: tw('2b55') },
+      { id: 'eyebrow',   label: 'Eyebrow Bar', src: tw('2796') },
+    ],
+  },
+  {
+    label: '🖋️ Tattoos',
+    items: [
+      { id: 'tattoo_heart',     label: 'Heart',     src: tw('2665') },
+      { id: 'tattoo_anchor',    label: 'Anchor',    src: tw('2693') },
+      { id: 'tattoo_snake',     label: 'Snake',     src: tw('1f40d') },
+      { id: 'tattoo_rose',      label: 'Rose',      src: tw('1f339') },
+      { id: 'tattoo_skull',     label: 'Skull',     src: tw('1f480') },
+      { id: 'tattoo_star',      label: 'Star',      src: tw('2b50') },
+      { id: 'tattoo_lightning', label: 'Lightning', src: tw('26a1') },
+      { id: 'tattoo_infinity',  label: 'Infinity',  src: tw('267e') },
+      { id: 'tattoo_dragon',    label: 'Dragon',    src: tw('1f409') },
+      { id: 'tattoo_butterfly', label: 'Butterfly', src: tw('1f98b') },
+    ],
+  },
+];
+
+// ── Draggable sticker overlay ────────────────────────────────────────────────
 function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, containerSize }) {
+  const dragStart = useRef(null);
+  const rotateStart = useRef(null);
+  const resizeStart = useRef(null);
+
   const handleDragMouseDown = (e) => {
     e.stopPropagation();
     onSelect(sticker.id);
-    const startMx = e.clientX, startMy = e.clientY;
-    const startSx = sticker.x, startSy = sticker.y;
+    dragStart.current = { mx: e.clientX, my: e.clientY, sx: sticker.x, sy: sticker.y };
     const onMove = (mv) => {
-      onUpdate(sticker.id, {
-        x: startSx + (mv.clientX - startMx) / containerSize,
-        y: startSy + (mv.clientY - startMy) / containerSize,
-      });
+      const dx = (mv.clientX - dragStart.current.mx) / containerSize;
+      const dy = (mv.clientY - dragStart.current.my) / containerSize;
+      onUpdate(sticker.id, { x: dragStart.current.sx + dx, y: dragStart.current.sy + dy });
     };
     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
@@ -32,14 +106,12 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
     e.stopPropagation();
     onSelect(sticker.id);
     const t = e.touches[0];
-    const startMx = t.clientX, startMy = t.clientY;
-    const startSx = sticker.x, startSy = sticker.y;
+    dragStart.current = { mx: t.clientX, my: t.clientY, sx: sticker.x, sy: sticker.y };
     const onMove = (mv) => {
       const touch = mv.touches[0];
-      onUpdate(sticker.id, {
-        x: startSx + (touch.clientX - startMx) / containerSize,
-        y: startSy + (touch.clientY - startMy) / containerSize,
-      });
+      const dx = (touch.clientX - dragStart.current.mx) / containerSize;
+      const dy = (touch.clientY - dragStart.current.my) / containerSize;
+      onUpdate(sticker.id, { x: dragStart.current.sx + dx, y: dragStart.current.sy + dy });
     };
     const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
     window.addEventListener('touchmove', onMove, { passive: true });
@@ -50,11 +122,11 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
     e.stopPropagation();
     const cx = sticker.x * containerSize;
     const cy = sticker.y * containerSize;
-    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
-    const origRot = sticker.rotation || 0;
+    rotateStart.current = { startAngle: Math.atan2(e.clientY - cy, e.clientX - cx), origRot: sticker.rotation || 0 };
     const onMove = (mv) => {
       const angle = Math.atan2(mv.clientY - cy, mv.clientX - cx);
-      onUpdate(sticker.id, { rotation: origRot + (angle - startAngle) * (180 / Math.PI) });
+      const delta = (angle - rotateStart.current.startAngle) * (180 / Math.PI);
+      onUpdate(sticker.id, { rotation: rotateStart.current.origRot + delta });
     };
     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
@@ -63,10 +135,10 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
 
   const handleResizeMouseDown = (e) => {
     e.stopPropagation();
-    const startMx = e.clientX;
-    const origSize = sticker.size;
+    resizeStart.current = { mx: e.clientX, origSize: sticker.size };
     const onMove = (mv) => {
-      const newSize = Math.max(0.05, Math.min(0.9, origSize + (mv.clientX - startMx) / containerSize));
+      const delta = (mv.clientX - resizeStart.current.mx) / containerSize;
+      const newSize = Math.max(0.05, Math.min(1.0, resizeStart.current.origSize + delta));
       onUpdate(sticker.id, { size: newSize });
     };
     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
@@ -93,30 +165,26 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
       onClick={(e) => { e.stopPropagation(); onSelect(sticker.id); }}
     >
       <img
-        src={svgToDataUrl(sticker.svg)}
+        src={sticker.src}
         alt={sticker.label}
-        style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none' }}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }}
         draggable={false}
       />
-
       {isSelected && (
         <>
-          <div style={{ position: 'absolute', inset: -3, border: '2px dashed #6366f1', borderRadius: 4, pointerEvents: 'none' }} />
-          {/* Delete */}
+          <div style={{ position: 'absolute', inset: -3, border: '2px dashed rgba(99,102,241,0.9)', borderRadius: 6, pointerEvents: 'none' }} />
           <button
             onMouseDown={(e) => { e.stopPropagation(); onDelete(sticker.id); }}
-            style={{ position: 'absolute', top: -12, right: -12, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 'bold' }}
-          >×</button>
-          {/* Rotate */}
+            style={{ position: 'absolute', top: -14, right: -14, width: 24, height: 24, borderRadius: '50%', background: '#ef4444', border: '2px solid white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 'bold', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+          >✕</button>
           <div
             onMouseDown={handleRotateMouseDown}
-            style={{ position: 'absolute', top: -26, left: '50%', transform: 'translateX(-50%)', width: 18, height: 18, borderRadius: '50%', background: '#6366f1', cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white' }}
+            style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 22, height: 22, borderRadius: '50%', background: '#6366f1', border: '2px solid white', cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
             title="Rotate"
           >↻</div>
-          {/* Resize */}
           <div
             onMouseDown={handleResizeMouseDown}
-            style={{ position: 'absolute', bottom: -10, right: -10, width: 18, height: 18, borderRadius: '50%', background: '#6366f1', cursor: 'se-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white' }}
+            style={{ position: 'absolute', bottom: -12, right: -12, width: 22, height: 22, borderRadius: '50%', background: '#6366f1', border: '2px solid white', cursor: 'se-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
             title="Resize"
           >⤡</div>
         </>
@@ -135,61 +203,56 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
   const CONTAINER_SIZE = 380;
 
   useEffect(() => {
-    if (open) { setStickers([]); setSelectedId(null); setActiveCategory(0); }
+    if (open) { setStickers([]); setSelectedId(null); }
   }, [open, imageSrc]);
 
   const addSticker = (item) => {
     const id = `${item.id}_${Date.now()}`;
-    setStickers(prev => [...prev, {
-      ...item,
-      id,
-      x: item.defaultX ?? 0.5,
-      y: item.defaultY ?? 0.35,
-      size: item.defaultSize ?? 0.28,
-      rotation: 0,
-    }]);
+    setStickers(prev => [...prev, { ...item, id, x: 0.5, y: 0.35, size: 0.3, rotation: 0 }]);
     setSelectedId(id);
   };
 
   const updateSticker = (id, changes) => setStickers(prev => prev.map(s => s.id === id ? { ...s, ...changes } : s));
   const deleteSticker = (id) => { setStickers(prev => prev.filter(s => s.id !== id)); if (selectedId === id) setSelectedId(null); };
 
-  // Export: draw base image + each sticker onto a canvas
-  const exportImage = useCallback(() => new Promise((resolve, reject) => {
-    const canvas = canvasRef.current;
-    const SIZE = 400;
-    canvas.width = SIZE; canvas.height = SIZE;
-    const ctx = canvas.getContext('2d');
+  const exportImage = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      const canvas = canvasRef.current;
+      const size = 400;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = size / CONTAINER_SIZE;
 
-    const baseImg = new Image();
-    baseImg.crossOrigin = 'anonymous';
-    baseImg.onload = () => {
-      ctx.drawImage(baseImg, 0, 0, SIZE, SIZE);
-      if (stickers.length === 0) return resolve(canvas.toDataURL('image/jpeg', 0.9));
-
-      let remaining = stickers.length;
-      stickers.forEach(s => {
-        const img = new Image();
-        img.onload = () => {
-          const scale = SIZE / CONTAINER_SIZE;
-          const cx = s.x * SIZE;
-          const cy = s.y * SIZE;
-          const sizePx = s.size * CONTAINER_SIZE * scale;
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(((s.rotation || 0) * Math.PI) / 180);
-          ctx.drawImage(img, -sizePx / 2, -sizePx / 2, sizePx, sizePx);
-          ctx.restore();
-          remaining--;
-          if (remaining === 0) resolve(canvas.toDataURL('image/jpeg', 0.9));
-        };
-        img.onerror = () => { remaining--; if (remaining === 0) resolve(canvas.toDataURL('image/jpeg', 0.9)); };
-        img.src = svgToDataUrl(s.svg);
-      });
-    };
-    baseImg.onerror = reject;
-    baseImg.src = imageSrc;
-  }), [stickers, imageSrc]);
+      const baseImg = new Image();
+      baseImg.crossOrigin = 'anonymous';
+      baseImg.onload = async () => {
+        ctx.drawImage(baseImg, 0, 0, size, size);
+        for (const s of stickers) {
+          await new Promise((res) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              const cx = s.x * size;
+              const cy = s.y * size;
+              const sizePx = s.size * CONTAINER_SIZE * scale;
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.rotate(((s.rotation || 0) * Math.PI) / 180);
+              ctx.drawImage(img, -sizePx / 2, -sizePx / 2, sizePx, sizePx);
+              ctx.restore();
+              res();
+            };
+            img.onerror = () => res();
+            img.src = s.src;
+          });
+        }
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      };
+      baseImg.onerror = reject;
+      baseImg.src = imageSrc;
+    });
+  }, [stickers, imageSrc]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -207,21 +270,23 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
     }
   };
 
-  const cat = CATEGORIES[activeCategory];
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col gap-3 p-4">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto flex flex-col gap-4 p-4">
         <DialogHeader>
-          <DialogTitle>Profile Effects Studio 🎨</DialogTitle>
+          <DialogTitle>Add Effects</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-5">
           {/* Preview */}
           <div className="flex-shrink-0 flex flex-col items-center gap-2">
             <div
               onClick={() => setSelectedId(null)}
-              style={{ width: CONTAINER_SIZE, height: CONTAINER_SIZE, position: 'relative', borderRadius: '50%', overflow: 'hidden', border: '3px solid hsl(var(--border))', flexShrink: 0, cursor: 'default' }}
+              style={{
+                width: CONTAINER_SIZE, height: CONTAINER_SIZE,
+                position: 'relative', borderRadius: '50%',
+                overflow: 'hidden', border: '3px solid #e2e8f0', flexShrink: 0,
+              }}
             >
               {imageSrc && (
                 <img src={imageSrc} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
@@ -240,65 +305,58 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
             </div>
             <p className="text-xs text-muted-foreground text-center max-w-[380px]">
               {selectedId
-                ? 'Drag to move · ↻ to rotate · ⤡ to resize · × to delete'
+                ? 'Drag to move · ↻ to rotate · ⤡ to resize · ✕ to remove'
                 : 'Click any item below to add it to your photo'}
             </p>
+            {stickers.length > 0 && (
+              <div className="flex flex-wrap gap-1 max-w-[380px]">
+                {stickers.map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => setSelectedId(s.id)}
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${selectedId === s.id ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/50'}`}
+                  >
+                    <img src={s.src} alt={s.label} className="w-4 h-4 object-contain" />
+                    <span>{s.label}</span>
+                    <button onClick={(e) => { e.stopPropagation(); deleteSticker(s.id); }} className="text-muted-foreground hover:text-destructive ml-0.5">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Picker */}
           <div className="flex-1 flex flex-col gap-2 min-w-0">
-            {/* Category tabs */}
             <div className="flex flex-wrap gap-1">
-              {CATEGORIES.map((c, i) => (
+              {CATEGORIES.map((cat, i) => (
                 <button
-                  key={c.id}
+                  key={i}
                   onClick={() => setActiveCategory(i)}
-                  className={`text-xs px-2 py-1 rounded-full border transition-colors whitespace-nowrap ${activeCategory === i ? 'bg-accent text-accent-foreground border-accent' : 'border-border hover:border-accent/50 bg-background'}`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors whitespace-nowrap ${activeCategory === i ? 'bg-accent text-accent-foreground border-accent' : 'border-border hover:border-accent/50 bg-background'}`}
                 >
-                  {c.icon} {c.label}
+                  {cat.label}
                 </button>
               ))}
             </div>
 
-            {/* Items grid */}
-            <div className="grid grid-cols-4 gap-2 mt-1">
-              {cat.items.map(item => (
+            <div className="grid grid-cols-4 gap-2 mt-1 overflow-y-auto max-h-[320px] pr-1">
+              {CATEGORIES[activeCategory].items.map(item => (
                 <button
                   key={item.id}
                   onClick={() => addSticker(item)}
                   title={item.label}
-                  className="flex flex-col items-center gap-1 p-2 rounded-lg border border-border hover:border-accent/60 hover:bg-accent/5 transition-all hover:scale-105 active:scale-95 bg-background"
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl border border-border hover:border-accent/70 hover:bg-accent/5 transition-all hover:scale-105 active:scale-95"
                 >
                   <img
-                    src={svgToDataUrl(item.svg)}
+                    src={item.src}
                     alt={item.label}
-                    style={{ width: 44, height: 44, objectFit: 'contain' }}
-                    draggable={false}
+                    className="w-12 h-12 object-contain"
+                    loading="lazy"
                   />
                   <span className="text-[10px] text-muted-foreground truncate w-full text-center leading-tight">{item.label}</span>
                 </button>
               ))}
             </div>
-
-            {/* Placed stickers list */}
-            {stickers.length > 0 && (
-              <div className="mt-2 border-t pt-2">
-                <p className="text-xs text-muted-foreground mb-1 font-medium">Placed ({stickers.length})</p>
-                <div className="flex flex-wrap gap-1">
-                  {stickers.map(s => (
-                    <div
-                      key={s.id}
-                      onClick={() => setSelectedId(s.id)}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${selectedId === s.id ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/50'}`}
-                    >
-                      <img src={svgToDataUrl(s.svg)} alt={s.label} style={{ width: 16, height: 16 }} />
-                      <span>{s.label}</span>
-                      <button onClick={(e) => { e.stopPropagation(); deleteSticker(s.id); }} className="text-muted-foreground hover:text-destructive ml-0.5">×</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
