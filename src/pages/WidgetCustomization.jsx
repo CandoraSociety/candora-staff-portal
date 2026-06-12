@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard } from 'lucide-react';
+import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
@@ -74,9 +74,9 @@ export default function WidgetCustomization() {
     }
   };
 
-  // Build widget list from DB, only those admin has enabled + set show_in_add_functions
+  // Locked widgets are always shown (even if not in add_functions), user-selectable ones need show_in_add_functions
   const PRESET_WIDGETS = [...dbWidgets]
-    .filter(w => w.show_in_add_functions)
+    .filter(w => w.show_in_add_functions || w.locked_to_dashboard)
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     .map(w => ({
       id: w.widget_id,
@@ -85,6 +85,7 @@ export default function WidgetCustomization() {
       icon: ICON_MAP[w.icon] || LayoutDashboard,
       color: w.color || '#6366f1',
       comingSoon: !!w.coming_soon,
+      locked: !!w.locked_to_dashboard,
     }));
 
   const toggleWidget = (widgetId) => {
@@ -144,40 +145,46 @@ export default function WidgetCustomization() {
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PRESET_WIDGETS.map(widget => {
-                const Icon = widget.icon;
-                const enabled = enabledWidgets.includes(widget.id);
-                const isComingSoon = widget.comingSoon;
-                return (
-                  <div
-                    key={widget.id}
-                    onClick={() => !isComingSoon && toggleWidget(widget.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all select-none ${
-                      isComingSoon
-                        ? 'border-border opacity-50 cursor-not-allowed'
-                        : enabled
-                          ? 'border-primary bg-primary/5 cursor-pointer'
-                          : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80 cursor-pointer'
-                    }`}
-                  >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: widget.color + '22' }}>
-                      <Icon className="w-5 h-5" style={{ color: widget.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">{widget.label}</p>
-                        {isComingSoon && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">Coming Soon</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{widget.description}</p>
-                    </div>
-                    {!isComingSoon && (
-                      <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
-                        {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        </div>}
-                      </div>
-                    )}
-                  </div>
-                );
+               const Icon = widget.icon;
+               const isLocked = widget.locked;
+               const isComingSoon = widget.comingSoon;
+               const enabled = isLocked || enabledWidgets.includes(widget.id);
+               return (
+                 <div
+                   key={widget.id}
+                   onClick={() => !isComingSoon && !isLocked && toggleWidget(widget.id)}
+                   className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all select-none ${
+                     isLocked
+                       ? 'border-accent/40 bg-accent/5 cursor-not-allowed'
+                       : isComingSoon
+                         ? 'border-border opacity-50 cursor-not-allowed'
+                         : enabled
+                           ? 'border-primary bg-primary/5 cursor-pointer'
+                           : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80 cursor-pointer'
+                   }`}
+                 >
+                   <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: widget.color + '22' }}>
+                     <Icon className="w-5 h-5" style={{ color: widget.color }} />
+                   </div>
+                   <div className="flex-1 min-w-0">
+                     <div className="flex items-center gap-2">
+                       <p className="font-medium text-sm">{widget.label}</p>
+                       {isLocked && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent flex items-center gap-1"><Lock className="w-2.5 h-2.5" />Required</span>}
+                       {isComingSoon && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">Coming Soon</span>}
+                     </div>
+                     <p className="text-xs text-muted-foreground truncate">{widget.description}</p>
+                   </div>
+                   {!isComingSoon && (
+                     isLocked
+                       ? <Lock className="w-4 h-4 text-accent/60 flex-shrink-0" />
+                       : <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
+                           {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                           </div>}
+                         </div>
+                   )}
+                 </div>
+               );
               })}
             </div>
             <p className="text-xs text-muted-foreground mt-3">{enabledWidgets.length} of {PRESET_WIDGETS.filter(w => !w.comingSoon).length} widgets enabled</p>

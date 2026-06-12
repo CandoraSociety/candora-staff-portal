@@ -119,6 +119,16 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
+  const { data: dbWidgets = [] } = useQuery({
+    queryKey: ['dashboardWidgets'],
+    queryFn: () => base44.entities.DashboardWidget.list(),
+  });
+
+  const lockedWidgetIds = dbWidgets.filter(w => w.locked_to_dashboard).map(w => w.widget_id);
+
+  const isWidgetActive = (id) =>
+    lockedWidgetIds.includes(id) || (userPreferences?.enabled_widgets?.includes(id) ?? false);
+
   const accessibleCards = cards.filter(card => access.canAccessCard(card));
 
   const pinnedPortalId = userPreferences?.pinned_portal_id || null;
@@ -212,8 +222,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {userPreferences?.enabled_widgets?.includes('howto') && <HowToSearch />}
-          {userPreferences?.enabled_widgets?.includes('organizer') && <OrganizerWidget />}
+          {isWidgetActive('howto') && <HowToSearch />}
+          {isWidgetActive('organizer') && <OrganizerWidget />}
           <RecentActivityWidget />
         </div>
         <div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,12 +68,24 @@ export default function ManageWidgets() {
                     <p className="text-xs text-muted-foreground mt-0.5">{widget.description}</p>
                   </div>
 
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Show in Add Functions</Label>
-                    <Switch
-                      checked={!!widget.show_in_add_functions}
-                      onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { show_in_add_functions: val } })}
-                    />
+                  <div className="flex items-center gap-6 flex-shrink-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Show in Add Functions</Label>
+                      <Switch
+                        checked={!!widget.show_in_add_functions}
+                        disabled={!!widget.locked_to_dashboard}
+                        onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { show_in_add_functions: val } })}
+                      />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                        <Lock className="w-3 h-3" /> Lock to All
+                      </Label>
+                      <Switch
+                        checked={!!widget.locked_to_dashboard}
+                        onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { locked_to_dashboard: val, show_in_add_functions: val ? false : widget.show_in_add_functions } })}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>

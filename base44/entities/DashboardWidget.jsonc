@@ -32,6 +32,11 @@
       "default": true,
       "description": "Whether staff can see and toggle this widget in Add Functions"
     },
+    "locked_to_dashboard": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this widget is forced onto every user's dashboard and cannot be removed by staff"
+    },
     "coming_soon": {
       "type": "boolean",
       "default": false,
