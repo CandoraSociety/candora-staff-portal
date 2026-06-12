@@ -23,7 +23,8 @@ export default function NexusEmployees() {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [viewingEmployee, setViewingEmployee] = useState(null);
   const queryClient = useQueryClient();
-  const { user } = useOutletContext();
+  const outletContext = useOutletContext();
+  const user = outletContext?.user;
 
   const { data: employees = [], isLoading } = useQuery({ 
     queryKey: ['employees'], 
