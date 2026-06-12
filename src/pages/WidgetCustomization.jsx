@@ -5,7 +5,12 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock } from 'lucide-react';
+import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard } from 'lucide-react';
+
+const ICON_MAP = {
+  BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
+  Users, Star, Bell, Brain, HelpCircle, CalendarClock, LayoutDashboard,
+};
 import { useOutletContext } from 'react-router-dom';
 
 export default function WidgetCustomization() {
@@ -22,6 +27,11 @@ export default function WidgetCustomization() {
   const { data: allPortals = [] } = useQuery({
     queryKey: ['allPortals'],
     queryFn: () => base44.entities.PortalCard.list(),
+  });
+
+  const { data: dbWidgets = [] } = useQuery({
+    queryKey: ['dashboardWidgets'],
+    queryFn: () => base44.entities.DashboardWidget.list(),
   });
 
   const [layout, setLayout] = useState(preferences?.layout_preference || 'grid');
@@ -64,22 +74,18 @@ export default function WidgetCustomization() {
     }
   };
 
-  const PRESET_WIDGETS = [
-    { id: 'stats', label: 'Statistics', description: 'Quick metrics and counts at a glance', icon: BarChart2, color: '#3b82f6' },
-    { id: 'announcements', label: 'Announcements', description: 'Organization-wide notices and updates', icon: Megaphone, color: '#f59e0b' },
-    { id: 'recent_activity', label: 'Recent Activity', description: 'Your latest files, notes and actions', icon: Activity, color: '#10b981' },
-    { id: 'organizer', label: 'Organization for the Disorganized', description: 'Personal chaos management with AI-powered planning', icon: Brain, color: '#8b5cf6' },
-    { id: 'howto', label: 'How-To AI Assistant', description: 'Search company knowledge base + AI fallback', icon: HelpCircle, color: '#0ea5e9' },
-    { id: 'my_tasks', label: 'My Tasks', description: 'Compass tasks and to-dos assigned to you', icon: CheckSquare, color: '#8b5cf6' },
-    { id: 'upcoming_events', label: 'Upcoming Events', description: 'Events and programs happening soon', icon: Clock, color: '#ef4444' },
-    { id: 'quick_notes', label: 'Quick Notes', description: 'Pin and access your recent notes', icon: FileText, color: '#06b6d4' },
-    { id: 'team_birthdays', label: 'Team Birthdays', description: 'Upcoming birthdays and work anniversaries', icon: Star, color: '#f97316' },
-    { id: 'recent_clients', label: 'Recent Clients', description: 'Clients you recently worked with', icon: Users, color: '#6366f1' },
-    { id: 'my_reminders', label: 'My Reminders', description: "Deadlines and reminders you've set", icon: Bell, color: '#ec4899' },
-    { id: 'project_progress', label: 'Project Progress', description: 'Status of active projects and grants', icon: TrendingUp, color: '#84cc16' },
-    { id: 'time_log', label: 'Time Log', description: 'Quick access to log your hours', icon: Clock, color: '#78716c' },
-    { id: 'meeting_manager', label: 'Meeting Manager', description: 'View and manage your Outlook calendar meetings', icon: CalendarClock, color: '#0078d4', comingSoon: true },
-  ];
+  // Build widget list from DB, only those admin has enabled + set show_in_add_functions
+  const PRESET_WIDGETS = [...dbWidgets]
+    .filter(w => w.is_enabled && w.show_in_add_functions)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    .map(w => ({
+      id: w.widget_id,
+      label: w.name,
+      description: w.description || '',
+      icon: ICON_MAP[w.icon] || LayoutDashboard,
+      color: w.color || '#6366f1',
+      comingSoon: !!w.coming_soon,
+    }));
 
   const toggleWidget = (widgetId) => {
     setEnabledWidgets(prev =>
@@ -174,7 +180,7 @@ export default function WidgetCustomization() {
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground mt-3">{enabledWidgets.length} of {PRESET_WIDGETS.length} widgets enabled</p>
+            <p className="text-xs text-muted-foreground mt-3">{enabledWidgets.length} of {PRESET_WIDGETS.filter(w => !w.comingSoon).length} widgets enabled</p>
           </CardContent>
         </Card>
 

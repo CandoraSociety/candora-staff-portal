@@ -6,39 +6,50 @@
       "type": "string",
       "description": "Display name of the widget"
     },
-    "widget_type": {
+    "widget_id": {
       "type": "string",
-      "enum": [
-        "welcome",
-        "quick_links",
-        "announcements",
-        "stats_counter",
-        "calendar_preview",
-        "recent_activity",
-        "team_directory",
-        "custom_html"
-      ],
-      "description": "Type of widget to render"
+      "description": "Unique machine key matching the preset widget ID (e.g. 'stats', 'announcements')"
     },
     "description": {
       "type": "string",
       "description": "What this widget shows"
     },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name"
+    },
+    "color": {
+      "type": "string",
+      "description": "Hex accent color for the widget card"
+    },
     "is_enabled": {
       "type": "boolean",
       "default": true,
-      "description": "Admin toggle to make widget available"
+      "description": "Admin toggle \u2014 if false, widget is hidden from Add Functions entirely"
+    },
+    "show_in_add_functions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether staff can see and toggle this widget in Add Functions"
+    },
+    "coming_soon": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks widget as coming soon \u2014 visible but not selectable"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    },
+    "widget_type": {
+      "type": "string",
+      "description": "Legacy type field"
     },
     "default_for_roles": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Roles that get this widget by default"
-    },
-    "config": {
-      "type": "object",
-      "description": "Widget-specific configuration data"
+      }
     },
     "size": {
       "type": "string",
@@ -47,12 +58,11 @@
         "medium",
         "large"
       ],
-      "default": "medium",
-      "description": "Default widget size"
+      "default": "medium"
     }
   },
   "required": [
     "name",
-    "widget_type"
+    "widget_id"
   ]
 }
