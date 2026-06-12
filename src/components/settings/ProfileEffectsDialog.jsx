@@ -1,79 +1,139 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, X, RotateCcw, Trash2 } from 'lucide-react';
+import { Check, X, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
+// ── Helper: render an emoji as a high-res image via Google Noto Emoji ────────
+// Converts an emoji to its Unicode codepoints for the Noto CDN URL
+function emojiToCDNUrl(emoji) {
+  const codePoints = [...emoji]
+    .map(c => c.codePointAt(0).toString(16).padStart(4, '0'))
+    .filter(c => c !== 'fe0f') // strip variation selector
+    .join('_');
+  return `https://fonts.gstatic.com/s/e/notoemoji/latest/${codePoints}/emoji.svg`;
+}
+
 // ── Sticker catalogue ────────────────────────────────────────────────────────
+// Each item: { id, label, emoji, type: 'emoji'|'svg' }
+// 'emoji' type = rendered via Noto SVG for crisp quality
+// For face overlays we use dedicated transparent PNGs from open sources
 const CATEGORIES = [
   {
     label: '🎩 Hats',
     items: [
-      { id: 'tophat',    emoji: '🎩', label: 'Top Hat' },
-      { id: 'cowboy',    emoji: '🤠', label: 'Cowboy' },
-      { id: 'crown',     emoji: '👑', label: 'Crown' },
-      { id: 'beret',     emoji: '🪖', label: 'Helmet' },
-      { id: 'wizard',    emoji: '🧙', label: 'Wizard' },
-      { id: 'santa',     emoji: '🎅', label: 'Santa' },
-      { id: 'party',     emoji: '🥳', label: 'Party' },
-      { id: 'pirate',    emoji: '🏴‍☠️', label: 'Pirate' },
+      { id: 'tophat',       label: 'Top Hat',       src: 'https://em-content.zobj.net/thumbs/240/google/350/top-hat_1f3a9.png' },
+      { id: 'crown',        label: 'Crown',         src: 'https://em-content.zobj.net/thumbs/240/google/350/crown_1f451.png' },
+      { id: 'cowboy',       label: 'Cowboy Hat',    src: 'https://em-content.zobj.net/thumbs/240/google/350/cowboy-hat-face_1f920.png' },
+      { id: 'graduation',   label: 'Grad Cap',      src: 'https://em-content.zobj.net/thumbs/240/google/350/graduation-cap_1f393.png' },
+      { id: 'beret',        label: 'Beret',         src: 'https://em-content.zobj.net/thumbs/240/google/350/beret_1fa96.png' },
+      { id: 'helmet',       label: 'Helmet',        src: 'https://em-content.zobj.net/thumbs/240/google/350/military-helmet_1fa96.png' },
+      { id: 'tophat2',      label: 'Witch Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/witch_1f9d9.png' },
+      { id: 'santa_hat',    label: 'Santa Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/santa-claus_1f385.png' },
+      { id: 'party_hat',    label: 'Party Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/partying-face_1f973.png' },
+      { id: 'pirate',       label: 'Pirate',        src: 'https://em-content.zobj.net/thumbs/240/google/350/pirate-flag_1f3f4-200d-2620-fe0f.png' },
+      { id: 'detective',    label: 'Detective',     src: 'https://em-content.zobj.net/thumbs/240/google/350/detective_1f575.png' },
+      { id: 'chef',         label: 'Chef Hat',      src: 'https://em-content.zobj.net/thumbs/240/google/350/cook_1f9d1-200d-1f373.png' },
     ],
   },
   {
     label: '👓 Eyewear',
     items: [
-      { id: 'sunglasses', emoji: '😎', label: 'Sunglasses' },
-      { id: 'monocle',   emoji: '🧐', label: 'Monocle' },
-      { id: 'nerd',      emoji: '🤓', label: 'Nerd Glasses' },
-      { id: 'goggles',   emoji: '🥽', label: 'Goggles' },
+      { id: 'sunglasses',   label: 'Sunglasses',    src: 'https://em-content.zobj.net/thumbs/240/google/350/sunglasses_1f576.png' },
+      { id: 'glasses',      label: 'Glasses',       src: 'https://em-content.zobj.net/thumbs/240/google/350/glasses_1f453.png' },
+      { id: 'goggles',      label: 'Goggles',       src: 'https://em-content.zobj.net/thumbs/240/google/350/goggles_1f97d.png' },
+      { id: 'monocle',      label: 'Monocle',       src: 'https://em-content.zobj.net/thumbs/240/google/350/face-with-monocle_1f9d0.png' },
+      { id: 'nerd_glasses', label: 'Nerd',          src: 'https://em-content.zobj.net/thumbs/240/google/350/nerd-face_1f913.png' },
+      { id: 'star_glasses', label: 'Star Glasses',  src: 'https://em-content.zobj.net/thumbs/240/google/350/star-struck_1f929.png' },
     ],
   },
   {
     label: '🥸 Facial Hair',
     items: [
-      { id: 'moustache', emoji: '👨', label: 'Moustache' },
-      { id: 'beard',     emoji: '🧔', label: 'Beard' },
-      { id: 'santa_beard', emoji: '🎅', label: 'Santa Beard' },
-      { id: 'walrus',    emoji: '🦭', label: 'Walrus' },
+      { id: 'moustache',    label: 'Moustache',     src: 'https://em-content.zobj.net/thumbs/240/google/350/moustache_1f9f4.png' },
+      { id: 'beard',        label: 'Full Beard',    src: 'https://em-content.zobj.net/thumbs/240/google/350/man-beard_1f9d4.png' },
+      { id: 'beard_w',      label: 'Beard (F)',     src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-beard_1f9d4-200d-2640-fe0f.png' },
+      { id: 'santa_beard',  label: 'Santa Beard',   src: 'https://em-content.zobj.net/thumbs/240/google/350/santa-claus_1f385.png' },
+      { id: 'curly_face',   label: 'Fancy Stache',  src: 'https://em-content.zobj.net/thumbs/240/google/350/face-with-open-mouth_1f62e.png' },
     ],
   },
   {
     label: '💇 Hair',
     items: [
-      { id: 'mohawk',    emoji: '🦹', label: 'Hero Hair' },
-      { id: 'curly',     emoji: '👩‍🦱', label: 'Curly' },
-      { id: 'blonde',    emoji: '👱', label: 'Blonde' },
-      { id: 'clown_hair',emoji: '🤡', label: 'Clown' },
+      { id: 'curly_hair',   label: 'Curly',         src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-curly-hair_1f469-200d-1f9b1.png' },
+      { id: 'red_hair',     label: 'Red Hair',      src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-red-hair_1f469-200d-1f9b0.png' },
+      { id: 'white_hair',   label: 'White Hair',    src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-white-hair_1f469-200d-1f9b3.png' },
+      { id: 'afro',         label: 'Afro',          src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-curly-hair_1f469-200d-1f9b1.png' },
+      { id: 'bald',         label: 'Bald',          src: 'https://em-content.zobj.net/thumbs/240/google/350/person-bald_1f9d1-200d-1f9b2.png' },
+      { id: 'elf',          label: 'Elf',           src: 'https://em-content.zobj.net/thumbs/240/google/350/elf_1f9dd.png' },
     ],
   },
   {
     label: '🪢 Accessories',
     items: [
-      { id: 'bowtie',    emoji: '🎀', label: 'Bow Tie' },
-      { id: 'tie',       emoji: '👔', label: 'Tie' },
-      { id: 'necklace',  emoji: '📿', label: 'Necklace' },
-      { id: 'ring',      emoji: '💍', label: 'Ring' },
-      { id: 'medal',     emoji: '🥇', label: 'Medal' },
+      { id: 'bowtie',       label: 'Bow Tie',       src: 'https://em-content.zobj.net/thumbs/240/google/350/bow-and-arrow_1f3f9.png' },
+      { id: 'necktie',      label: 'Neck Tie',      src: 'https://em-content.zobj.net/thumbs/240/google/350/necktie_1f454.png' },
+      { id: 'scarf',        label: 'Scarf',         src: 'https://em-content.zobj.net/thumbs/240/google/350/scarf_1f9e3.png' },
+      { id: 'handbag',      label: 'Handbag',       src: 'https://em-content.zobj.net/thumbs/240/google/350/handbag_1f45c.png' },
+      { id: 'crown2',       label: 'Tiara',         src: 'https://em-content.zobj.net/thumbs/240/google/350/crown_1f451.png' },
+      { id: 'medal',        label: 'Medal',         src: 'https://em-content.zobj.net/thumbs/240/google/350/sports-medal_1f3c5.png' },
     ],
   },
   {
-    label: '✨ Fun',
+    label: '💎 Jewelry',
     items: [
-      { id: 'sparkles',  emoji: '✨', label: 'Sparkles' },
-      { id: 'fire',      emoji: '🔥', label: 'Fire' },
-      { id: 'rainbow',   emoji: '🌈', label: 'Rainbow' },
-      { id: 'heart',     emoji: '❤️', label: 'Heart' },
-      { id: 'stars',     emoji: '⭐', label: 'Star' },
-      { id: 'alien',     emoji: '👽', label: 'Alien' },
-      { id: 'devil',     emoji: '😈', label: 'Devil' },
-      { id: 'angel',     emoji: '😇', label: 'Angel' },
+      { id: 'ring',         label: 'Ring',          src: 'https://em-content.zobj.net/thumbs/240/google/350/ring_1f48d.png' },
+      { id: 'gem',          label: 'Gem',           src: 'https://em-content.zobj.net/thumbs/240/google/350/gem-stone_1f48e.png' },
+      { id: 'necklace',     label: 'Necklace',      src: 'https://em-content.zobj.net/thumbs/240/google/350/beads_1f9ff.png' },
+      { id: 'earrings',     label: 'Earrings',      src: 'https://em-content.zobj.net/thumbs/240/google/350/crystal-ball_1f52e.png' },
+      { id: 'diamond',      label: 'Diamond',       src: 'https://em-content.zobj.net/thumbs/240/google/350/diamond-with-a-dot_1f4a0.png' },
+      { id: 'heart_charm',  label: 'Heart Charm',   src: 'https://em-content.zobj.net/thumbs/240/google/350/sparkling-heart_1f496.png' },
+      { id: 'id_badge',     label: 'Badge',         src: 'https://em-content.zobj.net/thumbs/240/google/350/id-button_1f194.png' },
+      { id: 'chain',        label: 'Chain',         src: 'https://em-content.zobj.net/thumbs/240/google/350/link_1f517.png' },
+    ],
+  },
+  {
+    label: '💉 Piercings',
+    items: [
+      { id: 'nose_ring',    label: 'Nose Ring',     src: 'https://em-content.zobj.net/thumbs/240/google/350/ring_1f48d.png' },
+      { id: 'ear_stud',     label: 'Ear Stud',      src: 'https://em-content.zobj.net/thumbs/240/google/350/diamond-with-a-dot_1f4a0.png' },
+      { id: 'lip_ring',     label: 'Lip Ring',      src: 'https://em-content.zobj.net/thumbs/240/google/350/o-button_1f17e.png' },
+      { id: 'eyebrow',      label: 'Eyebrow Bar',   src: 'https://em-content.zobj.net/thumbs/240/google/350/minus_2796.png' },
+    ],
+  },
+  {
+    label: '🖋️ Tattoos',
+    items: [
+      { id: 'tattoo_heart', label: 'Heart',         src: 'https://em-content.zobj.net/thumbs/240/google/350/heart-suit_2665.png' },
+      { id: 'tattoo_anchor',label: 'Anchor',        src: 'https://em-content.zobj.net/thumbs/240/google/350/anchor_2693.png' },
+      { id: 'tattoo_snake', label: 'Snake',         src: 'https://em-content.zobj.net/thumbs/240/google/350/snake_1f40d.png' },
+      { id: 'tattoo_rose',  label: 'Rose',          src: 'https://em-content.zobj.net/thumbs/240/google/350/rose_1f339.png' },
+      { id: 'tattoo_skull', label: 'Skull',         src: 'https://em-content.zobj.net/thumbs/240/google/350/skull_1f480.png' },
+      { id: 'tattoo_star',  label: 'Star',          src: 'https://em-content.zobj.net/thumbs/240/google/350/star_2b50.png' },
+      { id: 'tattoo_lightning', label: 'Lightning', src: 'https://em-content.zobj.net/thumbs/240/google/350/high-voltage_26a1.png' },
+      { id: 'tattoo_infinity', label: 'Infinity',   src: 'https://em-content.zobj.net/thumbs/240/google/350/infinity_267e.png' },
+      { id: 'tattoo_dragon',label: 'Dragon',        src: 'https://em-content.zobj.net/thumbs/240/google/350/dragon_1f409.png' },
+    ],
+  },
+  {
+    label: '✨ Effects',
+    items: [
+      { id: 'sparkles',     label: 'Sparkles',      src: 'https://em-content.zobj.net/thumbs/240/google/350/sparkles_2728.png' },
+      { id: 'fire',         label: 'Fire',          src: 'https://em-content.zobj.net/thumbs/240/google/350/fire_1f525.png' },
+      { id: 'rainbow',      label: 'Rainbow',       src: 'https://em-content.zobj.net/thumbs/240/google/350/rainbow_1f308.png' },
+      { id: 'stars',        label: 'Stars',         src: 'https://em-content.zobj.net/thumbs/240/google/350/shooting-star_1f320.png' },
+      { id: 'halo',         label: 'Halo',          src: 'https://em-content.zobj.net/thumbs/240/google/350/smiling-face-with-halo_1f607.png' },
+      { id: 'devil_horns',  label: 'Devil',         src: 'https://em-content.zobj.net/thumbs/240/google/350/smiling-face-with-horns_1f608.png' },
+      { id: 'aura',         label: 'Aura',          src: 'https://em-content.zobj.net/thumbs/240/google/350/dizzy_1f4ab.png' },
+      { id: 'glitter',      label: 'Glitter',       src: 'https://em-content.zobj.net/thumbs/240/google/350/glowing-star_1f31f.png' },
+      { id: 'confetti',     label: 'Confetti',      src: 'https://em-content.zobj.net/thumbs/240/google/350/confetti-ball_1f38a.png' },
+      { id: 'sunburst',     label: 'Sunburst',      src: 'https://em-content.zobj.net/thumbs/240/google/350/sun-with-face_1f31e.png' },
     ],
   },
 ];
 
-// ── Individual draggable sticker ─────────────────────────────────────────────
+// ── Draggable sticker overlay ────────────────────────────────────────────────
 function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, containerSize }) {
-  const ref = useRef(null);
   const dragStart = useRef(null);
   const rotateStart = useRef(null);
   const resizeStart = useRef(null);
@@ -81,19 +141,13 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
   const handleDragMouseDown = (e) => {
     e.stopPropagation();
     onSelect(sticker.id);
-    dragStart.current = {
-      mx: e.clientX, my: e.clientY,
-      sx: sticker.x, sy: sticker.y,
-    };
+    dragStart.current = { mx: e.clientX, my: e.clientY, sx: sticker.x, sy: sticker.y };
     const onMove = (mv) => {
       const dx = (mv.clientX - dragStart.current.mx) / containerSize;
       const dy = (mv.clientY - dragStart.current.my) / containerSize;
       onUpdate(sticker.id, { x: dragStart.current.sx + dx, y: dragStart.current.sy + dy });
     };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
@@ -109,10 +163,7 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
       const dy = (touch.clientY - dragStart.current.my) / containerSize;
       onUpdate(sticker.id, { x: dragStart.current.sx + dx, y: dragStart.current.sy + dy });
     };
-    const onEnd = () => {
-      window.removeEventListener('touchmove', onMove);
-      window.removeEventListener('touchend', onEnd);
-    };
+    const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
     window.addEventListener('touchmove', onMove, { passive: true });
     window.addEventListener('touchend', onEnd);
   };
@@ -121,19 +172,13 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
     e.stopPropagation();
     const cx = sticker.x * containerSize;
     const cy = sticker.y * containerSize;
-    rotateStart.current = {
-      startAngle: Math.atan2(e.clientY - cy, e.clientX - cx),
-      origRot: sticker.rotation || 0,
-    };
+    rotateStart.current = { startAngle: Math.atan2(e.clientY - cy, e.clientX - cx), origRot: sticker.rotation || 0 };
     const onMove = (mv) => {
       const angle = Math.atan2(mv.clientY - cy, mv.clientX - cx);
       const delta = (angle - rotateStart.current.startAngle) * (180 / Math.PI);
       onUpdate(sticker.id, { rotation: rotateStart.current.origRot + delta });
     };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
@@ -143,13 +188,10 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
     resizeStart.current = { mx: e.clientX, origSize: sticker.size };
     const onMove = (mv) => {
       const delta = (mv.clientX - resizeStart.current.mx) / containerSize;
-      const newSize = Math.max(0.05, Math.min(0.8, resizeStart.current.origSize + delta));
+      const newSize = Math.max(0.05, Math.min(1.0, resizeStart.current.origSize + delta));
       onUpdate(sticker.id, { size: newSize });
     };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
@@ -161,51 +203,43 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
 
   return (
     <div
-      ref={ref}
       style={{
-        position: 'absolute',
-        left: px,
-        top: py,
-        width: sizePx,
-        height: sizePx,
+        position: 'absolute', left: px, top: py,
+        width: sizePx, height: sizePx,
         transform: `translate(-50%, -50%) rotate(${rot}deg)`,
-        cursor: 'grab',
-        userSelect: 'none',
-        zIndex: isSelected ? 10 : 5,
-        touchAction: 'none',
+        cursor: 'grab', userSelect: 'none',
+        zIndex: isSelected ? 10 : 5, touchAction: 'none',
       }}
       onMouseDown={handleDragMouseDown}
       onTouchStart={handleTouchDrag}
       onClick={(e) => { e.stopPropagation(); onSelect(sticker.id); }}
     >
-      {/* Emoji */}
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: sizePx * 0.8, lineHeight: 1 }}>
-        {sticker.emoji}
-      </div>
+      <img
+        src={sticker.src}
+        alt={sticker.label}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none', imageRendering: 'crisp-edges' }}
+        draggable={false}
+        crossOrigin="anonymous"
+      />
 
-      {/* Controls — only when selected */}
       {isSelected && (
         <>
-          {/* Border */}
-          <div style={{ position: 'absolute', inset: 0, border: '2px dashed rgba(99,102,241,0.8)', borderRadius: 4, pointerEvents: 'none' }} />
-
+          <div style={{ position: 'absolute', inset: -3, border: '2px dashed rgba(99,102,241,0.9)', borderRadius: 6, pointerEvents: 'none' }} />
           {/* Delete */}
           <button
             onMouseDown={(e) => { e.stopPropagation(); onDelete(sticker.id); }}
-            style={{ position: 'absolute', top: -12, right: -12, width: 22, height: 22, borderRadius: '50%', background: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12 }}
+            style={{ position: 'absolute', top: -14, right: -14, width: 24, height: 24, borderRadius: '50%', background: '#ef4444', border: '2px solid white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 'bold', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
           >✕</button>
-
-          {/* Rotate handle */}
+          {/* Rotate */}
           <div
             onMouseDown={handleRotateMouseDown}
-            style={{ position: 'absolute', top: -28, left: '50%', transform: 'translateX(-50%)', width: 18, height: 18, borderRadius: '50%', background: '#6366f1', cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}
+            style={{ position: 'absolute', top: -32, left: '50%', transform: 'translateX(-50%)', width: 22, height: 22, borderRadius: '50%', background: '#6366f1', border: '2px solid white', cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
             title="Rotate"
           >↻</div>
-
-          {/* Resize handle */}
+          {/* Resize */}
           <div
             onMouseDown={handleResizeMouseDown}
-            style={{ position: 'absolute', bottom: -10, right: -10, width: 18, height: 18, borderRadius: '50%', background: '#6366f1', cursor: 'se-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'white' }}
+            style={{ position: 'absolute', bottom: -12, right: -12, width: 22, height: 22, borderRadius: '50%', background: '#6366f1', border: '2px solid white', cursor: 'se-resize', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
             title="Resize"
           >⤡</div>
         </>
@@ -216,7 +250,6 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
 
 // ── Main dialog ──────────────────────────────────────────────────────────────
 export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }) {
-  const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [stickers, setStickers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -230,22 +263,13 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
 
   const addSticker = (item) => {
     const id = `${item.id}_${Date.now()}`;
-    setStickers(prev => [...prev, { ...item, id, x: 0.5, y: 0.35, size: 0.25, rotation: 0 }]);
+    setStickers(prev => [...prev, { ...item, id, x: 0.5, y: 0.35, size: 0.3, rotation: 0 }]);
     setSelectedId(id);
   };
 
-  const updateSticker = (id, changes) => {
-    setStickers(prev => prev.map(s => s.id === id ? { ...s, ...changes } : s));
-  };
+  const updateSticker = (id, changes) => setStickers(prev => prev.map(s => s.id === id ? { ...s, ...changes } : s));
+  const deleteSticker = (id) => { setStickers(prev => prev.filter(s => s.id !== id)); if (selectedId === id) setSelectedId(null); };
 
-  const deleteSticker = (id) => {
-    setStickers(prev => prev.filter(s => s.id !== id));
-    if (selectedId === id) setSelectedId(null);
-  };
-
-  const handleContainerClick = () => setSelectedId(null);
-
-  // Render stickers onto canvas for export
   const exportImage = useCallback(() => {
     return new Promise((resolve, reject) => {
       const canvas = canvasRef.current;
@@ -253,28 +277,36 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d');
+      const scale = size / CONTAINER_SIZE;
 
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, size, size);
-        const scale = size / CONTAINER_SIZE;
-        stickers.forEach(s => {
-          const cx = s.x * size;
-          const cy = s.y * size;
-          const fontSize = s.size * CONTAINER_SIZE * 0.8 * scale;
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(((s.rotation || 0) * Math.PI) / 180);
-          ctx.font = `${fontSize}px serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(s.emoji, 0, 0);
-          ctx.restore();
-        });
-        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      const baseImg = new Image();
+      baseImg.crossOrigin = 'anonymous';
+      baseImg.onload = async () => {
+        ctx.drawImage(baseImg, 0, 0, size, size);
+        // Draw each sticker
+        for (const s of stickers) {
+          await new Promise((res) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              const cx = s.x * size;
+              const cy = s.y * size;
+              const sizePx = s.size * CONTAINER_SIZE * scale;
+              ctx.save();
+              ctx.translate(cx, cy);
+              ctx.rotate(((s.rotation || 0) * Math.PI) / 180);
+              ctx.drawImage(img, -sizePx / 2, -sizePx / 2, sizePx, sizePx);
+              ctx.restore();
+              res();
+            };
+            img.onerror = () => res(); // skip if fails
+            img.src = s.src;
+          });
+        }
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
       };
-      img.onerror = reject;
-      img.src = imageSrc;
+      baseImg.onerror = reject;
+      baseImg.src = imageSrc;
     });
   }, [stickers, imageSrc]);
 
@@ -296,28 +328,25 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col gap-4 p-4">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto flex flex-col gap-4 p-4">
         <DialogHeader>
           <DialogTitle>Add Fun Effects 🎨</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Preview area */}
+        <div className="flex flex-col md:flex-row gap-5">
+          {/* Preview */}
           <div className="flex-shrink-0 flex flex-col items-center gap-2">
             <div
-              ref={containerRef}
-              onClick={handleContainerClick}
-              style={{ width: CONTAINER_SIZE, height: CONTAINER_SIZE, position: 'relative', borderRadius: '50%', overflow: 'hidden', border: '3px solid #e2e8f0', flexShrink: 0 }}
+              onClick={() => setSelectedId(null)}
+              style={{
+                width: CONTAINER_SIZE, height: CONTAINER_SIZE,
+                position: 'relative', borderRadius: '50%',
+                overflow: 'hidden', border: '3px solid #e2e8f0', flexShrink: 0,
+              }}
             >
-              {/* Base image */}
               {imageSrc && (
-                <img
-                  src={imageSrc}
-                  alt="profile"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-                />
+                <img src={imageSrc} alt="profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
               )}
-              {/* Stickers as DOM overlays */}
               {stickers.map(s => (
                 <StickerOverlay
                   key={s.id}
@@ -330,12 +359,29 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
                 />
               ))}
             </div>
-            <p className="text-xs text-muted-foreground text-center">
-              {selectedId ? 'Drag to move · ↻ to rotate · ⤡ to resize · ✕ to delete' : 'Click a sticker below to add it'}
+            <p className="text-xs text-muted-foreground text-center max-w-[380px]">
+              {selectedId
+                ? 'Drag to move · ↻ handle to rotate · ⤡ handle to resize · ✕ to remove'
+                : 'Click any item below to add it to your photo'}
             </p>
+            {stickers.length > 0 && (
+              <div className="flex flex-wrap gap-1 max-w-[380px]">
+                {stickers.map(s => (
+                  <div
+                    key={s.id}
+                    onClick={() => setSelectedId(s.id)}
+                    className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${selectedId === s.id ? 'border-accent bg-accent/10 text-accent-foreground' : 'border-border hover:border-accent/50'}`}
+                  >
+                    <img src={s.src} alt={s.label} className="w-4 h-4 object-contain" crossOrigin="anonymous" />
+                    <span>{s.label}</span>
+                    <button onClick={(e) => { e.stopPropagation(); deleteSticker(s.id); }} className="text-muted-foreground hover:text-destructive ml-0.5 leading-none">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Sticker picker */}
+          {/* Picker */}
           <div className="flex-1 flex flex-col gap-2 min-w-0">
             {/* Category tabs */}
             <div className="flex flex-wrap gap-1">
@@ -343,7 +389,7 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
                 <button
                   key={i}
                   onClick={() => setActiveCategory(i)}
-                  className={`text-xs px-2 py-1 rounded-full border transition-colors ${activeCategory === i ? 'bg-accent text-accent-foreground border-accent' : 'border-border hover:border-accent/50'}`}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors whitespace-nowrap ${activeCategory === i ? 'bg-accent text-accent-foreground border-accent' : 'border-border hover:border-accent/50 bg-background'}`}
                 >
                   {cat.label}
                 </button>
@@ -351,45 +397,28 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
             </div>
 
             {/* Items grid */}
-            <div className="grid grid-cols-4 gap-2 mt-1">
+            <div className="grid grid-cols-4 gap-2 mt-1 overflow-y-auto max-h-[320px] pr-1">
               {CATEGORIES[activeCategory].items.map(item => (
                 <button
                   key={item.id}
                   onClick={() => addSticker(item)}
                   title={item.label}
-                  className="flex flex-col items-center gap-0.5 p-2 rounded-lg border border-border hover:border-accent/60 hover:bg-accent/5 transition-all hover:scale-105 active:scale-95"
+                  className="flex flex-col items-center gap-1 p-2 rounded-xl border border-border hover:border-accent/70 hover:bg-accent/5 transition-all hover:scale-105 active:scale-95"
                 >
-                  <span style={{ fontSize: 28 }}>{item.emoji}</span>
-                  <span className="text-[10px] text-muted-foreground truncate w-full text-center">{item.label}</span>
+                  <img
+                    src={item.src}
+                    alt={item.label}
+                    className="w-12 h-12 object-contain"
+                    crossOrigin="anonymous"
+                    loading="lazy"
+                  />
+                  <span className="text-[10px] text-muted-foreground truncate w-full text-center leading-tight">{item.label}</span>
                 </button>
               ))}
             </div>
-
-            {/* Sticker list / quick delete */}
-            {stickers.length > 0 && (
-              <div className="mt-2 border-t pt-2">
-                <p className="text-xs text-muted-foreground mb-1">Placed stickers</p>
-                <div className="flex flex-wrap gap-1">
-                  {stickers.map(s => (
-                    <div
-                      key={s.id}
-                      onClick={() => setSelectedId(s.id)}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${selectedId === s.id ? 'border-accent bg-accent/10' : 'border-border hover:border-accent/50'}`}
-                    >
-                      <span>{s.emoji}</span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteSticker(s.id); }}
-                        className="text-muted-foreground hover:text-destructive ml-0.5"
-                      >✕</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Hidden canvas for export */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
         <div className="flex justify-between items-center border-t pt-3">
@@ -397,13 +426,9 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
             <RotateCcw className="w-4 h-4 mr-1" /> Clear All
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              <X className="w-4 h-4 mr-1" /> Cancel
-            </Button>
+            <Button variant="outline" onClick={onClose}><X className="w-4 h-4 mr-1" /> Cancel</Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving
-                ? <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-                : <Check className="w-4 h-4 mr-1" />}
+              {isSaving ? <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" /> : <Check className="w-4 h-4 mr-1" />}
               {isSaving ? 'Saving...' : 'Save Photo'}
             </Button>
           </div>
