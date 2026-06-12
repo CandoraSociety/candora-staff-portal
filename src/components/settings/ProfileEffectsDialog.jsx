@@ -14,30 +14,145 @@ function svgWrap(content, vb = '0 0 100 100') {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${content}</svg>`;
 }
 
-// FACIAL HAIR — moustaches
+// FACIAL HAIR — high-quality moustaches, beards, sideburns
 const facialHairSVGs = {
   // Moustaches
-  moustache_pencil: (c) => svgWrap(`<path d="M20,52 Q35,44 50,46 Q65,44 80,52 Q65,56 50,54 Q35,56 20,52Z" fill="${c}"/>`, '0 0 100 100'),
-  moustache_handlebar: (c) => svgWrap(`<path d="M10,50 C10,40 25,38 35,45 Q50,50 65,45 C75,38 90,40 90,50 C90,56 80,54 70,50 Q50,55 30,50 C20,54 10,56 10,50Z" fill="${c}"/>`, '0 0 100 100'),
-  moustache_walrus: (c) => svgWrap(`<path d="M15,48 Q30,42 50,44 Q70,42 85,48 Q80,62 70,65 Q60,60 50,62 Q40,60 30,65 Q20,62 15,48Z" fill="${c}"/>`, '0 0 100 100'),
-  moustache_chevron: (c) => svgWrap(`<path d="M18,46 Q34,40 50,42 Q66,40 82,46 Q75,58 50,54 Q25,58 18,46Z" fill="${c}"/>`, '0 0 100 100'),
-  moustache_fu_manchu: (c) => svgWrap(`<path d="M25,46 Q38,40 50,42 Q62,40 75,46 Q70,54 65,52 Q57,48 50,50 Q43,48 35,52 Q30,54 25,46Z" fill="${c}"/><path d="M30,52 Q26,70 22,82 Q20,86 22,88 Q24,90 26,86 Q30,72 34,56" fill="${c}"/><path d="M70,52 Q74,70 78,82 Q80,86 78,88 Q76,90 74,86 Q70,72 66,56" fill="${c}"/>`, '0 0 100 100'),
-  moustache_english: (c) => svgWrap(`<path d="M20,50 C22,44 30,42 36,46 Q43,50 50,50 Q57,50 64,46 C70,42 78,44 80,50 C82,54 78,56 72,54 Q60,52 50,52 Q40,52 28,54 C22,56 18,54 20,50Z" fill="${c}"/><path d="M20,50 C15,48 8,44 6,48 C4,52 8,54 14,52" fill="${c}" stroke="${c}" stroke-width="1"/><path d="M80,50 C85,48 92,44 94,48 C96,52 92,54 86,52" fill="${c}" stroke="${c}" stroke-width="1"/>`, '0 0 100 100'),
-  moustache_imperial: (c) => svgWrap(`<path d="M25,50 Q37,40 50,42 Q63,40 75,50 Q68,58 60,55 Q55,52 50,53 Q45,52 40,55 Q32,58 25,50Z" fill="${c}"/><path d="M25,50 C18,46 12,36 16,30 C20,24 28,32 30,42" fill="${c}"/><path d="M75,50 C82,46 88,36 84,30 C80,24 72,32 70,42" fill="${c}"/>`, '0 0 100 100'),
+  moustache_pencil: (c) => svgWrap(`
+    <defs><filter id="fh"><feGaussianBlur stdDeviation="0.4"/></filter></defs>
+    <path d="M22,54 C28,48 38,46 50,47 C62,46 72,48 78,54 C72,57 62,56 50,56.5 C38,56 28,57 22,54Z" fill="${c}"/>
+    <path d="M22,54 C28,50 38,48.5 50,49 C62,48.5 72,50 78,54 C72,55.5 62,54.5 50,55 C38,54.5 28,55.5 22,54Z" fill="${c}" opacity="0.5"/>
+  `, '0 0 100 100'),
+
+  moustache_handlebar: (c) => svgWrap(`
+    <defs><linearGradient id="hbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M10,50 C8,40 18,36 28,41 C36,45 43,49 50,49 C57,49 64,45 72,41 C82,36 92,40 90,50 C88,56 80,55 72,51 C64,47 57,51 50,51 C43,51 36,47 28,51 C20,55 12,56 10,50Z" fill="url(#hbg)"/>
+    <path d="M10,50 C8,44 16,40 26,43 C34,46 42,49.5 50,49.5 C58,49.5 66,46 74,43 C84,40 92,44 90,50" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.4"/>
+    <path d="M10,50 C6,46 4,40 8,38 C12,36 16,40 18,46" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M90,50 C94,46 96,40 92,38 C88,36 84,40 82,46" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
+  `, '0 0 100 100'),
+
+  moustache_walrus: (c) => svgWrap(`
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M14,46 C20,40 34,37 50,38 C66,37 80,40 86,46 C84,56 80,64 72,68 C66,64 58,60 50,62 C42,60 34,64 28,68 C20,64 16,56 14,46Z" fill="url(#wg)"/>
+    <path d="M30,46 C36,43 44,41 50,42 C56,41 64,43 70,46" fill="none" stroke="${c}" stroke-width="1" opacity="0.35"/>
+    <path d="M28,56 C32,54 40,52 50,53 C60,52 68,54 72,56" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.25"/>
+  `, '0 0 100 100'),
+
+  moustache_chevron: (c) => svgWrap(`
+    <defs><linearGradient id="cvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M17,44 C26,38 38,36 50,38 C62,36 74,38 83,44 C78,54 66,56 50,54 C34,56 22,54 17,44Z" fill="url(#cvg)"/>
+    <path d="M24,43 C34,39 43,37.5 50,39 C57,37.5 66,39 76,43" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
+  `, '0 0 100 100'),
+
+  moustache_fu_manchu: (c) => svgWrap(`
+    <defs><linearGradient id="fmg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M26,44 C35,38 43,37 50,39 C57,37 65,38 74,44 C70,52 63,52 57,49 C54,47 52,48 50,49 C48,48 46,47 43,49 C37,52 30,52 26,44Z" fill="url(#fmg)"/>
+    <path d="M30,51 C28,58 26,66 24,76 C22,82 20,88 22,91 C24,94 27,90 28,84 C30,74 33,62 36,54" fill="${c}" stroke="${c}" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M70,51 C72,58 74,66 76,76 C78,82 80,88 78,91 C76,94 73,90 72,84 C70,74 67,62 64,54" fill="${c}" stroke="${c}" stroke-width="1" stroke-linejoin="round"/>
+  `, '0 0 100 100'),
+
+  moustache_english: (c) => svgWrap(`
+    <defs><linearGradient id="eng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M19,50 C22,43 30,40 37,44 C42,47 46,50 50,50 C54,50 58,47 63,44 C70,40 78,43 81,50 C79,55 74,55 68,53 C62,51 56,51 50,51.5 C44,51 38,51 32,53 C26,55 21,55 19,50Z" fill="url(#eng)"/>
+    <path d="M19,50 C14,48 7,43 5,47 C3,51 7,54 13,52 C16,51 18,50.5 19,50Z" fill="${c}"/>
+    <path d="M81,50 C86,48 93,43 95,47 C97,51 93,54 87,52 C84,51 82,50.5 81,50Z" fill="${c}"/>
+    <path d="M5,47 C5,44 8,42 11,44" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M95,47 C95,44 92,42 89,44" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+  `, '0 0 100 100'),
+
+  moustache_imperial: (c) => svgWrap(`
+    <defs><linearGradient id="impg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M24,49 C32,40 41,38 50,40 C59,38 68,40 76,49 C70,57 62,55 56,52 C53,50.5 51.5,51 50,51.5 C48.5,51 47,50.5 44,52 C38,55 30,57 24,49Z" fill="url(#impg)"/>
+    <path d="M24,49 C18,44 12,34 16,27 C20,22 27,30 29,41" fill="${c}" stroke="${c}" stroke-width="0.5"/>
+    <path d="M76,49 C82,44 88,34 84,27 C80,22 73,30 71,41" fill="${c}" stroke="${c}" stroke-width="0.5"/>
+    <path d="M16,27 C14,23 16,20 19,22" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M84,27 C86,23 84,20 81,22" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+  `, '0 0 100 100'),
 
   // Beards
-  beard_short: (c) => svgWrap(`<path d="M20,54 Q20,80 50,86 Q80,80 80,54 Q65,58 50,58 Q35,58 20,54Z" fill="${c}"/>`, '0 0 100 100'),
-  beard_full: (c) => svgWrap(`<path d="M18,50 Q15,70 18,82 Q30,96 50,98 Q70,96 82,82 Q85,70 82,50 Q70,56 50,56 Q30,56 18,50Z" fill="${c}"/>`, '0 0 100 100'),
-  beard_goatee: (c) => svgWrap(`<path d="M36,50 Q38,46 50,48 Q62,46 64,50 Q62,62 50,68 Q38,62 36,50Z" fill="${c}"/>`, '0 0 100 100'),
-  beard_circle: (c) => svgWrap(`<path d="M30,48 Q32,44 36,42 Q42,40 50,40 Q58,40 64,42 Q68,44 70,48 Q68,58 64,64 Q58,70 50,72 Q42,70 36,64 Q32,58 30,48Z M36,54 Q36,62 50,64 Q64,62 64,54 Q64,50 50,50 Q36,50 36,54Z" fill="${c}" fill-rule="evenodd"/>`, '0 0 100 100'),
-  beard_viking: (c) => svgWrap(`<path d="M14,46 Q12,68 16,82 Q24,96 50,100 Q76,96 84,82 Q88,68 86,46 Q72,54 50,54 Q28,54 14,46Z" fill="${c}"/><path d="M22,80 Q18,92 20,100 Q22,106 26,100 Q28,92 26,82" fill="${c}"/><path d="M78,80 Q82,92 80,100 Q78,106 74,100 Q72,92 74,82" fill="${c}"/>`, '0 0 100 120'),
-  beard_stubble: (c) => svgWrap(`<rect x="22" y="52" width="56" height="26" rx="8" fill="${c}" opacity="0.6"/><circle cx="28" cy="54" r="1.5" fill="${c}" opacity="0.7"/><circle cx="34" cy="52" r="1.2" fill="${c}" opacity="0.7"/><circle cx="40" cy="54" r="1.5" fill="${c}" opacity="0.7"/><circle cx="46" cy="52" r="1.2" fill="${c}" opacity="0.7"/><circle cx="52" cy="54" r="1.5" fill="${c}" opacity="0.7"/><circle cx="58" cy="52" r="1.2" fill="${c}" opacity="0.7"/><circle cx="64" cy="54" r="1.5" fill="${c}" opacity="0.7"/><circle cx="70" cy="52" r="1.2" fill="${c}" opacity="0.7"/><circle cx="30" cy="62" r="1.5" fill="${c}" opacity="0.7"/><circle cx="38" cy="64" r="1.2" fill="${c}" opacity="0.7"/><circle cx="50" cy="62" r="1.5" fill="${c}" opacity="0.7"/><circle cx="62" cy="64" r="1.2" fill="${c}" opacity="0.7"/><circle cx="70" cy="62" r="1.5" fill="${c}" opacity="0.7"/>`, '0 0 100 100'),
-  beard_mutton_chops: (c) => svgWrap(`<path d="M14,42 Q10,50 12,64 Q14,74 22,76 Q30,72 32,58 Q34,48 30,42 Q22,38 14,42Z" fill="${c}"/><path d="M86,42 Q90,50 88,64 Q86,74 78,76 Q70,72 68,58 Q66,48 70,42 Q78,38 86,42Z" fill="${c}"/><path d="M30,58 Q40,54 50,54 Q60,54 70,58" fill="none" stroke="${c}" stroke-width="3"/>`, '0 0 100 100'),
+  beard_short: (c) => svgWrap(`
+    <defs><linearGradient id="bsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M19,53 C18,62 19,72 24,79 C32,88 42,90 50,90 C58,90 68,88 76,79 C81,72 82,62 81,53 C72,57 62,59 50,59 C38,59 28,57 19,53Z" fill="url(#bsg)"/>
+    <path d="M24,60 C28,58 38,57 50,57.5 C62,57 72,58 76,60" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.3"/>
+    <path d="M22,70 C26,68 36,67 50,67.5 C64,67 74,68 78,70" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.2"/>
+  `, '0 0 100 100'),
+
+  beard_full: (c) => svgWrap(`
+    <defs><linearGradient id="bfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="60%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.9"/></linearGradient></defs>
+    <path d="M17,49 C14,62 14,75 18,84 C26,96 38,100 50,100 C62,100 74,96 82,84 C86,75 86,62 83,49 C74,55 62,57.5 50,57.5 C38,57.5 26,55 17,49Z" fill="url(#bfg)"/>
+    <path d="M22,57 C30,55 40,54 50,54.5 C60,54 70,55 78,57" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
+    <path d="M18,68 C24,66 36,65 50,65.5 C64,65 76,66 82,68" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.25"/>
+    <path d="M18,80 C26,78 38,77 50,77.5 C62,77 74,78 82,80" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.2"/>
+    <path d="M20,90 C30,88 40,87.5 50,88 C60,87.5 70,88 80,90" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.15"/>
+  `, '0 0 100 100'),
+
+  beard_goatee: (c) => svgWrap(`
+    <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M35,49 C37,44 43,42 50,43 C57,42 63,44 65,49 C64,58 60,66 50,72 C40,66 36,58 35,49Z" fill="url(#gg)"/>
+    <path d="M40,50 C42,47 46,46 50,46.5 C54,46 58,47 60,50" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.3"/>
+    <path d="M38,58 C40,56 44,55 50,55.5 C56,55 60,56 62,58" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.25"/>
+  `, '0 0 100 100'),
+
+  beard_circle: (c) => svgWrap(`
+    <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M29,47 C31,42 36,39 42,38 C45,37.5 47.5,37.5 50,37.5 C52.5,37.5 55,37.5 58,38 C64,39 69,42 71,47 C70,56 66,64 60,68 C56,70 53,71 50,71 C47,71 44,70 40,68 C34,64 30,56 29,47Z M37,52 C37,58 43,63 50,63 C57,63 63,58 63,52 C63,48 57,48 50,48 C43,48 37,48 37,52Z" fill="url(#cg)" fill-rule="evenodd"/>
+    <path d="M34,47 C36,44 40,42 44,41" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+    <path d="M66,47 C64,44 60,42 56,41" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+  `, '0 0 100 100'),
+
+  beard_viking: (c) => svgWrap(`
+    <defs><linearGradient id="vkg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M13,45 C10,60 10,76 15,88 C24,102 38,108 50,108 C62,108 76,102 85,88 C90,76 90,60 87,45 C76,53 62,56 50,56 C38,56 24,53 13,45Z" fill="url(#vkg)"/>
+    <path d="M21,84 C19,92 18,100 20,107 C22,112 26,108 27,100 C28,92 26,84 24,80Z" fill="${c}"/>
+    <path d="M79,84 C81,92 82,100 80,107 C78,112 74,108 73,100 C72,92 74,84 76,80Z" fill="${c}"/>
+    <path d="M18,57 C24,55 36,54 50,54.5 C64,54 76,55 82,57" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
+    <path d="M14,70 C20,68 34,67 50,67.5 C66,67 80,68 86,70" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.2"/>
+  `, '0 0 100 120'),
+
+  beard_stubble: (c) => svgWrap(`
+    <defs>
+      <filter id="stubf"><feGaussianBlur stdDeviation="0.6"/></filter>
+    </defs>
+    <rect x="20" y="50" width="60" height="30" rx="10" fill="${c}" opacity="0.18" filter="url(#stubf)"/>
+    ${Array.from({length: 7}, (_,row) => Array.from({length: 13}, (_,col) => {
+      const x = 22 + col * 4.5 + (row%2)*2;
+      const y = 52 + row * 4.2;
+      const r = 0.9 + Math.sin(col*row)*0.4;
+      return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity="${0.55 + Math.cos(col+row)*0.2}"/>`;
+    }).join('')).join('')}
+  `, '0 0 100 100'),
+
+  beard_mutton_chops: (c) => svgWrap(`
+    <defs><linearGradient id="mcg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.6"/></linearGradient>
+    <linearGradient id="mcg2" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.6"/></linearGradient></defs>
+    <path d="M13,40 C9,48 9,60 11,70 C13,78 19,82 26,80 C32,77 35,68 36,57 C37,47 34,40 28,37 C20,34 15,36 13,40Z" fill="url(#mcg)"/>
+    <path d="M87,40 C91,48 91,60 89,70 C87,78 81,82 74,80 C68,77 65,68 64,57 C63,47 66,40 72,37 C80,34 85,36 87,40Z" fill="url(#mcg2)"/>
+    <path d="M36,57 C42,54 46,53 50,53 C54,53 58,54 64,57" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M16,52 C20,50 26,50 32,52" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+    <path d="M84,52 C80,50 74,50 68,52" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+  `, '0 0 100 100'),
 
   // Sideburns
-  sideburns_short: (c) => svgWrap(`<path d="M14,30 Q10,40 12,52 Q14,58 20,56 Q26,52 24,40 Q22,28 14,30Z" fill="${c}"/><path d="M86,30 Q90,40 88,52 Q86,58 80,56 Q74,52 76,40 Q78,28 86,30Z" fill="${c}"/>`, '0 0 100 100'),
-  sideburns_long: (c) => svgWrap(`<path d="M12,28 Q8,42 10,58 Q12,70 18,72 Q24,68 24,54 Q24,38 20,26 Q16,22 12,28Z" fill="${c}"/><path d="M88,28 Q92,42 90,58 Q88,70 82,72 Q76,68 76,54 Q76,38 80,26 Q84,22 88,28Z" fill="${c}"/>`, '0 0 100 100'),
-  sideburns_chops: (c) => svgWrap(`<path d="M10,28 Q6,44 8,60 Q10,72 20,76 Q28,72 28,58 Q28,40 22,26 Q16,20 10,28Z" fill="${c}"/><path d="M90,28 Q94,44 92,60 Q90,72 80,76 Q72,72 72,58 Q72,40 78,26 Q84,20 90,28Z" fill="${c}"/>`, '0 0 100 100'),
+  sideburns_short: (c) => svgWrap(`
+    <defs><linearGradient id="ssg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+    <linearGradient id="ssg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M13,28 C9,36 9,46 11,54 C13,60 17,62 22,60 C27,57 28,48 26,38 C24,28 18,24 13,28Z" fill="url(#ssg)"/>
+    <path d="M87,28 C91,36 91,46 89,54 C87,60 83,62 78,60 C73,57 72,48 74,38 C76,28 82,24 87,28Z" fill="url(#ssg2)"/>
+  `, '0 0 100 100'),
+
+  sideburns_long: (c) => svgWrap(`
+    <defs><linearGradient id="slg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+    <linearGradient id="slg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M11,26 C7,38 7,54 9,66 C11,76 16,80 22,78 C28,74 29,60 28,44 C27,30 22,20 16,22 C12,22 11,24 11,26Z" fill="url(#slg)"/>
+    <path d="M89,26 C93,38 93,54 91,66 C89,76 84,80 78,78 C72,74 71,60 72,44 C73,30 78,20 84,22 C88,22 89,24 89,26Z" fill="url(#slg2)"/>
+  `, '0 0 100 100'),
+
+  sideburns_chops: (c) => svgWrap(`
+    <defs><linearGradient id="scg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+    <linearGradient id="scg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
+    <path d="M9,26 C5,40 5,58 7,70 C9,80 16,84 24,80 C30,76 32,64 31,48 C30,34 24,20 17,22 C12,22 9,24 9,26Z" fill="url(#scg)"/>
+    <path d="M91,26 C95,40 95,58 93,70 C91,80 84,84 76,80 C70,76 68,64 69,48 C70,34 76,20 83,22 C88,22 91,24 91,26Z" fill="url(#scg2)"/>
+  `, '0 0 100 100'),
 };
 
 // EYEWEAR — transparent lenses
