@@ -1,0 +1,31 @@
+{
+  "name": "HowToSearchLog",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "query": {
+      "type": "string"
+    },
+    "answer_type": {
+      "type": "string",
+      "enum": [
+        "preset",
+        "ai"
+      ],
+      "description": "Whether the answer came from the knowledge base or AI"
+    },
+    "answer_text": {
+      "type": "string"
+    },
+    "matched_question": {
+      "type": "string",
+      "description": "The matched preset question if answer_type is preset"
+    }
+  },
+  "required": [
+    "query",
+    "answer_type"
+  ]
+}
