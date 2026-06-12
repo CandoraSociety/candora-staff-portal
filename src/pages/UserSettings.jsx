@@ -173,9 +173,21 @@ export default function UserSettings() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setImageToCrop(profilePicture);
-                        setCropDialogOpen(true);
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(profilePicture);
+                          const blob = await res.blob();
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setImageToCrop(reader.result);
+                            setCropDialogOpen(true);
+                          };
+                          reader.readAsDataURL(blob);
+                        } catch {
+                          // fallback: try loading directly
+                          setImageToCrop(profilePicture);
+                          setCropDialogOpen(true);
+                        }
                       }}
                       disabled={isSavingProfile}
                     >
