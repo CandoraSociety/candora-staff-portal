@@ -53,7 +53,7 @@ export default function HowToSearch() {
         const res = await base44.integrations.Core.InvokeLLM({
           prompt: `You are a helpful workplace assistant. Answer this "how to" question concisely and practically in 2-4 sentences: "${query}"`,
         });
-        setAiAnswer(res.data);
+        setAiAnswer(res);
       } catch (err) {
         console.error('AI call failed:', err);
       }
