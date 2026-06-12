@@ -35,6 +35,7 @@ export default function UserSettings() {
 
 
   const [profilePicture, setProfilePicture] = useState(currentUser?.avatar_url || '');
+  const [originalPhoto, setOriginalPhoto] = useState(currentUser?.avatar_url || '');
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -60,6 +61,7 @@ export default function UserSettings() {
     try {
       await base44.auth.updateMe({ avatar_url: croppedImageUrl });
       setProfilePicture(croppedImageUrl);
+      setOriginalPhoto(croppedImageUrl);
       queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: croppedImageUrl } : old);
       await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setCropDialogOpen(false);
@@ -150,7 +152,7 @@ export default function UserSettings() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => loadAsDataUrl(profilePicture, (src) => { setEffectsImageSrc(src); setEffectsDialogOpen(true); })}
+                      onClick={() => loadAsDataUrl(originalPhoto, (src) => { setEffectsImageSrc(src); setEffectsDialogOpen(true); })}
                       disabled={isSavingProfile}
                     >
                       🎨 Effects
@@ -160,6 +162,7 @@ export default function UserSettings() {
                       size="sm"
                       onClick={async () => {
                         setProfilePicture('');
+                        setOriginalPhoto('');
                         await base44.auth.updateMe({ avatar_url: '' });
                         queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
                         await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -261,6 +264,7 @@ export default function UserSettings() {
           imageSrc={effectsImageSrc}
           onSave={async (url) => {
             setProfilePicture(url);
+            // Do NOT update originalPhoto — keeps the clean base for re-editing effects
             await base44.auth.updateMe({ avatar_url: url });
             queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: url } : old);
             await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
