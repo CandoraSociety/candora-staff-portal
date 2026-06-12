@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, X, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, ImageIcon } from 'lucide-react';
+import { Upload, X, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, ImageIcon, ZoomIn } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
 import ProfileEffectsDialog from '@/components/settings/ProfileEffectsDialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
@@ -40,6 +41,7 @@ export default function UserSettings() {
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
   const [effectsDialogOpen, setEffectsDialogOpen] = useState(false);
   const [effectsImageSrc, setEffectsImageSrc] = useState(null);
+  const [enlargePreviewOpen, setEnlargePreviewOpen] = useState(false);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -101,17 +103,24 @@ export default function UserSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <Avatar className="w-48 h-48 relative flex-shrink-0">
-                <AvatarImage src={profilePicture} className="object-cover" />
-                <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
-                  {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-                {isSavingProfile && (
-                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="relative group cursor-pointer" onClick={() => profilePicture && setEnlargePreviewOpen(true)}>
+                <Avatar className="w-48 h-48 relative flex-shrink-0">
+                  <AvatarImage src={profilePicture} className="object-cover" />
+                  <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
+                    {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                  {isSavingProfile && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </Avatar>
+                {profilePicture && !isSavingProfile && (
+                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-8 h-8 text-white" />
                   </div>
                 )}
-              </Avatar>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="profile-upload" className="cursor-pointer">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -271,6 +280,14 @@ export default function UserSettings() {
             setEditEmployeeOpen(false);
           }}
         />
+
+        <Dialog open={enlargePreviewOpen} onOpenChange={setEnlargePreviewOpen}>
+          <DialogContent className="max-w-2xl flex items-center justify-center p-2">
+            {profilePicture && (
+              <img src={profilePicture} alt="Profile preview" className="w-full h-auto rounded-lg object-contain max-h-[80vh]" />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
