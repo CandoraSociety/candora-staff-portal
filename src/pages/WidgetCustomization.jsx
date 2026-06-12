@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle } from 'lucide-react';
+import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 
 export default function WidgetCustomization() {
@@ -78,6 +78,7 @@ export default function WidgetCustomization() {
     { id: 'my_reminders', label: 'My Reminders', description: "Deadlines and reminders you've set", icon: Bell, color: '#ec4899' },
     { id: 'project_progress', label: 'Project Progress', description: 'Status of active projects and grants', icon: TrendingUp, color: '#84cc16' },
     { id: 'time_log', label: 'Time Log', description: 'Quick access to log your hours', icon: Clock, color: '#78716c' },
+    { id: 'meeting_manager', label: 'Meeting Manager', description: 'View and manage your Outlook calendar meetings', icon: CalendarClock, color: '#0078d4', comingSoon: true },
   ];
 
   const toggleWidget = (widgetId) => {
@@ -139,28 +140,36 @@ export default function WidgetCustomization() {
               {PRESET_WIDGETS.map(widget => {
                 const Icon = widget.icon;
                 const enabled = enabledWidgets.includes(widget.id);
+                const isComingSoon = widget.comingSoon;
                 return (
                   <div
                     key={widget.id}
-                    onClick={() => toggleWidget(widget.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-                      enabled
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80'
+                    onClick={() => !isComingSoon && toggleWidget(widget.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all select-none ${
+                      isComingSoon
+                        ? 'border-border opacity-50 cursor-not-allowed'
+                        : enabled
+                          ? 'border-primary bg-primary/5 cursor-pointer'
+                          : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80 cursor-pointer'
                     }`}
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: widget.color + '22' }}>
                       <Icon className="w-5 h-5" style={{ color: widget.color }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{widget.label}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{widget.label}</p>
+                        {isComingSoon && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">Coming Soon</span>}
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{widget.description}</p>
                     </div>
-                    <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
-                      {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                      </div>}
-                    </div>
+                    {!isComingSoon && (
+                      <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
+                        {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        </div>}
+                      </div>
+                    )}
                   </div>
                 );
               })}
