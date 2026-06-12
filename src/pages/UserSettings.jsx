@@ -13,6 +13,7 @@ import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, Che
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
+import ProfileEffectsDialog from '@/components/settings/ProfileEffectsDialog';
 
 export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
@@ -47,6 +48,8 @@ export default function UserSettings() {
   const [imageToCrop, setImageToCrop] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
+  const [effectsDialogOpen, setEffectsDialogOpen] = useState(false);
+  const [imageForEffects, setImageForEffects] = useState(null);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -184,7 +187,6 @@ export default function UserSettings() {
                           };
                           reader.readAsDataURL(blob);
                         } catch {
-                          // fallback: try loading directly
                           setImageToCrop(profilePicture);
                           setCropDialogOpen(true);
                         }
@@ -193,6 +195,28 @@ export default function UserSettings() {
                     >
                       <ImageIcon className="w-3 h-3 mr-1" />
                       Reposition
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(profilePicture);
+                          const blob = await res.blob();
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setImageForEffects(reader.result);
+                            setEffectsDialogOpen(true);
+                          };
+                          reader.readAsDataURL(blob);
+                        } catch {
+                          setImageForEffects(profilePicture);
+                          setEffectsDialogOpen(true);
+                        }
+                      }}
+                      disabled={isSavingProfile}
+                    >
+                      🎨 Effects
                     </Button>
                     <Button
                       variant="outline"
@@ -407,6 +431,20 @@ export default function UserSettings() {
           setCropDialogOpen(false);
           setImageToCrop(null);
         }}
+      />
+
+      <ProfileEffectsDialog
+        open={effectsDialogOpen}
+        imageSrc={imageForEffects}
+        onSave={async (url) => {
+          setProfilePicture(url);
+          await base44.auth.updateMe({ avatar_url: url });
+          queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: url } : old);
+          await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+          setEffectsDialogOpen(false);
+          setImageForEffects(null);
+        }}
+        onClose={() => { setEffectsDialogOpen(false); setImageForEffects(null); }}
       />
 
       <EditEmployeeDialog
