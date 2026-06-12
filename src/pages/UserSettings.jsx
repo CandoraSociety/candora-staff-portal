@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit } from 'lucide-react';
+import { Upload, Save, X, Image as ImageIcon, LayoutGrid, List, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
@@ -44,6 +44,11 @@ export default function UserSettings() {
   const [showActivity, setShowActivity] = useState(preferences?.show_recent_activity ?? true);
   const [showAnnouncements, setShowAnnouncements] = useState(preferences?.show_announcements ?? true);
   const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
+  const [enabledWidgets, setEnabledWidgets] = useState(() => {
+    const saved = preferences?.enabled_widgets;
+    if (saved && saved.length > 0) return saved;
+    return ['stats', 'announcements', 'recent_activity'];
+  });
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageToCrop, setImageToCrop] = useState(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -88,6 +93,7 @@ export default function UserSettings() {
           show_recent_activity: showActivity,
           show_announcements: showAnnouncements,
           visible_portal_ids: visiblePortals,
+          enabled_widgets: enabledWidgets,
         });
       } else {
         await base44.entities.UserDashboardPreference.create({
@@ -97,6 +103,7 @@ export default function UserSettings() {
           show_recent_activity: showActivity,
           show_announcements: showAnnouncements,
           visible_portal_ids: visiblePortals,
+          enabled_widgets: enabledWidgets,
         });
       }
       queryClient.invalidateQueries(['dashboardPreferences', currentUser?.id]);
@@ -116,6 +123,26 @@ export default function UserSettings() {
     } catch {
       onLoad(url);
     }
+  };
+
+  const PRESET_WIDGETS = [
+    { id: 'stats', label: 'Statistics', description: 'Quick metrics and counts at a glance', icon: BarChart2, color: '#3b82f6' },
+    { id: 'announcements', label: 'Announcements', description: 'Organization-wide notices and updates', icon: Megaphone, color: '#f59e0b' },
+    { id: 'recent_activity', label: 'Recent Activity', description: 'Your latest files, notes and actions', icon: Activity, color: '#10b981' },
+    { id: 'my_tasks', label: 'My Tasks', description: 'Compass tasks and to-dos assigned to you', icon: CheckSquare, color: '#8b5cf6' },
+    { id: 'upcoming_events', label: 'Upcoming Events', description: 'Events and programs happening soon', icon: Calendar, color: '#ef4444' },
+    { id: 'quick_notes', label: 'Quick Notes', description: 'Pin and access your recent notes', icon: FileText, color: '#06b6d4' },
+    { id: 'team_birthdays', label: 'Team Birthdays', description: 'Upcoming birthdays and work anniversaries', icon: Star, color: '#f97316' },
+    { id: 'recent_clients', label: 'Recent Clients', description: 'Clients you recently worked with', icon: Users, color: '#6366f1' },
+    { id: 'my_reminders', label: 'My Reminders', description: "Deadlines and reminders you've set", icon: Bell, color: '#ec4899' },
+    { id: 'project_progress', label: 'Project Progress', description: 'Status of active projects and grants', icon: TrendingUp, color: '#84cc16' },
+    { id: 'time_log', label: 'Time Log', description: 'Quick access to log your hours', icon: Clock, color: '#78716c' },
+  ];
+
+  const toggleWidget = (widgetId) => {
+    setEnabledWidgets(prev =>
+      prev.includes(widgetId) ? prev.filter(id => id !== widgetId) : [...prev, widgetId]
+    );
   };
 
   const togglePortal = (portalId) => {
@@ -304,31 +331,41 @@ export default function UserSettings() {
         {/* Widget Visibility */}
         <Card>
           <CardHeader>
-            <CardTitle>Widget Visibility</CardTitle>
-            <CardDescription>Choose which widgets to show on your dashboard</CardDescription>
+            <CardTitle>Home Widgets</CardTitle>
+            <CardDescription>Choose which widgets appear on your home dashboard — click to toggle on or off</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Statistics Widget</Label>
-                <p className="text-xs text-muted-foreground">Show quick stats and metrics</p>
-              </div>
-              <Switch checked={showStats} onCheckedChange={setShowStats} />
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PRESET_WIDGETS.map(widget => {
+                const Icon = widget.icon;
+                const enabled = enabledWidgets.includes(widget.id);
+                return (
+                  <div
+                    key={widget.id}
+                    onClick={() => toggleWidget(widget.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
+                      enabled
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: widget.color + '22' }}>
+                      <Icon className="w-5 h-5" style={{ color: widget.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{widget.label}</p>
+                      <p className="text-xs text-muted-foreground truncate">{widget.description}</p>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
+                      {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      </div>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Recent Activity</Label>
-                <p className="text-xs text-muted-foreground">Show your recent files and notes</p>
-              </div>
-              <Switch checked={showActivity} onCheckedChange={setShowActivity} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Announcements</Label>
-                <p className="text-xs text-muted-foreground">Show organization announcements</p>
-              </div>
-              <Switch checked={showAnnouncements} onCheckedChange={setShowAnnouncements} />
-            </div>
+            <p className="text-xs text-muted-foreground mt-3">{enabledWidgets.length} of {PRESET_WIDGETS.length} widgets enabled</p>
           </CardContent>
         </Card>
 

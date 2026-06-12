@@ -24,6 +24,13 @@
       "type": "string",
       "description": "ID of the single portal card pinned to the top of the dashboard"
     },
+    "enabled_widgets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of widget IDs enabled on the user's home dashboard"
+    },
     "custom_welcome_message": {
       "type": "string",
       "description": "Optional custom welcome message for this user"
