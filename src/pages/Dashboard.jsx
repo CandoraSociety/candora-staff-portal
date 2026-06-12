@@ -11,6 +11,7 @@ import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import OrganizerWidget from '@/components/dashboard/OrganizerWidget';
 import HowToSearch from '@/components/howto/HowToSearch';
+import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain } from 'lucide-react';
@@ -224,6 +225,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           {isWidgetActive('howto') && <HowToSearch />}
           {isWidgetActive('organizer') && <OrganizerWidget />}
+          {isWidgetActive('google_translate') && <GoogleTranslateWidget />}
           <RecentActivityWidget />
         </div>
         <div>

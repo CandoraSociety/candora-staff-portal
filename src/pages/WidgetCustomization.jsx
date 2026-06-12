@@ -5,11 +5,11 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
+import { BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock, Languages } from 'lucide-react';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
-  Users, Star, Bell, Brain, HelpCircle, CalendarClock, LayoutDashboard,
+  Users, Star, Bell, Brain, HelpCircle, CalendarClock, LayoutDashboard, Languages,
 };
 import { useOutletContext } from 'react-router-dom';
 
