@@ -51,7 +51,6 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
       const payload = {
         first_name: formData.first_name,
         last_name: formData.last_name,
-        email: formData.email,
         phone: formData.phone,
         department: dept || '',
       };
@@ -96,16 +95,6 @@ export default function EditEmployeeDialog({ open, employeeRecord, currentUser, 
                 onChange={(e) => handleChange('last_name', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-            />
           </div>
 
           <div className="space-y-2">
