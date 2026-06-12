@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export default function ManageWidgets() {
@@ -69,6 +70,21 @@ export default function ManageWidgets() {
                   </div>
 
                   <div className="flex items-center gap-6 flex-shrink-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Required Role</Label>
+                      <Select
+                        value={widget.required_role || 'any'}
+                        onValueChange={(val) => updateMutation.mutate({ id: widget.id, data: { required_role: val } })}
+                      >
+                        <SelectTrigger className="h-8 w-24 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any user</SelectItem>
+                          <SelectItem value="admin">Admin only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="flex flex-col items-center gap-1">
                       <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Show in Add Functions</Label>
                       <Switch

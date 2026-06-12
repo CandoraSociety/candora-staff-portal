@@ -53,7 +53,8 @@ export default function WidgetCustomization() {
 
   // Locked widgets are always shown (even if not in add_functions), user-selectable ones need show_in_add_functions
   const PRESET_WIDGETS = [...dbWidgets]
-    .filter(w => w.show_in_add_functions || w.locked_to_dashboard)
+    .filter(w => (w.show_in_add_functions || w.locked_to_dashboard))
+    .filter(w => !w.required_role || w.required_role === 'any' || (w.required_role === 'admin' && currentUser?.role === 'admin'))
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     .map(w => ({
       id: w.widget_id,

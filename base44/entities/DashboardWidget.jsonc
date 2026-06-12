@@ -42,6 +42,15 @@
       "default": false,
       "description": "Marks widget as coming soon \u2014 visible but not selectable"
     },
+    "required_role": {
+      "type": "string",
+      "enum": [
+        "any",
+        "admin"
+      ],
+      "default": "any",
+      "description": "Minimum role required to see this widget in Add Functions. 'any' = all users, 'admin' = admins only"
+    },
     "sort_order": {
       "type": "number",
       "default": 0
