@@ -32,12 +32,12 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
     setIsSaving(true);
     try {
       const dataUrl = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
+      // Convert data URL to File and upload
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
       const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       await onCropComplete(file_url);
-      onClose();
     } catch (error) {
       console.error('Error cropping image:', error);
       alert('Error: ' + (error.message || 'Could not save the image'));
@@ -135,32 +135,35 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   const bBoxHeight = Math.abs(Math.sin(rotRad) * image.naturalWidth) + Math.abs(Math.cos(rotRad) * image.naturalHeight);
 
   // Draw full rotated image onto a canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = bBoxWidth;
-  canvas.height = bBoxHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
-  ctx.rotate(rotRad);
-  ctx.translate(-image.naturalWidth / 2, -image.naturalHeight / 2);
-  ctx.drawImage(image, 0, 0);
+  const rotCanvas = document.createElement('canvas');
+  rotCanvas.width = bBoxWidth;
+  rotCanvas.height = bBoxHeight;
+  const rotCtx = rotCanvas.getContext('2d');
+  rotCtx.translate(bBoxWidth / 2, bBoxHeight / 2);
+  rotCtx.rotate(rotRad);
+  rotCtx.translate(-image.naturalWidth / 2, -image.naturalHeight / 2);
+  rotCtx.drawImage(image, 0, 0);
 
-  // Extract the cropped region
+  // Extract the cropped region, capped at 400x400 for storage efficiency
+  const outputSize = Math.min(pixelCrop.width, 400);
   const croppedCanvas = document.createElement('canvas');
-  croppedCanvas.width = pixelCrop.width;
-  croppedCanvas.height = pixelCrop.height;
+  croppedCanvas.width = outputSize;
+  croppedCanvas.height = outputSize;
   const croppedCtx = croppedCanvas.getContext('2d');
-  croppedCtx.drawImage(canvas, pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height, 0, 0, pixelCrop.width, pixelCrop.height);
+  croppedCtx.drawImage(
+    rotCanvas,
+    pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
+    0, 0, outputSize, outputSize
+  );
 
   return croppedCanvas.toDataURL('image/jpeg', 0.85);
 }
 
-function createImage(url) {
+function createImage(src) {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.crossOrigin = 'anonymous';
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', reject);
-    // Add cache-bust to force browser to respect crossOrigin on a cached image
-    image.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    image.src = src;
   });
 }

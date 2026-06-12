@@ -48,17 +48,18 @@ export default function UserSettings() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setImageToCrop(file_url);
+    // Read as local data URL — keeps crop coordinates accurate and avoids CORS
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result);
       setCropDialogOpen(true);
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-    }
+    };
+    reader.readAsDataURL(file);
+    // Reset the input so the same file can be re-selected
+    e.target.value = '';
   };
 
   const handleCropComplete = async (croppedImageUrl) => {
