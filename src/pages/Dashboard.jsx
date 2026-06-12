@@ -11,9 +11,39 @@ import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { FolderOpen, Sparkles, Settings, Search } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
+
+const ICON_MAP = {
+  FolderOpen, LayoutGrid, Users, Megaphone, FileText, BarChart2,
+  Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Sparkles,
+};
+
+function PortalCard({ card }) {
+  const IconComponent = ICON_MAP[card.icon] || LayoutGrid;
+  return (
+    <div className="group w-52 p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
+      <div className="flex items-center gap-4">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:opacity-90 transition-opacity"
+          style={{ backgroundColor: card.color ? card.color + '22' : 'hsl(var(--primary)/0.1)' }}
+        >
+          <IconComponent
+            className="h-6 w-6"
+            style={{ color: card.color || 'hsl(var(--primary))' }}
+          />
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{card.name}</h3>
+          {card.description && (
+            <p className="text-xs text-muted-foreground truncate">{card.description}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
@@ -101,63 +131,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Portal Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link to="/filemanager">
-          <div className="group p-6 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <FolderOpen className="h-7 w-7 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">File Manager</h3>
-                <p className="text-sm text-muted-foreground">Cloud Storage Portal</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        
-        <Link to="/pathways">
-          <div className="group p-6 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <span className="text-primary font-bold text-lg">P</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Pathways CM</h3>
-                <p className="text-sm text-muted-foreground">Case Management</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        
-        <Link to="/marketing">
-          <div className="group p-6 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <span className="text-primary font-bold text-lg">M</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Marketing</h3>
-                <p className="text-sm text-muted-foreground">Fundraising Manager</p>
-              </div>
-            </div>
-          </div>
-        </Link>
-        
-        <Link to="/volunteermgr">
-          <div className="group p-6 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                <span className="text-primary font-bold text-lg">V</span>
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Volunteer Mgr</h3>
-                <p className="text-sm text-muted-foreground">Volunteer Management</p>
-              </div>
-            </div>
-          </div>
-        </Link>
+      {/* Portal Quick Links — horizontal scrolling row */}
+      <div className="overflow-x-auto pb-2 -mx-1 px-1">
+        <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
+          {accessibleCards.filter(c => c.is_enabled).map(card => (
+            card.is_external ? (
+              <a key={card.id} href={card.url} target="_blank" rel="noopener noreferrer" className="block flex-shrink-0">
+                <PortalCard card={card} />
+              </a>
+            ) : (
+              <Link key={card.id} to={card.url || '#'} className="block flex-shrink-0">
+                <PortalCard card={card} />
+              </Link>
+            )
+          ))}
+        </div>
       </div>
       
       {access.isAdmin && stats && <StatsWidget stats={stats} />}
