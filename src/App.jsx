@@ -102,6 +102,7 @@ import Collections from '@/pages/filemanager/Collections';
 import CollectionDetail from '@/pages/filemanager/CollectionDetail';
 import SearchPage from '@/pages/filemanager/SearchPage';
 import DevTasks from '@/pages/DevTasks';
+import HowToAdmin from '@/pages/HowToAdmin';
 
 // Grant / Proposal Manager
 import GrantsLayout from '@/components/grants/GrantsLayout';
@@ -290,6 +291,7 @@ const AuthenticatedApp = () => {
 
         {/* Dev Tasks - standalone page */}
         <Route path="/dev-tasks" element={<DevTasks />} />
+        <Route path="/how-to-admin" element={<HowToAdmin />} />
 
         {/* Pathways CM - standalone layout */}
         <Route element={<PathwaysLayout />}>
