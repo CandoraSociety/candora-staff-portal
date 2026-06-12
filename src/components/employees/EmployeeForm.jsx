@@ -1,17 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
-const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation'];
+const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
 
-export default function EmployeeForm({ onSubmit, isLoading }) {
+export default function EmployeeForm({ employee, onSubmit, isLoading }) {
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     position: '', department: '', status: 'active', hire_date: '',
   });
+
+  // Populate form when editing an existing employee
+  useEffect(() => {
+    if (employee) {
+      setData({
+        first_name: employee.first_name || '',
+        last_name: employee.last_name || '',
+        email: employee.email || '',
+        phone: employee.phone || '',
+        position: employee.position || '',
+        department: employee.department || '',
+        status: employee.status || 'active',
+        hire_date: employee.hire_date || '',
+      });
+    }
+  }, [employee]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -61,7 +77,7 @@ export default function EmployeeForm({ onSubmit, isLoading }) {
         </Select>
       </div>
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? 'Saving...' : 'Save Employee'}
+        {isLoading ? 'Saving...' : (employee ? 'Save Changes' : 'Save Employee')}
       </Button>
     </form>
   );
