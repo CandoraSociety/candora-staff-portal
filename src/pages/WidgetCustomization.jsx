@@ -76,7 +76,7 @@ export default function WidgetCustomization() {
 
   // Build widget list from DB, only those admin has enabled + set show_in_add_functions
   const PRESET_WIDGETS = [...dbWidgets]
-    .filter(w => w.is_enabled && w.show_in_add_functions)
+    .filter(w => w.show_in_add_functions)
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     .map(w => ({
       id: w.widget_id,

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard, Eye, EyeOff, Clock } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +48,7 @@ export default function ManageWidgets() {
       ) : (
         <div className="grid gap-3">
           {sorted.map(widget => (
-            <Card key={widget.id} className={`shadow-sm transition-opacity ${!widget.is_enabled ? 'opacity-50' : ''}`}>
+            <Card key={widget.id} className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -68,24 +68,12 @@ export default function ManageWidgets() {
                     <p className="text-xs text-muted-foreground mt-0.5">{widget.description}</p>
                   </div>
 
-                  <div className="flex items-center gap-6 flex-shrink-0">
-                    {/* Show in Add Functions toggle */}
-                    <div className="flex flex-col items-center gap-1">
-                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">In Add Functions</Label>
-                      <Switch
-                        checked={!!widget.show_in_add_functions}
-                        disabled={!widget.is_enabled}
-                        onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { show_in_add_functions: val } })}
-                      />
-                    </div>
-                    {/* Enabled / globally visible toggle */}
-                    <div className="flex flex-col items-center gap-1">
-                      <Label className="text-[10px] text-muted-foreground whitespace-nowrap">Enabled</Label>
-                      <Switch
-                        checked={!!widget.is_enabled}
-                        onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { is_enabled: val, show_in_add_functions: val ? widget.show_in_add_functions : false } })}
-                      />
-                    </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Show in Add Functions</Label>
+                    <Switch
+                      checked={!!widget.show_in_add_functions}
+                      onCheckedChange={(val) => updateMutation.mutate({ id: widget.id, data: { show_in_add_functions: val } })}
+                    />
                   </div>
                 </div>
               </CardContent>
