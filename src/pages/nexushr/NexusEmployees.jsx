@@ -25,7 +25,7 @@ export default function NexusEmployees() {
   const queryClient = useQueryClient();
   const { user } = useOutletContext();
 
-  const { data: employees = [] } = useQuery({ 
+  const { data: employees = [], isLoading } = useQuery({ 
     queryKey: ['employees'], 
     queryFn: () => base44.entities.Employee.list('-created_date', 500) 
   });
@@ -59,7 +59,14 @@ export default function NexusEmployees() {
         <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      {filtered.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <p className="text-muted-foreground">Loading employees...</p>
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState icon={Eye} title="No employees found" description="Add your first employee to get started." />
       ) : (
         <Card>
