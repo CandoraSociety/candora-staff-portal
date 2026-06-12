@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, X, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, ImageIcon, ZoomIn } from 'lucide-react';
+import { Upload, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, Sparkles, Move, Trash2 } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
 import ProfileEffectsDialog from '@/components/settings/ProfileEffectsDialog';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function UserSettings() {
   const { user: currentUser } = useOutletContext();
@@ -42,7 +43,7 @@ export default function UserSettings() {
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
   const [effectsDialogOpen, setEffectsDialogOpen] = useState(false);
   const [effectsImageSrc, setEffectsImageSrc] = useState(null);
-  const [enlargePreviewOpen, setEnlargePreviewOpen] = useState(false);
+
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -105,80 +106,74 @@ export default function UserSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="relative group cursor-pointer" onClick={() => profilePicture && setEnlargePreviewOpen(true)}>
-                <Avatar className="w-48 h-48 relative flex-shrink-0">
-                  <AvatarImage src={profilePicture} className="object-cover" />
-                  <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
-                    {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                  {isSavingProfile && (
-                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                      <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild disabled={isSavingProfile}>
+                  <div className="relative group cursor-pointer">
+                    <Avatar className="w-48 h-48 relative flex-shrink-0">
+                      <AvatarImage src={profilePicture} className="object-cover" />
+                      <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
+                        {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                      {isSavingProfile && (
+                        <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </Avatar>
+                    {!isSavingProfile && (
+                      <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Edit className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuItem asChild>
+                    <Label htmlFor="profile-upload" className="flex items-center gap-2 cursor-pointer font-normal px-2 py-1.5">
+                      <Upload className="w-4 h-4" />
+                      Upload new photo
+                      <Input
+                        id="profile-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        disabled={isSavingProfile}
+                      />
+                    </Label>
+                  </DropdownMenuItem>
+                  {profilePicture && (
+                    <>
+                      <DropdownMenuItem onClick={() => loadAsDataUrl(profilePicture, (src) => { setImageToCrop(src); setCropDialogOpen(true); })}>
+                        <Move className="w-4 h-4" />
+                        Reposition / Resize
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => loadAsDataUrl(originalPhoto, (src) => { setEffectsImageSrc(src); setEffectsDialogOpen(true); })}>
+                        <Sparkles className="w-4 h-4" />
+                        Edit Effects
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={async () => {
+                          setProfilePicture('');
+                          setOriginalPhoto('');
+                          await base44.auth.updateMe({ avatar_url: '' });
+                          queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
+                          await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove Photo
+                      </DropdownMenuItem>
+                    </>
                   )}
-                </Avatar>
-                {profilePicture && !isSavingProfile && (
-                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ZoomIn className="w-8 h-8 text-white" />
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="profile-upload" className="cursor-pointer">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                    <Upload className="w-4 h-4" />
-                    <span>Upload new photo</span>
-                  </div>
-                  <Input
-                    id="profile-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={isSavingProfile}
-                  />
-                </Label>
-                {profilePicture && (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadAsDataUrl(profilePicture, (src) => { setImageToCrop(src); setCropDialogOpen(true); })}
-                      disabled={isSavingProfile}
-                    >
-                      <ImageIcon className="w-3 h-3 mr-1" />
-                      Reposition
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadAsDataUrl(originalPhoto, (src) => { setEffectsImageSrc(src); setEffectsDialogOpen(true); })}
-                      disabled={isSavingProfile}
-                    >
-                      🎨 Effects
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        setProfilePicture('');
-                        setOriginalPhoto('');
-                        await base44.auth.updateMe({ avatar_url: '' });
-                        queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
-                        await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-                      }}
-                      disabled={isSavingProfile}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Remove
-                    </Button>
-                  </div>
-                )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="text-sm text-muted-foreground pt-2">
+                Click your photo to upload, reposition, add effects, or remove it.
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Tip: After uploading, you can drag to reposition and zoom to get the perfect crop. Your photo saves automatically.
-            </p>
           </CardContent>
         </Card>
 
@@ -285,13 +280,7 @@ export default function UserSettings() {
           }}
         />
 
-        <Dialog open={enlargePreviewOpen} onOpenChange={setEnlargePreviewOpen}>
-          <DialogContent className="max-w-2xl flex items-center justify-center p-2">
-            {profilePicture && (
-              <img src={profilePicture} alt="Profile preview" className="w-full h-auto rounded-lg object-contain max-h-[80vh]" />
-            )}
-          </DialogContent>
-        </Dialog>
+
       </div>
     </div>
   );
