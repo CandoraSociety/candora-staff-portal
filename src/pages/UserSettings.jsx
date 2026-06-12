@@ -169,20 +169,34 @@ export default function UserSettings() {
                   />
                 </Label>
                 {profilePicture && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      setProfilePicture('');
-                      await base44.auth.updateMe({ avatar_url: '' });
-                      queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
-                      await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-                    }}
-                    disabled={isSavingProfile}
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Remove
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setImageToCrop(profilePicture);
+                        setCropDialogOpen(true);
+                      }}
+                      disabled={isSavingProfile}
+                    >
+                      <ImageIcon className="w-3 h-3 mr-1" />
+                      Reposition
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        setProfilePicture('');
+                        await base44.auth.updateMe({ avatar_url: '' });
+                        queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
+                        await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+                      }}
+                      disabled={isSavingProfile}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
