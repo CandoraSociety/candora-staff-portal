@@ -24,6 +24,7 @@ import AppLayout from '@/components/layout/AppLayout';
 // Pages
 import Dashboard from '@/pages/Dashboard';
 import Portal from '@/pages/Portal';
+import WidgetCustomization from '@/pages/WidgetCustomization';
 
 // NexusHR
 import NexusLayout from '@/components/nexushr/NexusLayout';
@@ -181,6 +182,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/portal" element={<Portal />} />
+          <Route path="/widget-customization" element={<WidgetCustomization />} />
           <Route path="/admin/cards" element={<ManageCards />} />
           <Route path="/admin/widgets" element={<ManageWidgets />} />
           <Route path="/admin/users" element={<UsersAccess />} />

@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
   { path: '/portal', label: 'Portal', icon: AppWindow, adminOnly: false },
-  { path: '/user/settings', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
+  { path: '/widget-customization', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
 ];
 
 const ADMIN_ITEMS = [
