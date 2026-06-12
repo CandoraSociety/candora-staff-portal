@@ -115,21 +115,6 @@ const CATEGORIES = [
       { id: 'tattoo_dragon',label: 'Dragon',        src: 'https://em-content.zobj.net/thumbs/240/google/350/dragon_1f409.png' },
     ],
   },
-  {
-    label: '✨ Effects',
-    items: [
-      { id: 'sparkles',     label: 'Sparkles',      src: 'https://em-content.zobj.net/thumbs/240/google/350/sparkles_2728.png' },
-      { id: 'fire',         label: 'Fire',          src: 'https://em-content.zobj.net/thumbs/240/google/350/fire_1f525.png' },
-      { id: 'rainbow',      label: 'Rainbow',       src: 'https://em-content.zobj.net/thumbs/240/google/350/rainbow_1f308.png' },
-      { id: 'stars',        label: 'Stars',         src: 'https://em-content.zobj.net/thumbs/240/google/350/shooting-star_1f320.png' },
-      { id: 'halo',         label: 'Halo',          src: 'https://em-content.zobj.net/thumbs/240/google/350/smiling-face-with-halo_1f607.png' },
-      { id: 'devil_horns',  label: 'Devil',         src: 'https://em-content.zobj.net/thumbs/240/google/350/smiling-face-with-horns_1f608.png' },
-      { id: 'aura',         label: 'Aura',          src: 'https://em-content.zobj.net/thumbs/240/google/350/dizzy_1f4ab.png' },
-      { id: 'glitter',      label: 'Glitter',       src: 'https://em-content.zobj.net/thumbs/240/google/350/glowing-star_1f31f.png' },
-      { id: 'confetti',     label: 'Confetti',      src: 'https://em-content.zobj.net/thumbs/240/google/350/confetti-ball_1f38a.png' },
-      { id: 'sunburst',     label: 'Sunburst',      src: 'https://em-content.zobj.net/thumbs/240/google/350/sun-with-face_1f31e.png' },
-    ],
-  },
 ];
 
 // ── Draggable sticker overlay ────────────────────────────────────────────────
