@@ -38,28 +38,28 @@ function NexusSidebar({ collapsed, setCollapsed }) {
 
   return (
     <aside className={cn(
-      'h-screen flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300',
+      'h-screen flex flex-col bg-card border-r border-border transition-all duration-300',
       collapsed ? 'w-16' : 'w-60'
     )}>
-      <div className="border-b border-sidebar-border">
+      <div className="border-b border-border">
         <Link
           to="/"
           className={cn(
-            'flex items-center gap-2 px-3 py-3 w-full hover:bg-sidebar-accent transition-colors group',
+            'flex items-center gap-2 px-3 py-3 w-full hover:bg-primary/10 transition-colors group',
             collapsed ? 'justify-center' : ''
           )}
         >
-          <ChevronLeft className="w-4 h-4 shrink-0 text-sidebar-primary group-hover:text-sidebar-primary" />
+          <ChevronLeft className="w-4 h-4 shrink-0 text-primary group-hover:text-primary" />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-xs text-sidebar-foreground/60 leading-none">← Back to</span>
-              <span className="font-bold text-sm text-sidebar-primary truncate">{user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}</span>
+              <span className="text-xs text-muted-foreground leading-none">← Back to</span>
+              <span className="font-bold text-sm text-primary truncate">{user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}</span>
             </div>
           )}
         </Link>
-        <div className={cn('flex items-center h-10 px-3 border-t border-sidebar-border/50', collapsed ? 'justify-center' : 'justify-between')}>
-          {!collapsed && <span className="font-semibold text-xs uppercase tracking-wider text-sidebar-foreground/50">HR Management</span>}
-          <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-sidebar-accent text-sidebar-foreground/60">
+        <div className={cn('flex items-center h-10 px-3 border-t border-border/50', collapsed ? 'justify-center' : 'justify-between')}>
+          {!collapsed && <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">HR Management</span>}
+          <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded hover:bg-muted text-muted-foreground">
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </div>
@@ -72,7 +72,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
           return (
             <Link key={item.path} to={item.path} className={cn(
               'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
-              active ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+              active ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted hover:text-foreground',
               collapsed && 'justify-center'
             )}>
               <Icon className="w-4 h-4 shrink-0" />
@@ -82,12 +82,12 @@ function NexusSidebar({ collapsed, setCollapsed }) {
         })}
       </nav>
 
-      <div className={cn('p-2 border-t border-sidebar-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
-        {!collapsed && user && <p className="text-xs text-sidebar-foreground/50 px-2 mb-1 truncate">{user.full_name || user.email}</p>}
-        {!collapsed && !user && accessUser && <p className="text-xs text-sidebar-foreground/50 px-2 mb-1 truncate">{accessUser.full_name || accessUser.email}</p>}
+      <div className={cn('p-2 border-t border-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
+        {!collapsed && user && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{user.full_name || user.email}</p>}
+        {!collapsed && !user && accessUser && <p className="text-xs text-muted-foreground px-2 mb-1 truncate">{accessUser.full_name || accessUser.email}</p>}
         <button
           onClick={() => base44.auth.logout()}
-          className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors', collapsed && 'justify-center w-auto')}
+          className={cn('flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm text-muted-foreground hover:bg-muted transition-colors', collapsed && 'justify-center w-auto')}
         >
           <LogOut className="w-4 h-4 shrink-0" />
           {!collapsed && 'Sign out'}
