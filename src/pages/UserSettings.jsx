@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Upload, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, Sparkles, Move, Trash2 } from 'lucide-react';
+
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
@@ -45,6 +46,7 @@ export default function UserSettings() {
   const [effectsImageSrc, setEffectsImageSrc] = useState(null);
   const [savedStickers, setSavedStickers] = useState([]);
   const [savedHairColor, setSavedHairColor] = useState('#1a1a1a');
+  const fileInputRef = useRef(null);
 
 
   const handleFileUpload = (e) => {
@@ -132,19 +134,9 @@ export default function UserSettings() {
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52">
-                  <DropdownMenuItem asChild>
-                    <Label htmlFor="profile-upload" className="flex items-center gap-2 cursor-pointer font-normal px-2 py-1.5">
-                      <Upload className="w-4 h-4" />
-                      Upload new photo
-                      <Input
-                        id="profile-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        disabled={isSavingProfile}
-                      />
-                    </Label>
+                  <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="w-4 h-4" />
+                    Upload new photo
                   </DropdownMenuItem>
                   {profilePicture && (
                     <>
@@ -252,6 +244,14 @@ export default function UserSettings() {
             <Button variant="outline" onClick={() => navigate('/')}>Back to Dashboard</Button>
           </div>
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
 
         <CropImageDialog
           open={cropDialogOpen}
