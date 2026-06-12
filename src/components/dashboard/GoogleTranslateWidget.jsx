@@ -1,51 +1,137 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Languages } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Languages, ArrowRightLeft, Copy, Check, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'fr', label: 'French' },
+  { code: 'es', label: 'Spanish' },
+  { code: 'ar', label: 'Arabic' },
+  { code: 'zh', label: 'Chinese (Simplified)' },
+  { code: 'hi', label: 'Hindi' },
+  { code: 'pt', label: 'Portuguese' },
+  { code: 'ru', label: 'Russian' },
+  { code: 'de', label: 'German' },
+  { code: 'ja', label: 'Japanese' },
+  { code: 'ko', label: 'Korean' },
+  { code: 'it', label: 'Italian' },
+  { code: 'vi', label: 'Vietnamese' },
+  { code: 'tl', label: 'Tagalog' },
+  { code: 'so', label: 'Somali' },
+  { code: 'uk', label: 'Ukrainian' },
+  { code: 'fa', label: 'Persian/Farsi' },
+  { code: 'am', label: 'Amharic' },
+  { code: 'ti', label: 'Tigrinya' },
+  { code: 'sw', label: 'Swahili' },
+];
 
 export default function GoogleTranslateWidget() {
-  const initialized = useRef(false);
+  const [inputText, setInputText] = useState('');
+  const [outputText, setOutputText] = useState('');
+  const [fromLang, setFromLang] = useState('en');
+  const [toLang, setToLang] = useState('fr');
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-
-    // Add Google Translate script if not already present
-    if (!document.getElementById('google-translate-script')) {
-      window.googleTranslateElementInit = () => {
-        new window.google.translate.TranslateElement(
-          {
-            pageLanguage: 'en',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false,
-          },
-          'google_translate_element'
-        );
-      };
-
-      const script = document.createElement('script');
-      script.id = 'google-translate-script';
-      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      script.async = true;
-      document.body.appendChild(script);
-    } else if (window.google?.translate) {
-      // Script already loaded, re-initialize
-      window.googleTranslateElementInit();
+  const handleTranslate = async () => {
+    if (!inputText.trim()) return;
+    setLoading(true);
+    try {
+      const fromLabel = LANGUAGES.find(l => l.code === fromLang)?.label || fromLang;
+      const toLabel = LANGUAGES.find(l => l.code === toLang)?.label || toLang;
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the following text from ${fromLabel} to ${toLabel}. Return ONLY the translated text, nothing else, no explanations.\n\n${inputText}`,
+      });
+      setOutputText(result);
+    } catch {
+      setOutputText('Translation failed. Please try again.');
     }
-  }, []);
+    setLoading(false);
+  };
+
+  const handleSwap = () => {
+    setFromLang(toLang);
+    setToLang(fromLang);
+    setInputText(outputText);
+    setOutputText(inputText);
+  };
+
+  const handleCopy = () => {
+    if (!outputText) return;
+    navigator.clipboard.writeText(outputText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Languages className="w-4 h-4 text-blue-500" />
-          Page Translation
+          Translate
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <p className="text-xs text-muted-foreground mb-3">
-          Translate this page into your preferred language using Google Translate.
-        </p>
-        <div id="google_translate_element" />
+      <CardContent className="space-y-3">
+        {/* Language selectors */}
+        <div className="flex items-center gap-2">
+          <select
+            value={fromLang}
+            onChange={e => setFromLang(e.target.value)}
+            className="flex-1 text-sm border border-input rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </select>
+
+          <button
+            onClick={handleSwap}
+            className="p-1.5 rounded-md hover:bg-muted transition-colors flex-shrink-0"
+            title="Swap languages"
+          >
+            <ArrowRightLeft className="w-4 h-4 text-muted-foreground" />
+          </button>
+
+          <select
+            value={toLang}
+            onChange={e => setToLang(e.target.value)}
+            className="flex-1 text-sm border border-input rounded-md px-2 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+          </select>
+        </div>
+
+        {/* Input */}
+        <textarea
+          value={inputText}
+          onChange={e => setInputText(e.target.value)}
+          placeholder="Enter text to translate..."
+          rows={4}
+          className="w-full text-sm border border-input rounded-md px-3 py-2 bg-background resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+          onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) handleTranslate(); }}
+        />
+
+        <Button onClick={handleTranslate} disabled={loading || !inputText.trim()} className="w-full" size="sm">
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Translating...</> : 'Translate'}
+        </Button>
+
+        {/* Output */}
+        {outputText && (
+          <div className="relative">
+            <div className="w-full text-sm border border-input rounded-md px-3 py-2 bg-muted min-h-[80px] whitespace-pre-wrap">
+              {outputText}
+            </div>
+            <button
+              onClick={handleCopy}
+              className="absolute top-2 right-2 p-1 rounded hover:bg-background transition-colors"
+              title="Copy translation"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-muted-foreground" />}
+            </button>
+          </div>
+        )}
+
+        <p className="text-[10px] text-muted-foreground">Tip: Ctrl+Enter to translate</p>
       </CardContent>
     </Card>
   );
