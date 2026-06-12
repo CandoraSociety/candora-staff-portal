@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
+import { LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
@@ -15,7 +15,6 @@ import { useOutletContext } from 'react-router-dom';
 
 export default function WidgetCustomization() {
   const { user: currentUser } = useOutletContext();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: preferences } = useQuery({
@@ -45,33 +44,15 @@ export default function WidgetCustomization() {
     return ['stats', 'announcements', 'recent_activity'];
   });
 
-  const handleSavePreferences = async () => {
+  const savePref = async (fields) => {
     try {
       if (preferences) {
-        await base44.entities.UserDashboardPreference.update(preferences.id, {
-          layout_preference: layout,
-          show_stats_widget: showStats,
-          show_recent_activity: showActivity,
-          show_announcements: showAnnouncements,
-          visible_portal_ids: visiblePortals,
-          enabled_widgets: enabledWidgets,
-        });
+        await base44.entities.UserDashboardPreference.update(preferences.id, fields);
       } else {
-        await base44.entities.UserDashboardPreference.create({
-          user_id: currentUser.id,
-          layout_preference: layout,
-          show_stats_widget: showStats,
-          show_recent_activity: showActivity,
-          show_announcements: showAnnouncements,
-          visible_portal_ids: visiblePortals,
-          enabled_widgets: enabledWidgets,
-        });
+        await base44.entities.UserDashboardPreference.create({ user_id: currentUser.id, ...fields });
       }
       queryClient.invalidateQueries(['dashboardPreferences', currentUser?.id]);
-      alert('Settings saved successfully!');
-    } catch (error) {
-      alert('Failed to save settings. Please try again.');
-    }
+    } catch {}
   };
 
   // Locked widgets are always shown (even if not in add_functions), user-selectable ones need show_in_add_functions
@@ -88,18 +69,34 @@ export default function WidgetCustomization() {
       locked: !!w.locked_to_dashboard,
     }));
 
+  const saveWidgets = async (newWidgets) => {
+    try {
+      if (preferences) {
+        await base44.entities.UserDashboardPreference.update(preferences.id, { enabled_widgets: newWidgets });
+      } else {
+        await base44.entities.UserDashboardPreference.create({
+          user_id: currentUser.id,
+          enabled_widgets: newWidgets,
+        });
+      }
+      queryClient.invalidateQueries(['dashboardPreferences', currentUser?.id]);
+    } catch {}
+  };
+
   const toggleWidget = (widgetId) => {
-    setEnabledWidgets(prev =>
-      prev.includes(widgetId) ? prev.filter(id => id !== widgetId) : [...prev, widgetId]
-    );
+    setEnabledWidgets(prev => {
+      const next = prev.includes(widgetId) ? prev.filter(id => id !== widgetId) : [...prev, widgetId];
+      saveWidgets(next);
+      return next;
+    });
   };
 
   const togglePortal = (portalId) => {
-    setVisiblePortals(prev =>
-      prev.includes(portalId)
-        ? prev.filter(id => id !== portalId)
-        : [...prev, portalId]
-    );
+    setVisiblePortals(prev => {
+      const next = prev.includes(portalId) ? prev.filter(id => id !== portalId) : [...prev, portalId];
+      savePref({ visible_portal_ids: next });
+      return next;
+    });
   };
 
   const accessiblePortals = allPortals.filter(card => {
@@ -124,11 +121,11 @@ export default function WidgetCustomization() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-3">
-              <Button variant={layout === 'grid' ? 'default' : 'outline'} onClick={() => setLayout('grid')} className="flex-1">
+              <Button variant={layout === 'grid' ? 'default' : 'outline'} onClick={() => { setLayout('grid'); savePref({ layout_preference: 'grid' }); }} className="flex-1">
                 <LayoutGrid className="w-4 h-4 mr-2" />
                 Grid
               </Button>
-              <Button variant={layout === 'list' ? 'default' : 'outline'} onClick={() => setLayout('list')} className="flex-1">
+              <Button variant={layout === 'list' ? 'default' : 'outline'} onClick={() => { setLayout('list'); savePref({ layout_preference: 'list' }); }} className="flex-1">
                 <List className="w-4 h-4 mr-2" />
                 List
               </Button>
@@ -227,15 +224,7 @@ export default function WidgetCustomization() {
           </CardContent>
         </Card>
 
-        <div className="flex-shrink-0 sticky bottom-0 bg-background pt-4 pb-6 border-t mt-auto">
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => navigate('/')}>Cancel</Button>
-            <Button onClick={handleSavePreferences}>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
-          </div>
-        </div>
+
       </div>
     </div>
   );
