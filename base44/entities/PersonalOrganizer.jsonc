@@ -1,0 +1,155 @@
+{
+  "name": "PersonalOrganizer",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user this organizer belongs to"
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Personal to-do tasks"
+    },
+    "focus_today": {
+      "type": "string",
+      "description": "What the user wants to focus on today"
+    },
+    "focus_date": {
+      "type": "string",
+      "description": "Date the focus was last set (YYYY-MM-DD)"
+    },
+    "reminders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "nudge_count": {
+            "type": "number"
+          },
+          "last_nudged": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Recurring reminders"
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "raw_entry": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "formatted": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Brain dump notes, AI-organized with subject headings"
+    },
+    "priorities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string"
+          },
+          "priority_level": {
+            "type": "string"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Priority catalogue with due dates and sub-tasks"
+    },
+    "daily_plan": {
+      "type": "object",
+      "description": "The current AI-generated daily plan",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "focus": {
+          "type": "string"
+        },
+        "detailed": {
+          "type": "boolean"
+        },
+        "ai_plan": {
+          "type": "string"
+        },
+        "priorities": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

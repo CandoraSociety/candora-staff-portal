@@ -10,6 +10,9 @@
     --font-display: 'Nunito', sans-serif;
     --tracking-display: 0.05em;
 
+    --violet-500: 254 83% 63%;
+    --purple-600: 279 66% 50%;
+
     --background: 220 20% 98%;
     --foreground: 230 60% 8%;
     --card: 0 0% 100%;
@@ -50,6 +53,9 @@
   }
 
   .dark {
+    --violet-500: 254 83% 63%;
+    --purple-600: 279 66% 50%;
+
     --background: 230 60% 6%;
     --foreground: 45 50% 94%;
     --card: 230 50% 10%;

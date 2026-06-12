@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon } from 'lucide-react';
+import { Save, LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 
 export default function WidgetCustomization() {
@@ -68,6 +68,7 @@ export default function WidgetCustomization() {
     { id: 'stats', label: 'Statistics', description: 'Quick metrics and counts at a glance', icon: BarChart2, color: '#3b82f6' },
     { id: 'announcements', label: 'Announcements', description: 'Organization-wide notices and updates', icon: Megaphone, color: '#f59e0b' },
     { id: 'recent_activity', label: 'Recent Activity', description: 'Your latest files, notes and actions', icon: Activity, color: '#10b981' },
+    { id: 'organizer', label: 'Organization for the Disorganized', description: 'Personal chaos management with AI-powered planning', icon: Brain, color: '#8b5cf6' },
     { id: 'my_tasks', label: 'My Tasks', description: 'Compass tasks and to-dos assigned to you', icon: CheckSquare, color: '#8b5cf6' },
     { id: 'upcoming_events', label: 'Upcoming Events', description: 'Events and programs happening soon', icon: Clock, color: '#ef4444' },
     { id: 'quick_notes', label: 'Quick Notes', description: 'Pin and access your recent notes', icon: FileText, color: '#06b6d4' },
