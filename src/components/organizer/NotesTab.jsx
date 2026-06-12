@@ -42,19 +42,17 @@ export default function NotesTab({ notes = [], onChange }) {
         }
       });
 
-      const updatedNotes = notes.map(n =>
+      onChange(currentNotes => currentNotes.map(n =>
         n.id === newNoteObj.id
           ? { ...n, subject: result.subject, formatted: result.formatted }
           : n
-      );
-      onChange(updatedNotes);
+      ));
     } catch (error) {
-      const updatedNotes = notes.map(n =>
+      onChange(currentNotes => currentNotes.map(n =>
         n.id === newNoteObj.id
           ? { ...n, subject: "Unprocessed", formatted: rawEntry }
           : n
-      );
-      onChange(updatedNotes);
+      ));
     } finally {
       setIsOrganizing(false);
     }
