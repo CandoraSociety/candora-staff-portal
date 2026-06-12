@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FloatingNoteButton from '@/components/notes/FloatingNoteButton';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -201,6 +202,7 @@ function AppNav() {
           <Outlet />
         </main>
       </div>
+      <FloatingNoteButton />
     </>
   );
 }

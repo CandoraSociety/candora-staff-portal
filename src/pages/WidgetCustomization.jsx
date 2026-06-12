@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LayoutGrid, List, BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
+import { BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock } from 'lucide-react';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
@@ -33,10 +33,6 @@ export default function WidgetCustomization() {
     queryFn: () => base44.entities.DashboardWidget.list(),
   });
 
-  const [layout, setLayout] = useState(preferences?.layout_preference || 'grid');
-  const [showStats, setShowStats] = useState(preferences?.show_stats_widget ?? true);
-  const [showActivity, setShowActivity] = useState(preferences?.show_recent_activity ?? true);
-  const [showAnnouncements, setShowAnnouncements] = useState(preferences?.show_announcements ?? true);
   const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
   const [enabledWidgets, setEnabledWidgets] = useState(() => {
     const saved = preferences?.enabled_widgets;
@@ -112,26 +108,6 @@ export default function WidgetCustomization() {
           <h1 className="text-3xl font-display font-bold">Add Functions</h1>
           <p className="text-muted-foreground mt-1">Customize your dashboard widgets and shortcuts</p>
         </div>
-
-        {/* Dashboard Layout */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Dashboard Layout</CardTitle>
-            <CardDescription>Choose how your dashboard content is displayed</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-3">
-              <Button variant={layout === 'grid' ? 'default' : 'outline'} onClick={() => { setLayout('grid'); savePref({ layout_preference: 'grid' }); }} className="flex-1">
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                Grid
-              </Button>
-              <Button variant={layout === 'list' ? 'default' : 'outline'} onClick={() => { setLayout('list'); savePref({ layout_preference: 'list' }); }} className="flex-1">
-                <List className="w-4 h-4 mr-2" />
-                List
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Widget Visibility */}
         <Card>
