@@ -14,144 +14,317 @@ function svgWrap(content, vb = '0 0 100 100') {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${content}</svg>`;
 }
 
-// FACIAL HAIR — high-quality moustaches, beards, sideburns
+// FACIAL HAIR — stroked hair-strand approach for natural look
+// Each style uses many thin stroke lines layered over a soft base shape
 const facialHairSVGs = {
-  // Moustaches
+
   moustache_pencil: (c) => svgWrap(`
-    <defs><filter id="fh"><feGaussianBlur stdDeviation="0.4"/></filter></defs>
-    <path d="M22,54 C28,48 38,46 50,47 C62,46 72,48 78,54 C72,57 62,56 50,56.5 C38,56 28,57 22,54Z" fill="${c}"/>
-    <path d="M22,54 C28,50 38,48.5 50,49 C62,48.5 72,50 78,54 C72,55.5 62,54.5 50,55 C38,54.5 28,55.5 22,54Z" fill="${c}" opacity="0.5"/>
+    <defs>
+      <linearGradient id="mpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.6"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="mpc"><path d="M20,51 C28,46 38,44 50,45 C62,44 72,46 80,51 C76,57 64,58 50,58 C36,58 24,57 20,51Z"/></clipPath>
+    </defs>
+    <path d="M20,51 C28,46 38,44 50,45 C62,44 72,46 80,51 C76,57 64,58 50,58 C36,58 24,57 20,51Z" fill="url(#mpg)"/>
+    <g clip-path="url(#mpc)" opacity="0.6">
+      <line x1="24" y1="50" x2="24" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="27" y1="48" x2="27" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="30" y1="47" x2="30" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="33" y1="46" x2="33" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="36" y1="46" x2="36" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="39" y1="45" x2="39" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="42" y1="45" x2="42" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="45" y1="45" x2="45" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="50" y1="45" x2="50" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="55" y1="45" x2="55" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="58" y1="45" x2="58" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="61" y1="46" x2="61" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="64" y1="46" x2="64" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="67" y1="47" x2="67" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="70" y1="48" x2="70" y2="57" stroke="${c}" stroke-width="0.6"/><line x1="73" y1="50" x2="73" y2="57" stroke="${c}" stroke-width="0.6"/>
+      <line x1="76" y1="51" x2="76" y2="57" stroke="${c}" stroke-width="0.6"/>
+    </g>
   `, '0 0 100 100'),
 
   moustache_handlebar: (c) => svgWrap(`
-    <defs><linearGradient id="hbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M10,50 C8,40 18,36 28,41 C36,45 43,49 50,49 C57,49 64,45 72,41 C82,36 92,40 90,50 C88,56 80,55 72,51 C64,47 57,51 50,51 C43,51 36,47 28,51 C20,55 12,56 10,50Z" fill="url(#hbg)"/>
-    <path d="M10,50 C8,44 16,40 26,43 C34,46 42,49.5 50,49.5 C58,49.5 66,46 74,43 C84,40 92,44 90,50" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.4"/>
-    <path d="M10,50 C6,46 4,40 8,38 C12,36 16,40 18,46" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M90,50 C94,46 96,40 92,38 C88,36 84,40 82,46" fill="none" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="hbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.65"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="hbc"><path d="M8,50 C8,38 18,34 30,40 C38,44 44,49 50,49 C56,49 62,44 70,40 C82,34 92,38 92,50 C90,57 82,56 74,51 C66,46 58,50 50,50.5 C42,50 34,46 26,51 C18,56 10,57 8,50Z"/></clipPath>
+    </defs>
+    <path d="M8,50 C8,38 18,34 30,40 C38,44 44,49 50,49 C56,49 62,44 70,40 C82,34 92,38 92,50 C90,57 82,56 74,51 C66,46 58,50 50,50.5 C42,50 34,46 26,51 C18,56 10,57 8,50Z" fill="url(#hbg)"/>
+    <g clip-path="url(#hbc)" opacity="0.55">
+      <path d="M12,48 C14,42 20,38 28,41" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M16,50 C18,44 24,40 32,43" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M20,51 C22,46 28,43 36,45" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M26,50 C28,47 34,45 40,47" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M34,49 C36,47 42,47 48,49" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M52,49 C58,47 64,47 66,49" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M60,50 C64,47 70,45 74,47" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M70,50 C72,45 78,43 82,46" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M78,51 C80,46 84,43 88,46" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+    </g>
+    <path d="M8,50 C4,46 2,40 6,37 C10,34 14,39 16,46" fill="none" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M92,50 C96,46 98,40 94,37 C90,34 86,39 84,46" fill="none" stroke="${c}" stroke-width="2.8" stroke-linecap="round"/>
   `, '0 0 100 100'),
 
   moustache_walrus: (c) => svgWrap(`
-    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M14,46 C20,40 34,37 50,38 C66,37 80,40 86,46 C84,56 80,64 72,68 C66,64 58,60 50,62 C42,60 34,64 28,68 C20,64 16,56 14,46Z" fill="url(#wg)"/>
-    <path d="M30,46 C36,43 44,41 50,42 C56,41 64,43 70,46" fill="none" stroke="${c}" stroke-width="1" opacity="0.35"/>
-    <path d="M28,56 C32,54 40,52 50,53 C60,52 68,54 72,56" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.25"/>
+    <defs>
+      <linearGradient id="wlg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="wlc"><path d="M14,46 C20,40 34,37 50,38 C66,37 80,40 86,46 C84,57 80,65 72,69 C66,65 58,61 50,63 C42,61 34,65 28,69 C20,65 16,57 14,46Z"/></clipPath>
+    </defs>
+    <path d="M14,46 C20,40 34,37 50,38 C66,37 80,40 86,46 C84,57 80,65 72,69 C66,65 58,61 50,63 C42,61 34,65 28,69 C20,65 16,57 14,46Z" fill="url(#wlg)"/>
+    <g clip-path="url(#wlc)" opacity="0.5">
+      <line x1="20" y1="44" x2="22" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="24" y1="41" x2="26" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="28" y1="39" x2="30" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="32" y1="38" x2="34" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="36" y1="37" x2="38" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="40" y1="37" x2="42" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="44" y1="37" x2="46" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="50" y1="38" x2="50" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="54" y1="37" x2="54" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="58" y1="37" x2="58" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="62" y1="38" x2="62" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="66" y1="38" x2="66" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="70" y1="39" x2="70" y2="68" stroke="${c}" stroke-width="0.65"/><line x1="74" y1="41" x2="74" y2="68" stroke="${c}" stroke-width="0.65"/>
+      <line x1="78" y1="44" x2="78" y2="68" stroke="${c}" stroke-width="0.65"/>
+    </g>
   `, '0 0 100 100'),
 
   moustache_chevron: (c) => svgWrap(`
-    <defs><linearGradient id="cvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M17,44 C26,38 38,36 50,38 C62,36 74,38 83,44 C78,54 66,56 50,54 C34,56 22,54 17,44Z" fill="url(#cvg)"/>
-    <path d="M24,43 C34,39 43,37.5 50,39 C57,37.5 66,39 76,43" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
+    <defs>
+      <linearGradient id="chvg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="chvc"><path d="M16,44 C26,37 38,35 50,37 C62,35 74,37 84,44 C80,55 68,57 50,55 C32,57 20,55 16,44Z"/></clipPath>
+    </defs>
+    <path d="M16,44 C26,37 38,35 50,37 C62,35 74,37 84,44 C80,55 68,57 50,55 C32,57 20,55 16,44Z" fill="url(#chvg)"/>
+    <g clip-path="url(#chvc)" opacity="0.5">
+      <line x1="20" y1="44" x2="21" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="24" y1="42" x2="25" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="28" y1="40" x2="29" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="32" y1="38" x2="33" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="36" y1="37" x2="37" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="40" y1="36" x2="41" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="44" y1="36" x2="45" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="50" y1="36" x2="50" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="56" y1="36" x2="56" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="60" y1="36" x2="60" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="64" y1="37" x2="64" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="68" y1="38" x2="68" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="72" y1="40" x2="72" y2="55" stroke="${c}" stroke-width="0.65"/><line x1="76" y1="42" x2="76" y2="55" stroke="${c}" stroke-width="0.65"/>
+      <line x1="80" y1="44" x2="80" y2="55" stroke="${c}" stroke-width="0.65"/>
+    </g>
   `, '0 0 100 100'),
 
   moustache_fu_manchu: (c) => svgWrap(`
-    <defs><linearGradient id="fmg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M26,44 C35,38 43,37 50,39 C57,37 65,38 74,44 C70,52 63,52 57,49 C54,47 52,48 50,49 C48,48 46,47 43,49 C37,52 30,52 26,44Z" fill="url(#fmg)"/>
-    <path d="M30,51 C28,58 26,66 24,76 C22,82 20,88 22,91 C24,94 27,90 28,84 C30,74 33,62 36,54" fill="${c}" stroke="${c}" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M70,51 C72,58 74,66 76,76 C78,82 80,88 78,91 C76,94 73,90 72,84 C70,74 67,62 64,54" fill="${c}" stroke="${c}" stroke-width="1" stroke-linejoin="round"/>
+    <defs>
+      <linearGradient id="fmg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+    </defs>
+    <path d="M26,44 C35,38 43,37 50,39 C57,37 65,38 74,44 C70,53 63,53 57,50 C54,48 52,49 50,50 C48,49 46,48 43,50 C37,53 30,53 26,44Z" fill="url(#fmg2)"/>
+    <path d="M30,51 C29,58 27,66 25,76 C23,83 21,89 23,92 C25,94 28,90 29,84 C31,74 34,62 37,54" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M30,51 C29,59 28,67 27,76 C26,81 25,87 27,90" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+    <path d="M70,51 C71,58 73,66 75,76 C77,83 79,89 77,92 C75,94 72,90 71,84 C69,74 66,62 63,54" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M70,51 C71,59 72,67 73,76 C74,81 75,87 73,90" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
   `, '0 0 100 100'),
 
   moustache_english: (c) => svgWrap(`
-    <defs><linearGradient id="eng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M19,50 C22,43 30,40 37,44 C42,47 46,50 50,50 C54,50 58,47 63,44 C70,40 78,43 81,50 C79,55 74,55 68,53 C62,51 56,51 50,51.5 C44,51 38,51 32,53 C26,55 21,55 19,50Z" fill="url(#eng)"/>
-    <path d="M19,50 C14,48 7,43 5,47 C3,51 7,54 13,52 C16,51 18,50.5 19,50Z" fill="${c}"/>
-    <path d="M81,50 C86,48 93,43 95,47 C97,51 93,54 87,52 C84,51 82,50.5 81,50Z" fill="${c}"/>
-    <path d="M5,47 C5,44 8,42 11,44" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M95,47 C95,44 92,42 89,44" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="eng2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.65"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="engc"><path d="M18,50 C22,43 30,40 38,44 C43,47 47,50 50,50.5 C53,50 57,47 62,44 C70,40 78,43 82,50 C80,56 74,56 68,54 C62,52 56,51 50,52 C44,51 38,52 32,54 C26,56 20,56 18,50Z"/></clipPath>
+    </defs>
+    <path d="M18,50 C22,43 30,40 38,44 C43,47 47,50 50,50.5 C53,50 57,47 62,44 C70,40 78,43 82,50 C80,56 74,56 68,54 C62,52 56,51 50,52 C44,51 38,52 32,54 C26,56 20,56 18,50Z" fill="url(#eng2)"/>
+    <g clip-path="url(#engc)" opacity="0.55">
+      <path d="M22,50 C24,46 28,43 34,44" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M26,51 C28,47 32,44 38,45" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M30,52 C32,48 36,46 42,47" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M36,52 C38,49 42,48 46,49" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M54,49 C56,48 60,49 64,52" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M60,51 C62,48 66,47 70,49" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M66,52 C68,48 72,46 76,48" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+      <path d="M72,51 C74,47 78,45 80,48" fill="none" stroke="${c}" stroke-width="0.7" stroke-linecap="round"/>
+    </g>
+    <path d="M18,50 C13,47 6,43 4,47 C2,51 6,55 13,53 Z" fill="${c}"/>
+    <path d="M82,50 C87,47 94,43 96,47 C98,51 94,55 87,53 Z" fill="${c}"/>
+    <path d="M4,47 C4,43 7,41 10,43" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M96,47 C96,43 93,41 90,43" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>
   `, '0 0 100 100'),
 
   moustache_imperial: (c) => svgWrap(`
-    <defs><linearGradient id="impg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M24,49 C32,40 41,38 50,40 C59,38 68,40 76,49 C70,57 62,55 56,52 C53,50.5 51.5,51 50,51.5 C48.5,51 47,50.5 44,52 C38,55 30,57 24,49Z" fill="url(#impg)"/>
-    <path d="M24,49 C18,44 12,34 16,27 C20,22 27,30 29,41" fill="${c}" stroke="${c}" stroke-width="0.5"/>
-    <path d="M76,49 C82,44 88,34 84,27 C80,22 73,30 71,41" fill="${c}" stroke="${c}" stroke-width="0.5"/>
-    <path d="M16,27 C14,23 16,20 19,22" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M84,27 C86,23 84,20 81,22" fill="none" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/>
+    <defs>
+      <linearGradient id="impg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.7"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+    </defs>
+    <path d="M24,49 C32,40 41,38 50,40 C59,38 68,40 76,49 C70,57 62,56 56,53 C53,51 51,51.5 50,52 C49,51.5 47,51 44,53 C38,56 30,57 24,49Z" fill="url(#impg2)"/>
+    <path d="M24,49 C18,43 12,33 16,26 C20,21 27,29 29,40" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M24,49 C19,44 14,35 18,28" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+    <path d="M76,49 C82,43 88,33 84,26 C80,21 73,29 71,40" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M76,49 C81,44 86,35 82,28" fill="none" stroke="${c}" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
+    <path d="M16,26 C14,22 16,19 19,21" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/>
+    <path d="M84,26 C86,22 84,19 81,21" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"/>
   `, '0 0 100 100'),
 
   // Beards
   beard_short: (c) => svgWrap(`
-    <defs><linearGradient id="bsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M19,53 C18,62 19,72 24,79 C32,88 42,90 50,90 C58,90 68,88 76,79 C81,72 82,62 81,53 C72,57 62,59 50,59 C38,59 28,57 19,53Z" fill="url(#bsg)"/>
-    <path d="M24,60 C28,58 38,57 50,57.5 C62,57 72,58 76,60" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.3"/>
-    <path d="M22,70 C26,68 36,67 50,67.5 C64,67 74,68 78,70" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.2"/>
+    <defs>
+      <linearGradient id="bsg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="bsc"><path d="M19,53 C18,63 19,73 24,80 C32,89 42,91 50,91 C58,91 68,89 76,80 C81,73 82,63 81,53 C72,57 62,59 50,59 C38,59 28,57 19,53Z"/></clipPath>
+    </defs>
+    <path d="M19,53 C18,63 19,73 24,80 C32,89 42,91 50,91 C58,91 68,89 76,80 C81,73 82,63 81,53 C72,57 62,59 50,59 C38,59 28,57 19,53Z" fill="url(#bsg2)"/>
+    <g clip-path="url(#bsc)" opacity="0.45">
+      <line x1="22" y1="56" x2="22" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="26" y1="55" x2="26" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="30" y1="55" x2="30" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="34" y1="55" x2="34" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="38" y1="55" x2="38" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="42" y1="55" x2="42" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="46" y1="55" x2="46" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="50" y1="55" x2="50" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="54" y1="55" x2="54" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="58" y1="55" x2="58" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="62" y1="55" x2="62" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="66" y1="55" x2="66" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="70" y1="55" x2="70" y2="90" stroke="${c}" stroke-width="0.7"/><line x1="74" y1="56" x2="74" y2="90" stroke="${c}" stroke-width="0.7"/>
+      <line x1="78" y1="57" x2="78" y2="90" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   beard_full: (c) => svgWrap(`
-    <defs><linearGradient id="bfg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="60%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.9"/></linearGradient></defs>
-    <path d="M17,49 C14,62 14,75 18,84 C26,96 38,100 50,100 C62,100 74,96 82,84 C86,75 86,62 83,49 C74,55 62,57.5 50,57.5 C38,57.5 26,55 17,49Z" fill="url(#bfg)"/>
-    <path d="M22,57 C30,55 40,54 50,54.5 C60,54 70,55 78,57" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
-    <path d="M18,68 C24,66 36,65 50,65.5 C64,65 76,66 82,68" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.25"/>
-    <path d="M18,80 C26,78 38,77 50,77.5 C62,77 74,78 82,80" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.2"/>
-    <path d="M20,90 C30,88 40,87.5 50,88 C60,87.5 70,88 80,90" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.15"/>
+    <defs>
+      <linearGradient id="bfg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="bfc"><path d="M17,49 C14,62 14,76 18,85 C26,97 38,101 50,101 C62,101 74,97 82,85 C86,76 86,62 83,49 C74,55 62,57.5 50,57.5 C38,57.5 26,55 17,49Z"/></clipPath>
+    </defs>
+    <path d="M17,49 C14,62 14,76 18,85 C26,97 38,101 50,101 C62,101 74,97 82,85 C86,76 86,62 83,49 C74,55 62,57.5 50,57.5 C38,57.5 26,55 17,49Z" fill="url(#bfg2)"/>
+    <g clip-path="url(#bfc)" opacity="0.45">
+      <line x1="20" y1="52" x2="20" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="24" y1="51" x2="24" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="28" y1="51" x2="28" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="32" y1="50" x2="32" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="36" y1="50" x2="36" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="40" y1="50" x2="40" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="44" y1="50" x2="44" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="48" y1="50" x2="48" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="52" y1="50" x2="52" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="56" y1="50" x2="56" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="60" y1="50" x2="60" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="64" y1="50" x2="64" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="68" y1="51" x2="68" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="72" y1="51" x2="72" y2="100" stroke="${c}" stroke-width="0.7"/>
+      <line x1="76" y1="52" x2="76" y2="100" stroke="${c}" stroke-width="0.7"/><line x1="80" y1="53" x2="80" y2="100" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   beard_goatee: (c) => svgWrap(`
-    <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M35,49 C37,44 43,42 50,43 C57,42 63,44 65,49 C64,58 60,66 50,72 C40,66 36,58 35,49Z" fill="url(#gg)"/>
-    <path d="M40,50 C42,47 46,46 50,46.5 C54,46 58,47 60,50" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.3"/>
-    <path d="M38,58 C40,56 44,55 50,55.5 C56,55 60,56 62,58" fill="none" stroke="${c}" stroke-width="0.8" opacity="0.25"/>
+    <defs>
+      <linearGradient id="gtg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.75"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="gtc"><path d="M35,49 C37,44 43,42 50,43 C57,42 63,44 65,49 C64,59 60,67 50,73 C40,67 36,59 35,49Z"/></clipPath>
+    </defs>
+    <path d="M35,49 C37,44 43,42 50,43 C57,42 63,44 65,49 C64,59 60,67 50,73 C40,67 36,59 35,49Z" fill="url(#gtg)"/>
+    <g clip-path="url(#gtc)" opacity="0.5">
+      <line x1="37" y1="50" x2="37" y2="72" stroke="${c}" stroke-width="0.7"/><line x1="40" y1="48" x2="40" y2="72" stroke="${c}" stroke-width="0.7"/>
+      <line x1="43" y1="46" x2="43" y2="72" stroke="${c}" stroke-width="0.7"/><line x1="46" y1="45" x2="46" y2="72" stroke="${c}" stroke-width="0.7"/>
+      <line x1="50" y1="44" x2="50" y2="72" stroke="${c}" stroke-width="0.7"/><line x1="54" y1="45" x2="54" y2="72" stroke="${c}" stroke-width="0.7"/>
+      <line x1="57" y1="46" x2="57" y2="72" stroke="${c}" stroke-width="0.7"/><line x1="60" y1="48" x2="60" y2="72" stroke="${c}" stroke-width="0.7"/>
+      <line x1="63" y1="50" x2="63" y2="72" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   beard_circle: (c) => svgWrap(`
-    <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M29,47 C31,42 36,39 42,38 C45,37.5 47.5,37.5 50,37.5 C52.5,37.5 55,37.5 58,38 C64,39 69,42 71,47 C70,56 66,64 60,68 C56,70 53,71 50,71 C47,71 44,70 40,68 C34,64 30,56 29,47Z M37,52 C37,58 43,63 50,63 C57,63 63,58 63,52 C63,48 57,48 50,48 C43,48 37,48 37,52Z" fill="url(#cg)" fill-rule="evenodd"/>
-    <path d="M34,47 C36,44 40,42 44,41" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
-    <path d="M66,47 C64,44 60,42 56,41" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+    <defs>
+      <linearGradient id="crcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="crcc"><path d="M29,47 C31,40 38,36 50,36 C62,36 69,40 71,47 C70,57 66,65 60,69 C56,71 53,72 50,72 C47,72 44,71 40,69 C34,65 30,57 29,47Z M39,52 C39,58 44,63 50,63 C56,63 61,58 61,52 C61,48 56,48 50,48 C44,48 39,48 39,52Z" fill-rule="evenodd"/></clipPath>
+    </defs>
+    <path d="M29,47 C31,40 38,36 50,36 C62,36 69,40 71,47 C70,57 66,65 60,69 C56,71 53,72 50,72 C47,72 44,71 40,69 C34,65 30,57 29,47Z M39,52 C39,58 44,63 50,63 C56,63 61,58 61,52 C61,48 56,48 50,48 C44,48 39,48 39,52Z" fill="url(#crcg)" fill-rule="evenodd"/>
+    <g clip-path="url(#crcc)" opacity="0.45">
+      <line x1="32" y1="48" x2="32" y2="71" stroke="${c}" stroke-width="0.7"/><line x1="36" y1="44" x2="36" y2="71" stroke="${c}" stroke-width="0.7"/>
+      <line x1="40" y1="41" x2="40" y2="71" stroke="${c}" stroke-width="0.7"/><line x1="44" y1="39" x2="44" y2="71" stroke="${c}" stroke-width="0.7"/>
+      <line x1="50" y1="38" x2="50" y2="71" stroke="${c}" stroke-width="0.7"/><line x1="56" y1="39" x2="56" y2="71" stroke="${c}" stroke-width="0.7"/>
+      <line x1="60" y1="41" x2="60" y2="71" stroke="${c}" stroke-width="0.7"/><line x1="64" y1="44" x2="64" y2="71" stroke="${c}" stroke-width="0.7"/>
+      <line x1="68" y1="48" x2="68" y2="71" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   beard_viking: (c) => svgWrap(`
-    <defs><linearGradient id="vkg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.85"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M13,45 C10,60 10,76 15,88 C24,102 38,108 50,108 C62,108 76,102 85,88 C90,76 90,60 87,45 C76,53 62,56 50,56 C38,56 24,53 13,45Z" fill="url(#vkg)"/>
-    <path d="M21,84 C19,92 18,100 20,107 C22,112 26,108 27,100 C28,92 26,84 24,80Z" fill="${c}"/>
-    <path d="M79,84 C81,92 82,100 80,107 C78,112 74,108 73,100 C72,92 74,84 76,80Z" fill="${c}"/>
-    <path d="M18,57 C24,55 36,54 50,54.5 C64,54 76,55 82,57" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.3"/>
-    <path d="M14,70 C20,68 34,67 50,67.5 C66,67 80,68 86,70" fill="none" stroke="${c}" stroke-width="0.7" opacity="0.2"/>
+    <defs>
+      <linearGradient id="vkg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity="0.8"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="vkc"><path d="M13,45 C10,61 10,77 15,89 C24,103 38,109 50,109 C62,109 76,103 85,89 C90,77 90,61 87,45 C76,53 62,57 50,57 C38,57 24,53 13,45Z"/></clipPath>
+    </defs>
+    <path d="M13,45 C10,61 10,77 15,89 C24,103 38,109 50,109 C62,109 76,103 85,89 C90,77 90,61 87,45 C76,53 62,57 50,57 C38,57 24,53 13,45Z" fill="url(#vkg2)"/>
+    <g clip-path="url(#vkc)" opacity="0.4">
+      <line x1="16" y1="50" x2="18" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="21" y1="48" x2="23" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="26" y1="46" x2="28" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="31" y1="45" x2="33" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="36" y1="45" x2="38" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="41" y1="45" x2="43" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="46" y1="45" x2="48" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="50" y1="45" x2="50" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="54" y1="45" x2="54" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="58" y1="45" x2="58" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="62" y1="45" x2="62" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="67" y1="45" x2="67" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="72" y1="46" x2="72" y2="108" stroke="${c}" stroke-width="0.8"/><line x1="77" y1="48" x2="77" y2="108" stroke="${c}" stroke-width="0.8"/>
+      <line x1="82" y1="50" x2="82" y2="108" stroke="${c}" stroke-width="0.8"/>
+    </g>
+    <path d="M20,85 C18,94 17,103 19,109 C21,114 25,110 26,102 C27,93 25,84 23,80Z" fill="${c}"/>
+    <path d="M80,85 C82,94 83,103 81,109 C79,114 75,110 74,102 C73,93 75,84 77,80Z" fill="${c}"/>
   `, '0 0 100 120'),
 
   beard_stubble: (c) => svgWrap(`
-    <defs>
-      <filter id="stubf"><feGaussianBlur stdDeviation="0.6"/></filter>
-    </defs>
-    <rect x="20" y="50" width="60" height="30" rx="10" fill="${c}" opacity="0.18" filter="url(#stubf)"/>
-    ${Array.from({length: 7}, (_,row) => Array.from({length: 13}, (_,col) => {
-      const x = 22 + col * 4.5 + (row%2)*2;
-      const y = 52 + row * 4.2;
-      const r = 0.9 + Math.sin(col*row)*0.4;
-      return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" opacity="${0.55 + Math.cos(col+row)*0.2}"/>`;
+    <defs><filter id="stubf2"><feGaussianBlur stdDeviation="0.5"/></filter></defs>
+    <ellipse cx="50" cy="65" rx="32" ry="18" fill="${c}" opacity="0.12" filter="url(#stubf2)"/>
+    ${Array.from({length: 8}, (_, row) => Array.from({length: 15}, (_, col) => {
+      const x = 20 + col * 4 + (row % 2) * 2;
+      const y = 51 + row * 3.8;
+      const len = 1.6 + ((col * 3 + row * 7) % 5) * 0.3;
+      const angle = -90 + ((col + row * 3) % 7) * 5 - 15;
+      const rad = angle * Math.PI / 180;
+      const x2 = x + Math.cos(rad) * len;
+      const y2 = y + Math.sin(rad) * len;
+      const op = 0.5 + ((col + row) % 4) * 0.1;
+      return `<line x1="${x}" y1="${y}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${c}" stroke-width="0.9" stroke-linecap="round" opacity="${op}"/>`;
     }).join('')).join('')}
   `, '0 0 100 100'),
 
   beard_mutton_chops: (c) => svgWrap(`
-    <defs><linearGradient id="mcg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.6"/></linearGradient>
-    <linearGradient id="mcg2" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.6"/></linearGradient></defs>
-    <path d="M13,40 C9,48 9,60 11,70 C13,78 19,82 26,80 C32,77 35,68 36,57 C37,47 34,40 28,37 C20,34 15,36 13,40Z" fill="url(#mcg)"/>
-    <path d="M87,40 C91,48 91,60 89,70 C87,78 81,82 74,80 C68,77 65,68 64,57 C63,47 66,40 72,37 C80,34 85,36 87,40Z" fill="url(#mcg2)"/>
-    <path d="M36,57 C42,54 46,53 50,53 C54,53 58,54 64,57" fill="none" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M16,52 C20,50 26,50 32,52" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
-    <path d="M84,52 C80,50 74,50 68,52" fill="none" stroke="${c}" stroke-width="0.6" opacity="0.3"/>
+    <defs>
+      <linearGradient id="mcg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.5"/></linearGradient>
+      <linearGradient id="mcg4" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${c}" stop-opacity="0.5"/></linearGradient>
+      <clipPath id="mccL"><path d="M13,40 C9,49 9,61 11,71 C13,79 19,83 26,81 C32,78 36,69 37,58 C38,47 34,40 28,37 C20,34 15,36 13,40Z"/></clipPath>
+      <clipPath id="mccR"><path d="M87,40 C91,49 91,61 89,71 C87,79 81,83 74,81 C68,78 64,69 63,58 C62,47 66,40 72,37 C80,34 85,36 87,40Z"/></clipPath>
+    </defs>
+    <path d="M13,40 C9,49 9,61 11,71 C13,79 19,83 26,81 C32,78 36,69 37,58 C38,47 34,40 28,37 C20,34 15,36 13,40Z" fill="url(#mcg3)"/>
+    <path d="M87,40 C91,49 91,61 89,71 C87,79 81,83 74,81 C68,78 64,69 63,58 C62,47 66,40 72,37 C80,34 85,36 87,40Z" fill="url(#mcg4)"/>
+    <g clip-path="url(#mccL)" opacity="0.45">
+      <line x1="14" y1="42" x2="36" y2="80" stroke="${c}" stroke-width="0.7"/><line x1="17" y1="40" x2="37" y2="75" stroke="${c}" stroke-width="0.7"/>
+      <line x1="20" y1="38" x2="36" y2="70" stroke="${c}" stroke-width="0.7"/><line x1="23" y1="37" x2="35" y2="65" stroke="${c}" stroke-width="0.7"/>
+      <line x1="27" y1="37" x2="35" y2="58" stroke="${c}" stroke-width="0.7"/>
+    </g>
+    <g clip-path="url(#mccR)" opacity="0.45">
+      <line x1="86" y1="42" x2="64" y2="80" stroke="${c}" stroke-width="0.7"/><line x1="83" y1="40" x2="63" y2="75" stroke="${c}" stroke-width="0.7"/>
+      <line x1="80" y1="38" x2="64" y2="70" stroke="${c}" stroke-width="0.7"/><line x1="77" y1="37" x2="65" y2="65" stroke="${c}" stroke-width="0.7"/>
+      <line x1="73" y1="37" x2="65" y2="58" stroke="${c}" stroke-width="0.7"/>
+    </g>
+    <path d="M37,58 C42,55 46,54 50,54 C54,54 58,55 63,58" fill="none" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
   `, '0 0 100 100'),
 
   // Sideburns
   sideburns_short: (c) => svgWrap(`
-    <defs><linearGradient id="ssg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
-    <linearGradient id="ssg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M13,28 C9,36 9,46 11,54 C13,60 17,62 22,60 C27,57 28,48 26,38 C24,28 18,24 13,28Z" fill="url(#ssg)"/>
-    <path d="M87,28 C91,36 91,46 89,54 C87,60 83,62 78,60 C73,57 72,48 74,38 C76,28 82,24 87,28Z" fill="url(#ssg2)"/>
+    <defs>
+      <linearGradient id="ssg3" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <linearGradient id="ssg4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="ssLc"><path d="M13,28 C9,37 9,48 11,56 C13,62 17,63 22,61 C27,58 28,49 26,38 C24,27 18,23 13,28Z"/></clipPath>
+      <clipPath id="ssRc"><path d="M87,28 C91,37 91,48 89,56 C87,62 83,63 78,61 C73,58 72,49 74,38 C76,27 82,23 87,28Z"/></clipPath>
+    </defs>
+    <path d="M13,28 C9,37 9,48 11,56 C13,62 17,63 22,61 C27,58 28,49 26,38 C24,27 18,23 13,28Z" fill="url(#ssg3)"/>
+    <path d="M87,28 C91,37 91,48 89,56 C87,62 83,63 78,61 C73,58 72,49 74,38 C76,27 82,23 87,28Z" fill="url(#ssg4)"/>
+    <g clip-path="url(#ssLc)" opacity="0.5">
+      <line x1="14" y1="30" x2="26" y2="62" stroke="${c}" stroke-width="0.7"/><line x1="17" y1="27" x2="27" y2="62" stroke="${c}" stroke-width="0.7"/>
+      <line x1="20" y1="26" x2="27" y2="60" stroke="${c}" stroke-width="0.7"/><line x1="23" y1="27" x2="27" y2="58" stroke="${c}" stroke-width="0.7"/>
+    </g>
+    <g clip-path="url(#ssRc)" opacity="0.5">
+      <line x1="86" y1="30" x2="74" y2="62" stroke="${c}" stroke-width="0.7"/><line x1="83" y1="27" x2="73" y2="62" stroke="${c}" stroke-width="0.7"/>
+      <line x1="80" y1="26" x2="73" y2="60" stroke="${c}" stroke-width="0.7"/><line x1="77" y1="27" x2="73" y2="58" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   sideburns_long: (c) => svgWrap(`
-    <defs><linearGradient id="slg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
-    <linearGradient id="slg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M11,26 C7,38 7,54 9,66 C11,76 16,80 22,78 C28,74 29,60 28,44 C27,30 22,20 16,22 C12,22 11,24 11,26Z" fill="url(#slg)"/>
-    <path d="M89,26 C93,38 93,54 91,66 C89,76 84,80 78,78 C72,74 71,60 72,44 C73,30 78,20 84,22 C88,22 89,24 89,26Z" fill="url(#slg2)"/>
+    <defs>
+      <linearGradient id="slg3" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <linearGradient id="slg4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="slLc"><path d="M11,26 C7,39 7,55 9,67 C11,77 16,81 22,79 C28,75 29,61 28,44 C27,29 22,19 16,21 C12,21 11,23 11,26Z"/></clipPath>
+      <clipPath id="slRc"><path d="M89,26 C93,39 93,55 91,67 C89,77 84,81 78,79 C72,75 71,61 72,44 C73,29 78,19 84,21 C88,21 89,23 89,26Z"/></clipPath>
+    </defs>
+    <path d="M11,26 C7,39 7,55 9,67 C11,77 16,81 22,79 C28,75 29,61 28,44 C27,29 22,19 16,21 C12,21 11,23 11,26Z" fill="url(#slg3)"/>
+    <path d="M89,26 C93,39 93,55 91,67 C89,77 84,81 78,79 C72,75 71,61 72,44 C73,29 78,19 84,21 C88,21 89,23 89,26Z" fill="url(#slg4)"/>
+    <g clip-path="url(#slLc)" opacity="0.5">
+      <line x1="12" y1="27" x2="27" y2="79" stroke="${c}" stroke-width="0.7"/><line x1="15" y1="24" x2="28" y2="79" stroke="${c}" stroke-width="0.7"/>
+      <line x1="18" y1="22" x2="28" y2="78" stroke="${c}" stroke-width="0.7"/><line x1="21" y1="22" x2="28" y2="75" stroke="${c}" stroke-width="0.7"/>
+      <line x1="24" y1="23" x2="28" y2="70" stroke="${c}" stroke-width="0.7"/>
+    </g>
+    <g clip-path="url(#slRc)" opacity="0.5">
+      <line x1="88" y1="27" x2="73" y2="79" stroke="${c}" stroke-width="0.7"/><line x1="85" y1="24" x2="72" y2="79" stroke="${c}" stroke-width="0.7"/>
+      <line x1="82" y1="22" x2="72" y2="78" stroke="${c}" stroke-width="0.7"/><line x1="79" y1="22" x2="72" y2="75" stroke="${c}" stroke-width="0.7"/>
+      <line x1="76" y1="23" x2="72" y2="70" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 
   sideburns_chops: (c) => svgWrap(`
-    <defs><linearGradient id="scg" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient>
-    <linearGradient id="scg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.5"/><stop offset="100%" stop-color="${c}"/></linearGradient></defs>
-    <path d="M9,26 C5,40 5,58 7,70 C9,80 16,84 24,80 C30,76 32,64 31,48 C30,34 24,20 17,22 C12,22 9,24 9,26Z" fill="url(#scg)"/>
-    <path d="M91,26 C95,40 95,58 93,70 C91,80 84,84 76,80 C70,76 68,64 69,48 C70,34 76,20 83,22 C88,22 91,24 91,26Z" fill="url(#scg2)"/>
+    <defs>
+      <linearGradient id="scg3" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <linearGradient id="scg4" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${c}" stop-opacity="0.4"/><stop offset="100%" stop-color="${c}"/></linearGradient>
+      <clipPath id="scLc"><path d="M9,26 C5,41 5,59 7,71 C9,81 16,85 24,81 C30,77 32,65 31,48 C30,33 24,19 17,21 C12,21 9,23 9,26Z"/></clipPath>
+      <clipPath id="scRc"><path d="M91,26 C95,41 95,59 93,71 C91,81 84,85 76,81 C70,77 68,65 69,48 C70,33 76,19 83,21 C88,21 91,23 91,26Z"/></clipPath>
+    </defs>
+    <path d="M9,26 C5,41 5,59 7,71 C9,81 16,85 24,81 C30,77 32,65 31,48 C30,33 24,19 17,21 C12,21 9,23 9,26Z" fill="url(#scg3)"/>
+    <path d="M91,26 C95,41 95,59 93,71 C91,81 84,85 76,81 C70,77 68,65 69,48 C70,33 76,19 83,21 C88,21 91,23 91,26Z" fill="url(#scg4)"/>
+    <g clip-path="url(#scLc)" opacity="0.5">
+      <line x1="10" y1="28" x2="30" y2="82" stroke="${c}" stroke-width="0.7"/><line x1="13" y1="25" x2="31" y2="82" stroke="${c}" stroke-width="0.7"/>
+      <line x1="16" y1="23" x2="31" y2="82" stroke="${c}" stroke-width="0.7"/><line x1="19" y1="22" x2="31" y2="80" stroke="${c}" stroke-width="0.7"/>
+      <line x1="22" y1="22" x2="31" y2="76" stroke="${c}" stroke-width="0.7"/><line x1="26" y1="23" x2="31" y2="68" stroke="${c}" stroke-width="0.7"/>
+    </g>
+    <g clip-path="url(#scRc)" opacity="0.5">
+      <line x1="90" y1="28" x2="70" y2="82" stroke="${c}" stroke-width="0.7"/><line x1="87" y1="25" x2="69" y2="82" stroke="${c}" stroke-width="0.7"/>
+      <line x1="84" y1="23" x2="69" y2="82" stroke="${c}" stroke-width="0.7"/><line x1="81" y1="22" x2="69" y2="80" stroke="${c}" stroke-width="0.7"/>
+      <line x1="78" y1="22" x2="69" y2="76" stroke="${c}" stroke-width="0.7"/><line x1="74" y1="23" x2="69" y2="68" stroke="${c}" stroke-width="0.7"/>
+    </g>
   `, '0 0 100 100'),
 };
 
