@@ -4,115 +4,93 @@ import { Button } from '@/components/ui/button';
 import { Check, X, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-// ── Helper: render an emoji as a high-res image via Google Noto Emoji ────────
-// Converts an emoji to its Unicode codepoints for the Noto CDN URL
-function emojiToCDNUrl(emoji) {
-  const codePoints = [...emoji]
-    .map(c => c.codePointAt(0).toString(16).padStart(4, '0'))
-    .filter(c => c !== 'fe0f') // strip variation selector
-    .join('_');
-  return `https://fonts.gstatic.com/s/e/notoemoji/latest/${codePoints}/emoji.svg`;
+// ── Twemoji CDN helper — reliable transparent PNGs, no CORS issues ───────────
+// Converts an emoji character to its Twemoji PNG URL
+function tw(emoji) {
+  const cp = [...emoji]
+    .map(c => c.codePointAt(0).toString(16))
+    .filter(c => c !== 'fe0f')
+    .join('-');
+  return `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${cp}.png`;
 }
 
-// ── Sticker catalogue ────────────────────────────────────────────────────────
-// Each item: { id, label, emoji, type: 'emoji'|'svg' }
-// 'emoji' type = rendered via Noto SVG for crisp quality
-// For face overlays we use dedicated transparent PNGs from open sources
 const CATEGORIES = [
   {
     label: '🎩 Hats',
     items: [
-      { id: 'tophat',       label: 'Top Hat',       src: 'https://em-content.zobj.net/thumbs/240/google/350/top-hat_1f3a9.png' },
-      { id: 'crown',        label: 'Crown',         src: 'https://em-content.zobj.net/thumbs/240/google/350/crown_1f451.png' },
-      { id: 'cowboy',       label: 'Cowboy Hat',    src: 'https://em-content.zobj.net/thumbs/240/google/350/cowboy-hat-face_1f920.png' },
-      { id: 'graduation',   label: 'Grad Cap',      src: 'https://em-content.zobj.net/thumbs/240/google/350/graduation-cap_1f393.png' },
-      { id: 'beret',        label: 'Beret',         src: 'https://em-content.zobj.net/thumbs/240/google/350/beret_1fa96.png' },
-      { id: 'helmet',       label: 'Helmet',        src: 'https://em-content.zobj.net/thumbs/240/google/350/military-helmet_1fa96.png' },
-      { id: 'tophat2',      label: 'Witch Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/witch_1f9d9.png' },
-      { id: 'santa_hat',    label: 'Santa Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/santa-claus_1f385.png' },
-      { id: 'party_hat',    label: 'Party Hat',     src: 'https://em-content.zobj.net/thumbs/240/google/350/partying-face_1f973.png' },
-      { id: 'pirate',       label: 'Pirate',        src: 'https://em-content.zobj.net/thumbs/240/google/350/pirate-flag_1f3f4-200d-2620-fe0f.png' },
-      { id: 'detective',    label: 'Detective',     src: 'https://em-content.zobj.net/thumbs/240/google/350/detective_1f575.png' },
-      { id: 'chef',         label: 'Chef Hat',      src: 'https://em-content.zobj.net/thumbs/240/google/350/cook_1f9d1-200d-1f373.png' },
+      { id: 'tophat',      label: 'Top Hat',     src: tw('🎩') },
+      { id: 'crown',       label: 'Crown',       src: tw('👑') },
+      { id: 'graduation',  label: 'Grad Cap',    src: tw('🎓') },
+      { id: 'beret',       label: 'Beret',       src: tw('🪖') },
+      { id: 'helmet',      label: 'Hard Hat',    src: tw('⛑️') },
     ],
   },
   {
     label: '👓 Eyewear',
     items: [
-      { id: 'sunglasses',   label: 'Sunglasses',    src: 'https://em-content.zobj.net/thumbs/240/google/350/sunglasses_1f576.png' },
-      { id: 'glasses',      label: 'Glasses',       src: 'https://em-content.zobj.net/thumbs/240/google/350/glasses_1f453.png' },
-      { id: 'goggles',      label: 'Goggles',       src: 'https://em-content.zobj.net/thumbs/240/google/350/goggles_1f97d.png' },
-      { id: 'monocle',      label: 'Monocle',       src: 'https://em-content.zobj.net/thumbs/240/google/350/face-with-monocle_1f9d0.png' },
-      { id: 'nerd_glasses', label: 'Nerd',          src: 'https://em-content.zobj.net/thumbs/240/google/350/nerd-face_1f913.png' },
-      { id: 'star_glasses', label: 'Star Glasses',  src: 'https://em-content.zobj.net/thumbs/240/google/350/star-struck_1f929.png' },
+      { id: 'sunglasses',  label: 'Sunglasses',  src: tw('🕶️') },
+      { id: 'glasses',     label: 'Glasses',     src: tw('👓') },
+      { id: 'goggles',     label: 'Goggles',     src: tw('🥽') },
     ],
   },
   {
     label: '🥸 Facial Hair',
     items: [
-      { id: 'moustache',    label: 'Moustache',     src: 'https://em-content.zobj.net/thumbs/240/google/350/moustache_1f9f4.png' },
-      { id: 'beard',        label: 'Full Beard',    src: 'https://em-content.zobj.net/thumbs/240/google/350/man-beard_1f9d4.png' },
-      { id: 'beard_w',      label: 'Beard (F)',     src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-beard_1f9d4-200d-2640-fe0f.png' },
-      { id: 'santa_beard',  label: 'Santa Beard',   src: 'https://em-content.zobj.net/thumbs/240/google/350/santa-claus_1f385.png' },
-      { id: 'curly_face',   label: 'Fancy Stache',  src: 'https://em-content.zobj.net/thumbs/240/google/350/face-with-open-mouth_1f62e.png' },
-    ],
-  },
-  {
-    label: '💇 Hair',
-    items: [
-      { id: 'curly_hair',   label: 'Curly',         src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-curly-hair_1f469-200d-1f9b1.png' },
-      { id: 'red_hair',     label: 'Red Hair',      src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-red-hair_1f469-200d-1f9b0.png' },
-      { id: 'white_hair',   label: 'White Hair',    src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-white-hair_1f469-200d-1f9b3.png' },
-      { id: 'afro',         label: 'Afro',          src: 'https://em-content.zobj.net/thumbs/240/google/350/woman-curly-hair_1f469-200d-1f9b1.png' },
-      { id: 'bald',         label: 'Bald',          src: 'https://em-content.zobj.net/thumbs/240/google/350/person-bald_1f9d1-200d-1f9b2.png' },
-      { id: 'elf',          label: 'Elf',           src: 'https://em-content.zobj.net/thumbs/240/google/350/elf_1f9dd.png' },
+      { id: 'moustache',   label: 'Moustache',   src: tw('👨') },
+      { id: 'beard',       label: 'Beard',       src: tw('🧔') },
     ],
   },
   {
     label: '🪢 Accessories',
     items: [
-      { id: 'bowtie',       label: 'Bow Tie',       src: 'https://em-content.zobj.net/thumbs/240/google/350/bow-and-arrow_1f3f9.png' },
-      { id: 'necktie',      label: 'Neck Tie',      src: 'https://em-content.zobj.net/thumbs/240/google/350/necktie_1f454.png' },
-      { id: 'scarf',        label: 'Scarf',         src: 'https://em-content.zobj.net/thumbs/240/google/350/scarf_1f9e3.png' },
-      { id: 'handbag',      label: 'Handbag',       src: 'https://em-content.zobj.net/thumbs/240/google/350/handbag_1f45c.png' },
-      { id: 'crown2',       label: 'Tiara',         src: 'https://em-content.zobj.net/thumbs/240/google/350/crown_1f451.png' },
-      { id: 'medal',        label: 'Medal',         src: 'https://em-content.zobj.net/thumbs/240/google/350/sports-medal_1f3c5.png' },
+      { id: 'necktie',     label: 'Neck Tie',    src: tw('👔') },
+      { id: 'scarf',       label: 'Scarf',       src: tw('🧣') },
+      { id: 'gloves',      label: 'Gloves',      src: tw('🧤') },
+      { id: 'handbag',     label: 'Handbag',     src: tw('👜') },
+      { id: 'backpack',    label: 'Backpack',    src: tw('🎒') },
+      { id: 'medal',       label: 'Medal',       src: tw('🏅') },
+      { id: 'ribbon',      label: 'Ribbon',      src: tw('🎀') },
     ],
   },
   {
     label: '💎 Jewelry',
     items: [
-      { id: 'ring',         label: 'Ring',          src: 'https://em-content.zobj.net/thumbs/240/google/350/ring_1f48d.png' },
-      { id: 'gem',          label: 'Gem',           src: 'https://em-content.zobj.net/thumbs/240/google/350/gem-stone_1f48e.png' },
-      { id: 'necklace',     label: 'Necklace',      src: 'https://em-content.zobj.net/thumbs/240/google/350/beads_1f9ff.png' },
-      { id: 'earrings',     label: 'Earrings',      src: 'https://em-content.zobj.net/thumbs/240/google/350/crystal-ball_1f52e.png' },
-      { id: 'diamond',      label: 'Diamond',       src: 'https://em-content.zobj.net/thumbs/240/google/350/diamond-with-a-dot_1f4a0.png' },
-      { id: 'heart_charm',  label: 'Heart Charm',   src: 'https://em-content.zobj.net/thumbs/240/google/350/sparkling-heart_1f496.png' },
-      { id: 'id_badge',     label: 'Badge',         src: 'https://em-content.zobj.net/thumbs/240/google/350/id-button_1f194.png' },
-      { id: 'chain',        label: 'Chain',         src: 'https://em-content.zobj.net/thumbs/240/google/350/link_1f517.png' },
+      { id: 'ring',        label: 'Ring',        src: tw('💍') },
+      { id: 'gem',         label: 'Gem',         src: tw('💎') },
+      { id: 'necklace',    label: 'Beads',       src: tw('📿') },
+      { id: 'heart_charm', label: 'Heart',       src: tw('💖') },
+      { id: 'chain',       label: 'Chain',       src: tw('🔗') },
     ],
   },
   {
     label: '💉 Piercings',
     items: [
-      { id: 'nose_ring',    label: 'Nose Ring',     src: 'https://em-content.zobj.net/thumbs/240/google/350/ring_1f48d.png' },
-      { id: 'ear_stud',     label: 'Ear Stud',      src: 'https://em-content.zobj.net/thumbs/240/google/350/diamond-with-a-dot_1f4a0.png' },
-      { id: 'lip_ring',     label: 'Lip Ring',      src: 'https://em-content.zobj.net/thumbs/240/google/350/o-button_1f17e.png' },
-      { id: 'eyebrow',      label: 'Eyebrow Bar',   src: 'https://em-content.zobj.net/thumbs/240/google/350/minus_2796.png' },
+      { id: 'nose_ring',   label: 'Nose Ring',   src: tw('💍') },
+      { id: 'ear_stud',    label: 'Ear Stud',    src: tw('🔘') },
+      { id: 'gem_stud',    label: 'Gem Stud',    src: tw('💎') },
     ],
   },
   {
     label: '🖋️ Tattoos',
     items: [
-      { id: 'tattoo_heart', label: 'Heart',         src: 'https://em-content.zobj.net/thumbs/240/google/350/heart-suit_2665.png' },
-      { id: 'tattoo_anchor',label: 'Anchor',        src: 'https://em-content.zobj.net/thumbs/240/google/350/anchor_2693.png' },
-      { id: 'tattoo_snake', label: 'Snake',         src: 'https://em-content.zobj.net/thumbs/240/google/350/snake_1f40d.png' },
-      { id: 'tattoo_rose',  label: 'Rose',          src: 'https://em-content.zobj.net/thumbs/240/google/350/rose_1f339.png' },
-      { id: 'tattoo_skull', label: 'Skull',         src: 'https://em-content.zobj.net/thumbs/240/google/350/skull_1f480.png' },
-      { id: 'tattoo_star',  label: 'Star',          src: 'https://em-content.zobj.net/thumbs/240/google/350/star_2b50.png' },
-      { id: 'tattoo_lightning', label: 'Lightning', src: 'https://em-content.zobj.net/thumbs/240/google/350/high-voltage_26a1.png' },
-      { id: 'tattoo_infinity', label: 'Infinity',   src: 'https://em-content.zobj.net/thumbs/240/google/350/infinity_267e.png' },
-      { id: 'tattoo_dragon',label: 'Dragon',        src: 'https://em-content.zobj.net/thumbs/240/google/350/dragon_1f409.png' },
+      { id: 'tattoo_heart',    label: 'Heart',     src: tw('❤️') },
+      { id: 'tattoo_anchor',   label: 'Anchor',    src: tw('⚓') },
+      { id: 'tattoo_snake',    label: 'Snake',     src: tw('🐍') },
+      { id: 'tattoo_rose',     label: 'Rose',      src: tw('🌹') },
+      { id: 'tattoo_skull',    label: 'Skull',     src: tw('💀') },
+      { id: 'tattoo_star',     label: 'Star',      src: tw('⭐') },
+      { id: 'tattoo_lightning',label: 'Lightning', src: tw('⚡') },
+      { id: 'tattoo_infinity', label: 'Infinity',  src: tw('♾️') },
+      { id: 'tattoo_dragon',   label: 'Dragon',    src: tw('🐉') },
+      { id: 'tattoo_butterfly',label: 'Butterfly', src: tw('🦋') },
+      { id: 'tattoo_lion',     label: 'Lion',      src: tw('🦁') },
+      { id: 'tattoo_wolf',     label: 'Wolf',      src: tw('🐺') },
+      { id: 'tattoo_flame',    label: 'Flame',     src: tw('🔥') },
+      { id: 'tattoo_moon',     label: 'Moon',      src: tw('🌙') },
+      { id: 'tattoo_compass',  label: 'Compass',   src: tw('🧭') },
+      { id: 'tattoo_feather',  label: 'Feather',   src: tw('🪶') },
+      { id: 'tattoo_sword',    label: 'Sword',     src: tw('⚔️') },
+      { id: 'tattoo_eye',      label: 'Eye',       src: tw('👁️') },
     ],
   },
 ];
@@ -204,7 +182,6 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
         alt={sticker.label}
         style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none', imageRendering: 'crisp-edges' }}
         draggable={false}
-        crossOrigin="anonymous"
       />
 
       {isSelected && (
@@ -357,7 +334,7 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
                     onClick={() => setSelectedId(s.id)}
                     className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border cursor-pointer transition-colors ${selectedId === s.id ? 'border-accent bg-accent/10 text-accent-foreground' : 'border-border hover:border-accent/50'}`}
                   >
-                    <img src={s.src} alt={s.label} className="w-4 h-4 object-contain" crossOrigin="anonymous" />
+                    <img src={s.src} alt={s.label} className="w-4 h-4 object-contain" />
                     <span>{s.label}</span>
                     <button onClick={(e) => { e.stopPropagation(); deleteSticker(s.id); }} className="text-muted-foreground hover:text-destructive ml-0.5 leading-none">✕</button>
                   </div>
@@ -394,7 +371,6 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
                     src={item.src}
                     alt={item.label}
                     className="w-12 h-12 object-contain"
-                    crossOrigin="anonymous"
                     loading="lazy"
                   />
                   <span className="text-[10px] text-muted-foreground truncate w-full text-center leading-tight">{item.label}</span>
