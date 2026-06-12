@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bell, Search, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,11 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { base44 } from '@/api/base44Client';
 import { ROLES } from '@/lib/constants';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
   const initials = (user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const roleLabel = ROLES.find(r => r.value === user?.role)?.label || user?.role || 'Staff';
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
@@ -35,7 +37,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
           <Bell className="w-5 h-5 text-muted-foreground" />
         </Button>
 
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors">
               <Avatar className="w-10 h-10">
@@ -50,13 +52,13 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
               </div>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48" onMouseLeave={() => setOpen(false)}>
             <DropdownMenuItem className="text-xs text-muted-foreground">{user?.email}</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <Link to="/user/settings" className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted">
+            <DropdownMenuItem onClick={() => { setOpen(false); navigate('/user/settings'); }}>
               <Settings className="w-4 h-4" />
               Settings
-            </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => base44.auth.logout('/login')}>
               Sign Out
