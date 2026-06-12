@@ -55,7 +55,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
                 className="w-10 h-10 rounded-xl flex-shrink-0 object-contain"
               />
               {!collapsed && (
-                <span className="font-display font-bold text-sidebar-foreground text-xl truncate">Candora</span>
+                <span className="font-display font-bold text-sidebar-primary text-sm truncate">CANDORA</span>
               )}
             </div>
             <Tooltip>
