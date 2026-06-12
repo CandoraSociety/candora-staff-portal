@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import EmployeeForm from './EmployeeForm';
 import EmployeeHourStats from './EmployeeHourStats';
 import { calculateMilestones } from '@/lib/employeeMilestones';
+import { formatPhoneNumber } from '@/lib/utils';
 
 const statusColors = {
   active: 'bg-green-50 text-green-700 border-green-200',
@@ -137,7 +138,7 @@ export default function EmployeeDetail({ employee, onEdit, onDelete }) {
             <Phone className="w-4 h-4 text-muted-foreground" />
             <div>
               <p className="text-muted-foreground text-xs">Phone</p>
-              <p className="font-medium">{employee.phone}</p>
+              <p className="font-medium">{formatPhoneNumber(employee.phone)}</p>
             </div>
           </div>
         )}

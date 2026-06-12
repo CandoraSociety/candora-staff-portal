@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Mail, Phone, Building2 } from 'lucide-react';
+import { formatPhoneNumber } from '@/lib/utils';
 
 export default function EmployeeInfoCard({ user }) {
   const { data: employeeRecord } = useQuery({
@@ -52,7 +53,7 @@ export default function EmployeeInfoCard({ user }) {
           {employeeRecord?.phone && (
             <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
               <Phone className="w-3 h-3" />
-              {employeeRecord.phone}
+              {formatPhoneNumber(employeeRecord.phone)}
             </span>
           )}
         </div>
