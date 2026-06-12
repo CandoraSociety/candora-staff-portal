@@ -441,7 +441,7 @@ function StickerOverlay({ sticker, isSelected, onSelect, onUpdate, onDelete, con
 }
 
 // ── Main dialog ──────────────────────────────────────────────────────────────
-export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }) {
+export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose, initialStickers = [], initialHairColor = '#1a1a1a' }) {
   const canvasRef = useRef(null);
   const [stickers, setStickers] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -451,7 +451,11 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
   const CONTAINER_SIZE = 380;
 
   useEffect(() => {
-    if (open) { setStickers([]); setSelectedId(null); }
+    if (open) {
+      setStickers(initialStickers);
+      setHairColor(initialHairColor);
+      setSelectedId(null);
+    }
   }, [open, imageSrc]);
 
   const addSticker = (item) => {
@@ -510,7 +514,7 @@ export default function ProfileEffectsDialog({ open, imageSrc, onSave, onClose }
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'profile-effect.jpg', { type: 'image/jpeg' });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await onSave(file_url);
+      await onSave(file_url, stickers, hairColor);
     } catch (err) {
       alert('Failed to save: ' + (err.message || 'Unknown error'));
     } finally {

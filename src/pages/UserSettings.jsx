@@ -43,6 +43,8 @@ export default function UserSettings() {
   const [editEmployeeOpen, setEditEmployeeOpen] = useState(false);
   const [effectsDialogOpen, setEffectsDialogOpen] = useState(false);
   const [effectsImageSrc, setEffectsImageSrc] = useState(null);
+  const [savedStickers, setSavedStickers] = useState([]);
+  const [savedHairColor, setSavedHairColor] = useState('#1a1a1a');
 
 
   const handleFileUpload = (e) => {
@@ -63,6 +65,8 @@ export default function UserSettings() {
       await base44.auth.updateMe({ avatar_url: croppedImageUrl });
       setProfilePicture(croppedImageUrl);
       setOriginalPhoto(croppedImageUrl);
+      setSavedStickers([]);
+      setSavedHairColor('#1a1a1a');
       queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: croppedImageUrl } : old);
       await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       setCropDialogOpen(false);
@@ -158,6 +162,8 @@ export default function UserSettings() {
                         onClick={async () => {
                           setProfilePicture('');
                           setOriginalPhoto('');
+                          setSavedStickers([]);
+                          setSavedHairColor('#1a1a1a');
                           await base44.auth.updateMe({ avatar_url: '' });
                           queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: '' } : old);
                           await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -257,8 +263,12 @@ export default function UserSettings() {
         <ProfileEffectsDialog
           open={effectsDialogOpen}
           imageSrc={effectsImageSrc}
-          onSave={async (url) => {
+          initialStickers={savedStickers}
+          initialHairColor={savedHairColor}
+          onSave={async (url, stickers, hairColor) => {
             setProfilePicture(url);
+            setSavedStickers(stickers || []);
+            setSavedHairColor(hairColor || '#1a1a1a');
             // Do NOT update originalPhoto — keeps the clean base for re-editing effects
             await base44.auth.updateMe({ avatar_url: url });
             queryClient.setQueryData(['currentUser'], (old) => old ? { ...old, avatar_url: url } : old);
