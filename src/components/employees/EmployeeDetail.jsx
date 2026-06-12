@@ -62,7 +62,7 @@ export default function EmployeeDetail({ employee, onEdit, onDelete }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
       {/* In Memoriam Banner */}
       {isDeceased && (
         <div className="bg-gradient-to-r from-purple-100 via-amber-50 to-purple-100 border border-purple-200 rounded-xl p-6 text-center relative overflow-hidden">
@@ -235,7 +235,7 @@ export default function EmployeeDetail({ employee, onEdit, onDelete }) {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Employee</DialogTitle></DialogHeader>
           <EmployeeForm employee={employee} onSubmit={(data) => { updateMutation.mutate({ id: employee.id, data }); setEditOpen(false); }} isLoading={updateMutation.isPending} />
         </DialogContent>
