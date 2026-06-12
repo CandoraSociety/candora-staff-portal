@@ -49,9 +49,11 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             collapsed ? "justify-center" : ""
           )}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-                <span className="text-primary-foreground font-display font-bold text-lg">C</span>
-              </div>
+              <img
+                src="https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png"
+                alt="Candora"
+                className="w-10 h-10 rounded-xl flex-shrink-0 object-contain"
+              />
               {!collapsed && (
                 <span className="font-display font-bold text-sidebar-foreground text-xl truncate">Candora</span>
               )}
