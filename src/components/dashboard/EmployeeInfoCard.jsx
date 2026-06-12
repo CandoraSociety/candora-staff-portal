@@ -33,27 +33,27 @@ export default function EmployeeInfoCard({ user }) {
       </Avatar>
 
       <div className="flex-1 min-w-0 relative z-10">
-        <h3 className="font-bold text-xl leading-tight truncate">{name}</h3>
+        <h3 className="font-bold text-xl leading-tight truncate"><span>{name}</span></h3>
         {employeeRecord?.position && (
-          <p className="text-sm font-medium text-accent-foreground/80 mt-0.5">{employeeRecord.position}</p>
+          <p className="text-sm font-medium text-accent-foreground/80 mt-0.5"><span>{employeeRecord.position}</span></p>
         )}
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
           {employeeRecord?.department && (
             <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
               <Building2 className="w-3 h-3" />
-              {employeeRecord.department}
+              <span>{employeeRecord.department}</span>
             </span>
           )}
           {user?.email && (
             <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
               <Mail className="w-3 h-3" />
-              {user.email}
+              <span>{user.email}</span>
             </span>
           )}
           {employeeRecord?.phone && (
             <span className="flex items-center gap-1 text-xs text-accent-foreground/70">
               <Phone className="w-3 h-3" />
-              {formatPhoneNumber(employeeRecord.phone)}
+              <span>{formatPhoneNumber(employeeRecord.phone)}</span>
             </span>
           )}
         </div>

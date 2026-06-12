@@ -20,8 +20,8 @@ export default function StatsWidget({ stats }) {
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${item.color} mb-3`}>
                 <Icon className="w-4 h-4" />
               </div>
-              <p className="text-2xl font-display font-bold text-foreground">{item.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+              <p className="text-2xl font-display font-bold text-foreground"><span>{item.value}</span></p>
+              <p className="text-xs text-muted-foreground mt-0.5"><span>{item.label}</span></p>
             </CardContent>
           </Card>
         );

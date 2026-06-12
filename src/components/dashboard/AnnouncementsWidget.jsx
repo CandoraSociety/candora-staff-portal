@@ -39,10 +39,10 @@ export default function AnnouncementsWidget({ announcements = [] }) {
               <div key={ann.id} className={`p-3 rounded-xl border ${config.color}`}>
                 <div className="flex items-start gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{ann.title}</p>
-                    <p className="text-xs mt-1 opacity-80 line-clamp-2">{ann.content}</p>
+                    <p className="text-sm font-medium"><span>{ann.title}</span></p>
+                    <p className="text-xs mt-1 opacity-80 line-clamp-2"><span>{ann.content}</span></p>
                     <p className="text-[10px] mt-2 opacity-60">
-                      {formatDistanceToNow(new Date(ann.created_date), { addSuffix: true })}
+                      <span>{formatDistanceToNow(new Date(ann.created_date), { addSuffix: true })}</span>
                     </p>
                   </div>
                 </div>
