@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useOutletContext, useNavigate, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 import WelcomeWidget from '@/components/dashboard/WelcomeWidget';
@@ -11,7 +11,7 @@ import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
@@ -20,19 +20,24 @@ const ICON_MAP = {
   Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Sparkles,
 };
 
-function PortalCard({ card }) {
+function PortalCard({ card, pinned, onPin }) {
   const IconComponent = ICON_MAP[card.icon] || LayoutGrid;
   return (
-    <div className="group w-52 p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
+    <div className="group relative w-52 p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
+      {/* Pin toggle button */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPin(card.id); }}
+        title={pinned ? 'Unpin from top' : 'Pin to top'}
+        className={`absolute top-2 right-2 p-1 rounded-md transition-all ${pinned ? 'text-primary opacity-100' : 'text-muted-foreground opacity-0 group-hover:opacity-100'} hover:bg-muted`}
+      >
+        {pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+      </button>
       <div className="flex items-center gap-4">
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:opacity-90 transition-opacity"
           style={{ backgroundColor: card.color ? card.color + '22' : 'hsl(var(--primary)/0.1)' }}
         >
-          <IconComponent
-            className="h-6 w-6"
-            style={{ color: card.color || 'hsl(var(--primary))' }}
-          />
+          <IconComponent className="h-6 w-6" style={{ color: card.color || 'hsl(var(--primary))' }} />
         </div>
         <div className="min-w-0">
           <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{card.name}</h3>
@@ -45,8 +50,41 @@ function PortalCard({ card }) {
   );
 }
 
+function PinnedPortalBanner({ card, onUnpin }) {
+  const IconComponent = ICON_MAP[card.icon] || LayoutGrid;
+  const inner = (
+    <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border-2 border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all cursor-pointer group">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: card.color ? card.color + '22' : 'hsl(var(--primary)/0.1)' }}>
+          <IconComponent className="h-6 w-6" style={{ color: card.color || 'hsl(var(--primary))' }} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <Pin className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs text-primary font-semibold uppercase tracking-wide">Pinned Portal</span>
+          </div>
+          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg">{card.name}</h3>
+          {card.description && <p className="text-sm text-muted-foreground">{card.description}</p>}
+        </div>
+      </div>
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUnpin(); }}
+        title="Unpin"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive px-2 py-1 rounded-md hover:bg-destructive/10 transition-colors flex-shrink-0"
+      >
+        <PinOff className="w-3.5 h-3.5" />
+        Unpin
+      </button>
+    </div>
+  );
+  return card.is_external
+    ? <a href={card.url} target="_blank" rel="noopener noreferrer">{inner}</a>
+    : <Link to={card.url || '#'}>{inner}</Link>;
+}
+
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
+  const queryClient = useQueryClient();
 
   const { data: cards = [] } = useQuery({
     queryKey: ['portalCards'],
@@ -81,6 +119,21 @@ export default function Dashboard() {
 
   const accessibleCards = cards.filter(card => access.canAccessCard(card));
 
+  const pinnedPortalId = userPreferences?.pinned_portal_id || null;
+  const pinnedCard = pinnedPortalId ? accessibleCards.find(c => c.id === pinnedPortalId) : null;
+
+  const handlePin = async (cardId) => {
+    const newPinnedId = pinnedPortalId === cardId ? null : cardId;
+    try {
+      if (userPreferences) {
+        await base44.entities.UserDashboardPreference.update(userPreferences.id, { pinned_portal_id: newPinnedId });
+      } else {
+        await base44.entities.UserDashboardPreference.create({ user_id: user.id, pinned_portal_id: newPinnedId });
+      }
+      queryClient.invalidateQueries(['userPreferences', user?.id]);
+    } catch {}
+  };
+
   const userAnnouncements = announcements.filter(a => {
     if (!a.is_active) return false;
     if (a.expires_at && new Date(a.expires_at) < new Date()) return false;
@@ -101,6 +154,11 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Employee Info Card */}
       <EmployeeInfoCard user={user} />
+
+      {/* Pinned Portal */}
+      {pinnedCard && (
+        <PinnedPortalBanner card={pinnedCard} onUnpin={() => handlePin(pinnedCard.id)} />
+      )}
 
       {/* Hero Section with Logo */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-accent via-accent/90 to-accent-foreground p-12">
@@ -137,11 +195,11 @@ export default function Dashboard() {
           {accessibleCards.filter(c => c.is_enabled).map(card => (
             card.is_external ? (
               <a key={card.id} href={card.url} target="_blank" rel="noopener noreferrer" className="block flex-shrink-0">
-                <PortalCard card={card} />
+                <PortalCard card={card} pinned={pinnedPortalId === card.id} onPin={handlePin} />
               </a>
             ) : (
               <Link key={card.id} to={card.url || '#'} className="block flex-shrink-0">
-                <PortalCard card={card} />
+                <PortalCard card={card} pinned={pinnedPortalId === card.id} onPin={handlePin} />
               </Link>
             )
           ))}
