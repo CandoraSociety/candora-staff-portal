@@ -68,6 +68,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
               onZoomChange={setZoom}
               onRotationChange={setRotation}
               onCropComplete={onCropCompleted}
+              restrictPosition={false}
             />
           )}
         </div>
