@@ -43,9 +43,9 @@ function PortalCard({ card, pinned, onPin }) {
           <IconComponent className="h-6 w-6" style={{ color: card.color || 'hsl(var(--primary))' }} />
         </div>
         <div className="min-w-0">
-          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{card.name}</h3>
+          <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate"><span>{card.name}</span></h3>
           {card.description && (
-            <p className="text-xs text-muted-foreground truncate">{card.description}</p>
+            <p className="text-xs text-muted-foreground truncate"><span>{card.description}</span></p>
           )}
         </div>
       </div>
@@ -66,8 +66,8 @@ function PinnedPortalBanner({ card, onUnpin }) {
             <Pin className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs text-primary font-semibold uppercase tracking-wide">Pinned Portal</span>
           </div>
-          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg">{card.name}</h3>
-          {card.description && <p className="text-sm text-muted-foreground">{card.description}</p>}
+          <h3 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg"><span>{card.name}</span></h3>
+          {card.description && <p className="text-sm text-muted-foreground"><span>{card.description}</span></p>}
         </div>
       </div>
       <button
@@ -187,8 +187,8 @@ export default function Dashboard() {
                 <h1 className="text-4xl font-display font-bold text-white mb-2">
                   Welcome Back
                 </h1>
-                <p className="text-primary text-lg font-semibold">{user?.full_name || 'Guest'}</p>
-                <p className="text-white/80 mt-1">Your integrated management platform</p>
+                <p className="text-primary text-lg font-semibold"><span>{user?.full_name || 'Guest'}</span></p>
+                <p className="text-white/80 mt-1"><span>Your integrated management platform</span></p>
               </div>
               <Link 
                 to="/user/settings" 
