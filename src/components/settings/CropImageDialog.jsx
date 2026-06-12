@@ -13,7 +13,6 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Reset state each time a new image is opened
   useEffect(() => {
     if (open) {
       setCrop({ x: 0, y: 0 });
@@ -28,11 +27,10 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   }, []);
 
   const handleCrop = async () => {
-    if (!croppedAreaPixels) return;
+    if (!croppedAreaPixels || !imageSrc) return;
     setIsSaving(true);
     try {
       const dataUrl = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
-      // Convert data URL to File and upload
       const res = await fetch(dataUrl);
       const blob = await res.blob();
       const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
@@ -51,9 +49,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Adjust Profile Picture</DialogTitle>
-          <DialogDescription>
-            Drag to reposition and use the slider to zoom
-          </DialogDescription>
+          <DialogDescription>Drag to reposition and use the slider to zoom</DialogDescription>
         </DialogHeader>
 
         <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ height: 500 }}>
@@ -127,43 +123,57 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
   );
 }
 
+function createImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   const image = await createImage(imageSrc);
 
-  const rotRad = (rotation * Math.PI) / 180;
-  const bBoxWidth = Math.abs(Math.cos(rotRad) * image.naturalWidth) + Math.abs(Math.sin(rotRad) * image.naturalHeight);
-  const bBoxHeight = Math.abs(Math.sin(rotRad) * image.naturalWidth) + Math.abs(Math.cos(rotRad) * image.naturalHeight);
+  // react-easy-crop's onCropComplete already gives us pixel coordinates
+  // relative to the *natural* image size when using a data URL with no scaling tricks.
+  // We just need to handle rotation of the full image first, then crop from that.
 
-  // Draw full rotated image onto a canvas
+  const rotRad = (rotation * Math.PI) / 180;
+
+  // Step 1: draw the full image rotated onto a temp canvas
+  const bBoxW = Math.round(
+    Math.abs(Math.cos(rotRad) * image.naturalWidth) + Math.abs(Math.sin(rotRad) * image.naturalHeight)
+  );
+  const bBoxH = Math.round(
+    Math.abs(Math.sin(rotRad) * image.naturalWidth) + Math.abs(Math.cos(rotRad) * image.naturalHeight)
+  );
+
   const rotCanvas = document.createElement('canvas');
-  rotCanvas.width = bBoxWidth;
-  rotCanvas.height = bBoxHeight;
+  rotCanvas.width = bBoxW;
+  rotCanvas.height = bBoxH;
   const rotCtx = rotCanvas.getContext('2d');
-  rotCtx.translate(bBoxWidth / 2, bBoxHeight / 2);
+  rotCtx.translate(bBoxW / 2, bBoxH / 2);
   rotCtx.rotate(rotRad);
   rotCtx.translate(-image.naturalWidth / 2, -image.naturalHeight / 2);
   rotCtx.drawImage(image, 0, 0);
 
-  // Extract the cropped region, capped at 400x400 for storage efficiency
-  const outputSize = Math.min(pixelCrop.width, 400);
-  const croppedCanvas = document.createElement('canvas');
-  croppedCanvas.width = outputSize;
-  croppedCanvas.height = outputSize;
-  const croppedCtx = croppedCanvas.getContext('2d');
-  croppedCtx.drawImage(
+  // Step 2: extract crop area from the rotated canvas, output at max 400x400
+  const outputSize = Math.min(Math.round(pixelCrop.width), 400);
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = outputSize;
+  cropCanvas.height = outputSize;
+  const cropCtx = cropCanvas.getContext('2d');
+  cropCtx.drawImage(
     rotCanvas,
-    pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
-    0, 0, outputSize, outputSize
+    Math.round(pixelCrop.x),
+    Math.round(pixelCrop.y),
+    Math.round(pixelCrop.width),
+    Math.round(pixelCrop.height),
+    0, 0,
+    outputSize,
+    outputSize
   );
 
-  return croppedCanvas.toDataURL('image/jpeg', 0.85);
-}
-
-function createImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', reject);
-    image.src = src;
-  });
+  return cropCanvas.toDataURL('image/jpeg', 0.9);
 }
