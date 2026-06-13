@@ -246,6 +246,7 @@ export default function EDOrgChart() {
             showSalary={showSalary}
             showNames={showNames}
             originalPositions={positions}
+            basePositions={null}
           />
         ) : currentScenario ? (
           <OrgChartSheet
@@ -256,6 +257,7 @@ export default function EDOrgChart() {
             showSalary={showSalary}
             showNames={showNames}
             originalPositions={positions}
+            basePositions={positions}
           />
         ) : null}
       </div>}

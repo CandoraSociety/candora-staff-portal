@@ -98,6 +98,7 @@ export default function OrgChartSheet({
   onDeletePosition, // (id) => void — canonical
   showSalary, showNames,
   originalPositions, // canonical positions for change-highlighting
+  basePositions, // base positions for delta calculation (original for scenarios)
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_POS);
@@ -205,7 +206,7 @@ export default function OrgChartSheet({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
-        <PayrollSummary positions={working} showSalary={showSalary} />
+        <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />
         <div className="flex items-center gap-2">
           {/* Layout toggle */}
           <div className="flex rounded-md border overflow-hidden">
