@@ -22,7 +22,7 @@ const TIERS = [
 
 export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
-  tier: "", reports_to_id: "", salary: "", is_vacant: false, notes: "",
+  tier: "", reports_to_id: "", dotted_line_reports_to_id: "", salary: "", is_vacant: false, notes: "",
   team_ids: []
 };
 
@@ -218,8 +218,25 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
   );
   const deptSuggestions = useMemo(() => {
     const all = allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : []));
-    return [...new Set(all.filter(Boolean))];
+    return [...new Set(all.filter(Boolean).map(d =>
+      d.toLowerCase().includes("employment") && d.toLowerCase().includes("social enterprise") ? "Social Enterprise" : d
+    ))];
   }, [allPositions]);
+
+  // Ensure a team exists for every department used across all positions
+  useEffect(() => {
+    if (!allPositions.length || !teams) return;
+    const allDepts = [...new Set(allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : [])).filter(Boolean))];
+    const missingDepts = allDepts.filter(d => !teams.some(t => t.name.toLowerCase() === d.toLowerCase()));
+    if (missingDepts.length === 0) return;
+    (async () => {
+      for (const dept of missingDepts) {
+        await base44.entities.EDOrgTeam.create({ name: dept });
+      }
+      qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPositions.length, teams.length]);
 
   // On save: create any missing teams for new departments, then call onSave with updated team_ids
   const handleSave = async () => {
@@ -306,7 +323,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Reports To</label>
+            <label className="text-xs text-muted-foreground">Reports To (solid line)</label>
             <Select value={form.reports_to_id || "none"} onValueChange={v => setForm({ ...form, reports_to_id: v === "none" ? "" : v })}>
               <SelectTrigger><SelectValue placeholder="No reporting relationship" /></SelectTrigger>
               <SelectContent>
@@ -318,10 +335,26 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
             </Select>
           </div>
 
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <span>Dotted-Line Reports To</span>
+              <span className="text-muted-foreground/50 font-normal">— secondary / advisory relationship</span>
+            </label>
+            <Select value={form.dotted_line_reports_to_id || "none"} onValueChange={v => setForm({ ...form, dotted_line_reports_to_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {(positions || []).filter(p => p.id !== editId && p.id !== form.reports_to_id).map(p => (
+                  <SelectItem key={p.id} value={p.id}>{p.title}{p.person_name ? ` (${p.person_name})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Teams — auto-populated from departments, but fully editable */}
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">
-              Teams <span className="text-muted-foreground/50">(auto-suggested from departments — edit freely)</span>
+              Teams <span className="text-muted-foreground/50">(auto-suggested — edit freely)</span>
             </label>
             <TeamMultiSelect
               selected={form.team_ids || []}

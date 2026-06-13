@@ -192,9 +192,29 @@ export default function OrgTreeLayout({ positions, originalPositions = [], isSce
     const midY = py + (cy - py) / 2;
     lines.push(
       <path
-        key={`${p.reports_to_id}-${p.id}`}
+        key={`solid-${p.reports_to_id}-${p.id}`}
         d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
         fill="none" stroke="hsl(var(--border))" strokeWidth="1.5"
+      />
+    );
+  });
+
+  // Dotted-line connectors
+  positions.forEach(p => {
+    if (!p.dotted_line_reports_to_id) return;
+    const parent = posMap[p.dotted_line_reports_to_id];
+    const child = posMap[p.id];
+    if (!parent || !child) return;
+    const px = parent.x + LABEL_W + PAD;
+    const py = parent.y + NODE_H + PAD;
+    const cx = child.x + LABEL_W + PAD;
+    const cy = child.y + PAD;
+    const midY = py + (cy - py) / 2;
+    lines.push(
+      <path
+        key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
+        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
+        fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6"
       />
     );
   });
