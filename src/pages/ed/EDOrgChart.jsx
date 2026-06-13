@@ -2,169 +2,368 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, User, UserX, DollarSign } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil } from "lucide-react";
+import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
+import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
 
-const TIERS = [
-  { value: "executive", label: "Executive" },
-  { value: "director", label: "Director" },
-  { value: "senior_manager", label: "Senior Manager" },
-  { value: "manager", label: "Manager" },
-  { value: "supervisor_team_lead", label: "Supervisor / Team Lead" },
-  { value: "frontline", label: "Frontline" },
-  { value: "assistant", label: "Assistant" },
-  { value: "practicum_placement", label: "Practicum Placement" },
-  { value: "specialist", label: "Specialist" },
-];
 
-const EMPTY = { title: "", person_name: "", department: "", tier: "", reports_to_id: "", salary: "", is_vacant: false, notes: "" };
-
-function OrgNode({ position, all, depth = 0, onEdit, onDelete }) {
-  const children = all.filter(p => p.reports_to_id === position.id);
-  const branchSalary = (function sum(pos) {
-    const kids = all.filter(p => p.reports_to_id === pos.id);
-    return (pos.salary || 0) + kids.reduce((s, c) => s + sum(c), 0);
-  })(position);
-
-  return (
-    <div className="flex flex-col items-center">
-      <div className={`group relative p-3 rounded-xl border-2 min-w-[140px] max-w-[180px] text-center ${position.is_vacant ? "border-dashed border-muted-foreground/40 bg-muted/20" : "border-border bg-card shadow-sm"}`}>
-        <div className="flex justify-center mb-1">
-          {position.is_vacant ? <UserX className="w-6 h-6 text-muted-foreground/50" /> : <User className="w-6 h-6 text-accent" />}
-        </div>
-        <p className="text-xs font-semibold leading-tight">{position.title}</p>
-        {position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
-        {position.tier && <p className="text-[10px] text-muted-foreground/60 italic">{TIERS.find(t => t.value === position.tier)?.label}</p>}
-        {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
-        {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
-        {position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}</p>}
-        <div className="absolute -top-2 -right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="w-5 h-5 bg-background border rounded-full flex items-center justify-center shadow-sm" onClick={() => onEdit(position)}>
-            <Pencil className="w-2.5 h-2.5" />
-          </button>
-          <button className="w-5 h-5 bg-background border rounded-full flex items-center justify-center shadow-sm" onClick={() => onDelete(position.id)}>
-            <Trash2 className="w-2.5 h-2.5 text-destructive" />
-          </button>
-        </div>
-        {children.length > 0 && (
-          <p className="text-xs text-muted-foreground/60 mt-1 flex items-center justify-center gap-0.5">
-            <DollarSign className="w-2.5 h-2.5" />{branchSalary.toLocaleString()}
-          </p>
-        )}
-      </div>
-
-      {children.length > 0 && (
-        <div className="flex flex-col items-center">
-          <div className="w-px h-6 bg-border" />
-          <div className="flex gap-6 items-start relative">
-            {children.length > 1 && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-border" />
-            )}
-            {children.map(child => (
-              <div key={child.id} className="flex flex-col items-center">
-                <div className="w-px h-6 bg-border" />
-                <OrgNode position={child} all={all} depth={depth + 1} onEdit={onEdit} onDelete={onDelete} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+// PDF export: use browser print on the chart area
+function printSheet(name) {
+  const el = document.getElementById("org-chart-print-area");
+  if (!el) return;
+  const win = window.open("", "_blank");
+  win.document.write(`<html><head><title>${name}</title><style>
+    body { font-family: sans-serif; }
+    * { box-sizing: border-box; }
+    @media print { body { margin: 0; } }
+  </style></head><body>${el.innerHTML}</body></html>`);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.close();
 }
 
 export default function EDOrgChart() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY);
-  const [editId, setEditId] = useState(null);
 
-  const { data: positions = [] } = useQuery({ queryKey: ["ed-org"], queryFn: () => base44.entities.EDOrgPosition.list() });
+  // ---- Canonical positions (Tab 0 = Original) ----
+  const { data: positions = [] } = useQuery({
+    queryKey: ["ed-org"],
+    queryFn: () => base44.entities.EDOrgPosition.list(),
+  });
 
-  const save = async () => {
-    if (!form.title.trim()) return;
+  // ---- Scenario sheets ----
+  const { data: scenarios = [] } = useQuery({
+    queryKey: ["ed-org-scenarios"],
+    queryFn: () => base44.entities.EDOrgScenario.list(),
+  });
+
+  // ---- UI state ----
+  const [activeTab, setActiveTab] = useState(0); // 0 = original
+  const [showSalary, setShowSalary] = useState(true);
+  const [showNames, setShowNames] = useState(true);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSelected, setCompareSelected] = useState([]);
+  const [newSheetDialog, setNewSheetDialog] = useState(false);
+  const [newSheetName, setNewSheetName] = useState("");
+  const [newSheetSource, setNewSheetSource] = useState("original"); // "original" | scenario id | "blank"
+  const [renameDialog, setRenameDialog] = useState(null); // scenario id
+  const [renameName, setRenameName] = useState("");
+
+  // ---- Canonical CRUD ----
+  const saveCanonical = async (form, editId) => {
     const data = { ...form, salary: parseFloat(form.salary) || 0 };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
     qc.invalidateQueries({ queryKey: ["ed-org"] });
-    setOpen(false); setForm(EMPTY); setEditId(null);
   };
 
-  const del = async (id) => { await base44.entities.EDOrgPosition.delete(id); qc.invalidateQueries({ queryKey: ["ed-org"] }); };
-  const openEdit = (p) => { setForm({ ...p }); setEditId(p.id); setOpen(true); };
+  const deleteCanonical = async (id) => {
+    await base44.entities.EDOrgPosition.delete(id);
+    qc.invalidateQueries({ queryKey: ["ed-org"] });
+  };
 
-  const roots = positions.filter(p => !p.reports_to_id || !positions.find(x => x.id === p.reports_to_id));
-  const totalSalary = positions.reduce((s, p) => s + (p.salary || 0), 0);
+  // ---- Scenario CRUD ----
+  const createScenario = async () => {
+    if (!newSheetName.trim()) return;
+    let snapshotPositions = [];
+    if (newSheetSource === "original") {
+      snapshotPositions = positions.map(p => ({ ...p, original_id: p.id, id: p.id }));
+    } else if (newSheetSource === "blank") {
+      snapshotPositions = [];
+    } else {
+      // duplicate another scenario
+      const src = scenarios.find(s => s.id === newSheetSource);
+      if (src) snapshotPositions = (src.positions || []).map(p => ({ ...p }));
+    }
+    await base44.entities.EDOrgScenario.create({
+      name: newSheetName.trim(),
+      positions: snapshotPositions,
+      owner_id: user?.id,
+    });
+    await qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
+    setNewSheetDialog(false);
+    setNewSheetName("");
+    setNewSheetSource("original");
+    // Switch to the new tab (will be last)
+    setActiveTab(scenarios.length + 1);
+  };
+
+  const saveScenarioPositions = async (scenarioId, newPositions) => {
+    await base44.entities.EDOrgScenario.update(scenarioId, { positions: newPositions });
+    qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
+  };
+
+  const deleteScenario = async (id) => {
+    await base44.entities.EDOrgScenario.delete(id);
+    qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
+    if (activeTab > scenarios.length - 1) setActiveTab(0);
+  };
+
+  const renameScenario = async () => {
+    if (!renameName.trim()) return;
+    await base44.entities.EDOrgScenario.update(renameDialog, { name: renameName.trim() });
+    qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
+    setRenameDialog(null);
+  };
+
+  // ---- Compare ----
+  const allSheets = [
+    { id: "original", name: "Original", positions, isScenario: false },
+    ...scenarios.map(s => ({ id: s.id, name: s.name, positions: s.positions || [], isScenario: true })),
+  ];
+
+  const toggleCompareSheet = (id) => {
+    setCompareSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const compareSheetsData = allSheets.filter(s => compareSelected.includes(s.id));
+
+  // ---- Current sheet ----
+  const currentScenario = activeTab > 0 ? scenarios[activeTab - 1] : null;
+
+  // ---- PDF export ----
+  const handleExportPDF = () => {
+    const tabName = activeTab === 0 ? "Original" : (currentScenario?.name || "Scenario");
+    printSheet(tabName);
+  };
+
+  const handleExportAll = () => {
+    allSheets.forEach((sheet, i) => {
+      setTimeout(() => printSheet(sheet.name), i * 800);
+    });
+  };
 
   return (
-    <div className="p-6 space-y-4 max-w-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Org Chart</h1>
-          {positions.length > 0 && <p className="text-sm text-muted-foreground">Total payroll: ${totalSalary.toLocaleString()} · {positions.length} positions ({positions.filter(p => p.is_vacant).length} vacant)</p>}
+    <div className="flex flex-col h-screen bg-background">
+      {/* Top toolbar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-card gap-3 flex-wrap">
+        <h1 className="text-xl font-bold">Org Chart</h1>
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          {/* Visibility toggle */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Eye className="w-4 h-4" /> View <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Show / Hide</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem checked={showSalary} onCheckedChange={setShowSalary}>
+                Salary & Payroll
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem checked={showNames} onCheckedChange={setShowNames}>
+                Staff Names
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Compare */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <GitCompare className="w-4 h-4" /> Compare <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>Select sheets to compare</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {allSheets.map(s => (
+                <DropdownMenuCheckboxItem
+                  key={s.id}
+                  checked={compareSelected.includes(s.id)}
+                  onCheckedChange={() => toggleCompareSheet(s.id)}
+                >
+                  {s.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+              <DropdownMenuSeparator />
+              <div className="px-2 py-1">
+                <Button
+                  size="sm" className="w-full"
+                  disabled={compareSelected.length < 2}
+                  onClick={() => setCompareMode(true)}
+                >
+                  Compare {compareSelected.length > 0 ? `(${compareSelected.length})` : ""}
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Export PDF */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <FileDown className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Save as PDF</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="px-2 py-1 space-y-1">
+                <Button size="sm" variant="outline" className="w-full" onClick={handleExportPDF}>
+                  Current sheet
+                </Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={handleExportAll}>
+                  All sheets
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Button size="sm" onClick={() => { setForm(EMPTY); setEditId(null); setOpen(true); }}>
-          <Plus className="w-4 h-4 mr-1" /> Add Position
-        </Button>
       </div>
 
-      {positions.length === 0 && <p className="text-sm text-muted-foreground text-center py-8">No positions yet.</p>}
-
-      <div className="overflow-x-auto pb-6">
-        <div className="flex gap-12 justify-center min-w-max pt-4">
-          {roots.map(r => <OrgNode key={r.id} position={r} all={positions} onEdit={openEdit} onDelete={del} />)}
-        </div>
+      {/* Chart area */}
+      <div className="flex-1 overflow-hidden" id="org-chart-print-area">
+        {activeTab === 0 ? (
+          <OrgChartSheet
+            positions={positions}
+            isOriginal
+            onSavePosition={saveCanonical}
+            onDeletePosition={deleteCanonical}
+            showSalary={showSalary}
+            showNames={showNames}
+            originalPositions={positions}
+          />
+        ) : currentScenario ? (
+          <OrgChartSheet
+            positions={positions}
+            scenarioPositions={currentScenario.positions || []}
+            onScenarioChange={(newPos) => saveScenarioPositions(currentScenario.id, newPos)}
+            isOriginal={false}
+            showSalary={showSalary}
+            showNames={showNames}
+            originalPositions={positions}
+          />
+        ) : null}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{editId ? "Edit Position" : "Add Position"}</DialogTitle></DialogHeader>
+      {/* Tab bar at bottom */}
+      <div className="border-t bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto">
+        {/* Original tab */}
+        <button
+          onClick={() => setActiveTab(0)}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-t-md text-sm font-medium border border-b-0 transition-colors whitespace-nowrap ${
+            activeTab === 0
+              ? "bg-background text-foreground border-border"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+          }`}
+        >
+          📋 Original
+        </button>
+
+        {/* Scenario tabs */}
+        {scenarios.map((s, i) => (
+          <div
+            key={s.id}
+            className={`group flex items-center gap-1 px-3 py-1.5 rounded-t-md text-sm border border-b-0 transition-colors whitespace-nowrap ${
+              activeTab === i + 1
+                ? "bg-background text-foreground border-border font-medium"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+            }`}
+          >
+            <button onClick={() => setActiveTab(i + 1)} className="flex items-center gap-1.5">
+              🔬 {s.name}
+            </button>
+            <button
+              onClick={() => { setRenameDialog(s.id); setRenameName(s.name); }}
+              className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
+            >
+              <Pencil className="w-2.5 h-2.5" />
+            </button>
+            <button
+              onClick={() => deleteScenario(s.id)}
+              className="opacity-0 group-hover:opacity-60 hover:!opacity-100 hover:text-destructive transition-opacity p-0.5 rounded"
+            >
+              <X className="w-2.5 h-2.5" />
+            </button>
+          </div>
+        ))}
+
+        {/* Add new sheet */}
+        <button
+          onClick={() => setNewSheetDialog(true)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-t-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent transition-colors whitespace-nowrap"
+        >
+          <Plus className="w-3.5 h-3.5" /> New Sheet
+        </button>
+
+        {/* Legend for scenario tabs */}
+        {activeTab > 0 && (
+          <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground px-2">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-blue-300 inline-block" /> Unchanged</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-orange-400 inline-block" /> Modified</span>
+          </div>
+        )}
+      </div>
+
+      {/* New Sheet Dialog */}
+      <Dialog open={newSheetDialog} onOpenChange={setNewSheetDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>New Scenario Sheet</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <Input placeholder="Job title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-            <Input placeholder="Person name (leave blank if vacant)" value={form.person_name} onChange={e => setForm({ ...form, person_name: e.target.value })} />
-            <Input placeholder="Department" value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} />
+            <Input
+              placeholder="Sheet name (e.g. Budget Cut Scenario)"
+              value={newSheetName}
+              onChange={e => setNewSheetName(e.target.value)}
+            />
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Tier</label>
-              <Select value={form.tier || "none"} onValueChange={v => setForm({ ...form, tier: v === "none" ? "" : v })}>
-                <SelectTrigger><SelectValue placeholder="Select tier" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— No tier —</SelectItem>
-                  {TIERS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <label className="text-xs text-muted-foreground">Start from</label>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newSheetSource === "original"} onChange={() => setNewSheetSource("original")} />
+                  <span className="text-sm">Duplicate Original</span>
+                </label>
+                {scenarios.map(s => (
+                  <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" checked={newSheetSource === s.id} onChange={() => setNewSheetSource(s.id)} />
+                    <span className="text-sm">Duplicate "{s.name}"</span>
+                  </label>
+                ))}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" checked={newSheetSource === "blank"} onChange={() => setNewSheetSource("blank")} />
+                  <span className="text-sm">Start blank</span>
+                </label>
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Reports To</label>
-              <Select value={form.reports_to_id || "none"} onValueChange={v => setForm({ ...form, reports_to_id: v === "none" ? "" : v })}>
-                <SelectTrigger><SelectValue placeholder="No reporting relationship" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None (top level)</SelectItem>
-                  {positions.filter(p => p.id !== editId).map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.title} {p.person_name ? `(${p.person_name})` : ""}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Input type="number" placeholder="Annual salary" value={form.salary} onChange={e => setForm({ ...form, salary: e.target.value })} />
-            <div className="flex items-center gap-2">
-              <Switch checked={form.is_vacant} onCheckedChange={v => setForm({ ...form, is_vacant: v })} />
-              <span className="text-sm">Mark as vacant</span>
-            </div>
-            <Input placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button onClick={save}>Save</Button>
+              <Button variant="outline" onClick={() => setNewSheetDialog(false)}>Cancel</Button>
+              <Button onClick={createScenario} disabled={!newSheetName.trim()}>Create</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog open={!!renameDialog} onOpenChange={v => !v && setRenameDialog(null)}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader><DialogTitle>Rename Sheet</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Input value={renameName} onChange={e => setRenameName(e.target.value)} />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRenameDialog(null)}>Cancel</Button>
+              <Button onClick={renameScenario}>Rename</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Compare overlay */}
+      {compareMode && compareSheetsData.length >= 2 && (
+        <OrgChartCompare
+          sheets={compareSheetsData}
+          onClose={() => setCompareMode(false)}
+          showSalary={showSalary}
+          showNames={showNames}
+          originalPositions={positions}
+        />
+      )}
     </div>
   );
 }

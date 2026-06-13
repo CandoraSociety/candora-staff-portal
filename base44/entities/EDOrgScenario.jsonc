@@ -1,0 +1,56 @@
+{
+  "name": "EDOrgScenario",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Scenario / sheet name"
+    },
+    "positions": {
+      "type": "array",
+      "description": "Snapshot of positions for this scenario",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "original_id": {
+            "type": "string",
+            "description": "ID from the canonical org if duplicated"
+          },
+          "title": {
+            "type": "string"
+          },
+          "person_name": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "reports_to_id": {
+            "type": "string"
+          },
+          "salary": {
+            "type": "number"
+          },
+          "is_vacant": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
