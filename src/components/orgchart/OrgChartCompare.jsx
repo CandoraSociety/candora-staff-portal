@@ -15,10 +15,14 @@ const TIER_LABELS = {
 
 function MiniCard({ position, showSalary, showNames, originalPositions, isScenario }) {
   let isChanged = false;
+  let wageIncreased = false;
   if (isScenario && originalPositions?.length > 0) {
     const orig = originalPositions.find(o => o.id === (position.original_id || position.id));
     if (!orig) isChanged = true;
-    else isChanged = orig.title !== position.title || orig.person_name !== position.person_name || orig.salary !== position.salary;
+    else {
+      isChanged = orig.title !== position.title || orig.person_name !== position.person_name || orig.salary !== position.salary;
+      wageIncreased = position.salary > orig.salary;
+    }
   }
   let borderClass = "border-border bg-card";
   if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
@@ -32,7 +36,11 @@ function MiniCard({ position, showSalary, showNames, originalPositions, isScenar
       <p className="text-xs font-semibold leading-tight">{position.title}</p>
       {showNames && position.person_name && <p className="text-[10px] text-muted-foreground">{position.person_name}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-[10px] mt-0.5">Vacant</Badge>}
-      {showSalary && position.salary > 0 && <p className="text-[10px] text-muted-foreground">${position.salary.toLocaleString()}</p>}
+      {showSalary && position.salary > 0 && (
+        <p className={`text-[10px] mt-0.5 ${wageIncreased ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>
+          ${position.salary.toLocaleString()}
+        </p>
+      )}
     </div>
   );
 }
@@ -91,10 +99,10 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
                     <PayrollSummary positions={s.positions} showSalary={showSalary} />
                     {i > 0 && (
                       <div className="mt-1 text-xs space-y-0.5">
-                        <p className={diffPositions !== 0 ? "font-semibold text-orange-600" : "text-muted-foreground"}>
+                        <p className={diffPositions !== 0 ? "font-semibold text-red-600 italic" : "text-muted-foreground"}>
                           Δ Positions: {fmtDiff(diffPositions)}
                         </p>
-                        <p className={diffAnnual !== 0 ? "font-semibold text-orange-600" : "text-muted-foreground"}>
+                        <p className={diffAnnual !== 0 ? "font-semibold text-red-600 italic" : "text-muted-foreground"}>
                           Δ Annual: {fmtDiff(diffAnnual)}
                         </p>
                       </div>
