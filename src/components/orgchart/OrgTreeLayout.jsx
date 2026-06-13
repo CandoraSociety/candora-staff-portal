@@ -36,11 +36,11 @@ const TIER_LABELS = {
   __none__: "Unassigned",
 };
 
-const NODE_W = 160;
-const NODE_H = 90;   // approximate card height
-const COL_GAP = 24;  // horizontal gap between sibling subtrees
-const ROW_GAP = 40;  // vertical gap between tier rows
-const TIER_LABEL_W = 130;
+const NODE_W = 150;
+const NODE_H = 82;   // approximate card height
+const COL_GAP = 12;  // horizontal gap between sibling subtrees
+const ROW_GAP = 20;  // vertical gap between tier rows
+const TIER_LABEL_W = 120;
 
 // --- Layout engine ---
 // Returns { positions: Map<id, {x,y}>, tierRows: [{tier, y}], totalWidth, totalHeight }
@@ -189,11 +189,11 @@ export default function OrgTreeLayout({ positions, originalPositions = [], isSce
     const py = parent.y + NODE_H + PAD;
     const cx = child.x + LABEL_W + PAD;
     const cy = child.y + PAD;
-    const midY = (py + cy) / 2;
+    const midY = py + (cy - py) / 2;
     lines.push(
       <path
         key={`${p.reports_to_id}-${p.id}`}
-        d={`M ${px} ${py} C ${px} ${midY}, ${cx} ${midY}, ${cx} ${cy}`}
+        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
         fill="none" stroke="hsl(var(--border))" strokeWidth="1.5"
       />
     );
