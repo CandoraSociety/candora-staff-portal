@@ -107,32 +107,35 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <Input
-          placeholder="New priority"
+          placeholder="New priority title..."
           value={newPriority.title}
           onChange={(e) => setNewPriority({ ...newPriority, title: e.target.value })}
-          className="h-9 flex-1"
+          onKeyPress={(e) => e.key === "Enter" && handleAddPriority()}
+          className="h-11 text-base w-full"
         />
-        <Input
-          type="date"
-          value={newPriority.due_date}
-          onChange={(e) => setNewPriority({ ...newPriority, due_date: e.target.value })}
-          className="h-9 w-32"
-        />
-        <Select value={newPriority.priority_level} onValueChange={(v) => setNewPriority({ ...newPriority, priority_level: v })}>
-          <SelectTrigger className="h-9 w-28">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PRIORITY_LEVELS.map(level => (
-              <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button onClick={handleAddPriority} size="default">
-          <Plus className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Input
+            type="date"
+            value={newPriority.due_date}
+            onChange={(e) => setNewPriority({ ...newPriority, due_date: e.target.value })}
+            className="h-9 flex-1"
+          />
+          <Select value={newPriority.priority_level} onValueChange={(v) => setNewPriority({ ...newPriority, priority_level: v })}>
+            <SelectTrigger className="h-9 w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITY_LEVELS.map(level => (
+                <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleAddPriority} size="default" className="h-9">
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {sortedPriorities.length === 0 ? (
