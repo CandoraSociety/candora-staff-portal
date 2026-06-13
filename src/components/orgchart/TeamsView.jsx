@@ -75,8 +75,8 @@ export default function TeamsView({ positions, currentUser }) {
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {teams.map(team => {
-            const members = positions.filter(p => (team.member_position_ids || []).includes(p.id));
             const lead = positions.find(p => p.id === team.lead_position_id);
+            const members = positions.filter(p => (team.member_position_ids || []).includes(p.id) && p.id !== team.lead_position_id);
             return (
               <div key={team.id} className="border rounded-xl p-4 bg-card shadow-sm">
                 <div className="flex items-start justify-between mb-3">
@@ -98,7 +98,7 @@ export default function TeamsView({ positions, currentUser }) {
                   </div>
                 )}
                 <div className="flex flex-wrap gap-1.5 mt-1">
-                  {members.length === 0 && <span className="text-xs text-muted-foreground/50 italic">No members yet</span>}
+                  {members.length === 0 && !lead && <span className="text-xs text-muted-foreground/50 italic">No members yet</span>}
                   {members.map(m => (
                     <div key={m.id} className="flex items-center gap-1 bg-muted/60 rounded-full px-2 py-0.5">
                       {m.is_vacant ? <UserX className="w-3 h-3 text-muted-foreground/50" /> : <User className="w-3 h-3 text-accent" />}
@@ -106,7 +106,7 @@ export default function TeamsView({ positions, currentUser }) {
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground/50 mt-2">{members.length} member{members.length !== 1 ? "s" : ""}</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-2">{members.length + (lead ? 1 : 0)} member{members.length + (lead ? 1 : 0) !== 1 ? "s" : ""}</p>
               </div>
             );
           })}
