@@ -44,6 +44,29 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
   const rows = [...TIER_ORDER.filter(t => allTiersPresent.has(t))];
   if (allTiersPresent.has("__none__")) rows.push("__none__");
 
+  // Calculate totals for each sheet
+  const sheetTotals = sheets.map(s => {
+    const annual = s.positions.reduce((sum, p) => {
+      if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
+        return sum + (parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year));
+      }
+      return sum + (p.salary || 0);
+    }, 0);
+    return {
+      positions: s.positions.length,
+      filled: s.positions.filter(p => !p.is_vacant).length,
+      vacant: s.positions.filter(p => p.is_vacant).length,
+      annual,
+      monthly: annual / 12,
+      biweekly: annual / 26,
+    };
+  });
+
+  // Calculate differences (vs first sheet)
+  const base = sheetTotals[0];
+  const fmt = (n) => "$" + Math.round(n).toLocaleString();
+  const fmtDiff = (n) => (n >= 0 ? "+" : "") + Math.round(n).toLocaleString();
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       <div className="flex items-center justify-between px-6 py-3 border-b bg-card shadow-sm">
@@ -58,12 +81,27 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
           <thead>
             <tr className="bg-muted/40 border-b">
               <th className="w-36 px-3 py-2 text-left text-xs font-semibold text-muted-foreground border-r">Tier</th>
-              {sheets.map((s, i) => (
-                <th key={i} className="px-4 py-2 text-left border-r last:border-r-0">
-                  <p className="font-semibold text-sm">{s.name}</p>
-                  <PayrollSummary positions={s.positions} showSalary={showSalary} />
-                </th>
-              ))}
+              {sheets.map((s, i) => {
+                const total = sheetTotals[i];
+                const diffPositions = i > 0 ? total.positions - base.positions : 0;
+                const diffAnnual = i > 0 ? total.annual - base.annual : 0;
+                return (
+                  <th key={i} className="px-4 py-2 text-left border-r last:border-r-0">
+                    <p className="font-semibold text-sm">{s.name}</p>
+                    <PayrollSummary positions={s.positions} showSalary={showSalary} />
+                    {i > 0 && (
+                      <div className="mt-1 text-xs space-y-0.5">
+                        <p className={diffPositions !== 0 ? "font-semibold text-orange-600" : "text-muted-foreground"}>
+                          Δ Positions: {fmtDiff(diffPositions)}
+                        </p>
+                        <p className={diffAnnual !== 0 ? "font-semibold text-orange-600" : "text-muted-foreground"}>
+                          Δ Annual: {fmtDiff(diffAnnual)}
+                        </p>
+                      </div>
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
