@@ -11,6 +11,20 @@
     "department": {
       "type": "string"
     },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "executive",
+        "director",
+        "senior_manager",
+        "manager",
+        "supervisor_team_lead",
+        "frontline",
+        "assistant",
+        "practicum_placement",
+        "specialist"
+      ]
+    },
     "reports_to_id": {
       "type": "string"
     },

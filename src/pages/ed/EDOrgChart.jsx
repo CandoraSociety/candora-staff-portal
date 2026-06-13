@@ -11,7 +11,19 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, User, UserX, DollarSign } from "lucide-react";
 
-const EMPTY = { title: "", person_name: "", department: "", reports_to_id: "", salary: "", is_vacant: false, notes: "" };
+const TIERS = [
+  { value: "executive", label: "Executive" },
+  { value: "director", label: "Director" },
+  { value: "senior_manager", label: "Senior Manager" },
+  { value: "manager", label: "Manager" },
+  { value: "supervisor_team_lead", label: "Supervisor / Team Lead" },
+  { value: "frontline", label: "Frontline" },
+  { value: "assistant", label: "Assistant" },
+  { value: "practicum_placement", label: "Practicum Placement" },
+  { value: "specialist", label: "Specialist" },
+];
+
+const EMPTY = { title: "", person_name: "", department: "", tier: "", reports_to_id: "", salary: "", is_vacant: false, notes: "" };
 
 function OrgNode({ position, all, depth = 0, onEdit, onDelete }) {
   const children = all.filter(p => p.reports_to_id === position.id);
@@ -28,6 +40,7 @@ function OrgNode({ position, all, depth = 0, onEdit, onDelete }) {
         </div>
         <p className="text-xs font-semibold leading-tight">{position.title}</p>
         {position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
+        {position.tier && <p className="text-[10px] text-muted-foreground/60 italic">{TIERS.find(t => t.value === position.tier)?.label}</p>}
         {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
         {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
         {position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}</p>}
@@ -117,6 +130,16 @@ export default function EDOrgChart() {
             <Input placeholder="Job title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <Input placeholder="Person name (leave blank if vacant)" value={form.person_name} onChange={e => setForm({ ...form, person_name: e.target.value })} />
             <Input placeholder="Department" value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} />
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Tier</label>
+              <Select value={form.tier || "none"} onValueChange={v => setForm({ ...form, tier: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Select tier" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— No tier —</SelectItem>
+                  {TIERS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Reports To</label>
               <Select value={form.reports_to_id || "none"} onValueChange={v => setForm({ ...form, reports_to_id: v === "none" ? "" : v })}>
