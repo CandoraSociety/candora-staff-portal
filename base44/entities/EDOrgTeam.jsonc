@@ -1,0 +1,33 @@
+{
+  "name": "EDOrgTeam",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string",
+      "description": "Hex color for team badge"
+    },
+    "member_position_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of EDOrgPosition records on this team"
+    },
+    "lead_position_id": {
+      "type": "string",
+      "description": "Position ID of team lead"
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil } from "lucide-react";
+import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users } from "lucide-react";
 import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
 import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
+import TeamsView from "@/components/orgchart/TeamsView";
 
 
 // PDF export: use browser print on the chart area
@@ -44,6 +45,7 @@ export default function EDOrgChart() {
   });
 
   // ---- UI state ----
+  const [mode, setMode] = useState("chart"); // "chart" | "teams"
   const [activeTab, setActiveTab] = useState(0); // 0 = original
   const [showSalary, setShowSalary] = useState(true);
   const [showNames, setShowNames] = useState(true);
@@ -143,7 +145,14 @@ export default function EDOrgChart() {
     <div className="flex flex-col h-screen bg-background">
       {/* Top toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-card gap-3 flex-wrap">
-        <h1 className="text-xl font-bold">Org Chart</h1>
+        <div className="flex items-center gap-1">
+          <h1 className="text-xl font-bold mr-3">Org Chart</h1>
+          {/* Mode toggle */}
+          <div className="flex rounded-md border overflow-hidden">
+            <button onClick={() => setMode("chart")} className={`px-3 py-1 text-sm transition-colors ${mode === "chart" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}>Chart</button>
+            <button onClick={() => setMode("teams")} className={`flex items-center gap-1 px-3 py-1 text-sm border-l transition-colors ${mode === "teams" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}><Users className="w-3.5 h-3.5" /> Teams</button>
+          </div>
+        </div>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           {/* Visibility toggle */}
           <DropdownMenu>
@@ -219,8 +228,15 @@ export default function EDOrgChart() {
         </div>
       </div>
 
+      {/* Teams mode */}
+      {mode === "teams" && (
+        <div className="flex-1 overflow-hidden">
+          <TeamsView positions={positions} currentUser={user} />
+        </div>
+      )}
+
       {/* Chart area */}
-      <div className="flex-1 overflow-hidden" id="org-chart-print-area">
+      {mode === "chart" && <div className="flex-1 overflow-hidden" id="org-chart-print-area">
         {activeTab === 0 ? (
           <OrgChartSheet
             positions={positions}
@@ -242,9 +258,11 @@ export default function EDOrgChart() {
             originalPositions={positions}
           />
         ) : null}
-      </div>
+      </div>}
 
-      {/* Tab bar at bottom */}
+      {/* Tab bar at bottom — only in chart mode */}
+      {mode === "teams" ? null :
+      /* Tab bar at bottom */
       <div className="border-t bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto">
         {/* Original tab */}
         <button
@@ -301,7 +319,7 @@ export default function EDOrgChart() {
             <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-orange-400 inline-block" /> Modified</span>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* New Sheet Dialog */}
       <Dialog open={newSheetDialog} onOpenChange={setNewSheetDialog}>

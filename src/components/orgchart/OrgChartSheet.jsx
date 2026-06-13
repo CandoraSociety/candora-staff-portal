@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3 } from "lucide-react";
-import OrgNode from "./OrgNode";
+import OrgTreeLayout from "./OrgTreeLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
 import PayrollSummary from "./PayrollSummary";
@@ -215,36 +215,20 @@ export default function OrgChartSheet({
 
         {/* Tree layout */}
         {layout === "tree" && (
-          <div>
-            {!isOriginal && draggingId && (
-              <div
-                className="mx-6 mb-2 h-10 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center text-xs text-muted-foreground"
-                onDragOver={e => e.preventDefault()}
-                onDrop={handleDropToRoot}
-              >
-                Drop here to make top-level
-              </div>
-            )}
-            <div className="flex gap-12 justify-center min-w-max px-6 pt-4">
-              {working.filter(p => !p.reports_to_id || !working.find(x => x.id === p.reports_to_id)).map(r => (
-                <OrgNode
-                  key={r.id}
-                  position={r}
-                  all={working}
-                  originalPositions={originalPositions}
-                  onEdit={openEdit}
-                  onDelete={handleDelete}
-                  showSalary={showSalary}
-                  showNames={showNames}
-                  isScenario={!isOriginal}
-                  draggingId={draggingId}
-                  onDragStart={setDraggingId}
-                  onDragOver={setDragOverId}
-                  onDrop={handleDrop}
-                />
-              ))}
-            </div>
-          </div>
+          <OrgTreeLayout
+            positions={working}
+            originalPositions={originalPositions}
+            isScenario={!isOriginal}
+            showSalary={showSalary}
+            showNames={showNames}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            draggingId={draggingId}
+            onDragStart={setDraggingId}
+            onDragOver={setDragOverId}
+            onDrop={handleDrop}
+            onDropToRoot={handleDropToRoot}
+          />
         )}
 
         {/* Tiers layout */}
