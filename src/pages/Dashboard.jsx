@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import WelcomeWidget from '@/components/dashboard/WelcomeWidget';
 import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
 import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
-import LiveDataWidget from '@/components/dashboard/LiveDataWidget';
+// LiveDataWidget moved to admin console
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import OrganizerWidget from '@/components/dashboard/OrganizerWidget';
@@ -219,7 +219,7 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {access.isAdmin && <LiveDataWidget stats={stats} allUsers={allUsers} departments={departments} permissions={permissions} />}
+      {/* Live data moved to Admin > Users & Access */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
