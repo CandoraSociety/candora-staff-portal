@@ -8,6 +8,13 @@ import { CheckSquare, FolderKanban, Target, BarChart2, Clock, StickyNote } from 
 import { Link } from "react-router-dom";
 import { format, isAfter, parseISO, addDays } from "date-fns";
 
+// Dashboard widgets — same components as main dashboard (shared data)
+import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
+import OrganizerWidget from "@/components/dashboard/OrganizerWidget";
+import HowToSearch from "@/components/howto/HowToSearch";
+import GoogleTranslateWidget from "@/components/dashboard/GoogleTranslateWidget";
+import RecentActivityWidget from "@/components/dashboard/RecentActivityWidget";
+
 function greeting() {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -18,29 +25,49 @@ function greeting() {
 export default function EDDashboard() {
   const { user } = useAuth();
 
-  const { data: tasks = [] } = useQuery({ queryKey: ["ed-tasks"], queryFn: () => base44.entities.EDTask.list() });
   const { data: projects = [] } = useQuery({ queryKey: ["ed-projects"], queryFn: () => base44.entities.EDProject.list() });
   const { data: objectives = [] } = useQuery({ queryKey: ["ed-objectives"], queryFn: () => base44.entities.EDObjective.list() });
   const { data: kpis = [] } = useQuery({ queryKey: ["ed-kpis"], queryFn: () => base44.entities.EDKPI.list() });
   const { data: notes = [] } = useQuery({ queryKey: ["ed-notes"], queryFn: () => base44.entities.EDNote.list() });
 
-  const activeTasks = tasks.filter(t => t.status === "in_progress" || t.status === "not_started");
+  // For widget rendering — use same tasks entity as main organizer
+  const { data: announcements = [] } = useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => base44.entities.Announcement.list("-created_date"),
+  });
+
+  // EA widget preferences (separate from main dashboard)
+  const { data: preferences } = useQuery({
+    queryKey: ["dashboardPreferences", user?.id],
+    queryFn: () => base44.entities.UserDashboardPreference.filter({ user_id: user?.id }).then(d => d[0]),
+    enabled: !!user?.id,
+  });
+  const { data: dbWidgets = [] } = useQuery({
+    queryKey: ["dashboardWidgets"],
+    queryFn: () => base44.entities.DashboardWidget.list(),
+  });
+
+  const edEnabled = preferences?.ed_enabled_widgets || [];
+  const lockedIds = dbWidgets.filter(w => w.locked_to_dashboard).map(w => w.widget_id);
+  const isOn = (id) => lockedIds.includes(id) || edEnabled.includes(id);
+
   const activeProjects = projects.filter(p => p.status === "active" || p.status === "planning");
   const activeObjectives = objectives.filter(o => o.status === "active");
-  const upcomingTasks = activeTasks
-    .filter(t => t.due_date)
-    .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
-    .slice(0, 5);
   const recentNotes = [...notes].sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date)).slice(0, 4);
 
   const stats = [
-    { label: "Active Tasks", value: activeTasks.length, icon: CheckSquare, color: "text-blue-500", bg: "bg-blue-50", to: "/ed/tasks" },
     { label: "Projects", value: activeProjects.length, icon: FolderKanban, color: "text-purple-500", bg: "bg-purple-50", to: "/ed/projects" },
     { label: "Objectives", value: activeObjectives.length, icon: Target, color: "text-green-500", bg: "bg-green-50", to: "/ed/opsp" },
     { label: "KPIs Tracked", value: kpis.length, icon: BarChart2, color: "text-amber-500", bg: "bg-amber-50", to: "/ed/kpis" },
+    { label: "Notes", value: notes.length, icon: StickyNote, color: "text-rose-500", bg: "bg-rose-50", to: "/ed/notes" },
   ];
 
-  const priorityColor = { critical: "destructive", high: "default", medium: "secondary", low: "outline" };
+  const userAnnouncements = announcements.filter(a => {
+    if (!a.is_active) return false;
+    if (a.expires_at && new Date(a.expires_at) < new Date()) return false;
+    if (a.target_roles && a.target_roles.length > 0) return a.target_roles.includes(user?.role);
+    return true;
+  });
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -69,29 +96,8 @@ export default function EDDashboard() {
         ))}
       </div>
 
+      {/* Project Progress + Recent Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Tasks */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-500" /> Upcoming Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {upcomingTasks.length === 0 && <p className="text-sm text-muted-foreground">No upcoming tasks.</p>}
-            {upcomingTasks.map(task => (
-              <div key={task.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40">
-                <span className="text-sm truncate flex-1">{task.title}</span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Badge variant={priorityColor[task.priority] || "outline"} className="text-xs">{task.priority}</Badge>
-                  {task.due_date && <span className="text-xs text-muted-foreground">{format(parseISO(task.due_date), "MMM d")}</span>}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Project Progress */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -100,7 +106,7 @@ export default function EDDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             {activeProjects.length === 0 && <p className="text-sm text-muted-foreground">No active projects.</p>}
-            {activeProjects.slice(0, 4).map(p => (
+            {activeProjects.slice(0, 5).map(p => (
               <div key={p.id} className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="font-medium truncate flex-1">{p.name}</span>
@@ -112,27 +118,6 @@ export default function EDDashboard() {
           </CardContent>
         </Card>
 
-        {/* Time Horizon Snapshot */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Time Horizon Snapshot</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {["This Week", "This Month", "This Quarter"].map((label, i) => {
-              const days = [7, 30, 90][i];
-              const horizon = addDays(new Date(), days);
-              const count = activeTasks.filter(t => t.due_date && isAfter(horizon, parseISO(t.due_date))).length;
-              return (
-                <div key={label} className="flex items-center justify-between p-2 rounded-lg bg-muted/40">
-                  <span className="text-sm">{label}</span>
-                  <Badge variant="secondary">{count} tasks due</Badge>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Recent Notes */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -150,6 +135,24 @@ export default function EDDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Optional widgets from main dashboard (shared data) */}
+      {(isOn("howto") || isOn("organizer") || isOn("google_translate") || isOn("announcements") || isOn("recent_activity")) && (
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dashboard Widgets</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
+              {isOn("howto") && <HowToSearch user={user} />}
+              {isOn("organizer") && <OrganizerWidget />}
+              {isOn("google_translate") && <GoogleTranslateWidget />}
+              {isOn("recent_activity") && <RecentActivityWidget />}
+            </div>
+            <div>
+              {isOn("announcements") && <AnnouncementsWidget announcements={userAnnouncements} />}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

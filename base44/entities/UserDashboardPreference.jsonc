@@ -31,6 +31,13 @@
       },
       "description": "List of widget IDs enabled on the user's home dashboard"
     },
+    "ed_enabled_widgets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of widget IDs enabled on the Executive Assistant portal dashboard"
+    },
     "custom_welcome_message": {
       "type": "string",
       "description": "Optional custom welcome message for this user"

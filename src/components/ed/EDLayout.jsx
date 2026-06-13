@@ -1,11 +1,11 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
-import { useEffect } from "react";
-import { LayoutDashboard, CheckSquare, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid } from "lucide-react";
+import EDWidgetSettings from "./EDWidgetSettings";
 
 const NAV = [
   { label: "Dashboard", path: "/ed", icon: LayoutDashboard },
-  { label: "Tasks", path: "/ed/tasks", icon: CheckSquare },
   { label: "Projects", path: "/ed/projects", icon: FolderKanban },
   { label: "OPSP", path: "/ed/opsp", icon: Target },
   { label: "KPIs", path: "/ed/kpis", icon: BarChart2 },
@@ -17,6 +17,7 @@ const NAV = [
 export default function EDLayout() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showWidgets, setShowWidgets] = useState(false);
 
   useEffect(() => {
     if (user && user.role !== "admin") {
@@ -29,48 +30,64 @@ export default function EDLayout() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <aside className="w-56 flex-shrink-0 flex flex-col" style={{ background: "hsl(230,70%,10%)" }}>
-        <div className="flex items-center gap-2 px-4 py-5 border-b" style={{ borderColor: "hsl(230,50%,16%)" }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(45,92%,53%)" }}>
-            <span className="text-xs font-bold" style={{ color: "hsl(230,60%,10%)" }}>EA</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold leading-none" style={{ color: "hsl(45,92%,53%)" }}>Executive</p>
-            <p className="text-[10px] leading-none mt-0.5" style={{ color: "hsl(230,30%,65%)" }}>Assistant Portal</p>
-          </div>
-        </div>
+        {showWidgets ? (
+          <EDWidgetSettings onClose={() => setShowWidgets(false)} />
+        ) : (
+          <>
+            <div className="flex items-center gap-2 px-4 py-5 border-b" style={{ borderColor: "hsl(230,50%,16%)" }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(45,92%,53%)" }}>
+                <span className="text-xs font-bold" style={{ color: "hsl(230,60%,10%)" }}>EA</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold leading-none" style={{ color: "hsl(45,92%,53%)" }}>Executive</p>
+                <p className="text-[10px] leading-none mt-0.5" style={{ color: "hsl(230,30%,65%)" }}>Assistant Portal</p>
+              </div>
+            </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {NAV.map(({ label, path, icon: NavIcon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              end={path === "/ed"}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive ? "font-semibold" : "hover:opacity-80"
-                }`
-              }
-              style={({ isActive }) => isActive
-                ? { background: "hsl(45,92%,53%)", color: "hsl(230,60%,10%)" }
-                : { color: "hsl(45,60%,88%)" }
-              }
-            >
-              <NavIcon className="w-4 h-4 shrink-0" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+              {NAV.map(({ label, path, icon: NavIcon }) => (
+                <NavLink
+                  key={path}
+                  to={path}
+                  end={path === "/ed"}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      isActive ? "font-semibold" : "hover:opacity-80"
+                    }`
+                  }
+                  style={({ isActive }) => isActive
+                    ? { background: "hsl(45,92%,53%)", color: "hsl(230,60%,10%)" }
+                    : { color: "hsl(45,60%,88%)" }
+                  }
+                >
+                  <NavIcon className="w-4 h-4 shrink-0" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
 
-        <div className="px-3 pb-4">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full hover:opacity-70 transition-colors"
-            style={{ color: "hsl(230,30%,60%)" }}
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Back to Dashboard</span>
-          </button>
-        </div>
+              {/* Widget settings */}
+              <button
+                onClick={() => setShowWidgets(true)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:opacity-80 mt-2"
+                style={{ color: "hsl(45,60%,88%)" }}
+              >
+                <LayoutGrid className="w-4 h-4 shrink-0" />
+                <span>Dashboard Widgets</span>
+              </button>
+            </nav>
+
+            <div className="px-3 pb-4">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full hover:opacity-70 transition-colors"
+                style={{ color: "hsl(230,30%,60%)" }}
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Back to Dashboard</span>
+              </button>
+            </div>
+          </>
+        )}
       </aside>
 
       <main className="flex-1 overflow-y-auto bg-background">
