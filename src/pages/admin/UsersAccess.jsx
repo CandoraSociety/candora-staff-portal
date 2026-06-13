@@ -112,7 +112,7 @@ function LiveDataPanel({ users, departments }) {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Total Users', value: users.length, icon: Users, color: 'text-primary bg-primary/10' },
+          { label: 'Registered Users', value: users.length, icon: Users, color: 'text-primary bg-primary/10' },
           { label: 'Active Portals', value: activePortals, icon: AppWindow, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
           { label: 'Departments', value: departments.length, icon: Building2, color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/20' },
         ].map(item => {
