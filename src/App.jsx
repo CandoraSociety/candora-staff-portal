@@ -115,6 +115,17 @@ import GrantsSubmissions from '@/pages/grants/GrantsSubmissions';
 import GrantsReports from '@/pages/grants/GrantsReports';
 import GrantsFiles from '@/pages/grants/GrantsFiles';
 
+// Executive Director Portal
+import EDLayout from '@/components/ed/EDLayout';
+import EDDashboard from '@/pages/ed/EDDashboard';
+import EDTasks from '@/pages/ed/EDTasks';
+import EDProjects from '@/pages/ed/EDProjects';
+import EDOPSP from '@/pages/ed/EDOPSP';
+import EDKPIs from '@/pages/ed/EDKPIs';
+import EDBudgets from '@/pages/ed/EDBudgets';
+import EDOrgChart from '@/pages/ed/EDOrgChart';
+import EDNotes from '@/pages/ed/EDNotes';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -242,6 +253,18 @@ const AuthenticatedApp = () => {
           <Route path="/grants/proposals" element={<GrantsSubmissions />} />
           <Route path="/grants/reports" element={<GrantsReports />} />
           <Route path="/grants/files" element={<GrantsFiles />} />
+        </Route>
+
+        {/* Executive Director Portal */}
+        <Route element={<EDLayout />}>
+          <Route path="/ed" element={<EDDashboard />} />
+          <Route path="/ed/tasks" element={<EDTasks />} />
+          <Route path="/ed/projects" element={<EDProjects />} />
+          <Route path="/ed/opsp" element={<EDOPSP />} />
+          <Route path="/ed/kpis" element={<EDKPIs />} />
+          <Route path="/ed/budgets" element={<EDBudgets />} />
+          <Route path="/ed/org" element={<EDOrgChart />} />
+          <Route path="/ed/notes" element={<EDNotes />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}

@@ -1,0 +1,54 @@
+{
+  "name": "EDNote",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "note_type": {
+      "type": "string",
+      "enum": [
+        "idea",
+        "meeting",
+        "action_item",
+        "reflection",
+        "general"
+      ],
+      "default": "general"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "text",
+        "voice",
+        "photo"
+      ],
+      "default": "text"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

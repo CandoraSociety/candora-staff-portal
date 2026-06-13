@@ -1,0 +1,66 @@
+{
+  "name": "EDKPI",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "financial",
+        "operational",
+        "growth",
+        "customer",
+        "employee",
+        "impact"
+      ],
+      "default": "operational"
+    },
+    "current_value": {
+      "type": "number"
+    },
+    "target_value": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string"
+    },
+    "trend": {
+      "type": "string",
+      "enum": [
+        "up",
+        "down",
+        "flat"
+      ],
+      "default": "flat"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

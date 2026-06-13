@@ -1,0 +1,59 @@
+{
+  "name": "EDObjective",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "quarter": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "at_risk",
+        "completed",
+        "archived"
+      ],
+      "default": "active"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0
+    },
+    "key_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "current": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

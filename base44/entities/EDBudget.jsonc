@@ -1,0 +1,54 @@
+{
+  "name": "EDBudget",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "fiscal_year": {
+      "type": "string"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "allocated": {
+            "type": "number"
+          },
+          "spent": {
+            "type": "number"
+          },
+          "funder_restricted": {
+            "type": "boolean",
+            "default": false
+          },
+          "funder_name": {
+            "type": "string"
+          },
+          "cap_percent": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
