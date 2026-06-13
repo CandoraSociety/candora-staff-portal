@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, User, UserX, Pencil, Trash2, GripVertical } from "lucide-react";
+import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3 } from "lucide-react";
+import OrgNode from "./OrgNode";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
 import PayrollSummary from "./PayrollSummary";
@@ -102,6 +103,7 @@ export default function OrgChartSheet({
   const [editId, setEditId] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
+  const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
 
   const working = isOriginal ? positions : (scenarioPositions || []);
 
@@ -179,9 +181,28 @@ export default function OrgChartSheet({
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
         <PayrollSummary positions={working} showSalary={showSalary} />
-        <Button size="sm" variant="outline" onClick={openAdd}>
-          <Plus className="w-4 h-4 mr-1" /> Add Position
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Layout toggle */}
+          <div className="flex rounded-md border overflow-hidden">
+            <button
+              onClick={() => setLayout("tree")}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs transition-colors ${layout === "tree" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              title="Tree view — shows reporting hierarchy"
+            >
+              <Network className="w-3.5 h-3.5" /> Tree
+            </button>
+            <button
+              onClick={() => setLayout("tiers")}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs transition-colors border-l ${layout === "tiers" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              title="Tier view — groups by seniority level"
+            >
+              <Rows3 className="w-3.5 h-3.5" /> Tiers
+            </button>
+          </div>
+          <Button size="sm" variant="outline" onClick={openAdd}>
+            <Plus className="w-4 h-4 mr-1" /> Add Position
+          </Button>
+        </div>
       </div>
 
       <div
@@ -191,35 +212,71 @@ export default function OrgChartSheet({
         {working.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No positions yet. Add one to get started.</p>
         )}
-        <div className="min-w-max">
-          {tieredRows.map(({ tier, label, positions: rowPositions }, rowIdx) => (
-            <div key={tier} className={`flex items-center border-b last:border-b-0 ${rowIdx % 2 === 0 ? "bg-muted/20" : "bg-background"}`}>
-              {/* Tier label column */}
-              <div className="w-36 shrink-0 px-3 py-4 border-r">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{label}</p>
+
+        {/* Tree layout */}
+        {layout === "tree" && (
+          <div>
+            {!isOriginal && draggingId && (
+              <div
+                className="mx-6 mb-2 h-10 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center text-xs text-muted-foreground"
+                onDragOver={e => e.preventDefault()}
+                onDrop={handleDropToRoot}
+              >
+                Drop here to make top-level
               </div>
-              {/* Cards row */}
-              <div className="flex flex-wrap gap-3 px-4 py-4 items-center">
-                {rowPositions.map(p => (
-                  <PositionCard
-                    key={p.id}
-                    position={p}
-                    originalPositions={originalPositions}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                    showSalary={showSalary}
-                    showNames={showNames}
-                    isScenario={!isOriginal}
-                    draggingId={draggingId}
-                    onDragStart={setDraggingId}
-                    onDragOver={setDragOverId}
-                    onDrop={handleDrop}
-                  />
-                ))}
-              </div>
+            )}
+            <div className="flex gap-12 justify-center min-w-max px-6 pt-4">
+              {working.filter(p => !p.reports_to_id || !working.find(x => x.id === p.reports_to_id)).map(r => (
+                <OrgNode
+                  key={r.id}
+                  position={r}
+                  all={working}
+                  originalPositions={originalPositions}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  showSalary={showSalary}
+                  showNames={showNames}
+                  isScenario={!isOriginal}
+                  draggingId={draggingId}
+                  onDragStart={setDraggingId}
+                  onDragOver={setDragOverId}
+                  onDrop={handleDrop}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Tiers layout */}
+        {layout === "tiers" && (
+          <div className="min-w-max">
+            {tieredRows.map(({ tier, label, positions: rowPositions }, rowIdx) => (
+              <div key={tier} className={`flex items-center border-b last:border-b-0 ${rowIdx % 2 === 0 ? "bg-muted/20" : "bg-background"}`}>
+                <div className="w-36 shrink-0 px-3 py-4 border-r">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{label}</p>
+                </div>
+                <div className="flex flex-wrap gap-3 px-4 py-4 items-center">
+                  {rowPositions.map(p => (
+                    <PositionCard
+                      key={p.id}
+                      position={p}
+                      originalPositions={originalPositions}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
+                      showSalary={showSalary}
+                      showNames={showNames}
+                      isScenario={!isOriginal}
+                      draggingId={draggingId}
+                      onDragStart={setDraggingId}
+                      onDragOver={setDragOverId}
+                      onDrop={handleDrop}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <OrgChartPositionForm
