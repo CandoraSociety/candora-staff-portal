@@ -16,12 +16,14 @@ const TIER_LABELS = {
 function MiniCard({ position, showSalary, showNames, originalPositions, isScenario }) {
   let isChanged = false;
   let wageIncreased = false;
+  let origSalary = 0;
   if (isScenario && originalPositions?.length > 0) {
-    const orig = originalPositions.find(o => o.id === (position.original_id || position.id));
+    const orig = originalPositions.find(o => o.id === position.id);
     if (!orig) isChanged = true;
     else {
+      origSalary = orig.salary || 0;
       isChanged = orig.title !== position.title || orig.person_name !== position.person_name || orig.salary !== position.salary;
-      wageIncreased = position.salary > orig.salary;
+      wageIncreased = (position.salary || 0) > (orig.salary || 0);
     }
   }
   let borderClass = "border-border bg-card";
