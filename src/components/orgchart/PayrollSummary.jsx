@@ -1,3 +1,41 @@
+// 2026 Canada employer contribution rates and caps
+const EI_MAX_INSURABLE = 68900;
+const EI_EMPLOYER_RATE = 0.02282;
+const EI_MAX_EMPLOYER = EI_MAX_INSURABLE * EI_EMPLOYER_RATE; // ~$1,572
+
+const CPP_YMPE = 74600;
+const CPP_BASIC_EXEMPTION = 3500;
+const CPP1_EMPLOYER_RATE = 0.0595;
+const CPP1_MAX_EMPLOYER = (CPP_YMPE - CPP_BASIC_EXEMPTION) * CPP1_EMPLOYER_RATE; // $4,230.45
+
+const CPP2_THRESHOLD = 74600;
+const CPP2_UPPER_CAP = 85000;
+const CPP2_EMPLOYER_RATE = 0.04;
+const CPP2_MAX_EMPLOYER = (CPP2_UPPER_CAP - CPP2_THRESHOLD) * CPP2_EMPLOYER_RATE; // $416
+
+function calculateEmployerContributions(salary) {
+  if (!salary || salary <= 0) return { ei: 0, cpp1: 0, cpp2: 0, total: 0 };
+  
+  // EI: capped at max insurable earnings
+  const ei = Math.min(salary, EI_MAX_INSURABLE) * EI_EMPLOYER_RATE;
+  
+  // CPP1: on earnings between basic exemption and YMPE
+  let cpp1 = 0;
+  if (salary > CPP_BASIC_EXEMPTION) {
+    const cpp1Taxable = Math.min(salary, CPP_YMPE) - CPP_BASIC_EXEMPTION;
+    cpp1 = cpp1Taxable * CPP1_EMPLOYER_RATE;
+  }
+  
+  // CPP2: on earnings between YMPE and upper cap
+  let cpp2 = 0;
+  if (salary > CPP2_THRESHOLD) {
+    const cpp2Taxable = Math.min(salary, CPP2_UPPER_CAP) - CPP2_THRESHOLD;
+    cpp2 = cpp2Taxable * CPP2_EMPLOYER_RATE;
+  }
+  
+  return { ei, cpp1, cpp2, total: ei + cpp1 + cpp2 };
+}
+
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
@@ -15,11 +53,27 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const filled = positions.filter(p => !p.is_vacant).length;
   const vacant = positions.filter(p => p.is_vacant).length;
 
+  // Calculate employer CPP/EI contributions
+  let totalEI = 0;
+  let totalCPP = 0;
+  positions.forEach(p => {
+    const salary = p.hourly_rate && p.hours_per_week && p.weeks_per_year
+      ? parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year)
+      : (p.salary || 0);
+    const contribs = calculateEmployerContributions(salary);
+    totalEI += contribs.ei;
+    totalCPP += contribs.cpp1 + contribs.cpp2;
+  });
+  const totalEmployerContributions = totalEI + totalCPP;
+
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
   let diffAnnual = 0;
   let diffMonthly = 0;
   let diffBiweekly = 0;
+  let diffEI = 0;
+  let diffCPP = 0;
+  let diffEmployerContributions = 0;
   if (basePositions && basePositions.length > 0) {
     diffPositions = positions.length - basePositions.length;
     const baseAnnual = basePositions.reduce((s, p) => {
@@ -31,6 +85,21 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     diffAnnual = annual - baseAnnual;
     diffMonthly = diffAnnual / 12;
     diffBiweekly = diffAnnual / 26;
+    
+    // Calculate base employer contributions
+    let baseEI = 0;
+    let baseCPP = 0;
+    basePositions.forEach(p => {
+      const salary = p.hourly_rate && p.hours_per_week && p.weeks_per_year
+        ? parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year)
+        : (p.salary || 0);
+      const contribs = calculateEmployerContributions(salary);
+      baseEI += contribs.ei;
+      baseCPP += contribs.cpp1 + contribs.cpp2;
+    });
+    diffEI = totalEI - baseEI;
+    diffCPP = totalCPP - baseCPP;
+    diffEmployerContributions = diffEI + diffCPP;
   }
   const hasDeltas = basePositions && basePositions.length > 0 && (diffPositions !== 0 || diffAnnual !== 0);
 
@@ -65,6 +134,29 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffBiweekly)}</p>
         )}
       </div>
+      {showSalary && (
+        <>
+          <span className="text-muted-foreground/40">|</span>
+          <div>
+            <span><span className="font-medium text-foreground">Employer CPP/EI:</span> {fmt(totalEmployerContributions)}</span>
+            {hasDeltas && diffEmployerContributions !== 0 && (
+              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffEmployerContributions)}</p>
+            )}
+          </div>
+          <div className="text-xs">
+            <span className="text-muted-foreground">CPP: {fmt(totalCPP)}</span>
+            {hasDeltas && diffCPP !== 0 && (
+              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffCPP)}</p>
+            )}
+          </div>
+          <div className="text-xs">
+            <span className="text-muted-foreground">EI: {fmt(totalEI)}</span>
+            {hasDeltas && diffEI !== 0 && (
+              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffEI)}</p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
