@@ -31,11 +31,11 @@ export default function EDLayout() {
       <aside className="w-56 flex-shrink-0 flex flex-col" style={{ background: "hsl(230,70%,10%)" }}>
         <div className="flex items-center gap-2 px-4 py-5 border-b" style={{ borderColor: "hsl(230,50%,16%)" }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(45,92%,53%)" }}>
-            <span className="text-xs font-bold" style={{ color: "hsl(230,60%,10%)" }}>ED</span>
+            <span className="text-xs font-bold" style={{ color: "hsl(230,60%,10%)" }}>EA</span>
           </div>
           <div>
             <p className="text-xs font-bold leading-none" style={{ color: "hsl(45,92%,53%)" }}>Executive</p>
-            <p className="text-[10px] leading-none mt-0.5" style={{ color: "hsl(230,30%,65%)" }}>Director Portal</p>
+            <p className="text-[10px] leading-none mt-0.5" style={{ color: "hsl(230,30%,65%)" }}>Assistant Portal</p>
           </div>
         </div>
 
