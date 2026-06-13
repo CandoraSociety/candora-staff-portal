@@ -68,7 +68,8 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showNames && position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
       {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
-      {showSalary && position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}</p>}
+      {showSalary && position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}/yr</p>}
+      {showSalary && position.hourly_rate > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.hourly_rate}/hr</p>}
       {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" title="Modified" />}
       <div className="absolute -top-2 -right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {onEdit && (
@@ -108,12 +109,28 @@ export default function OrgChartSheet({
   const working = isOriginal ? positions : (scenarioPositions || []);
 
   const openAdd = () => { setForm(EMPTY_POS); setEditId(null); setFormOpen(true); };
-  const openEdit = (p) => { setForm({ ...p, salary: p.salary || "" }); setEditId(p.id); setFormOpen(true); };
+  const openEdit = (p) => { 
+    setForm({ 
+      ...p, 
+      salary: p.salary || "", 
+      hourly_rate: p.hourly_rate || "",
+      hours_per_week: p.hours_per_week || "",
+      weeks_per_year: p.weeks_per_year || ""
+    }); 
+    setEditId(p.id); 
+    setFormOpen(true); 
+  };
 
   const handleSave = (overrideForm) => {
     const merged = overrideForm || form;
     if (!merged.title?.trim()) return;
-    const data = { ...merged, salary: parseFloat(merged.salary) || 0 };
+    const data = { 
+      ...merged, 
+      salary: parseFloat(merged.salary) || 0,
+      hourly_rate: parseFloat(merged.hourly_rate) || 0,
+      hours_per_week: parseFloat(merged.hours_per_week) || 0,
+      weeks_per_year: parseFloat(merged.weeks_per_year) || 0,
+    };
     if (isOriginal) {
       onSavePosition(data, editId);
     } else {

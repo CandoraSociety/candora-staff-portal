@@ -41,7 +41,20 @@
       "description": "Secondary dotted-line reporting relationship"
     },
     "salary": {
-      "type": "number"
+      "type": "number",
+      "description": "Annual salary"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Hourly wage"
+    },
+    "hours_per_week": {
+      "type": "number",
+      "description": "Number of hours per week"
+    },
+    "weeks_per_year": {
+      "type": "number",
+      "description": "Number of weeks per year"
     },
     "is_vacant": {
       "type": "boolean",

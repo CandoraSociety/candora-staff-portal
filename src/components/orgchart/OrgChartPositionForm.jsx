@@ -22,7 +22,9 @@ const TIERS = [
 
 export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
-  tier: "", reports_to_id: "", dotted_line_reports_to_id: "", salary: "", is_vacant: false, notes: "",
+  tier: "", reports_to_id: "", dotted_line_reports_to_id: "", 
+  salary: "", hourly_rate: "", hours_per_week: "", weeks_per_year: "",
+  is_vacant: false, notes: "",
   team_ids: []
 };
 
@@ -315,16 +317,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
             onChange={e => setForm({ ...form, person_name: e.target.value })}
           />
 
-          {/* Departments — multi-select with autocomplete */}
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Department(s)</label>
-            <DepartmentMultiSelect
-              selected={form.departments || (form.department ? [form.department] : [])}
-              onChange={handleDepartmentsChange}
-              suggestions={deptSuggestions}
-            />
-          </div>
-
+          {/* Tier */}
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Tier</label>
             <Select value={form.tier || "none"} onValueChange={v => setForm({ ...form, tier: v === "none" ? "" : v })}>
@@ -334,6 +327,58 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
                 {TIERS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Compensation */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Annual Salary ($)</label>
+              <Input
+                type="number"
+                value={form.salary || ""}
+                onChange={e => setForm({ ...form, salary: e.target.value })}
+                placeholder="e.g. 65000"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Hourly Rate ($)</label>
+              <Input
+                type="number"
+                value={form.hourly_rate || ""}
+                onChange={e => setForm({ ...form, hourly_rate: e.target.value })}
+                placeholder="e.g. 25"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Hours/Week</label>
+              <Input
+                type="number"
+                value={form.hours_per_week || ""}
+                onChange={e => setForm({ ...form, hours_per_week: e.target.value })}
+                placeholder="e.g. 40"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Weeks/Year</label>
+              <Input
+                type="number"
+                value={form.weeks_per_year || ""}
+                onChange={e => setForm({ ...form, weeks_per_year: e.target.value })}
+                placeholder="e.g. 52"
+              />
+            </div>
+          </div>
+
+          {/* Departments — multi-select with autocomplete */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Department(s)</label>
+            <DepartmentMultiSelect
+              selected={form.departments || (form.department ? [form.department] : [])}
+              onChange={handleDepartmentsChange}
+              suggestions={deptSuggestions}
+            />
           </div>
 
           <div className="space-y-1">
@@ -377,12 +422,6 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
             />
           </div>
 
-          <Input
-            type="number"
-            placeholder="Annual salary"
-            value={form.salary || ""}
-            onChange={e => setForm({ ...form, salary: e.target.value })}
-          />
           <div className="flex items-center gap-2">
             <Switch checked={!!form.is_vacant} onCheckedChange={v => setForm({ ...form, is_vacant: v })} />
             <span className="text-sm">Mark as vacant</span>
