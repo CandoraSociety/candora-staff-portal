@@ -56,6 +56,19 @@
       "type": "number",
       "description": "Number of weeks per year"
     },
+    "has_summer_hours": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this position has different summer hours"
+    },
+    "summer_hours_per_week": {
+      "type": "number",
+      "description": "Hours per week during summer period"
+    },
+    "summer_weeks": {
+      "type": "number",
+      "description": "Number of weeks in summer period"
+    },
     "is_vacant": {
       "type": "boolean",
       "default": false

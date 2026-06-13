@@ -24,6 +24,7 @@ export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
   tier: "", reports_to_id: "", dotted_line_reports_to_id: "", 
   salary: "", hourly_rate: "", hours_per_week: "", weeks_per_year: "",
+  has_summer_hours: false, summer_hours_per_week: "", summer_weeks: "",
   is_vacant: false, notes: "",
   team_ids: []
 };
@@ -229,13 +230,25 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
   const normalizeDept = (d) =>
     d.toLowerCase().includes("employment") && d.toLowerCase().includes("social enterprise") ? "Social Enterprise" : d;
 
-  // Auto-calculate annual salary from hourly rate × hours/week × weeks/year
+  // Auto-calculate annual salary from hourly rate × hours/week × weeks/year (with optional summer hours)
   useEffect(() => {
     if (form.hourly_rate && form.hours_per_week && form.weeks_per_year) {
-      const annual = parseFloat(form.hourly_rate) * parseFloat(form.hours_per_week) * parseFloat(form.weeks_per_year);
+      const hourly = parseFloat(form.hourly_rate);
+      const regularHours = parseFloat(form.hours_per_week);
+      const regularWeeks = parseFloat(form.weeks_per_year);
+      
+      let annual = hourly * regularHours * regularWeeks;
+      
+      // Add summer hours calculation if enabled
+      if (form.has_summer_hours && form.summer_hours_per_week && form.summer_weeks) {
+        const summerHours = parseFloat(form.summer_hours_per_week);
+        const summerWeeks = parseFloat(form.summer_weeks);
+        annual += hourly * summerHours * summerWeeks;
+      }
+      
       setForm(prev => ({ ...prev, salary: Math.round(annual) }));
     }
-  }, [form.hourly_rate, form.hours_per_week, form.weeks_per_year]);
+  }, [form.hourly_rate, form.hours_per_week, form.weeks_per_year, form.has_summer_hours, form.summer_hours_per_week, form.summer_weeks]);
 
   // Sync teams with departments when form opens or departments change
   useEffect(() => {
@@ -378,6 +391,38 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
               />
             </div>
           </div>
+
+          {/* Summer hours option */}
+          <div className="flex items-center gap-2 pt-1">
+            <Switch
+              checked={!!form.has_summer_hours}
+              onCheckedChange={v => setForm({ ...form, has_summer_hours: v })}
+            />
+            <span className="text-sm text-muted-foreground">Different summer hours</span>
+          </div>
+
+          {form.has_summer_hours && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Summer Hours/Week</label>
+                <Input
+                  type="number"
+                  value={form.summer_hours_per_week || ""}
+                  onChange={e => setForm({ ...form, summer_hours_per_week: e.target.value })}
+                  placeholder="e.g. 30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Summer Weeks</label>
+                <Input
+                  type="number"
+                  value={form.summer_weeks || ""}
+                  onChange={e => setForm({ ...form, summer_weeks: e.target.value })}
+                  placeholder="e.g. 8"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Departments — multi-select with autocomplete */}
           <div className="space-y-1">

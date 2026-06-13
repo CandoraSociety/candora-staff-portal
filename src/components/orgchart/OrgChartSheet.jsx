@@ -115,7 +115,10 @@ export default function OrgChartSheet({
       salary: p.salary || "", 
       hourly_rate: p.hourly_rate || "",
       hours_per_week: p.hours_per_week || "",
-      weeks_per_year: p.weeks_per_year || ""
+      weeks_per_year: p.weeks_per_year || "",
+      has_summer_hours: p.has_summer_hours || false,
+      summer_hours_per_week: p.summer_hours_per_week || "",
+      summer_weeks: p.summer_weeks || ""
     }); 
     setEditId(p.id); 
     setFormOpen(true); 
@@ -130,6 +133,9 @@ export default function OrgChartSheet({
       hourly_rate: parseFloat(merged.hourly_rate) || 0,
       hours_per_week: parseFloat(merged.hours_per_week) || 0,
       weeks_per_year: parseFloat(merged.weeks_per_year) || 0,
+      has_summer_hours: merged.has_summer_hours || false,
+      summer_hours_per_week: parseFloat(merged.summer_hours_per_week) || 0,
+      summer_weeks: parseFloat(merged.summer_weeks) || 0,
     };
     if (isOriginal) {
       onSavePosition(data, editId);
