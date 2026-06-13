@@ -1,7 +1,13 @@
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary }) {
   if (!showSalary) return null;
-  const annual = positions.reduce((s, p) => s + (p.salary || 0), 0);
+  // Calculate annual salary: use salary field, or calculate from hourly if hourly_rate is provided
+  const annual = positions.reduce((s, p) => {
+    if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
+      return s + (parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year));
+    }
+    return s + (p.salary || 0);
+  }, 0);
   const monthly = annual / 12;
   const biweekly = annual / 26;
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
