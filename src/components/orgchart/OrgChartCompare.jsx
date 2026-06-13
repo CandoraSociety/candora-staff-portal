@@ -13,25 +13,24 @@ const TIER_LABELS = {
   practicum_placement: "Practicum Placement",
 };
 
-function MiniCard({ position, showSalary, showNames, originalPositions, isScenario }) {
+function MiniCard({ position, showSalary, showNames, basePositions, isCompareMode, sheetIndex }) {
   let isChanged = false;
   let wageIncreased = false;
-  let origSalary = 0;
-  if (isScenario && originalPositions?.length > 0) {
-    const orig = originalPositions.find(o => o.id === position.id);
+  // In compare mode, compare against the first (base) sheet's positions
+  if (isCompareMode && sheetIndex > 0 && basePositions?.length > 0) {
+    const orig = basePositions.find(o => o.id === position.id);
     if (!orig) isChanged = true;
     else {
-      origSalary = orig.salary || 0;
       isChanged = orig.title !== position.title || orig.person_name !== position.person_name || orig.salary !== position.salary;
       wageIncreased = (position.salary || 0) > (orig.salary || 0);
     }
   }
   let borderClass = "border-border bg-card";
   if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
-  else if (isScenario && isChanged) borderClass = "border-orange-400 bg-orange-50/50";
+  else if (isCompareMode && sheetIndex > 0 && isChanged) borderClass = "border-orange-400 bg-orange-50/50";
   return (
     <div className={`relative p-2 rounded-lg border-2 min-w-[120px] max-w-[160px] text-center ${borderClass}`}>
-      {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" />}
+      {isCompareMode && sheetIndex > 0 && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" />}
       <div className="flex justify-center mb-0.5">
         {position.is_vacant ? <UserX className="w-4 h-4 text-muted-foreground/50" /> : <User className="w-4 h-4 text-accent" />}
       </div>
@@ -74,6 +73,7 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
 
   // Calculate differences (vs first sheet)
   const base = sheetTotals[0];
+  const basePositions = sheets[0]?.positions || [];
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
   const fmtDiff = (n) => (n >= 0 ? "+" : "") + Math.round(n).toLocaleString();
 
@@ -133,8 +133,9 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
                             position={p}
                             showSalary={showSalary}
                             showNames={showNames}
-                            originalPositions={originalPositions}
-                            isScenario={sheet.isScenario}
+                            basePositions={basePositions}
+                            isCompareMode={true}
+                            sheetIndex={si}
                           />
                         ))}
                         {positions.length === 0 && <span className="text-xs text-muted-foreground/40 italic">—</span>}
