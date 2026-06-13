@@ -116,12 +116,15 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
           className="h-11 text-base w-full"
         />
         <div className="flex gap-2">
-          <Input
-            type="date"
-            value={newPriority.due_date}
-            onChange={(e) => setNewPriority({ ...newPriority, due_date: e.target.value })}
-            className="h-9 flex-1"
-          />
+          <div className="relative flex-1">
+            <label className="absolute -top-2 left-2 text-[10px] font-medium text-muted-foreground bg-background px-1 z-10">Due date</label>
+            <Input
+              type="date"
+              value={newPriority.due_date}
+              onChange={(e) => setNewPriority({ ...newPriority, due_date: e.target.value })}
+              className="h-9 w-full"
+            />
+          </div>
           <Select value={newPriority.priority_level} onValueChange={(v) => setNewPriority({ ...newPriority, priority_level: v })}>
             <SelectTrigger className="h-9 w-28">
               <SelectValue />
