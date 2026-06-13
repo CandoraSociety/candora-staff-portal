@@ -223,15 +223,19 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
     ))];
   }, [allPositions]);
 
-  // Ensure a team exists for every department used across all positions
+  // Seed "Leadership" team and any missing department teams on load
   useEffect(() => {
-    if (!allPositions.length || !teams) return;
-    const allDepts = [...new Set(allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : [])).filter(Boolean))];
-    const missingDepts = allDepts.filter(d => !teams.some(t => t.name.toLowerCase() === d.toLowerCase()));
-    if (missingDepts.length === 0) return;
+    if (!teams) return;
+    const needed = ["Leadership"];
+    if (allPositions.length) {
+      const allDepts = [...new Set(allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : [])).filter(Boolean))];
+      needed.push(...allDepts);
+    }
+    const missing = needed.filter(n => !teams.some(t => t.name.toLowerCase() === n.toLowerCase()));
+    if (missing.length === 0) return;
     (async () => {
-      for (const dept of missingDepts) {
-        await base44.entities.EDOrgTeam.create({ name: dept });
+      for (const name of missing) {
+        await base44.entities.EDOrgTeam.create({ name });
       }
       qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
     })();
@@ -261,20 +265,27 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
     onSave({ ...form, team_ids: teamIds });
   };
 
-  // When departments change, auto-suggest teams whose names match a department
+  // When departments change:
+  // - add the matching team when a dept is selected
+  // - remove the matching team when a dept is removed (unless manually kept)
   const handleDepartmentsChange = (newDepts) => {
-    // Find teams whose names match any selected department (case-insensitive)
-    const autoTeamIds = teams
+    const prevDepts = form.departments || (form.department ? [form.department] : []);
+
+    // Teams that correspond to the newly selected departments
+    const newAutoIds = teams
       .filter(t => newDepts.some(d => t.name.toLowerCase() === d.toLowerCase()))
       .map(t => t.id);
-    // Merge with manually selected teams (don't remove ones user added manually)
-    const currentManual = (form.team_ids || []).filter(id => {
-      const team = teams.find(t => t.id === id);
-      if (!team) return false;
-      // Keep if it doesn't match any old department auto-assignment
-      return true;
-    });
-    const merged = [...new Set([...currentManual, ...autoTeamIds])];
+
+    // Teams that corresponded to removed departments (to deselect them)
+    const removedDepts = prevDepts.filter(d => !newDepts.includes(d));
+    const removedAutoIds = teams
+      .filter(t => removedDepts.some(d => t.name.toLowerCase() === d.toLowerCase()))
+      .map(t => t.id);
+
+    // Keep current team_ids minus removed dept-teams, plus new dept-teams
+    const current = form.team_ids || [];
+    const merged = [...new Set([...current.filter(id => !removedAutoIds.includes(id)), ...newAutoIds])];
+
     setForm({ ...form, departments: newDepts, department: newDepts[0] || "", team_ids: merged });
   };
 
