@@ -18,6 +18,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
   let diffAnnual = 0;
+  let diffMonthly = 0;
+  let diffBiweekly = 0;
   if (basePositions && basePositions.length > 0) {
     diffPositions = positions.length - basePositions.length;
     const baseAnnual = basePositions.reduce((s, p) => {
@@ -27,29 +29,42 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
       return s + (p.salary || 0);
     }, 0);
     diffAnnual = annual - baseAnnual;
+    diffMonthly = diffAnnual / 12;
+    diffBiweekly = diffAnnual / 26;
   }
   const hasDeltas = basePositions && basePositions.length > 0 && (diffPositions !== 0 || diffAnnual !== 0);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-      <span className="font-semibold text-foreground">{positions.length} positions</span>
+    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+      <div>
+        <span className="font-semibold text-foreground">{positions.length} positions</span>
+        {hasDeltas && diffPositions !== 0 && (
+          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffPositions)}</p>
+        )}
+      </div>
       <span className="text-muted-foreground/40">|</span>
-      <span>{filled} filled · {vacant} vacant</span>
+      <div>
+        <span>{filled} filled · {vacant} vacant</span>
+      </div>
       <span className="text-muted-foreground/40">|</span>
-      <span><span className="font-medium text-foreground">Annual:</span> {fmt(annual)}</span>
-      <span><span className="font-medium text-foreground">Monthly:</span> {fmt(monthly)}</span>
-      <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
-      {hasDeltas && (
-        <>
-          <span className="text-muted-foreground/40">|</span>
-          <span className={diffPositions !== 0 ? "font-semibold text-red-600 italic" : "text-muted-foreground"}>
-            Δ Positions: {fmtDiff(diffPositions)}
-          </span>
-          <span className={diffAnnual !== 0 ? "font-semibold text-red-600 italic" : "text-muted-foreground"}>
-            Δ Annual: {fmtDiff(diffAnnual)}
-          </span>
-        </>
-      )}
+      <div>
+        <span><span className="font-medium text-foreground">Annual:</span> {fmt(annual)}</span>
+        {hasDeltas && diffAnnual !== 0 && (
+          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffAnnual)}</p>
+        )}
+      </div>
+      <div>
+        <span><span className="font-medium text-foreground">Monthly:</span> {fmt(monthly)}</span>
+        {hasDeltas && diffMonthly !== 0 && (
+          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffMonthly)}</p>
+        )}
+      </div>
+      <div>
+        <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
+        {hasDeltas && diffBiweekly !== 0 && (
+          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffBiweekly)}</p>
+        )}
+      </div>
     </div>
   );
 }
