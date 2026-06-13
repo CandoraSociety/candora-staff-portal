@@ -30,10 +30,18 @@ export default function TeamsView({ positions, currentUser }) {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
+    const payload = {
+      name: form.name,
+      description: form.description,
+      color: form.color,
+      member_position_ids: form.member_position_ids,
+      lead_position_id: form.lead_position_id || null,
+      owner_id: currentUser?.id,
+    };
     if (dialog.mode === "new") {
-      await base44.entities.EDOrgTeam.create({ ...form, owner_id: currentUser?.id });
+      await base44.entities.EDOrgTeam.create(payload);
     } else {
-      await base44.entities.EDOrgTeam.update(dialog.team.id, form);
+      await base44.entities.EDOrgTeam.update(dialog.team.id, payload);
     }
     qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
     setDialog(null);
@@ -45,12 +53,13 @@ export default function TeamsView({ positions, currentUser }) {
   };
 
   const toggleMember = (posId) => {
-    setForm(f => ({
-      ...f,
-      member_position_ids: f.member_position_ids.includes(posId)
-        ? f.member_position_ids.filter(x => x !== posId)
-        : [...f.member_position_ids, posId],
-    }));
+    setForm(prev => {
+      const isSelected = prev.member_position_ids.includes(posId);
+      const updated = isSelected
+        ? prev.member_position_ids.filter(x => x !== posId)
+        : [...prev.member_position_ids, posId];
+      return { ...prev, member_position_ids: updated };
+    });
   };
 
   return (
