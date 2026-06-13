@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Flag, Plus, Trash2, List, Grid, Calendar, ChevronDown } from "lucide-react";
+import { Flag, Plus, Trash2, List, Grid, Calendar, ChevronDown, Sparkles } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { motion } from "framer-motion";
 import PriorityCoach from "./PriorityCoach";
@@ -216,6 +216,16 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
             );
           })}
         </div>
+      )}
+
+      {!showCoach && priorities.length > 0 && (
+        <button
+          onClick={() => setShowCoach(true)}
+          className="w-full mt-1 rounded-xl border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors py-3 px-4 flex items-center justify-center gap-2 text-sm text-primary font-medium"
+        >
+          <Sparkles className="w-4 h-4" />
+          Can I help you with your priorities today?
+        </button>
       )}
 
       {showCoach && (
