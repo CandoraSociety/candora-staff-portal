@@ -110,9 +110,10 @@ export default function OrgChartSheet({
   const openAdd = () => { setForm(EMPTY_POS); setEditId(null); setFormOpen(true); };
   const openEdit = (p) => { setForm({ ...p, salary: p.salary || "" }); setEditId(p.id); setFormOpen(true); };
 
-  const handleSave = () => {
-    if (!form.title.trim()) return;
-    const data = { ...form, salary: parseFloat(form.salary) || 0 };
+  const handleSave = (overrideForm) => {
+    const merged = overrideForm || form;
+    if (!merged.title?.trim()) return;
+    const data = { ...merged, salary: parseFloat(merged.salary) || 0 };
     if (isOriginal) {
       onSavePosition(data, editId);
     } else {
@@ -126,6 +127,7 @@ export default function OrgChartSheet({
       onScenarioChange(next);
     }
     setFormOpen(false); setForm(EMPTY_POS); setEditId(null);
+
   };
 
   const handleDelete = (id) => {

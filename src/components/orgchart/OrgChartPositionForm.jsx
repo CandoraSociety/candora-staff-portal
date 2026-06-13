@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -200,12 +200,13 @@ function TeamMultiSelect({ selected, onChange, teams }) {
 }
 
 export default function OrgChartPositionForm({ open, onOpenChange, form, setForm, onSave, editId, positions }) {
+  const qc = useQueryClient();
   // Load all existing positions to derive title/department suggestions
   const { data: allPositions = [] } = useQuery({
     queryKey: ["ed-org"],
     queryFn: () => base44.entities.EDOrgPosition.list(),
   });
-  const { data: teams = [] } = useQuery({
+  const { data: teams = [], refetch: refetchTeams } = useQuery({
     queryKey: ["ed-org-teams"],
     queryFn: () => base44.entities.EDOrgTeam.list(),
   });
@@ -219,6 +220,29 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
     const all = allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : []));
     return [...new Set(all.filter(Boolean))];
   }, [allPositions]);
+
+  // On save: create any missing teams for new departments, then call onSave with updated team_ids
+  const handleSave = async () => {
+    const depts = form.departments || (form.department ? [form.department] : []);
+    let currentTeams = teams;
+    let teamIds = [...(form.team_ids || [])];
+
+    for (const dept of depts) {
+      const exists = currentTeams.find(t => t.name.toLowerCase() === dept.toLowerCase());
+      if (!exists) {
+        // Create a new team for this department
+        const created = await base44.entities.EDOrgTeam.create({ name: dept });
+        currentTeams = [...currentTeams, created];
+        qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
+        if (!teamIds.includes(created.id)) teamIds.push(created.id);
+      } else if (!teamIds.includes(exists.id)) {
+        teamIds.push(exists.id);
+      }
+    }
+
+    // Call the parent save with the updated team_ids
+    onSave({ ...form, team_ids: teamIds });
+  };
 
   // When departments change, auto-suggest teams whose names match a department
   const handleDepartmentsChange = (newDepts) => {
@@ -324,7 +348,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={onSave}>Save</Button>
+            <Button onClick={handleSave}>Save</Button>
           </div>
         </div>
       </DialogContent>
