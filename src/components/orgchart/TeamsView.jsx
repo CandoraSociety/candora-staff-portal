@@ -66,9 +66,7 @@ export default function TeamsView({ positions, currentUser }) {
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {teams.map(team => {
-            const members = positions.filter(p =>
-              (team.member_position_ids || []).includes(p.id) || (p.team_ids || []).includes(team.id)
-            );
+            const members = positions.filter(p => (p.team_ids || []).includes(team.id));
             const lead = positions.find(p => p.id === team.lead_position_id);
             return (
               <div key={team.id} className="border rounded-xl p-4 bg-card shadow-sm">

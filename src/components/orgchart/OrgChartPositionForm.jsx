@@ -223,21 +223,49 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
     ))];
   }, [allPositions]);
 
-  // Seed "Leadership" team and any missing department teams on load
+  // Normalize dept name helper
+  const normalizeDept = (d) =>
+    d.toLowerCase().includes("employment") && d.toLowerCase().includes("social enterprise") ? "Social Enterprise" : d;
+
+  // Seed "Leadership" + missing department teams, rename old dept values, and back-fill team_ids
   useEffect(() => {
-    if (!teams) return;
-    const needed = ["Leadership"];
-    if (allPositions.length) {
-      const allDepts = [...new Set(allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : [])).filter(Boolean))];
-      needed.push(...allDepts);
-    }
-    const missing = needed.filter(n => !teams.some(t => t.name.toLowerCase() === n.toLowerCase()));
-    if (missing.length === 0) return;
+    if (!teams || !allPositions.length) return;
+
     (async () => {
+      // Step 1: collect all unique dept names (normalized)
+      const allDepts = [...new Set(
+        allPositions.flatMap(p => p.departments?.length ? p.departments : (p.department ? [p.department] : []))
+          .filter(Boolean).map(normalizeDept)
+      )];
+
+      // Step 2: ensure all dept teams + Leadership exist
+      let currentTeams = [...teams];
+      const needed = ["Leadership", ...allDepts];
+      const missing = needed.filter(n => !currentTeams.some(t => t.name.toLowerCase() === n.toLowerCase()));
       for (const name of missing) {
-        await base44.entities.EDOrgTeam.create({ name });
+        const created = await base44.entities.EDOrgTeam.create({ name });
+        currentTeams.push(created);
       }
-      qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
+      if (missing.length > 0) qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
+
+      // Step 3: back-fill team_ids on positions that have departments but no team_ids
+      const positionsNeedingUpdate = allPositions.filter(p => {
+        const depts = (p.departments?.length ? p.departments : (p.department ? [p.department] : [])).map(normalizeDept);
+        if (!depts.length) return false;
+        const expectedIds = currentTeams.filter(t => depts.some(d => d.toLowerCase() === t.name.toLowerCase())).map(t => t.id);
+        const currentIds = p.team_ids || [];
+        return expectedIds.some(id => !currentIds.includes(id));
+      });
+
+      for (const pos of positionsNeedingUpdate) {
+        const depts = (pos.departments?.length ? pos.departments : (pos.department ? [pos.department] : [])).map(normalizeDept);
+        const autoIds = currentTeams.filter(t => depts.some(d => d.toLowerCase() === t.name.toLowerCase())).map(t => t.id);
+        const merged = [...new Set([...(pos.team_ids || []), ...autoIds])];
+        // Also fix the department name if it was old
+        const fixedDepts = depts;
+        await base44.entities.EDOrgPosition.update(pos.id, { team_ids: merged, departments: fixedDepts, department: fixedDepts[0] || "" });
+      }
+      if (positionsNeedingUpdate.length > 0) qc.invalidateQueries({ queryKey: ["ed-org"] });
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPositions.length, teams.length]);
