@@ -161,7 +161,8 @@ function NodeCard({ position, x, y, originalPositions, isScenario, showSalary, s
       {showNames && position.person_name && <p className="text-[10px] text-muted-foreground truncate">{position.person_name}</p>}
       {position.department && <p className="text-[10px] text-muted-foreground/60 truncate">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-[10px] mt-0.5 px-1">Vacant</Badge>}
-      {showSalary && position.salary > 0 && <p className="text-[10px] text-muted-foreground">${position.salary.toLocaleString()}</p>}
+      {showSalary && position.salary > 0 && <p className="text-[10px] text-muted-foreground">${position.salary.toLocaleString()}/yr</p>}
+      {showSalary && position.hourly_rate > 0 && <p className="text-[10px] text-muted-foreground">${position.hourly_rate}/hr</p>}
       <div className="absolute -top-2 -right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         {onEdit && <button className="w-5 h-5 bg-background border rounded-full flex items-center justify-center shadow-sm" onClick={() => onEdit(position)}><Pencil className="w-2.5 h-2.5" /></button>}
         {onDelete && <button className="w-5 h-5 bg-background border rounded-full flex items-center justify-center shadow-sm" onClick={() => onDelete(position.id)}><Trash2 className="w-2.5 h-2.5 text-destructive" /></button>}
