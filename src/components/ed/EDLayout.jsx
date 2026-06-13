@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid, PanelLeft, PanelRight } from "lucide-react";
 import EDWidgetSettings from "./EDWidgetSettings";
 
 const NAV = [
