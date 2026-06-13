@@ -227,7 +227,23 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
   const normalizeDept = (d) =>
     d.toLowerCase().includes("employment") && d.toLowerCase().includes("social enterprise") ? "Social Enterprise" : d;
 
+  // Sync teams with departments when form opens or departments change
+  useEffect(() => {
+    if (!open || teams.length === 0) return;
+    const depts = form.departments || (form.department ? [form.department] : []);
+    if (depts.length === 0) return;
 
+    const matchingTeamIds = teams
+      .filter(t => depts.some(d => t.name.toLowerCase() === d.toLowerCase()))
+      .map(t => t.id);
+
+    // Only update if there are matching teams not already in team_ids
+    const current = form.team_ids || [];
+    const missing = matchingTeamIds.filter(id => !current.includes(id));
+    if (missing.length > 0) {
+      setForm({ ...form, team_ids: [...new Set([...current, ...missing])] });
+    }
+  }, [open, teams.length]);
 
   // On save: create any missing teams for new departments, then call onSave with updated team_ids
   const handleSave = async () => {
