@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Flag, Plus, Trash2, List, Grid, Calendar, ChevronDown, Sparkles } from "lucide-react";
+import { Flag, Plus, Trash2, List, Grid, Calendar, ChevronDown, Sparkles, Pencil, Check, X } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { motion } from "framer-motion";
 import PriorityCoach from "./PriorityCoach";
@@ -22,6 +22,7 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
   const [newTask, setNewTask] = useState("");
   const [expandedPriorities, setExpandedPriorities] = useState({});
   const [showCoach, setShowCoach] = useState(false);
+  const [editingPriority, setEditingPriority] = useState(null); // { id, title, due_date, priority_level }
   const [newPriority, setNewPriority] = useState({
     title: "",
     due_date: "",
@@ -77,6 +78,16 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
 
   const toggleExpand = (id) => {
     setExpandedPriorities(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const saveEdit = () => {
+    if (!editingPriority || !editingPriority.title.trim()) return;
+    updatePriority(editingPriority.id, {
+      title: editingPriority.title,
+      due_date: editingPriority.due_date,
+      priority_level: editingPriority.priority_level,
+    });
+    setEditingPriority(null);
   };
 
   const sortedPriorities = [...priorities].sort((a, b) => {
@@ -158,6 +169,43 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
                   <div className="flex items-start gap-2">
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${level?.color}`} />
                     <div className="flex-1 min-w-0">
+                      {editingPriority?.id === priority.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editingPriority.title}
+                            onChange={(e) => setEditingPriority({ ...editingPriority, title: e.target.value })}
+                            className="h-9 text-sm w-full"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <label className="absolute -top-2 left-2 text-[10px] font-medium text-muted-foreground bg-background px-1 z-10">Due date</label>
+                              <Input
+                                type="date"
+                                value={editingPriority.due_date}
+                                onChange={(e) => setEditingPriority({ ...editingPriority, due_date: e.target.value })}
+                                className="h-9 w-full"
+                              />
+                            </div>
+                            <Select value={editingPriority.priority_level} onValueChange={(v) => setEditingPriority({ ...editingPriority, priority_level: v })}>
+                              <SelectTrigger className="h-9 w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PRIORITY_LEVELS.map(level => (
+                                  <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button size="icon" className="h-9 w-9" onClick={saveEdit}>
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button size="icon" variant="outline" className="h-9 w-9" onClick={() => setEditingPriority(null)}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
                       <div className="flex items-center justify-between gap-2">
                         <h4 className="text-sm font-medium truncate">{priority.title}</h4>
                         <div className="flex items-center gap-1 shrink-0">
@@ -167,6 +215,9 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
                               {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}d overdue` : daysUntilDue === 0 ? "Due today" : `${daysUntilDue}d`}
                             </Badge>
                           )}
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingPriority({ id: priority.id, title: priority.title, due_date: priority.due_date || "", priority_level: priority.priority_level })}>
+                            <Pencil className="w-3 h-3 text-muted-foreground" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleExpand(priority.id)}>
                             <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                           </Button>
@@ -175,8 +226,9 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
                           </Button>
                         </div>
                       </div>
+                      )}
 
-                      {isExpanded && (
+                      {editingPriority?.id !== priority.id && isExpanded && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
