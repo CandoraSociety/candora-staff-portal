@@ -229,6 +229,14 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
   const normalizeDept = (d) =>
     d.toLowerCase().includes("employment") && d.toLowerCase().includes("social enterprise") ? "Social Enterprise" : d;
 
+  // Auto-calculate annual salary from hourly rate × hours/week × weeks/year
+  useEffect(() => {
+    if (form.hourly_rate && form.hours_per_week && form.weeks_per_year) {
+      const annual = parseFloat(form.hourly_rate) * parseFloat(form.hours_per_week) * parseFloat(form.weeks_per_year);
+      setForm(prev => ({ ...prev, salary: Math.round(annual) }));
+    }
+  }, [form.hourly_rate, form.hours_per_week, form.weeks_per_year]);
+
   // Sync teams with departments when form opens or departments change
   useEffect(() => {
     if (!open || teams.length === 0) return;
