@@ -290,7 +290,7 @@ export default function EDOrgChart() {
       {/* Tab bar at bottom — only in chart mode */}
       {mode === "teams" ? null :
       /* Tab bar at bottom */
-      <div className="border-t bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto">
+      <div className="border-t bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto" style={{ paddingBottom: "max(4px, env(safe-area-inset-bottom))" }}>
         {/* Original tab */}
         <button
           onClick={() => setActiveTab(0)}
