@@ -252,6 +252,7 @@ export default function EDOrgChart() {
           />
         ) : currentScenario ? (
           <OrgChartSheet
+            key={currentScenario.id}
             positions={positions}
             scenarioPositions={currentScenario.positions || []}
             initialRemovedPositions={(() => {

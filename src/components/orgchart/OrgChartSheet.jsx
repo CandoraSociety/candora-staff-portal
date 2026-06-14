@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw } from "lucide-react";
 import OrgTreeLayout from "./OrgTreeLayout";
@@ -108,6 +108,11 @@ export default function OrgChartSheet({
   const [dragOverId, setDragOverId] = useState(null);
   const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
   const [removedPositions, setRemovedPositions] = useState(initialRemovedPositions || []);
+  useEffect(() => {
+    if (initialRemovedPositions?.length > 0) {
+      setRemovedPositions(initialRemovedPositions);
+    }
+  }, [JSON.stringify(initialRemovedPositions)]);
 
   const working = isOriginal ? positions : (scenarioPositions || []);
 
