@@ -22,6 +22,14 @@ export default function OrgSettingsPage() {
   const replaceInputRef = useRef(null);
   const [replacingLogoId, setReplacingLogoId] = useState(null);
 
+  // Immediately persist logo changes to DB
+  const saveLogosNow = async (newLogos, newLogoUrl) => {
+    if (!settings) return;
+    const update = { logos: newLogos, logo_url: newLogoUrl };
+    await base44.entities.OrgSettings.update(settings.id, update);
+    queryClient.invalidateQueries({ queryKey: ['orgSettings'] });
+  };
+
   const { data: settingsList = [] } = useQuery({
     queryKey: ['orgSettings'],
     queryFn: () => base44.entities.OrgSettings.list(),
@@ -80,31 +88,30 @@ export default function OrgSettingsPage() {
     }
   };
 
-  const setActiveLogo = (id) => {
+  const setActiveLogo = async (id) => {
     const logo = form.logos.find(l => l.id === id);
     if (!logo) return;
-    setForm(f => ({
-      ...f,
-      logo_url: logo.url,
-      logos: f.logos.map(l => ({ ...l, is_active: l.id === id })),
-    }));
+    const newLogos = form.logos.map(l => ({ ...l, is_active: l.id === id }));
+    const newLogoUrl = logo.url;
+    setForm(f => ({ ...f, logo_url: newLogoUrl, logos: newLogos }));
+    await saveLogosNow(newLogos, newLogoUrl);
+    toast.success('Active logo updated');
   };
 
-  const removeLogo = (id) => {
-    setForm(f => {
-      const newLogos = f.logos.filter(l => l.id !== id);
-      const wasActive = f.logos.find(l => l.id === id)?.is_active;
-      return {
-        ...f,
-        logos: newLogos,
-        logo_url: wasActive ? (newLogos[0]?.url || '') : f.logo_url,
-      };
-    });
+  const removeLogo = async (id) => {
+    const wasActive = form.logos.find(l => l.id === id)?.is_active;
+    const newLogos = form.logos.filter(l => l.id !== id);
+    const newLogoUrl = wasActive ? (newLogos[0]?.url || '') : form.logo_url;
+    setForm(f => ({ ...f, logos: newLogos, logo_url: newLogoUrl }));
+    await saveLogosNow(newLogos, newLogoUrl);
   };
 
-  const saveLogoName = (id) => {
-    setForm(f => ({ ...f, logos: f.logos.map(l => l.id === id ? { ...l, name: editingLogoName } : l) }));
+  const saveLogoName = async (id) => {
+    const newLogos = form.logos.map(l => l.id === id ? { ...l, name: editingLogoName } : l);
+    setForm(f => ({ ...f, logos: newLogos }));
     setEditingLogoId(null);
+    await saveLogosNow(newLogos, form.logo_url);
+    toast.success('Logo name updated');
   };
 
   const handleReplaceImage = async (e) => {
@@ -113,11 +120,11 @@ export default function OrgSettingsPage() {
     setUploadingLogo(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setForm(f => ({
-        ...f,
-        logos: f.logos.map(l => l.id === replacingLogoId ? { ...l, url: file_url } : l),
-        logo_url: f.logos.find(l => l.id === replacingLogoId)?.is_active ? file_url : f.logo_url,
-      }));
+      const isActive = form.logos.find(l => l.id === replacingLogoId)?.is_active;
+      const newLogos = form.logos.map(l => l.id === replacingLogoId ? { ...l, url: file_url } : l);
+      const newLogoUrl = isActive ? file_url : form.logo_url;
+      setForm(f => ({ ...f, logos: newLogos, logo_url: newLogoUrl }));
+      await saveLogosNow(newLogos, newLogoUrl);
       toast.success('Logo image replaced');
     } catch {
       toast.error('Upload failed');
@@ -178,7 +185,17 @@ export default function OrgSettingsPage() {
                     key={logo.id}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${logo.is_active ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
                   >
-                    <img src={logo.url} alt={logo.name} className="w-10 h-10 rounded-lg object-contain bg-muted shrink-0" />
+                    <button
+                      type="button"
+                      title="Click to replace image"
+                      onClick={() => { setReplacingLogoId(logo.id); replaceInputRef.current?.click(); }}
+                      className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-muted hover:ring-2 hover:ring-primary transition-all group relative"
+                    >
+                      <img src={logo.url} alt={logo.name} className="w-full h-full object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Upload className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </button>
 
                     <div className="flex-1 min-w-0">
                       {editingLogoId === logo.id ? (
@@ -223,15 +240,6 @@ export default function OrgSettingsPage() {
                           Set Active
                         </Button>
                       )}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-7"
-                        onClick={() => { setReplacingLogoId(logo.id); replaceInputRef.current?.click(); }}
-                      >
-                        <Upload className="w-3 h-3 mr-1" /> Replace
-                      </Button>
                       <button
                         type="button"
                         onClick={() => removeLogo(logo.id)}
