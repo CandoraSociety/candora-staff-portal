@@ -96,8 +96,10 @@ export default function EDOrgChart() {
     setActiveTab(scenarios.length + 1);
   };
 
-  const saveScenarioPositions = async (scenarioId, newPositions) => {
-    await base44.entities.EDOrgScenario.update(scenarioId, { positions: newPositions });
+  const saveScenarioPositions = async (scenarioId, newPositions, newRemovedPositions) => {
+    const updateData = { positions: newPositions };
+    if (newRemovedPositions !== undefined) updateData.removed_positions = newRemovedPositions;
+    await base44.entities.EDOrgScenario.update(scenarioId, updateData);
     qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
   };
 
@@ -252,7 +254,17 @@ export default function EDOrgChart() {
           <OrgChartSheet
             positions={positions}
             scenarioPositions={currentScenario.positions || []}
-            onScenarioChange={(newPos) => saveScenarioPositions(currentScenario.id, newPos)}
+            initialRemovedPositions={(() => {
+              // Retroactively compute removed: canonical positions whose ID isn't in scenario original_ids
+              const scenarioOriginalIds = new Set((currentScenario.positions || []).map(p => p.original_id || p.id));
+              const computed = positions.filter(p => !scenarioOriginalIds.has(p.id));
+              // Merge with any persisted removed_positions (may include positions no longer in canonical)
+              const persisted = currentScenario.removed_positions || [];
+              const persistedIds = new Set(persisted.map(p => p.id));
+              const merged = [...persisted, ...computed.filter(p => !persistedIds.has(p.id))];
+              return merged;
+            })()}
+            onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
             isOriginal={false}
             showSalary={showSalary}
             showNames={showNames}

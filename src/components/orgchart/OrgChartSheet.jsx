@@ -92,7 +92,8 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
 export default function OrgChartSheet({
   positions, // canonical DB positions (always passed for original reference)
   scenarioPositions, // only set for scenario sheets
-  onScenarioChange, // (newPositions) => void
+  initialRemovedPositions, // pre-seeded removed positions (retroactive + persisted)
+  onScenarioChange, // (newPositions, newRemovedPositions?) => void
   isOriginal,
   onSavePosition, // (form, editId) => void — canonical
   onDeletePosition, // (id) => void — canonical
@@ -106,7 +107,7 @@ export default function OrgChartSheet({
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
-  const [removedPositions, setRemovedPositions] = useState([]);
+  const [removedPositions, setRemovedPositions] = useState(initialRemovedPositions || []);
 
   const working = isOriginal ? positions : (scenarioPositions || []);
 
@@ -160,16 +161,18 @@ export default function OrgChartSheet({
       onDeletePosition(id);
     } else {
       const pos = working.find(p => p.id === id);
-      if (pos) setRemovedPositions(prev => [...prev, pos]);
-      onScenarioChange(working.filter(p => p.id !== id));
+      const newRemoved = pos ? [...removedPositions, pos] : removedPositions;
+      if (pos) setRemovedPositions(newRemoved);
+      onScenarioChange(working.filter(p => p.id !== id), newRemoved);
     }
   };
 
   const handleRestore = (id) => {
     const pos = removedPositions.find(p => p.id === id);
     if (pos) {
-      onScenarioChange([...working, pos]);
-      setRemovedPositions(prev => prev.filter(p => p.id !== id));
+      const newRemoved = removedPositions.filter(p => p.id !== id);
+      onScenarioChange([...working, pos], newRemoved);
+      setRemovedPositions(newRemoved);
     }
   };
 

@@ -46,6 +46,13 @@
         }
       }
     },
+    "removed_positions": {
+      "type": "array",
+      "description": "Positions that were deleted from this scenario (for display in the removed list)",
+      "items": {
+        "type": "object"
+      }
+    },
     "owner_id": {
       "type": "string"
     }
