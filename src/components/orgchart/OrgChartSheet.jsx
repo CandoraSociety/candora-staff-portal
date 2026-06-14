@@ -200,7 +200,15 @@ export default function OrgChartSheet({
     setFormOpen(false); setForm(EMPTY_POS); setEditId(null);
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // position object to confirm delete
+
   const handleDelete = (id) => {
+    const pos = working.find(p => p.id === id);
+    if (pos) setDeleteConfirm(pos);
+  };
+
+  const confirmDelete = () => {
+    const id = deleteConfirm.id;
     if (isOriginal) {
       pushUndo(positions, removedPositions);
       onDeletePosition(id);
@@ -211,6 +219,7 @@ export default function OrgChartSheet({
       if (pos) setRemovedPositions(newRemoved);
       onScenarioChange(working.filter(p => p.id !== id), newRemoved);
     }
+    setDeleteConfirm(null);
   };
 
   const handleRestore = (id) => {
@@ -400,6 +409,51 @@ export default function OrgChartSheet({
           </div>
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      {deleteConfirm && (() => {
+        const salary = deleteConfirm.hourly_rate && deleteConfirm.hours_per_week && deleteConfirm.weeks_per_year
+          ? parseFloat(deleteConfirm.hourly_rate) * parseFloat(deleteConfirm.hours_per_week) * parseFloat(deleteConfirm.weeks_per_year)
+          : (deleteConfirm.salary || 0);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-background border rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold">Delete Position?</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This will permanently remove <span className="font-semibold text-foreground">{deleteConfirm.title}</span>
+                  {deleteConfirm.person_name ? ` (${deleteConfirm.person_name})` : ""} from the org chart.
+                </p>
+              </div>
+              {salary > 0 && (
+                <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm">
+                  <p className="font-medium text-destructive">Payroll impact</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Removing this position will reduce annual wages by{" "}
+                    <span className="font-semibold text-foreground">${Math.round(salary).toLocaleString()}/yr</span>
+                    {" "}(${Math.round(salary / 12).toLocaleString()}/mo).
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">This can be undone with the Undo button immediately after.</p>
+                </div>
+              )}
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 rounded-md border text-sm hover:bg-muted transition-colors"
+                  onClick={() => setDeleteConfirm(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
+                  onClick={confirmDelete}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <OrgChartPositionForm
         open={formOpen}
