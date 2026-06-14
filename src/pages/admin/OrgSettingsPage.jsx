@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Settings, Save, Upload, Trash2, CheckCircle2, Pencil } from 'lucide-react';
+import LogoEditor from '@/components/admin/LogoEditor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export default function OrgSettingsPage() {
   const [editingLogoName, setEditingLogoName] = useState('');
   const replaceInputRef = useRef(null);
   const [replacingLogoId, setReplacingLogoId] = useState(null);
+  const [editingLogoEditor, setEditingLogoEditor] = useState(null); // { id, url }
 
   // Immediately persist logo changes to DB
   const saveLogosNow = async (newLogos, newLogoUrl) => {
@@ -214,9 +216,9 @@ export default function OrgSettingsPage() {
                           <span className="text-sm font-medium truncate">{logo.name || 'Untitled'}</span>
                           <button
                             type="button"
-                            onClick={() => { setReplacingLogoId(logo.id); replaceInputRef.current?.click(); }}
+                            onClick={() => setEditingLogoEditor({ id: logo.id, url: logo.url })}
                             className="text-muted-foreground hover:text-foreground"
-                            title="Replace logo image"
+                            title="Edit logo"
                           >
                             <Pencil className="w-3 h-3" />
                           </button>
@@ -292,6 +294,21 @@ export default function OrgSettingsPage() {
           </form>
         </CardContent>
       </Card>
+      {editingLogoEditor && (
+        <LogoEditor
+          open={!!editingLogoEditor}
+          onClose={() => setEditingLogoEditor(null)}
+          logoUrl={editingLogoEditor.url}
+          onSave={async (newUrl) => {
+            const isActive = form.logos.find(l => l.id === editingLogoEditor.id)?.is_active;
+            const newLogos = form.logos.map(l => l.id === editingLogoEditor.id ? { ...l, url: newUrl } : l);
+            const newLogoUrl = isActive ? newUrl : form.logo_url;
+            setForm(f => ({ ...f, logos: newLogos, logo_url: newLogoUrl }));
+            await saveLogosNow(newLogos, newLogoUrl);
+            toast.success('Logo saved');
+          }}
+        />
+      )}
     </div>
   );
 }
