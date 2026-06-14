@@ -19,6 +19,8 @@ export default function OrgSettingsPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [editingLogoId, setEditingLogoId] = useState(null);
   const [editingLogoName, setEditingLogoName] = useState('');
+  const replaceInputRef = useRef(null);
+  const [replacingLogoId, setReplacingLogoId] = useState(null);
 
   const { data: settingsList = [] } = useQuery({
     queryKey: ['orgSettings'],
@@ -105,6 +107,27 @@ export default function OrgSettingsPage() {
     setEditingLogoId(null);
   };
 
+  const handleReplaceImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !replacingLogoId) return;
+    setUploadingLogo(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setForm(f => ({
+        ...f,
+        logos: f.logos.map(l => l.id === replacingLogoId ? { ...l, url: file_url } : l),
+        logo_url: f.logos.find(l => l.id === replacingLogoId)?.is_active ? file_url : f.logo_url,
+      }));
+      toast.success('Logo image replaced');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploadingLogo(false);
+      setReplacingLogoId(null);
+      if (replaceInputRef.current) replaceInputRef.current.value = '';
+    }
+  };
+
   if (!access.isAdmin) return <p className="text-muted-foreground">Access denied</p>;
 
   return (
@@ -142,6 +165,7 @@ export default function OrgSettingsPage() {
                   {uploadingLogo ? 'Uploading…' : 'Upload Logo'}
                 </button>
                 <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                <input ref={replaceInputRef} type="file" accept="image/*" className="hidden" onChange={handleReplaceImage} />
               </div>
 
               {form.logos.length === 0 && (
@@ -199,6 +223,15 @@ export default function OrgSettingsPage() {
                           Set Active
                         </Button>
                       )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-7"
+                        onClick={() => { setReplacingLogoId(logo.id); replaceInputRef.current?.click(); }}
+                      >
+                        <Upload className="w-3 h-3 mr-1" /> Replace
+                      </Button>
                       <button
                         type="button"
                         onClick={() => removeLogo(logo.id)}

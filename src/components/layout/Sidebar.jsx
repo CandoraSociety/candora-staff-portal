@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
@@ -27,6 +28,7 @@ const ADMIN_ITEMS = [
 
 export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const location = useLocation();
+  const { logoUrl, orgName } = useOrgSettings();
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -51,12 +53,12 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           )}>
             <div className="flex items-center gap-3">
               <img
-                src="https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png"
-                alt="Candora"
+                src={logoUrl}
+                alt={orgName}
                 className="w-10 h-10 rounded-xl flex-shrink-0 object-contain"
               />
               {!collapsed && (
-                <span className="font-display font-bold text-sidebar-primary text-sm truncate">CANDORA</span>
+                <span className="font-display font-bold text-sidebar-primary text-sm truncate">{orgName}</span>
               )}
             </div>
             <Tooltip>
