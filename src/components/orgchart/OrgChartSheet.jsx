@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3 } from "lucide-react";
+import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw } from "lucide-react";
 import OrgTreeLayout from "./OrgTreeLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
@@ -106,6 +106,7 @@ export default function OrgChartSheet({
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
+  const [removedPositions, setRemovedPositions] = useState([]);
 
   const working = isOriginal ? positions : (scenarioPositions || []);
 
@@ -158,7 +159,17 @@ export default function OrgChartSheet({
     if (isOriginal) {
       onDeletePosition(id);
     } else {
+      const pos = working.find(p => p.id === id);
+      if (pos) setRemovedPositions(prev => [...prev, pos]);
       onScenarioChange(working.filter(p => p.id !== id));
+    }
+  };
+
+  const handleRestore = (id) => {
+    const pos = removedPositions.find(p => p.id === id);
+    if (pos) {
+      onScenarioChange([...working, pos]);
+      setRemovedPositions(prev => prev.filter(p => p.id !== id));
     }
   };
 
@@ -288,6 +299,36 @@ export default function OrgChartSheet({
           </div>
         )}
       </div>
+
+      {/* Removed positions list — scenario sheets only */}
+      {!isOriginal && removedPositions.length > 0 && (
+        <div className="border-t mx-4 mb-4 pt-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Removed from this scenario ({removedPositions.length})
+          </p>
+          <div className="flex flex-col gap-1">
+            {removedPositions.map(p => (
+              <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm">
+                <div className="flex items-center gap-2">
+                  <UserX className="w-4 h-4 text-red-400 shrink-0" />
+                  <span className="font-medium text-red-800">{p.title}</span>
+                  {p.person_name && <span className="text-red-600 text-xs">· {p.person_name}</span>}
+                  {p.department && <span className="text-red-400 text-xs">· {p.department}</span>}
+                  {showSalary && p.hourly_rate > 0 && <span className="text-red-400 text-xs">· ${p.hourly_rate}/hr</span>}
+                  {showSalary && p.salary > 0 && !p.hourly_rate && <span className="text-red-400 text-xs">· ${p.salary.toLocaleString()}/yr</span>}
+                </div>
+                <button
+                  onClick={() => handleRestore(p.id)}
+                  className="flex items-center gap-1 text-xs text-red-600 hover:text-green-700 transition-colors ml-4"
+                  title="Restore to scenario"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Restore
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <OrgChartPositionForm
         open={formOpen}
