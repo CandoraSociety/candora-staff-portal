@@ -105,8 +105,6 @@ export default function OrgChartSheet({
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_POS);
   const [editId, setEditId] = useState(null);
-  const [draggingId, setDraggingId] = useState(null);
-  const [dragOverId, setDragOverId] = useState(null);
   const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
   const [removedPositions, setRemovedPositions] = useState(initialRemovedPositions || []);
   useEffect(() => {
@@ -234,20 +232,17 @@ export default function OrgChartSheet({
 
   const [reparentConfirm, setReparentConfirm] = useState(null); // { childId, targetId }
 
-  // Drag-to-reparent: drop dragging node onto target → show confirmation before saving
-  const handleDrop = useCallback((targetId) => {
-    if (!draggingId || draggingId === targetId || isOriginal) return;
+  const handleReparentRequest = useCallback((childId, targetId) => {
+    if (isOriginal) return;
     const isDescendant = (checkId, ancestorId) => {
       const pos = working.find(p => p.id === checkId);
       if (!pos) return false;
       if (pos.reports_to_id === ancestorId) return true;
       return pos.reports_to_id ? isDescendant(pos.reports_to_id, ancestorId) : false;
     };
-    if (isDescendant(targetId, draggingId)) return;
-    setReparentConfirm({ childId: draggingId, targetId });
-    setDraggingId(null);
-    setDragOverId(null);
-  }, [draggingId, working, isOriginal]);
+    if (isDescendant(targetId, childId)) return;
+    setReparentConfirm({ childId, targetId });
+  }, [working, isOriginal]);
 
   const confirmReparent = () => {
     if (!reparentConfirm) return;
@@ -258,12 +253,26 @@ export default function OrgChartSheet({
     setReparentConfirm(null);
   };
 
-  const handleDropToRoot = (e) => {
-    e.preventDefault();
-    if (!draggingId || isOriginal) return;
-    setReparentConfirm({ childId: draggingId, targetId: "__root__" });
-    setDraggingId(null);
-  };
+  const handleReorder = useCallback((draggedId, closestId, mouseX) => {
+    if (isOriginal) return;
+    // Swap the reports_to_id so the dragged node appears on the other side of closestId
+    // Actually for display order we just swap their reports_to_id values (siblings share same parent)
+    const dragged = working.find(p => p.id === draggedId);
+    const closest = working.find(p => p.id === closestId);
+    if (!dragged || !closest) return;
+    // Only reorder if they share the same parent
+    if (dragged.reports_to_id !== closest.reports_to_id) return;
+    pushUndo(working, removedPositions);
+    // Swap their reports_to_id is meaningless since they're the same — 
+    // instead swap their x-sort by swapping the two positions' IDs in the array
+    const di = working.findIndex(p => p.id === draggedId);
+    const ci = working.findIndex(p => p.id === closestId);
+    const next = [...working];
+    [next[di], next[ci]] = [next[ci], next[di]];
+    onScenarioChange(next);
+  }, [working, isOriginal, removedPositions, onScenarioChange]);
+
+
 
   // Build tier rows — positions grouped by tier, in tier rank order
   const tieredRows = (() => {
@@ -329,10 +338,7 @@ export default function OrgChartSheet({
         </div>
       </div>
 
-      <div
-        className="flex-1 overflow-auto pb-6"
-        onDragEnd={() => { setDraggingId(null); setDragOverId(null); }}
-      >
+      <div className="flex-1 overflow-auto pb-6">
         {working.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No positions yet. Add one to get started.</p>
         )}
@@ -347,11 +353,8 @@ export default function OrgChartSheet({
             showNames={showNames}
             onEdit={openEdit}
             onDelete={handleDelete}
-            draggingId={draggingId}
-            onDragStart={setDraggingId}
-            onDragOver={setDragOverId}
-            onDrop={handleDrop}
-            onDropToRoot={handleDropToRoot}
+            onReparentRequest={handleReparentRequest}
+            onReorder={handleReorder}
           />
         )}
 
@@ -374,10 +377,6 @@ export default function OrgChartSheet({
                       showSalary={showSalary}
                       showNames={showNames}
                       isScenario={!isOriginal}
-                      draggingId={draggingId}
-                      onDragStart={setDraggingId}
-                      onDragOver={setDragOverId}
-                      onDrop={handleDrop}
                     />
                   ))}
                 </div>
@@ -420,7 +419,7 @@ export default function OrgChartSheet({
       {/* Reparent confirmation dialog */}
       {reparentConfirm && (() => {
         const child = working.find(p => p.id === reparentConfirm.childId);
-        const newManager = reparentConfirm.targetId === "__root__" ? null : working.find(p => p.id === reparentConfirm.targetId);
+        const newManager = working.find(p => p.id === reparentConfirm.targetId);
         const oldManager = child?.reports_to_id ? working.find(p => p.id === child.reports_to_id) : null;
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

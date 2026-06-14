@@ -52,7 +52,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const monthly = annual / 12;
   const biweekly = annual / 26;
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
-  const fmtDiff = (n) => (n >= 0 ? "+" : "") + Math.round(n).toLocaleString();
+  const fmtDiff = (n) => (n >= 0 ? "▲ +" : "▼ ") + Math.round(n).toLocaleString();
+  const diffColor = (n) => n > 0 ? "text-red-600" : "text-green-600";
   const filled = positions.filter(p => !p.is_vacant).length;
   const vacant = positions.filter(p => p.is_vacant).length;
 
@@ -113,7 +114,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
       <div>
         <span className="font-semibold text-foreground">{positions.length} positions</span>
         {hasDeltas && diffPositions !== 0 && (
-          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffPositions)}</p>
+          <p className={`text-xs font-semibold italic ${diffColor(diffPositions)}`}>{fmtDiff(diffPositions)}</p>
         )}
       </div>
       <span className="text-muted-foreground/40">|</span>
