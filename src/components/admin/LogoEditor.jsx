@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Pencil, Type, Eraser, RotateCcw, Download, Save, Minus, Plus } from "lucide-react";
@@ -42,24 +42,29 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
     setHistory([ctx.getImageData(0, 0, canvas.width, canvas.height)]);
   };
 
-  // Use a callback ref so we load as soon as the canvas mounts inside the Dialog
-  const setCanvasRef = (node) => {
+  // Stable callback ref — only fires when the DOM node mounts/unmounts, not on every render
+  const setCanvasRef = useCallback((node) => {
     canvasRef.current = node;
-    if (node && logoUrl && open) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        baseImageRef.current = img;
-        loadImageOntoCanvas(node, img, filter);
-      };
-      img.src = logoUrl + (logoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
-    }
-  };
+  }, []);
 
-  // Reset when dialog opens/closes
+  // Load image onto canvas when dialog opens
   useEffect(() => {
-    if (!open) { setHistory([]); baseImageRef.current = null; setFilter("none"); }
-  }, [open]);
+    if (!open) {
+      setHistory([]);
+      baseImageRef.current = null;
+      setFilter("none");
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas || !logoUrl) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      baseImageRef.current = img;
+      loadImageOntoCanvas(canvas, img, "none");
+    };
+    img.src = logoUrl + (logoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  }, [open, logoUrl]);
 
   const getPos = (e) => {
     const canvas = canvasRef.current;
