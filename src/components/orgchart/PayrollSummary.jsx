@@ -125,19 +125,19 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
       <div>
         <span><span className="font-medium text-foreground">Annual:</span> {fmt(annual)}</span>
         {hasDeltas && diffAnnual !== 0 && (
-          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffAnnual)}</p>
+          <p className={`text-xs font-semibold italic ${diffColor(diffAnnual)}`}>{fmtDiff(diffAnnual)}</p>
         )}
       </div>
       <div>
         <span><span className="font-medium text-foreground">Monthly:</span> {fmt(monthly)}</span>
         {hasDeltas && diffMonthly !== 0 && (
-          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffMonthly)}</p>
+          <p className={`text-xs font-semibold italic ${diffColor(diffMonthly)}`}>{fmtDiff(diffMonthly)}</p>
         )}
       </div>
       <div>
         <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
         {hasDeltas && diffBiweekly !== 0 && (
-          <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffBiweekly)}</p>
+          <p className={`text-xs font-semibold italic ${diffColor(diffBiweekly)}`}>{fmtDiff(diffBiweekly)}</p>
         )}
       </div>
       {showSalary && (
@@ -146,19 +146,19 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           <div>
             <span><span className="font-medium text-foreground">Employer CPP/EI:</span> {fmt(totalEmployerContributions)}</span>
             {hasDeltas && diffEmployerContributions !== 0 && (
-              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffEmployerContributions)}</p>
+              <p className={`text-xs font-semibold italic ${diffColor(diffEmployerContributions)}`}>{fmtDiff(diffEmployerContributions)}</p>
             )}
           </div>
           <div className="text-xs">
             <span className="text-muted-foreground">CPP: {fmt(totalCPP)}</span>
             {hasDeltas && diffCPP !== 0 && (
-              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffCPP)}</p>
+              <p className={`text-xs font-semibold italic ${diffColor(diffCPP)}`}>{fmtDiff(diffCPP)}</p>
             )}
           </div>
           <div className="text-xs">
             <span className="text-muted-foreground">EI: {fmt(totalEI)}</span>
             {hasDeltas && diffEI !== 0 && (
-              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffEI)}</p>
+              <p className={`text-xs font-semibold italic ${diffColor(diffEI)}`}>{fmtDiff(diffEI)}</p>
             )}
           </div>
           <div className="text-xs">
@@ -170,7 +170,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
             <span className="font-semibold text-foreground">Total Cost: {fmt(grandTotalAnnual)}/yr</span>
             <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo</p>
             {hasDeltas && diffAnnual !== 0 && (
-              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffAnnual + diffEmployerContributions)}/yr</p>
+              <p className={`text-xs font-semibold italic ${diffColor(diffAnnual + diffEmployerContributions)}`}>{fmtDiff(diffAnnual + diffEmployerContributions)}/yr</p>
             )}
           </div>
         </>
