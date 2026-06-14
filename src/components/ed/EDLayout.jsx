@@ -28,7 +28,7 @@ export default function EDLayout() {
 
   if (!user || user.role !== "admin") return null;
 
-  const sidebarInner = showWidgets ? (
+  const renderSidebar = () => showWidgets ? (
     <EDWidgetSettings onClose={() => setShowWidgets(false)} />
   ) : (
     <>
@@ -43,7 +43,7 @@ export default function EDLayout() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ label, path, icon: NavIcon }) => (
+        {NAV.map(({ label, path, icon: Icon }) => (
           <NavLink
             key={path}
             to={path}
@@ -59,12 +59,13 @@ export default function EDLayout() {
               : { color: "hsl(45,60%,88%)" }
             }
           >
-            <NavIcon className="w-4 h-4 shrink-0" />
+            <Icon className="w-4 h-4 shrink-0" />
             <span>{label}</span>
           </NavLink>
         ))}
 
         <button
+          type="button"
           onClick={() => setShowWidgets(true)}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors hover:opacity-80 mt-2"
           style={{ color: "hsl(45,60%,88%)" }}
@@ -76,6 +77,7 @@ export default function EDLayout() {
 
       <div className="px-3 pb-4">
         <button
+          type="button"
           onClick={() => navigate("/")}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs w-full hover:opacity-70 transition-colors"
           style={{ color: "hsl(230,30%,60%)" }}
@@ -108,18 +110,18 @@ export default function EDLayout() {
         >
           <X className="w-4 h-4" />
         </button>
-        {sidebarInner}
+        {renderSidebar()}
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-56 flex-shrink-0 flex-col" style={{ background: "hsl(230,70%,10%)" }}>
-        {sidebarInner}
+        {renderSidebar()}
       </aside>
 
       <main className="flex-1 overflow-y-auto bg-background">
         {/* Mobile top bar */}
         <div className="flex items-center gap-3 px-4 py-3 border-b md:hidden" style={{ background: "hsl(230,70%,10%)" }}>
-          <button onClick={() => setMobileOpen(true)} style={{ color: "hsl(45,92%,53%)" }}>
+          <button type="button" onClick={() => setMobileOpen(prev => !prev)} className="z-10 p-1" style={{ color: "hsl(45,92%,53%)" }}>
             <Menu className="w-5 h-5" />
           </button>
           <span className="text-sm font-bold" style={{ color: "hsl(45,92%,53%)" }}>Executive Assistant Portal</span>
