@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -36,36 +36,29 @@ const externalLinks = [
 
 function VolunteerSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
-  const [pendingApprovalsCount, setPendingApprovalsCount] = React.useState(0);
   const { logoUrl } = useOrgSettings();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Initial fetch
-  React.useEffect(() => {
-    const fetchCount = async () => {
-      const [approvals, profileChanges, cohortRequests, practicumRequests] = await Promise.all([
+  const pendingQuery = useQuery({
+    queryKey: ['pendingApprovalsCount'],
+    queryFn: async () => {
+      const [approvals, profileChanges, cohortRequests] = await Promise.all([
         base44.entities.VolunteerApproval.filter({ status: 'pending' }),
         base44.entities.VolunteerProfileChange.filter({ status: 'pending' }),
         base44.entities.VolunteerCohortRequest.filter({ status: 'pending' }),
-        base44.entities.VolunteerApproval.filter({ request_type: 'practicum_placement', status: 'pending' }),
       ]);
-      setPendingApprovalsCount(approvals.length + profileChanges.length + cohortRequests.length + practicumRequests.length);
-    };
-    fetchCount();
+      return approvals.length + profileChanges.length + cohortRequests.length;
+    },
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60 * 5,
+  });
 
-    // Real-time subscriptions
-    const unsubscribers = [
-      base44.entities.VolunteerApproval.subscribe(() => fetchCount()),
-      base44.entities.VolunteerProfileChange.subscribe(() => fetchCount()),
-      base44.entities.VolunteerCohortRequest.subscribe(() => fetchCount()),
-    ];
-
-    return () => unsubscribers.forEach(unsub => unsub());
-  }, []);
+  const pendingApprovalsCount = pendingQuery.data ?? 0;
 
   const isActive = (item) => {
     if (item.exact) return location.pathname === item.path;
