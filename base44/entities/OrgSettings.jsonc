@@ -8,7 +8,29 @@
     },
     "logo_url": {
       "type": "string",
-      "description": "URL to the organization logo"
+      "description": "Active logo URL (used across the app)"
+    },
+    "logos": {
+      "type": "array",
+      "description": "Library of all uploaded logos",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
     },
     "primary_color": {
       "type": "string",
@@ -20,8 +42,8 @@
     },
     "accent_color": {
       "type": "string",
-      "default": "#1a8fe3",
-      "description": "Bright blue accent colour from the Candora logo"
+      "default": "#2b2de8",
+      "description": "Bright blue from the Candora text in the logo"
     },
     "welcome_message": {
       "type": "string",

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Settings, Save, Upload } from 'lucide-react';
+import { Settings, Save, Upload, Trash2, CheckCircle2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,9 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
+const nanoid = () => Math.random().toString(36).slice(2, 10);
+
 export default function OrgSettingsPage() {
   const { access } = useOutletContext();
   const queryClient = useQueryClient();
+  const logoInputRef = useRef(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [editingLogoId, setEditingLogoId] = useState(null);
+  const [editingLogoName, setEditingLogoName] = useState('');
 
   const { data: settingsList = [] } = useQuery({
     queryKey: ['orgSettings'],
@@ -23,23 +29,26 @@ export default function OrgSettingsPage() {
   const [form, setForm] = useState({
     org_name: 'Candora',
     logo_url: '',
+    logos: [],
     primary_color: '#f5c116',
     secondary_color: '#0f1f6b',
-    accent_color: '#1a8fe3',
+    accent_color: '#2b2de8',
     welcome_message: 'Welcome to the Candora Staff Portal',
   });
 
   useEffect(() => {
     if (settings) {
       setForm({
-        ...form,
-        ...settings,
+        org_name: settings.org_name || 'Candora',
+        logo_url: settings.logo_url || '',
+        logos: settings.logos || [],
         primary_color: settings.primary_color || '#f5c116',
         secondary_color: settings.secondary_color || '#0f1f6b',
-        accent_color: settings.accent_color || '#1a8fe3',
+        accent_color: settings.accent_color || '#2b2de8',
+        welcome_message: settings.welcome_message || 'Welcome to the Candora Staff Portal',
       });
     }
-  }, [settings]);
+  }, [settings?.id]);
 
   const mutation = useMutation({
     mutationFn: (data) => settings
@@ -54,8 +63,46 @@ export default function OrgSettingsPage() {
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm({ ...form, logo_url: file_url });
+    setUploadingLogo(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const newLogo = { id: nanoid(), name: file.name.replace(/\.[^.]+$/, ''), url: file_url, is_active: false };
+      const newLogos = [...form.logos, newLogo];
+      setForm(f => ({ ...f, logos: newLogos }));
+      toast.success('Logo uploaded — set it as active to use it across the app');
+    } catch {
+      toast.error('Upload failed');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const setActiveLogo = (id) => {
+    const logo = form.logos.find(l => l.id === id);
+    if (!logo) return;
+    setForm(f => ({
+      ...f,
+      logo_url: logo.url,
+      logos: f.logos.map(l => ({ ...l, is_active: l.id === id })),
+    }));
+  };
+
+  const removeLogo = (id) => {
+    setForm(f => {
+      const newLogos = f.logos.filter(l => l.id !== id);
+      const wasActive = f.logos.find(l => l.id === id)?.is_active;
+      return {
+        ...f,
+        logos: newLogos,
+        logo_url: wasActive ? (newLogos[0]?.url || '') : f.logo_url,
+      };
+    });
+  };
+
+  const saveLogoName = (id) => {
+    setForm(f => ({ ...f, logos: f.logos.map(l => l.id === id ? { ...l, name: editingLogoName } : l) }));
+    setEditingLogoId(null);
   };
 
   if (!access.isAdmin) return <p className="text-muted-foreground">Access denied</p>;
@@ -75,28 +122,97 @@ export default function OrgSettingsPage() {
           <CardTitle className="text-base font-heading">General</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={e => { e.preventDefault(); mutation.mutate(form); }} className="space-y-5">
+          <form onSubmit={e => { e.preventDefault(); mutation.mutate(form); }} className="space-y-6">
             <div className="space-y-1.5">
               <Label>Organization Name</Label>
               <Input value={form.org_name} onChange={e => setForm({ ...form, org_name: e.target.value })} />
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Logo</Label>
-              <div className="flex items-center gap-4">
-                {form.logo_url && (
-                  <img src={form.logo_url} alt="Logo" className="w-12 h-12 rounded-lg object-contain bg-muted" />
-                )}
-                <label className="cursor-pointer">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:bg-muted transition-colors">
-                    <Upload className="w-4 h-4" />
-                    Upload logo
+            {/* Logo Library */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Logos</Label>
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-dashed border-border text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {uploadingLogo ? 'Uploading…' : 'Upload Logo'}
+                </button>
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+              </div>
+
+              {form.logos.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">No logos uploaded yet.</p>
+              )}
+
+              <div className="space-y-2">
+                {form.logos.map(logo => (
+                  <div
+                    key={logo.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${logo.is_active ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+                  >
+                    <img src={logo.url} alt={logo.name} className="w-10 h-10 rounded-lg object-contain bg-muted shrink-0" />
+
+                    <div className="flex-1 min-w-0">
+                      {editingLogoId === logo.id ? (
+                        <div className="flex gap-1.5">
+                          <Input
+                            value={editingLogoName}
+                            onChange={e => setEditingLogoName(e.target.value)}
+                            className="h-7 text-sm"
+                            autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter') saveLogoName(logo.id); if (e.key === 'Escape') setEditingLogoId(null); }}
+                          />
+                          <Button type="button" size="sm" className="h-7 px-2" onClick={() => saveLogoName(logo.id)}>Save</Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium truncate">{logo.name || 'Untitled'}</span>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingLogoId(logo.id); setEditingLogoName(logo.name); }}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                      {logo.is_active && (
+                        <span className="text-xs text-primary font-medium flex items-center gap-1 mt-0.5">
+                          <CheckCircle2 className="w-3 h-3" /> Active — used across the app
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!logo.is_active && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => setActiveLogo(logo.id)}
+                        >
+                          Set Active
+                        </Button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeLogo(logo.id)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                </label>
+                ))}
               </div>
             </div>
 
+            {/* Colors */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Primary Color</Label>
@@ -115,7 +231,7 @@ export default function OrgSettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Accent Color <span className="text-muted-foreground font-normal">(bright blue — logo highlight)</span></Label>
+              <Label>Accent Color <span className="text-muted-foreground font-normal">(vivid blue from the Candora text in the logo)</span></Label>
               <div className="flex items-center gap-2">
                 <input type="color" value={form.accent_color} onChange={e => setForm({ ...form, accent_color: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0" />
                 <Input value={form.accent_color} onChange={e => setForm({ ...form, accent_color: e.target.value })} />
@@ -129,7 +245,7 @@ export default function OrgSettingsPage() {
 
             <Button type="submit" disabled={mutation.isPending} className="gap-2">
               <Save className="w-4 h-4" />
-              {mutation.isPending ? 'Saving...' : 'Save Settings'}
+              {mutation.isPending ? 'Saving…' : 'Save Settings'}
             </Button>
           </form>
         </CardContent>
