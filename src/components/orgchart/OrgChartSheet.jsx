@@ -5,6 +5,7 @@ import OrgTreeLayout from "./OrgTreeLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
 import PayrollSummary from "./PayrollSummary";
+import ScenarioChangelog from "./ScenarioChangelog";
 const nanoid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 
 const TIER_ORDER = [
@@ -385,6 +386,15 @@ export default function OrgChartSheet({
           </div>
         )}
       </div>
+
+      {/* Changelog — scenario sheets only */}
+      {!isOriginal && (
+        <ScenarioChangelog
+          scenarioPositions={working}
+          originalPositions={originalPositions}
+          removedPositions={removedPositions}
+        />
+      )}
 
       {/* Removed positions list — scenario sheets only */}
       {!isOriginal && removedPositions.length > 0 && (
