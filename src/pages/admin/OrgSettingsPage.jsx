@@ -23,8 +23,8 @@ export default function OrgSettingsPage() {
   const [form, setForm] = useState({
     org_name: 'Candora',
     logo_url: '',
-    primary_color: '#2a9d8f',
-    secondary_color: '#e9963e',
+    primary_color: '#f5c116',
+    secondary_color: '#0f1f6b',
     welcome_message: 'Welcome to the Candora Staff Portal',
   });
 
