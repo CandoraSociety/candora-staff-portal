@@ -146,9 +146,9 @@ function NodeCard({ position, x, y, originalPositions, isScenario, showSalary, s
   return (
     <div
       style={{ position: "absolute", left: x - NODE_W / 2, top: y, width: NODE_W }}
-      className={`group border-2 rounded-xl p-2.5 text-center transition-all cursor-default select-none ${borderClass} ${isDragging ? "opacity-40" : ""}`}
-      draggable={false}
-      onDragStart={undefined}
+      className={`group border-2 rounded-xl p-2.5 text-center transition-all select-none ${isScenario ? "cursor-grab" : "cursor-default"} ${borderClass} ${isDragging ? "opacity-40" : ""}`}
+      draggable={!!isScenario}
+      onDragStart={isScenario ? (e) => { e.dataTransfer.effectAllowed = "move"; onDragStart?.(position.id); } : undefined}
       onDragOver={isScenario ? (e) => { e.preventDefault(); onDragOver?.(position.id); } : undefined}
       onDrop={isScenario ? (e) => { e.preventDefault(); onDrop?.(position.id); } : undefined}
     >
