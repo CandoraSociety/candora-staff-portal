@@ -69,7 +69,7 @@ function computeLayout(all) {
       childrenOf[p.reports_to_id].push(p.id);
     }
   });
-  const roots = all.filter(p => !p.reports_to_id || !childrenOf[p.reports_to_id] === undefined || !all.find(x => x.id === p.reports_to_id));
+  const roots = all.filter(p => !p.reports_to_id || !all.find(x => x.id === p.reports_to_id));
 
   // Compute subtree width (in columns) for each node
   // A "column" here is NODE_W + COL_GAP
@@ -147,8 +147,8 @@ function NodeCard({ position, x, y, originalPositions, isScenario, showSalary, s
     <div
       style={{ position: "absolute", left: x - NODE_W / 2, top: y, width: NODE_W }}
       className={`group border-2 rounded-xl p-2.5 text-center transition-all cursor-default select-none ${borderClass} ${isDragging ? "opacity-40" : ""}`}
-      draggable={isScenario}
-      onDragStart={isScenario ? (e) => { e.dataTransfer.effectAllowed = "move"; onDragStart?.(position.id); } : undefined}
+      draggable={false}
+      onDragStart={undefined}
       onDragOver={isScenario ? (e) => { e.preventDefault(); onDragOver?.(position.id); } : undefined}
       onDrop={isScenario ? (e) => { e.preventDefault(); onDrop?.(position.id); } : undefined}
     >
