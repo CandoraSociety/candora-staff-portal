@@ -25,6 +25,7 @@ export default function OrgSettingsPage() {
     logo_url: '',
     primary_color: '#f5c116',
     secondary_color: '#0f1f6b',
+    accent_color: '#1a8fe3',
     welcome_message: 'Welcome to the Candora Staff Portal',
   });
 
@@ -35,6 +36,7 @@ export default function OrgSettingsPage() {
         ...settings,
         primary_color: settings.primary_color || '#f5c116',
         secondary_color: settings.secondary_color || '#0f1f6b',
+        accent_color: settings.accent_color || '#1a8fe3',
       });
     }
   }, [settings]);
@@ -109,6 +111,14 @@ export default function OrgSettingsPage() {
                   <input type="color" value={form.secondary_color} onChange={e => setForm({ ...form, secondary_color: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0" />
                   <Input value={form.secondary_color} onChange={e => setForm({ ...form, secondary_color: e.target.value })} />
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Accent Color <span className="text-muted-foreground font-normal">(bright blue — logo highlight)</span></Label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={form.accent_color} onChange={e => setForm({ ...form, accent_color: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0" />
+                <Input value={form.accent_color} onChange={e => setForm({ ...form, accent_color: e.target.value })} />
               </div>
             </div>
 

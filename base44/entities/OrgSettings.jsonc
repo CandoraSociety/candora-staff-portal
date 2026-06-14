@@ -12,11 +12,16 @@
     },
     "primary_color": {
       "type": "string",
-      "default": "#2a9d8f"
+      "default": "#f5c116"
     },
     "secondary_color": {
       "type": "string",
-      "default": "#e9963e"
+      "default": "#0f1f6b"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#1a8fe3",
+      "description": "Bright blue accent colour from the Candora logo"
     },
     "welcome_message": {
       "type": "string",
