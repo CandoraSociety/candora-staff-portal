@@ -18,7 +18,7 @@ const COLORS = ["#000000", "#ffffff", "#ef4444", "#3b82f6", "#22c55e", "#f59e0b"
 
 export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
   const canvasRef = useRef(null);
-  const [tool, setTool] = useState("draw"); // draw | erase | text
+  const [tool, setTool] = useState("draw");
   const [color, setColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(4);
   const [filter, setFilter] = useState("none");
@@ -29,42 +29,44 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState([]);
   const lastPos = useRef(null);
+  const baseImageRef = useRef(null); // store the original Image for filter reapplication
 
-  // Load image onto canvas when dialog opens
-  useEffect(() => {
-    if (!open || !logoUrl) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  const loadImageOntoCanvas = (canvas, imgEl, filterVal) => {
     const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      canvas.width = img.naturalWidth || 400;
-      canvas.height = img.naturalHeight || 400;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = filter !== "none" ? filter : "none";
-      ctx.drawImage(img, 0, 0);
-      ctx.filter = "none";
-      setHistory([ctx.getImageData(0, 0, canvas.width, canvas.height)]);
-    };
-    img.src = logoUrl;
-  }, [open, logoUrl]);
+    canvas.width = imgEl.naturalWidth || 400;
+    canvas.height = imgEl.naturalHeight || 400;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (filterVal && filterVal !== "none") ctx.filter = filterVal;
+    ctx.drawImage(imgEl, 0, 0);
+    ctx.filter = "none";
+    setHistory([ctx.getImageData(0, 0, canvas.width, canvas.height)]);
+  };
 
-  // Reapply filter when changed
+  // Use a callback ref so we load as soon as the canvas mounts inside the Dialog
+  const setCanvasRef = (node) => {
+    canvasRef.current = node;
+    if (node && logoUrl && open) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        baseImageRef.current = img;
+        loadImageOntoCanvas(node, img, filter);
+      };
+      img.src = logoUrl + (logoUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    }
+  };
+
+  // Reset when dialog opens/closes
   useEffect(() => {
-    if (!open || !logoUrl) return;
+    if (!open) { setHistory([]); baseImageRef.current = null; setFilter("none"); }
+  }, [open]);
+
+  // Reapply filter on top of base image
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = filter !== "none" ? filter : "none";
-      ctx.drawImage(img, 0, 0);
-      ctx.filter = "none";
-    };
-    img.src = logoUrl;
+    const img = baseImageRef.current;
+    if (!canvas || !img) return;
+    loadImageOntoCanvas(canvas, img, filter);
   }, [filter]);
 
   const getPos = (e) => {
@@ -276,7 +278,7 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
           {/* Canvas */}
           <div className="flex-1 overflow-auto bg-[#f0f0f0] flex items-center justify-center">
             <canvas
-              ref={canvasRef}
+              ref={setCanvasRef}
               className="max-w-full max-h-full object-contain shadow-lg"
               style={{ cursor: tool === "text" ? "crosshair" : tool === "erase" ? "cell" : "crosshair", imageRendering: "pixelated" }}
               onMouseDown={onMouseDown}
