@@ -30,7 +30,12 @@ export default function OrgSettingsPage() {
 
   useEffect(() => {
     if (settings) {
-      setForm({ ...form, ...settings });
+      setForm({
+        ...form,
+        ...settings,
+        primary_color: settings.primary_color || '#f5c116',
+        secondary_color: settings.secondary_color || '#0f1f6b',
+      });
     }
   }, [settings]);
 
