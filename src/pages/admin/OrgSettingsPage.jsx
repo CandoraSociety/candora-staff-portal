@@ -214,8 +214,9 @@ export default function OrgSettingsPage() {
                           <span className="text-sm font-medium truncate">{logo.name || 'Untitled'}</span>
                           <button
                             type="button"
-                            onClick={() => { setEditingLogoId(logo.id); setEditingLogoName(logo.name); }}
+                            onClick={() => { setReplacingLogoId(logo.id); replaceInputRef.current?.click(); }}
                             className="text-muted-foreground hover:text-foreground"
+                            title="Replace logo image"
                           >
                             <Pencil className="w-3 h-3" />
                           </button>
