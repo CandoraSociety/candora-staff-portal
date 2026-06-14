@@ -36,6 +36,9 @@ function calculateEmployerContributions(salary) {
   return { ei, cpp1, cpp2, total: ei + cpp1 + cpp2 };
 }
 
+const BENEFITS_MONTHLY = 1900;
+const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
+
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
@@ -65,6 +68,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     totalCPP += contribs.cpp1 + contribs.cpp2;
   });
   const totalEmployerContributions = totalEI + totalCPP;
+  const grandTotalAnnual = annual + totalEmployerContributions + BENEFITS_ANNUAL;
+  const grandTotalMonthly = grandTotalAnnual / 12;
 
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
@@ -153,6 +158,18 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
             <span className="text-muted-foreground">EI: {fmt(totalEI)}</span>
             {hasDeltas && diffEI !== 0 && (
               <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffEI)}</p>
+            )}
+          </div>
+          <div className="text-xs">
+            <span className="text-muted-foreground">Benefits: {fmt(BENEFITS_ANNUAL)}/yr</span>
+            <p className="text-xs text-muted-foreground/60 italic">(est. fixed)</p>
+          </div>
+          <span className="text-muted-foreground/40">|</span>
+          <div>
+            <span className="font-semibold text-foreground">Total Cost: {fmt(grandTotalAnnual)}/yr</span>
+            <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo</p>
+            {hasDeltas && diffAnnual !== 0 && (
+              <p className="text-xs font-semibold text-red-600 italic">Δ {fmtDiff(diffAnnual + diffEmployerContributions)}/yr</p>
             )}
           </div>
         </>
