@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Image, Mail, Megaphone, Calendar, Globe,
@@ -29,6 +30,7 @@ const navItems = [
 
 function MarketingSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
+  const { logoUrl } = useOrgSettings();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -55,19 +57,11 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
       {/* Logo */}
       <div className="border-b border-[hsl(330,50%,18%)] px-3 pt-4 pb-3">
         <Link to="/" className={cn('flex items-center gap-2 group', collapsed ? 'justify-center' : '')}>
-          {collapsed ? (
-            <img
-              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/562a66657_Candoracirclelogo_noanniversary.png"
-              alt="Candora"
-              className="w-9 h-9 object-contain"
-            />
-          ) : (
-            <img
-              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
-              alt="The Candora Society"
-              className="h-24 object-contain"
-            />
-          )}
+          <img
+            src={logoUrl}
+            alt="Candora"
+            className={collapsed ? "w-9 h-9 object-contain" : "h-14 object-contain"}
+          />
         </Link>
         <div className={cn('flex items-center mt-2', collapsed ? 'justify-center' : 'justify-between')}>
           {!collapsed && (

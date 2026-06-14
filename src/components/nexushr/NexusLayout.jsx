@@ -3,13 +3,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAccessLevel } from '@/lib/useAuth';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 import {
   LayoutDashboard, Users, FileText, ClipboardList, AlertTriangle,
   GraduationCap, Scale, BookOpen, TrendingUp, DollarSign,
   Shield, ChevronLeft, ChevronRight, LogOut, Award, Home, Clock, Star, Mail
 } from 'lucide-react';
-
-const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
 const allNavItems = [
   { path: '/nexushr', label: 'Dashboard', icon: LayoutDashboard, access: 'manager' },
@@ -33,6 +32,7 @@ const allNavItems = [
 function NexusSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
   const { isHRAdmin, isManager } = useAccessLevel();
+  const { logoUrl } = useOrgSettings();
   const [user, setUser] = React.useState(null);
   React.useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
 
@@ -52,7 +52,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
       <div className={cn('flex items-center gap-3 px-3 py-4 border-b', collapsed ? 'justify-center' : '')}
         style={{ borderColor: 'hsl(var(--sidebar-border))' }}>
         <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-          <img src={LOGO_URL} alt="Candora" className="w-8 h-8 rounded-full flex-shrink-0" />
+          <img src={logoUrl} alt="Candora" className="w-8 h-8 rounded-full flex-shrink-0" />
         </Link>
         {!collapsed && (
           <div className="min-w-0">

@@ -3,6 +3,7 @@ import FloatingNoteButton from '@/components/notes/FloatingNoteButton';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 import { cn } from '@/lib/utils';
 import { 
   Menu, X, ChevronLeft, Home, FolderOpen, Globe, User, Shield, 
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
 function AppNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logoUrl } = useOrgSettings();
   const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me() });
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -87,11 +89,7 @@ function AppNav() {
         {/* Logo */}
         <div className="h-14 flex items-center gap-3 px-4 border-b border-sidebar-border">
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img
-              src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
-              alt="Candora"
-              className="h-8 w-8 object-contain rounded-full"
-            />
+            <img src={logoUrl} alt="Candora" className="h-8 w-8 object-contain rounded-full" />
             {!collapsed && (
               <span className="font-display font-bold text-sidebar-primary text-sm">CANDORA</span>
             )}
@@ -145,11 +143,7 @@ function AppNav() {
         <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar lg:hidden z-50">
           <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
             <Link to="/" className="flex items-center gap-2">
-              <img
-                src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
-                alt="Candora"
-                className="h-8 w-8 object-contain rounded-full"
-              />
+              <img src={logoUrl} alt="Candora" className="h-8 w-8 object-contain rounded-full" />
               <span className="font-display font-bold text-sidebar-primary text-sm">CANDORA</span>
             </Link>
             <Button variant="ghost" size="icon" onClick={() => setMenuOpen(false)}>

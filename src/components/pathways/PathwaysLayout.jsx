@@ -2,6 +2,7 @@ import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 import { Menu, X, ChevronLeft } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 function AppNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logoUrl } = useOrgSettings();
   const [user, setUser] = useState(null);
   const [pendingCompassCount, setPendingCompassCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,7 +66,7 @@ function AppNav() {
         {/* Logo + Wordmark — clicks back to home */}
         <Link to="/" className="flex items-center gap-3 shrink-0 group" title={user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}>
           <img
-            src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
+            src={logoUrl}
             alt="Candora logo"
             className="h-9 w-9 object-contain rounded-full group-hover:opacity-80 transition-opacity"
           />

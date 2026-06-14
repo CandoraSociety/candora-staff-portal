@@ -2,8 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FolderOpen, FileText, Bell, Archive, CheckSquare, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const NAV_ITEMS = [
   { path: '/grants',              label: 'Dashboard',      icon: LayoutDashboard, exact: true },
@@ -16,6 +15,7 @@ const NAV_ITEMS = [
 
 export default function GrantsLayout() {
   const location = useLocation();
+  const { logoUrl } = useOrgSettings();
 
   const isActive = (item) =>
     item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
@@ -27,7 +27,7 @@ export default function GrantsLayout() {
           <div className="flex items-center justify-between h-16">
             {/* Logo → app home */}
             <Link to="/" className="flex items-center gap-3">
-              <img src={LOGO_URL} alt="Candora" className="h-9 w-9 rounded-lg object-contain" />
+              <img src={logoUrl} alt="Candora" className="h-9 w-9 rounded-lg object-contain" />
               <span className="font-display font-bold text-sm text-primary leading-tight">
                 Grant / Proposal<br />
                 <span className="text-accent-foreground/60 font-normal text-xs">Manager</span>

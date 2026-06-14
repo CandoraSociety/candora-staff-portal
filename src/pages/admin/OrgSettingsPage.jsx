@@ -155,10 +155,15 @@ export default function OrgSettingsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={e => { e.preventDefault(); mutation.mutate(form); }} className="space-y-6">
-            <div className="space-y-1.5">
-              <Label>Organization Name</Label>
+          <div className="space-y-1.5">
+            <Label>Organization Name</Label>
+            <div className="flex gap-2">
               <Input value={form.org_name} onChange={e => setForm({ ...form, org_name: e.target.value })} />
+              <Button type="button" variant="outline" size="sm" onClick={() => mutation.mutate({ ...form })} disabled={mutation.isPending}>
+                Save
+              </Button>
             </div>
+          </div>
 
             {/* Logo Library */}
             <div className="space-y-3">

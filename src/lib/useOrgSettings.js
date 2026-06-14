@@ -7,7 +7,7 @@ export function useOrgSettings() {
   const { data: list = [] } = useQuery({
     queryKey: ['orgSettings'],
     queryFn: () => base44.entities.OrgSettings.list(),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
   const s = list[0] || {};
   return {
