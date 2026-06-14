@@ -61,14 +61,6 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
     if (!open) { setHistory([]); baseImageRef.current = null; setFilter("none"); }
   }, [open]);
 
-  // Reapply filter on top of base image
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const img = baseImageRef.current;
-    if (!canvas || !img) return;
-    loadImageOntoCanvas(canvas, img, filter);
-  }, [filter]);
-
   const getPos = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -143,7 +135,18 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
     const canvas = canvasRef.current;
     setSaving(true);
     try {
-      const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+      // Bake CSS filter into the export canvas
+      let exportCanvas = canvas;
+      if (filter && filter !== "none") {
+        exportCanvas = document.createElement("canvas");
+        exportCanvas.width = canvas.width;
+        exportCanvas.height = canvas.height;
+        const ctx2 = exportCanvas.getContext("2d");
+        ctx2.filter = filter;
+        ctx2.drawImage(canvas, 0, 0);
+        ctx2.filter = "none";
+      }
+      const blob = await new Promise(res => exportCanvas.toBlob(res, "image/png"));
       const { file_url } = await base44.integrations.Core.UploadFile({ file: blob });
       onSave(file_url);
       onClose();
@@ -280,7 +283,7 @@ export default function LogoEditor({ open, onClose, logoUrl, onSave }) {
             <canvas
               ref={setCanvasRef}
               className="max-w-full max-h-full object-contain shadow-lg"
-              style={{ cursor: tool === "text" ? "crosshair" : tool === "erase" ? "cell" : "crosshair", imageRendering: "pixelated" }}
+              style={{ cursor: "crosshair", imageRendering: "pixelated", filter: filter !== "none" ? filter : undefined }}
               onMouseDown={onMouseDown}
               onMouseMove={onMouseMove}
               onMouseUp={onMouseUp}
