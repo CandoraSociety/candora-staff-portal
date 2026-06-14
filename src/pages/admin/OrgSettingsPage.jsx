@@ -83,11 +83,10 @@ export default function OrgSettingsPage() {
   const setActiveLogo = (id) => {
     const logo = form.logos.find(l => l.id === id);
     if (!logo) return;
-    setForm(f => ({
-      ...f,
-      logo_url: logo.url,
-      logos: f.logos.map(l => ({ ...l, is_active: l.id === id })),
-    }));
+    const newLogos = form.logos.map(l => ({ ...l, is_active: l.id === id }));
+    const updated = { ...form, logo_url: logo.url, logos: newLogos };
+    setForm(updated);
+    mutation.mutate(updated);
   };
 
   const removeLogo = (id) => {
@@ -113,11 +112,11 @@ export default function OrgSettingsPage() {
     setUploadingLogo(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setForm(f => ({
-        ...f,
-        logos: f.logos.map(l => l.id === replacingLogoId ? { ...l, url: file_url } : l),
-        logo_url: f.logos.find(l => l.id === replacingLogoId)?.is_active ? file_url : f.logo_url,
-      }));
+      const wasActive = form.logos.find(l => l.id === replacingLogoId)?.is_active;
+      const newLogos = form.logos.map(l => l.id === replacingLogoId ? { ...l, url: file_url } : l);
+      const updated = { ...form, logos: newLogos, logo_url: wasActive ? file_url : form.logo_url };
+      setForm(updated);
+      mutation.mutate(updated);
       toast.success('Logo image replaced');
     } catch {
       toast.error('Upload failed');
