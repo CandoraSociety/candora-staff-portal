@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users, Undo2, Redo2 } from "lucide-react";
+import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users } from "lucide-react";
 import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
 import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
 import TeamsView from "@/components/orgchart/TeamsView";
@@ -44,36 +44,10 @@ export default function EDOrgChart() {
     queryFn: () => base44.entities.EDOrgScenario.list(),
   });
 
-  // ---- Undo/Redo for canonical positions ----
-  const [undoStack, setUndoStack] = useState([]); // each entry: snapshot of positions array
-  const [redoStack, setRedoStack] = useState([]);
-
-  const pushUndo = (snapshot) => {
-    setUndoStack(s => [...s.slice(-29), snapshot]);
-    setRedoStack([]);
-  };
-
-  const handleUndo = async () => {
-    if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
-    setRedoStack(s => [...s, positions]); // save current for redo
-    setUndoStack(s => s.slice(0, -1));
-    // Apply: delete all current, recreate prev snapshot
+  // ---- Canonical undo/redo restore (called from OrgChartSheet) ----
+  const handleUndoRestoreCanonical = async (snapshotPositions) => {
     await Promise.all(positions.map(p => base44.entities.EDOrgPosition.delete(p.id)));
-    await Promise.all(prev.map(p => {
-      const { id, created_date, updated_date, ...rest } = p;
-      return base44.entities.EDOrgPosition.create({ ...rest, owner_id: user?.id });
-    }));
-    qc.invalidateQueries({ queryKey: ["ed-org"] });
-  };
-
-  const handleRedo = async () => {
-    if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
-    setUndoStack(s => [...s, positions]);
-    setRedoStack(s => s.slice(0, -1));
-    await Promise.all(positions.map(p => base44.entities.EDOrgPosition.delete(p.id)));
-    await Promise.all(next.map(p => {
+    await Promise.all(snapshotPositions.map(p => {
       const { id, created_date, updated_date, ...rest } = p;
       return base44.entities.EDOrgPosition.create({ ...rest, owner_id: user?.id });
     }));
@@ -95,7 +69,6 @@ export default function EDOrgChart() {
 
   // ---- Canonical CRUD ----
   const saveCanonical = async (form, editId) => {
-    pushUndo(positions); // snapshot before change
     const data = { ...form, salary: parseFloat(form.salary) || 0 };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
@@ -103,7 +76,6 @@ export default function EDOrgChart() {
   };
 
   const deleteCanonical = async (id) => {
-    pushUndo(positions); // snapshot before delete
     await base44.entities.EDOrgPosition.delete(id);
     qc.invalidateQueries({ queryKey: ["ed-org"] });
   };
@@ -194,18 +166,6 @@ export default function EDOrgChart() {
           </div>
         </div>
         <div className="flex items-center gap-2 ml-auto flex-wrap">
-          {/* Undo/Redo — Original tab only */}
-          {activeTab === 0 && (
-            <div className="flex items-center gap-1 border rounded-md overflow-hidden">
-              <Button variant="ghost" size="sm" onClick={handleUndo} disabled={undoStack.length === 0} className="rounded-none gap-1 px-2.5">
-                <Undo2 className="w-3.5 h-3.5" /> Undo
-              </Button>
-              <div className="w-px h-5 bg-border" />
-              <Button variant="ghost" size="sm" onClick={handleRedo} disabled={redoStack.length === 0} className="rounded-none gap-1 px-2.5">
-                <Redo2 className="w-3.5 h-3.5" /> Redo
-              </Button>
-            </div>
-          )}
           {/* Visibility toggle */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -295,6 +255,7 @@ export default function EDOrgChart() {
             isOriginal
             onSavePosition={saveCanonical}
             onDeletePosition={deleteCanonical}
+            onUndoRestoreCanonical={handleUndoRestoreCanonical}
             showSalary={showSalary}
             showNames={showNames}
             originalPositions={positions}

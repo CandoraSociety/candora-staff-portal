@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw } from "lucide-react";
+import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw, Undo2, Redo2 } from "lucide-react";
 import OrgTreeLayout from "./OrgTreeLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
@@ -97,6 +97,7 @@ export default function OrgChartSheet({
   isOriginal,
   onSavePosition, // (form, editId) => void — canonical
   onDeletePosition, // (id) => void — canonical
+  onUndoRestoreCanonical, // (snapshotPositions) => void — called when undo/redo on original tab
   showSalary, showNames,
   originalPositions, // canonical positions for change-highlighting
   basePositions, // base positions for delta calculation (original for scenarios)
@@ -113,6 +114,43 @@ export default function OrgChartSheet({
       setRemovedPositions(initialRemovedPositions);
     }
   }, [JSON.stringify(initialRemovedPositions)]);
+
+  // ---- Undo / Redo ----
+  // Each history entry: { positions, removedPositions }
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  // Capture current state before a mutation
+  const pushUndo = (currentPositions, currentRemoved) => {
+    setUndoStack(s => [...s.slice(-29), { positions: currentPositions, removed: currentRemoved }]);
+    setRedoStack([]);
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    setUndoStack(s => s.slice(0, -1));
+    setRedoStack(s => [...s, { positions: isOriginal ? positions : working, removed: removedPositions }]);
+    if (isOriginal) {
+      onUndoRestoreCanonical?.(prev.positions);
+    } else {
+      setRemovedPositions(prev.removed);
+      onScenarioChange(prev.positions, prev.removed);
+    }
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    setRedoStack(s => s.slice(0, -1));
+    setUndoStack(s => [...s, { positions: isOriginal ? positions : working, removed: removedPositions }]);
+    if (isOriginal) {
+      onUndoRestoreCanonical?.(next.positions);
+    } else {
+      setRemovedPositions(next.removed);
+      onScenarioChange(next.positions, next.removed);
+    }
+  };
 
   const working = isOriginal ? positions : (scenarioPositions || []);
 
@@ -146,8 +184,10 @@ export default function OrgChartSheet({
       summer_weeks: parseFloat(merged.summer_weeks) || 0,
     };
     if (isOriginal) {
+      pushUndo(positions, removedPositions);
       onSavePosition(data, editId);
     } else {
+      pushUndo(working, removedPositions);
       let next;
       if (editId) {
         next = working.map(p => p.id === editId ? { ...p, ...data } : p);
@@ -158,13 +198,14 @@ export default function OrgChartSheet({
       onScenarioChange(next);
     }
     setFormOpen(false); setForm(EMPTY_POS); setEditId(null);
-
   };
 
   const handleDelete = (id) => {
     if (isOriginal) {
+      pushUndo(positions, removedPositions);
       onDeletePosition(id);
     } else {
+      pushUndo(working, removedPositions);
       const pos = working.find(p => p.id === id);
       const newRemoved = pos ? [...removedPositions, pos] : removedPositions;
       if (pos) setRemovedPositions(newRemoved);
@@ -175,6 +216,7 @@ export default function OrgChartSheet({
   const handleRestore = (id) => {
     const pos = removedPositions.find(p => p.id === id);
     if (pos) {
+      pushUndo(working, removedPositions);
       const newRemoved = removedPositions.filter(p => p.id !== id);
       onScenarioChange([...working, pos], newRemoved);
       setRemovedPositions(newRemoved);
@@ -184,7 +226,6 @@ export default function OrgChartSheet({
   // Drag-to-reparent: drop dragging node onto target → dragging becomes child of target
   const handleDrop = useCallback((targetId) => {
     if (!draggingId || draggingId === targetId || isOriginal) return;
-    // Check target is not a descendant of dragging (prevent cycles)
     const isDescendant = (checkId, ancestorId) => {
       const pos = working.find(p => p.id === checkId);
       if (!pos) return false;
@@ -192,15 +233,17 @@ export default function OrgChartSheet({
       return pos.reports_to_id ? isDescendant(pos.reports_to_id, ancestorId) : false;
     };
     if (isDescendant(targetId, draggingId)) return;
+    pushUndo(working, removedPositions);
     const next = working.map(p => p.id === draggingId ? { ...p, reports_to_id: targetId } : p);
     onScenarioChange(next);
     setDraggingId(null);
     setDragOverId(null);
-  }, [draggingId, working, isOriginal, onScenarioChange]);
+  }, [draggingId, working, isOriginal, onScenarioChange, removedPositions]);
 
   const handleDropToRoot = (e) => {
     e.preventDefault();
     if (!draggingId || isOriginal) return;
+    pushUndo(working, removedPositions);
     const next = working.map(p => p.id === draggingId ? { ...p, reports_to_id: "" } : p);
     onScenarioChange(next);
     setDraggingId(null);
@@ -227,6 +270,26 @@ export default function OrgChartSheet({
       <div className="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
         <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />
         <div className="flex items-center gap-2">
+          {/* Undo / Redo */}
+          <div className="flex items-center border rounded-md overflow-hidden">
+            <button
+              onClick={handleUndo}
+              disabled={undoStack.length === 0}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs transition-colors disabled:opacity-40 hover:bg-muted"
+              title="Undo"
+            >
+              <Undo2 className="w-3.5 h-3.5" /> Undo
+            </button>
+            <div className="w-px h-4 bg-border" />
+            <button
+              onClick={handleRedo}
+              disabled={redoStack.length === 0}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs transition-colors disabled:opacity-40 hover:bg-muted"
+              title="Redo"
+            >
+              <Redo2 className="w-3.5 h-3.5" /> Redo
+            </button>
+          </div>
           {/* Layout toggle */}
           <div className="flex rounded-md border overflow-hidden">
             <button
