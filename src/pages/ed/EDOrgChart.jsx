@@ -42,6 +42,7 @@ export default function EDOrgChart() {
   const { data: scenarios = [] } = useQuery({
     queryKey: ["ed-org-scenarios"],
     queryFn: () => base44.entities.EDOrgScenario.list(),
+    staleTime: 0,
   });
 
   // ---- Canonical undo/redo restore (called from OrgChartSheet) ----
