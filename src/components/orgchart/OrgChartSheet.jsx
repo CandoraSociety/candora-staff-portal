@@ -232,7 +232,9 @@ export default function OrgChartSheet({
     }
   };
 
-  // Drag-to-reparent: drop dragging node onto target → dragging becomes child of target
+  const [reparentConfirm, setReparentConfirm] = useState(null); // { childId, targetId }
+
+  // Drag-to-reparent: drop dragging node onto target → show confirmation before saving
   const handleDrop = useCallback((targetId) => {
     if (!draggingId || draggingId === targetId || isOriginal) return;
     const isDescendant = (checkId, ancestorId) => {
@@ -242,19 +244,24 @@ export default function OrgChartSheet({
       return pos.reports_to_id ? isDescendant(pos.reports_to_id, ancestorId) : false;
     };
     if (isDescendant(targetId, draggingId)) return;
-    pushUndo(working, removedPositions);
-    const next = working.map(p => p.id === draggingId ? { ...p, reports_to_id: targetId } : p);
-    onScenarioChange(next);
+    setReparentConfirm({ childId: draggingId, targetId });
     setDraggingId(null);
     setDragOverId(null);
-  }, [draggingId, working, isOriginal, onScenarioChange, removedPositions]);
+  }, [draggingId, working, isOriginal]);
+
+  const confirmReparent = () => {
+    if (!reparentConfirm) return;
+    const { childId, targetId } = reparentConfirm;
+    pushUndo(working, removedPositions);
+    const next = working.map(p => p.id === childId ? { ...p, reports_to_id: targetId } : p);
+    onScenarioChange(next);
+    setReparentConfirm(null);
+  };
 
   const handleDropToRoot = (e) => {
     e.preventDefault();
     if (!draggingId || isOriginal) return;
-    pushUndo(working, removedPositions);
-    const next = working.map(p => p.id === draggingId ? { ...p, reports_to_id: "" } : p);
-    onScenarioChange(next);
+    setReparentConfirm({ childId: draggingId, targetId: "__root__" });
     setDraggingId(null);
   };
 
@@ -409,6 +416,48 @@ export default function OrgChartSheet({
           </div>
         </div>
       )}
+
+      {/* Reparent confirmation dialog */}
+      {reparentConfirm && (() => {
+        const child = working.find(p => p.id === reparentConfirm.childId);
+        const newManager = reparentConfirm.targetId === "__root__" ? null : working.find(p => p.id === reparentConfirm.targetId);
+        const oldManager = child?.reports_to_id ? working.find(p => p.id === child.reports_to_id) : null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-background border rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold">Move Position?</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <span className="font-semibold text-foreground">{child?.title}{child?.person_name ? ` (${child.person_name})` : ""}</span>
+                  {" "}will now report to{" "}
+                  <span className="font-semibold text-foreground">
+                    {newManager ? `${newManager.title}${newManager.person_name ? ` (${newManager.person_name})` : ""}` : "no one (top level)"}
+                  </span>.
+                </p>
+                {oldManager && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Previously reported to: {oldManager.title}{oldManager.person_name ? ` (${oldManager.person_name})` : ""}
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 rounded-md border text-sm hover:bg-muted transition-colors"
+                  onClick={() => setReparentConfirm(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded-md bg-accent text-accent-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+                  onClick={confirmReparent}
+                >
+                  Confirm Move
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Delete confirmation dialog */}
       {deleteConfirm && (() => {
