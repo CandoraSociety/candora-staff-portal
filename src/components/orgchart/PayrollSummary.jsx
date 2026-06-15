@@ -42,20 +42,25 @@ const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
-  // Always use the stored salary field as the source of truth
-  const annual = positions.reduce((s, p) => s + (p.salary || 0), 0);
+
+  // Separate practicum placements from paid staff
+  const practicumPositions = positions.filter(p => p.tier === "practicum_placement");
+  const paidPositions = positions.filter(p => p.tier !== "practicum_placement");
+
+  // Always use the stored salary field as the source of truth (exclude practicums — always $0)
+  const annual = paidPositions.reduce((s, p) => s + (p.salary || 0), 0);
   const monthly = annual / 12;
   const biweekly = annual / 26;
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
   const fmtDiff = (n) => (n >= 0 ? "▲ +" : "▼ ") + Math.round(Math.abs(n)).toLocaleString();
   const diffColor = (n) => n > 0 ? "text-green-600" : "text-red-600";
-  const filled = positions.filter(p => !p.is_vacant && p.person_name?.trim()).length;
-  const vacant = positions.filter(p => p.is_vacant || !p.person_name?.trim()).length;
+  const filled = paidPositions.filter(p => !p.is_vacant && p.person_name?.trim()).length;
+  const vacant = paidPositions.filter(p => p.is_vacant || !p.person_name?.trim()).length;
 
-  // Calculate employer CPP/EI contributions
+  // Calculate employer CPP/EI contributions (paid staff only)
   let totalEI = 0;
   let totalCPP = 0;
-  positions.forEach(p => {
+  paidPositions.forEach(p => {
     const contribs = calculateEmployerContributions(p.salary || 0);
     totalEI += contribs.ei;
     totalCPP += contribs.cpp1 + contribs.cpp2;
@@ -63,6 +68,9 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const totalEmployerContributions = totalEI + totalCPP;
   const grandTotalAnnual = annual + totalEmployerContributions + BENEFITS_ANNUAL;
   const grandTotalMonthly = grandTotalAnnual / 12;
+
+  // Base comparisons also exclude practicums
+  const basePaidPositions = basePositions?.filter(p => p.tier !== "practicum_placement") || [];
 
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
@@ -72,9 +80,9 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   let diffEI = 0;
   let diffCPP = 0;
   let diffEmployerContributions = 0;
-  if (basePositions && basePositions.length > 0) {
-    diffPositions = positions.length - basePositions.length;
-    const baseAnnual = basePositions.reduce((s, p) => s + (p.salary || 0), 0);
+  if (basePaidPositions.length > 0) {
+    diffPositions = paidPositions.length - basePaidPositions.length;
+    const baseAnnual = basePaidPositions.reduce((s, p) => s + (p.salary || 0), 0);
     diffAnnual = annual - baseAnnual;
     diffMonthly = diffAnnual / 12;
     diffBiweekly = diffAnnual / 26;
@@ -82,7 +90,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     // Calculate base employer contributions
     let baseEI = 0;
     let baseCPP = 0;
-    basePositions.forEach(p => {
+    basePaidPositions.forEach(p => {
       const contribs = calculateEmployerContributions(p.salary || 0);
       baseEI += contribs.ei;
       baseCPP += contribs.cpp1 + contribs.cpp2;
@@ -91,12 +99,15 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     diffCPP = totalCPP - baseCPP;
     diffEmployerContributions = diffEI + diffCPP;
   }
-  const hasDeltas = basePositions && basePositions.length > 0 && (diffPositions !== 0 || diffAnnual !== 0);
+  const hasDeltas = basePaidPositions.length > 0 && (diffPositions !== 0 || diffAnnual !== 0);
 
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
       <div>
-        <span className="font-semibold text-foreground">{positions.length} positions</span>
+        <span className="font-semibold text-foreground">{paidPositions.length} staff position{paidPositions.length !== 1 ? "s" : ""}</span>
+        {practicumPositions.length > 0 && (
+          <p className="text-xs text-muted-foreground">{practicumPositions.length} practicum</p>
+        )}
         {hasDeltas && diffPositions !== 0 && (
           <p className={`text-xs font-semibold italic ${diffColor(diffPositions)}`}>{fmtDiff(diffPositions)}</p>
         )}
