@@ -155,7 +155,7 @@ export default function EDOrgChart() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-dvh bg-background">
       {/* Top toolbar */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-card gap-3 flex-wrap">
         <div className="flex items-center gap-1">
@@ -241,6 +241,67 @@ export default function EDOrgChart() {
         </div>
       </div>
 
+      {/* Tab bar — only in chart mode, placed ABOVE chart so mobile browser chrome can't cover it */}
+      {mode === "chart" && (
+        <div className="border-b bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto shrink-0">
+          {/* Original tab */}
+          <button
+            onClick={() => setActiveTab(0)}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-b-md text-sm font-medium border border-t-0 transition-colors whitespace-nowrap ${
+              activeTab === 0
+                ? "bg-background text-foreground border-border"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+            }`}
+          >
+            📋 Original
+          </button>
+
+          {/* Scenario tabs */}
+          {scenarios.map((s, i) => (
+            <div
+              key={s.id}
+              className={`group flex items-center gap-1 px-3 py-1.5 rounded-b-md text-sm border border-t-0 transition-colors whitespace-nowrap ${
+                activeTab === i + 1
+                  ? "bg-background text-foreground border-border font-medium"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+              }`}
+            >
+              <button onClick={() => setActiveTab(i + 1)} className="flex items-center gap-1.5">
+                🔬 {s.name}
+              </button>
+              <button
+                onClick={() => { setRenameDialog(s.id); setRenameName(s.name); }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
+              >
+                <Pencil className="w-2.5 h-2.5" />
+              </button>
+              <button
+                onClick={() => deleteScenario(s.id)}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 hover:text-destructive transition-opacity p-0.5 rounded"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          ))}
+
+          {/* Add new sheet */}
+          <button
+            onClick={() => setNewSheetDialog(true)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-b-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent transition-colors whitespace-nowrap"
+          >
+            <Plus className="w-3.5 h-3.5" /> New Sheet
+          </button>
+
+          {/* Legend for scenario tabs */}
+          {activeTab > 0 && (
+            <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground px-2">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-blue-300 inline-block" /> Unchanged</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-orange-400 inline-block" /> Modified</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Teams mode */}
       {mode === "teams" && (
         <div className="flex-1 overflow-hidden">
@@ -268,10 +329,8 @@ export default function EDOrgChart() {
             positions={positions}
             scenarioPositions={currentScenario.positions || []}
             initialRemovedPositions={(() => {
-              // Retroactively compute removed: canonical positions whose ID isn't in scenario original_ids
               const scenarioOriginalIds = new Set((currentScenario.positions || []).map(p => p.original_id || p.id));
               const computed = positions.filter(p => !scenarioOriginalIds.has(p.id));
-              // Merge with any persisted removed_positions (may include positions no longer in canonical)
               const persisted = currentScenario.removed_positions || [];
               const persistedIds = new Set(persisted.map(p => p.id));
               const merged = [...persisted, ...computed.filter(p => !persistedIds.has(p.id))];
@@ -285,67 +344,6 @@ export default function EDOrgChart() {
             basePositions={positions}
           />
         ) : null}
-      </div>}
-
-      {/* Tab bar at bottom — only in chart mode */}
-      {mode === "teams" ? null :
-      /* Tab bar at bottom */
-      <div className="border-t bg-card flex items-center gap-0.5 px-2 py-1 overflow-x-auto" style={{ paddingBottom: "max(4px, env(safe-area-inset-bottom))" }}>
-        {/* Original tab */}
-        <button
-          onClick={() => setActiveTab(0)}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-t-md text-sm font-medium border border-b-0 transition-colors whitespace-nowrap ${
-            activeTab === 0
-              ? "bg-background text-foreground border-border"
-              : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
-          }`}
-        >
-          📋 Original
-        </button>
-
-        {/* Scenario tabs */}
-        {scenarios.map((s, i) => (
-          <div
-            key={s.id}
-            className={`group flex items-center gap-1 px-3 py-1.5 rounded-t-md text-sm border border-b-0 transition-colors whitespace-nowrap ${
-              activeTab === i + 1
-                ? "bg-background text-foreground border-border font-medium"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
-            }`}
-          >
-            <button onClick={() => setActiveTab(i + 1)} className="flex items-center gap-1.5">
-              🔬 {s.name}
-            </button>
-            <button
-              onClick={() => { setRenameDialog(s.id); setRenameName(s.name); }}
-              className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity p-0.5 rounded"
-            >
-              <Pencil className="w-2.5 h-2.5" />
-            </button>
-            <button
-              onClick={() => deleteScenario(s.id)}
-              className="opacity-0 group-hover:opacity-60 hover:!opacity-100 hover:text-destructive transition-opacity p-0.5 rounded"
-            >
-              <X className="w-2.5 h-2.5" />
-            </button>
-          </div>
-        ))}
-
-        {/* Add new sheet */}
-        <button
-          onClick={() => setNewSheetDialog(true)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-t-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent transition-colors whitespace-nowrap"
-        >
-          <Plus className="w-3.5 h-3.5" /> New Sheet
-        </button>
-
-        {/* Legend for scenario tabs */}
-        {activeTab > 0 && (
-          <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground px-2">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-blue-300 inline-block" /> Unchanged</span>
-            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-orange-400 inline-block" /> Modified</span>
-          </div>
-        )}
       </div>}
 
       {/* New Sheet Dialog */}
