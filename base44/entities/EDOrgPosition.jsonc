@@ -33,6 +33,10 @@
         "specialist"
       ]
     },
+    "row_number": {
+      "type": "number",
+      "description": "Manual row assignment for tree layout (1 = top row)"
+    },
     "reports_to_id": {
       "type": "string"
     },

@@ -31,6 +31,10 @@
           "tier": {
             "type": "string"
           },
+          "row_number": {
+            "type": "number",
+            "description": "Manual row assignment for tree layout"
+          },
           "reports_to_id": {
             "type": "string"
           },

@@ -22,7 +22,7 @@ const TIERS = [
 
 export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
-  tier: "", reports_to_id: "", dotted_line_reports_to_id: "", 
+  tier: "", row_number: "", reports_to_id: "", dotted_line_reports_to_id: "", 
   salary: "", hourly_rate: "", hours_per_week: "", weeks_per_year: "",
   has_summer_hours: false, summer_hours_per_week: "", summer_weeks: "",
   is_vacant: false, notes: "",
@@ -348,6 +348,18 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
                 {TIERS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Row Number — for manual tree layout positioning */}
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Row Number (for tree layout)</label>
+            <Input
+              type="number"
+              value={form.row_number || ""}
+              onChange={e => setForm({ ...form, row_number: e.target.value ? parseInt(e.target.value) : "" })}
+              placeholder="Leave blank to use tier-based rows"
+            />
+            <p className="text-[10px] text-muted-foreground/70">Set a number to place this position on a specific row (1 = top). Leave blank to auto-position by tier.</p>
           </div>
 
           {/* Compensation */}

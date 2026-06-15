@@ -107,6 +107,7 @@ export default function EDOrgChart() {
         person_name: p.person_name,
         department: p.department,
         tier: p.tier,
+        row_number: p.row_number,
         reports_to_id: p.reports_to_id,
         dotted_line_reports_to_id: p.dotted_line_reports_to_id,
         salary: p.salary,

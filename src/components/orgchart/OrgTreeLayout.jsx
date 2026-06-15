@@ -23,7 +23,7 @@ const TIER_LABELS = {
 const NODE_W = 150;
 const NODE_H = 82;
 const COL_GAP = 12;
-const ROW_GAP = 60;
+const ROW_GAP = 80;
 const TIER_LABEL_W = 120;
 const PAD = 24;
 
@@ -35,11 +35,20 @@ function tierRank(tier) {
 }
 
 function computeLayout(all) {
-  const usedTiers = [...new Set(all.map(p => p.tier || "__none__"))];
-  usedTiers.sort((a, b) => tierRank(a) - tierRank(b));
+  // Group by row_number (default to tier-based if not set)
+  const usedRows = [...new Set(all.map(p => p.row_number ?? p.tier ?? "__none__"))];
+  usedRows.sort((a, b) => {
+    // If both are numbers, sort numerically
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    // If both are strings (tiers), use tier order
+    if (typeof a === "string" && typeof b === "string") return tierRank(a) - tierRank(b);
+    // Numbers come before strings
+    if (typeof a === "number") return -1;
+    return 1;
+  });
 
-  const tierY = {};
-  usedTiers.forEach((tier, i) => { tierY[tier] = i * (NODE_H + ROW_GAP); });
+  const rowY = {};
+  usedRows.forEach((row, i) => { rowY[row] = i * (NODE_H + ROW_GAP); });
 
   const childrenOf = {};
   all.forEach(p => { childrenOf[p.id] = []; });
@@ -76,13 +85,13 @@ function computeLayout(all) {
 
   const posMap = {};
   all.forEach(p => {
-    const tier = p.tier || "__none__";
-    posMap[p.id] = { x: xPos[p.id] ?? 0, y: tierY[tier] ?? 0 };
+    const row = p.row_number ?? p.tier ?? "__none__";
+    posMap[p.id] = { x: xPos[p.id] ?? 0, y: rowY[row] ?? 0 };
   });
 
   const totalWidth = Math.max(...Object.values(xPos).map(x => x + NODE_W / 2), 200);
-  const totalHeight = Math.max(...Object.values(tierY).map(y => y + NODE_H + ROW_GAP), 200);
-  const tierRows = usedTiers.map(tier => ({ tier, y: tierY[tier], label: TIER_LABELS[tier] }));
+  const totalHeight = Math.max(...Object.values(rowY).map(y => y + NODE_H + ROW_GAP), 200);
+  const tierRows = usedRows.map(row => ({ tier: row, y: rowY[row], label: typeof row === "number" ? `Row ${row}` : TIER_LABELS[row] || row }));
   return { posMap, tierRows, totalWidth, totalHeight };
 }
 
@@ -313,9 +322,9 @@ export default function OrgTreeLayout({
   });
 
   return (
-    <div className="relative" style={{ userSelect: "none" }}>
+    <div className="relative w-full h-full" style={{ userSelect: "none", minHeight: "400px" }}>
       {/* Zoom controls — fixed top-right, high z-index to stay on top */}
-      <div className="absolute top-2 right-2 z-50 flex items-center gap-1 bg-card border rounded-lg shadow-lg px-1 py-0.5" style={{ zIndex: 9999 }}>
+      <div className="absolute top-2 right-2 z-[9999] flex items-center gap-1 bg-card border rounded-lg shadow-lg px-2 py-1.5">
         <button onClick={zoomOut} className="p-1.5 rounded hover:bg-muted transition-colors" title="Zoom out">
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
