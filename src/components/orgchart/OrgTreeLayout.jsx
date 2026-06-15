@@ -4,7 +4,7 @@
  * - Drag near a card in a HIGHER tier → prompt reparent confirmation
  */
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
-import { User, UserX, Pencil, Trash2 } from "lucide-react";
+import { User, UserX, Pencil, Trash2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const TIER_ORDER = [
@@ -27,7 +27,6 @@ const ROW_GAP = 20;
 const TIER_LABEL_W = 120;
 const PAD = 24;
 
-// Proximity threshold (px) to trigger reparent prompt — must be well within the target card
 const REPARENT_THRESHOLD = 40;
 
 function tierRank(tier) {
@@ -141,22 +140,17 @@ export default function OrgTreeLayout({
   onEdit, onDelete, onReparentRequest, onReorder,
 }) {
   const containerRef = useRef(null);
+  const [zoom, setZoom] = useState(1);
   const [drag, setDrag] = useState(null);
-  // drag = { id, startX, startY, currentX, currentY, offsetX, offsetY }
   const [dropTargetId, setDropTargetId] = useState(null);
 
   const { posMap, tierRows, totalWidth, totalHeight } = useMemo(() => computeLayout(positions), [positions]);
   const svgW = totalWidth + TIER_LABEL_W + PAD * 2;
   const svgH = totalHeight + NODE_H + PAD * 2;
 
-  // Absolute pixel coords of a position's card centre
-  const absCardCentre = useCallback((id) => {
-    const p = posMap[id];
-    if (!p) return null;
-    return { x: p.x + TIER_LABEL_W + PAD, y: p.y + PAD + NODE_H / 2 };
-  }, [posMap]);
+  const zoomIn = () => setZoom(z => Math.min(2, Math.round((z + 0.1) * 10) / 10));
+  const zoomOut = () => setZoom(z => Math.max(0.3, Math.round((z - 0.1) * 10) / 10));
 
-  // During drag: find the highest-tier card (superior) the dragged card is hovering within REPARENT_THRESHOLD
   const findReparentTarget = useCallback((draggedId, mouseX, mouseY) => {
     const dragged = positions.find(p => p.id === draggedId);
     if (!dragged) return null;
@@ -168,14 +162,13 @@ export default function OrgTreeLayout({
     positions.forEach(p => {
       if (p.id === draggedId) return;
       const pRank = tierRank(p.tier);
-      if (pRank >= draggedRank) return; // must be a superior tier
+      if (pRank >= draggedRank) return;
 
       const cardPos = posMap[p.id];
       if (!cardPos) return;
       const cardAbsX = cardPos.x + TIER_LABEL_W + PAD;
       const cardAbsY = cardPos.y + PAD;
 
-      // Check if mouse is within card bounds + threshold
       const inX = mouseX >= cardAbsX - NODE_W / 2 - REPARENT_THRESHOLD &&
                   mouseX <= cardAbsX + NODE_W / 2 + REPARENT_THRESHOLD;
       const inY = mouseY >= cardAbsY - REPARENT_THRESHOLD &&
@@ -194,8 +187,8 @@ export default function OrgTreeLayout({
     e.preventDefault();
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const mouseX = e.clientX - rect.left + containerRef.current.scrollLeft;
-    const mouseY = e.clientY - rect.top + containerRef.current.scrollTop;
+    const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
+    const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
     const card = posMap[id];
     if (!card) return;
     const cardAbsX = card.x + TIER_LABEL_W + PAD;
@@ -208,7 +201,7 @@ export default function OrgTreeLayout({
       offsetY: mouseY - cardAbsY,
     });
     setDropTargetId(null);
-  }, [posMap]);
+  }, [posMap, zoom]);
 
   useEffect(() => {
     if (!drag) return;
@@ -216,8 +209,8 @@ export default function OrgTreeLayout({
     const onMove = (e) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const mouseX = e.clientX - rect.left + containerRef.current.scrollLeft;
-      const mouseY = e.clientY - rect.top + containerRef.current.scrollTop;
+      const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
+      const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
       setDrag(d => ({ ...d, currentX: mouseX - d.offsetX, currentY: mouseY - d.offsetY }));
       const target = findReparentTarget(drag.id, mouseX, mouseY);
       setDropTargetId(target);
@@ -226,22 +219,18 @@ export default function OrgTreeLayout({
     const onUp = (e) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) { setDrag(null); setDropTargetId(null); return; }
-      const mouseX = e.clientX - rect.left + containerRef.current.scrollLeft;
-      const mouseY = e.clientY - rect.top + containerRef.current.scrollTop;
+      const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
+      const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
 
       const reparentTarget = findReparentTarget(drag.id, mouseX, mouseY);
 
       if (reparentTarget) {
-        // Prompt reparent
         onReparentRequest?.(drag.id, reparentTarget);
       } else {
-        // Same-tier reorder: find closest same-tier card horizontally
         const dragged = positions.find(p => p.id === drag.id);
         if (dragged) {
           const sameTier = positions.filter(p => p.tier === dragged.tier && p.id !== drag.id);
-          // Find if we're between two same-tier cards → reorder
           if (sameTier.length > 0) {
-            // find the closest by x
             let closestId = null;
             let closestDist = Infinity;
             sameTier.forEach(p => {
@@ -249,8 +238,7 @@ export default function OrgTreeLayout({
               if (!cardPos) return;
               const cx = cardPos.x + TIER_LABEL_W + PAD;
               const cy = cardPos.y + PAD;
-              // only consider same-row cards (similar y)
-              if (Math.abs(cy - (drag.currentY)) < NODE_H * 2) {
+              if (Math.abs(cy - drag.currentY) < NODE_H * 2) {
                 const dist = Math.abs(mouseX - cx);
                 if (dist < closestDist) { closestDist = dist; closestId = p.id; }
               }
@@ -272,7 +260,7 @@ export default function OrgTreeLayout({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder]);
+  }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder, zoom]);
 
   // Build SVG lines
   const lines = [];
@@ -310,74 +298,106 @@ export default function OrgTreeLayout({
   });
 
   return (
-    <div ref={containerRef} className="relative overflow-auto" style={{ minHeight: svgH + 20, userSelect: "none" }}>
-      <div className="relative" style={{ width: svgW, height: svgH }}>
-        {/* Tier row bands */}
-        {tierRows.map((row, i) => (
-          <div key={row.tier} style={{ position: "absolute", top: row.y + PAD, left: 0, width: svgW, height: NODE_H + ROW_GAP }}
-            className={i % 2 === 0 ? "bg-muted/10" : ""}>
-            <div style={{ position: "absolute", top: 0, left: 0, width: TIER_LABEL_W, height: NODE_H }}
-              className="flex items-center px-3">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{row.label}</p>
-            </div>
+    <div className="relative" style={{ userSelect: "none" }}>
+      {/* Zoom controls — fixed top-right */}
+      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-card border rounded-lg shadow-sm px-1 py-0.5">
+        <button onClick={zoomOut} className="p-1.5 rounded hover:bg-muted transition-colors" title="Zoom out">
+          <ZoomOut className="w-3.5 h-3.5" />
+        </button>
+        <span className="text-xs font-mono w-10 text-center">{Math.round(zoom * 100)}%</span>
+        <button onClick={zoomIn} className="p-1.5 rounded hover:bg-muted transition-colors" title="Zoom in">
+          <ZoomIn className="w-3.5 h-3.5" />
+        </button>
+        {zoom !== 1 && (
+          <button onClick={() => setZoom(1)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Reset zoom">
+            <RotateCcw className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {/* Scrollable container — sized to the scaled content */}
+      <div
+        ref={containerRef}
+        className="overflow-auto"
+        style={{ minHeight: svgH * zoom + 20 }}
+      >
+        {/* Scaled inner content */}
+        <div style={{ width: svgW * zoom, height: svgH * zoom, position: "relative" }}>
+          <div style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: "top left",
+            width: svgW,
+            height: svgH,
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}>
+            {/* Tier row bands */}
+            {tierRows.map((row, i) => (
+              <div key={row.tier} style={{ position: "absolute", top: row.y + PAD, left: 0, width: svgW, height: NODE_H + ROW_GAP }}
+                className={i % 2 === 0 ? "bg-muted/10" : ""}>
+                <div style={{ position: "absolute", top: 0, left: 0, width: TIER_LABEL_W, height: NODE_H }}
+                  className="flex items-center px-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-tight">{row.label}</p>
+                </div>
+              </div>
+            ))}
+
+            {/* SVG lines */}
+            <svg style={{ position: "absolute", top: 0, left: 0, width: svgW, height: svgH, pointerEvents: "none" }}>
+              {lines}
+            </svg>
+
+            {/* Cards */}
+            {positions.map(p => {
+              const pos = posMap[p.id];
+              if (!pos) return null;
+              const absX = pos.x + TIER_LABEL_W + PAD;
+              const absY = pos.y + PAD;
+              const isDragging = drag?.id === p.id;
+              return (
+                <NodeCard
+                  key={p.id}
+                  position={p}
+                  absX={isDragging ? drag.currentX + NODE_W / 2 : absX}
+                  absY={isDragging ? drag.currentY : absY}
+                  originalPositions={originalPositions}
+                  isScenario={isScenario}
+                  showSalary={showSalary}
+                  showNames={showNames}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isDragging={isDragging}
+                  isDropTarget={dropTargetId === p.id}
+                  onMouseDown={(e) => handleMouseDown(e, p.id)}
+                />
+              );
+            })}
+
+            {/* Ghost card while dragging */}
+            {drag && (() => {
+              const p = positions.find(x => x.id === drag.id);
+              if (!p) return null;
+              return (
+                <div style={{
+                  position: "absolute",
+                  left: drag.currentX,
+                  top: drag.currentY,
+                  width: NODE_W,
+                  zIndex: 100,
+                  pointerEvents: "none",
+                  opacity: 0.85,
+                }}
+                  className={`border-2 rounded-xl p-2.5 text-center shadow-2xl bg-card ${dropTargetId ? "border-primary" : "border-accent"}`}
+                >
+                  <p className="text-xs font-semibold leading-tight truncate">{p.title}</p>
+                  {p.person_name && <p className="text-[10px] text-muted-foreground truncate">{p.person_name}</p>}
+                  {dropTargetId && <p className="text-[10px] text-primary font-medium mt-0.5">→ new manager</p>}
+                </div>
+              );
+            })()}
           </div>
-        ))}
-
-        {/* SVG lines */}
-        <svg style={{ position: "absolute", top: 0, left: 0, width: svgW, height: svgH, pointerEvents: "none" }}>
-          {lines}
-        </svg>
-
-        {/* Cards */}
-        {positions.map(p => {
-          const pos = posMap[p.id];
-          if (!pos) return null;
-          const absX = pos.x + TIER_LABEL_W + PAD;
-          const absY = pos.y + PAD;
-          const isDragging = drag?.id === p.id;
-          return (
-            <NodeCard
-              key={p.id}
-              position={p}
-              absX={isDragging ? drag.currentX + NODE_W / 2 : absX}
-              absY={isDragging ? drag.currentY : absY}
-              originalPositions={originalPositions}
-              isScenario={isScenario}
-              showSalary={showSalary}
-              showNames={showNames}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              isDragging={isDragging}
-              isDropTarget={dropTargetId === p.id}
-              onMouseDown={(e) => handleMouseDown(e, p.id)}
-            />
-          );
-        })}
-
-        {/* Ghost card while dragging */}
-        {drag && (() => {
-          const p = positions.find(x => x.id === drag.id);
-          if (!p) return null;
-          return (
-            <div style={{
-              position: "absolute",
-              left: drag.currentX,
-              top: drag.currentY,
-              width: NODE_W,
-              zIndex: 100,
-              pointerEvents: "none",
-              opacity: 0.85,
-            }}
-              className={`border-2 rounded-xl p-2.5 text-center shadow-2xl bg-card ${dropTargetId ? "border-primary" : "border-accent"}`}
-            >
-              <p className="text-xs font-semibold leading-tight truncate">{p.title}</p>
-              {p.person_name && <p className="text-[10px] text-muted-foreground truncate">{p.person_name}</p>}
-              {dropTargetId && (
-                <p className="text-[10px] text-primary font-medium mt-0.5">→ new manager</p>
-              )}
-            </div>
-          );
-        })()}
+        </div>
       </div>
     </div>
   );
