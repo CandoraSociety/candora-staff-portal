@@ -277,7 +277,6 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
     for (const dept of depts) {
       const exists = currentTeams.find(t => t.name.toLowerCase() === dept.toLowerCase());
       if (!exists) {
-        // Create a new team for this department
         const created = await base44.entities.EDOrgTeam.create({ name: dept });
         currentTeams = [...currentTeams, created];
         qc.invalidateQueries({ queryKey: ["ed-org-teams"] });
@@ -287,8 +286,26 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
       }
     }
 
-    // Call the parent save with the updated team_ids
-    onSave({ ...form, team_ids: teamIds });
+    // Recompute salary from hourly fields at save time so we don't rely on useEffect timing
+    let computedSalary = parseFloat(form.salary) || 0;
+    const hourly = parseFloat(form.hourly_rate);
+    const hoursPerWeek = parseFloat(form.hours_per_week);
+    const weeksPerYear = parseFloat(form.weeks_per_year);
+    if (hourly > 0 && hoursPerWeek > 0 && weeksPerYear > 0) {
+      computedSalary = Math.round(hourly * hoursPerWeek * weeksPerYear);
+      if (form.has_summer_hours) {
+        const summerHours = parseFloat(form.summer_hours_per_week) || 0;
+        const summerWeeks = parseFloat(form.summer_weeks) || 0;
+        if (summerHours > 0 && summerWeeks > 0) {
+          computedSalary += Math.round(hourly * summerHours * summerWeeks);
+        }
+      }
+    }
+
+    // Auto-set is_vacant if no person name provided
+    const isVacant = form.is_vacant || !form.person_name?.trim();
+
+    onSave({ ...form, team_ids: teamIds, salary: computedSalary, is_vacant: isVacant });
   };
 
   // When departments change:

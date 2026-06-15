@@ -49,8 +49,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
   const fmtDiff = (n) => (n >= 0 ? "▲ +" : "▼ ") + Math.round(Math.abs(n)).toLocaleString();
   const diffColor = (n) => n > 0 ? "text-green-600" : "text-red-600";
-  const filled = positions.filter(p => !p.is_vacant).length;
-  const vacant = positions.filter(p => p.is_vacant).length;
+  const filled = positions.filter(p => !p.is_vacant && p.person_name?.trim()).length;
+  const vacant = positions.filter(p => p.is_vacant || !p.person_name?.trim()).length;
 
   // Calculate employer CPP/EI contributions
   let totalEI = 0;
