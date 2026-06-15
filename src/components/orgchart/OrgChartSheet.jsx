@@ -72,16 +72,28 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showNames && position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
       {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
-      {showSalary && position.salary > 0 && (
-        <p className="text-xs text-muted-foreground mt-0.5 font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
-      )}
-      {showSalary && (position.hourly_rate > 0 || position.hours_per_week > 0 || position.weeks_per_year > 0) && (() => {
-        const hr = position.hourly_rate;
-        const h = position.hours_per_week;
-        const w = position.weeks_per_year;
-        const sh = position.summer_hours_per_week;
-        const sw = position.summer_weeks;
-        const hasSummer = position.has_summer_hours && sh > 0 && sw > 0;
+      {showSalary && (() => {
+        const origId = position.original_id || position.id;
+        const canonical = originalPositions?.find(o => o.id === origId)
+          || originalPositions?.find(o => o.title === position.title && (o.person_name || "") === (position.person_name || ""));
+        const pay = (position.hourly_rate > 0 || position.hours_per_week > 0 || position.salary > 0)
+          ? position : (canonical || position);
+        const displaySalary = pay.salary;
+        return displaySalary > 0 ? <p className="text-xs text-muted-foreground mt-0.5 font-medium">${Math.round(displaySalary).toLocaleString()}/yr</p> : null;
+      })()}
+      {showSalary && (() => {
+        const origId = position.original_id || position.id;
+        const canonical = originalPositions?.find(o => o.id === origId)
+          || originalPositions?.find(o => o.title === position.title && (o.person_name || "") === (position.person_name || ""));
+        const pay = (position.hourly_rate > 0 || position.hours_per_week > 0)
+          ? position : (canonical || position);
+        const hr = pay.hourly_rate;
+        const h = pay.hours_per_week;
+        const w = pay.weeks_per_year;
+        const sh = pay.summer_hours_per_week;
+        const sw = pay.summer_weeks;
+        const hasSummer = pay.has_summer_hours && sh > 0 && sw > 0;
+        if (!(hr > 0 || h > 0 || w > 0)) return null;
         return (
           <>
             <p className="text-xs text-muted-foreground/70 mt-0.5">
