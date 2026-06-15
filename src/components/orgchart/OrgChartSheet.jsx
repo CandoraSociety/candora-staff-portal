@@ -74,13 +74,16 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showSalary && position.salary > 0 && (
         <p className="text-xs text-muted-foreground mt-0.5 font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
       )}
-      {showSalary && position.hourly_rate > 0 && (
-        <p className="text-xs text-muted-foreground/70 mt-0.5">
-          ${position.hourly_rate}/hr
-          {position.hours_per_week > 0 && ` · ${position.hours_per_week}h/wk`}
-          {position.weeks_per_year > 0 && ` · ${position.weeks_per_year}wks`}
-        </p>
-      )}
+      {showSalary && position.hours_per_week > 0 && position.weeks_per_year > 0 && (() => {
+        const effectiveHourly = position.salary > 0
+          ? (position.salary / (position.hours_per_week * position.weeks_per_year)).toFixed(2)
+          : position.hourly_rate;
+        return (
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            ${effectiveHourly}/hr · {position.hours_per_week}h/wk · {position.weeks_per_year}wks
+          </p>
+        );
+      })()}
       {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" title="Modified" />}
       <div className="absolute -top-2 -right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         {onEdit && (
