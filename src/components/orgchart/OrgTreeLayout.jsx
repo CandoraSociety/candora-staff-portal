@@ -72,38 +72,8 @@ function computeLayout(all) {
     });
     xPos[id] = (xPos[kids[0]] + xPos[kids[kids.length - 1]]) / 2;
   }
-  // Separate roots with subtrees (anchors) from standalone floating roots (no children, no manager)
-  const anchoredRoots = roots.filter(r => (childrenOf[r.id] || []).length > 0);
-  const floatingRoots = roots.filter(r => (childrenOf[r.id] || []).length === 0);
-
-  // Lay out anchored roots first to establish the column grid
   let cursor = 0;
-  anchoredRoots.forEach(r => {
-    assignX(r.id, cursor);
-    cursor += (subtreeWidth[r.id] || NODE_W) + COL_GAP * 2;
-  });
-
-  // Distribute floating roots evenly across the existing x-space (or just left-to-right if no anchors)
-  if (floatingRoots.length > 0) {
-    const allX = Object.values(xPos);
-    if (allX.length === 0) {
-      // No anchors: lay them out normally
-      floatingRoots.forEach(r => {
-        assignX(r.id, cursor);
-        cursor += NODE_W + COL_GAP * 2;
-      });
-    } else {
-      const minX = Math.min(...allX);
-      const maxX = Math.max(...allX);
-      const span = Math.max(maxX - minX, NODE_W);
-      // Place floating roots evenly spaced within the existing x range
-      floatingRoots.forEach((r, i) => {
-        xPos[r.id] = floatingRoots.length === 1
-          ? minX + span / 2
-          : minX + (i / (floatingRoots.length - 1)) * span;
-      });
-    }
-  }
+  roots.forEach(r => { assignX(r.id, cursor); cursor += (subtreeWidth[r.id] || NODE_W) + COL_GAP * 2; });
 
   const posMap = {};
   all.forEach(p => {
