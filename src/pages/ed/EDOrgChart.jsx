@@ -70,9 +70,8 @@ export default function EDOrgChart() {
 
   // ---- Canonical CRUD ----
   const saveCanonical = async (form, editId) => {
-    const data = { ...form, salary: parseFloat(form.salary) || 0 };
-    if (editId) await base44.entities.EDOrgPosition.update(editId, data);
-    else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
+    if (editId) await base44.entities.EDOrgPosition.update(editId, form);
+    else await base44.entities.EDOrgPosition.create({ ...form, owner_id: user?.id });
     qc.invalidateQueries({ queryKey: ["ed-org"] });
   };
 
