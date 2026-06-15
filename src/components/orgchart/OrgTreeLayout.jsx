@@ -75,22 +75,6 @@ function computeLayout(all) {
   let cursor = 0;
   roots.forEach(r => { assignX(r.id, cursor); cursor += (subtreeWidth[r.id] || NODE_W) + COL_GAP * 2; });
 
-  // Resolve same-tier x collisions: positions sharing the same y row must not overlap
-  // Group by tier, sort by computed x, then space them out if too close
-  const byTier = {};
-  all.forEach(p => {
-    const tier = p.tier || "__none__";
-    if (!byTier[tier]) byTier[tier] = [];
-    byTier[tier].push(p.id);
-  });
-  Object.values(byTier).forEach(ids => {
-    ids.sort((a, b) => (xPos[a] ?? 0) - (xPos[b] ?? 0));
-    for (let i = 1; i < ids.length; i++) {
-      const minX = (xPos[ids[i - 1]] ?? 0) + NODE_W + COL_GAP;
-      if ((xPos[ids[i]] ?? 0) < minX) xPos[ids[i]] = minX;
-    }
-  });
-
   const posMap = {};
   all.forEach(p => {
     const tier = p.tier || "__none__";
