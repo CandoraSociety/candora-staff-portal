@@ -75,16 +75,24 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showSalary && position.salary > 0 && (
         <p className="text-xs text-muted-foreground mt-0.5 font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
       )}
-      {showSalary && (position.hourly_rate > 0 || (position.hours_per_week > 0 && position.weeks_per_year > 0)) && (() => {
+      {showSalary && (position.hourly_rate > 0 || position.hours_per_week > 0 || position.weeks_per_year > 0) && (() => {
+        const hr = position.hourly_rate;
         const h = position.hours_per_week;
         const w = position.weeks_per_year;
-        const effectiveHourly = (h > 0 && w > 0 && position.salary > 0)
-          ? (position.salary / (h * w)).toFixed(2)
-          : (position.hourly_rate || 0).toFixed(2);
+        const sh = position.summer_hours_per_week;
+        const sw = position.summer_weeks;
+        const hasSummer = position.has_summer_hours && sh > 0 && sw > 0;
         return (
-          <p className="text-xs text-muted-foreground/70 mt-0.5">
-            ${effectiveHourly}/hr{h > 0 ? ` · ${h}h/wk` : ""}{w > 0 ? ` · ${w}wks` : ""}
-          </p>
+          <>
+            <p className="text-xs text-muted-foreground/70 mt-0.5">
+              {hr > 0 ? `$${hr}/hr` : ""}{hr > 0 && (h > 0 || w > 0) ? " · " : ""}{h > 0 ? `${h}h/wk` : ""}{h > 0 && w > 0 ? " · " : ""}{w > 0 ? `${w}wks` : ""}
+            </p>
+            {hasSummer && (
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                Summer: {sh}h/wk · {sw}wks
+              </p>
+            )}
+          </>
         );
       })()}
       {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" title="Modified" />}
