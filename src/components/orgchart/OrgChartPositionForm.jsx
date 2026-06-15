@@ -204,11 +204,14 @@ function TeamMultiSelect({ selected, onChange, teams }) {
 
 export default function OrgChartPositionForm({ open, onOpenChange, form, setForm, onSave, editId, positions }) {
   const qc = useQueryClient();
-  // Load all existing positions to derive title/department suggestions
+  // Load canonical DB positions only for autocomplete suggestions (titles/departments)
+  // The `positions` prop (current sheet's working positions) is used for reporting dropdowns
   const { data: allPositions = [] } = useQuery({
     queryKey: ["ed-org"],
     queryFn: () => base44.entities.EDOrgPosition.list(),
   });
+  // Use the passed-in positions for dropdowns so scenario local IDs work correctly
+  const dropdownPositions = positions?.length ? positions : allPositions;
   const { data: teams = [], refetch: refetchTeams } = useQuery({
     queryKey: ["ed-org-teams"],
     queryFn: () => base44.entities.EDOrgTeam.list(),
@@ -469,7 +472,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
               <SelectTrigger><SelectValue placeholder="No reporting relationship" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None (top level)</SelectItem>
-                {(positions || []).filter(p => p.id !== editId).map(p => (
+                {(dropdownPositions || []).filter(p => p.id !== editId).map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.title}{p.person_name ? ` (${p.person_name})` : ""}</SelectItem>
                 ))}
               </SelectContent>
@@ -485,7 +488,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                {(positions || []).filter(p => p.id !== editId && p.id !== form.reports_to_id).map(p => (
+                {(dropdownPositions || []).filter(p => p.id !== editId && p.id !== form.reports_to_id).map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.title}{p.person_name ? ` (${p.person_name})` : ""}</SelectItem>
                 ))}
               </SelectContent>
