@@ -84,6 +84,7 @@ export default function EDOrgChart() {
       hours_per_week: parseFloat(rest.hours_per_week) || 0,
       weeks_per_year: parseFloat(rest.weeks_per_year) || 0,
       dotted_line_reports_to_id: rest.dotted_line_reports_to_id || "",
+      row_number: (rest.row_number !== "" && rest.row_number != null) ? Number(rest.row_number) : null,
     };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
@@ -107,7 +108,7 @@ export default function EDOrgChart() {
         person_name: p.person_name,
         department: p.department,
         tier: p.tier,
-        row_number: p.row_number,
+        row_number: (p.row_number !== "" && p.row_number != null) ? Number(p.row_number) : null,
         reports_to_id: p.reports_to_id,
         dotted_line_reports_to_id: p.dotted_line_reports_to_id,
         salary: p.salary,
@@ -141,7 +142,11 @@ export default function EDOrgChart() {
   };
 
   const saveScenarioPositions = async (scenarioId, newPositions, newRemovedPositions) => {
-    const updateData = { positions: newPositions };
+    const cleanPositions = newPositions.map(p => ({
+      ...p,
+      row_number: (p.row_number !== "" && p.row_number != null) ? Number(p.row_number) : null,
+    }));
+    const updateData = { positions: cleanPositions };
     if (newRemovedPositions !== undefined) updateData.removed_positions = newRemovedPositions;
     await base44.entities.EDOrgScenario.update(scenarioId, updateData);
     qc.invalidateQueries({ queryKey: ["ed-org-scenarios"] });
