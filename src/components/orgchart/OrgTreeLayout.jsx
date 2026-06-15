@@ -307,7 +307,16 @@ export default function OrgTreeLayout({
     };
   }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder, zoom]);
 
-  // Build SVG lines
+  // Build SVG lines — use cubic bezier curves to avoid passing through nodes
+  // The control points pull the line out through the vertical gap between rows,
+  // so lines arc cleanly without cutting across sibling cards.
+  function makePath(px, py, cx, cy) {
+    const dy = cy - py;
+    // Control point offset: 60% of the vertical distance, keeping lines in the gap
+    const cpOffset = Math.max(Math.abs(dy) * 0.6, 40);
+    return `M ${px} ${py} C ${px} ${py + cpOffset}, ${cx} ${cy - cpOffset}, ${cx} ${cy}`;
+  }
+
   const lines = [];
   positions.forEach(p => {
     if (!p.reports_to_id || p.reports_to_id === "") return;
@@ -318,10 +327,9 @@ export default function OrgTreeLayout({
     const py = parent.y + NODE_H + PAD;
     const cx = child.x + TIER_LABEL_W + PAD;
     const cy = child.y + PAD;
-    const midY = py + (cy - py) / 2;
     lines.push(
       <path key={`solid-${p.reports_to_id}-${p.id}`}
-        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
+        d={makePath(px, py, cx, cy)}
         fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
     );
   });
@@ -334,10 +342,9 @@ export default function OrgTreeLayout({
     const py = parent.y + NODE_H + PAD;
     const cx = child.x + TIER_LABEL_W + PAD;
     const cy = child.y + PAD;
-    const midY = py + (cy - py) / 2;
     lines.push(
       <path key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
-        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
+        d={makePath(px, py, cx, cy)}
         fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
     );
   });
