@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users } from "lucide-react";
+import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users, Maximize2, Minimize2 } from "lucide-react";
 import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
 import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
 import TeamsView from "@/components/orgchart/TeamsView";
@@ -60,6 +60,7 @@ export default function EDOrgChart() {
   const [activeTab, setActiveTab] = useState(0); // 0 = original
   const [showSalary, setShowSalary] = useState(true);
   const [showNames, setShowNames] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
   const [compareMode, setCompareMode] = useState(false);
   const [compareSelected, setCompareSelected] = useState([]);
   const [newSheetDialog, setNewSheetDialog] = useState(false);
@@ -259,6 +260,11 @@ export default function EDOrgChart() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Fullscreen */}
+          <Button variant="outline" size="sm" className="gap-1" onClick={() => setFullscreen(true)}>
+            <Maximize2 className="w-4 h-4" /> Fullscreen
+          </Button>
+
           {/* Export PDF */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -430,6 +436,50 @@ export default function EDOrgChart() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen overlay */}
+      {fullscreen && (
+        <div className="fixed inset-0 z-[9998] bg-background flex flex-col">
+          <div className="flex items-center justify-between px-4 py-2 border-b bg-card shrink-0">
+            <h2 className="font-semibold text-sm">
+              Org Chart — {activeTab === 0 ? "Original" : (scenarios[activeTab - 1]?.name || "Scenario")}
+            </h2>
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setFullscreen(false)}>
+              <Minimize2 className="w-4 h-4" /> Close
+            </Button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {mode === "teams" ? (
+              <TeamsView positions={positions} currentUser={user} />
+            ) : activeTab === 0 ? (
+              <OrgChartSheet
+                positions={positions}
+                isOriginal
+                onSavePosition={saveCanonical}
+                onDeletePosition={deleteCanonical}
+                onUndoRestoreCanonical={handleUndoRestoreCanonical}
+                showSalary={showSalary}
+                showNames={showNames}
+                originalPositions={positions}
+                basePositions={null}
+              />
+            ) : currentScenario ? (
+              <OrgChartSheet
+                key={currentScenario.id + "-fs"}
+                positions={positions}
+                scenarioPositions={currentScenario.positions || []}
+                initialRemovedPositions={currentScenario.removed_positions || []}
+                onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
+                isOriginal={false}
+                showSalary={showSalary}
+                showNames={showNames}
+                originalPositions={positions}
+                basePositions={positions}
+              />
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {/* Compare overlay */}
       {compareMode && compareSheetsData.length >= 2 && (
