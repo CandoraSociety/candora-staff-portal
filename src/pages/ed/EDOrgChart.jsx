@@ -249,8 +249,8 @@ export default function EDOrgChart() {
             onClick={() => setActiveTab(0)}
             className={`flex items-center gap-1.5 px-4 py-1.5 rounded-b-md text-sm font-medium border border-t-0 transition-colors whitespace-nowrap ${
               activeTab === 0
-                ? "bg-background text-foreground border-border"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+                ? "bg-yellow-200 text-yellow-900 border-yellow-300 shadow-md"
+                : "bg-yellow-50 text-yellow-800 hover:bg-yellow-100 border-yellow-200"
             }`}
           >
             📋 Original
@@ -262,8 +262,8 @@ export default function EDOrgChart() {
               key={s.id}
               className={`group flex items-center gap-1 px-3 py-1.5 rounded-b-md text-sm border border-t-0 transition-colors whitespace-nowrap ${
                 activeTab === i + 1
-                  ? "bg-background text-foreground border-border font-medium"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted border-transparent"
+                  ? "bg-yellow-200 text-yellow-900 border-yellow-300 shadow-md font-medium"
+                  : "bg-yellow-50 text-yellow-800 hover:bg-yellow-100 border-yellow-200"
               }`}
             >
               <button onClick={() => setActiveTab(i + 1)} className="flex items-center gap-1.5">
@@ -287,7 +287,7 @@ export default function EDOrgChart() {
           {/* Add new sheet */}
           <button
             onClick={() => setNewSheetDialog(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-b-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent transition-colors whitespace-nowrap"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-b-md text-sm text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100 border border-yellow-200 bg-yellow-50 transition-colors whitespace-nowrap"
           >
             <Plus className="w-3.5 h-3.5" /> New Sheet
           </button>
