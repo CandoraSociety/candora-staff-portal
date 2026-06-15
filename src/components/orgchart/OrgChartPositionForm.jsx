@@ -22,7 +22,7 @@ const TIERS = [
 
 export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
-  tier: "", row_number: "", reports_to_id: "", dotted_line_reports_to_id: "", 
+  tier: "", row_number: "", reports_to_id: null, dotted_line_reports_to_id: null, 
   salary: "", hourly_rate: "", hours_per_week: "", weeks_per_year: "",
   has_summer_hours: false, summer_hours_per_week: "", summer_weeks: "",
   is_vacant: false, notes: "",
@@ -465,7 +465,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
 
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Reports To (solid line)</label>
-            <Select value={form.reports_to_id || "none"} onValueChange={v => setForm({ ...form, reports_to_id: v === "none" ? "" : v })}>
+            <Select value={form.reports_to_id || "none"} onValueChange={v => setForm({ ...form, reports_to_id: v === "none" ? null : v })}>
               <SelectTrigger><SelectValue placeholder="No reporting relationship" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None (top level)</SelectItem>
@@ -481,7 +481,7 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
               <span>Dotted-Line Reports To</span>
               <span className="text-muted-foreground/50 font-normal">— secondary / advisory relationship</span>
             </label>
-            <Select value={form.dotted_line_reports_to_id || "none"} onValueChange={v => setForm({ ...form, dotted_line_reports_to_id: v === "none" ? "" : v })}>
+            <Select value={form.dotted_line_reports_to_id || "none"} onValueChange={v => setForm({ ...form, dotted_line_reports_to_id: v === "none" ? null : v })}>
               <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>

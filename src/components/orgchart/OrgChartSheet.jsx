@@ -201,7 +201,8 @@ export default function OrgChartSheet({
       has_summer_hours: p.has_summer_hours || false,
       summer_hours_per_week: p.summer_hours_per_week || "",
       summer_weeks: p.summer_weeks || "",
-      dotted_line_reports_to_id: p.dotted_line_reports_to_id || "",
+      dotted_line_reports_to_id: p.dotted_line_reports_to_id || null,
+      reports_to_id: p.reports_to_id || null,
       row_number: p.row_number || ""
     }); 
     setEditId(p.id); 
@@ -220,7 +221,7 @@ export default function OrgChartSheet({
       has_summer_hours: merged.has_summer_hours || false,
       summer_hours_per_week: parseFloat(merged.summer_hours_per_week) || 0,
       summer_weeks: parseFloat(merged.summer_weeks) || 0,
-      dotted_line_reports_to_id: merged.dotted_line_reports_to_id || "",
+      dotted_line_reports_to_id: merged.dotted_line_reports_to_id || null,
       row_number: merged.row_number || "",
     };
     if (isOriginal) {

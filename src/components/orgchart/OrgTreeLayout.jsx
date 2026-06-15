@@ -319,7 +319,7 @@ export default function OrgTreeLayout({
 
   const lines = [];
   positions.forEach(p => {
-    if (!p.reports_to_id || p.reports_to_id === "") return;
+    if (!p.reports_to_id || p.reports_to_id === "" || p.reports_to_id === null) return;
     const parent = posMap[p.reports_to_id];
     const child = posMap[p.id];
     if (!parent || !child) return;
@@ -334,8 +334,9 @@ export default function OrgTreeLayout({
     );
   });
   positions.forEach(p => {
-    if (!p.dotted_line_reports_to_id || p.dotted_line_reports_to_id === "") return;
-    const parent = posMap[p.dotted_line_reports_to_id];
+    const dottedId = p.dotted_line_reports_to_id;
+    if (!dottedId || dottedId === "" || dottedId === null) return;
+    const parent = posMap[dottedId];
     const child = posMap[p.id];
     if (!parent || !child) return;
     const px = parent.x + TIER_LABEL_W + PAD;
@@ -343,7 +344,7 @@ export default function OrgTreeLayout({
     const cx = child.x + TIER_LABEL_W + PAD;
     const cy = child.y + PAD;
     lines.push(
-      <path key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
+      <path key={`dotted-${dottedId}-${p.id}`}
         d={makePath(px, py, cx, cy)}
         fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
     );

@@ -83,7 +83,7 @@ export default function EDOrgChart() {
       hourly_rate: parseFloat(rest.hourly_rate) || 0,
       hours_per_week: parseFloat(rest.hours_per_week) || 0,
       weeks_per_year: parseFloat(rest.weeks_per_year) || 0,
-      dotted_line_reports_to_id: rest.dotted_line_reports_to_id || "",
+      dotted_line_reports_to_id: rest.dotted_line_reports_to_id || null,
       row_number: (rest.row_number !== "" && rest.row_number != null) ? Number(rest.row_number) : null,
     };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
