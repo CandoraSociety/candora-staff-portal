@@ -28,6 +28,12 @@
           "department": {
             "type": "string"
           },
+          "departments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "tier": {
             "type": "string"
           },
@@ -37,6 +43,10 @@
           },
           "reports_to_id": {
             "type": "string"
+          },
+          "dotted_line_reports_to_id": {
+            "type": "string",
+            "description": "Secondary dotted-line reporting relationship"
           },
           "salary": {
             "type": "number"

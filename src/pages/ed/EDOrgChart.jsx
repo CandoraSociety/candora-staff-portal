@@ -107,10 +107,11 @@ export default function EDOrgChart() {
         title: p.title,
         person_name: p.person_name,
         department: p.department,
+        departments: p.departments,
         tier: p.tier,
         row_number: (p.row_number !== "" && p.row_number != null) ? Number(p.row_number) : null,
-        reports_to_id: p.reports_to_id,
-        dotted_line_reports_to_id: p.dotted_line_reports_to_id,
+        reports_to_id: p.reports_to_id || null,
+        dotted_line_reports_to_id: p.dotted_line_reports_to_id || null,
         salary: p.salary,
         hourly_rate: p.hourly_rate,
         hours_per_week: p.hours_per_week,
@@ -146,7 +147,7 @@ export default function EDOrgChart() {
       ...p,
       row_number: (p.row_number !== "" && p.row_number != null) ? Number(p.row_number) : null,
       reports_to_id: p.reports_to_id || null,
-      dotted_line_reports_to_id: p.dotted_line_reports_to_id || null,
+      dotted_line_reports_to_id: p.dotted_line_reports_to_id !== "" ? (p.dotted_line_reports_to_id || null) : null,
     }));
     const updateData = { positions: cleanPositions };
     if (newRemovedPositions !== undefined) updateData.removed_positions = newRemovedPositions;
