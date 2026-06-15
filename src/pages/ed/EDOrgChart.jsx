@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -39,7 +39,7 @@ export default function EDOrgChart() {
   });
 
   // ---- Scenario sheets ----
-  const { data: scenarios = [] } = useQuery({
+  const { data: scenarios = [], refetch: refetchScenarios } = useQuery({
     queryKey: ["ed-org-scenarios"],
     queryFn: () => base44.entities.EDOrgScenario.list(),
     staleTime: 0,
@@ -67,6 +67,11 @@ export default function EDOrgChart() {
   const [newSheetSource, setNewSheetSource] = useState("original"); // "original" | scenario id | "blank"
   const [renameDialog, setRenameDialog] = useState(null); // scenario id
   const [renameName, setRenameName] = useState("");
+
+  // Force refresh scenarios when switching tabs to ensure latest data
+  useEffect(() => {
+    refetchScenarios();
+  }, [activeTab]);
 
   // ---- Canonical CRUD ----
   const saveCanonical = async (form, editId) => {
