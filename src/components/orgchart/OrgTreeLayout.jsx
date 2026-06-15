@@ -1,9 +1,10 @@
 /**
- * Tier-aware tree layout with smart drag.
- * Supports two orientations: "top-down" (default) and "left-right".
+ * Tier-aware tree layout with smart drag:
+ * - Drag within same tier → reorder (no reporting change)
+ * - Drag near a card in a HIGHER tier → prompt reparent confirmation
  */
 import { useMemo, useRef, useState, useCallback, useEffect } from "react";
-import { User, UserX, Pencil, Trash2, ZoomIn, ZoomOut, RotateCcw, ArrowDown, ArrowRight } from "lucide-react";
+import { User, UserX, Pencil, Trash2, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const TIER_ORDER = [
@@ -24,7 +25,6 @@ const NODE_H = 82;
 const COL_GAP = 12;
 const ROW_GAP = 20;
 const TIER_LABEL_W = 120;
-const TIER_LABEL_H = 28; // for left-right mode: horizontal label strip height
 const PAD = 24;
 
 const REPARENT_THRESHOLD = 40;
@@ -34,8 +34,7 @@ function tierRank(tier) {
   return i === -1 ? TIER_ORDER.length - 1 : i;
 }
 
-// Top-down layout: tiers are rows (y axis), siblings spread on x
-function computeTopDownLayout(all) {
+function computeLayout(all) {
   const usedTiers = [...new Set(all.map(p => p.tier || "__none__"))];
   usedTiers.sort((a, b) => tierRank(a) - tierRank(b));
 
@@ -87,61 +86,6 @@ function computeTopDownLayout(all) {
   return { posMap, tierRows, totalWidth, totalHeight };
 }
 
-// Left-right layout: tiers are columns (x axis), siblings spread on y
-function computeLeftRightLayout(all) {
-  const usedTiers = [...new Set(all.map(p => p.tier || "__none__"))];
-  usedTiers.sort((a, b) => tierRank(a) - tierRank(b));
-
-  // Each tier column: x offset
-  const tierX = {};
-  usedTiers.forEach((tier, i) => { tierX[tier] = i * (NODE_W + COL_GAP * 3); });
-
-  const childrenOf = {};
-  all.forEach(p => { childrenOf[p.id] = []; });
-  all.forEach(p => {
-    if (p.reports_to_id && childrenOf[p.reports_to_id]) {
-      childrenOf[p.reports_to_id].push(p.id);
-    }
-  });
-  const roots = all.filter(p => !p.reports_to_id || !all.find(x => x.id === p.reports_to_id));
-
-  // subtreeHeight = total vertical space needed for this node's subtree
-  const subtreeHeight = {};
-  function calcHeight(id) {
-    const kids = childrenOf[id] || [];
-    if (kids.length === 0) { subtreeHeight[id] = NODE_H; return NODE_H; }
-    const total = kids.reduce((s, c, i) => s + calcHeight(c) + (i > 0 ? ROW_GAP : 0), 0);
-    subtreeHeight[id] = Math.max(NODE_H, total);
-    return subtreeHeight[id];
-  }
-  roots.forEach(r => calcHeight(r.id));
-
-  const yPos = {};
-  function assignY(id, top) {
-    const kids = childrenOf[id] || [];
-    if (kids.length === 0) { yPos[id] = top + NODE_H / 2; return; }
-    let cursor = top;
-    kids.forEach(kid => {
-      assignY(kid, cursor);
-      cursor += (subtreeHeight[kid] || NODE_H) + ROW_GAP;
-    });
-    yPos[id] = (yPos[kids[0]] + yPos[kids[kids.length - 1]]) / 2;
-  }
-  let cursor = 0;
-  roots.forEach(r => { assignY(r.id, cursor); cursor += (subtreeHeight[r.id] || NODE_H) + ROW_GAP * 2; });
-
-  const posMap = {};
-  all.forEach(p => {
-    const tier = p.tier || "__none__";
-    posMap[p.id] = { x: tierX[tier] ?? 0, y: yPos[p.id] ?? 0 };
-  });
-
-  const totalWidth = Math.max(...usedTiers.map(t => tierX[t] + NODE_W), 200);
-  const totalHeight = Math.max(...Object.values(yPos).map(y => y + NODE_H / 2), 200);
-  const tierCols = usedTiers.map(tier => ({ tier, x: tierX[tier], label: TIER_LABELS[tier] }));
-  return { posMap, tierCols, totalWidth, totalHeight };
-}
-
 function NodeCard({ position, absX, absY, originalPositions, isScenario, showSalary, showNames,
   onEdit, onDelete, isDragging, isDropTarget, onMouseDown }) {
 
@@ -164,9 +108,8 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       style={{
         position: "absolute",
         left: absX - NODE_W / 2,
-        top: absY - NODE_H / 2,
+        top: absY,
         width: NODE_W,
-        height: NODE_H,
         zIndex: isDragging ? 50 : 1,
         opacity: isDragging ? 0.3 : 1,
         pointerEvents: isDragging ? "none" : "auto",
@@ -198,41 +141,12 @@ export default function OrgTreeLayout({
 }) {
   const containerRef = useRef(null);
   const [zoom, setZoom] = useState(1);
-  const [orientation, setOrientation] = useState("top-down"); // "top-down" | "left-right"
   const [drag, setDrag] = useState(null);
   const [dropTargetId, setDropTargetId] = useState(null);
 
-  const isLR = orientation === "left-right";
-
-  const layoutTD = useMemo(() => computeTopDownLayout(positions), [positions]);
-  const layoutLR = useMemo(() => computeLeftRightLayout(positions), [positions]);
-
-  const { posMap, totalWidth, totalHeight } = isLR ? layoutLR : layoutTD;
-  const tierRows = !isLR ? layoutTD.tierRows : [];
-  const tierCols = isLR ? layoutLR.tierCols : [];
-
-  // Canvas size
-  const canvasW = isLR
-    ? totalWidth + TIER_LABEL_W + PAD * 2
-    : totalWidth + TIER_LABEL_W + PAD * 2;
-  const canvasH = isLR
-    ? totalHeight + TIER_LABEL_H + PAD * 2
-    : totalHeight + NODE_H + PAD * 2;
-
-  // Absolute pixel position of a card's centre given posMap entry
-  const cardAbsPos = useCallback((pos) => {
-    if (!pos) return { cx: 0, cy: 0 };
-    if (isLR) {
-      return {
-        cx: pos.x + TIER_LABEL_W + PAD + NODE_W / 2,
-        cy: pos.y + TIER_LABEL_H + PAD,
-      };
-    }
-    return {
-      cx: pos.x + TIER_LABEL_W + PAD,
-      cy: pos.y + PAD + NODE_H / 2,
-    };
-  }, [isLR]);
+  const { posMap, tierRows, totalWidth, totalHeight } = useMemo(() => computeLayout(positions), [positions]);
+  const svgW = totalWidth + TIER_LABEL_W + PAD * 2;
+  const svgH = totalHeight + NODE_H + PAD * 2;
 
   const zoomIn = () => setZoom(z => Math.min(2, Math.round((z + 0.1) * 10) / 10));
   const zoomOut = () => setZoom(z => Math.max(0.3, Math.round((z - 0.1) * 10) / 10));
@@ -247,23 +161,27 @@ export default function OrgTreeLayout({
 
     positions.forEach(p => {
       if (p.id === draggedId) return;
-      if (tierRank(p.tier) >= draggedRank) return;
+      const pRank = tierRank(p.tier);
+      if (pRank >= draggedRank) return;
 
       const cardPos = posMap[p.id];
       if (!cardPos) return;
-      const { cx, cy } = cardAbsPos(cardPos);
+      const cardAbsX = cardPos.x + TIER_LABEL_W + PAD;
+      const cardAbsY = cardPos.y + PAD;
 
-      const inX = mouseX >= cx - NODE_W / 2 - REPARENT_THRESHOLD && mouseX <= cx + NODE_W / 2 + REPARENT_THRESHOLD;
-      const inY = mouseY >= cy - NODE_H / 2 - REPARENT_THRESHOLD && mouseY <= cy + NODE_H / 2 + REPARENT_THRESHOLD;
+      const inX = mouseX >= cardAbsX - NODE_W / 2 - REPARENT_THRESHOLD &&
+                  mouseX <= cardAbsX + NODE_W / 2 + REPARENT_THRESHOLD;
+      const inY = mouseY >= cardAbsY - REPARENT_THRESHOLD &&
+                  mouseY <= cardAbsY + NODE_H + REPARENT_THRESHOLD;
 
       if (inX && inY) {
-        const dist = Math.hypot(mouseX - cx, mouseY - cy);
+        const dist = Math.hypot(mouseX - cardAbsX, mouseY - (cardAbsY + NODE_H / 2));
         if (dist < bestDist) { bestDist = dist; best = p.id; }
       }
     });
 
     return best;
-  }, [positions, posMap, cardAbsPos]);
+  }, [positions, posMap]);
 
   const handleMouseDown = useCallback((e, id) => {
     e.preventDefault();
@@ -273,10 +191,17 @@ export default function OrgTreeLayout({
     const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
     const card = posMap[id];
     if (!card) return;
-    const { cx, cy } = cardAbsPos(card);
-    setDrag({ id, currentX: cx, currentY: cy, offsetX: mouseX - cx, offsetY: mouseY - cy });
+    const cardAbsX = card.x + TIER_LABEL_W + PAD;
+    const cardAbsY = card.y + PAD;
+    setDrag({
+      id,
+      currentX: cardAbsX,
+      currentY: cardAbsY,
+      offsetX: mouseX - cardAbsX,
+      offsetY: mouseY - cardAbsY,
+    });
     setDropTargetId(null);
-  }, [posMap, zoom, cardAbsPos]);
+  }, [posMap, zoom]);
 
   useEffect(() => {
     if (!drag) return;
@@ -287,7 +212,8 @@ export default function OrgTreeLayout({
       const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
       const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
       setDrag(d => ({ ...d, currentX: mouseX - d.offsetX, currentY: mouseY - d.offsetY }));
-      setDropTargetId(findReparentTarget(drag.id, mouseX, mouseY));
+      const target = findReparentTarget(drag.id, mouseX, mouseY);
+      setDropTargetId(target);
     };
 
     const onUp = (e) => {
@@ -297,6 +223,7 @@ export default function OrgTreeLayout({
       const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
 
       const reparentTarget = findReparentTarget(drag.id, mouseX, mouseY);
+
       if (reparentTarget) {
         onReparentRequest?.(drag.id, reparentTarget);
       } else {
@@ -304,18 +231,19 @@ export default function OrgTreeLayout({
         if (dragged) {
           const sameTier = positions.filter(p => p.tier === dragged.tier && p.id !== drag.id);
           if (sameTier.length > 0) {
-            let closestId = null, closestDist = Infinity;
+            let closestId = null;
+            let closestDist = Infinity;
             sameTier.forEach(p => {
-              const cp = posMap[p.id];
-              if (!cp) return;
-              const { cx, cy } = cardAbsPos(cp);
-              const axis = isLR ? Math.abs(mouseY - cy) : Math.abs(mouseX - cx);
-              const cross = isLR ? Math.abs(drag.currentX - cx) : Math.abs(drag.currentY - cy);
-              if (cross < (isLR ? NODE_W * 2 : NODE_H * 2) && axis < closestDist) {
-                closestDist = axis; closestId = p.id;
+              const cardPos = posMap[p.id];
+              if (!cardPos) return;
+              const cx = cardPos.x + TIER_LABEL_W + PAD;
+              const cy = cardPos.y + PAD;
+              if (Math.abs(cy - drag.currentY) < NODE_H * 2) {
+                const dist = Math.abs(mouseX - cx);
+                if (dist < closestDist) { closestDist = dist; closestId = p.id; }
               }
             });
-            if (closestId && closestDist < (isLR ? NODE_H * 1.5 : NODE_W * 1.5)) {
+            if (closestId && closestDist < NODE_W * 1.5) {
               onReorder?.(drag.id, closestId, mouseX);
             }
           }
@@ -328,95 +256,51 @@ export default function OrgTreeLayout({
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder, zoom, isLR, cardAbsPos]);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder, zoom]);
 
-  // Build SVG connector lines
-  const lines = useMemo(() => {
-    const result = [];
-    positions.forEach(p => {
-      if (!p.reports_to_id) return;
-      const parentPos = posMap[p.reports_to_id];
-      const childPos = posMap[p.id];
-      if (!parentPos || !childPos) return;
-
-      if (isLR) {
-        // parent right edge → child left edge
-        const px = parentPos.x + TIER_LABEL_W + PAD + NODE_W;
-        const py = parentPos.y + TIER_LABEL_H + PAD;
-        const cx = childPos.x + TIER_LABEL_W + PAD;
-        const cy = childPos.y + TIER_LABEL_H + PAD;
-        const midX = px + (cx - px) / 2;
-        result.push(
-          <path key={`solid-${p.reports_to_id}-${p.id}`}
-            d={`M ${px} ${py} L ${midX} ${py} L ${midX} ${cy} L ${cx} ${cy}`}
-            fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        );
-        if (p.dotted_line_reports_to_id) {
-          const dp = posMap[p.dotted_line_reports_to_id];
-          if (dp) {
-            const dpx = dp.x + TIER_LABEL_W + PAD + NODE_W;
-            const dpy = dp.y + TIER_LABEL_H + PAD;
-            const dmidX = dpx + (cx - dpx) / 2;
-            result.push(
-              <path key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
-                d={`M ${dpx} ${dpy} L ${dmidX} ${dpy} L ${dmidX} ${cy} L ${cx} ${cy}`}
-                fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
-            );
-          }
-        }
-      } else {
-        // top-down: parent bottom → child top
-        const px = parentPos.x + TIER_LABEL_W + PAD;
-        const py = parentPos.y + NODE_H + PAD;
-        const cx = childPos.x + TIER_LABEL_W + PAD;
-        const cy = childPos.y + PAD;
-        const midY = py + (cy - py) / 2;
-        result.push(
-          <path key={`solid-${p.reports_to_id}-${p.id}`}
-            d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
-            fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
-        );
-      }
-    });
-
-    if (!isLR) {
-      positions.forEach(p => {
-        if (!p.dotted_line_reports_to_id) return;
-        const parentPos = posMap[p.dotted_line_reports_to_id];
-        const childPos = posMap[p.id];
-        if (!parentPos || !childPos) return;
-        const px = parentPos.x + TIER_LABEL_W + PAD;
-        const py = parentPos.y + NODE_H + PAD;
-        const cx = childPos.x + TIER_LABEL_W + PAD;
-        const cy = childPos.y + PAD;
-        const midY = py + (cy - py) / 2;
-        result.push(
-          <path key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
-            d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
-            fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
-        );
-      });
-    }
-
-    return result;
-  }, [positions, posMap, isLR]);
+  // Build SVG lines
+  const lines = [];
+  positions.forEach(p => {
+    if (!p.reports_to_id) return;
+    const parent = posMap[p.reports_to_id];
+    const child = posMap[p.id];
+    if (!parent || !child) return;
+    const px = parent.x + TIER_LABEL_W + PAD;
+    const py = parent.y + NODE_H + PAD;
+    const cx = child.x + TIER_LABEL_W + PAD;
+    const cy = child.y + PAD;
+    const midY = py + (cy - py) / 2;
+    lines.push(
+      <path key={`solid-${p.reports_to_id}-${p.id}`}
+        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
+        fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
+    );
+  });
+  positions.forEach(p => {
+    if (!p.dotted_line_reports_to_id) return;
+    const parent = posMap[p.dotted_line_reports_to_id];
+    const child = posMap[p.id];
+    if (!parent || !child) return;
+    const px = parent.x + TIER_LABEL_W + PAD;
+    const py = parent.y + NODE_H + PAD;
+    const cx = child.x + TIER_LABEL_W + PAD;
+    const cy = child.y + PAD;
+    const midY = py + (cy - py) / 2;
+    lines.push(
+      <path key={`dotted-${p.dotted_line_reports_to_id}-${p.id}`}
+        d={`M ${px} ${py} L ${px} ${midY} L ${cx} ${midY} L ${cx} ${cy}`}
+        fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
+    );
+  });
 
   return (
     <div className="relative" style={{ userSelect: "none" }}>
-      {/* Controls — top-right */}
+      {/* Zoom controls — fixed top-right */}
       <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-card border rounded-lg shadow-sm px-1 py-0.5">
-        {/* Orientation toggle */}
-        <button
-          onClick={() => setOrientation(o => o === "top-down" ? "left-right" : "top-down")}
-          className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${isLR ? "bg-accent text-accent-foreground" : "hover:bg-muted text-muted-foreground"}`}
-          title={isLR ? "Switch to top-down" : "Switch to left-right"}
-        >
-          {isLR ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
-          {isLR ? "L→R" : "T↓B"}
-        </button>
-        <div className="w-px h-4 bg-border" />
-        {/* Zoom */}
         <button onClick={zoomOut} className="p-1.5 rounded hover:bg-muted transition-colors" title="Zoom out">
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
@@ -431,14 +315,26 @@ export default function OrgTreeLayout({
         )}
       </div>
 
-      {/* Scrollable container */}
-      <div ref={containerRef} className="overflow-auto" style={{ minHeight: canvasH * zoom + 20 }}>
-        <div style={{ width: canvasW * zoom, height: canvasH * zoom, position: "relative" }}>
-          <div style={{ transform: `scale(${zoom})`, transformOrigin: "top left", width: canvasW, height: canvasH, position: "absolute", top: 0, left: 0 }}>
-
-            {/* Top-down: horizontal tier bands */}
-            {!isLR && tierRows.map((row, i) => (
-              <div key={row.tier} style={{ position: "absolute", top: row.y + PAD, left: 0, width: canvasW, height: NODE_H + ROW_GAP }}
+      {/* Scrollable container — sized to the scaled content */}
+      <div
+        ref={containerRef}
+        className="overflow-auto"
+        style={{ minHeight: svgH * zoom + 20 }}
+      >
+        {/* Scaled inner content */}
+        <div style={{ width: svgW * zoom, height: svgH * zoom, position: "relative" }}>
+          <div style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: "top left",
+            width: svgW,
+            height: svgH,
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}>
+            {/* Tier row bands */}
+            {tierRows.map((row, i) => (
+              <div key={row.tier} style={{ position: "absolute", top: row.y + PAD, left: 0, width: svgW, height: NODE_H + ROW_GAP }}
                 className={i % 2 === 0 ? "bg-muted/10" : ""}>
                 <div style={{ position: "absolute", top: 0, left: 0, width: TIER_LABEL_W, height: NODE_H }}
                   className="flex items-center px-3">
@@ -447,19 +343,8 @@ export default function OrgTreeLayout({
               </div>
             ))}
 
-            {/* Left-right: vertical tier column bands */}
-            {isLR && tierCols.map((col, i) => (
-              <div key={col.tier} style={{ position: "absolute", top: 0, left: col.x + TIER_LABEL_W + PAD, width: NODE_W + COL_GAP * 3, height: canvasH }}
-                className={i % 2 === 0 ? "bg-muted/10" : ""}>
-                <div style={{ position: "absolute", top: PAD / 2, left: 0, width: NODE_W + COL_GAP * 3, height: TIER_LABEL_H }}
-                  className="flex items-center justify-center px-2">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide leading-tight truncate">{col.label}</p>
-                </div>
-              </div>
-            ))}
-
             {/* SVG lines */}
-            <svg style={{ position: "absolute", top: 0, left: 0, width: canvasW, height: canvasH, pointerEvents: "none" }}>
+            <svg style={{ position: "absolute", top: 0, left: 0, width: svgW, height: svgH, pointerEvents: "none" }}>
               {lines}
             </svg>
 
@@ -467,14 +352,15 @@ export default function OrgTreeLayout({
             {positions.map(p => {
               const pos = posMap[p.id];
               if (!pos) return null;
-              const { cx, cy } = cardAbsPos(pos);
+              const absX = pos.x + TIER_LABEL_W + PAD;
+              const absY = pos.y + PAD;
               const isDragging = drag?.id === p.id;
               return (
                 <NodeCard
                   key={p.id}
                   position={p}
-                  absX={isDragging ? drag.currentX : cx}
-                  absY={isDragging ? drag.currentY : cy}
+                  absX={isDragging ? drag.currentX + NODE_W / 2 : absX}
+                  absY={isDragging ? drag.currentY : absY}
                   originalPositions={originalPositions}
                   isScenario={isScenario}
                   showSalary={showSalary}
@@ -495,10 +381,9 @@ export default function OrgTreeLayout({
               return (
                 <div style={{
                   position: "absolute",
-                  left: drag.currentX - NODE_W / 2,
-                  top: drag.currentY - NODE_H / 2,
+                  left: drag.currentX,
+                  top: drag.currentY,
                   width: NODE_W,
-                  height: NODE_H,
                   zIndex: 100,
                   pointerEvents: "none",
                   opacity: 0.85,
