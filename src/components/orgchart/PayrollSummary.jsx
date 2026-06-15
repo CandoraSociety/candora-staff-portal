@@ -168,7 +168,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           <span className="text-muted-foreground/40">|</span>
           <div>
             <span className="font-semibold text-foreground">Total Cost: {fmt(grandTotalAnnual)}/yr</span>
-            <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo</p>
+            <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo · {fmt(grandTotalAnnual / 26)}/bi-wk</p>
             {hasDeltas && diffAnnual !== 0 && (
               <p className={`text-xs font-semibold italic ${diffColor(diffAnnual + diffEmployerContributions)}`}>{fmtDiff(diffAnnual + diffEmployerContributions)}/yr</p>
             )}
