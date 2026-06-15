@@ -188,7 +188,11 @@ export default function OrgChartSheet({
     }
   };
 
-  const working = isOriginal ? positions : (scenarioPositions || []);
+  const working = (isOriginal ? positions : (scenarioPositions || [])).map(p => ({
+    ...p,
+    reports_to_id: p.reports_to_id || null,
+    dotted_line_reports_to_id: p.dotted_line_reports_to_id || null,
+  }));
 
   const openAdd = () => { setForm(EMPTY_POS); setEditId(null); setFormOpen(true); };
   const openEdit = (p) => { 
