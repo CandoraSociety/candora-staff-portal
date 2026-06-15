@@ -23,7 +23,7 @@ const TIER_LABELS = {
 const NODE_W = 150;
 const NODE_H = 82;
 const COL_GAP = 12;
-const ROW_GAP = 40;
+const ROW_GAP = 60;
 const TIER_LABEL_W = 120;
 const PAD = 24;
 
