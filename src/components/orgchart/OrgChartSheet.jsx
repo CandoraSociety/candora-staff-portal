@@ -180,7 +180,8 @@ export default function OrgChartSheet({
       weeks_per_year: p.weeks_per_year || "",
       has_summer_hours: p.has_summer_hours || false,
       summer_hours_per_week: p.summer_hours_per_week || "",
-      summer_weeks: p.summer_weeks || ""
+      summer_weeks: p.summer_weeks || "",
+      dotted_line_reports_to_id: p.dotted_line_reports_to_id || ""
     }); 
     setEditId(p.id); 
     setFormOpen(true); 
@@ -198,6 +199,7 @@ export default function OrgChartSheet({
       has_summer_hours: merged.has_summer_hours || false,
       summer_hours_per_week: parseFloat(merged.summer_hours_per_week) || 0,
       summer_weeks: parseFloat(merged.summer_weeks) || 0,
+      dotted_line_reports_to_id: merged.dotted_line_reports_to_id || "",
     };
     if (isOriginal) {
       pushUndo(positions, removedPositions);
