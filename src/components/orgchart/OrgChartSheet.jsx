@@ -324,16 +324,22 @@ export default function OrgChartSheet({
 
 
   // Build tier rows — positions grouped by tier, in tier rank order
+  // practicum_placement and skilled_volunteer share a single row
   const tieredRows = (() => {
     const grouped = {};
     working.forEach(p => {
       const tier = p.tier || "__none__";
-      if (!grouped[tier]) grouped[tier] = [];
-      grouped[tier].push(p);
+      // Merge skilled_volunteer into practicum_placement row
+      const rowKey = tier === "skilled_volunteer" ? "practicum_placement" : tier;
+      if (!grouped[rowKey]) grouped[rowKey] = [];
+      grouped[rowKey].push(p);
     });
     const rows = [];
-    TIER_ORDER.forEach(tier => {
-      if (grouped[tier]?.length) rows.push({ tier, label: TIER_LABELS[tier], positions: grouped[tier] });
+    TIER_ORDER.filter(t => t !== "skilled_volunteer").forEach(tier => {
+      if (grouped[tier]?.length) {
+        const label = tier === "practicum_placement" ? "Practicum / Skilled Volunteer" : TIER_LABELS[tier];
+        rows.push({ tier, label, positions: grouped[tier] });
+      }
     });
     if (grouped["__none__"]?.length) rows.push({ tier: "__none__", label: "Unassigned", positions: grouped["__none__"] });
     return rows;

@@ -35,8 +35,10 @@ function tierRank(tier) {
 }
 
 function computeLayout(all) {
+  // Normalize: skilled_volunteer shares the same tier row as practicum_placement
+  const normalized = all.map(p => p.tier === "skilled_volunteer" ? { ...p, _displayTier: "practicum_placement" } : { ...p, _displayTier: p.tier ?? "__none__" });
   // Group by row_number (default to tier-based if not set)
-  const usedRows = [...new Set(all.map(p => p.row_number ?? p.tier ?? "__none__"))];
+  const usedRows = [...new Set(normalized.map(p => p.row_number ?? p._displayTier))];
   usedRows.sort((a, b) => {
     // If both are numbers, sort numerically
     if (typeof a === "number" && typeof b === "number") return a - b;
@@ -51,13 +53,13 @@ function computeLayout(all) {
   usedRows.forEach((row, i) => { rowY[row] = i * (NODE_H + ROW_GAP); });
 
   const childrenOf = {};
-  all.forEach(p => { childrenOf[p.id] = []; });
-  all.forEach(p => {
+  normalized.forEach(p => { childrenOf[p.id] = []; });
+  normalized.forEach(p => {
     if (p.reports_to_id && childrenOf[p.reports_to_id]) {
       childrenOf[p.reports_to_id].push(p.id);
     }
   });
-  const roots = all.filter(p => !p.reports_to_id || !all.find(x => x.id === p.reports_to_id));
+  const roots = normalized.filter(p => !p.reports_to_id || !normalized.find(x => x.id === p.reports_to_id));
 
   const subtreeWidth = {};
   function calcWidth(id) {
@@ -68,6 +70,7 @@ function computeLayout(all) {
     return subtreeWidth[id];
   }
   roots.forEach(r => calcWidth(r.id));
+
 
   const xPos = {};
   function assignX(id, left) {
@@ -84,14 +87,18 @@ function computeLayout(all) {
   roots.forEach(r => { assignX(r.id, cursor); cursor += (subtreeWidth[r.id] || NODE_W) + COL_GAP * 2; });
 
   const posMap = {};
-  all.forEach(p => {
-    const row = p.row_number ?? p.tier ?? "__none__";
+  normalized.forEach(p => {
+    const row = p.row_number ?? p._displayTier ?? "__none__";
     posMap[p.id] = { x: xPos[p.id] ?? 0, y: rowY[row] ?? 0 };
   });
 
   const totalWidth = Math.max(...Object.values(xPos).map(x => x + NODE_W / 2), 200);
   const totalHeight = Math.max(...Object.values(rowY).map(y => y + NODE_H + ROW_GAP), 200);
-  const tierRows = usedRows.map(row => ({ tier: row, y: rowY[row], label: typeof row === "number" ? `Row ${row}` : TIER_LABELS[row] || row }));
+  const tierRows = usedRows.map(row => ({
+    tier: row,
+    y: rowY[row],
+    label: typeof row === "number" ? `Row ${row}` : (row === "practicum_placement" ? "Practicum / Skilled Volunteer" : (TIER_LABELS[row] || row)),
+  }));
   return { posMap, tierRows, totalWidth, totalHeight };
 }
 
