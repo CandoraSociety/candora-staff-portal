@@ -189,7 +189,7 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
 
 export default function OrgTreeLayout({
   positions, originalPositions = [], isScenario, showSalary, showNames,
-  onEdit, onDelete, onReparentRequest, onReorder,
+  onEdit, onDelete, onReparentRequest, onReorder, fitToScreen,
 }) {
   const containerRef = useRef(null);
   const [zoom, setZoom] = useState(1);
@@ -199,6 +199,16 @@ export default function OrgTreeLayout({
   const { posMap, tierRows, totalWidth, totalHeight } = useMemo(() => computeLayout(positions), [positions]);
   const svgW = totalWidth + TIER_LABEL_W + PAD * 2;
   const svgH = totalHeight + NODE_H + PAD * 2;
+
+  // Auto-fit zoom when fitToScreen is true
+  useEffect(() => {
+    if (!fitToScreen || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0 && svgW > 0 && svgH > 0) {
+      const fitZoom = Math.min(rect.width / svgW, rect.height / svgH, 1);
+      setZoom(Math.max(0.2, Math.round(fitZoom * 100) / 100));
+    }
+  }, [fitToScreen, svgW, svgH]);
 
   const zoomIn = () => setZoom(z => Math.min(2, Math.round((z + 0.1) * 10) / 10));
   const zoomOut = () => setZoom(z => Math.max(0.3, Math.round((z - 0.1) * 10) / 10));

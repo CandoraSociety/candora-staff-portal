@@ -140,6 +140,7 @@ export default function OrgChartSheet({
   showSalary, showNames,
   originalPositions, // canonical positions for change-highlighting
   basePositions, // base positions for delta calculation (original for scenarios)
+  fitToScreen, // when true, tree view auto-fits zoom to fill container
 }) {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_POS);
@@ -420,6 +421,7 @@ export default function OrgChartSheet({
             onDelete={handleDelete}
             onReparentRequest={handleReparentRequest}
             onReorder={handleReorder}
+            fitToScreen={fitToScreen}
           />
         )}
 

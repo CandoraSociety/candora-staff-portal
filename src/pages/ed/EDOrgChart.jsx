@@ -437,46 +437,53 @@ export default function EDOrgChart() {
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen overlay */}
+      {/* Fullscreen popup */}
       {fullscreen && (
-        <div className="fixed inset-0 z-[9998] bg-background flex flex-col">
-          <div className="flex items-center justify-between px-4 py-2 border-b bg-card shrink-0">
-            <h2 className="font-semibold text-sm">
-              Org Chart — {activeTab === 0 ? "Original" : (scenarios[activeTab - 1]?.name || "Scenario")}
-            </h2>
-            <Button variant="outline" size="sm" className="gap-1" onClick={() => setFullscreen(false)}>
-              <Minimize2 className="w-4 h-4" /> Close
-            </Button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            {mode === "teams" ? (
-              <TeamsView positions={positions} currentUser={user} />
-            ) : activeTab === 0 ? (
-              <OrgChartSheet
-                positions={positions}
-                isOriginal
-                onSavePosition={saveCanonical}
-                onDeletePosition={deleteCanonical}
-                onUndoRestoreCanonical={handleUndoRestoreCanonical}
-                showSalary={showSalary}
-                showNames={showNames}
-                originalPositions={positions}
-                basePositions={null}
-              />
-            ) : currentScenario ? (
-              <OrgChartSheet
-                key={currentScenario.id + "-fs"}
-                positions={positions}
-                scenarioPositions={currentScenario.positions || []}
-                initialRemovedPositions={currentScenario.removed_positions || []}
-                onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
-                isOriginal={false}
-                showSalary={showSalary}
-                showNames={showNames}
-                originalPositions={positions}
-                basePositions={positions}
-              />
-            ) : null}
+        <div className="fixed inset-0 z-[9998] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-background rounded-xl shadow-2xl flex flex-col w-full h-full max-w-[98vw] max-h-[96vh] overflow-hidden">
+            {/* Popup header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b bg-card shrink-0">
+              <div className="flex items-center gap-3">
+                <h2 className="font-semibold">Org Chart</h2>
+                <span className="text-sm text-muted-foreground">
+                  {activeTab === 0 ? "Original" : (scenarios[activeTab - 1]?.name || "Scenario")}
+                </span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setFullscreen(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            {/* Chart fills remaining space */}
+            <div className="flex-1 overflow-hidden">
+              {activeTab === 0 ? (
+                <OrgChartSheet
+                  positions={positions}
+                  isOriginal
+                  onSavePosition={saveCanonical}
+                  onDeletePosition={deleteCanonical}
+                  onUndoRestoreCanonical={handleUndoRestoreCanonical}
+                  showSalary={showSalary}
+                  showNames={showNames}
+                  originalPositions={positions}
+                  basePositions={null}
+                  fitToScreen
+                />
+              ) : currentScenario ? (
+                <OrgChartSheet
+                  key={currentScenario.id + "-fs"}
+                  positions={positions}
+                  scenarioPositions={currentScenario.positions || []}
+                  initialRemovedPositions={currentScenario.removed_positions || []}
+                  onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
+                  isOriginal={false}
+                  showSalary={showSalary}
+                  showNames={showNames}
+                  originalPositions={positions}
+                  basePositions={positions}
+                  fitToScreen
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       )}
