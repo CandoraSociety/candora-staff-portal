@@ -12,6 +12,7 @@ const fmt = (n) => "$" + Math.round(n).toLocaleString();
 
 export default function ScenarioChangelog({ scenarioPositions, originalPositions, removedPositions = [] }) {
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState("all"); // "all" | "added" | "removed" | "modified"
 
   const changes = useMemo(() => {
     const result = [];
@@ -61,17 +62,37 @@ export default function ScenarioChangelog({ scenarioPositions, originalPositions
 
   return (
     <div className="border-t mx-4 mb-4 pt-3">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors mb-2"
-      >
-        {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        Changes from Original ({changes.length})
-      </button>
+      <div className="flex items-center gap-3 mb-2 flex-wrap">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors"
+        >
+          {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          Changes from Original ({changes.length})
+        </button>
+        {open && (
+          <div className="flex items-center gap-1">
+            {[
+              { key: "all", label: "All" },
+              { key: "added", label: `Added (${changes.filter(c => c.type === "added").length})` },
+              { key: "removed", label: `Removed (${changes.filter(c => c.type === "removed").length})` },
+              { key: "modified", label: `Modified (${changes.filter(c => c.type === "modified").length})` },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className={`px-2 py-0.5 rounded text-xs border transition-colors ${filter === f.key ? "bg-accent text-accent-foreground border-accent" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {open && (
         <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
-          {changes.map((c, i) => (
+          {changes.filter(c => filter === "all" || c.type === filter).map((c, i) => (
             <div key={i} className={`flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm border ${
               c.type === "added" ? "bg-blue-50 border-blue-200" :
               c.type === "removed" ? "bg-red-50 border-red-200" :
@@ -109,6 +130,9 @@ export default function ScenarioChangelog({ scenarioPositions, originalPositions
               </div>
             </div>
           ))}
+          {changes.filter(c => filter === "all" || c.type === filter).length === 0 && (
+            <p className="text-xs text-muted-foreground italic py-2">No {filter} changes.</p>
+          )}
         </div>
       )}
     </div>
