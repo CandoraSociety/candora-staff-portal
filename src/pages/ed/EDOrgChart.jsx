@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMe
 import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users, Maximize2, Minimize2 } from "lucide-react";
 import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
 import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
+import OrgTreeLayout from "@/components/orgchart/OrgTreeLayout";
 import TeamsView from "@/components/orgchart/TeamsView";
 
 
@@ -437,52 +438,29 @@ export default function EDOrgChart() {
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen popup */}
+      {/* Fullscreen popup — just the tree, no chrome */}
       {fullscreen && (
-        <div className="fixed inset-0 z-[9998] bg-black/60 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9998] bg-black/70 flex items-center justify-center p-4">
           <div className="bg-background rounded-xl shadow-2xl flex flex-col w-full h-full max-w-[98vw] max-h-[96vh] overflow-hidden">
-            {/* Popup header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b bg-card shrink-0">
-              <div className="flex items-center gap-3">
-                <h2 className="font-semibold">Org Chart</h2>
-                <span className="text-sm text-muted-foreground">
-                  {activeTab === 0 ? "Original" : (scenarios[activeTab - 1]?.name || "Scenario")}
-                </span>
-              </div>
+            {/* Minimal header */}
+            <div className="flex items-center justify-between px-4 py-2 border-b bg-card shrink-0">
+              <span className="text-sm font-medium text-muted-foreground">
+                Org Chart — {activeTab === 0 ? "Original" : (scenarios[activeTab - 1]?.name || "Scenario")}
+              </span>
               <Button variant="ghost" size="icon" onClick={() => setFullscreen(false)}>
                 <X className="w-5 h-5" />
               </Button>
             </div>
-            {/* Chart fills remaining space */}
+            {/* Pure tree chart, auto-fitted */}
             <div className="flex-1 overflow-hidden">
-              {activeTab === 0 ? (
-                <OrgChartSheet
-                  positions={positions}
-                  isOriginal
-                  onSavePosition={saveCanonical}
-                  onDeletePosition={deleteCanonical}
-                  onUndoRestoreCanonical={handleUndoRestoreCanonical}
-                  showSalary={showSalary}
-                  showNames={showNames}
-                  originalPositions={positions}
-                  basePositions={null}
-                  fitToScreen
-                />
-              ) : currentScenario ? (
-                <OrgChartSheet
-                  key={currentScenario.id + "-fs"}
-                  positions={positions}
-                  scenarioPositions={currentScenario.positions || []}
-                  initialRemovedPositions={currentScenario.removed_positions || []}
-                  onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
-                  isOriginal={false}
-                  showSalary={showSalary}
-                  showNames={showNames}
-                  originalPositions={positions}
-                  basePositions={positions}
-                  fitToScreen
-                />
-              ) : null}
+              <OrgTreeLayout
+                positions={activeTab === 0 ? positions : (currentScenario?.positions || [])}
+                originalPositions={positions}
+                isScenario={activeTab !== 0}
+                showSalary={showSalary}
+                showNames={showNames}
+                fitToScreen
+              />
             </div>
           </div>
         </div>
