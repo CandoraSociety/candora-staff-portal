@@ -130,13 +130,15 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       {showSalary && position.salary > 0 && (
         <p className="text-[10px] text-muted-foreground font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
       )}
-      {showSalary && position.hours_per_week > 0 && position.weeks_per_year > 0 && (() => {
-        const effectiveHourly = position.salary > 0
-          ? (position.salary / (position.hours_per_week * position.weeks_per_year)).toFixed(2)
-          : position.hourly_rate;
+      {showSalary && (position.hourly_rate > 0 || (position.hours_per_week > 0 && position.weeks_per_year > 0)) && (() => {
+        const h = position.hours_per_week;
+        const w = position.weeks_per_year;
+        const effectiveHourly = (h > 0 && w > 0 && position.salary > 0)
+          ? (position.salary / (h * w)).toFixed(2)
+          : (position.hourly_rate || 0).toFixed(2);
         return (
           <p className="text-[10px] text-muted-foreground/70">
-            ${effectiveHourly}/hr · {position.hours_per_week}h/wk · {position.weeks_per_year}wks
+            ${effectiveHourly}/hr{h > 0 ? ` · ${h}h/wk` : ""}{w > 0 ? ` · ${w}wks` : ""}
           </p>
         );
       })()}
