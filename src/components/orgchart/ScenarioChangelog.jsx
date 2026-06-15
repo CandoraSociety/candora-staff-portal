@@ -19,7 +19,9 @@ export default function ScenarioChangelog({ scenarioPositions, originalPositions
     // Positions added (no original_id or original_id not found in originals)
     scenarioPositions.forEach(p => {
       const origId = p.original_id || p.id;
-      const orig = originalPositions.find(o => o.id === origId);
+      // Match by ID first, then fall back to title+person_name (handles recreated canonical positions)
+      const orig = originalPositions.find(o => o.id === origId)
+        || originalPositions.find(o => o.title === p.title && (o.person_name || "") === (p.person_name || ""));
       if (!orig) {
         result.push({ type: "added", position: p });
         return;

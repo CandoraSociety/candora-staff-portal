@@ -91,7 +91,9 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
 
   let isChanged = false;
   if (isScenario && originalPositions?.length > 0) {
-    const orig = originalPositions.find(o => o.id === (position.original_id || position.id));
+    const origId = position.original_id || position.id;
+    const orig = originalPositions.find(o => o.id === origId)
+      || originalPositions.find(o => o.title === position.title && (o.person_name || "") === (position.person_name || ""));
     if (!orig) isChanged = true;
     else isChanged = orig.title !== position.title || orig.person_name !== position.person_name ||
       orig.salary !== position.salary || orig.reports_to_id !== position.reports_to_id;

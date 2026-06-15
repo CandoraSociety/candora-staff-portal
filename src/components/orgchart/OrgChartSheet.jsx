@@ -35,7 +35,9 @@ const TIER_LABELS = {
 function PositionCard({ position, originalPositions, onEdit, onDelete, showSalary, showNames, isScenario, draggingId, onDragStart, onDragOver, onDrop }) {
   let isChanged = false;
   if (isScenario && originalPositions.length > 0) {
-    const orig = originalPositions.find(o => o.id === (position.original_id || position.id));
+    const origId = position.original_id || position.id;
+    const orig = originalPositions.find(o => o.id === origId)
+      || originalPositions.find(o => o.title === position.title && (o.person_name || "") === (position.person_name || ""));
     if (!orig) isChanged = true;
     else isChanged = (
       orig.title !== position.title ||
