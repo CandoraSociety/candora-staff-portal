@@ -75,8 +75,14 @@ export default function TeamsView({ positions, currentUser }) {
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {teams.map(team => {
+            // Membership comes from BOTH sources: the team's own member_position_ids
+            // AND positions that have this team's id in their team_ids array
+            const memberIds = new Set([
+              ...(team.member_position_ids || []),
+              ...positions.filter(p => (p.team_ids || []).includes(team.id)).map(p => p.id),
+            ]);
             const lead = positions.find(p => p.id === team.lead_position_id);
-            const members = positions.filter(p => (team.member_position_ids || []).includes(p.id) && p.id !== team.lead_position_id);
+            const members = positions.filter(p => memberIds.has(p.id) && p.id !== team.lead_position_id);
             return (
               <div key={team.id} className="border rounded-xl p-4 bg-card shadow-sm">
                 <div className="flex items-start justify-between mb-3">
@@ -106,7 +112,7 @@ export default function TeamsView({ positions, currentUser }) {
                     </div>
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground/50 mt-2">{members.length + (lead ? 1 : 0)} member{members.length + (lead ? 1 : 0) !== 1 ? "s" : ""}</p>
+                <p className="text-[10px] text-muted-foreground/50 mt-2">{memberIds.size} member{memberIds.size !== 1 ? "s" : ""}</p>
               </div>
             );
           })}
