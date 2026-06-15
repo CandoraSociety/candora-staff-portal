@@ -70,7 +70,9 @@ export default function EDOrgChart() {
 
   // ---- Canonical CRUD ----
   const saveCanonical = async (form, editId) => {
-    const data = { ...form, salary: parseFloat(form.salary) || 0 };
+    // Strip built-in read-only fields before saving
+    const { id, created_date, updated_date, created_by_id, ...rest } = form;
+    const data = { ...rest, salary: parseFloat(rest.salary) || 0 };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
     qc.invalidateQueries({ queryKey: ["ed-org"] });
@@ -86,7 +88,7 @@ export default function EDOrgChart() {
     if (!newSheetName.trim()) return;
     let snapshotPositions = [];
     if (newSheetSource === "original") {
-      snapshotPositions = positions.map(p => ({ ...p, original_id: p.id, id: p.id }));
+      snapshotPositions = positions.map(p => ({ ...p, original_id: p.id }));
     } else if (newSheetSource === "blank") {
       snapshotPositions = [];
     } else {
@@ -328,14 +330,7 @@ export default function EDOrgChart() {
             key={currentScenario.id}
             positions={positions}
             scenarioPositions={currentScenario.positions || []}
-            initialRemovedPositions={(() => {
-              const scenarioOriginalIds = new Set((currentScenario.positions || []).map(p => p.original_id || p.id));
-              const computed = positions.filter(p => !scenarioOriginalIds.has(p.id));
-              const persisted = currentScenario.removed_positions || [];
-              const persistedIds = new Set(persisted.map(p => p.id));
-              const merged = [...persisted, ...computed.filter(p => !persistedIds.has(p.id))];
-              return merged;
-            })()}
+            initialRemovedPositions={currentScenario.removed_positions || []}
             onScenarioChange={(newPos, newRemoved) => saveScenarioPositions(currentScenario.id, newPos, newRemoved)}
             isOriginal={false}
             showSalary={showSalary}
