@@ -72,7 +72,13 @@ export default function EDOrgChart() {
   const saveCanonical = async (form, editId) => {
     // Strip built-in read-only fields before saving
     const { id, created_date, updated_date, created_by_id, ...rest } = form;
-    const data = { ...rest, salary: parseFloat(rest.salary) || 0 };
+    const data = {
+      ...rest,
+      salary: parseFloat(rest.salary) || 0,
+      hourly_rate: parseFloat(rest.hourly_rate) || 0,
+      hours_per_week: parseFloat(rest.hours_per_week) || 0,
+      weeks_per_year: parseFloat(rest.weeks_per_year) || 0,
+    };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
     qc.invalidateQueries({ queryKey: ["ed-org"] });
@@ -88,7 +94,24 @@ export default function EDOrgChart() {
     if (!newSheetName.trim()) return;
     let snapshotPositions = [];
     if (newSheetSource === "original") {
-      snapshotPositions = positions.map(p => ({ ...p, original_id: p.id }));
+      snapshotPositions = positions.map(p => ({
+        id: p.id,
+        original_id: p.id,
+        title: p.title,
+        person_name: p.person_name,
+        department: p.department,
+        tier: p.tier,
+        reports_to_id: p.reports_to_id,
+        salary: p.salary,
+        hourly_rate: p.hourly_rate,
+        hours_per_week: p.hours_per_week,
+        weeks_per_year: p.weeks_per_year,
+        has_summer_hours: p.has_summer_hours,
+        summer_hours_per_week: p.summer_hours_per_week,
+        summer_weeks: p.summer_weeks,
+        is_vacant: p.is_vacant,
+        notes: p.notes,
+      }));
     } else if (newSheetSource === "blank") {
       snapshotPositions = [];
     } else {

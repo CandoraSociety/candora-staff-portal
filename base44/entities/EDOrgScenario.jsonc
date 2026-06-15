@@ -37,6 +37,24 @@
           "salary": {
             "type": "number"
           },
+          "hourly_rate": {
+            "type": "number"
+          },
+          "hours_per_week": {
+            "type": "number"
+          },
+          "weeks_per_year": {
+            "type": "number"
+          },
+          "has_summer_hours": {
+            "type": "boolean"
+          },
+          "summer_hours_per_week": {
+            "type": "number"
+          },
+          "summer_weeks": {
+            "type": "number"
+          },
           "is_vacant": {
             "type": "boolean"
           },
@@ -48,7 +66,7 @@
     },
     "removed_positions": {
       "type": "array",
-      "description": "Positions that were deleted from this scenario (for display in the removed list)",
+      "description": "Positions that were deleted from this scenario",
       "items": {
         "type": "object"
       }
