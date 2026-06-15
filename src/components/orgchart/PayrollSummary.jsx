@@ -43,9 +43,10 @@ const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
 
-  // Separate practicum placements from paid staff
-  const practicumPositions = positions.filter(p => p.tier === "practicum_placement");
-  const paidPositions = positions.filter(p => p.tier !== "practicum_placement");
+  // Separate unpaid tiers (practicum + skilled volunteer) from paid staff
+  const unpaidTiers = ["practicum_placement", "skilled_volunteer"];
+  const practicumPositions = positions.filter(p => unpaidTiers.includes(p.tier));
+  const paidPositions = positions.filter(p => !unpaidTiers.includes(p.tier));
 
   // Always use the stored salary field as the source of truth (exclude practicums — always $0)
   const annual = paidPositions.reduce((s, p) => s + (p.salary || 0), 0);
@@ -69,8 +70,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const grandTotalAnnual = annual + totalEmployerContributions + BENEFITS_ANNUAL;
   const grandTotalMonthly = grandTotalAnnual / 12;
 
-  // Base comparisons also exclude practicums
-  const basePaidPositions = basePositions?.filter(p => p.tier !== "practicum_placement") || [];
+  // Base comparisons also exclude unpaid tiers
+  const basePaidPositions = basePositions?.filter(p => !unpaidTiers.includes(p.tier)) || [];
 
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
@@ -106,7 +107,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
       <div>
         <span className="font-semibold text-foreground">{paidPositions.length} staff position{paidPositions.length !== 1 ? "s" : ""}</span>
         {practicumPositions.length > 0 && (
-          <p className="text-xs text-muted-foreground">{practicumPositions.length} practicum</p>
+          <p className="text-xs text-muted-foreground">{practicumPositions.length} unpaid (practicum/volunteer)</p>
         )}
         {hasDeltas && diffPositions !== 0 && (
           <p className={`text-xs font-semibold italic ${diffColor(diffPositions)}`}>{fmtDiff(diffPositions)}</p>

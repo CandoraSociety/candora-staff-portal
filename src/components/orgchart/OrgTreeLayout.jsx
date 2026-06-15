@@ -10,14 +10,14 @@ import { Badge } from "@/components/ui/badge";
 const TIER_ORDER = [
   "executive", "director", "senior_manager", "manager",
   "supervisor_team_lead", "specialist", "frontline",
-  "assistant", "practicum_placement", "__none__",
+  "assistant", "practicum_placement", "skilled_volunteer", "__none__",
 ];
 
 const TIER_LABELS = {
   executive: "Executive", director: "Director", senior_manager: "Senior Manager",
   manager: "Manager", supervisor_team_lead: "Supervisor / Team Lead",
   specialist: "Specialist", frontline: "Frontline", assistant: "Assistant",
-  practicum_placement: "Practicum Placement", __none__: "Unassigned",
+  practicum_placement: "Practicum Placement", skilled_volunteer: "Skilled Volunteer", __none__: "Unassigned",
 };
 
 const NODE_W = 150;

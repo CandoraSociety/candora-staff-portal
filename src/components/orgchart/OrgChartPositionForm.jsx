@@ -17,8 +17,11 @@ const TIERS = [
   { value: "frontline", label: "Frontline" },
   { value: "assistant", label: "Assistant" },
   { value: "practicum_placement", label: "Practicum Placement" },
+  { value: "skilled_volunteer", label: "Skilled Volunteer" },
   { value: "specialist", label: "Specialist" },
 ];
+
+const NO_WAGE_TIERS = ["practicum_placement", "skilled_volunteer"];
 
 export const EMPTY_POS = {
   title: "", person_name: "", department: "", departments: [],
@@ -382,78 +385,50 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
             <p className="text-[10px] text-muted-foreground/70">Set a number to place this position on a specific row (1 = top). Leave blank to auto-position by tier.</p>
           </div>
 
-          {/* Compensation */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Annual Salary ($)</label>
-              <Input
-                type="number"
-                value={form.salary || ""}
-                onChange={e => setForm({ ...form, salary: e.target.value })}
-                placeholder="e.g. 65000"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Hourly Rate ($)</label>
-              <Input
-                type="number"
-                value={form.hourly_rate || ""}
-                onChange={e => setForm({ ...form, hourly_rate: e.target.value })}
-                placeholder="e.g. 25"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Hours/Week</label>
-              <Input
-                type="number"
-                value={form.hours_per_week || ""}
-                onChange={e => setForm({ ...form, hours_per_week: e.target.value })}
-                placeholder="e.g. 40"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Weeks/Year</label>
-              <Input
-                type="number"
-                value={form.weeks_per_year || ""}
-                onChange={e => setForm({ ...form, weeks_per_year: e.target.value })}
-                placeholder="e.g. 52"
-              />
-            </div>
-          </div>
-
-          {/* Summer hours option */}
-          <div className="flex items-center gap-2 pt-1">
-            <Switch
-              checked={!!form.has_summer_hours}
-              onCheckedChange={v => setForm({ ...form, has_summer_hours: v })}
-            />
-            <span className="text-sm text-muted-foreground">Different summer hours</span>
-          </div>
-
-          {form.has_summer_hours && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Summer Hours/Week</label>
-                <Input
-                  type="number"
-                  value={form.summer_hours_per_week || ""}
-                  onChange={e => setForm({ ...form, summer_hours_per_week: e.target.value })}
-                  placeholder="e.g. 30"
-                />
+          {/* Compensation — hidden for unpaid tiers */}
+          {NO_WAGE_TIERS.includes(form.tier) ? (
+            <p className="text-xs text-muted-foreground italic bg-muted/40 rounded-md px-3 py-2">
+              No wage info for {TIERS.find(t => t.value === form.tier)?.label} positions.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Annual Salary ($)</label>
+                  <Input type="number" value={form.salary || ""} onChange={e => setForm({ ...form, salary: e.target.value })} placeholder="e.g. 65000" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Hourly Rate ($)</label>
+                  <Input type="number" value={form.hourly_rate || ""} onChange={e => setForm({ ...form, hourly_rate: e.target.value })} placeholder="e.g. 25" />
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Summer Weeks</label>
-                <Input
-                  type="number"
-                  value={form.summer_weeks || ""}
-                  onChange={e => setForm({ ...form, summer_weeks: e.target.value })}
-                  placeholder="e.g. 8"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Hours/Week</label>
+                  <Input type="number" value={form.hours_per_week || ""} onChange={e => setForm({ ...form, hours_per_week: e.target.value })} placeholder="e.g. 40" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Weeks/Year</label>
+                  <Input type="number" value={form.weeks_per_year || ""} onChange={e => setForm({ ...form, weeks_per_year: e.target.value })} placeholder="e.g. 52" />
+                </div>
               </div>
-            </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Switch checked={!!form.has_summer_hours} onCheckedChange={v => setForm({ ...form, has_summer_hours: v })} />
+                <span className="text-sm text-muted-foreground">Different summer hours</span>
+              </div>
+              {form.has_summer_hours && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Summer Hours/Week</label>
+                    <Input type="number" value={form.summer_hours_per_week || ""} onChange={e => setForm({ ...form, summer_hours_per_week: e.target.value })} placeholder="e.g. 30" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Summer Weeks</label>
+                    <Input type="number" value={form.summer_weeks || ""} onChange={e => setForm({ ...form, summer_weeks: e.target.value })} placeholder="e.g. 8" />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Departments — multi-select with autocomplete */}

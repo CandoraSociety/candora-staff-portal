@@ -18,6 +18,7 @@ const TIER_ORDER = [
   "frontline",
   "assistant",
   "practicum_placement",
+  "skilled_volunteer",
 ];
 
 const TIER_LABELS = {
@@ -30,6 +31,7 @@ const TIER_LABELS = {
   frontline: "Frontline",
   assistant: "Assistant",
   practicum_placement: "Practicum Placement",
+  skilled_volunteer: "Skilled Volunteer",
 };
 
 function PositionCard({ position, originalPositions, onEdit, onDelete, showSalary, showNames, isScenario, draggingId, onDragStart, onDragOver, onDrop }) {
