@@ -43,7 +43,8 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       orig.title !== position.title ||
       orig.person_name !== position.person_name ||
       orig.salary !== position.salary ||
-      orig.reports_to_id !== position.reports_to_id
+      orig.reports_to_id !== position.reports_to_id ||
+      orig.dotted_line_reports_to_id !== position.dotted_line_reports_to_id
     );
   }
 

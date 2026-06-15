@@ -280,7 +280,7 @@ export default function OrgTreeLayout({
   // Build SVG lines
   const lines = [];
   positions.forEach(p => {
-    if (!p.reports_to_id) return;
+    if (!p.reports_to_id || p.reports_to_id === "") return;
     const parent = posMap[p.reports_to_id];
     const child = posMap[p.id];
     if (!parent || !child) return;
@@ -296,7 +296,7 @@ export default function OrgTreeLayout({
     );
   });
   positions.forEach(p => {
-    if (!p.dotted_line_reports_to_id) return;
+    if (!p.dotted_line_reports_to_id || p.dotted_line_reports_to_id === "") return;
     const parent = posMap[p.dotted_line_reports_to_id];
     const child = posMap[p.id];
     if (!parent || !child) return;
