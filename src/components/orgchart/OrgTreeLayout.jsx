@@ -139,16 +139,24 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       {showSalary && position.salary > 0 && (
         <p className="text-[10px] text-muted-foreground font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
       )}
-      {showSalary && (position.hourly_rate > 0 || (position.hours_per_week > 0 && position.weeks_per_year > 0)) && (() => {
+      {showSalary && (position.hourly_rate > 0 || position.hours_per_week > 0 || position.weeks_per_year > 0) && (() => {
+        const hr = position.hourly_rate;
         const h = position.hours_per_week;
         const w = position.weeks_per_year;
-        const effectiveHourly = (h > 0 && w > 0 && position.salary > 0)
-          ? (position.salary / (h * w)).toFixed(2)
-          : (position.hourly_rate || 0).toFixed(2);
+        const sh = position.summer_hours_per_week;
+        const sw = position.summer_weeks;
+        const hasSummer = position.has_summer_hours && sh > 0 && sw > 0;
         return (
-          <p className="text-[10px] text-muted-foreground/70">
-            ${effectiveHourly}/hr{h > 0 ? ` · ${h}h/wk` : ""}{w > 0 ? ` · ${w}wks` : ""}
-          </p>
+          <>
+            <p className="text-[10px] text-muted-foreground/70">
+              {hr > 0 ? `$${hr}/hr` : ""}{hr > 0 && (h > 0 || w > 0) ? " · " : ""}{h > 0 ? `${h}h/wk` : ""}{h > 0 && w > 0 ? " · " : ""}{w > 0 ? `${w}wks` : ""}
+            </p>
+            {hasSummer && (
+              <p className="text-[10px] text-muted-foreground/60">
+                Summer: {sh}h/wk · {sw}wks
+              </p>
+            )}
+          </>
         );
       })()}
       <div className="absolute -top-2 -right-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
