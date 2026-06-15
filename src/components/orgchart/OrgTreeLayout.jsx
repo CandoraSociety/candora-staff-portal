@@ -127,9 +127,11 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       {showNames && position.person_name && <p className="text-[10px] text-muted-foreground truncate">{position.person_name}</p>}
       {position.department && <p className="text-[10px] text-muted-foreground/60 truncate">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-[10px] mt-0.5 px-1">Vacant</Badge>}
-      {showSalary && position.salary > 0 && <p className="text-[10px] text-muted-foreground">${position.salary.toLocaleString()}/yr</p>}
+      {showSalary && position.salary > 0 && (
+        <p className="text-[10px] text-muted-foreground font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
+      )}
       {showSalary && position.hourly_rate > 0 && (
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-[10px] text-muted-foreground/70">
           ${position.hourly_rate}/hr
           {position.hours_per_week > 0 && ` · ${position.hours_per_week}h/wk`}
           {position.weeks_per_year > 0 && ` · ${position.weeks_per_year}wks`}

@@ -71,9 +71,11 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showNames && position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
       {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
-      {showSalary && position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}/yr</p>}
+      {showSalary && position.salary > 0 && (
+        <p className="text-xs text-muted-foreground mt-0.5 font-medium">${Math.round(position.salary).toLocaleString()}/yr</p>
+      )}
       {showSalary && position.hourly_rate > 0 && (
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-xs text-muted-foreground/70 mt-0.5">
           ${position.hourly_rate}/hr
           {position.hours_per_week > 0 && ` · ${position.hours_per_week}h/wk`}
           {position.weeks_per_year > 0 && ` · ${position.weeks_per_year}wks`}

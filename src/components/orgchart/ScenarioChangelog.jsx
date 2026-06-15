@@ -2,9 +2,6 @@ import { useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Minus, Pencil, UserX } from "lucide-react";
 
 function calcSalary(p) {
-  if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
-    return parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year);
-  }
   return p.salary || 0;
 }
 
@@ -38,10 +35,20 @@ export default function ScenarioChangelog({ scenarioPositions, originalPositions
         const toMgr = scenarioPositions.find(s => s.id === p.reports_to_id) || originalPositions.find(o => o.id === p.reports_to_id);
         diffs.push({ field: "Reports to", from: fromMgr?.title || "(none)", to: toMgr?.title || "(none)" });
       }
-      const origSal = calcSalary(orig);
-      const newSal = calcSalary(p);
+      const origSal = orig.salary || 0;
+      const newSal = p.salary || 0;
       if (Math.abs(origSal - newSal) > 1) {
-        diffs.push({ field: "Salary", from: fmt(origSal), to: fmt(newSal), delta: newSal - origSal });
+        diffs.push({ field: "Annual Wage", from: fmt(origSal), to: fmt(newSal), delta: newSal - origSal });
+      }
+      // Also flag hourly rate / hours changes even if annual salary is same (rounding can mask them)
+      if ((orig.hourly_rate || 0) !== (p.hourly_rate || 0)) {
+        diffs.push({ field: "Hourly Rate", from: `$${orig.hourly_rate || 0}/hr`, to: `$${p.hourly_rate || 0}/hr` });
+      }
+      if ((orig.hours_per_week || 0) !== (p.hours_per_week || 0)) {
+        diffs.push({ field: "Hours/Week", from: `${orig.hours_per_week || 0}h`, to: `${p.hours_per_week || 0}h` });
+      }
+      if ((orig.weeks_per_year || 0) !== (p.weeks_per_year || 0)) {
+        diffs.push({ field: "Weeks/Year", from: `${orig.weeks_per_year || 0}wks`, to: `${p.weeks_per_year || 0}wks` });
       }
       if (diffs.length > 0) result.push({ type: "modified", position: p, orig, diffs });
     });
