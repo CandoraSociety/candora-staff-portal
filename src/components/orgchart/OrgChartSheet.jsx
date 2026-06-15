@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw, Undo2, Redo2 } from "lucide-react";
+import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw, Undo2, Redo2, ChevronDown, ChevronUp } from "lucide-react";
 import OrgTreeLayout from "./OrgTreeLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
@@ -107,6 +107,8 @@ export default function OrgChartSheet({
   const [form, setForm] = useState(EMPTY_POS);
   const [editId, setEditId] = useState(null);
   const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
+  const [payrollOpen, setPayrollOpen] = useState(true);
+  const [removedOpen, setRemovedOpen] = useState(true);
   const [removedPositions, setRemovedPositions] = useState(initialRemovedPositions || []);
   useEffect(() => {
     if (initialRemovedPositions?.length > 0) {
@@ -294,7 +296,17 @@ export default function OrgChartSheet({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
-        <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPayrollOpen(o => !o)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title={payrollOpen ? "Hide financials" : "Show financials"}
+          >
+            {payrollOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            Financials
+          </button>
+          {payrollOpen && <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />}
+        </div>
         <div className="flex items-center gap-2">
           {/* Undo / Redo */}
           <div className="flex items-center border rounded-md overflow-hidden">
@@ -399,30 +411,36 @@ export default function OrgChartSheet({
       {/* Removed positions list — scenario sheets only */}
       {!isOriginal && removedPositions.length > 0 && (
         <div className="border-t mx-4 mb-4 pt-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          <button
+            onClick={() => setRemovedOpen(o => !o)}
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 hover:text-foreground transition-colors"
+          >
+            {removedOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             Removed from this scenario ({removedPositions.length})
-          </p>
-          <div className="flex flex-col gap-1">
-            {removedPositions.map(p => (
-              <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm">
-                <div className="flex items-center gap-2">
-                  <UserX className="w-4 h-4 text-red-400 shrink-0" />
-                  <span className="font-medium text-red-800">{p.title}</span>
-                  {p.person_name && <span className="text-red-600 text-xs">· {p.person_name}</span>}
-                  {p.department && <span className="text-red-400 text-xs">· {p.department}</span>}
-                  {showSalary && p.hourly_rate > 0 && <span className="text-red-400 text-xs">· ${p.hourly_rate}/hr</span>}
-                  {showSalary && p.salary > 0 && !p.hourly_rate && <span className="text-red-400 text-xs">· ${p.salary.toLocaleString()}/yr</span>}
+          </button>
+          {removedOpen && (
+            <div className="flex flex-col gap-1">
+              {removedPositions.map(p => (
+                <div key={p.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-sm">
+                  <div className="flex items-center gap-2">
+                    <UserX className="w-4 h-4 text-red-400 shrink-0" />
+                    <span className="font-medium text-red-800">{p.title}</span>
+                    {p.person_name && <span className="text-red-600 text-xs">· {p.person_name}</span>}
+                    {p.department && <span className="text-red-400 text-xs">· {p.department}</span>}
+                    {showSalary && p.hourly_rate > 0 && <span className="text-red-400 text-xs">· ${p.hourly_rate}/hr</span>}
+                    {showSalary && p.salary > 0 && !p.hourly_rate && <span className="text-red-400 text-xs">· ${p.salary.toLocaleString()}/yr</span>}
+                  </div>
+                  <button
+                    onClick={() => handleRestore(p.id)}
+                    className="flex items-center gap-1 text-xs text-red-600 hover:text-green-700 transition-colors ml-4"
+                    title="Restore to scenario"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Restore
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleRestore(p.id)}
-                  className="flex items-center gap-1 text-xs text-red-600 hover:text-green-700 transition-colors ml-4"
-                  title="Restore to scenario"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Restore
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
