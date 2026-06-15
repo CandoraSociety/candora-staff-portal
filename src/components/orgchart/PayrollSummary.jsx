@@ -110,7 +110,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const hasDeltas = basePositions && basePositions.length > 0 && (diffPositions !== 0 || diffAnnual !== 0);
 
   return (
-    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground bg-blue-50 border border-blue-100 rounded-lg px-4 py-2">
       <div>
         <span className="font-semibold text-foreground">{positions.length} positions</span>
         {hasDeltas && diffPositions !== 0 && (
