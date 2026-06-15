@@ -83,6 +83,7 @@ export default function EDOrgChart() {
       hourly_rate: parseFloat(rest.hourly_rate) || 0,
       hours_per_week: parseFloat(rest.hours_per_week) || 0,
       weeks_per_year: parseFloat(rest.weeks_per_year) || 0,
+      dotted_line_reports_to_id: rest.dotted_line_reports_to_id || "",
     };
     if (editId) await base44.entities.EDOrgPosition.update(editId, data);
     else await base44.entities.EDOrgPosition.create({ ...data, owner_id: user?.id });
@@ -107,6 +108,7 @@ export default function EDOrgChart() {
         department: p.department,
         tier: p.tier,
         reports_to_id: p.reports_to_id,
+        dotted_line_reports_to_id: p.dotted_line_reports_to_id,
         salary: p.salary,
         hourly_rate: p.hourly_rate,
         hours_per_week: p.hours_per_week,
