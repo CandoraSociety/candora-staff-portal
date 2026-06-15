@@ -145,6 +145,8 @@ export default function EDOrgChart() {
     const cleanPositions = newPositions.map(p => ({
       ...p,
       row_number: (p.row_number !== "" && p.row_number != null) ? Number(p.row_number) : null,
+      reports_to_id: p.reports_to_id || null,
+      dotted_line_reports_to_id: p.dotted_line_reports_to_id || null,
     }));
     const updateData = { positions: cleanPositions };
     if (newRemovedPositions !== undefined) updateData.removed_positions = newRemovedPositions;
