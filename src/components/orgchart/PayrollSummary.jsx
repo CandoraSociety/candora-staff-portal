@@ -42,13 +42,8 @@ const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
-  // Calculate annual salary: use salary field, or calculate from hourly if hourly_rate is provided
-  const annual = positions.reduce((s, p) => {
-    if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
-      return s + (parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year));
-    }
-    return s + (p.salary || 0);
-  }, 0);
+  // Always use the stored salary field as the source of truth
+  const annual = positions.reduce((s, p) => s + (p.salary || 0), 0);
   const monthly = annual / 12;
   const biweekly = annual / 26;
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
@@ -61,10 +56,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   let totalEI = 0;
   let totalCPP = 0;
   positions.forEach(p => {
-    const salary = p.hourly_rate && p.hours_per_week && p.weeks_per_year
-      ? parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year)
-      : (p.salary || 0);
-    const contribs = calculateEmployerContributions(salary);
+    const contribs = calculateEmployerContributions(p.salary || 0);
     totalEI += contribs.ei;
     totalCPP += contribs.cpp1 + contribs.cpp2;
   });
@@ -82,12 +74,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   let diffEmployerContributions = 0;
   if (basePositions && basePositions.length > 0) {
     diffPositions = positions.length - basePositions.length;
-    const baseAnnual = basePositions.reduce((s, p) => {
-      if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
-        return s + (parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year));
-      }
-      return s + (p.salary || 0);
-    }, 0);
+    const baseAnnual = basePositions.reduce((s, p) => s + (p.salary || 0), 0);
     diffAnnual = annual - baseAnnual;
     diffMonthly = diffAnnual / 12;
     diffBiweekly = diffAnnual / 26;
@@ -96,10 +83,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     let baseEI = 0;
     let baseCPP = 0;
     basePositions.forEach(p => {
-      const salary = p.hourly_rate && p.hours_per_week && p.weeks_per_year
-        ? parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year)
-        : (p.salary || 0);
-      const contribs = calculateEmployerContributions(salary);
+      const contribs = calculateEmployerContributions(p.salary || 0);
       baseEI += contribs.ei;
       baseCPP += contribs.cpp1 + contribs.cpp2;
     });
