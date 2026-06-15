@@ -314,8 +314,8 @@ export default function OrgTreeLayout({
 
   return (
     <div className="relative" style={{ userSelect: "none" }}>
-      {/* Zoom controls — fixed top-right */}
-      <div className="absolute top-2 right-2 z-20 flex items-center gap-1 bg-card border rounded-lg shadow-sm px-1 py-0.5">
+      {/* Zoom controls — fixed top-right, high z-index to stay on top */}
+      <div className="absolute top-2 right-2 z-50 flex items-center gap-1 bg-card border rounded-lg shadow-lg px-1 py-0.5" style={{ zIndex: 9999 }}>
         <button onClick={zoomOut} className="p-1.5 rounded hover:bg-muted transition-colors" title="Zoom out">
           <ZoomOut className="w-3.5 h-3.5" />
         </button>
