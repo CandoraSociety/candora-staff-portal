@@ -296,10 +296,10 @@ export default function OrgChartSheet({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-2 flex-wrap gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 bg-blue-100 border border-blue-200 rounded-lg px-3 py-1.5">
           <button
             onClick={() => setPayrollOpen(o => !o)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
             title={payrollOpen ? "Hide financials" : "Show financials"}
           >
             {payrollOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
