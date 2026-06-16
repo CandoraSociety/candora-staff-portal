@@ -12,7 +12,6 @@ const WORKERS = [
   { email: 'graham@candorasociety.com', full_name: 'Graham Currie' },
   { email: 'jamie@candorasociety.com', full_name: 'Jamie Morin' },
   { email: 'maria@candorasociety.com', full_name: 'Maria Alba' },
-  { email: 'lola@candorasociety.com', full_name: 'Lola' },
   { email: 'john@candorasociety.com', full_name: 'John' },
   { email: 'Dawn.williston@candorasociety.com', full_name: 'Dawn' },
   { email: 'olena@candorasociety.com', full_name: 'Olena' },
