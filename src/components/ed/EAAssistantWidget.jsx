@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw } from "lucide-react";
+import RecoveryScanner from "./EARecoveryScanner";
 
 function greeting() {
   const h = new Date().getHours();
@@ -421,17 +422,22 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 300, maxHeight: 480 }}>
-            {messages.length === 0 && hasBackup && (
+            {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-6 gap-3">
-                <p className="text-xs text-center" style={{ color: "hsl(230,30%,60%)" }}>Your previous conversation was cleared.</p>
-                <button
-                  onClick={restoreConversation}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:opacity-80"
-                  style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Restore Previous Conversation
-                </button>
+                {hasBackup && (
+                  <>
+                    <p className="text-xs text-center" style={{ color: "hsl(230,30%,60%)" }}>Your previous conversation was backed up.</p>
+                    <button
+                      onClick={restoreConversation}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:opacity-80"
+                      style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Restore Previous Conversation
+                    </button>
+                  </>
+                )}
+                <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); }} />
               </div>
             )}
             {messages.map((m, i) => (
