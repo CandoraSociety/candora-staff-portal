@@ -131,6 +131,8 @@ function NexusSidebar({ collapsed, setCollapsed }) {
   );
 }
 
+import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+
 export default function NexusLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -142,6 +144,7 @@ export default function NexusLayout() {
           <Outlet />
         </div>
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

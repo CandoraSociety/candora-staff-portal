@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
+import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
 import { Calendar, FolderKanban, Target, BookOpen, Users, FileText, Settings, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -97,6 +98,7 @@ export default function EventsMgrLayout() {
       <main className="container mx-auto p-6">
         <Outlet />
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

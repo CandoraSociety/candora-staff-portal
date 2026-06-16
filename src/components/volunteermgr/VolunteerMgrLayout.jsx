@@ -181,6 +181,8 @@ function VolunteerSidebar({ collapsed, setCollapsed }) {
   );
 }
 
+import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+
 export default function VolunteerMgrLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -192,6 +194,7 @@ export default function VolunteerMgrLayout() {
           <Outlet />
         </div>
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

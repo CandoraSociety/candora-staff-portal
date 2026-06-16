@@ -117,6 +117,8 @@ function AppNav() {
   );
 }
 
+import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+
 export default function PathwaysLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
@@ -124,6 +126,7 @@ export default function PathwaysLayout() {
       <main className="w-full">
         <Outlet />
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid, Menu, X } from "lucide-react";
 import EDWidgetSettings from "./EDWidgetSettings";
+import EAFloatingWidget from "./EAFloatingWidget";
 
 const NAV = [
   { label: "Dashboard", path: "/ed", icon: LayoutDashboard },
@@ -128,6 +129,7 @@ export default function EDLayout() {
         </div>
         <Outlet />
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

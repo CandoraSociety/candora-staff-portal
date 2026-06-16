@@ -152,6 +152,8 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
   );
 }
 
+import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+
 export default function MarketingLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -163,6 +165,7 @@ export default function MarketingLayout() {
           <Outlet />
         </div>
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

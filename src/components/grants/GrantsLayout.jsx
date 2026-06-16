@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import { LayoutDashboard, FolderOpen, FileText, Bell, Archive, CheckSquare, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -84,6 +85,7 @@ export default function GrantsLayout() {
       <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <Outlet />
       </main>
+      <EAFloatingWidget />
     </div>
   );
 }

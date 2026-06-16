@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { useAccessControl } from '@/lib/useAccessControl';
 import { cn } from '@/lib/utils';
+import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -50,6 +51,7 @@ export default function AppLayout() {
           <Outlet context={{ user, access, permissions }} />
         </main>
       </div>
+      <EAFloatingWidget />
     </div>
   );
 }
