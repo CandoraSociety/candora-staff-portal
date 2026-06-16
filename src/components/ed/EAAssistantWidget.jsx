@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X } from "lucide-react";
+import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw } from "lucide-react";
 
 function greeting() {
   const h = new Date().getHours();
@@ -152,6 +152,7 @@ const PROACTIVE_PROMPTS = [
 ];
 
 const STORAGE_KEY = "ea_assistant_messages_v1";
+const BACKUP_KEY = "ea_assistant_messages_backup_v1";
 const MEMORY_KEY = "ea_assistant_memory_v1";
 
 export default function EAAssistantWidget() {
@@ -304,10 +305,29 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
   };
 
   const resetConversation = () => {
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try {
+      const current = localStorage.getItem(STORAGE_KEY);
+      if (current) { localStorage.setItem(BACKUP_KEY, current); setHasBackup(true); }
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
     setInitialized(false);
     setMessages([]);
   };
+
+  const restoreConversation = () => {
+    try {
+      const backup = localStorage.getItem(BACKUP_KEY);
+      if (!backup) return;
+      const parsed = JSON.parse(backup);
+      localStorage.setItem(STORAGE_KEY, backup);
+      setMessages(parsed);
+      setInitialized(true);
+    } catch {}
+  };
+
+  const [hasBackup, setHasBackup] = useState(() => {
+    try { return !!localStorage.getItem(BACKUP_KEY); } catch { return false; }
+  });
 
   return (
     <div className="flex flex-col rounded-2xl border shadow-lg overflow-hidden" style={{ background: "hsl(230,70%,9%)", borderColor: "hsl(230,50%,18%)" }}>
@@ -401,6 +421,19 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 300, maxHeight: 480 }}>
+            {messages.length === 0 && hasBackup && (
+              <div className="flex flex-col items-center justify-center py-6 gap-3">
+                <p className="text-xs text-center" style={{ color: "hsl(230,30%,60%)" }}>Your previous conversation was cleared.</p>
+                <button
+                  onClick={restoreConversation}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors hover:opacity-80"
+                  style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Restore Previous Conversation
+                </button>
+              </div>
+            )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                 {m.role === "assistant" && (
