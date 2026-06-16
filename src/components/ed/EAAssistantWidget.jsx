@@ -151,15 +151,29 @@ const PROACTIVE_PROMPTS = [
   "What tasks are overdue or at risk?",
 ];
 
+const STORAGE_KEY = "ea_assistant_messages_v1";
+
 export default function EAAssistantWidget() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch {}
+  }, [messages]);
 
   // EA Portal data
   const { data: tasks = [] } = useQuery({ queryKey: ["ed-tasks"], queryFn: () => base44.entities.EDTask.list() });
@@ -193,10 +207,11 @@ export default function EAAssistantWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Initial greeting once data is loaded
+  // Initial greeting only if there are no existing messages
   useEffect(() => {
     if (initialized || !user || tasks === undefined) return;
     setInitialized(true);
+    if (messages.length > 0) return; // already have a conversation — don't overwrite
 
     const openTasks = tasks.filter(t => t.status !== "completed" && t.status !== "cancelled");
     const urgentCount = openTasks.filter(t => t.priority === "critical" || t.priority === "high").length;
@@ -281,6 +296,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
   };
 
   const resetConversation = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setInitialized(false);
     setMessages([]);
   };
