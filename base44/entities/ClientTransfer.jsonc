@@ -1,0 +1,40 @@
+{
+  "name": "ClientTransfer",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "from_worker": {
+      "type": "string"
+    },
+    "from_worker_name": {
+      "type": "string"
+    },
+    "to_worker": {
+      "type": "string"
+    },
+    "to_worker_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "client_id",
+    "client_name",
+    "from_worker",
+    "to_worker",
+    "to_worker_name"
+  ]
+}

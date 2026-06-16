@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, UserCheck, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
@@ -65,12 +65,19 @@ export default function PathwaysMasterList() {
   const [loading, setLoading] = useState(true);
   const [workers, setWorkers] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
+  const [reassignClient, setReassignClient] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [reassigning, setReassigning] = useState(false);
 
   useEffect(() => {
-    base44.entities.Client.list("-intake_date", 1000).then(data => {
+    Promise.all([
+      base44.entities.Client.list("-intake_date", 1000),
+      base44.entities.User.list(),
+    ]).then(([data, userList]) => {
       setClients(data);
       const names = [...new Set(data.map(c => c.assigned_worker_name).filter(Boolean))].sort();
       setWorkers(names);
+      setUsers(userList);
       setLoading(false);
     });
   }, []);
@@ -198,7 +205,7 @@ export default function PathwaysMasterList() {
                   <tr
                     key={c.id}
                     onClick={() => navigate(`/pathways/client/${c.id}`)}
-                    className={`transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
+                    className={`group transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
                   >
                     <td className="px-3 py-2.5 whitespace-nowrap font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
                       {c.first_name} {c.last_name}
@@ -246,7 +253,20 @@ export default function PathwaysMasterList() {
                     <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.followup_90day_date)}</td>
                     <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">{c.followup_90day_status || "—"}</td>
                     <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.service_navigation_supports ? "Yes" : "—"}</td>
-                    <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.assigned_worker_name || "—"}</td>
+                    <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span>{c.assigned_worker_name || "—"}</span>
+                        {c.assigned_worker && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setReassignClient(c); }}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-blue-100 transition-all"
+                            title="Reassign to a different career counsellor"
+                          >
+                            <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
 
                     {activeTab === "closed" && (
                       <>
@@ -274,6 +294,80 @@ export default function PathwaysMasterList() {
           </div>
         </div>
       </div>
+
+      {/* Reassign Confirmation Dialog */}
+      {reassignClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setReassignClient(null)}>
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold" style={{ color: "hsl(231,64%,20%)" }}>Reassign Client?</h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  You are about to reassign <span className="font-semibold text-slate-800">{reassignClient.first_name} {reassignClient.last_name}</span>
+                  {" "}from <span className="font-semibold text-slate-800">{reassignClient.assigned_worker_name || "Unassigned"}</span> to a different career counsellor.
+                </p>
+                <p className="text-sm text-slate-500 mt-2">
+                  The new counsellor will be notified and must <strong>accept</strong> the transfer before the client appears in their list.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">New Career Counsellor</label>
+              <select
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={reassignClient._newWorker || ""}
+                onChange={e => setReassignClient({ ...reassignClient, _newWorker: e.target.value })}
+              >
+                <option value="">Select a counsellor...</option>
+                {users.filter(u => u.email !== reassignClient.assigned_worker).sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")).map(u => (
+                  <option key={u.id} value={u.email + "|" + (u.full_name || u.email)}>
+                    {u.full_name || u.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                className="px-4 py-2 rounded-lg border border-slate-300 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                onClick={() => setReassignClient(null)}
+                disabled={reassigning}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                style={{ background: "hsl(231,64%,20%)" }}
+                onClick={async () => {
+                  if (!reassignClient._newWorker || reassigning) return;
+                  setReassigning(true);
+                  const [toEmail, toName] = reassignClient._newWorker.split("|");
+                  try {
+                    await base44.entities.ClientTransfer.create({
+                      client_id: reassignClient.id,
+                      client_name: `${reassignClient.first_name} ${reassignClient.last_name}`,
+                      from_worker: reassignClient.assigned_worker || "",
+                      from_worker_name: reassignClient.assigned_worker_name || "",
+                      to_worker: toEmail,
+                      to_worker_name: toName,
+                      status: "pending",
+                    });
+                  } catch {}
+                  setReassigning(false);
+                  setReassignClient(null);
+                }}
+                disabled={!reassignClient._newWorker || reassigning}
+              >
+                {reassigning ? "Sending..." : "Confirm Reassign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
