@@ -355,6 +355,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
           )}
         </div>
         <div className="flex items-center gap-2">
+          <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); }} headerMode />
           <button
             onClick={(e) => { e.stopPropagation(); resetConversation(); }}
             className="p-1.5 rounded-lg transition-colors hover:opacity-70"
