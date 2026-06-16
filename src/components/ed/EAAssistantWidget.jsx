@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw } from "lucide-react";
+import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X } from "lucide-react";
 
 function greeting() {
   const h = new Date().getHours();
@@ -152,6 +152,7 @@ const PROACTIVE_PROMPTS = [
 ];
 
 const STORAGE_KEY = "ea_assistant_messages_v1";
+const MEMORY_KEY = "ea_assistant_memory_v1";
 
 export default function EAAssistantWidget() {
   const { user } = useAuth();
@@ -165,6 +166,11 @@ export default function EAAssistantWidget() {
   const [loading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [memoryOpen, setMemoryOpen] = useState(false);
+  const [memory, setMemory] = useState(() => {
+    try { return localStorage.getItem(MEMORY_KEY) || ""; } catch { return ""; }
+  });
+  const [memoryDraft, setMemoryDraft] = useState("");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -275,8 +281,10 @@ export default function EAAssistantWidget() {
       .map(m => `${m.role === "user" ? firstName : "Assistant"}: ${m.content}`)
       .join("\n\n");
 
-    const prompt = `${systemContext}
+    const savedMemory = (() => { try { return localStorage.getItem(MEMORY_KEY) || ""; } catch { return ""; } })();
 
+    const prompt = `${systemContext}
+${savedMemory ? `\n=== PERMANENT MEMORY (key context Graham has provided — always keep this in mind) ===\n${savedMemory}\n` : ""}
 === CONVERSATION HISTORY ===
 ${conversationText}
 
@@ -340,6 +348,57 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
 
       {!collapsed && (
         <>
+          {/* Permanent Memory Panel */}
+          <div style={{ borderBottom: "1px solid hsl(230,50%,18%)" }}>
+            <button
+              className="w-full flex items-center justify-between px-4 py-2 text-xs transition-colors hover:opacity-80"
+              style={{ background: "hsl(230,65%,11%)", color: "hsl(45,70%,70%)" }}
+              onClick={() => { setMemoryOpen(o => !o); if (!memoryOpen) setMemoryDraft(memory); }}
+            >
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="font-semibold">Permanent Memory</span>
+                {memory && <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}>Active</span>}
+              </span>
+              <span style={{ color: "hsl(230,30%,55%)" }}>{memoryOpen ? "▲ close" : "▼ edit"}</span>
+            </button>
+            {memoryOpen && (
+              <div className="px-4 py-3 space-y-2" style={{ background: "hsl(230,65%,10%)" }}>
+                <p className="text-xs" style={{ color: "hsl(230,30%,60%)" }}>
+                  Anything written here is <strong style={{ color: "hsl(45,70%,75%)" }}>always remembered</strong> across every conversation — even after a reset. Use this to capture key context about yourself, Candora, your priorities, relationships, history, etc.
+                </p>
+                <textarea
+                  value={memoryDraft}
+                  onChange={e => setMemoryDraft(e.target.value)}
+                  placeholder="e.g. I am the Executive Director of Candora, a non-profit in Edmonton. Our fiscal year ends March 31. Key priorities this year are... My board chair is... We are currently navigating..."
+                  rows={6}
+                  className="w-full resize-y rounded-lg px-3 py-2 text-xs outline-none"
+                  style={{ background: "hsl(230,55%,14%)", border: "1px solid hsl(230,45%,22%)", color: "hsl(45,50%,90%)" }}
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setMemoryOpen(false)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors hover:opacity-70"
+                    style={{ color: "hsl(230,30%,60%)" }}
+                  >
+                    <X className="w-3 h-3" /> Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      try { localStorage.setItem(MEMORY_KEY, memoryDraft); } catch {}
+                      setMemory(memoryDraft);
+                      setMemoryOpen(false);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:opacity-80"
+                    style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}
+                  >
+                    <Check className="w-3 h-3" /> Save Memory
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 300, maxHeight: 480 }}>
             {messages.map((m, i) => (
