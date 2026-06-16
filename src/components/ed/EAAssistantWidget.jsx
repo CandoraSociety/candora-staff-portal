@@ -24,56 +24,123 @@ function formatDueLabel(dateStr) {
   } catch { return ""; }
 }
 
-function buildContext({ user, tasks, projects, objectives, notes, organizer }) {
+function buildContext({ user, tasks, projects, objectives, notes, organizer, kpis, budgets,
+  grantProjects, grantReports, employees, volunteers, clients, announcements,
+  edProjects, compassTasks, events, programs, marketingCampaigns, invoices }) {
   const firstName = user?.full_name?.split(" ")[0] || "Director";
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
   const openTasks = tasks.filter(t => t.status !== "completed" && t.status !== "cancelled");
   const urgentTasks = openTasks.filter(t => t.priority === "critical" || t.priority === "high");
-  const activeProjects = projects.filter(p => p.status === "active" || p.status === "planning");
+  const activeProjects = edProjects.filter(p => p.status === "active" || p.status === "planning");
+  const atRiskProjects = edProjects.filter(p => p.risk_level === "high" || p.risk_level === "critical");
   const activeObjectives = objectives.filter(o => o.status === "active" || o.status === "at_risk");
   const recentNotes = [...notes].sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date)).slice(0, 6);
   const personalTasks = (organizer?.tasks || []).filter(t => !t.done);
   const priorities = organizer?.priorities || [];
   const focusToday = organizer?.focus_today || null;
 
-  return `You are the Executive Assistant to ${firstName} (Executive Director of Candora, a non-profit organization). You know them personally, understand their role and responsibilities deeply, and proactively help them stay on top of their work.
+  const activeEmployees = employees.filter(e => e.status === "active");
+  const activeVolunteers = volunteers.filter(v => v.status === "active");
+  const activeClients = clients.filter(c => c.status === "active" || c.status === "employed");
+
+  const openGrantProjects = grantProjects.filter(p => p.status === "in_progress" || p.status === "planning");
+  const upcomingReports = grantReports.filter(r => r.status !== "submitted" && r.status !== "accepted" && r.due_date);
+
+  const activeBudgets = budgets.slice(0, 3);
+  const overdueCompass = compassTasks.filter(t => t.status !== "completed" && t.due_date && isPast(parseISO(t.due_date)));
+  const upcomingEvents = events.filter(e => e.start_date && !isPast(parseISO(e.start_date))).slice(0, 5);
+  const activePrograms = programs.filter(p => p.status === "active").slice(0, 5);
+
+  const pendingInvoices = invoices.filter(i => i.status === "pending" || i.status === "draft").slice(0, 5);
+
+  return `You are the Executive Assistant to ${firstName} (Executive Director of Candora, a non-profit organization). You have FULL visibility into everything happening across the organization. You know them personally and proactively help them stay on top of everything.
 
 Today is ${today}.
 
-=== THEIR OPEN TASKS (${openTasks.length} total, ${urgentTasks.length} urgent) ===
-${urgentTasks.slice(0, 8).map(t => `- [${t.priority.toUpperCase()}] ${t.title}${t.due_date ? formatDueLabel(t.due_date) : ""}${t.category ? ` [${t.category}]` : ""}`).join("\n") || "None urgent right now."}
-${openTasks.filter(t => t.priority !== "critical" && t.priority !== "high").slice(0, 5).map(t => `- ${t.title}${t.due_date ? formatDueLabel(t.due_date) : ""}`).join("\n")}
+=== ED TASKS (${openTasks.length} open, ${urgentTasks.length} urgent) ===
+${urgentTasks.slice(0, 8).map(t => `- [${t.priority.toUpperCase()}] ${t.title}${t.due_date ? formatDueLabel(t.due_date) : ""}${t.category ? ` [${t.category}]` : ""}`).join("\n") || "None urgent."}
+${openTasks.filter(t => t.priority !== "critical" && t.priority !== "high").slice(0, 6).map(t => `- ${t.title}${t.due_date ? formatDueLabel(t.due_date) : ""}`).join("\n")}
 
-=== ACTIVE PROJECTS (${activeProjects.length}) ===
-${activeProjects.slice(0, 6).map(p => `- ${p.name} (${p.progress_percent || 0}% complete, risk: ${p.risk_level || "low"})${p.end_date ? ` — due ${format(parseISO(p.end_date), "MMM d")}` : ""}`).join("\n") || "No active projects."}
+=== ED PROJECTS (${activeProjects.length} active, ${atRiskProjects.length} at risk) ===
+${activeProjects.slice(0, 8).map(p => `- ${p.name} (${p.progress_percent || 0}% — risk: ${p.risk_level || "low"})${p.end_date ? ` — due ${format(parseISO(p.end_date), "MMM d")}` : ""}${p.description ? ` | ${p.description.slice(0, 60)}` : ""}`).join("\n") || "No active projects."}
 
-=== STRATEGIC OBJECTIVES (${activeObjectives.length}) ===
-${activeObjectives.slice(0, 5).map(o => `- ${o.title} (${o.progress_percent || 0}% — ${o.quarter || "ongoing"})`).join("\n") || "No active objectives on record."}
+=== STRATEGIC OBJECTIVES / OPSP (${activeObjectives.length}) ===
+${activeObjectives.slice(0, 6).map(o => `- ${o.title} (${o.progress_percent || 0}% — ${o.quarter || "ongoing"}) [${o.status}]`).join("\n") || "No active objectives."}
+
+=== KPIs (${kpis.length} tracked) ===
+${kpis.slice(0, 8).map(k => `- ${k.name}: ${k.current_value ?? "?"} / ${k.target_value ?? "?"} ${k.unit || ""} [${k.trend || "flat"}] (${k.category})`).join("\n") || "No KPIs tracked."}
+
+=== BUDGETS (${budgets.length} total) ===
+${activeBudgets.map(b => `- ${b.name} FY${b.fiscal_year || "?"}: $${(b.total_amount || 0).toLocaleString()} total${b.categories?.length ? `, ${b.categories.length} categories` : ""}`).join("\n") || "No budgets on record."}
+
+=== GRANTS & FUNDING PROJECTS (${openGrantProjects.length} open) ===
+${openGrantProjects.slice(0, 6).map(p => `- ${p.name} [${p.status}]${p.budget ? ` — $${p.budget.toLocaleString()}` : ""}`).join("\n") || "No open grant projects."}
+${upcomingReports.length > 0 ? `\nUPCOMING GRANT REPORTS DUE:\n${upcomingReports.slice(0, 4).map(r => `- ${r.title}${r.due_date ? formatDueLabel(r.due_date) : ""} [${r.status}]`).join("\n")}` : ""}
+
+=== STAFF (${activeEmployees.length} active employees) ===
+${activeEmployees.slice(0, 6).map(e => `- ${e.first_name} ${e.last_name} — ${e.position} (${e.department})`).join("\n") || "No employee records."}
+
+=== VOLUNTEERS (${activeVolunteers.length} active) ===
+${activeVolunteers.slice(0, 5).map(v => `- ${v.first_name} ${v.last_name}${v.position ? ` — ${v.position}` : ""}`).join("\n") || "No volunteer records."}
+
+=== PATHWAYS CLIENTS (${activeClients.length} active) ===
+${activeClients.length > 0 ? `${activeClients.length} active clients in the Pathways employment program.` : "No active clients."}
+${overdueCompass.length > 0 ? `\n⚠️ ${overdueCompass.length} overdue Compass tasks need attention.` : ""}
+
+=== EVENTS & PROGRAMS ===
+Upcoming Events: ${upcomingEvents.length > 0 ? upcomingEvents.map(e => `${e.name || e.title}${e.start_date ? ` (${format(parseISO(e.start_date), "MMM d")})` : ""}`).join(", ") : "None scheduled."}
+Active Programs: ${activePrograms.length > 0 ? activePrograms.map(p => p.name || p.title).join(", ") : "None."}
+
+=== MARKETING & CAMPAIGNS ===
+${marketingCampaigns.filter(c => c.status === "active").slice(0, 4).map(c => `- ${c.name} [${c.status}]${c.budget ? ` — $${c.budget.toLocaleString()}` : ""}`).join("\n") || "No active campaigns."}
+
+=== INVOICES / BILLING (${pendingInvoices.length} pending) ===
+${pendingInvoices.map(i => `- ${i.title || i.invoice_number || "Invoice"} — $${(i.total_amount || 0).toLocaleString()} [${i.status}]`).join("\n") || "No pending invoices."}
+
+=== ANNOUNCEMENTS (${announcements.filter(a => a.is_active).length} active) ===
+${announcements.filter(a => a.is_active).slice(0, 3).map(a => `- "${a.title}" — ${a.message?.slice(0, 80) || ""}`).join("\n") || "No active announcements."}
 
 === TODAY'S FOCUS ===
 ${focusToday || "Not set yet today."}
 
 === PERSONAL PRIORITIES ===
-${priorities.slice(0, 5).map(p => `- ${p.title}${p.due_date ? formatDueLabel(p.due_date) : ""}${p.tasks?.filter(t=>!t.done).length ? ` (${p.tasks.filter(t=>!t.done).length} open sub-tasks)` : ""}`).join("\n") || "None set."}
+${priorities.slice(0, 6).map(p => `- ${p.title}${p.due_date ? formatDueLabel(p.due_date) : ""}${p.tasks?.filter(t=>!t.done).length ? ` (${p.tasks.filter(t=>!t.done).length} open sub-tasks)` : ""}`).join("\n") || "None set."}
 
 === PERSONAL TO-DOs ===
 ${personalTasks.slice(0, 8).map(t => `- ${t.text}`).join("\n") || "None."}
 
 === RECENT NOTES ===
-${recentNotes.slice(0, 4).map(n => `- "${n.title}"${n.note_type ? ` [${n.note_type}]` : ""}`).join("\n") || "None."}
+${recentNotes.slice(0, 5).map(n => `- "${n.title}"${n.note_type ? ` [${n.note_type}]` : ""}${n.content ? `: ${n.content.slice(0, 80)}` : ""}`).join("\n") || "None."}
+
+=== PORTAL NAVIGATION (what you can access) ===
+- /ed — Executive Assistant Dashboard (here)
+- /ed/tasks — Your ED Tasks
+- /ed/projects — ED Projects
+- /ed/opsp — Objectives / Strategic Plan
+- /ed/kpis — KPI Tracker
+- /ed/budgets — Budget Management
+- /ed/org — Org Chart
+- /ed/notes — Notes
+- /nexushr — Staff HR Portal (employees, reviews, onboarding, etc.)
+- /volunteermgr — Volunteer Manager
+- /pathways — Pathways Client Portal
+- /grants — Grants & Proposals
+- /marketing — Marketing & Fundraising
+- /eventsmgr — Events, Projects & Programs
+- /filemanager — File Manager
 
 === YOUR ROLE & RESPONSIBILITIES ===
-You are the Executive Director of Candora, a non-profit organization. Your responsibilities include: strategic leadership, board relations, program oversight, fundraising & grants, financial stewardship, staff management, stakeholder engagement, and community partnerships.
+Executive Director of Candora — a non-profit organization. Responsibilities: strategic leadership, board governance, program oversight, fundraising & grants management, financial stewardship, staff & volunteer leadership, stakeholder engagement, community partnerships, organizational development.
 
 === HOW YOU SHOULD BEHAVE ===
-- Be warm, professional, and proactive — like a real EA who truly knows them
-- Offer specific, actionable help based on what you see in their data
-- When they first open this widget each session, give a brief contextual briefing (urgent items, what needs attention today)
-- Proactively ask if you can help draft emails, prepare for meetings, summarize projects, create agenda items, etc.
-- Keep responses concise but rich — this is a conversation, not a report
+- Be warm, professional, and proactive — like a real EA who truly knows their boss
+- Reference specific data you see above when offering help ("I see you have 3 overdue grant reports...")
+- Proactively offer to draft emails, prepare briefings, build agendas, summarize status, flag risks
+- Keep responses conversational and concise unless asked to draft something (then be complete)
 - Use their first name (${firstName}) naturally
-- If they ask you to draft something, draft it fully and completely`;
+- When they mention a topic, connect it to the relevant data you see
+- If asked about any part of the organization, give them a real, data-grounded answer`;
 }
 
 const PROACTIVE_PROMPTS = [
@@ -94,16 +161,30 @@ export default function EAAssistantWidget() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load all context data
+  // EA Portal data
   const { data: tasks = [] } = useQuery({ queryKey: ["ed-tasks"], queryFn: () => base44.entities.EDTask.list() });
-  const { data: projects = [] } = useQuery({ queryKey: ["ed-projects"], queryFn: () => base44.entities.EDProject.list() });
+  const { data: edProjects = [] } = useQuery({ queryKey: ["ed-projects"], queryFn: () => base44.entities.EDProject.list() });
   const { data: objectives = [] } = useQuery({ queryKey: ["ed-objectives"], queryFn: () => base44.entities.EDObjective.list() });
   const { data: notes = [] } = useQuery({ queryKey: ["ed-notes"], queryFn: () => base44.entities.EDNote.list() });
+  const { data: kpis = [] } = useQuery({ queryKey: ["ed-kpis"], queryFn: () => base44.entities.EDKPI.list() });
+  const { data: budgets = [] } = useQuery({ queryKey: ["ed-budgets"], queryFn: () => base44.entities.EDBudget.list() });
   const { data: organizer } = useQuery({
     queryKey: ["organizer", user?.email],
     queryFn: () => base44.entities.PersonalOrganizer.filter({ user_email: user?.email }).then(d => d[0]),
     enabled: !!user?.email,
   });
+  // Org-wide data
+  const { data: employees = [] } = useQuery({ queryKey: ["employees"], queryFn: () => base44.entities.Employee.list() });
+  const { data: volunteers = [] } = useQuery({ queryKey: ["volunteers"], queryFn: () => base44.entities.Volunteer.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: grantProjects = [] } = useQuery({ queryKey: ["grant-projects"], queryFn: () => base44.entities.Project.list() });
+  const { data: grantReports = [] } = useQuery({ queryKey: ["grant-reports"], queryFn: () => base44.entities.Report.list() });
+  const { data: compassTasks = [] } = useQuery({ queryKey: ["compass-tasks"], queryFn: () => base44.entities.CompassTask.list() });
+  const { data: events = [] } = useQuery({ queryKey: ["events"], queryFn: () => base44.entities.Event.list() });
+  const { data: programs = [] } = useQuery({ queryKey: ["programs"], queryFn: () => base44.entities.Program.list() });
+  const { data: marketingCampaigns = [] } = useQuery({ queryKey: ["marketing-campaigns"], queryFn: () => base44.entities.MarketingCampaign.list() });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list() });
+  const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => base44.entities.Announcement.list() });
 
   const firstName = user?.full_name?.split(" ")[0] || "Director";
 
@@ -119,7 +200,7 @@ export default function EAAssistantWidget() {
 
     const openTasks = tasks.filter(t => t.status !== "completed" && t.status !== "cancelled");
     const urgentCount = openTasks.filter(t => t.priority === "critical" || t.priority === "high").length;
-    const activeProjects = projects.filter(p => p.status === "active" || p.status === "planning");
+    const activeProjects = edProjects.filter(p => p.status === "active" || p.status === "planning");
 
     const g = greeting();
     const h = new Date().getHours();
@@ -129,6 +210,18 @@ export default function EAAssistantWidget() {
 
     if (urgentCount > 0) brief += `🔴 **${urgentCount} urgent/high-priority task${urgentCount > 1 ? "s" : ""}** need your attention\n`;
     if (activeProjects.length > 0) brief += `📁 **${activeProjects.length} active project${activeProjects.length > 1 ? "s" : ""}** in flight\n`;
+
+    const atRisk = edProjects.filter(p => p.risk_level === "high" || p.risk_level === "critical");
+    if (atRisk.length > 0) brief += `⚠️ **${atRisk.length} project${atRisk.length > 1 ? "s" : ""}** flagged as high/critical risk\n`;
+
+    const overdueReports = grantReports.filter(r => r.status !== "submitted" && r.status !== "accepted" && r.due_date && isPast(parseISO(r.due_date)));
+    if (overdueReports.length > 0) brief += `📋 **${overdueReports.length} overdue grant report${overdueReports.length > 1 ? "s" : ""}** need attention\n`;
+
+    const overdueCompassCount = compassTasks.filter(t => t.status !== "completed" && t.due_date && isPast(parseISO(t.due_date))).length;
+    if (overdueCompassCount > 0) brief += `🧭 **${overdueCompassCount} overdue Compass task${overdueCompassCount > 1 ? "s" : ""}** in Pathways\n`;
+
+    const pendingInvoiceCount = invoices.filter(i => i.status === "pending" || i.status === "draft").length;
+    if (pendingInvoiceCount > 0) brief += `💰 **${pendingInvoiceCount} pending invoice${pendingInvoiceCount > 1 ? "s" : ""}** to review\n`;
 
     const focusToday = organizer?.focus_today;
     const focusDate = organizer?.focus_date;
@@ -144,9 +237,14 @@ export default function EAAssistantWidget() {
     brief += `\nWhat would you like to tackle first? I'm here to help you get through the day.`;
 
     setMessages([{ role: "assistant", content: brief }]);
-  }, [user, tasks, projects, objectives, organizer, initialized]);
+  }, [user, tasks, edProjects, objectives, organizer, grantReports, compassTasks, invoices, initialized]);
 
-  const systemContext = buildContext({ user, tasks, projects, objectives, notes, organizer });
+  const systemContext = buildContext({
+    user, tasks, edProjects, objectives, notes, organizer,
+    kpis, budgets, grantProjects, grantReports,
+    employees, volunteers, clients, compassTasks,
+    events, programs, marketingCampaigns, invoices, announcements,
+  });
 
   const sendMessage = async (text) => {
     const msg = text || input.trim();
