@@ -331,7 +331,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
   });
 
   return (
-    <div className="flex flex-col rounded-2xl border shadow-lg overflow-hidden" style={{ background: "hsl(230,70%,9%)", borderColor: "hsl(230,50%,18%)" }}>
+    <div className="flex flex-col rounded-2xl border shadow-lg" style={{ background: "hsl(230,70%,9%)", borderColor: "hsl(230,50%,18%)" }}>
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
