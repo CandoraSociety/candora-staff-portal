@@ -14,6 +14,7 @@ import OrganizerWidget from "@/components/dashboard/OrganizerWidget";
 import HowToSearch from "@/components/howto/HowToSearch";
 import GoogleTranslateWidget from "@/components/dashboard/GoogleTranslateWidget";
 import RecentActivityWidget from "@/components/dashboard/RecentActivityWidget";
+import EAAssistantWidget from "@/components/ed/EAAssistantWidget";
 
 function greeting() {
   const h = new Date().getHours();
@@ -76,6 +77,9 @@ export default function EDDashboard() {
         <h1 className="text-2xl font-bold">{greeting()}, {user?.full_name?.split(" ")[0] || "Director"} 👋</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>
       </div>
+
+      {/* EA Assistant Widget */}
+      <EAAssistantWidget />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
