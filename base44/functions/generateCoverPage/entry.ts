@@ -19,9 +19,10 @@ Deno.serve(async (req) => {
 
     const referenceUrls = [];
     if (reference_image_url) referenceUrls.push(reference_image_url);
-    if ((type === 'inside_front' || type === 'inside_back') && front_cover_url) referenceUrls.push(front_cover_url);
-    // Push all logos as visual reference — AI can use them to match brand style
-    if (logos.length > 0) referenceUrls.push(...logos.slice(0, 2));
+    // Inside covers + back cover get front cover as a style reference for thematic consistency
+    if ((type === 'inside_front' || type === 'inside_back' || type === 'back') && front_cover_url) referenceUrls.push(front_cover_url);
+    // Brand logos for front + inside covers only — back cover is text-only, no logo
+    if (type !== 'back' && logos.length > 0) referenceUrls.push(...logos.slice(0, 2));
     if (subsidiary_logo_urls?.length) referenceUrls.push(...subsidiary_logo_urls.slice(0, 2));
     if (funder_logo_urls?.length) referenceUrls.push(...funder_logo_urls.slice(0, 2));
 
@@ -83,20 +84,25 @@ Style: Minimal, elegant inside back cover. Use the Primary color as a very faint
 
       back: `${NO_MOCKUP}
 
-Create a non-profit annual report back cover as a flat 2D graphic design using the organization's exact brand identity:
+Create a non-profit annual report back cover as a flat 2D graphic design. The front cover image is provided as a style reference — match its color mood and overall aesthetic, but keep this much simpler.
 
 BRAND COLOR PALETTE (use ONLY these colors for the entire design):
 ${colorPalette}
 
-${branding.legal_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.legal_name + '"' : branding.common_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.common_name + '"' : ''}
-${branding.address ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + branding.address + '"' : (branding.address_line1 ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code, branding.address_country].filter(Boolean).join(', ') + '"' : '')}
-${branding.website ? '• Website — COPY THIS TEXT CHARACTER BY CHARACTER: "' + branding.website + '"' : ''}
+ABSOLUTELY NO LOGO: Do not include the organization logo on the back cover. This page is text-only — no logo fragments, no logo shapes, nothing from the logo at all.
 
-ABSOLUTE TOP PRIORITY — SPELLING: The text on the back cover is the #1 most important element. You must copy every address and name character-by-character from the quoted strings above. Double-check each letter before finalizing. If you misspell "Edmonton" or any other word, the entire generation is a failure. Take your time — accuracy over speed.
+CRITICAL — TEXT TO RENDER EXACTLY (copy character-by-character, verify each letter):
+${branding.legal_name ? '• Organization: "' + branding.legal_name + '"' : branding.common_name ? '• Organization: "' + branding.common_name + '"' : ''}
+${branding.address ? '• Address: "' + branding.address + '"' : (branding.address_line1 ? '• Address: "' + [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code, branding.address_country].filter(Boolean).join(', ') + '"' : '')}
+${branding.website ? '• Website: "' + branding.website + '"' : ''}
 
-CRITICAL: This must be significantly simpler and less busy than the front cover. The back cover should feel like a quiet closing statement — use the Primary color as a subtle wash or gradient background, with the Secondary and Accent colors used sparingly for small accents. No complex imagery, no busy patterns. Think: the back of a book, not a second front page.
+SPELLING CHECKLIST — before finalizing, verify EVERY character:
+☐ "Edmonton" is E-d-m-o-n-t-o-n (not Edmondon, Edmenton, Edmunton, or any other variation)
+☐ "Candora" is C-a-n-d-o-r-a
+☐ Every comma, period, and space in the address matches exactly
+☐ The website URL has correct slashes, dots, and no extra characters
 
-Style: Minimal, clean back cover. Portrait orientation. Use the Primary color as background, with the organization name and contact info displayed cleanly in a small, readable font.${branding.subsidiary_logos?.length || branding.funder_logos?.length ? ' Leave room for funder/subsidiary logos at the bottom.' : ''}${addl}`
+This is a text-on-background design. Render the organization name in a clean readable font centered on the page, with the address and website below it in smaller text. Use the Primary color as a subtle wash or gradient background. The Secondary and Accent colors may appear as thin decorative lines or very small accents. Nothing else — no abstract shapes, no patterns, no imagery. Think of it as a simple closing page with just the essential contact details.${branding.subsidiary_logos?.length || branding.funder_logos?.length ? ' Leave room at the very bottom for small funder/subsidiary logos.' : ''}${addl}`
     };
 
     const result = await base44.integrations.Core.GenerateImage({
