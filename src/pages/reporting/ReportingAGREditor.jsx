@@ -11,6 +11,7 @@ import SectionRenderer from '@/components/reporting/SectionRenderer';
 import BrandingPanel from '@/components/reporting/BrandingPanel';
 import CoverGenerator from '@/components/reporting/CoverGenerator';
 import DataPanel from '@/components/reporting/DataPanel';
+import TemplatePreview from '@/components/reporting/TemplatePreview';
 
 export default function ReportingAGREditor() {
   const { id } = useParams();
@@ -24,18 +25,21 @@ export default function ReportingAGREditor() {
   const [suggestions, setSuggestions] = useState({});
   const [generatingHeader, setGeneratingHeader] = useState(false);
   const [generatingFooter, setGeneratingFooter] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
 
   const loadAll = useCallback(async () => {
-    const [r, secs, brandList, dataList] = await Promise.all([
+    const [r, secs, brandList, dataList, analysisList] = await Promise.all([
       base44.entities.AGRReport.get(id),
       base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
       base44.entities.AGRBranding.filter({ report_id: id }),
       base44.entities.AGRReportData.filter({ report_id: id }),
+      base44.entities.AGRAnalysisResult.filter({ report_id: id }),
     ]);
     setReport(r);
     setSections(secs);
     setBranding(brandList[0] || null);
     setDataEntries(dataList);
+    setAnalysis(analysisList[0] || null);
     setLoading(false);
   }, [id]);
 
@@ -239,6 +243,7 @@ export default function ReportingAGREditor() {
         {/* Right: Preview */}
         <div className="hidden lg:block">
           <div className="sticky top-24 space-y-4">
+            <TemplatePreview analysis={analysis} />
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
             <div className="border rounded-xl bg-white p-6 max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
               {/* Cover */}

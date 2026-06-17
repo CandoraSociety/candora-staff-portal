@@ -53,6 +53,8 @@ export default function ReportingAGRAnalysis() {
           order_index: i + 1
         })
       ));
+      // Link analysis to the report
+      await base44.entities.AGRAnalysisResult.update(id, { report_id: report.id });
       navigate(`/reporting/agr/${report.id}/edit`);
     } catch {}
     setCreating(false);
