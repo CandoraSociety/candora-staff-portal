@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     };
 
     const prompt = `Analyze this uploaded report document. Extract:
-- The overall structure and layout of the document (sections, their layouts)
+- The overall structure and layout of the document (sections, their layouts). IMPORTANT: do NOT include "Table of Contents" as a section — skip it entirely. Only include actual content sections (e.g. Executive Summary, Programs, Financials, etc.).
 - Visual style (colors, fonts, tone)
 - A content checklist of what should be included in each section
 

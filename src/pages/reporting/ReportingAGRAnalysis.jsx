@@ -44,8 +44,10 @@ export default function ReportingAGRAnalysis() {
         status: 'draft',
         description: ''
       });
-      // Pre-create sections matching the extracted layout
-      await Promise.all(layoutTemplate.map((lt, i) =>
+      // Pre-create sections from the extracted layout — skip TOC/contents entries
+      const TOC_PATTERNS = /^(table of contents|contents|index)\b/i;
+      const filtered = layoutTemplate.filter(lt => !TOC_PATTERNS.test(lt.section_name?.trim()));
+      await Promise.all(filtered.map((lt, i) =>
         base44.entities.AGRReportSection.create({
           report_id: report.id,
           title: lt.section_name,
