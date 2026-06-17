@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft, Printer, FileText } from 'lucide-react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 
 export default function ReportingAGRPrint() {
@@ -11,6 +11,7 @@ export default function ReportingAGRPrint() {
   const [sections, setSections] = useState([]);
   const [branding, setBranding] = useState(null);
   const [dataEntries, setDataEntries] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,11 +20,13 @@ export default function ReportingAGRPrint() {
       base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
       base44.entities.AGRBranding.filter({ report_id: id }),
       base44.entities.AGRReportData.filter({ report_id: id }),
-    ]).then(([r, secs, brandList, dataList]) => {
+      base44.entities.AGRAnalysisResult.filter({ report_id: id }),
+    ]).then(([r, secs, brandList, dataList, analysisList]) => {
       setReport(r);
       setSections(secs);
       setBranding(brandList[0] || null);
       setDataEntries(dataList);
+      setAnalysis(analysisList[0] || null);
       setLoading(false);
     });
   }, [id]);
@@ -51,30 +54,35 @@ export default function ReportingAGRPrint() {
         </Button>
       </div>
 
-      <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
-        <div className="print-break p-8">
-          {report?.cover_image ? (
-            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
-          ) : branding ? (
-            <div className="text-center">
-              {branding.logo_urls && branding.logo_urls[0] && (
-                <img src={branding.logo_urls[0]} alt="Logo" className="h-20 mx-auto mb-4 object-contain" />
-              )}
-              <h1 className="text-3xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
-                {report?.title}
-              </h1>
-              {branding.tagline && <p className="text-lg text-muted-foreground mt-2">{branding.tagline}</p>}
-              <p className="text-sm mt-6" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>
-              <p className="text-sm text-muted-foreground">Fiscal Year {report?.year}</p>
-            </div>
-          ) : null}
+      {analysis?.source_file_url && (
+        <div className="no-print max-w-[210mm] mx-auto mb-2">
+          <a href={analysis.source_file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline">
+            <FileText className="w-3.5 h-3.5" />View Original Source Document
+          </a>
         </div>
+      )}
 
-        {/* Inside front cover */}
-        {report?.inside_front_cover_image && (
-          <div className="print-break p-8">
-            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+      <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
+        {/* Front cover — full bleed */}
+        {report?.cover_image ? (
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+        ) : branding ? (
+          <div className="print-break p-8 text-center">
+            {branding.logo_urls && branding.logo_urls[0] && (
+              <img src={branding.logo_urls[0]} alt="Logo" className="h-20 mx-auto mb-4 object-contain" />
+            )}
+            <h1 className="text-3xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
+              {report?.title}
+            </h1>
+            {branding.tagline && <p className="text-lg text-muted-foreground mt-2">{branding.tagline}</p>}
+            <p className="text-sm mt-6" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>
+            <p className="text-sm text-muted-foreground">Fiscal Year {report?.year}</p>
           </div>
+        ) : null}
+
+        {/* Inside front cover — full bleed */}
+        {report?.inside_front_cover_image && (
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
         )}
 
         <div className="print-break p-8">
@@ -129,30 +137,27 @@ export default function ReportingAGRPrint() {
           </div>
         )}
 
-        {/* Inside back cover */}
+        {/* Inside back cover — full bleed */}
         {report?.inside_back_cover_image && (
-          <div className="print-break p-8">
-            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
-          </div>
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
         )}
 
-        <div className="print-break p-8">
-          {report?.back_cover_image ? (
-            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
-          ) : branding ? (
-            <div className="text-center py-12">
-              {branding.logo_urls && branding.logo_urls[0] && (
-                <img src={branding.logo_urls[0]} alt="Logo" className="h-12 mx-auto mb-4 object-contain" />
-              )}
-              <p className="text-lg font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
-                {branding.legal_name || branding.common_name}
-              </p>
-              {branding.address && <p className="text-sm text-muted-foreground mt-2">{branding.address}</p>}
-              {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
-              {branding.footer_text && <p className="text-xs text-muted-foreground mt-4">{branding.footer_text}</p>}
-            </div>
-          ) : null}
-        </div>
+        {/* Back cover — full bleed */}
+        {report?.back_cover_image ? (
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+        ) : branding ? (
+          <div className="print-break p-8 text-center py-12">
+            {branding.logo_urls && branding.logo_urls[0] && (
+              <img src={branding.logo_urls[0]} alt="Logo" className="h-12 mx-auto mb-4 object-contain" />
+            )}
+            <p className="text-lg font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
+              {branding.legal_name || branding.common_name}
+            </p>
+            {branding.address && <p className="text-sm text-muted-foreground mt-2">{branding.address}</p>}
+            {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
+            {branding.footer_text && <p className="text-xs text-muted-foreground mt-4">{branding.footer_text}</p>}
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
-export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, showHeaderAll, showFooterAll, showPageNumbersAll }) {
+export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const pc = branding?.primary_color || '#1a2744';
@@ -31,7 +31,7 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
   );
 
   const hasImage = section.image_url && section.layout !== 'text_only';
-  const isCollapsible = section.is_collapsible && !isPrint;
+  const isCollapsible = (section.is_collapsible || forceCollapsible) && !isPrint;
 
   const renderContent = () => {
     const contentBlock = (

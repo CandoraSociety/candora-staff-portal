@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import SectionEditor from '@/components/reporting/SectionEditor';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
@@ -244,20 +244,26 @@ export default function ReportingAGREditor() {
         <div className="hidden lg:block">
           <div className="sticky top-24 space-y-4">
             <TemplatePreview analysis={analysis} />
+            {analysis?.source_file_url && (
+              <a href={analysis.source_file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-xs text-accent hover:underline">
+                <FileText className="w-3.5 h-3.5" />View Original Source Document
+              </a>
+            )}
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
-            <div className="border rounded-xl bg-white p-6 max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
-              {/* Front cover */}
+            <div className="border rounded-xl bg-white max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
+              {/* Front cover — full bleed */}
               {report?.cover_image && (
-                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
               )}
-              {/* Inside front cover */}
+              {/* Inside front cover — full bleed */}
               {report?.inside_front_cover_image && (
-                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+                <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
               )}
 
+              <div className="p-6 space-y-6">
               {/* Branding header — only if no cover image */}
               {!report?.cover_image && branding && (
-                <div className="text-center mb-6 pb-4 border-b">
+                <div className="text-center pb-4 border-b">
                   {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-12 mx-auto mb-2 object-contain" />}
                   <h2 className="text-base font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>
                   {branding.tagline && <p className="text-xs text-muted-foreground mt-1">{branding.tagline}</p>}
@@ -266,7 +272,7 @@ export default function ReportingAGREditor() {
 
               {/* Table of Contents */}
               {sections.length > 0 && (
-                <div className="mb-6">
+                <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: branding?.primary_color || '#1a2744' }}>Contents</h4>
                   <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '10px', borderRadius: '0 4px 4px 0' }}>
                     {sections.map((s, i) => (
@@ -292,17 +298,19 @@ export default function ReportingAGREditor() {
                   showHeaderAll={report?.show_header_all}
                   showFooterAll={report?.show_footer_all}
                   showPageNumbersAll={report?.show_page_numbers_all}
+                  forceCollapsible
                 />
               ))}
 
               {/* Inside back cover */}
               {report?.inside_back_cover_image && (
-                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+                <div className="-mx-6 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
               )}
               {/* Back cover */}
               {report?.back_cover_image && (
-                <div className="mt-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+                <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
               )}
+              </div>
             </div>
           </div>
         </div>

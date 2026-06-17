@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Printer, ChevronDown, FileText } from 'lucide-react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 
 export default function ReportingAGRPreview() {
@@ -11,6 +11,7 @@ export default function ReportingAGRPreview() {
   const [sections, setSections] = useState([]);
   const [branding, setBranding] = useState(null);
   const [dataEntries, setDataEntries] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,11 +20,13 @@ export default function ReportingAGRPreview() {
       base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
       base44.entities.AGRBranding.filter({ report_id: id }),
       base44.entities.AGRReportData.filter({ report_id: id }),
-    ]).then(([r, secs, brandList, dataList]) => {
+      base44.entities.AGRAnalysisResult.filter({ report_id: id }),
+    ]).then(([r, secs, brandList, dataList, analysisList]) => {
       setReport(r);
       setSections(secs);
       setBranding(brandList[0] || null);
       setDataEntries(dataList);
+      setAnalysis(analysisList[0] || null);
       setLoading(false);
     });
   }, [id]);
@@ -51,19 +54,28 @@ export default function ReportingAGRPreview() {
         </Link>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-8 space-y-6">
-        {/* Front cover */}
+      {analysis?.source_file_url && (
+        <div className="max-w-4xl mx-auto">
+          <a href={analysis.source_file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline">
+            <FileText className="w-3.5 h-3.5" />View Original Source Document
+          </a>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden">
+        {/* Front cover — full bleed */}
         {report?.cover_image && (
-          <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+          <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
         )}
-        {/* Inside front cover */}
+        {/* Inside front cover — full bleed */}
         {report?.inside_front_cover_image && (
-          <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+          <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
         )}
 
+        <div className="p-8 space-y-6">
         {/* Branding header — only if no cover image */}
         {!report?.cover_image && branding && (
-          <div className="text-center mb-8 pb-6 border-b">
+          <div className="text-center pb-6 border-b">
             {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-16 mx-auto mb-3 object-contain" />}
             <h2 className="text-2xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>
             {branding.tagline && <p className="text-sm text-muted-foreground mt-1">{branding.tagline}</p>}
@@ -73,7 +85,7 @@ export default function ReportingAGRPreview() {
 
         {/* Table of Contents */}
         {sections.length > 0 && (
-          <div className="mb-8">
+          <div>
             <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
             <div className="space-y-0.5 border-l-2 rounded-l" style={{ borderColor: branding?.accent_color || '#2b2de8', paddingLeft: '12px' }}>
               {sections.map((s, i) => (
@@ -100,13 +112,14 @@ export default function ReportingAGRPreview() {
               showHeaderAll={report?.show_header_all}
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
+              forceCollapsible
             />
           </div>
         ))}
 
         {/* Subsidiary logos */}
         {branding?.subsidiary_logos?.length > 0 && (
-          <div className="border-t pt-6 mt-6">
+          <div className="border-t pt-6">
             <div className="flex flex-wrap items-center justify-center gap-4">
               {branding.subsidiary_logos.map((sl, i) => (
                 <div key={i} className="text-center">
@@ -118,14 +131,15 @@ export default function ReportingAGRPreview() {
           </div>
         )}
 
-        {/* Inside back cover */}
+        {/* Inside back cover — full bleed */}
         {report?.inside_back_cover_image && (
-          <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+          <div className="-mx-8 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
         )}
-        {/* Back cover */}
+        {/* Back cover — full bleed */}
         {report?.back_cover_image && (
-          <div className="mt-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+          <div className="-mx-8 -mb-8 aspect-[8.5/11] overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
         )}
+        </div>
       </div>
     </div>
   );
