@@ -164,9 +164,31 @@ export default function ReportingAGRPrint() {
           <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
         )}
 
-        {/* Back cover — full bleed */}
+        {/* Back cover — full bleed with branding info overlay */}
         {report?.back_cover_image ? (
-          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
+            <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+              {branding?.logo_urls?.[0] && (
+                <img src={branding.logo_urls[0]} alt="Logo" className="h-16 object-contain mb-6 drop-shadow-lg opacity-80" />
+              )}
+              {branding?.legal_name && (
+                <p className="text-xl font-heading font-bold text-white drop-shadow mb-2">{branding.legal_name}</p>
+              )}
+              {branding?.common_name && !branding?.legal_name && (
+                <p className="text-xl font-heading font-bold text-white drop-shadow mb-2">{branding.common_name}</p>
+              )}
+              {branding?.address && (
+                <p className="text-base text-white/80 drop-shadow">{branding.address}</p>
+              )}
+              {branding?.website && (
+                <p className="text-base text-white/80 drop-shadow">{branding.website}</p>
+              )}
+              {branding?.footer_text && (
+                <p className="text-sm text-white/60 drop-shadow mt-6">{branding.footer_text}</p>
+              )}
+            </div>
+          </div>
         ) : branding ? (
           <div className="print-break p-8 text-center py-12">
             {branding.logo_urls && branding.logo_urls[0] && (

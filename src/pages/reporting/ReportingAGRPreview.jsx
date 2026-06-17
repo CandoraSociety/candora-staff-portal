@@ -174,10 +174,30 @@ export default function ReportingAGRPreview() {
           <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
         </div>
       )}
-      {/* Back cover — truly full bleed */}
+      {/* Back cover — full bleed with branding info overlay */}
       {report?.back_cover_image && (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
           <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+            {branding?.logo_urls?.[0] && (
+              <img src={branding.logo_urls[0]} alt="Logo" className="h-16 object-contain mb-4 drop-shadow-lg opacity-80" />
+            )}
+            {branding?.legal_name && (
+              <p className="text-base font-heading font-bold text-white drop-shadow mb-1">{branding.legal_name}</p>
+            )}
+            {branding?.common_name && !branding?.legal_name && (
+              <p className="text-base font-heading font-bold text-white drop-shadow mb-1">{branding.common_name}</p>
+            )}
+            {branding?.address && (
+              <p className="text-sm text-white/80 drop-shadow">{branding.address}</p>
+            )}
+            {branding?.website && (
+              <p className="text-sm text-white/80 drop-shadow">{branding.website}</p>
+            )}
+            {branding?.footer_text && (
+              <p className="text-xs text-white/60 drop-shadow mt-4">{branding.footer_text}</p>
+            )}
+          </div>
         </div>
       )}
     </div>

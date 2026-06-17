@@ -64,16 +64,13 @@ Style: Minimal, elegant inside back cover. Subtle brand color wash or very faint
 
       back: `${NO_MOCKUP}
 
-Create a non-profit annual report back cover as a flat 2D graphic design.
-${branding.legal_name ? '• Legal name (USE THIS EXACT TEXT — never alter, misspell, or paraphrase): ' + branding.legal_name : branding.common_name ? '• Organization (USE THIS EXACT TEXT): ' + branding.common_name : ''}
-${branding.address ? '• Address (USE THIS EXACT TEXT — never alter, misspell, or paraphrase): ' + branding.address : ''}
-${branding.website ? '• Website (USE THIS EXACT TEXT — never alter, misspell, or paraphrase): ' + branding.website : ''}
+Create a non-profit annual report back cover BACKGROUND DESIGN as a flat 2D graphic:
 • Colors: ${colors}
 
 CRITICAL: This must be significantly simpler and less busy than the front cover. The back cover should feel like a quiet closing statement — carry forward ONLY the color palette and general mood from the front, but use the simplest version of that theme. No complex imagery, no busy patterns. Think: the back of a book, not a second front page.
-${branding.address || branding.website ? 'Any address or website text shown on the design MUST match the exact spelling provided above. Do NOT generate or guess any text — only use the exact text strings given.' : ''}
+CRITICAL: Do NOT include any text, words, letters, addresses, logos, or typography in the image. This is a pure background/pattern only. All text and logo information will be overlaid separately.
 
-Style: Minimal, clean back cover. Portrait orientation. Simple abstract background or subtle brand color wash.${branding.subsidiary_logos?.length ? ' Leave room for funder/subsidiary logos at the bottom.' : ''}${addl}`
+Style: Minimal, clean back cover BACKGROUND. Portrait orientation. Simple abstract gradient or very subtle brand color wash. Clean and understated.${addl}`
     };
 
     const result = await base44.integrations.Core.GenerateImage({
