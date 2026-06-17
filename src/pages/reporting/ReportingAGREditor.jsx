@@ -313,16 +313,18 @@ export default function ReportingAGREditor() {
                 </div>
               )}
 
-              {/* Table of Contents */}
+              {/* Table of Contents — full page */}
               {sections.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: branding?.primary_color || '#1a2744' }}>Contents</h4>
-                  <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '10px', borderRadius: '0 4px 4px 0' }}>
+                <div className="aspect-[8.5/11] w-full flex flex-col justify-center p-8">
+                  <h4 className="text-xl font-heading font-bold mb-6" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h4>
+                  <div className="space-y-0.5">
                     {sections.map((s, i) => (
-                      <p key={s.id} className="text-xs py-0.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                        <span className="font-bold" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}. </span>
-                        {s.title || 'Untitled'}
-                      </p>
+                      <div key={s.id} className="flex items-center gap-3 text-sm py-1.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                        <span className="font-bold w-6 text-right shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
+                        <span className="truncate">{s.title || 'Untitled'}</span>
+                        <span className="flex-1 border-b border-dotted opacity-30" />
+                        <span className="text-xs opacity-50 shrink-0">{i + 1}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
