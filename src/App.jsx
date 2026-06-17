@@ -126,6 +126,14 @@ import EDBudgets from '@/pages/ed/EDBudgets';
 import EDOrgChart from '@/pages/ed/EDOrgChart';
 import EDNotes from '@/pages/ed/EDNotes';
 
+// Reports Portal
+import ReportingLayout from '@/components/reporting/ReportingLayout';
+import ReportingHome from '@/pages/reporting/ReportingHome';
+import ReportingInternal from '@/pages/reporting/ReportingInternal';
+import ReportingFunder from '@/pages/reporting/ReportingFunder';
+import ReportingSpecial from '@/pages/reporting/ReportingSpecial';
+import ReportingAGR from '@/pages/reporting/ReportingAGR';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -265,6 +273,15 @@ const AuthenticatedApp = () => {
           <Route path="/ed/budgets" element={<EDBudgets />} />
           <Route path="/ed/org" element={<EDOrgChart />} />
           <Route path="/ed/notes" element={<EDNotes />} />
+        </Route>
+
+        {/* Reports Portal - standalone layout */}
+        <Route element={<ReportingLayout />}>
+          <Route path="/reporting" element={<ReportingHome />} />
+          <Route path="/reporting/internal" element={<ReportingInternal />} />
+          <Route path="/reporting/funder" element={<ReportingFunder />} />
+          <Route path="/reporting/special" element={<ReportingSpecial />} />
+          <Route path="/reporting/agr" element={<ReportingAGR />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}
