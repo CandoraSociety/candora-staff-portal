@@ -17,15 +17,11 @@ Deno.serve(async (req) => {
     const branding = brandingList[0] || {};
 
     // Build reference images.
-    // Front / inside covers: current image + front cover for style. NO logos (HTML overlay).
-    // Back cover: include logo URLs as reference so the AI can incorporate them.
+    // ALL covers: current image + front cover for style. NO logos — logos are HTML overlays.
     const referenceUrls = [];
     if (reference_image_url) referenceUrls.push(reference_image_url);
     if ((type === 'inside_front' || type === 'inside_back' || type === 'back') && front_cover_url) {
       referenceUrls.push(front_cover_url);
-    }
-    if (type === 'back' && branding.logo_urls?.length) {
-      referenceUrls.push(...branding.logo_urls);
     }
 
     const primaryColor = branding.primary_color || '#1a2744';
@@ -59,28 +55,6 @@ Deno.serve(async (req) => {
       'The real logo will be overlaid in HTML with pixel-perfect accuracy.',
       'Any logo you generate will look distorted or wrong compared to the real one and ruin the cover.',
     ].join(' ');
-
-    // Build address string for back cover
-    const addressParts = [
-      branding.address_line1, branding.address_line2,
-      branding.address_city, branding.address_province,
-      branding.address_postal_code, branding.address_country
-    ].filter(Boolean);
-    const addressStr = addressParts.join(', ') || branding.address || '';
-    const legalName = branding.legal_name || branding.common_name || '';
-    const website = branding.website || '';
-
-    const EXACT_TEXT = [
-      'USE THIS EXACT TEXT — do not change, paraphrase, or invent anything:',
-      legalName ? `Organization name: "${legalName}"` : '',
-      addressStr ? `Address: "${addressStr}"` : '',
-      website ? `Website: "${website}"` : '',
-      'VERIFY character-by-character that the text on the image matches these exact strings.',
-    ].filter(Boolean).join('\n');
-
-    const PRESERVE_STYLE = reference_image_url
-      ? 'CRITICAL: You are REFINING the existing back cover image. Preserve the exact same composition, layout, colors, and imagery — ONLY add the requested text/logo additions on top without changing anything else.'
-      : '';
 
     const addl = custom_prompt ? '\n\nADDITIONAL INSTRUCTIONS (these take priority): ' + custom_prompt : '';
 
@@ -129,17 +103,17 @@ This is a quiet transitional page inside the report — it should feel calm, ele
 
       back: `${FULL_BLEED}
 
-Create a non-profit annual report back cover as a flat 2D graphic design.
+Create a non-profit annual report back cover BACKGROUND as a flat 2D graphic design.
 
 ${colorPalette}
 
-${PRESERVE_STYLE}
+${NO_TEXT}
 
-${EXACT_TEXT}
+${NO_LOGO}
 
-Include the organization's logo (use the reference logo image provided) and display it alongside the exact contact text above.
+Design: A simple, elegant closing page background. Use the Primary color as a subtle wash or gentle gradient that fades toward the edges. The Secondary color may appear as a single elegant decorative line, thin border accent, or subtle geometric detail. Keep it minimalist — mostly quiet negative space with just enough visual interest to feel intentional.
 
-Design: A simple closing page. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear as elegant decorative lines or accents. Display the logo, name, address, and website in a clean, professional layout.
+This is ONLY the background layer for the back cover. The organization name, full address, website, and logo will all be overlaid separately in HTML with pixel-perfect accuracy. Do not include them in the image.
 
 The front cover image is provided as a style reference — match the color mood and overall aesthetic, but keep this dramatically simpler. This is the closing page — it should feel like a quiet, elegant sign-off.${addl}`
     };

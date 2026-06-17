@@ -181,6 +181,9 @@ export default function ReportingAGRPreview() {
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
           <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+            {branding?.logo_urls?.[0] && (
+              <img src={branding.logo_urls[0]} alt="Logo" className="h-16 md:h-20 object-contain mb-6 drop-shadow-lg" />
+            )}
             <p className="text-xl md:text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
               {branding?.legal_name || branding?.common_name || ''}
             </p>

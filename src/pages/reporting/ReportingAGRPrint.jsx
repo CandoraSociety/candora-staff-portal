@@ -171,6 +171,9 @@ export default function ReportingAGRPrint() {
           <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
             <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+              {branding?.logo_urls?.[0] && (
+                <img src={branding.logo_urls[0]} alt="Logo" className="h-20 object-contain mb-6 drop-shadow-lg" />
+              )}
               <p className="text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
                 {branding?.legal_name || branding?.common_name || ''}
               </p>
@@ -190,6 +193,9 @@ export default function ReportingAGRPrint() {
         ) : branding ? (
           <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+              {branding?.logo_urls?.[0] && (
+                <img src={branding.logo_urls[0]} alt="Logo" className="h-20 object-contain mb-6 drop-shadow-lg" />
+              )}
               <p className="text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
                 {branding.legal_name || branding.common_name || ''}
               </p>
