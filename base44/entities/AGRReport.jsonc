@@ -23,6 +23,14 @@
       "type": "string",
       "description": "Front cover image URL"
     },
+    "inside_front_cover_image": {
+      "type": "string",
+      "description": "Inside front cover image URL"
+    },
+    "inside_back_cover_image": {
+      "type": "string",
+      "description": "Inside back cover image URL"
+    },
     "back_cover_image": {
       "type": "string",
       "description": "Back cover image URL"

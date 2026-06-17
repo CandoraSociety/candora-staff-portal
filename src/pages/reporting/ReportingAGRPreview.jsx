@@ -52,9 +52,13 @@ export default function ReportingAGRPreview() {
       </div>
 
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-8 space-y-6">
-        {/* Cover */}
+        {/* Front cover */}
         {report?.cover_image && (
           <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+        )}
+        {/* Inside front cover */}
+        {report?.inside_front_cover_image && (
+          <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
         )}
 
         {/* Branding header — only if no cover image */}
@@ -113,6 +117,10 @@ export default function ReportingAGRPreview() {
           </div>
         )}
 
+        {/* Inside back cover */}
+        {report?.inside_back_cover_image && (
+          <div className="mb-8 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+        )}
         {/* Back cover */}
         {report?.back_cover_image && (
           <div className="mt-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>

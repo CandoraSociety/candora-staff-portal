@@ -70,6 +70,13 @@ export default function ReportingAGRPrint() {
           ) : null}
         </div>
 
+        {/* Inside front cover */}
+        {report?.inside_front_cover_image && (
+          <div className="print-break p-8">
+            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+          </div>
+        )}
+
         <div className="print-break p-8">
           {branding && (
             <div className="text-center mb-8 pb-6 border-b">
@@ -115,6 +122,13 @@ export default function ReportingAGRPrint() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Inside back cover */}
+        {report?.inside_back_cover_image && (
+          <div className="print-break p-8">
+            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
           </div>
         )}
 

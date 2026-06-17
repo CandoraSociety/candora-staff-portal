@@ -246,9 +246,13 @@ export default function ReportingAGREditor() {
             <TemplatePreview analysis={analysis} />
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
             <div className="border rounded-xl bg-white p-6 max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
-              {/* Cover */}
+              {/* Front cover */}
               {report?.cover_image && (
                 <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+              )}
+              {/* Inside front cover */}
+              {report?.inside_front_cover_image && (
+                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
               )}
 
               {/* Branding header — only if no cover image */}
@@ -285,6 +289,10 @@ export default function ReportingAGREditor() {
                 />
               ))}
 
+              {/* Inside back cover */}
+              {report?.inside_back_cover_image && (
+                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+              )}
               {/* Back cover */}
               {report?.back_cover_image && (
                 <div className="mt-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
