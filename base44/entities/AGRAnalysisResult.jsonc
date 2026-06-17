@@ -1,0 +1,31 @@
+{
+  "name": "AGRAnalysisResult",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "source_file_url": {
+      "type": "string"
+    },
+    "layout_template": {
+      "type": "string",
+      "description": "JSON of extracted layout"
+    },
+    "visual_style": {
+      "type": "string",
+      "description": "JSON of extracted styles"
+    },
+    "content_checklist": {
+      "type": "string",
+      "description": "JSON of checklist items"
+    },
+    "raw_analysis": {
+      "type": "string",
+      "description": "Full analysis JSON"
+    }
+  },
+  "required": [
+    "source_file_url"
+  ]
+}

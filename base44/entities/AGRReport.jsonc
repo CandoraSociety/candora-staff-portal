@@ -1,0 +1,59 @@
+{
+  "name": "AGRReport",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Report title, e.g. 2025 Annual General Report"
+    },
+    "year": {
+      "type": "number",
+      "description": "Fiscal year"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_review",
+        "published"
+      ],
+      "default": "draft"
+    },
+    "cover_image": {
+      "type": "string",
+      "description": "Front cover image URL"
+    },
+    "back_cover_image": {
+      "type": "string",
+      "description": "Back cover image URL"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief subtitle"
+    },
+    "master_header_text": {
+      "type": "string",
+      "description": "Universal page header"
+    },
+    "master_footer_text": {
+      "type": "string",
+      "description": "Universal page footer"
+    },
+    "show_header_all": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_footer_all": {
+      "type": "boolean",
+      "default": false
+    },
+    "show_page_numbers_all": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title",
+    "year"
+  ]
+}

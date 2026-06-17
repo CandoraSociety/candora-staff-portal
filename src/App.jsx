@@ -133,6 +133,10 @@ import ReportingInternal from '@/pages/reporting/ReportingInternal';
 import ReportingFunder from '@/pages/reporting/ReportingFunder';
 import ReportingSpecial from '@/pages/reporting/ReportingSpecial';
 import ReportingAGR from '@/pages/reporting/ReportingAGR';
+import ReportingAGREditor from '@/pages/reporting/ReportingAGREditor';
+import ReportingAGRPreview from '@/pages/reporting/ReportingAGRPreview';
+import ReportingAGRPrint from '@/pages/reporting/ReportingAGRPrint';
+import ReportingAGRAnalysis from '@/pages/reporting/ReportingAGRAnalysis';
 
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
@@ -282,6 +286,10 @@ const AuthenticatedApp = () => {
           <Route path="/reporting/funder" element={<ReportingFunder />} />
           <Route path="/reporting/special" element={<ReportingSpecial />} />
           <Route path="/reporting/agr" element={<ReportingAGR />} />
+          <Route path="/reporting/agr/:id/edit" element={<ReportingAGREditor />} />
+          <Route path="/reporting/agr/:id/preview" element={<ReportingAGRPreview />} />
+          <Route path="/reporting/agr/:id/print" element={<ReportingAGRPrint />} />
+          <Route path="/reporting/agr/analysis/:id" element={<ReportingAGRAnalysis />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}

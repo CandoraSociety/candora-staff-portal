@@ -1,0 +1,54 @@
+{
+  "name": "AGRReportData",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "section_id": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "data_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "file_upload"
+      ],
+      "default": "manual"
+    },
+    "source_file_url": {
+      "type": "string"
+    },
+    "source_file_name": {
+      "type": "string"
+    },
+    "raw_data": {
+      "type": "string",
+      "description": "JSON string of data"
+    },
+    "ai_narrative": {
+      "type": "string",
+      "description": "AI-generated analysis"
+    },
+    "chart_config": {
+      "type": "string",
+      "description": "JSON chart config"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "raw",
+        "analyzed"
+      ],
+      "default": "raw"
+    }
+  },
+  "required": [
+    "report_id",
+    "label",
+    "data_type"
+  ]
+}

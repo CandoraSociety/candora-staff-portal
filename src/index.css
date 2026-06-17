@@ -95,3 +95,9 @@
   border-color: hsl(44,100%,88%);
   border-top-color: hsl(231,64%,20%);
 }
+
+@media print {
+  .no-print { display: none !important; }
+  .print-break { page-break-before: always; }
+  body { background: white !important; }
+}

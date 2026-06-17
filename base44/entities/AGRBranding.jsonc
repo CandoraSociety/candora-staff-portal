@@ -1,0 +1,62 @@
+{
+  "name": "AGRBranding",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string"
+    },
+    "logo_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Primary logo URLs"
+    },
+    "subsidiary_logos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "common_name": {
+      "type": "string",
+      "description": "Used in narrative"
+    },
+    "legal_name": {
+      "type": "string",
+      "description": "Used in fine print"
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "primary_color": {
+      "type": "string"
+    },
+    "secondary_color": {
+      "type": "string"
+    },
+    "accent_color": {
+      "type": "string"
+    },
+    "footer_text": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id"
+  ]
+}
