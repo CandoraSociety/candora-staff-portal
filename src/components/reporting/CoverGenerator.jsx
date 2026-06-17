@@ -3,28 +3,36 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, RefreshCw, Sparkles } from 'lucide-react';
+import { Upload, RefreshCw, Sparkles, Trash2 } from 'lucide-react';
 
 export default function CoverGenerator({ reportId, report, branding, onUpdate }) {
   const [generatingFront, setGeneratingFront] = useState(false);
   const [generatingBack, setGeneratingBack] = useState(false);
   const [frontPrompt, setFrontPrompt] = useState('');
   const [backPrompt, setBackPrompt] = useState('');
+  const [frontError, setFrontError] = useState('');
+  const [backError, setBackError] = useState('');
 
   const generateCover = async (type) => {
     const setGenerating = type === 'front' ? setGeneratingFront : setGeneratingBack;
+    const setError = type === 'front' ? setFrontError : setBackError;
+    setError('');
     setGenerating(true);
     try {
       const res = await base44.functions.invoke('generateCoverPage', {
         report_id: reportId,
         type,
         logo_urls: branding?.logo_urls || [],
-        custom_prompt: type === 'front' ? frontPrompt || undefined : backPrompt || undefined
+        custom_prompt: type === 'front' ? (frontPrompt || undefined) : (backPrompt || undefined)
       });
       if (res.data?.url) {
-        onUpdate(type === 'front' ? { cover_image: res.data.url } : { back_cover_image: res.data.url });
+        await onUpdate(type === 'front' ? { cover_image: res.data.url } : { back_cover_image: res.data.url });
+      } else {
+        setError(res.data?.error || 'No image returned');
       }
-    } catch {}
+    } catch (err) {
+      setError(err?.response?.data?.error || err?.message || 'Generation failed');
+    }
     setGenerating(false);
   };
 
@@ -32,14 +40,21 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
     const file = e.target.files?.[0];
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    onUpdate(type === 'front' ? { cover_image: file_url } : { back_cover_image: file_url });
+    await onUpdate(type === 'front' ? { cover_image: file_url } : { back_cover_image: file_url });
+  };
+
+  const deleteCover = async (type) => {
+    await onUpdate(type === 'front' ? { cover_image: '' } : { back_cover_image: '' });
   };
 
   const CoverBlock = ({ type }) => {
     const isFront = type === 'front';
     const imageUrl = isFront ? report?.cover_image : report?.back_cover_image;
     const generating = isFront ? generatingFront : generatingBack;
+    const error = isFront ? frontError : backError;
     const label = isFront ? 'Front Cover' : 'Back Cover';
+    const prompt = isFront ? frontPrompt : backPrompt;
+    const setPrompt = isFront ? setFrontPrompt : setBackPrompt;
 
     return (
       <div className="space-y-3">
@@ -53,12 +68,15 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
             </div>
             <div className="flex gap-2 mt-2">
               <Button variant="outline" size="sm" onClick={() => generateCover(type)} disabled={generating} className="gap-1">
-                <RefreshCw className="w-3.5 h-3.5" />Regenerate
+                <RefreshCw className={`w-3.5 h-3.5 ${generating ? 'animate-spin' : ''}`} />{generating ? 'Regenerating...' : 'Regenerate'}
               </Button>
               <label className="cursor-pointer">
                 <Button variant="outline" size="sm" className="gap-1" asChild><span><Upload className="w-3.5 h-3.5" />Upload</span></Button>
                 <input type="file" accept="image/*" className="hidden" onChange={e => uploadCover(e, type)} />
               </label>
+              <Button variant="outline" size="sm" onClick={() => deleteCover(type)} className="gap-1 text-red-400 hover:text-red-600">
+                <Trash2 className="w-3.5 h-3.5" />Delete
+              </Button>
             </div>
           </div>
         ) : (
@@ -72,18 +90,17 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
             </label>
           </div>
         )}
-        {!imageUrl && (
-          <div>
-            <Label className="text-xs text-muted-foreground">Custom prompt (optional)</Label>
-            <Textarea
-              rows={2}
-              value={isFront ? frontPrompt : backPrompt}
-              onChange={e => isFront ? setFrontPrompt(e.target.value) : setBackPrompt(e.target.value)}
-              placeholder="Additional instructions for the AI..."
-              className="mt-1 text-xs"
-            />
-          </div>
-        )}
+        <div>
+          <Label className="text-xs text-muted-foreground">Custom prompt (optional)</Label>
+          <Textarea
+            rows={2}
+            value={prompt}
+            onChange={e => setPrompt(e.target.value)}
+            placeholder="Additional instructions for the AI..."
+            className="mt-1 text-xs"
+          />
+        </div>
+        {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     );
   };
