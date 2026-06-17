@@ -64,13 +64,17 @@ Style: Minimal, elegant inside back cover. Subtle brand color wash or very faint
 
       back: `${NO_MOCKUP}
 
-Create a non-profit annual report back cover BACKGROUND DESIGN as a flat 2D graphic:
+Create a non-profit annual report back cover as a flat 2D graphic design.
 • Colors: ${colors}
+${branding.legal_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.legal_name + '"' : branding.common_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.common_name + '"' : ''}
+${branding.address ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + branding.address + '"' : ''}
+${branding.website ? '• Website — COPY THIS TEXT CHARACTER BY CHARACTER: "' + branding.website + '"' : ''}
+
+ABSOLUTE TOP PRIORITY — SPELLING: The text on the back cover is the #1 most important element. You must copy every address and name character-by-character from the quoted strings above. Double-check each letter before finalizing. If you misspell "Edmonton" or any other word, the entire generation is a failure. Take your time — accuracy over speed.
 
 CRITICAL: This must be significantly simpler and less busy than the front cover. The back cover should feel like a quiet closing statement — carry forward ONLY the color palette and general mood from the front, but use the simplest version of that theme. No complex imagery, no busy patterns. Think: the back of a book, not a second front page.
-CRITICAL: Do NOT include any text, words, letters, addresses, logos, or typography in the image. This is a pure background/pattern only. All text and logo information will be overlaid separately.
 
-Style: Minimal, clean back cover BACKGROUND. Portrait orientation. Simple abstract gradient or very subtle brand color wash. Clean and understated.${addl}`
+Style: Minimal, clean back cover. Portrait orientation. Simple abstract background or subtle brand color wash with the organization name and contact info displayed cleanly in a small, readable font.${branding.subsidiary_logos?.length ? ' Leave room for funder/subsidiary logos at the bottom.' : ''}${addl}`
     };
 
     const result = await base44.integrations.Core.GenerateImage({
