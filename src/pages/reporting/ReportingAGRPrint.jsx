@@ -54,7 +54,7 @@ export default function ReportingAGRPrint() {
       <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
         <div className="print-break p-8">
           {report?.cover_image ? (
-            <img src={report.cover_image} alt="Cover" className="w-full" />
+            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
           ) : branding ? (
             <div className="text-center">
               {branding.logo_urls && branding.logo_urls[0] && (
@@ -120,7 +120,7 @@ export default function ReportingAGRPrint() {
 
         <div className="print-break p-8">
           {report?.back_cover_image ? (
-            <img src={report.back_cover_image} alt="Back Cover" className="w-full" />
+            <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
           ) : branding ? (
             <div className="text-center py-12">
               {branding.logo_urls && branding.logo_urls[0] && (

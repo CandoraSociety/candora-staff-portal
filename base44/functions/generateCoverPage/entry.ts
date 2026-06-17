@@ -21,25 +21,31 @@ Deno.serve(async (req) => {
     if (reference_image_url) referenceUrls.push(reference_image_url);
     if (logos.length > 0) referenceUrls.push(logos[0]);
 
+    const NO_MOCKUP = 'CRITICAL INSTRUCTION: Generate a flat graphic design, not a photograph of a physical object. NO 3D perspective, NO shadows underneath, NO desk/table/wall backgrounds, NO curled page corners, NO book spines, NO mockup frames. The entire output must be the cover design itself — just the artwork, edge to edge.';
+
     let prompt;
     if (type === 'front') {
-      prompt = custom_prompt || `Design a professional, elegant front cover for a non-profit annual report.
-Organization: ${branding.common_name || report.title}
-Report Title: ${report.title}
-Year: ${report.year}
-${report.description ? 'Subtitle: ' + report.description : ''}
-${branding.tagline ? 'Tagline: ' + branding.tagline : ''}
-Primary color: ${branding.primary_color || '#1a2744'}
-Secondary color: ${branding.secondary_color || '#c8952e'}
-The organization's logo must be prominently featured on the cover.
-Style: This must be a full-bleed cover design at 8.5×11 portrait proportions — not a photo of a printed page or a mockup. The image itself should BE the cover design, filling the entire frame edge-to-edge. Clean, modern non-profit annual report aesthetic. Elegant abstract patterns or photography conveying community impact and hope. The organization's logo should appear naturally integrated into the design. No heavy text, no mockup frames, no desk backgrounds, no shadows suggesting a physical object. Just the flat cover design filling the entire image.`;
+      prompt = custom_prompt || `${NO_MOCKUP}
+
+Create a non-profit annual report front cover as a flat 2D graphic design:
+• Organization: ${branding.common_name || report.title}
+• Title: ${report.title}
+• Year: ${report.year}
+${branding.tagline ? '• Tagline: ' + branding.tagline : ''}
+• Colors: ${branding.primary_color || '#1a2744'} and ${branding.secondary_color || '#c8952e'}
+• Include the organization logo prominently in the design
+
+Style: Modern non-profit annual report cover. Elegant abstract patterns, gradients, or photography conveying community impact, growth, and hope. Portrait orientation. The design should be a clean 2D composition that fills the entire canvas — abstract background with the logo as focal point, title and year as accents.`;
     } else {
-      prompt = custom_prompt || `Design a professional back cover for a non-profit annual report.
-Organization: ${branding.legal_name || branding.common_name || ''}
-${branding.address ? 'Address: ' + branding.address : ''}
-${branding.website ? 'Website: ' + branding.website : ''}
-Colors: ${branding.primary_color || '#1a2744'}, ${branding.secondary_color || '#c8952e'}
-Style: This must be a full-bleed back cover design at 8.5×11 portrait proportions — not a photo of a printed page or a mockup. The image itself should BE the back cover, filling the entire frame edge-to-edge. Clean, minimal design with subtle branding elements. No mockup frames, no desk backgrounds, no shadows suggesting a physical object. Just the flat back cover filling the entire image.${branding.subsidiary_logos?.length ? ' Room for subsidiary/funder logos.' : ''}`;
+      prompt = custom_prompt || `${NO_MOCKUP}
+
+Create a non-profit annual report back cover as a flat 2D graphic design:
+• Organization: ${branding.legal_name || branding.common_name || ''}
+${branding.address ? '• Address: ' + branding.address : ''}
+${branding.website ? '• Website: ' + branding.website : ''}
+• Colors: ${branding.primary_color || '#1a2744'} and ${branding.secondary_color || '#c8952e'}
+
+Style: Minimal, clean back cover design. Portrait orientation. Simple abstract background or subtle brand pattern. Light text for contact/address information if included.${branding.subsidiary_logos?.length ? ' Include space for funder/subsidiary logos at the bottom.' : ''}`;
     }
 
     const result = await base44.integrations.Core.GenerateImage({

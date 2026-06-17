@@ -248,7 +248,7 @@ export default function ReportingAGREditor() {
             <div className="border rounded-xl bg-white p-6 max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
               {/* Cover */}
               {report?.cover_image && (
-                <div className="mb-6"><img src={report.cover_image} alt="Cover" className="w-full" /></div>
+                <div className="mb-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
               )}
 
               {/* Branding header — only if no cover image */}
@@ -287,7 +287,7 @@ export default function ReportingAGREditor() {
 
               {/* Back cover */}
               {report?.back_cover_image && (
-                <div className="mt-6"><img src={report.back_cover_image} alt="Back Cover" className="w-full rounded-lg" /></div>
+                <div className="mt-6 aspect-[8.5/11] w-full overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
               )}
             </div>
           </div>
