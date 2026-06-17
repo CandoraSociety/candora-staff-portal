@@ -4,8 +4,12 @@ import ReactMarkdown from 'react-markdown';
 import { ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
-export default function SectionRenderer({ section, dataEntries, isPrint, pageNumber, masterHeader, masterFooter, showHeaderAll, showFooterAll, showPageNumbersAll }) {
+export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, showHeaderAll, showFooterAll, showPageNumbersAll }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
+
+  const pc = branding?.primary_color || '#1a2744';
+  const sc = branding?.secondary_color || '#3b5998';
+  const ac = branding?.accent_color || '#2b2de8';
 
   const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
   const showHeader = showHeaderAll && !section.hide_header;
@@ -13,14 +17,14 @@ export default function SectionRenderer({ section, dataEntries, isPrint, pageNum
   const showPageNum = showPageNumbersAll;
 
   const headerContent = (
-    <div className="text-xs text-muted-foreground border-b pb-2 mb-4">
+    <div className="text-xs text-muted-foreground pb-2 mb-4" style={{ borderBottom: `1px solid ${pc}20` }}>
       {showHeader && masterHeader && <span>{masterHeader}</span>}
       {showPageNum && pageNumber && <span className="float-right">{pageNumber}</span>}
     </div>
   );
 
   const footerContent = (
-    <div className="text-xs text-muted-foreground border-t pt-2 mt-6">
+    <div className="text-xs text-muted-foreground pt-2 mt-6" style={{ borderTop: `1px solid ${pc}20` }}>
       {showFooter && masterFooter && <span>{masterFooter}</span>}
       {showPageNum && !showHeader && pageNumber && <span className="float-right">{pageNumber}</span>}
     </div>
@@ -48,7 +52,7 @@ export default function SectionRenderer({ section, dataEntries, isPrint, pageNum
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
-            <div key={d.id} className="border rounded-lg p-4 bg-slate-50">
+            <div key={d.id} className="border rounded-lg p-4" style={{ borderColor: `${ac}30`, backgroundColor: `${ac}05` }}>
               {chartConfig && <ChartRenderer chartConfig={chartConfig} isPrint={isPrint} />}
               {d.ai_narrative && <p className="text-sm text-slate-700 mt-2">{d.ai_narrative}</p>}
             </div>
@@ -94,7 +98,7 @@ export default function SectionRenderer({ section, dataEntries, isPrint, pageNum
             onClick={() => setExpanded(!expanded)}
             className="flex items-center gap-2 w-full text-left mb-3 hover:opacity-80 transition-opacity"
           >
-            <h3 className="text-lg font-heading font-bold text-accent">{section.title}</h3>
+            <h3 className="text-lg font-heading font-bold" style={{ color: pc }}>{section.title}</h3>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </button>
           <AnimatePresence>
@@ -109,7 +113,7 @@ export default function SectionRenderer({ section, dataEntries, isPrint, pageNum
         </>
       ) : (
         <>
-          <h3 className="text-lg font-heading font-bold text-accent mb-3">{section.title}</h3>
+          <h3 className="text-lg font-heading font-bold mb-3" style={{ color: pc }}>{section.title}</h3>
           {headerContent}
           {renderContent()}
           {footerContent}

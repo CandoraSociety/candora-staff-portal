@@ -267,10 +267,15 @@ export default function ReportingAGREditor() {
               {/* Table of Contents */}
               {sections.length > 0 && (
                 <div className="mb-6">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Contents</h4>
-                  {sections.map((s, i) => (
-                    <p key={s.id} className="text-xs text-muted-foreground py-0.5">{i + 1}. {s.title || 'Untitled'}</p>
-                  ))}
+                  <h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: branding?.primary_color || '#1a2744' }}>Contents</h4>
+                  <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '10px', borderRadius: '0 4px 4px 0' }}>
+                    {sections.map((s, i) => (
+                      <p key={s.id} className="text-xs py-0.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                        <span className="font-bold" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}. </span>
+                        {s.title || 'Untitled'}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -280,6 +285,7 @@ export default function ReportingAGREditor() {
                   key={section.id}
                   section={section}
                   dataEntries={dataEntries}
+                  branding={branding}
                   pageNumber={i + 1}
                   masterHeader={report?.master_header_text}
                   masterFooter={report?.master_footer_text}

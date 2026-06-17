@@ -74,13 +74,13 @@ export default function ReportingAGRPreview() {
         {/* Table of Contents */}
         {sections.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">Table of Contents</h3>
-            <div className="space-y-1">
+            <h3 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
+            <div className="space-y-0.5 border-l-2 rounded-l" style={{ borderColor: branding?.accent_color || '#2b2de8', paddingLeft: '12px' }}>
               {sections.map((s, i) => (
-                <a key={s.id} href={`#section-${s.id}`} className="flex items-center gap-3 text-sm text-slate-700 hover:text-accent transition-colors py-1">
-                  <span className="font-bold text-muted-foreground w-6">{i + 1}.</span>
+                <a key={s.id} href={`#section-${s.id}`} className="flex items-center gap-3 text-sm py-1 transition-colors hover:bg-slate-50 rounded px-2 -mx-2" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                  <span className="font-bold w-6" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
                   <span>{s.title || 'Untitled'}</span>
-                  <ChevronDown className="w-3 h-3 text-muted-foreground ml-auto" />
+                  <ChevronDown className="w-3 h-3 opacity-40 ml-auto" />
                 </a>
               ))}
             </div>
@@ -93,6 +93,7 @@ export default function ReportingAGRPreview() {
             <SectionRenderer
               section={section}
               dataEntries={dataEntries}
+              branding={branding}
               pageNumber={i + 1}
               masterHeader={report?.master_header_text}
               masterFooter={report?.master_footer_text}

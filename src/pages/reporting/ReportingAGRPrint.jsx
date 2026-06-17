@@ -85,11 +85,11 @@ export default function ReportingAGRPrint() {
               {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
             </div>
           )}
-          <h3 className="text-base font-bold uppercase tracking-wider text-muted-foreground mb-4">Table of Contents</h3>
-          <div className="space-y-1">
+          <h3 className="text-base font-bold uppercase tracking-wider mb-4" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
+          <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '14px', borderRadius: '0 4px 4px 0' }}>
             {sections.map((s, i) => (
-              <p key={s.id} className="text-sm">
-                <span className="font-bold mr-2">{i + 1}.</span>
+              <p key={s.id} className="text-sm py-0.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                <span className="font-bold mr-2" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
                 {s.title || 'Untitled'}
               </p>
             ))}
@@ -97,10 +97,13 @@ export default function ReportingAGRPrint() {
         </div>
 
         {sections.map((section, i) => (
-          <div key={section.id} className="print-break p-8">
+          <div key={section.id} className="print-break">
+            <div className="h-1 w-full" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
+            <div className="p-8">
             <SectionRenderer
               section={section}
               dataEntries={dataEntries}
+              branding={branding}
               isPrint
               pageNumber={i + 3}
               masterHeader={report?.master_header_text}
@@ -109,6 +112,7 @@ export default function ReportingAGRPrint() {
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
             />
+            </div>
           </div>
         ))}
 
