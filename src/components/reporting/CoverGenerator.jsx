@@ -58,7 +58,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         type,
         logo_urls: branding?.logo_urls || [],
         custom_prompt: prompt || undefined,
-        reference_image_url: imageUrl || undefined
+        reference_image_url: imageUrl || undefined,
+        front_cover_url: type !== 'front' ? report?.cover_image || undefined : undefined
       });
       if (res.data?.url) {
         await onUpdate({ [FIELD_MAP[type]]: res.data.url });
