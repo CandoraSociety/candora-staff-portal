@@ -57,6 +57,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         report_id: reportId,
         type,
         logo_urls: branding?.logo_urls || [],
+        subsidiary_logo_urls: branding?.subsidiary_logos?.map(s => s.url) || [],
+        funder_logo_urls: branding?.funder_logos?.map(f => f.url) || [],
         custom_prompt: prompt || undefined,
         reference_image_url: imageUrl || undefined,
         front_cover_url: type !== 'front' ? report?.cover_image || undefined : undefined
