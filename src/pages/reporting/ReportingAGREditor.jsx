@@ -290,34 +290,13 @@ export default function ReportingAGREditor() {
             )}
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
             <div className="border rounded-xl bg-white max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
-              {/* Front cover — full bleed with overlays */}
+              {/* Front cover — full bleed, no overlays */}
               {report?.cover_image ? (
                 <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative">
                   <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
-                    {branding?.logo_urls?.[0] && (
-                      <img src={branding.logo_urls[0]} alt="Logo" className="h-12 md:h-16 object-contain mb-4 drop-shadow-lg" />
-                    )}
-                    <h3 className="text-sm md:text-lg font-heading font-bold text-white drop-shadow-lg mb-2">{report?.title}</h3>
-                    {branding?.tagline && <p className="text-xs text-white/90 drop-shadow">{branding.tagline}</p>}
-                    {report?.year && (
-                      <p className="text-xs text-white/80 font-medium drop-shadow mt-2">April 1, {report.year} – March 31, {report.year + 1}</p>
-                    )}
-                  </div>
                 </div>
               ) : (
-                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative" style={{ backgroundColor: branding?.primary_color || '#1a2744' }}>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                    {branding?.logo_urls?.[0] && (
-                      <img src={branding.logo_urls[0]} alt="Logo" className="h-12 md:h-16 object-contain mb-4 drop-shadow-lg" />
-                    )}
-                    <h3 className="text-sm md:text-lg font-heading font-bold text-white drop-shadow-lg mb-2">{report?.title}</h3>
-                    {branding?.tagline && <p className="text-xs text-white/90 drop-shadow">{branding.tagline}</p>}
-                    {report?.year && (
-                      <p className="text-xs text-white/80 font-medium drop-shadow mt-2">April 1, {report.year} – March 31, {report.year + 1}</p>
-                    )}
-                  </div>
-                </div>
+                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
               )}
               {/* Inside front cover — full bleed */}
               {report?.inside_front_cover_image && (
@@ -372,11 +351,14 @@ export default function ReportingAGREditor() {
               {report?.inside_back_cover_image && (
                 <div className="-mx-6 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
               )}
-              {/* Back cover — full bleed with contact info overlay */}
+              {/* Back cover — full bleed with logo + contact info overlay */}
               {report?.back_cover_image ? (
                 <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative">
                   <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+                    {branding?.logo_urls?.[0] && (
+                      <img src={branding.logo_urls[0]} alt="Logo" className="h-10 md:h-12 object-contain mb-4 drop-shadow-lg" />
+                    )}
                     <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
                       {branding?.legal_name || branding?.common_name || ''}
                     </p>
@@ -393,6 +375,9 @@ export default function ReportingAGREditor() {
               ) : branding ? (
                 <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    {branding?.logo_urls?.[0] && (
+                      <img src={branding.logo_urls[0]} alt="Logo" className="h-10 md:h-12 object-contain mb-4 drop-shadow-lg" />
+                    )}
                     <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
                       {branding.legal_name || branding.common_name || ''}
                     </p>

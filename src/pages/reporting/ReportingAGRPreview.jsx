@@ -62,25 +62,13 @@ export default function ReportingAGRPreview() {
         </div>
       )}
 
-      {/* Front cover — full bleed with required info overlay */}
+      {/* Front cover — full bleed, no overlays */}
       <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
         {report?.cover_image ? (
           <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
         )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.3)' : 'transparent' }}>
-          {branding?.logo_urls?.[0] && (
-            <img src={branding.logo_urls[0]} alt="Logo" className="h-20 md:h-24 object-contain mb-6 drop-shadow-lg" />
-          )}
-          <h1 className="text-2xl md:text-4xl font-heading font-bold text-white drop-shadow-lg mb-4">{report?.title || 'Annual Report'}</h1>
-          {branding?.tagline && <p className="text-sm md:text-base text-white/90 mb-6 drop-shadow">{branding.tagline}</p>}
-          {report?.year && (
-            <p className="text-sm md:text-lg text-white/90 font-medium drop-shadow">
-              April 1, {report.year} – March 31, {report.year + 1}
-            </p>
-          )}
-        </div>
       </div>
       {/* Inside front cover — truly full bleed */}
       {report?.inside_front_cover_image && (
