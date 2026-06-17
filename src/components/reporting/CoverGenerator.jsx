@@ -163,7 +163,13 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
           rows={2}
           value={prompt}
           onChange={e => setPrompt(e.target.value)}
-          placeholder="Additional instructions for the AI..."
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              generateCover();
+            }
+          }}
+          placeholder="Additional instructions for the AI... (press Enter to regenerate)"
           className="mt-1 text-xs"
         />
       </div>

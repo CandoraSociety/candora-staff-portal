@@ -104,16 +104,13 @@ This is a quiet transitional page inside the report — it should feel calm, ele
 
       back: `${FULL_BLEED}
 
-Create a non-profit annual report back cover BACKGROUND as a flat 2D graphic design.
+Create a non-profit annual report back cover as a flat 2D graphic design.
 
 ${colorPalette}
 
-${NO_LOGO}
-The real organization name, address, and website will be overlaid in HTML with perfect accuracy — do NOT attempt to render any text yourself.
+Include the organization's legal name, full address, and website as clean, legible text on the cover.
 
-${NO_TEXT}
-
-Design: A simple closing page background. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear only as extremely thin decorative lines or very tiny accents. Keep the center area clean for the overlaid contact details.
+Design: A simple closing page. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear as elegant decorative lines or accents. The organization's full contact details should be prominently displayed in a clean layout.
 
 The front cover image is provided as a style reference — match the color mood and overall aesthetic, but keep this dramatically simpler. This is the closing page — it should feel like a quiet, elegant sign-off.${addl}`
     };
