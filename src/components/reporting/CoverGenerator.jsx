@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,18 +38,18 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const [generating, setGenerating] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState('');
-  const [previous, setPrevious] = useState(null);
   const [showFavPicker, setShowFavPicker] = useState(false);
   const [favouriting, setFavouriting] = useState(false);
+  const previousRef = useRef(null);
 
   const imageUrl = report?.[FIELD_MAP[type]];
   const label = LABEL_MAP[type];
-  const hasUndo = previous !== undefined && previous !== null;
+  const hasUndo = previousRef.current !== null;
   const favs = favourites.filter(f => f.cover_type === type);
   const gen = generating;
 
   const generateCover = async () => {
-    setPrevious(imageUrl || null);
+    previousRef.current = imageUrl || null;
     setGenerating(true);
     setError('');
     try {
@@ -75,21 +75,22 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   };
 
   const undoCover = async () => {
-    if (hasUndo) {
-      await onUpdate({ [FIELD_MAP[type]]: previous });
-      setPrevious(null);
+    if (previousRef.current !== null) {
+      await onUpdate({ [FIELD_MAP[type]]: previousRef.current });
+      previousRef.current = null;
     }
   };
 
   const uploadCover = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPrevious(imageUrl || null);
+    previousRef.current = imageUrl || null;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     await onUpdate({ [FIELD_MAP[type]]: file_url });
   };
 
   const deleteCover = async () => {
+    previousRef.current = imageUrl || null;
     await onUpdate({ [FIELD_MAP[type]]: '' });
   };
 
@@ -108,7 +109,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   };
 
   const pickFavourite = async (fav) => {
-    setPrevious(imageUrl || null);
+    previousRef.current = imageUrl || null;
     await onUpdate({ [FIELD_MAP[type]]: fav.image_url });
     setShowFavPicker(false);
   };
