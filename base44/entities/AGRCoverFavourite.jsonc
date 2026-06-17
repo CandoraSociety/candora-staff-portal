@@ -1,0 +1,36 @@
+{
+  "name": "AGRCoverFavourite",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "Parent AGR report ID"
+    },
+    "cover_type": {
+      "type": "string",
+      "enum": [
+        "front",
+        "inside_front",
+        "inside_back",
+        "back"
+      ],
+      "description": "Which cover position this is for"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "The cover image URL"
+    },
+    "label": {
+      "type": "string",
+      "description": "Optional user-friendly label"
+    },
+    "owner_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "cover_type",
+    "image_url"
+  ]
+}
