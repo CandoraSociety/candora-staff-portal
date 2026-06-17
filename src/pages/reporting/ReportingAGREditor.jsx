@@ -248,11 +248,11 @@ export default function ReportingAGREditor() {
             <div className="border rounded-xl bg-white p-6 max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
               {/* Cover */}
               {report?.cover_image && (
-                <div className="mb-6"><img src={report.cover_image} alt="Cover" className="w-full rounded-lg" /></div>
+                <div className="mb-6"><img src={report.cover_image} alt="Cover" className="w-full" /></div>
               )}
 
-              {/* Branding header */}
-              {branding && (
+              {/* Branding header — only if no cover image */}
+              {!report?.cover_image && branding && (
                 <div className="text-center mb-6 pb-4 border-b">
                   {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-12 mx-auto mb-2 object-contain" />}
                   <h2 className="text-base font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>

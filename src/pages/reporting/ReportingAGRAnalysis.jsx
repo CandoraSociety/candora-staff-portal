@@ -42,7 +42,7 @@ export default function ReportingAGRAnalysis() {
         title: `Annual General Report ${new Date().getFullYear()}`,
         year: new Date().getFullYear(),
         status: 'draft',
-        description: 'Created from AGR template analysis'
+        description: ''
       });
       // Pre-create sections matching the extracted layout
       await Promise.all(layoutTemplate.map((lt, i) =>

@@ -53,10 +53,9 @@ export default function ReportingAGRPrint() {
 
       <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
         <div className="print-break p-8">
-          {report?.cover_image && (
-            <img src={report.cover_image} alt="Cover" className="w-full rounded-lg mb-8" />
-          )}
-          {branding && (
+          {report?.cover_image ? (
+            <img src={report.cover_image} alt="Cover" className="w-full" />
+          ) : branding ? (
             <div className="text-center">
               {branding.logo_urls && branding.logo_urls[0] && (
                 <img src={branding.logo_urls[0]} alt="Logo" className="h-20 mx-auto mb-4 object-contain" />
@@ -68,7 +67,7 @@ export default function ReportingAGRPrint() {
               <p className="text-sm mt-6" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>
               <p className="text-sm text-muted-foreground">Fiscal Year {report?.year}</p>
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="print-break p-8">
@@ -121,7 +120,7 @@ export default function ReportingAGRPrint() {
 
         <div className="print-break p-8">
           {report?.back_cover_image ? (
-            <img src={report.back_cover_image} alt="Back Cover" className="w-full rounded-lg" />
+            <img src={report.back_cover_image} alt="Back Cover" className="w-full" />
           ) : branding ? (
             <div className="text-center py-12">
               {branding.logo_urls && branding.logo_urls[0] && (

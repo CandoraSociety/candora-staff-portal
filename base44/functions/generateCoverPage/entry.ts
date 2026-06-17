@@ -32,14 +32,14 @@ ${branding.tagline ? 'Tagline: ' + branding.tagline : ''}
 Primary color: ${branding.primary_color || '#1a2744'}
 Secondary color: ${branding.secondary_color || '#c8952e'}
 The organization's logo must be prominently featured on the cover.
-Style: Full-bleed 8.5"×11" portrait layout. Clean, modern non-profit annual report cover. Elegant abstract patterns or photography conveying community impact and hope. No heavy text — the cover should be primarily visual with the logo as the focal point.`;
+Style: This must be a full-bleed cover design at 8.5×11 portrait proportions — not a photo of a printed page or a mockup. The image itself should BE the cover design, filling the entire frame edge-to-edge. Clean, modern non-profit annual report aesthetic. Elegant abstract patterns or photography conveying community impact and hope. The organization's logo should appear naturally integrated into the design. No heavy text, no mockup frames, no desk backgrounds, no shadows suggesting a physical object. Just the flat cover design filling the entire image.`;
     } else {
       prompt = custom_prompt || `Design a professional back cover for a non-profit annual report.
 Organization: ${branding.legal_name || branding.common_name || ''}
 ${branding.address ? 'Address: ' + branding.address : ''}
 ${branding.website ? 'Website: ' + branding.website : ''}
 Colors: ${branding.primary_color || '#1a2744'}, ${branding.secondary_color || '#c8952e'}
-Style: Full-bleed 8.5"×11" portrait layout. Clean, minimal back cover design with subtle branding elements.${branding.subsidiary_logos?.length ? ' Room for subsidiary/funder logos.' : ''}`;
+Style: This must be a full-bleed back cover design at 8.5×11 portrait proportions — not a photo of a printed page or a mockup. The image itself should BE the back cover, filling the entire frame edge-to-edge. Clean, minimal design with subtle branding elements. No mockup frames, no desk backgrounds, no shadows suggesting a physical object. Just the flat back cover filling the entire image.${branding.subsidiary_logos?.length ? ' Room for subsidiary/funder logos.' : ''}`;
     }
 
     const result = await base44.integrations.Core.GenerateImage({

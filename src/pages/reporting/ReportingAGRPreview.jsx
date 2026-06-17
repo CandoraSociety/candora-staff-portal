@@ -54,11 +54,11 @@ export default function ReportingAGRPreview() {
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border p-8 space-y-6">
         {/* Cover */}
         {report?.cover_image && (
-          <div className="mb-8"><img src={report.cover_image} alt="Cover" className="w-full rounded-lg" /></div>
+          <div className="mb-8"><img src={report.cover_image} alt="Cover" className="w-full" /></div>
         )}
 
-        {/* Branding header */}
-        {branding && (
+        {/* Branding header — only if no cover image */}
+        {!report?.cover_image && branding && (
           <div className="text-center mb-8 pb-6 border-b">
             {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-16 mx-auto mb-3 object-contain" />}
             <h2 className="text-2xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>
