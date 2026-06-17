@@ -69,7 +69,7 @@ export default function ReportingAGRPreview() {
         ) : (
           <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
         )}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.12)' : 'transparent' }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.3)' : 'transparent' }}>
           {branding?.logo_urls?.[0] && (
             <img src={branding.logo_urls[0]} alt="Logo" className="h-20 md:h-24 object-contain mb-6 drop-shadow-lg" />
           )}
