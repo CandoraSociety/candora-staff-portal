@@ -96,7 +96,7 @@ export default function ReportingAGRPrint() {
           {branding && (
             <div className="text-center mb-8 pb-6 border-b">
               <h2 className="text-xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</h2>
-              {branding.address && <p className="text-sm text-muted-foreground mt-1">{branding.address}</p>}
+              {(branding.address || branding.address_line1) && <p className="text-sm text-muted-foreground mt-1">{branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}</p>}
               {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
             </div>
           )}
@@ -175,7 +175,7 @@ export default function ReportingAGRPrint() {
             <p className="text-lg font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
               {branding.legal_name || branding.common_name}
             </p>
-            {branding.address && <p className="text-sm text-muted-foreground mt-2">{branding.address}</p>}
+            {(branding.address || branding.address_line1) && <p className="text-sm text-muted-foreground mt-2">{branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}</p>}
             {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
             {branding.footer_text && <p className="text-xs text-muted-foreground mt-4">{branding.footer_text}</p>}
           </div>

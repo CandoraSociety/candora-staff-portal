@@ -67,7 +67,7 @@ Style: Minimal, elegant inside back cover. Subtle brand color wash or very faint
 Create a non-profit annual report back cover as a flat 2D graphic design.
 • Colors: ${colors}
 ${branding.legal_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.legal_name + '"' : branding.common_name ? '• Organization name — COPY THIS TEXT CHARACTER BY CHARACTER, do not alter a single letter: "' + branding.common_name + '"' : ''}
-${branding.address ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + branding.address + '"' : ''}
+${branding.address ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + branding.address + '"' : (branding.address_line1 ? '• Address — COPY THIS TEXT CHARACTER BY CHARACTER, every comma and space exactly: "' + [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code, branding.address_country].filter(Boolean).join(', ') + '"' : '')}
 ${branding.website ? '• Website — COPY THIS TEXT CHARACTER BY CHARACTER: "' + branding.website + '"' : ''}
 
 ABSOLUTE TOP PRIORITY — SPELLING: The text on the back cover is the #1 most important element. You must copy every address and name character-by-character from the quoted strings above. Double-check each letter before finalizing. If you misspell "Edmonton" or any other word, the entire generation is a failure. Take your time — accuracy over speed.

@@ -13,7 +13,8 @@ export default function BrandingPanel({ reportId }) {
   const [form, setForm] = useState({
     logo_urls: [], subsidiary_logos: [], funder_logos: [], common_name: '', legal_name: '',
     tagline: '', primary_color: '#1a2744', secondary_color: '#c8952e', accent_color: '#2b2de8',
-    footer_text: '', address: '', website: ''
+    footer_text: '', address: '', website: '',
+    address_line1: '', address_line2: '', address_city: '', address_province: '', address_postal_code: '', address_country: 'Canada'
   });
 
   useEffect(() => {
@@ -32,7 +33,13 @@ export default function BrandingPanel({ reportId }) {
           accent_color: data[0].accent_color || '#2b2de8',
           footer_text: data[0].footer_text || '',
           address: data[0].address || '',
-          website: data[0].website || ''
+          website: data[0].website || '',
+          address_line1: data[0].address_line1 || '',
+          address_line2: data[0].address_line2 || '',
+          address_city: data[0].address_city || '',
+          address_province: data[0].address_province || '',
+          address_postal_code: data[0].address_postal_code || '',
+          address_country: data[0].address_country || 'Canada'
         });
       }
     });
@@ -177,15 +184,32 @@ export default function BrandingPanel({ reportId }) {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-3">
-            <div>
-              <Label className="text-xs">Website</Label>
-              <Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." className="mt-1 text-xs" />
+          <div>
+            <Label className="text-xs font-semibold mb-1 block">Address</Label>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <div className="sm:col-span-2">
+                <Input value={form.address_line1} onChange={e => setForm(f => ({ ...f, address_line1: e.target.value }))} placeholder="Street address" className="text-xs" />
+              </div>
+              <div className="sm:col-span-2">
+                <Input value={form.address_line2} onChange={e => setForm(f => ({ ...f, address_line2: e.target.value }))} placeholder="Apt / Suite / Unit (optional)" className="text-xs" />
+              </div>
+              <div>
+                <Input value={form.address_city} onChange={e => setForm(f => ({ ...f, address_city: e.target.value }))} placeholder="City" className="text-xs" />
+              </div>
+              <div>
+                <Input value={form.address_province} onChange={e => setForm(f => ({ ...f, address_province: e.target.value }))} placeholder="Province / State" className="text-xs" />
+              </div>
+              <div>
+                <Input value={form.address_postal_code} onChange={e => setForm(f => ({ ...f, address_postal_code: e.target.value }))} placeholder="Postal / ZIP code" className="text-xs" />
+              </div>
+              <div>
+                <Input value={form.address_country} onChange={e => setForm(f => ({ ...f, address_country: e.target.value }))} placeholder="Country" className="text-xs" />
+              </div>
             </div>
-            <div className="sm:col-span-2">
-              <Label className="text-xs">Address</Label>
-              <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="mt-1 text-xs" />
-            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Website</Label>
+            <Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." className="mt-1 text-xs" />
           </div>
           <div>
             <Label className="text-xs">Footer Text</Label>

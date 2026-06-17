@@ -66,7 +66,29 @@
       "type": "string"
     },
     "address": {
+      "type": "string",
+      "description": "Legacy single-line address \u2014 kept for backwards compatibility"
+    },
+    "address_line1": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "address_line2": {
+      "type": "string",
+      "description": "Apt/suite/unit (optional)"
+    },
+    "address_city": {
       "type": "string"
+    },
+    "address_province": {
+      "type": "string"
+    },
+    "address_postal_code": {
+      "type": "string"
+    },
+    "address_country": {
+      "type": "string",
+      "default": "Canada"
     },
     "website": {
       "type": "string"
