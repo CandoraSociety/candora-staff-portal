@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Save, Plus, X, Upload, Palette, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Plus, X, Upload, Palette, ChevronDown, ChevronUp, Check } from 'lucide-react';
 
 export default function BrandingPanel({ reportId }) {
   const [branding, setBranding] = useState(null);
@@ -148,6 +148,7 @@ export default function BrandingPanel({ reportId }) {
                 <div key={i} className="flex items-center gap-2">
                   <img src={sl.url} alt="" className="h-10 rounded border object-contain bg-white" />
                   <Input value={sl.purpose} onChange={e => { const copy = [...form.subsidiary_logos]; copy[i] = { ...copy[i], purpose: e.target.value }; setForm(f => ({ ...f, subsidiary_logos: copy })); }} placeholder="e.g. Candora Housing" className="text-xs flex-1" />
+                  <button onClick={handleSave} title="Save description" className="p-1 rounded hover:bg-green-100 text-green-600 transition-colors"><Check className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setForm(f => ({ ...f, subsidiary_logos: f.subsidiary_logos.filter((_, j) => j !== i) }))}><X className="w-3.5 h-3.5 text-red-400" /></button>
                 </div>
               ))}
@@ -165,6 +166,7 @@ export default function BrandingPanel({ reportId }) {
                 <div key={i} className="flex items-center gap-2">
                   <img src={fl.url} alt="" className="h-10 rounded border object-contain bg-white" />
                   <Input value={fl.purpose} onChange={e => { const copy = [...form.funder_logos]; copy[i] = { ...copy[i], purpose: e.target.value }; setForm(f => ({ ...f, funder_logos: copy })); }} placeholder="e.g. Funded by..." className="text-xs flex-1" />
+                  <button onClick={handleSave} title="Save description" className="p-1 rounded hover:bg-green-100 text-green-600 transition-colors"><Check className="w-3.5 h-3.5" /></button>
                   <button onClick={() => setForm(f => ({ ...f, funder_logos: f.funder_logos.filter((_, j) => j !== i) }))}><X className="w-3.5 h-3.5 text-red-400" /></button>
                 </div>
               ))}
