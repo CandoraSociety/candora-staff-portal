@@ -3,8 +3,7 @@
   "type": "object",
   "properties": {
     "report_id": {
-      "type": "string",
-      "description": "Parent AGR report ID"
+      "type": "string"
     },
     "cover_type": {
       "type": "string",
@@ -13,18 +12,12 @@
         "inside_front",
         "inside_back",
         "back"
-      ],
-      "description": "Which cover position this is for"
+      ]
     },
     "image_url": {
-      "type": "string",
-      "description": "The cover image URL"
+      "type": "string"
     },
     "label": {
-      "type": "string",
-      "description": "Optional user-friendly label"
-    },
-    "owner_id": {
       "type": "string"
     }
   },

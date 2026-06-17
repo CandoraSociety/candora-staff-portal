@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,17 +19,28 @@ const LABEL_MAP = {
   back: 'Back Cover',
 };
 
+const STORAGE_KEY = (reportId) => `agr_cover_favourites_${reportId}`;
+
+function loadFavourites(reportId) {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY(reportId)) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveFavourites(reportId, favs) {
+  localStorage.setItem(STORAGE_KEY(reportId), JSON.stringify(favs));
+}
+
 export default function CoverGenerator({ reportId, report, branding, onUpdate }) {
   const [generating, setGenerating] = useState({});
   const [prompts, setPrompts] = useState({});
   const [errors, setErrors] = useState({});
   const [previous, setPrevious] = useState({});
-  const [favourites, setFavourites] = useState([]);
+  const [favourites, setFavourites] = useState(() => loadFavourites(reportId));
   const [showFavPicker, setShowFavPicker] = useState({});
-
-  useEffect(() => {
-    base44.entities.AGRCoverFavourite.filter({ report_id: reportId }, '-created_date').then(setFavourites);
-  }, [reportId]);
+  const [favouriting, setFavouriting] = useState({});
 
   const generateCover = async (type) => {
     const currentUrl = report?.[FIELD_MAP[type]];
@@ -74,16 +85,20 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
     await onUpdate({ [FIELD_MAP[type]]: '' });
   };
 
-  const favouriteCover = async (type) => {
+  const favouriteCover = (type) => {
     const imageUrl = report?.[FIELD_MAP[type]];
     if (!imageUrl) return;
-    const fav = await base44.entities.AGRCoverFavourite.create({
-      report_id: reportId,
+    setFavouriting(prev => ({ ...prev, [type]: true }));
+    const newFav = {
+      id: Date.now().toString(),
       cover_type: type,
       image_url: imageUrl,
       label: `${LABEL_MAP[type]} — ${new Date().toLocaleDateString('en-CA', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-    });
-    setFavourites(prev => [fav, ...prev]);
+    };
+    const updated = [newFav, ...favourites];
+    setFavourites(updated);
+    saveFavourites(reportId, updated);
+    setTimeout(() => setFavouriting(prev => ({ ...prev, [type]: false })), 600);
   };
 
   const pickFavourite = async (type, fav) => {
@@ -92,9 +107,10 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
     setShowFavPicker(prev => ({ ...prev, [type]: false }));
   };
 
-  const removeFavourite = async (favId) => {
-    await base44.entities.AGRCoverFavourite.delete(favId);
-    setFavourites(prev => prev.filter(f => f.id !== favId));
+  const removeFavourite = (favId) => {
+    const updated = favourites.filter(f => f.id !== favId);
+    setFavourites(updated);
+    saveFavourites(reportId, updated);
   };
 
   const typeFavourites = (type) => favourites.filter(f => f.cover_type === type);
@@ -109,6 +125,7 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
     const hasUndo = previous[type] !== undefined && previous[type] !== null;
     const favs = typeFavourites(type);
     const pickerOpen = showFavPicker[type] || false;
+    const favving = favouriting[type] || false;
 
     return (
       <div className="space-y-3">
@@ -129,8 +146,8 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
                   <Undo2 className="w-3.5 h-3.5" />Undo
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => favouriteCover(type)} className="gap-1 text-pink-500 hover:text-pink-600">
-                <Heart className="w-3.5 h-3.5" />Favourite
+              <Button variant="outline" size="sm" onClick={() => favouriteCover(type)} disabled={favving} className="gap-1 text-pink-500 hover:text-pink-600">
+                <Heart className={`w-3.5 h-3.5 ${favving ? 'animate-pulse fill-pink-500' : ''}`} />{favving ? 'Saved!' : 'Favourite'}
               </Button>
               <label className="cursor-pointer">
                 <Button variant="outline" size="sm" className="gap-1" asChild><span><Upload className="w-3.5 h-3.5" />Upload</span></Button>
