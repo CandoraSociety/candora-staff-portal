@@ -120,11 +120,27 @@ export default function ReportingAGRPreview() {
         {/* Subsidiary logos */}
         {branding?.subsidiary_logos?.length > 0 && (
           <div className="border-t pt-6">
+            <p className="text-xs font-bold uppercase tracking-wider mb-3 text-muted-foreground">Our Sub-Brands</p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               {branding.subsidiary_logos.map((sl, i) => (
                 <div key={i} className="text-center">
                   <img src={sl.url} alt={sl.purpose} className="h-10 object-contain mx-auto" />
                   {sl.purpose && <p className="text-[10px] text-muted-foreground mt-1">{sl.purpose}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Funder logos */}
+        {branding?.funder_logos?.length > 0 && (
+          <div className="border-t pt-6">
+            <p className="text-xs font-bold uppercase tracking-wider mb-3 text-muted-foreground">Our Funders</p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {branding.funder_logos.map((fl, i) => (
+                <div key={i} className="text-center">
+                  <img src={fl.url} alt={fl.purpose} className="h-10 object-contain mx-auto" />
+                  {fl.purpose && <p className="text-[10px] text-muted-foreground mt-1">{fl.purpose}</p>}
                 </div>
               ))}
             </div>

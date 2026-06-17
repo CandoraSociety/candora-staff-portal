@@ -124,13 +124,28 @@ export default function ReportingAGRPrint() {
           </div>
         ))}
 
-        {branding?.subsidiary_logos && branding.subsidiary_logos.length > 0 && (
+        {branding?.subsidiary_logos?.length > 0 && (
           <div className="print-break p-8">
+            <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Sub-Brands</p>
             <div className="flex flex-wrap items-center justify-center gap-6">
               {branding.subsidiary_logos.map((sl, i) => (
                 <div key={i} className="text-center">
                   <img src={sl.url} alt={sl.purpose} className="h-12 object-contain mx-auto" />
                   {sl.purpose && <p className="text-xs text-muted-foreground mt-1">{sl.purpose}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {branding?.funder_logos?.length > 0 && (
+          <div className="print-break p-8">
+            <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Funders</p>
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              {branding.funder_logos.map((fl, i) => (
+                <div key={i} className="text-center">
+                  <img src={fl.url} alt={fl.purpose} className="h-12 object-contain mx-auto" />
+                  {fl.purpose && <p className="text-xs text-muted-foreground mt-1">{fl.purpose}</p>}
                 </div>
               ))}
             </div>

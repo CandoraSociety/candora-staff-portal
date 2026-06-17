@@ -11,7 +11,7 @@ export default function BrandingPanel({ reportId }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({
-    logo_urls: [], subsidiary_logos: [], common_name: '', legal_name: '',
+    logo_urls: [], subsidiary_logos: [], funder_logos: [], common_name: '', legal_name: '',
     tagline: '', primary_color: '#1a2744', secondary_color: '#c8952e', accent_color: '#2b2de8',
     footer_text: '', address: '', website: ''
   });
@@ -23,6 +23,7 @@ export default function BrandingPanel({ reportId }) {
         setForm({
           logo_urls: data[0].logo_urls || [],
           subsidiary_logos: data[0].subsidiary_logos || [],
+          funder_logos: data[0].funder_logos || [],
           common_name: data[0].common_name || '',
           legal_name: data[0].legal_name || '',
           tagline: data[0].tagline || '',
@@ -49,6 +50,13 @@ export default function BrandingPanel({ reportId }) {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setForm(f => ({ ...f, subsidiary_logos: [...f.subsidiary_logos, { url: file_url, purpose: '' }] }));
+  };
+
+  const addFunderLogo = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, funder_logos: [...f.funder_logos, { url: file_url, purpose: '' }] }));
   };
 
   const handleSave = async () => {
@@ -134,18 +142,35 @@ export default function BrandingPanel({ reportId }) {
           </div>
 
           <div>
-            <Label className="text-xs">Subsidiary/Funder Logos</Label>
+            <Label className="text-xs">Subsidiary Logos</Label>
             <div className="space-y-2 mt-1">
               {form.subsidiary_logos.map((sl, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <img src={sl.url} alt="" className="h-10 rounded border object-contain bg-white" />
-                  <Input value={sl.purpose} onChange={e => { const copy = [...form.subsidiary_logos]; copy[i] = { ...copy[i], purpose: e.target.value }; setForm(f => ({ ...f, subsidiary_logos: copy })); }} placeholder="e.g. Funded by..." className="text-xs flex-1" />
+                  <Input value={sl.purpose} onChange={e => { const copy = [...form.subsidiary_logos]; copy[i] = { ...copy[i], purpose: e.target.value }; setForm(f => ({ ...f, subsidiary_logos: copy })); }} placeholder="e.g. Candora Housing" className="text-xs flex-1" />
                   <button onClick={() => setForm(f => ({ ...f, subsidiary_logos: f.subsidiary_logos.filter((_, j) => j !== i) }))}><X className="w-3.5 h-3.5 text-red-400" /></button>
                 </div>
               ))}
               <label className="flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline">
-                <Plus className="w-3 h-3" /> Add funder logo
+                <Plus className="w-3 h-3" /> Add sub-brand logo
                 <input type="file" accept="image/*" className="hidden" onChange={addSubLogo} />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs">Funder Logos</Label>
+            <div className="space-y-2 mt-1">
+              {form.funder_logos.map((fl, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <img src={fl.url} alt="" className="h-10 rounded border object-contain bg-white" />
+                  <Input value={fl.purpose} onChange={e => { const copy = [...form.funder_logos]; copy[i] = { ...copy[i], purpose: e.target.value }; setForm(f => ({ ...f, funder_logos: copy })); }} placeholder="e.g. Funded by..." className="text-xs flex-1" />
+                  <button onClick={() => setForm(f => ({ ...f, funder_logos: f.funder_logos.filter((_, j) => j !== i) }))}><X className="w-3.5 h-3.5 text-red-400" /></button>
+                </div>
+              ))}
+              <label className="flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline">
+                <Plus className="w-3 h-3" /> Add funder logo
+                <input type="file" accept="image/*" className="hidden" onChange={addFunderLogo} />
               </label>
             </div>
           </div>

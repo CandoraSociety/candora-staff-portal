@@ -24,7 +24,23 @@
             "type": "string"
           }
         }
-      }
+      },
+      "description": "Internal sub-brand logos"
+    },
+    "funder_logos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "External funder/sponsor logos"
     },
     "common_name": {
       "type": "string",
