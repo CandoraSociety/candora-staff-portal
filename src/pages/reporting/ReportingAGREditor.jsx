@@ -193,6 +193,20 @@ export default function ReportingAGREditor() {
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload('master_header_image', e.target.files?.[0])} />
                     </label>
                   )}
+                  {report?.master_header_image && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Height:</span>
+                      <input
+                        type="number"
+                        value={report?.header_image_height || 48}
+                        onChange={e => updateReport({ header_image_height: parseInt(e.target.value) || 48 })}
+                        className="w-14 h-6 text-xs border rounded px-1"
+                        min="16"
+                        max="200"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
@@ -212,6 +226,20 @@ export default function ReportingAGREditor() {
                       <Upload className="w-3 h-3" />Upload image
                       <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload('master_footer_image', e.target.files?.[0])} />
                     </label>
+                  )}
+                  {report?.master_footer_image && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground">Height:</span>
+                      <input
+                        type="number"
+                        value={report?.footer_image_height || 48}
+                        onChange={e => updateReport({ footer_image_height: parseInt(e.target.value) || 48 })}
+                        className="w-14 h-6 text-xs border rounded px-1"
+                        min="16"
+                        max="200"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -345,6 +373,8 @@ export default function ReportingAGREditor() {
                   masterFooter={report?.master_footer_text}
                   headerImage={report?.master_header_image}
                   footerImage={report?.master_footer_image}
+                  headerImageHeight={report?.header_image_height}
+                  footerImageHeight={report?.footer_image_height}
                   showHeaderAll={report?.show_header_all}
                   showFooterAll={report?.show_footer_all}
                   showPageNumbersAll={report?.show_page_numbers_all}

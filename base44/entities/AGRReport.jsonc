@@ -47,6 +47,11 @@
       "type": "string",
       "description": "Optional header image displayed on all pages"
     },
+    "header_image_height": {
+      "type": "number",
+      "description": "Header image max height in pixels",
+      "default": 48
+    },
     "master_footer_text": {
       "type": "string",
       "description": "Universal page footer text"
@@ -54,6 +59,11 @@
     "master_footer_image": {
       "type": "string",
       "description": "Optional footer image displayed on all pages"
+    },
+    "footer_image_height": {
+      "type": "number",
+      "description": "Footer image max height in pixels",
+      "default": 48
     },
     "show_header_all": {
       "type": "boolean",

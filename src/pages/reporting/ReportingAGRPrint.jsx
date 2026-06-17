@@ -125,6 +125,8 @@ export default function ReportingAGRPrint() {
               masterFooter={report?.master_footer_text}
               headerImage={report?.master_header_image}
               footerImage={report?.master_footer_image}
+              headerImageHeight={report?.header_image_height}
+              footerImageHeight={report?.footer_image_height}
               showHeaderAll={report?.show_header_all}
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
