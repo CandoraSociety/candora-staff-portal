@@ -18,6 +18,7 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
       const res = await base44.functions.invoke('generateCoverPage', {
         report_id: reportId,
         type,
+        logo_urls: branding?.logo_urls || [],
         custom_prompt: type === 'front' ? frontPrompt || undefined : backPrompt || undefined
       });
       if (res.data?.url) {
@@ -42,16 +43,20 @@ export default function CoverGenerator({ reportId, report, branding, onUpdate })
 
     return (
       <div className="space-y-3">
-        <Label className="text-xs font-semibold">{label}</Label>
+        <Label className="text-xs font-semibold">{label} (8.5″ × 11″)</Label>
         {imageUrl ? (
-          <div className="relative group rounded-lg overflow-hidden border">
-            <img src={imageUrl} alt={label} className="w-full h-48 object-cover" />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button variant="secondary" size="sm" onClick={() => generateCover(type)} disabled={generating} className="gap-1">
+          <div>
+            <div className="relative group rounded-lg overflow-hidden border bg-slate-100">
+              <div className="aspect-[8.5/11] w-full">
+                <img src={imageUrl} alt={label} className="w-full h-full object-cover" />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" size="sm" onClick={() => generateCover(type)} disabled={generating} className="gap-1">
                 <RefreshCw className="w-3.5 h-3.5" />Regenerate
               </Button>
               <label className="cursor-pointer">
-                <Button variant="secondary" size="sm" className="gap-1" asChild><span><Upload className="w-3.5 h-3.5" />Replace</span></Button>
+                <Button variant="outline" size="sm" className="gap-1" asChild><span><Upload className="w-3.5 h-3.5" />Upload</span></Button>
                 <input type="file" accept="image/*" className="hidden" onChange={e => uploadCover(e, type)} />
               </label>
             </div>

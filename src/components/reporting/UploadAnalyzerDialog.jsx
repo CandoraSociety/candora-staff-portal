@@ -48,9 +48,9 @@ export default function UploadAnalyzerDialog({ open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Analyze Previous AGR</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Analyze AGR</DialogTitle></DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Upload a PDF of a previous Annual General Report to extract its structure, style, and content checklist.</p>
+          <p className="text-sm text-muted-foreground">Upload a PDF of an Annual General Report to extract its structure, style, and content checklist.</p>
 
           {step === 'upload' && (
             <div className="border-2 border-dashed rounded-xl p-8 text-center">

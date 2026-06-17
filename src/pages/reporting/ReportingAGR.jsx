@@ -45,7 +45,7 @@ export default function ReportingAGR() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setShowUpload(true)} className="gap-2">
-            <Upload className="w-4 h-4" />Analyze Previous
+            <Upload className="w-4 h-4" />Analyze AGR
           </Button>
           <Button onClick={() => setShowCreate(true)} className="gap-2">
             <Plus className="w-4 h-4" />New Report
@@ -58,11 +58,11 @@ export default function ReportingAGR() {
           <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
           <h2 className="text-xl font-semibold text-slate-600 mb-2">No annual reports yet</h2>
           <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-            Create a new Annual General Report or analyze a previous year's report to extract its structure.
+            Create a new Annual General Report or analyze an existing report to extract its structure.
           </p>
           <div className="flex items-center justify-center gap-3">
             <Button variant="outline" onClick={() => setShowUpload(true)} className="gap-2">
-              <Upload className="w-4 h-4" />Analyze Previous AGR
+              <Upload className="w-4 h-4" />Analyze AGR
             </Button>
             <Button onClick={() => setShowCreate(true)} className="gap-2">
               <Plus className="w-4 h-4" />New Report

@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { report_id, type, reference_image_url, custom_prompt } = await req.json();
+    const { report_id, type, reference_image_url, custom_prompt, logo_urls } = await req.json();
     if (!report_id || !type) return Response.json({ error: 'report_id and type required' }, { status: 400 });
     if (!['front', 'back'].includes(type)) return Response.json({ error: 'type must be front or back' }, { status: 400 });
 
@@ -15,6 +15,11 @@ Deno.serve(async (req) => {
 
     const brandingList = await base44.asServiceRole.entities.AGRBranding.filter({ report_id });
     const branding = brandingList[0] || {};
+    const logos = (logo_urls && logo_urls.length > 0) ? logo_urls : (branding.logo_urls || []);
+
+    const referenceUrls = [];
+    if (reference_image_url) referenceUrls.push(reference_image_url);
+    if (logos.length > 0) referenceUrls.push(logos[0]);
 
     let prompt;
     if (type === 'front') {
@@ -26,19 +31,20 @@ ${report.description ? 'Subtitle: ' + report.description : ''}
 ${branding.tagline ? 'Tagline: ' + branding.tagline : ''}
 Primary color: ${branding.primary_color || '#1a2744'}
 Secondary color: ${branding.secondary_color || '#c8952e'}
-Style: Clean, modern, professional non-profit annual report cover. No text overlay needed — use elegant abstract patterns or photography that conveys community impact and hope.`;
+The organization's logo must be prominently featured on the cover.
+Style: Full-bleed 8.5"×11" portrait layout. Clean, modern non-profit annual report cover. Elegant abstract patterns or photography conveying community impact and hope. No heavy text — the cover should be primarily visual with the logo as the focal point.`;
     } else {
       prompt = custom_prompt || `Design a professional back cover for a non-profit annual report.
 Organization: ${branding.legal_name || branding.common_name || ''}
 ${branding.address ? 'Address: ' + branding.address : ''}
 ${branding.website ? 'Website: ' + branding.website : ''}
 Colors: ${branding.primary_color || '#1a2744'}, ${branding.secondary_color || '#c8952e'}
-Style: Clean, minimal back cover design. Subtle branding elements only. No heavy text — the content will be overlaid separately.${branding.subsidiary_logos?.length ? ' Room for subsidiary/funder logos.' : ''}`;
+Style: Full-bleed 8.5"×11" portrait layout. Clean, minimal back cover design with subtle branding elements.${branding.subsidiary_logos?.length ? ' Room for subsidiary/funder logos.' : ''}`;
     }
 
     const result = await base44.integrations.Core.GenerateImage({
       prompt,
-      existing_image_urls: reference_image_url ? [reference_image_url] : undefined
+      existing_image_urls: referenceUrls.length > 0 ? referenceUrls : undefined
     });
 
     const updateField = type === 'front' ? 'cover_image' : 'back_cover_image';

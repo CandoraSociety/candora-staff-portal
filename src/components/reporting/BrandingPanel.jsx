@@ -9,6 +9,7 @@ export default function BrandingPanel({ reportId }) {
   const [branding, setBranding] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [form, setForm] = useState({
     logo_urls: [], subsidiary_logos: [], common_name: '', legal_name: '',
     tagline: '', primary_color: '#1a2744', secondary_color: '#c8952e', accent_color: '#2b2de8',
@@ -52,6 +53,7 @@ export default function BrandingPanel({ reportId }) {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaved(false);
     const data = { ...form, report_id: reportId };
     if (branding) {
       await base44.entities.AGRBranding.update(branding.id, data);
@@ -60,6 +62,8 @@ export default function BrandingPanel({ reportId }) {
       setBranding(created);
     }
     setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
@@ -161,9 +165,12 @@ export default function BrandingPanel({ reportId }) {
             <Input value={form.footer_text} onChange={e => setForm(f => ({ ...f, footer_text: e.target.value }))} placeholder="e.g. © 2025 Candora Society. All rights reserved." className="mt-1 text-xs" />
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="gap-2" size="sm">
-            <Save className="w-3.5 h-3.5" />{saving ? 'Saving...' : 'Save Branding'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleSave} disabled={saving} className="gap-2" size="sm">
+              <Save className="w-3.5 h-3.5" />{saving ? 'Saving...' : 'Save Branding'}
+            </Button>
+            {saved && <span className="text-xs text-green-600 font-medium animate-in fade-in">✓ Saved</span>}
+          </div>
         </div>
       )}
     </div>
