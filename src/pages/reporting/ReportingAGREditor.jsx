@@ -151,8 +151,11 @@ export default function ReportingAGREditor() {
               <SelectItem value="published">Published</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" className="gap-1 lg:hidden" onClick={() => setShowPreview(!showPreview)}>
+            <Eye className="w-3.5 h-3.5" />{showPreview ? 'Hide Preview' : 'Preview'}
+          </Button>
           <Link to={`/reporting/agr/${id}/preview`}>
-            <Button variant="outline" size="sm" className="gap-1"><Eye className="w-3.5 h-3.5" />Preview</Button>
+            <Button variant="outline" size="sm" className="gap-1"><Eye className="w-3.5 h-3.5" />Full Preview</Button>
           </Link>
           <Link to={`/reporting/agr/${id}/print`}>
             <Button variant="outline" size="sm" className="gap-1"><Printer className="w-3.5 h-3.5" />Print</Button>
@@ -276,8 +279,8 @@ export default function ReportingAGREditor() {
           <DataPanel reportId={id} sections={sections} />
         </div>
 
-        {/* Right: Preview */}
-        <div className="hidden lg:block">
+        {/* Right: Preview — always on desktop, toggleable on mobile */}
+        <div className={showPreview ? 'block lg:block' : 'hidden lg:block'}>
           <div className="sticky top-24 space-y-4">
             <TemplatePreview analysis={analysis} />
             {analysis?.source_file_url && (
@@ -287,9 +290,34 @@ export default function ReportingAGREditor() {
             )}
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
             <div className="border rounded-xl bg-white max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
-              {/* Front cover — full bleed */}
-              {report?.cover_image && (
-                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+              {/* Front cover — full bleed with overlays */}
+              {report?.cover_image ? (
+                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative">
+                  <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                    {branding?.logo_urls?.[0] && (
+                      <img src={branding.logo_urls[0]} alt="Logo" className="h-12 md:h-16 object-contain mb-4 drop-shadow-lg" />
+                    )}
+                    <h3 className="text-sm md:text-lg font-heading font-bold text-white drop-shadow-lg mb-2">{report?.title}</h3>
+                    {branding?.tagline && <p className="text-xs text-white/90 drop-shadow">{branding.tagline}</p>}
+                    {report?.year && (
+                      <p className="text-xs text-white/80 font-medium drop-shadow mt-2">April 1, {report.year} – March 31, {report.year + 1}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative" style={{ backgroundColor: branding?.primary_color || '#1a2744' }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    {branding?.logo_urls?.[0] && (
+                      <img src={branding.logo_urls[0]} alt="Logo" className="h-12 md:h-16 object-contain mb-4 drop-shadow-lg" />
+                    )}
+                    <h3 className="text-sm md:text-lg font-heading font-bold text-white drop-shadow-lg mb-2">{report?.title}</h3>
+                    {branding?.tagline && <p className="text-xs text-white/90 drop-shadow">{branding.tagline}</p>}
+                    {report?.year && (
+                      <p className="text-xs text-white/80 font-medium drop-shadow mt-2">April 1, {report.year} – March 31, {report.year + 1}</p>
+                    )}
+                  </div>
+                </div>
               )}
               {/* Inside front cover — full bleed */}
               {report?.inside_front_cover_image && (
@@ -344,10 +372,41 @@ export default function ReportingAGREditor() {
               {report?.inside_back_cover_image && (
                 <div className="-mx-6 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
               )}
-              {/* Back cover */}
-              {report?.back_cover_image && (
-                <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
-              )}
+              {/* Back cover — full bleed with contact info overlay */}
+              {report?.back_cover_image ? (
+                <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative">
+                  <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+                    <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
+                      {branding?.legal_name || branding?.common_name || ''}
+                    </p>
+                    {(branding?.address || branding?.address_line1) && (
+                      <p className="text-xs text-white/90 drop-shadow">
+                        {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {branding?.website && (
+                      <p className="text-xs text-white/90 drop-shadow mt-1">{branding.website}</p>
+                    )}
+                  </div>
+                </div>
+              ) : branding ? (
+                <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
+                      {branding.legal_name || branding.common_name || ''}
+                    </p>
+                    {(branding.address || branding.address_line1) && (
+                      <p className="text-xs text-white/90 drop-shadow">
+                        {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
+                      </p>
+                    )}
+                    {branding.website && (
+                      <p className="text-xs text-white/90 drop-shadow mt-1">{branding.website}</p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
               </div>
             </div>
           </div>
