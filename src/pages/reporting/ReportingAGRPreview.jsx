@@ -176,12 +176,41 @@ export default function ReportingAGRPreview() {
           <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
         </div>
       )}
-      {/* Back cover — truly full bleed */}
-      {report?.back_cover_image && (
+      {/* Back cover — full bleed with contact info overlay */}
+      {report?.back_cover_image ? (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
           <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
+            <p className="text-xl md:text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
+              {branding?.legal_name || branding?.common_name || ''}
+            </p>
+            {(branding?.address || branding?.address_line1) && (
+              <p className="text-sm md:text-base text-white/90 drop-shadow">
+                {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {branding?.website && (
+              <p className="text-sm md:text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
+            )}
+          </div>
         </div>
-      )}
+      ) : branding ? (
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+            <p className="text-xl md:text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
+              {branding.legal_name || branding.common_name || ''}
+            </p>
+            {(branding.address || branding.address_line1) && (
+              <p className="text-sm md:text-base text-white/90 drop-shadow">
+                {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {branding?.website && (
+              <p className="text-sm md:text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

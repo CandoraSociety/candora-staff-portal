@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { report_id, type, reference_image_url, custom_prompt, logo_urls, subsidiary_logo_urls, funder_logo_urls, front_cover_url } = await req.json();
+    const { report_id, type, reference_image_url, custom_prompt, front_cover_url } = await req.json();
     if (!report_id || !type) return Response.json({ error: 'report_id and type required' }, { status: 400 });
     if (!['front', 'inside_front', 'inside_back', 'back'].includes(type)) return Response.json({ error: 'type must be front, inside_front, inside_back, or back' }, { status: 400 });
 
@@ -15,94 +15,107 @@ Deno.serve(async (req) => {
 
     const brandingList = await base44.asServiceRole.entities.AGRBranding.filter({ report_id });
     const branding = brandingList[0] || {};
-    const logos = (logo_urls && logo_urls.length > 0) ? logo_urls : (branding.logo_urls || []);
 
+    // Build reference images for style only — NEVER include logos.
+    // AI cannot faithfully reproduce logos; the real logo is overlaid in HTML on the front/back covers.
+    // Only use: the current cover image (for regeneration) and front cover (for thematic consistency).
     const referenceUrls = [];
     if (reference_image_url) referenceUrls.push(reference_image_url);
-    // Inside covers + back cover get front cover as a style reference for thematic consistency
-    if ((type === 'inside_front' || type === 'inside_back' || type === 'back') && front_cover_url) referenceUrls.push(front_cover_url);
-    // Brand logos for front + inside covers only — back cover is text-only, no logo
-    if (type !== 'back' && logos.length > 0) referenceUrls.push(...logos.slice(0, 2));
-    if (subsidiary_logo_urls?.length) referenceUrls.push(...subsidiary_logo_urls.slice(0, 2));
-    if (funder_logo_urls?.length) referenceUrls.push(...funder_logo_urls.slice(0, 2));
-
-    const NO_MOCKUP = 'CRITICAL INSTRUCTION: Generate a flat graphic design, not a photograph of a physical object. NO 3D perspective, NO shadows underneath, NO desk/table/wall backgrounds, NO curled page corners, NO book spines, NO mockup frames. The entire output must be the cover design itself — just the artwork, edge to edge.';
+    if ((type === 'inside_front' || type === 'inside_back' || type === 'back') && front_cover_url) {
+      referenceUrls.push(front_cover_url);
+    }
 
     const primaryColor = branding.primary_color || '#1a2744';
     const secondaryColor = branding.secondary_color || '#c8952e';
     const accentColor = branding.accent_color || '#2b2de8';
-    const colorPalette = `Primary: ${primaryColor} — use as the dominant background / large-area color. Secondary: ${secondaryColor} — use as an accent/highlight. Accent: ${accentColor} — use sparingly for fine details and contrast.`;
+
+    const FULL_BLEED = [
+      'CRITICAL: This image is an 8.5×11 inch full-bleed cover page.',
+      'The design MUST fill every pixel from edge to edge — NO white borders, NO margins, NO empty space at edges.',
+      'Extend all backgrounds, gradients, and patterns all the way to every edge of the canvas.',
+      'NO mockup style — NO 3D perspective, NO shadows underneath, NO desk/table/wall, NO curled corners, NO book spines.',
+      'Generate a flat 2D graphic that IS the cover itself.',
+    ].join(' ');
+
+    const colorPalette = [
+      `Primary color: ${primaryColor} — use as the dominant background color.`,
+      `Secondary color: ${secondaryColor} — use for highlights and accents.`,
+      `Accent color: ${accentColor} — use sparingly for fine details.`,
+      'Use ONLY these three colors plus their tints/shades. NO other colors.',
+    ].join(' ');
+
+    const NO_TEXT = [
+      'DO NOT include any text, letters, words, numbers, or characters of any kind.',
+      'DO NOT include the organization name, report title, year, tagline, or any other text.',
+      'Text will be overlaid separately in HTML with perfect accuracy.',
+      'If you include any text it will conflict with the HTML overlay and look broken.',
+    ].join(' ');
+
+    const NO_LOGO = [
+      'DO NOT include a logo, icon, emblem, or symbol of any kind.',
+      'The real logo will be overlaid in HTML with pixel-perfect accuracy.',
+      'Any logo you generate will look distorted or wrong compared to the real one and ruin the cover.',
+    ].join(' ');
 
     const addl = custom_prompt ? '\n\nADDITIONAL INSTRUCTIONS (these take priority): ' + custom_prompt : '';
 
     const prompts = {
-      front: `${NO_MOCKUP}
+      front: `${FULL_BLEED}
 
-Create a non-profit annual report front cover as a flat 2D graphic design using the organization's exact brand identity:
+Create a non-profit annual report front cover BACKGROUND as a flat 2D graphic design.
 
-BRAND COLOR PALETTE (use ONLY these colors for the entire design):
 ${colorPalette}
 
-• Organization: ${branding.common_name || report.title}
-• Title: ${report.title}
-• Year: ${report.year}
-${branding.tagline ? '• Tagline: ' + branding.tagline : ''}
+${NO_TEXT}
 
-The brand logo is provided as a reference image — reproduce it faithfully and prominently in the design. The subsidiary/funder reference images show additional brand assets to match style.
+${NO_LOGO}
 
-Style: Modern non-profit annual report cover. Elegant abstract patterns or gradients using the EXACT brand colors above. Portrait orientation. The design should be a clean 2D composition that fills the entire canvas — use the Primary color for the dominant background, the Secondary color for highlights/flourishes, and the Accent color for fine details. The brand logo should be the focal point, with title and year as supporting text.${addl}`,
+Design: A striking, professional background for an annual report front cover. Use elegant abstract gradients, flowing geometric patterns, or sophisticated color fields. The Primary color should dominate as the main background. Use the Secondary color for sweeping curves, diagonal bands, or organic shapes that create visual movement. Use the Accent color for very subtle dot patterns, thin lines, or tiny highlights.
 
-      inside_front: `${NO_MOCKUP}
+This should look like a polished, modern non-profit annual report cover — but it is ONLY the background layer. It must stand on its own as a beautiful design while leaving the center area relatively unobstructed for the logo and title overlay (which will be added separately in HTML). Portrait orientation.${addl}`,
 
-Create a subtle inside front cover for a non-profit annual report as a flat 2D graphic design using the organization's exact brand identity:
+      inside_front: `${FULL_BLEED}
 
-BRAND COLOR PALETTE (use ONLY these colors for the entire design):
+Create a subtle inside front cover BACKGROUND for a non-profit annual report as a flat 2D graphic design.
+
 ${colorPalette}
 
-• Organization (exact name, do not alter): ${branding.common_name || report.title}
+${NO_TEXT}
 
-The brand logo is provided as a reference image — use it subtly, perhaps small in a corner.
+${NO_LOGO}
 
-CRITICAL: This should be noticeably simpler and quieter than the front cover. Carry forward the color palette and general mood, but use minimal, understated imagery — do NOT replicate the front cover's visual motifs. Think of it as a quiet transition page.
+Design: Minimal and understated. Use a very faint wash of the Primary color — almost white with just a hint of the brand. Maybe a gentle gradient that transitions from the Primary tint at one edge to nearly transparent. The Secondary color can appear as a single thin decorative line or a very subtle geometric detail in one corner. Mostly empty negative space.
 
-Style: Minimal, elegant inside cover. Use the Primary color as a very faint wash or subtle gradient. Mostly empty negative space. Small logo in bottom corner. Clean, quiet, understated. Portrait orientation.${addl}`,
+This is a quiet transitional page inside the report — it should feel calm, elegant, and understated. The front cover style reference is provided so you can match the overall mood, but keep this dramatically simpler.${addl}`,
 
-      inside_back: `${NO_MOCKUP}
+      inside_back: `${FULL_BLEED}
 
-Create a subtle inside back cover for a non-profit annual report as a flat 2D graphic design using the organization's exact brand identity:
+Create a subtle inside back cover BACKGROUND for a non-profit annual report as a flat 2D graphic design.
 
-BRAND COLOR PALETTE (use ONLY these colors for the entire design):
 ${colorPalette}
 
-• Organization (exact name, do not alter): ${branding.common_name || report.title}
+${NO_TEXT}
 
-The brand logo is provided as a reference image — use it subtly, perhaps small in a corner.
+${NO_LOGO}
 
-CRITICAL: This should be noticeably simpler and quieter than the front cover. Carry forward the color palette and general mood, but use minimal, understated imagery — do NOT replicate the front cover's visual motifs.
+Design: Minimal and understated. Use a very faint wash of the Primary color — almost white with just a hint of the brand. Maybe a gentle gradient that transitions from the Primary tint at one edge to nearly transparent. The Secondary color can appear as a single thin decorative line or a very subtle geometric detail in one corner. Mostly empty negative space.
 
-Style: Minimal, elegant inside back cover. Use the Primary color as a very faint wash or subtle pattern. Mostly empty negative space. Small logo in bottom corner. Clean, quiet, understated. Portrait orientation.${addl}`,
+This is a quiet transitional page inside the report — it should feel calm, elegant, and understated. The front cover style reference is provided so you can match the overall mood, but keep this dramatically simpler.${addl}`,
 
-      back: `${NO_MOCKUP}
+      back: `${FULL_BLEED}
 
-Create a non-profit annual report back cover as a flat 2D graphic design. The front cover image is provided as a style reference — match its color mood and overall aesthetic, but keep this much simpler.
+Create a non-profit annual report back cover BACKGROUND as a flat 2D graphic design.
 
-BRAND COLOR PALETTE (use ONLY these colors for the entire design):
 ${colorPalette}
 
-ABSOLUTELY NO LOGO: Do not include the organization logo on the back cover. This page is text-only — no logo fragments, no logo shapes, nothing from the logo at all.
+${NO_LOGO}
+The real organization name, address, and website will be overlaid in HTML with perfect accuracy — do NOT attempt to render any text yourself.
 
-CRITICAL — TEXT TO RENDER EXACTLY (copy character-by-character, verify each letter):
-${branding.legal_name ? '• Organization: "' + branding.legal_name + '"' : branding.common_name ? '• Organization: "' + branding.common_name + '"' : ''}
-${branding.address ? '• Address: "' + branding.address + '"' : (branding.address_line1 ? '• Address: "' + [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code, branding.address_country].filter(Boolean).join(', ') + '"' : '')}
-${branding.website ? '• Website: "' + branding.website + '"' : ''}
+${NO_TEXT}
 
-SPELLING CHECKLIST — before finalizing, verify EVERY character:
-☐ "Edmonton" is E-d-m-o-n-t-o-n (not Edmondon, Edmenton, Edmunton, or any other variation)
-☐ "Candora" is C-a-n-d-o-r-a
-☐ Every comma, period, and space in the address matches exactly
-☐ The website URL has correct slashes, dots, and no extra characters
+Design: A simple closing page background. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear only as extremely thin decorative lines or very tiny accents. Keep the center area clean for the overlaid contact details.
 
-This is a text-on-background design. Render the organization name in a clean readable font centered on the page, with the address and website below it in smaller text. Use the Primary color as a subtle wash or gradient background. The Secondary and Accent colors may appear as thin decorative lines or very small accents. Nothing else — no abstract shapes, no patterns, no imagery. Think of it as a simple closing page with just the essential contact details.${branding.subsidiary_logos?.length || branding.funder_logos?.length ? ' Leave room at the very bottom for small funder/subsidiary logos.' : ''}${addl}`
+The front cover image is provided as a style reference — match the color mood and overall aesthetic, but keep this dramatically simpler. This is the closing page — it should feel like a quiet, elegant sign-off.${addl}`
     };
 
     const result = await base44.integrations.Core.GenerateImage({
