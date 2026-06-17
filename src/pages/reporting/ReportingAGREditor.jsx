@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import SectionEditor from '@/components/reporting/SectionEditor';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
@@ -112,6 +112,16 @@ export default function ReportingAGREditor() {
     setGeneratingFooter(false);
   };
 
+  const handleImageUpload = async (field, file) => {
+    if (!file) return;
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await updateReport({ [field]: file_url });
+    } catch {}
+  };
+
+  const handleRemoveImage = (field) => updateReport({ [field]: null });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32">
@@ -164,17 +174,43 @@ export default function ReportingAGREditor() {
             <div className="grid sm:grid-cols-2 gap-3 pt-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold">Header Text</span>
+                  <span className="text-xs font-semibold">Header</span>
                   <Button variant="ghost" size="sm" onClick={handleGenerateHeaderText} disabled={generatingHeader} className="text-xs gap-1 h-6"><Sparkles className="w-3 h-3" />{generatingHeader ? '...' : 'AI'}</Button>
                 </div>
-                <Input value={report?.master_header_text || ''} onChange={e => updateReport({ master_header_text: e.target.value })} placeholder="e.g. Candora Society — Annual Report 2025" className="text-xs" />
+                <Input value={report?.master_header_text || ''} onChange={e => updateReport({ master_header_text: e.target.value })} placeholder="Header text" className="text-xs" />
+                <div className="flex items-center gap-2 mt-1.5">
+                  {report?.master_header_image ? (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <img src={report.master_header_image} alt="Header" className="h-6 object-contain rounded" />
+                      <button onClick={() => handleRemoveImage('master_header_image')} className="text-destructive hover:underline"><X className="w-3 h-3" /></button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline">
+                      <Upload className="w-3 h-3" />Upload image
+                      <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload('master_header_image', e.target.files?.[0])} />
+                    </label>
+                  )}
+                </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold">Footer Text</span>
+                  <span className="text-xs font-semibold">Footer</span>
                   <Button variant="ghost" size="sm" onClick={handleGenerateFooterText} disabled={generatingFooter} className="text-xs gap-1 h-6"><Sparkles className="w-3 h-3" />{generatingFooter ? '...' : 'AI'}</Button>
                 </div>
-                <Input value={report?.master_footer_text || ''} onChange={e => updateReport({ master_footer_text: e.target.value })} placeholder="e.g. Candora Society of Edmonton · www.candorasociety.com" className="text-xs" />
+                <Input value={report?.master_footer_text || ''} onChange={e => updateReport({ master_footer_text: e.target.value })} placeholder="Footer text" className="text-xs" />
+                <div className="flex items-center gap-2 mt-1.5">
+                  {report?.master_footer_image ? (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <img src={report.master_footer_image} alt="Footer" className="h-6 object-contain rounded" />
+                      <button onClick={() => handleRemoveImage('master_footer_image')} className="text-destructive hover:underline"><X className="w-3 h-3" /></button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline">
+                      <Upload className="w-3 h-3" />Upload image
+                      <input type="file" accept="image/*" className="hidden" onChange={e => handleImageUpload('master_footer_image', e.target.files?.[0])} />
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-4 text-xs">
@@ -295,6 +331,8 @@ export default function ReportingAGREditor() {
                   pageNumber={i + 1}
                   masterHeader={report?.master_header_text}
                   masterFooter={report?.master_footer_text}
+                  headerImage={report?.master_header_image}
+                  footerImage={report?.master_footer_image}
                   showHeaderAll={report?.show_header_all}
                   showFooterAll={report?.show_footer_all}
                   showPageNumbersAll={report?.show_page_numbers_all}

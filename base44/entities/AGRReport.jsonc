@@ -41,11 +41,19 @@
     },
     "master_header_text": {
       "type": "string",
-      "description": "Universal page header"
+      "description": "Universal page header text"
+    },
+    "master_header_image": {
+      "type": "string",
+      "description": "Optional header image displayed on all pages"
     },
     "master_footer_text": {
       "type": "string",
-      "description": "Universal page footer"
+      "description": "Universal page footer text"
+    },
+    "master_footer_image": {
+      "type": "string",
+      "description": "Optional footer image displayed on all pages"
     },
     "show_header_all": {
       "type": "boolean",

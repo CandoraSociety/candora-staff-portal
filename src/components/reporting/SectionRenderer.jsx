@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
-export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
+export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, headerImage, footerImage, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const pc = branding?.primary_color || '#1a2744';
@@ -18,6 +18,7 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
 
   const headerContent = (
     <div className="text-xs text-muted-foreground pb-2 mb-4" style={{ borderBottom: `1px solid ${pc}20` }}>
+      {showHeader && headerImage && <img src={headerImage} alt="Header" className="w-full mb-1 object-contain max-h-16" />}
       {showHeader && masterHeader && <span>{masterHeader}</span>}
       {showPageNum && pageNumber && <span className="float-right">{pageNumber}</span>}
     </div>
@@ -27,6 +28,7 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
     <div className="text-xs text-muted-foreground pt-2 mt-6" style={{ borderTop: `1px solid ${pc}20` }}>
       {showFooter && masterFooter && <span>{masterFooter}</span>}
       {showPageNum && !showHeader && pageNumber && <span className="float-right">{pageNumber}</span>}
+      {showFooter && footerImage && <img src={footerImage} alt="Footer" className="w-full mt-1 object-contain max-h-16" />}
     </div>
   );
 

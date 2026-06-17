@@ -127,6 +127,8 @@ export default function ReportingAGRPreview() {
               pageNumber={i + 1}
               masterHeader={report?.master_header_text}
               masterFooter={report?.master_footer_text}
+              headerImage={report?.master_header_image}
+              footerImage={report?.master_footer_image}
               showHeaderAll={report?.show_header_all}
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
