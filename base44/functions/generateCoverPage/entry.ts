@@ -16,13 +16,16 @@ Deno.serve(async (req) => {
     const brandingList = await base44.asServiceRole.entities.AGRBranding.filter({ report_id });
     const branding = brandingList[0] || {};
 
-    // Build reference images for style only — NEVER include logos.
-    // AI cannot faithfully reproduce logos; the real logo is overlaid in HTML on the front/back covers.
-    // Only use: the current cover image (for regeneration) and front cover (for thematic consistency).
+    // Build reference images.
+    // Front / inside covers: current image + front cover for style. NO logos (HTML overlay).
+    // Back cover: include logo URLs as reference so the AI can incorporate them.
     const referenceUrls = [];
     if (reference_image_url) referenceUrls.push(reference_image_url);
     if ((type === 'inside_front' || type === 'inside_back' || type === 'back') && front_cover_url) {
       referenceUrls.push(front_cover_url);
+    }
+    if (type === 'back' && branding.logo_urls?.length) {
+      referenceUrls.push(...branding.logo_urls);
     }
 
     const primaryColor = branding.primary_color || '#1a2744';
@@ -56,6 +59,28 @@ Deno.serve(async (req) => {
       'The real logo will be overlaid in HTML with pixel-perfect accuracy.',
       'Any logo you generate will look distorted or wrong compared to the real one and ruin the cover.',
     ].join(' ');
+
+    // Build address string for back cover
+    const addressParts = [
+      branding.address_line1, branding.address_line2,
+      branding.address_city, branding.address_province,
+      branding.address_postal_code, branding.address_country
+    ].filter(Boolean);
+    const addressStr = addressParts.join(', ') || branding.address || '';
+    const legalName = branding.legal_name || branding.common_name || '';
+    const website = branding.website || '';
+
+    const EXACT_TEXT = [
+      'USE THIS EXACT TEXT — do not change, paraphrase, or invent anything:',
+      legalName ? `Organization name: "${legalName}"` : '',
+      addressStr ? `Address: "${addressStr}"` : '',
+      website ? `Website: "${website}"` : '',
+      'VERIFY character-by-character that the text on the image matches these exact strings.',
+    ].filter(Boolean).join('\n');
+
+    const PRESERVE_STYLE = reference_image_url
+      ? 'CRITICAL: You are REFINING the existing back cover image. Preserve the exact same composition, layout, colors, and imagery — ONLY add the requested text/logo additions on top without changing anything else.'
+      : '';
 
     const addl = custom_prompt ? '\n\nADDITIONAL INSTRUCTIONS (these take priority): ' + custom_prompt : '';
 
@@ -108,9 +133,13 @@ Create a non-profit annual report back cover as a flat 2D graphic design.
 
 ${colorPalette}
 
-Include the organization's legal name, full address, and website as clean, legible text on the cover.
+${PRESERVE_STYLE}
 
-Design: A simple closing page. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear as elegant decorative lines or accents. The organization's full contact details should be prominently displayed in a clean layout.
+${EXACT_TEXT}
+
+Include the organization's logo (use the reference logo image provided) and display it alongside the exact contact text above.
+
+Design: A simple closing page. Use the Primary color as a very subtle wash or gentle gradient. The Secondary and Accent colors may appear as elegant decorative lines or accents. Display the logo, name, address, and website in a clean, professional layout.
 
 The front cover image is provided as a style reference — match the color mood and overall aesthetic, but keep this dramatically simpler. This is the closing page — it should feel like a quiet, elegant sign-off.${addl}`
     };
