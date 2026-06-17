@@ -63,22 +63,29 @@ export default function ReportingAGRPrint() {
       )}
 
       <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
-        {/* Front cover — full bleed */}
-        {report?.cover_image ? (
-          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
-        ) : branding ? (
-          <div className="print-break p-8 text-center">
-            {branding.logo_urls && branding.logo_urls[0] && (
-              <img src={branding.logo_urls[0]} alt="Logo" className="h-20 mx-auto mb-4 object-contain" />
+        {/* Front cover — full bleed with required info overlay */}
+        <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
+          {report?.cover_image ? (
+            <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
+          )}
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.3)' : 'transparent' }}>
+            {branding?.logo_urls?.[0] && (
+              <img src={branding.logo_urls[0]} alt="Logo" className="h-24 object-contain mb-6 drop-shadow-lg" />
             )}
-            <h1 className="text-3xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>
-              {report?.title}
-            </h1>
-            {branding.tagline && <p className="text-lg text-muted-foreground mt-2">{branding.tagline}</p>}
-            <p className="text-sm mt-6" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>
-            <p className="text-sm text-muted-foreground">Fiscal Year {report?.year}</p>
+            <h1 className="text-3xl font-heading font-bold text-white drop-shadow-lg mb-4">{report?.title || 'Annual Report'}</h1>
+            {branding?.tagline && <p className="text-lg text-white/90 mb-6 drop-shadow">{branding.tagline}</p>}
+            {report?.year && (
+              <p className="text-lg text-white/90 font-medium drop-shadow">
+                April 1, {report.year} – March 31, {report.year + 1}
+              </p>
+            )}
+            {branding?.common_name && (
+              <p className="text-sm text-white/80 mt-6 drop-shadow">{branding.common_name}</p>
+            )}
           </div>
-        ) : null}
+        </div>
 
         {/* Inside front cover — full bleed */}
         {report?.inside_front_cover_image && (
