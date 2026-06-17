@@ -62,16 +62,16 @@ export default function ReportingAGRPreview() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden">
-        {/* Front cover — full bleed */}
-        {report?.cover_image && (
-          <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
-        )}
-        {/* Inside front cover — full bleed */}
-        {report?.inside_front_cover_image && (
-          <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
-        )}
+      {/* Front cover — truly full bleed */}
+      {report?.cover_image && (
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.cover_image} alt="Cover" className="w-full h-full object-cover" /></div>
+      )}
+      {/* Inside front cover — truly full bleed */}
+      {report?.inside_front_cover_image && (
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+      )}
 
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden">
         <div className="p-8 space-y-6">
         {/* Branding header — only if no cover image */}
         {!report?.cover_image && branding && (
@@ -147,16 +147,17 @@ export default function ReportingAGRPreview() {
           </div>
         )}
 
-        {/* Inside back cover — full bleed */}
-        {report?.inside_back_cover_image && (
-          <div className="-mx-8 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
-        )}
-        {/* Back cover — full bleed */}
-        {report?.back_cover_image && (
-          <div className="-mx-8 -mb-8 aspect-[8.5/11] overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
-        )}
         </div>
       </div>
+
+      {/* Inside back cover — truly full bleed */}
+      {report?.inside_back_cover_image && (
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+      )}
+      {/* Back cover — truly full bleed */}
+      {report?.back_cover_image && (
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+      )}
     </div>
   );
 }
