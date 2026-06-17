@@ -89,22 +89,25 @@ export default function ReportingAGRPreview() {
           </div>
         )}
 
-        {/* Table of Contents — full page */}
-        {sections.length > 0 && (
-          <div className="max-w-4xl mx-auto aspect-[8.5/11] bg-white rounded-xl shadow-sm border flex flex-col justify-center p-16">
-            <h3 className="text-2xl font-heading font-bold mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-            <div className="space-y-1">
-              {sections.map((s, i) => (
-                <a key={s.id} href={`#section-${s.id}`} className="flex items-center gap-4 text-base py-2 transition-colors hover:bg-slate-50 rounded px-3 -mx-3" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                  <span className="font-bold w-8 text-right" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                  <span>{s.title || 'Untitled'}</span>
-                  <span className="flex-1 border-b border-dotted mx-3 opacity-30" />
-                  <span className="text-xs opacity-50">{i + 1}</span>
-                </a>
-              ))}
+        {/* Table of Contents — full page, always fully visible */}
+        {sections.length > 0 && (() => {
+          const tocPage = 1 + (report?.cover_image ? 1 : 0) + (report?.inside_front_cover_image ? 1 : 0);
+          return (
+            <div className="max-w-4xl mx-auto min-h-[80vh] bg-white rounded-xl shadow-sm border flex flex-col justify-center p-16">
+              <h3 className="text-2xl font-heading font-bold mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
+              <div className="space-y-1">
+                {sections.map((s, i) => (
+                  <a key={s.id} href={`#section-${s.id}`} className="flex items-center gap-4 text-base py-2 transition-colors hover:bg-slate-50 rounded px-3 -mx-3" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                    <span className="font-bold w-8 text-right" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
+                    <span>{s.title || 'Untitled'}</span>
+                    <span className="flex-1 border-b border-dotted mx-3 opacity-30" />
+                    <span className="text-xs opacity-50">{tocPage + 1 + i}</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Sections */}
         {sections.map((section, i) => (

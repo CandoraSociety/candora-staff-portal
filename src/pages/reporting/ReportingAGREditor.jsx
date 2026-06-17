@@ -313,22 +313,25 @@ export default function ReportingAGREditor() {
                 </div>
               )}
 
-              {/* Table of Contents — full page */}
-              {sections.length > 0 && (
-                <div className="aspect-[8.5/11] w-full flex flex-col justify-center p-8">
-                  <h4 className="text-xl font-heading font-bold mb-6" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h4>
-                  <div className="space-y-0.5">
-                    {sections.map((s, i) => (
-                      <div key={s.id} className="flex items-center gap-3 text-sm py-1.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                        <span className="font-bold w-6 text-right shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                        <span className="truncate">{s.title || 'Untitled'}</span>
-                        <span className="flex-1 border-b border-dotted opacity-30" />
-                        <span className="text-xs opacity-50 shrink-0">{i + 1}</span>
-                      </div>
-                    ))}
+              {/* Table of Contents — full page, always fully visible */}
+              {sections.length > 0 && (() => {
+                const tocPage = 1 + (report?.cover_image ? 1 : 0) + (report?.inside_front_cover_image ? 1 : 0);
+                return (
+                  <div className="min-h-[60vh] w-full flex flex-col justify-center p-8">
+                    <h4 className="text-xl font-heading font-bold mb-6" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h4>
+                    <div className="space-y-0.5">
+                      {sections.map((s, i) => (
+                        <div key={s.id} className="flex items-center gap-3 text-sm py-1.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                          <span className="font-bold w-6 text-right shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
+                          <span className="truncate">{s.title || 'Untitled'}</span>
+                          <span className="flex-1 border-b border-dotted opacity-30" />
+                          <span className="text-xs opacity-50 shrink-0">{tocPage + 1 + i}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Sections */}
               {sections.map((section, i) => (
