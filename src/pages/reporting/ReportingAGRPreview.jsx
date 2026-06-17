@@ -84,7 +84,9 @@ export default function ReportingAGRPreview() {
       </div>
       {/* Inside front cover — truly full bleed */}
       {report?.inside_front_cover_image && (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
+          <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" />
+        </div>
       )}
 
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -168,11 +170,15 @@ export default function ReportingAGRPreview() {
 
       {/* Inside back cover — truly full bleed */}
       {report?.inside_back_cover_image && (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
+          <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+        </div>
       )}
       {/* Back cover — truly full bleed */}
       {report?.back_cover_image && (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden"><img src={report.back_cover_image} alt="Back Cover" className="w-full h-full object-cover" /></div>
+        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
+          <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+        </div>
       )}
     </div>
   );
