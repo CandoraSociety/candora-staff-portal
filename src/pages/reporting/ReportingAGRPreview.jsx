@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer, ChevronDown, FileText } from 'lucide-react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
+import StyledCoverPreview from '@/components/reporting/CoverPreview';
 
 export default function ReportingAGRPreview() {
   const { id } = useParams();
@@ -76,28 +77,14 @@ export default function ReportingAGRPreview() {
         </div>
       )}
 
-      {/* Front cover — full bleed with manual overlay text */}
-      <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-        {report?.cover_image ? (
-          <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
-        )}
-        {report?.front_cover_text && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.25)' : 'transparent' }}>
-            <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.front_cover_text}</p>
-          </div>
-        )}
+      {/* Front cover — styled overlay */}
+      <div className="max-w-4xl mx-auto">
+        <StyledCoverPreview coverType="front" report={report} branding={branding} />
       </div>
-      {/* Inside front cover — full bleed with manual overlay text */}
+      {/* Inside front cover — styled overlay */}
       {report?.inside_front_cover_image && (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-          {report?.inside_front_cover_text && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
-              <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_front_cover_text}</p>
-            </div>
-          )}
+        <div className="max-w-4xl mx-auto">
+          <StyledCoverPreview coverType="inside_front" report={report} branding={branding} />
         </div>
       )}
 
@@ -199,33 +186,21 @@ export default function ReportingAGRPreview() {
         </div>
       </div>
 
-      {/* Inside back cover — full bleed with manual overlay text */}
+      {/* Inside back cover — styled overlay */}
       {report?.inside_back_cover_image && (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-          {report?.inside_back_cover_text && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
-              <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_back_cover_text}</p>
-            </div>
-          )}
+        <div className="max-w-4xl mx-auto">
+          <StyledCoverPreview coverType="inside_back" report={report} branding={branding} />
         </div>
       )}
-      {/* Back cover — full bleed with manual overlay text */}
+      {/* Back cover — styled overlay */}
       {report?.back_cover_image ? (
-        <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-          {report?.back_cover_text && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
-              <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
-            </div>
-          )}
+        <div className="max-w-4xl mx-auto">
+          <StyledCoverPreview coverType="back" report={report} branding={branding} />
         </div>
       ) : branding ? (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
           {report?.back_cover_text && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
-              <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
-            </div>
+            <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line text-center p-12">{report.back_cover_text}</p>
           )}
         </div>
       ) : null}

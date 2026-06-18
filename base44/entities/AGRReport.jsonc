@@ -25,7 +25,7 @@
     },
     "front_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for front cover \u2014 type exactly what you want displayed"
+      "description": "Manual text overlay for front cover"
     },
     "inside_front_cover_image": {
       "type": "string",
@@ -49,11 +49,15 @@
     },
     "back_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for back cover \u2014 type exactly what you want displayed"
+      "description": "Manual text overlay for back cover"
     },
     "description": {
       "type": "string",
       "description": "Brief subtitle"
+    },
+    "cover_text_styles": {
+      "type": "string",
+      "description": "JSON string of text styling per cover: { front: { font_size, font_family, color, bold, italic, underline, align, x, y }, inside_front: {}, inside_back: {}, back: {} }"
     },
     "master_header_text": {
       "type": "string",
