@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Type } from 'lucide-react';
+import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Type, Check } from 'lucide-react';
 
 const FIELD_MAP = {
   front: 'cover_image',
@@ -40,6 +40,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const [error, setError] = useState('');
   const [showFavPicker, setShowFavPicker] = useState(false);
   const [favouriting, setFavouriting] = useState(false);
+  const [localText, setLocalText] = useState('');
   const previousRef = useRef(null);
 
   const imageUrl = report?.[FIELD_MAP[type]];
@@ -49,6 +50,11 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const hasUndo = previousRef.current !== null;
   const favs = favourites.filter(f => f.cover_type === type);
   const gen = generating;
+
+  // Sync localText from report when it changes externally
+  useEffect(() => {
+    setLocalText(coverText);
+  }, [coverText]);
 
   const generateCover = async () => {
     previousRef.current = imageUrl || null;
@@ -179,13 +185,20 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
 
       <div>
         <Label className="text-xs text-muted-foreground flex items-center gap-1"><Type className="w-3 h-3" />Overlay Text</Label>
-        <Textarea
-          rows={3}
-          value={coverText}
-          onChange={e => onUpdate({ [coverTextField]: e.target.value })}
-          placeholder="Text to overlay on this cover (line breaks preserved)..."
-          className="mt-1 text-xs"
-        />
+        <div className="flex items-start gap-1 mt-1">
+          <Textarea
+            rows={3}
+            value={localText}
+            onChange={e => setLocalText(e.target.value)}
+            placeholder="Text to overlay on this cover (line breaks preserved)..."
+            className="text-xs flex-1"
+          />
+          {localText !== coverText && (
+            <Button size="icon" variant="outline" onClick={() => onUpdate({ [coverTextField]: localText })} className="h-8 w-8 shrink-0 text-green-600" title="Apply">
+              <Check className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {favs.length > 0 && (

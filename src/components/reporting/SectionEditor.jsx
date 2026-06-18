@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check } from 'lucide-react';
 import ReactQuill from 'react-quill';
 
 const LAYOUT_LABELS = {
@@ -129,7 +129,10 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
                 </Button>
               </div>
             </div>
-            <ReactQuill theme="snow" value={content} onChange={v => { setContent(v); onUpdate(section.id, { content: v }); }} className="bg-white rounded-lg" style={{ minHeight: 160 }} />
+            <ReactQuill theme="snow" value={content} onChange={setContent} className="bg-white rounded-lg" style={{ minHeight: 160 }} />
+            <div className="flex items-center gap-2 mt-1">
+              <Button variant="outline" size="sm" onClick={save} className="gap-1 text-xs h-7"><Check className="w-3 h-3" />Apply Content</Button>
+            </div>
           </div>
 
           {suggestions && suggestions.length > 0 && (
@@ -144,11 +147,11 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Image URL</Label>
-              <Input value={imageUrl} onChange={e => { setImageUrl(e.target.value); onUpdate(section.id, { image_url: e.target.value }); }} placeholder="https://..." className="mt-1" />
+              <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} onBlur={() => onUpdate(section.id, { image_url: imageUrl })} placeholder="https://..." className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Image Caption</Label>
-              <Input value={imageCaption} onChange={e => { setImageCaption(e.target.value); onUpdate(section.id, { image_caption: e.target.value }); }} placeholder="Caption text" className="mt-1" />
+              <Input value={imageCaption} onChange={e => setImageCaption(e.target.value)} onBlur={() => onUpdate(section.id, { image_caption: imageCaption })} placeholder="Caption text" className="mt-1" />
             </div>
           </div>
 

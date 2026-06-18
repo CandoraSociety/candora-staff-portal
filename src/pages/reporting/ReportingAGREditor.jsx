@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X, Check } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import SectionEditor from '@/components/reporting/SectionEditor';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
@@ -27,6 +27,12 @@ export default function ReportingAGREditor() {
   const [generatingHeader, setGeneratingHeader] = useState(false);
   const [generatingFooter, setGeneratingFooter] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [localTitle, setLocalTitle] = useState('');
+  const [localHeaderText, setLocalHeaderText] = useState('');
+  const [localFooterText, setLocalFooterText] = useState('');
+  const [localHeaderImageHeight, setLocalHeaderImageHeight] = useState(48);
+  const [localFooterImageHeight, setLocalFooterImageHeight] = useState(48);
+  const [initialized, setInitialized] = useState(false);
 
   const loadAll = useCallback(async () => {
     const [r, secs, brandList, dataList, analysisList] = await Promise.all([
@@ -41,14 +47,25 @@ export default function ReportingAGREditor() {
     setBranding(brandList[0] || null);
     setDataEntries(dataList);
     setAnalysis(analysisList[0] || null);
+    if (!initialized) {
+      setLocalTitle(r.title || '');
+      setLocalHeaderText(r.master_header_text || '');
+      setLocalFooterText(r.master_footer_text || '');
+      setLocalHeaderImageHeight(r.header_image_height || 48);
+      setLocalFooterImageHeight(r.footer_image_height || 48);
+      setInitialized(true);
+    }
     setLoading(false);
-  }, [id]);
-
-  useEffect(() => { loadAll(); }, [loadAll]);
+  }, [id, initialized]);
 
   const updateReport = async (patch) => {
     const updated = await base44.entities.AGRReport.update(id, patch);
     setReport(updated);
+    if ('title' in patch) setLocalTitle(updated.title || '');
+    if ('master_header_text' in patch) setLocalHeaderText(updated.master_header_text || '');
+    if ('master_footer_text' in patch) setLocalFooterText(updated.master_footer_text || '');
+    if ('header_image_height' in patch) setLocalHeaderImageHeight(updated.header_image_height || 48);
+    if ('footer_image_height' in patch) setLocalFooterImageHeight(updated.footer_image_height || 48);
   };
 
   const handleAddSection = async () => {
@@ -138,11 +155,18 @@ export default function ReportingAGREditor() {
         <Link to="/reporting/agr" className="text-muted-foreground hover:text-accent transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <Input
-          value={report?.title || ''}
-          onChange={e => updateReport({ title: e.target.value })}
-          className="text-lg font-bold border-0 border-b-2 border-transparent focus:border-accent rounded-none px-1 shadow-none max-w-md"
-        />
+        <div className="flex items-center gap-1">
+          <Input
+            value={localTitle}
+            onChange={e => setLocalTitle(e.target.value)}
+            className="text-lg font-bold border-0 border-b-2 border-transparent focus:border-accent rounded-none px-1 shadow-none max-w-md"
+          />
+          {localTitle !== (report?.title || '') && (
+            <Button size="icon" variant="ghost" onClick={() => updateReport({ title: localTitle })} className="h-8 w-8 text-green-600" title="Apply">
+              <Check className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
         <div className="flex items-center gap-2 ml-auto">
           <Select value={report?.status || 'draft'} onValueChange={v => updateReport({ status: v })}>
             <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -181,7 +205,14 @@ export default function ReportingAGREditor() {
                   <span className="text-xs font-semibold">Header</span>
                   <Button variant="ghost" size="sm" onClick={handleGenerateHeaderText} disabled={generatingHeader} className="text-xs gap-1 h-6"><Sparkles className="w-3 h-3" />{generatingHeader ? '...' : 'AI'}</Button>
                 </div>
-                <Input value={report?.master_header_text || ''} onChange={e => updateReport({ master_header_text: e.target.value })} placeholder="Header text" className="text-xs" />
+                <div className="flex items-center gap-1">
+                  <Input value={localHeaderText} onChange={e => setLocalHeaderText(e.target.value)} placeholder="Header text" className="text-xs flex-1" />
+                  {localHeaderText !== (report?.master_header_text || '') && (
+                    <Button size="icon" variant="ghost" onClick={() => updateReport({ master_header_text: localHeaderText })} className="h-7 w-7 text-green-600" title="Apply">
+                      <Check className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-1.5">
                   {report?.master_header_image ? (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -195,18 +226,23 @@ export default function ReportingAGREditor() {
                     </label>
                   )}
                   {report?.master_header_image && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-muted-foreground">Height:</span>
-                      <input
-                        type="number"
-                        value={report?.header_image_height || 48}
-                        onChange={e => updateReport({ header_image_height: parseInt(e.target.value) || 48 })}
-                        className="w-14 h-6 text-xs border rounded px-1"
-                        min="16"
-                        max="200"
-                      />
-                      <span className="text-xs text-muted-foreground">px</span>
-                    </div>
+                   <div className="flex items-center gap-1">
+                     <span className="text-xs text-muted-foreground">Height:</span>
+                     <input
+                       type="number"
+                       value={localHeaderImageHeight}
+                       onChange={e => setLocalHeaderImageHeight(parseInt(e.target.value) || 48)}
+                       className="w-14 h-6 text-xs border rounded px-1"
+                       min="16"
+                       max="200"
+                     />
+                     <span className="text-xs text-muted-foreground">px</span>
+                     {localHeaderImageHeight !== (report?.header_image_height || 48) && (
+                       <Button size="icon" variant="ghost" onClick={() => updateReport({ header_image_height: localHeaderImageHeight })} className="h-6 w-6 text-green-600" title="Apply">
+                         <Check className="w-3 h-3" />
+                       </Button>
+                     )}
+                   </div>
                   )}
                 </div>
               </div>
@@ -215,7 +251,14 @@ export default function ReportingAGREditor() {
                   <span className="text-xs font-semibold">Footer</span>
                   <Button variant="ghost" size="sm" onClick={handleGenerateFooterText} disabled={generatingFooter} className="text-xs gap-1 h-6"><Sparkles className="w-3 h-3" />{generatingFooter ? '...' : 'AI'}</Button>
                 </div>
-                <Input value={report?.master_footer_text || ''} onChange={e => updateReport({ master_footer_text: e.target.value })} placeholder="Footer text" className="text-xs" />
+                <div className="flex items-center gap-1">
+                  <Input value={localFooterText} onChange={e => setLocalFooterText(e.target.value)} placeholder="Footer text" className="text-xs flex-1" />
+                  {localFooterText !== (report?.master_footer_text || '') && (
+                    <Button size="icon" variant="ghost" onClick={() => updateReport({ master_footer_text: localFooterText })} className="h-7 w-7 text-green-600" title="Apply">
+                      <Check className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-1.5">
                   {report?.master_footer_image ? (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -229,18 +272,23 @@ export default function ReportingAGREditor() {
                     </label>
                   )}
                   {report?.master_footer_image && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-muted-foreground">Height:</span>
-                      <input
-                        type="number"
-                        value={report?.footer_image_height || 48}
-                        onChange={e => updateReport({ footer_image_height: parseInt(e.target.value) || 48 })}
-                        className="w-14 h-6 text-xs border rounded px-1"
-                        min="16"
-                        max="200"
-                      />
-                      <span className="text-xs text-muted-foreground">px</span>
-                    </div>
+                   <div className="flex items-center gap-1">
+                     <span className="text-xs text-muted-foreground">Height:</span>
+                     <input
+                       type="number"
+                       value={localFooterImageHeight}
+                       onChange={e => setLocalFooterImageHeight(parseInt(e.target.value) || 48)}
+                       className="w-14 h-6 text-xs border rounded px-1"
+                       min="16"
+                       max="200"
+                     />
+                     <span className="text-xs text-muted-foreground">px</span>
+                     {localFooterImageHeight !== (report?.footer_image_height || 48) && (
+                       <Button size="icon" variant="ghost" onClick={() => updateReport({ footer_image_height: localFooterImageHeight })} className="h-6 w-6 text-green-600" title="Apply">
+                         <Check className="w-3 h-3" />
+                       </Button>
+                     )}
+                   </div>
                   )}
                 </div>
               </div>
