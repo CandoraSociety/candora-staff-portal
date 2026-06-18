@@ -93,10 +93,12 @@ export default function HeaderFooterMapEditor({
             <div key={z.id} className="flex items-center gap-1.5">
               <div className="flex-1 flex items-center gap-1">
                 <button
-                  onClick={() => { setSelectedZoneId(z.content === 'text' ? z.id : null); cycleContent(z.id); }}
+                  onClick={() => {
+                    if (isSelected) { cycleContent(z.id); } else { setSelectedZoneId(z.id); }
+                  }}
                   className={`h-8 rounded-md border flex items-center justify-center gap-1 text-[10px] font-medium transition-all cursor-pointer hover:ring-2 hover:ring-accent/50 ${isSelected ? 'ring-2 ring-accent' : ''} ${ct.color}`}
                   style={{ width: `${z.w}%` }}
-                  title={`Click to change — currently: ${ct.label}`}
+                  title={isSelected ? 'Click again to change type' : 'Click to select — then customize styling'}
                 >
                   {Icon && <Icon className="w-3 h-3" />}
                   <span className="leading-none truncate">{ct.label}</span>
