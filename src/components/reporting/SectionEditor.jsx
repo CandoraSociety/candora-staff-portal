@@ -28,6 +28,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [content, setContent] = useState(section.content || '');
   const [layout, setLayout] = useState(section.layout || 'text_only');
   const [imageUrl, setImageUrl] = useState(section.image_url || '');
+  const [titleImageUrl, setTitleImageUrl] = useState(section.title_image_url || '');
   const [imageCaption, setImageCaption] = useState(section.image_caption || '');
   const [isCollapsible, setIsCollapsible] = useState(section.is_collapsible || false);
   const [isExpandedDefault, setIsExpandedDefault] = useState(section.is_expanded_default !== false);
@@ -55,6 +56,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setContent(section.content || '');
     setLayout(section.layout || 'text_only');
     setImageUrl(section.image_url || '');
+    setTitleImageUrl(section.title_image_url || '');
     setImageCaption(section.image_caption || '');
     setIsCollapsible(section.is_collapsible || false);
     setIsExpandedDefault(section.is_expanded_default !== false);
@@ -209,6 +211,36 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 )}
               </div>
               <Input value={title} onChange={e => setTitle(e.target.value)} onBlur={save} placeholder="e.g. Executive Message" className="mt-1" />
+              {/* Title Image */}
+              <div className="mt-2">
+                <Label className="text-[10px] text-muted-foreground">Title Image</Label>
+                {titleImageUrl ? (
+                  <div className="relative mt-1 inline-block">
+                    <img src={titleImageUrl} alt="Title" className="h-10 object-contain rounded border" />
+                    <button
+                      onClick={() => { setTitleImageUrl(''); onUpdate(section.id, { title_image_url: null }); }}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] hover:bg-red-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline mt-1">
+                    <Upload className="w-3 h-3" /> Add title image
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploadingImage(true);
+                      try {
+                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                        setTitleImageUrl(file_url);
+                        onUpdate(section.id, { title_image_url: file_url });
+                      } catch {}
+                      setUploadingImage(false);
+                    }} />
+                  </label>
+                )}
+              </div>
               {/* Title Styling Toolbar */}
               <div className="mt-2 p-2 border rounded bg-gray-50/50 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-1">

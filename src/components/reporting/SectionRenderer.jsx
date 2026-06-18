@@ -141,6 +141,7 @@ export default function SectionRenderer({
   const TitleBar = () => {
     const titleColor = ts.color || pc;
     const titleSize = ts.font_size || 18;
+    const titleImage = section.title_image_url;
     return (
       <div className="relative mb-5">
         <div
@@ -152,6 +153,9 @@ export default function SectionRenderer({
             <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
               {sectionNumber}
             </div>
+          )}
+          {titleImage && (
+            <img src={titleImage} alt="" className="shrink-0 object-contain rounded" style={{ maxHeight: `${Math.max(titleSize + 8, 36)}px`, maxWidth: '120px' }} />
           )}
           <h3
             className="font-heading font-bold leading-tight"

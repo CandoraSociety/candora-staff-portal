@@ -14,6 +14,10 @@
       "type": "string",
       "description": "JSON styling for section title: {font_family, font_size, color, bold, italic, underline, align}"
     },
+    "title_image_url": {
+      "type": "string",
+      "description": "Optional image displayed next to the section title heading"
+    },
     "content": {
       "type": "string",
       "description": "Rich text (HTML)"
