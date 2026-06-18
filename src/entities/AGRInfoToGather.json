@@ -4,7 +4,7 @@
   "properties": {
     "report_id": {
       "type": "string",
-      "description": "Parent AGR report ID"
+      "description": "Parent report ID"
     },
     "title": {
       "type": "string",
@@ -12,7 +12,7 @@
     },
     "details": {
       "type": "string",
-      "description": "Additional context about the information needed"
+      "description": "Additional context or specifics"
     },
     "source": {
       "type": "string",
@@ -20,7 +20,7 @@
     },
     "target_section_id": {
       "type": "string",
-      "description": "Which section this info should be added to"
+      "description": "Which section this info is destined for"
     },
     "status": {
       "type": "string",
