@@ -223,6 +223,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                         lineHeight: 1.3, whiteSpace: 'pre-line', wordBreak: 'break-word',
                         zIndex: isSelected ? 20 : 10,
                       }}
+                      onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
                       {el.content}
@@ -242,6 +243,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                         width: `${el.w || 160}px`, height: `${el.h || 160}px`,
                         cursor: dragging?.elId === el.id ? 'grabbing' : 'grab', zIndex: isSelected ? 20 : 10,
                       }}
+                      onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
                       <img src={el.url} alt="" className="w-full h-full object-cover rounded" />
