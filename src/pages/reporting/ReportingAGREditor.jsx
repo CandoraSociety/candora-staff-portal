@@ -516,7 +516,9 @@ export default function ReportingAGREditor() {
               {report?.back_cover_image ? (
                 <StyledCoverPreview coverType="back" report={report} branding={branding} />
               ) : branding ? (
-                <StyledCoverPreview coverType="back" report={report} branding={branding} />
+                <div className="-mx-6 -mb-6 rounded-b-xl overflow-hidden">
+                  <StyledCoverPreview coverType="back" report={report} branding={branding} />
+                </div>
               ) : null}
               </div>
             </div>
