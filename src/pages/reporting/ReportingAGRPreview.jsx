@@ -128,6 +128,7 @@ export default function ReportingAGRPreview() {
               sectionNumber={i + 1}
               dataEntries={dataEntries}
               branding={branding}
+              masterStyles={report?.master_section_styles}
               pageNumber={i + 1}
               masterHeader={report?.master_header_text}
               masterFooter={report?.master_footer_text}

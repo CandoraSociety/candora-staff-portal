@@ -25,7 +25,7 @@
     },
     "cover_overlays": {
       "type": "string",
-      "description": "JSON string of overlay elements per cover: { front: [{id, type, content, x, y, w, h, font_size, font_family, color, bold, italic, underline, align}], inside_front: [], inside_back: [], back: [] }"
+      "description": "JSON string of overlay elements per cover"
     },
     "front_cover_text": {
       "type": "string",
@@ -63,6 +63,10 @@
       "type": "string",
       "description": "Legacy JSON string of text styling per cover"
     },
+    "master_section_styles": {
+      "type": "string",
+      "description": "JSON: { title: { font_family, font_size, color, bold, italic, underline, align }, content: { font_family, font_size, color } } \u2014 master defaults for all sections"
+    },
     "master_header_text": {
       "type": "string",
       "description": "Universal page header text"
@@ -92,7 +96,7 @@
     },
     "header_zones": {
       "type": "string",
-      "description": "JSON: [{id, w (width %), content: 'text'|'image'|'page_number'|''}] \u2014 dynamic zone configuration"
+      "description": "JSON zone configuration"
     },
     "header_text_align": {
       "type": "string",
@@ -102,7 +106,7 @@
         "right"
       ],
       "default": "left",
-      "description": "Legacy \u2014 which zone the header text occupies"
+      "description": "Legacy"
     },
     "header_image_align": {
       "type": "string",
@@ -112,7 +116,7 @@
         "right"
       ],
       "default": "right",
-      "description": "Legacy \u2014 which zone the header image occupies"
+      "description": "Legacy"
     },
     "header_page_number_align": {
       "type": "string",
@@ -123,7 +127,7 @@
         "none"
       ],
       "default": "right",
-      "description": "Legacy \u2014 which zone the page number occupies"
+      "description": "Legacy"
     },
     "master_footer_text": {
       "type": "string",
@@ -149,12 +153,11 @@
         "inline",
         "stacked"
       ],
-      "default": "inline",
-      "description": "Inline = text beside image, Stacked = stacked vertically"
+      "default": "inline"
     },
     "footer_zones": {
       "type": "string",
-      "description": "JSON: [{id, w (width %), content: 'text'|'image'|'page_number'|''}] \u2014 dynamic zone configuration"
+      "description": "JSON zone configuration"
     },
     "footer_text_align": {
       "type": "string",
@@ -164,7 +167,7 @@
         "right"
       ],
       "default": "left",
-      "description": "Legacy \u2014 which zone the footer text occupies"
+      "description": "Legacy"
     },
     "footer_image_align": {
       "type": "string",
@@ -174,7 +177,7 @@
         "right"
       ],
       "default": "right",
-      "description": "Legacy \u2014 which zone the footer image occupies"
+      "description": "Legacy"
     },
     "footer_page_number_align": {
       "type": "string",
@@ -185,7 +188,7 @@
         "none"
       ],
       "default": "right",
-      "description": "Legacy \u2014 which zone the page number occupies"
+      "description": "Legacy"
     },
     "show_header_all": {
       "type": "boolean",

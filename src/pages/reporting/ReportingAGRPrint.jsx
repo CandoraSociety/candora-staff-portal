@@ -119,6 +119,7 @@ export default function ReportingAGRPrint() {
               dataEntries={dataEntries}
               branding={branding}
               isPrint
+              masterStyles={report?.master_section_styles}
               pageNumber={i + 3}
               masterHeader={report?.master_header_text}
               masterFooter={report?.master_footer_text}

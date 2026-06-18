@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw } from 'lucide-react';
 import ReactQuill from 'react-quill';
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
@@ -21,7 +21,7 @@ const LAYOUT_LABELS = {
   two_column: 'Two Column'
 };
 
-export default function SectionEditor({ section, onUpdate, onDelete, onGenerateSuggestions, onGenerateVisual, suggestions }) {
+export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, onGenerateVisual, suggestions }) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState(section.title || '');
   const [content, setContent] = useState(section.content || '');
@@ -37,12 +37,21 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
   const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
   const [titleStyles, setTitleStyles] = useState(parseStyles(section.title_styles));
 
+  const master = parseStyles(masterStyles);
+  const masterTitle = master.title || {};
+  const effectiveTitle = section.title_styles ? { ...masterTitle, ...parseStyles(section.title_styles) } : { ...masterTitle };
+  const hasTitleOverride = !!section.title_styles;
+
   useEffect(() => {
     setTitle(section.title || '');
     setContent(section.content || '');
     setLayout(section.layout || 'text_only');
     setImageUrl(section.image_url || '');
     setImageCaption(section.image_caption || '');
+    setIsCollapsible(section.is_collapsible || false);
+    setIsExpandedDefault(section.is_expanded_default !== false);
+    setHideHeader(section.hide_header || false);
+    setHideFooter(section.hide_footer || false);
     setTitleStyles(parseStyles(section.title_styles));
   }, [section]);
 
@@ -54,6 +63,11 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
     const updated = { ...titleStyles, [key]: value };
     setTitleStyles(updated);
     onUpdate(section.id, { title_styles: JSON.stringify(updated) });
+  };
+
+  const resetTitleOverride = () => {
+    setTitleStyles({ ...masterTitle });
+    onUpdate(section.id, { title_styles: null });
   };
 
   const handleGenerateVisual = async () => {
@@ -85,6 +99,11 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
           <p className="text-sm font-semibold truncate">{title || 'Untitled Section'}</p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{LAYOUT_LABELS[layout]}</span>
+            {hasTitleOverride ? (
+              <span className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">custom title</span>
+            ) : (
+              <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">master</span>
+            )}
             {content && <span className="text-xs text-muted-foreground truncate">{content.replace(/<[^>]+>/g, '').slice(0, 60)}</span>}
           </div>
         </div>
@@ -102,7 +121,17 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
         <div className="px-4 pb-4 space-y-4 border-t">
           <div className="grid sm:grid-cols-2 gap-3 pt-3">
             <div className="sm:col-span-2">
-              <Label className="text-xs">Section Title</Label>
+              <div className="flex items-center gap-2 mb-1">
+                <Label className="text-xs">Section Title</Label>
+                {!hasTitleOverride && masterTitle && Object.keys(masterTitle).length > 0 && (
+                  <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">using master style</span>
+                )}
+                {hasTitleOverride && (
+                  <button onClick={resetTitleOverride} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1" title="Revert to master styles">
+                    <RotateCcw className="w-3 h-3" /> revert to master
+                  </button>
+                )}
+              </div>
               <Input value={title} onChange={e => setTitle(e.target.value)} onBlur={save} placeholder="e.g. Executive Message" className="mt-1" />
               {/* Title Styling Toolbar */}
               <div className="mt-2 p-2 border rounded bg-gray-50/50 space-y-1.5">
@@ -115,31 +144,31 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
                     {FONT_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                   <span className="w-px h-5 bg-border mx-0.5" />
-                  <button onClick={() => updateTitleStyle('bold', !titleStyles.bold)}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.bold ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                  <button onClick={() => updateTitleStyle('bold', !effectiveTitle.bold)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.bold ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Bold"><Bold className="w-3 h-3" /></button>
-                  <button onClick={() => updateTitleStyle('italic', !titleStyles.italic)}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.italic ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                  <button onClick={() => updateTitleStyle('italic', !effectiveTitle.italic)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.italic ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Italic"><Italic className="w-3 h-3" /></button>
-                  <button onClick={() => updateTitleStyle('underline', !titleStyles.underline)}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.underline ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                  <button onClick={() => updateTitleStyle('underline', !effectiveTitle.underline)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.underline ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Underline"><Underline className="w-3 h-3" /></button>
                   <span className="w-px h-5 bg-border mx-0.5" />
                   <button onClick={() => updateTitleStyle('align', 'left')}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'left' || !titleStyles.align ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.align === 'left' || !effectiveTitle.align ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Align Left"><AlignLeft className="w-3 h-3" /></button>
                   <button onClick={() => updateTitleStyle('align', 'center')}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'center' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.align === 'center' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Align Center"><AlignCenter className="w-3 h-3" /></button>
                   <button onClick={() => updateTitleStyle('align', 'right')}
-                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'right' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${effectiveTitle.align === 'right' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
                     title="Align Right"><AlignRight className="w-3 h-3" /></button>
                   <span className="w-px h-5 bg-border mx-0.5" />
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] text-muted-foreground">Color</span>
                     <input
                       type="color"
-                      value={titleStyles.color || '#000000'}
+                      value={effectiveTitle.color || '#000000'}
                       onChange={e => updateTitleStyle('color', e.target.value)}
                       className="w-6 h-6 rounded border cursor-pointer p-0.5"
                     />
@@ -149,7 +178,7 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
                     <span className="text-[10px] text-muted-foreground">Size</span>
                     <input
                       type="number"
-                      value={titleStyles.font_size || 18}
+                      value={effectiveTitle.font_size || 18}
                       onChange={e => updateTitleStyle('font_size', parseInt(e.target.value) || 18)}
                       className="w-12 h-6 text-xs border rounded px-1"
                       min="8" max="72"

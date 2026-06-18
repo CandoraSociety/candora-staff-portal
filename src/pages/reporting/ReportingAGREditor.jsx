@@ -14,6 +14,7 @@ import DataPanel from '@/components/reporting/DataPanel';
 import TemplatePreview from '@/components/reporting/TemplatePreview';
 import HeaderFooterMapEditor from '@/components/reporting/HeaderFooterMapEditor';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
+import MasterStyleControl from '@/components/reporting/MasterStyleControl';
 
 export default function ReportingAGREditor() {
   const { id } = useParams();
@@ -364,6 +365,9 @@ export default function ReportingAGREditor() {
         )}
       </div>
 
+      {/* Master Section Styles */}
+      <MasterStyleControl report={report} onUpdate={updateReport} />
+
       {/* Covers */}
       <CoverGenerator reportId={id} report={report} branding={branding} onUpdate={updateReport} />
 
@@ -389,6 +393,7 @@ export default function ReportingAGREditor() {
                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                             <SectionEditor
                               section={section}
+                              masterStyles={report?.master_section_styles}
                               onUpdate={handleUpdateSection}
                               onDelete={handleDeleteSection}
                               onGenerateSuggestions={handleGenerateSuggestions}
@@ -468,6 +473,7 @@ export default function ReportingAGREditor() {
                   sectionNumber={i + 1}
                   dataEntries={dataEntries}
                   branding={branding}
+                  masterStyles={report?.master_section_styles}
                   pageNumber={i + 1}
                   masterHeader={report?.master_header_text}
                   masterFooter={report?.master_footer_text}

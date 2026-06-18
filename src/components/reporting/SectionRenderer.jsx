@@ -13,8 +13,12 @@ function parseTitleStyles(raw) {
   try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
 }
 
+function parseStyles(raw) {
+  try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+}
+
 export default function SectionRenderer({
-  section, sectionNumber, dataEntries, branding, isPrint,
+  section, sectionNumber, dataEntries, branding, isPrint, masterStyles,
   pageNumber, masterHeader, masterFooter, headerImage, footerImage,
   headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
   headerLayout, footerLayout,
@@ -132,7 +136,10 @@ export default function SectionRenderer({
   );
 
   // ── Branded title bar ──────────────────────────────────────────────
-  const ts = parseTitleStyles(section.title_styles);
+  const master = parseStyles(masterStyles);
+  const masterTitle = master.title || {};
+  // Merge: section title_styles override master, master fills gaps
+  const ts = { ...masterTitle, ...parseTitleStyles(section.title_styles) };
   const TitleBar = () => {
     const titleColor = ts.color || pc;
     const titleSize = ts.font_size || 18;
@@ -174,8 +181,13 @@ export default function SectionRenderer({
   };
 
   const renderContent = () => {
+    const masterContent = master.content || {};
     const contentBlock = (
-      <div className="prose prose-sm max-w-none">
+      <div className="prose prose-sm max-w-none" style={{
+        fontFamily: masterContent.font_family || undefined,
+        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
+        color: masterContent.color || undefined,
+      }}>
         {section.content ? (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
