@@ -56,14 +56,39 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const coverText = report?.[coverTextField] || '';
   const favs = favourites.filter(f => f.cover_type === type);
   const allStyles = parseStyles(report?.cover_text_styles);
-  const style = { ...DEFAULT_STYLE, ...allStyles[type] };
+  const baseStyle = { ...DEFAULT_STYLE, ...allStyles[type] };
+
+  // Local style for instant drag feedback — only persisted on pointerup
+  const [localStyle, setLocalStyle] = useState(null);
+  const localStyleRef = useRef(null);
+  const style = localStyle || baseStyle;
 
   useEffect(() => { setLocalText(coverText); }, [coverText]);
+  // Sync localStyle when persisted styles change (e.g. report reload)
+  useEffect(() => { setLocalStyle(null); }, [report?.cover_text_styles]);
 
-  const saveStyle = async (patch) => {
+  const persistStyle = async (patch) => {
     const current = parseStyles(report?.cover_text_styles);
     current[type] = { ...current[type], ...patch };
     await onUpdate({ cover_text_styles: JSON.stringify(current) });
+  };
+
+  const debounceRef = useRef(null);
+  const pendingPatchRef = useRef({});
+
+  const saveStyle = (patch) => {
+    // Update local immediately for snappy UI
+    setLocalStyle(prev => {
+      const current = prev || baseStyle;
+      return { ...current, ...patch };
+    });
+    // Accumulate changes and debounce API persist
+    Object.assign(pendingPatchRef.current, patch);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      persistStyle({ ...pendingPatchRef.current });
+      pendingPatchRef.current = {};
+    }, 250);
   };
 
   const generateCover = async () => {
@@ -104,13 +129,13 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const pickFavourite = (fav) => onUpdate({ [FIELD_MAP[type]]: fav.image_url });
   const removeFavourite = (favId) => onFavouritesChange(favourites.filter(f => f.id !== favId));
 
-  // Dragging logic
+  // Dragging logic — local-only updates during move, persist once on release
   const onPointerDown = (e) => {
     e.preventDefault();
     const rect = e.currentTarget.parentElement.getBoundingClientRect();
     dragRef.current = {
       startX: e.clientX, startY: e.clientY,
-      styleX: style.x, styleY: style.y,
+      styleX: baseStyle.x, styleY: baseStyle.y,
       rect, parentW: rect.width, parentH: rect.height
     };
     setDragging(true);
@@ -124,13 +149,23 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
       const dy = ((e.clientY - startY) / parentH) * 100;
       const nx = Math.max(5, Math.min(95, styleX + dx));
       const ny = Math.max(5, Math.min(95, styleY + dy));
-      saveStyle({ x: Math.round(nx), y: Math.round(ny) });
+      const updated = { ...(localStyleRef.current || baseStyle), x: Math.round(nx), y: Math.round(ny) };
+      localStyleRef.current = updated;
+      setLocalStyle(updated);
     };
-    const onUp = () => setDragging(false);
+    const onUp = () => {
+      setDragging(false);
+      // Persist final position from ref (avoids closure over stale state)
+      if (localStyleRef.current) {
+        persistStyle({ x: localStyleRef.current.x, y: localStyleRef.current.y });
+      }
+      localStyleRef.current = null;
+      setLocalStyle(null);
+    };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
-  }, [dragging]);
+  }, [dragging, baseStyle]);
 
   const fontFamilies = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
 
