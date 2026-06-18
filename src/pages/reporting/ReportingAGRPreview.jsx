@@ -65,7 +65,7 @@ export default function ReportingAGRPreview() {
       {/* Front cover — full bleed with manual overlay text */}
       <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
         {report?.cover_image ? (
-          <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
         )}
@@ -78,7 +78,7 @@ export default function ReportingAGRPreview() {
       {/* Inside front cover — full bleed with manual overlay text */}
       {report?.inside_front_cover_image && (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
           {report?.inside_front_cover_text && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_front_cover_text}</p>
@@ -188,7 +188,7 @@ export default function ReportingAGRPreview() {
       {/* Inside back cover — full bleed with manual overlay text */}
       {report?.inside_back_cover_image && (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
           {report?.inside_back_cover_text && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_back_cover_text}</p>
@@ -199,7 +199,7 @@ export default function ReportingAGRPreview() {
       {/* Back cover — full bleed with manual overlay text */}
       {report?.back_cover_image ? (
         <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative">
-          <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
           {report?.back_cover_text && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>

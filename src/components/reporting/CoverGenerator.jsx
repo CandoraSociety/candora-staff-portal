@@ -130,7 +130,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         <div>
           <div className="relative group rounded-lg overflow-hidden border bg-slate-100">
             <div className="aspect-[8.5/11] w-full">
-              <img src={imageUrl} alt={label} className="w-full h-full object-cover" />
+              <img src={imageUrl} alt={label} className="w-full h-full object-cover" loading="lazy" />
             </div>
           </div>
           <div className="flex gap-2 mt-2 flex-wrap">
@@ -214,7 +214,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
               {favs.map(fav => (
                 <div key={fav.id} className="relative group">
                   <button onClick={() => pickFavourite(fav)} className="w-full aspect-[8.5/11] rounded overflow-hidden border hover:ring-2 hover:ring-pink-400 transition-all">
-                    <img src={fav.image_url} alt={fav.label || ''} className="w-full h-full object-cover" />
+                    <img src={fav.image_url} alt={fav.label || ''} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                   <button
                     onClick={() => removeFavourite(fav.id)}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ export default function ReportingAGREditor() {
   const [localFooterText, setLocalFooterText] = useState('');
   const [localHeaderImageHeight, setLocalHeaderImageHeight] = useState(48);
   const [localFooterImageHeight, setLocalFooterImageHeight] = useState(48);
-  const [initialized, setInitialized] = useState(false);
+  const initRef = useRef(false);
 
   const loadAll = useCallback(async () => {
     const [r, secs, brandList, dataList, analysisList] = await Promise.all([
@@ -47,16 +47,16 @@ export default function ReportingAGREditor() {
     setBranding(brandList[0] || null);
     setDataEntries(dataList);
     setAnalysis(analysisList[0] || null);
-    if (!initialized) {
+    if (!initRef.current) {
       setLocalTitle(r.title || '');
       setLocalHeaderText(r.master_header_text || '');
       setLocalFooterText(r.master_footer_text || '');
       setLocalHeaderImageHeight(r.header_image_height || 48);
       setLocalFooterImageHeight(r.footer_image_height || 48);
-      setInitialized(true);
+      initRef.current = true;
     }
     setLoading(false);
-  }, [id, initialized]);
+  }, [id]);
 
   const updateReport = async (patch) => {
     const updated = await base44.entities.AGRReport.update(id, patch);
@@ -412,7 +412,7 @@ export default function ReportingAGREditor() {
               {/* Front cover — full bleed with manual overlay text */}
               <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative">
                 {report?.cover_image ? (
-                  <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
                 )}
@@ -425,7 +425,7 @@ export default function ReportingAGREditor() {
               {/* Inside front cover — full bleed with manual overlay text */}
               {report?.inside_front_cover_image && (
                 <div className="aspect-[8.5/11] w-full overflow-hidden relative">
-                  <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   {report?.inside_front_cover_text && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
                       <p className="text-sm md:text-base text-white drop-shadow-lg whitespace-pre-line">{report.inside_front_cover_text}</p>
@@ -499,7 +499,7 @@ export default function ReportingAGREditor() {
               {/* Inside back cover — full bleed with manual overlay text */}
               {report?.inside_back_cover_image && (
                 <div className="-mx-6 aspect-[8.5/11] overflow-hidden relative">
-                  <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   {report?.inside_back_cover_text && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
                       <p className="text-sm text-white drop-shadow-lg whitespace-pre-line">{report.inside_back_cover_text}</p>
@@ -510,7 +510,7 @@ export default function ReportingAGREditor() {
               {/* Back cover — full bleed with manual overlay text */}
               {report?.back_cover_image ? (
                 <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative">
-                  <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                   {report?.back_cover_text && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
                       <p className="text-sm text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
