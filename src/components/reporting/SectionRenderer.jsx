@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
@@ -189,16 +187,7 @@ export default function SectionRenderer({
         color: masterContent.color || undefined,
       }}>
         {section.content ? (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              a: ({ href, children, ...props }) => (
-                <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2" {...props}>{children}</a>
-              )
-            }}
-          >
-            {section.content}
-          </ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: section.content }} />
         ) : <p className="text-muted-foreground italic">No content yet.</p>}
       </div>
     );
@@ -212,7 +201,7 @@ export default function SectionRenderer({
     ) : null;
 
     const dataBlock = sectionData.length > 0 ? (
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4">
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
@@ -225,15 +214,38 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
+    const hasChart = dataBlock !== null;
+    const hasVisual = hasImage || hasChart;
+
+    // Smart layout: when there are charts but no image in text_only, use a responsive grid
+    if (section.layout === 'text_only' && hasChart && !hasImage) {
+      return (
+        <div className="grid md:grid-cols-5 gap-6 items-start">
+          <div className="md:col-span-3">{contentBlock}</div>
+          <div className="md:col-span-2">{dataBlock}</div>
+        </div>
+      );
+    }
+
     switch (section.layout) {
       case 'image_left':
-        return <div className="flex gap-4"><div className="w-1/3 shrink-0">{imageBlock}</div><div className="flex-1">{contentBlock}{dataBlock}</div></div>;
+        return (
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="md:w-2/5 shrink-0 space-y-4">{imageBlock}{dataBlock}</div>
+            <div className="flex-1">{contentBlock}</div>
+          </div>
+        );
       case 'image_right':
-        return <div className="flex gap-4"><div className="flex-1">{contentBlock}{dataBlock}</div><div className="w-1/3 shrink-0">{imageBlock}</div></div>;
+        return (
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">{contentBlock}</div>
+            <div className="md:w-2/5 shrink-0 space-y-4">{imageBlock}{dataBlock}</div>
+          </div>
+        );
       case 'image_full':
         return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
       case 'two_column':
-        return <div className="grid grid-cols-2 gap-6"><div>{contentBlock}</div><div>{imageBlock}{dataBlock}</div></div>;
+        return <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
       default:
         return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
