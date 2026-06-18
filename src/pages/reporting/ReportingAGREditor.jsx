@@ -34,11 +34,21 @@ export default function ReportingAGREditor() {
   const [localFooterText, setLocalFooterText] = useState('');
   const [localHeaderImageHeight, setLocalHeaderImageHeight] = useState(48);
   const [localFooterImageHeight, setLocalFooterImageHeight] = useState(48);
+  const [activeSectionId, setActiveSectionId] = useState(null);
+  const sectionRefs = useRef({});
+  const previewRef = useRef(null);
   const initRef = useRef(false);
 
   useEffect(() => {
     if (id) loadAll();
   }, [id]);
+
+  // Scroll live preview to active section
+  useEffect(() => {
+    if (activeSectionId && sectionRefs.current[activeSectionId]) {
+      sectionRefs.current[activeSectionId].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeSectionId]);
 
   const loadAll = useCallback(async () => {
     // Phase 1: critical data — render the page immediately
@@ -397,6 +407,7 @@ export default function ReportingAGREditor() {
                               onDelete={handleDeleteSection}
                               onGenerateSuggestions={handleGenerateSuggestions}
                               suggestions={suggestions[section.id]}
+                              onExpand={setActiveSectionId}
                             />
                           </div>
                         )}
@@ -464,8 +475,8 @@ export default function ReportingAGREditor() {
 
               {/* Sections */}
               {sections.map((section, i) => (
+                <div key={section.id} ref={el => { sectionRefs.current[section.id] = el; }}>
                 <SectionRenderer
-                  key={section.id}
                   section={section}
                   sectionNumber={i + 1}
                   dataEntries={dataEntries}
@@ -489,6 +500,7 @@ export default function ReportingAGREditor() {
                   showPageNumbersAll={report?.show_page_numbers_all}
                   forceCollapsible
                 />
+                </div>
               ))}
 
               </div>

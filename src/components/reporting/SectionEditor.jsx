@@ -22,7 +22,7 @@ const LAYOUT_LABELS = {
   two_column: 'Two Column'
 };
 
-export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions }) {
+export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions, onExpand }) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState(section.title || '');
   const [content, setContent] = useState(section.content || '');
@@ -164,7 +164,11 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     <div className="border rounded-xl bg-white">
       <div
         className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 rounded-t-xl"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          const next = !expanded;
+          setExpanded(next);
+          if (next && onExpand) onExpand(section.id);
+        }}
       >
         <GripVertical className="w-4 h-4 text-slate-300" />
         <div className="flex-1 min-w-0">
@@ -180,7 +184,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); const next = !expanded; setExpanded(next); if (next && onExpand) onExpand(section.id); }}>
             {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete(section.id); }} className="text-red-400 hover:text-red-600">
