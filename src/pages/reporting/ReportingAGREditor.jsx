@@ -13,7 +13,7 @@ import CoverGenerator from '@/components/reporting/CoverGenerator';
 import DataPanel from '@/components/reporting/DataPanel';
 import TemplatePreview from '@/components/reporting/TemplatePreview';
 import HeaderFooterMapEditor from '@/components/reporting/HeaderFooterMapEditor';
-import StyledCoverPreview, { CoverTextDisplay } from '@/components/reporting/CoverPreview';
+import StyledCoverPreview from '@/components/reporting/CoverPreview';
 
 export default function ReportingAGREditor() {
   const { id } = useParams();
@@ -516,11 +516,7 @@ export default function ReportingAGREditor() {
               {report?.back_cover_image ? (
                 <StyledCoverPreview coverType="back" report={report} branding={branding} />
               ) : branding ? (
-                <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
-                  {report?.back_cover_text && (
-                    <CoverTextDisplay type="back" report={report} />
-                  )}
-                </div>
+                <StyledCoverPreview coverType="back" report={report} branding={branding} />
               ) : null}
               </div>
             </div>
