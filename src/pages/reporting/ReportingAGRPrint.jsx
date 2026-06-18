@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, FileText, ArrowBigUp } from 'lucide-react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
 
@@ -15,6 +15,11 @@ export default function ReportingAGRPrint() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const togglePageBreak = async (sectionId, current) => {
+    await base44.entities.AGRReportSection.update(sectionId, { page_break_before: !current });
+    setSections(prev => prev.map(s => s.id === sectionId ? { ...s, page_break_before: !current } : s));
+  };
 
   useEffect(() => {
     Promise.all([
@@ -62,7 +67,7 @@ export default function ReportingAGRPrint() {
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
-          <p className="text-xs text-muted-foreground">Print-optimized view</p>
+          <p className="text-xs text-muted-foreground">Print-optimized view • Click a section heading to toggle page break</p>
         </div>
         <Button onClick={() => window.print()} className="gap-2">
           <Printer className="w-4 h-4" />Print / Save PDF
@@ -90,15 +95,8 @@ export default function ReportingAGRPrint() {
           </div>
         )}
 
-        <div className="print-break p-8">
-          {branding && (
-            <div className="text-center mb-8 pb-6 border-b">
-              <h2 className="text-xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</h2>
-              {(branding.address || branding.address_line1) && <p className="text-sm text-muted-foreground mt-1">{branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}</p>}
-              {branding.website && <p className="text-sm text-muted-foreground">{branding.website}</p>}
-            </div>
-          )}
-          <h3 className="text-base font-bold uppercase tracking-wider mb-4" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
+        <div className="print-break p-10 flex flex-col" style={{ minHeight: 'calc(11in - 0.5in)' }}>
+          <h3 className="text-base font-bold uppercase tracking-wider mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
           <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '14px', borderRadius: '0 4px 4px 0' }}>
             {sections.map((s, i) => (
               <p key={s.id} className="text-sm py-0.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
@@ -110,9 +108,17 @@ export default function ReportingAGRPrint() {
         </div>
 
         {sections.map((section, i) => (
-          <div key={section.id} className="print-break">
+          <div key={section.id} className={section.page_break_before ? 'print-break' : ''}>
             <div className="h-1 w-full" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
-            <div className="p-8">
+            <div className="p-8 relative">
+            <button
+              onClick={() => togglePageBreak(section.id, section.page_break_before)}
+              className="no-print absolute top-2 right-2 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
+              title={section.page_break_before ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
+            >
+              <ArrowBigUp className={`w-3.5 h-3.5 ${section.page_break_before ? 'text-accent' : ''}`} />
+              {section.page_break_before ? 'Forced page break' : 'Normal flow'}
+            </button>
             <SectionRenderer
               section={section}
               sectionNumber={i + 1}

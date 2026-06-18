@@ -54,6 +54,11 @@
     "hide_footer": {
       "type": "boolean",
       "default": false
+    },
+    "page_break_before": {
+      "type": "boolean",
+      "default": false,
+      "description": "Force this section to start on a new page when printing"
     }
   },
   "required": [
