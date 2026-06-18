@@ -366,6 +366,7 @@ export default function ReportingAGREditor() {
                 <SectionRenderer
                   key={section.id}
                   section={section}
+                  sectionNumber={i + 1}
                   dataEntries={dataEntries}
                   branding={branding}
                   pageNumber={i + 1}

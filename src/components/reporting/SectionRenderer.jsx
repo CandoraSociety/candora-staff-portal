@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
-export default function SectionRenderer({ section, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, headerImage, footerImage, headerImageHeight, footerImageHeight, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
+export default function SectionRenderer({ section, sectionNumber, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, headerImage, footerImage, headerImageHeight, footerImageHeight, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const pc = branding?.primary_color || '#1a2744';
@@ -34,6 +34,44 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
 
   const hasImage = section.image_url && section.layout !== 'text_only';
   const isCollapsible = (section.is_collapsible || forceCollapsible) && !isPrint;
+
+  // ── Branded title bar ──────────────────────────────────────────────
+  const TitleBar = () => (
+    <div className="relative mb-5">
+      {/* Top gradient rule */}
+      <div
+        className="h-1 w-full rounded-full mb-4"
+        style={{
+          background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)`,
+        }}
+      />
+      <div className="flex items-center gap-3">
+        {/* Section number badge */}
+        {sectionNumber != null && (
+          <div
+            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+            style={{ backgroundColor: pc, color: '#fff' }}
+          >
+            {sectionNumber}
+          </div>
+        )}
+        <h3
+          className="text-lg font-heading font-bold leading-tight"
+          style={{ color: pc }}
+        >
+          {section.title}
+        </h3>
+      </div>
+      {/* Subtle decorative dot grid — top-right corner */}
+      <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
+        <div className="grid grid-cols-3 gap-[3px]">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: i % 3 === 0 ? pc : ac }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   const renderContent = () => {
     const contentBlock = (
@@ -98,10 +136,12 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
         <>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-2 w-full text-left mb-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity"
           >
-            <h3 className="text-lg font-heading font-bold" style={{ color: pc }}>{section.title}</h3>
-            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            <div className="flex-1">
+              <TitleBar />
+            </div>
+            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
           </button>
           <AnimatePresence>
             {expanded && (
@@ -115,7 +155,7 @@ export default function SectionRenderer({ section, dataEntries, branding, isPrin
         </>
       ) : (
         <>
-          <h3 className="text-lg font-heading font-bold mb-3" style={{ color: pc }}>{section.title}</h3>
+          <TitleBar />
           {headerContent}
           {renderContent()}
           {footerContent}

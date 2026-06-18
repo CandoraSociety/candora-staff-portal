@@ -114,6 +114,7 @@ export default function ReportingAGRPreview() {
           <div key={section.id} id={`section-${section.id}`}>
             <SectionRenderer
               section={section}
+              sectionNumber={i + 1}
               dataEntries={dataEntries}
               branding={branding}
               pageNumber={i + 1}

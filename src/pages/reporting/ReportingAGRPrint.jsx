@@ -117,6 +117,7 @@ export default function ReportingAGRPrint() {
             <div className="p-8">
             <SectionRenderer
               section={section}
+              sectionNumber={i + 1}
               dataEntries={dataEntries}
               branding={branding}
               isPrint
