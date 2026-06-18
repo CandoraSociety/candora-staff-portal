@@ -212,10 +212,11 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                   const isSelected = selectedId === el.id && !dragging;
                   return (
                     <div key={el.id}
-                      className={`absolute select-none ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                      className={`group absolute select-none ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                       style={{
                         left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-                        width: `${el.w || 280}px`, cursor: dragging?.elId === el.id ? 'grabbing' : 'grab',
+                        width: `${el.w || 280}px`, minHeight: el.h ? `${el.h}px` : undefined,
+                        cursor: dragging?.elId === el.id ? 'grabbing' : 'grab',
                         fontSize: `${el.font_size || 20}px`, fontFamily: el.font_family || 'Inter',
                         color: el.color || '#fff', fontWeight: el.bold ? 'bold' : 'normal',
                         fontStyle: el.italic ? 'italic' : 'normal', textDecoration: el.underline ? 'underline' : 'none',
@@ -227,9 +228,11 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
                       {el.content}
-                      {/* Resize handle */}
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-400 rounded-full cursor-se-resize opacity-0 hover:opacity-100" style={{ opacity: isSelected ? 1 : undefined }}
-                        onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }} />
+                      {/* Resize handle — visible on group hover or when selected */}
+                      <div
+                        className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
+                        onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }}
+                      />
                     </div>
                   );
                 }
@@ -237,7 +240,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                   const isSelected = selectedId === el.id && !dragging;
                   return (
                     <div key={el.id}
-                      className={`absolute ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                      className={`group absolute ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                       style={{
                         left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
                         width: `${el.w || 160}px`, height: `${el.h || 160}px`,
@@ -247,8 +250,10 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
                       <img src={el.url} alt="" className="w-full h-full object-cover rounded" />
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-400 rounded-full cursor-se-resize" style={{ opacity: isSelected ? 1 : 0 }}
-                        onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }} />
+                      <div
+                        className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
+                        onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }}
+                      />
                     </div>
                   );
                 }

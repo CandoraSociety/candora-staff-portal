@@ -27,7 +27,7 @@ export default function StyledCoverPreview({ coverType, report, branding, rounde
             <div key={el.id} className="absolute select-none pointer-events-none"
               style={{
                 left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-                width: `${el.w || 280}px`,
+                width: `${el.w || 280}px`, minHeight: el.h ? `${el.h}px` : undefined,
                 fontSize: `${el.font_size || 20}px`, fontFamily: el.font_family || 'Inter',
                 color: el.color || '#fff', fontWeight: el.bold ? 'bold' : 'normal',
                 fontStyle: el.italic ? 'italic' : 'normal', textDecoration: el.underline ? 'underline' : 'none',
