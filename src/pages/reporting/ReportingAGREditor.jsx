@@ -12,6 +12,7 @@ import BrandingPanel from '@/components/reporting/BrandingPanel';
 import CoverGenerator from '@/components/reporting/CoverGenerator';
 import DataPanel from '@/components/reporting/DataPanel';
 import TemplatePreview from '@/components/reporting/TemplatePreview';
+import HeaderFooterMapEditor from '@/components/reporting/HeaderFooterMapEditor';
 
 export default function ReportingAGREditor() {
   const { id } = useParams();
@@ -244,6 +245,48 @@ export default function ReportingAGREditor() {
                 </div>
               </div>
             </div>
+            {/* Header/Footer Layout Maps */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <HeaderFooterMapEditor
+                label="Header"
+                text={report?.master_header_text}
+                hasImage={!!report?.master_header_image}
+                font_size={report?.header_font_size}
+                layout={report?.header_layout || 'inline'}
+                text_align={report?.header_text_align || 'left'}
+                image_align={report?.header_image_align || 'right'}
+                page_number_align={report?.header_page_number_align || 'right'}
+                onUpdate={(patch) => {
+                  const updates = {};
+                  if ('text_align' in patch) updates.header_text_align = patch.text_align || null;
+                  if ('image_align' in patch) updates.header_image_align = patch.image_align || null;
+                  if ('page_number_align' in patch) updates.header_page_number_align = patch.page_number_align || null;
+                  updateReport(updates);
+                }}
+                onFontSize={(v) => updateReport({ header_font_size: v })}
+                onLayout={(v) => updateReport({ header_layout: v })}
+              />
+              <HeaderFooterMapEditor
+                label="Footer"
+                text={report?.master_footer_text}
+                hasImage={!!report?.master_footer_image}
+                font_size={report?.footer_font_size}
+                layout={report?.footer_layout || 'inline'}
+                text_align={report?.footer_text_align || 'left'}
+                image_align={report?.footer_image_align || 'right'}
+                page_number_align={report?.footer_page_number_align || 'right'}
+                onUpdate={(patch) => {
+                  const updates = {};
+                  if ('text_align' in patch) updates.footer_text_align = patch.text_align || null;
+                  if ('image_align' in patch) updates.footer_image_align = patch.image_align || null;
+                  if ('page_number_align' in patch) updates.footer_page_number_align = patch.page_number_align || null;
+                  updateReport(updates);
+                }}
+                onFontSize={(v) => updateReport({ footer_font_size: v })}
+                onLayout={(v) => updateReport({ footer_layout: v })}
+              />
+            </div>
+
             <div className="flex flex-wrap gap-4 text-xs">
               <label className="flex items-center gap-1.5">
                 <input type="checkbox" checked={report?.show_header_all || false} onChange={e => updateReport({ show_header_all: e.target.checked })} className="rounded" />Show header on all pages
@@ -376,6 +419,16 @@ export default function ReportingAGREditor() {
                   footerImage={report?.master_footer_image}
                   headerImageHeight={report?.header_image_height}
                   footerImageHeight={report?.footer_image_height}
+                  headerFontSize={report?.header_font_size}
+                  footerFontSize={report?.footer_font_size}
+                  headerLayout={report?.header_layout}
+                  headerTextAlign={report?.header_text_align}
+                  headerImageAlign={report?.header_image_align}
+                  headerPageNumberAlign={report?.header_page_number_align}
+                  footerLayout={report?.footer_layout}
+                  footerTextAlign={report?.footer_text_align}
+                  footerImageAlign={report?.footer_image_align}
+                  footerPageNumberAlign={report?.footer_page_number_align}
                   showHeaderAll={report?.show_header_all}
                   showFooterAll={report?.show_footer_all}
                   showPageNumbersAll={report?.show_page_numbers_all}

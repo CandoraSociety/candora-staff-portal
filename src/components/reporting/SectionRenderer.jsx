@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { ChevronDown, ChevronUp, ImageIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
-export default function SectionRenderer({ section, sectionNumber, dataEntries, branding, isPrint, pageNumber, masterHeader, masterFooter, headerImage, footerImage, headerImageHeight, footerImageHeight, showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible }) {
+export default function SectionRenderer({
+  section, sectionNumber, dataEntries, branding, isPrint,
+  pageNumber, masterHeader, masterFooter, headerImage, footerImage,
+  headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
+  headerLayout, headerTextAlign, headerImageAlign, headerPageNumberAlign,
+  footerLayout, footerTextAlign, footerImageAlign, footerPageNumberAlign,
+  showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible
+}) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const pc = branding?.primary_color || '#1a2744';
@@ -15,54 +22,102 @@ export default function SectionRenderer({ section, sectionNumber, dataEntries, b
   const showHeader = showHeaderAll && !section.hide_header;
   const showFooter = showFooterAll && !section.hide_footer;
   const showPageNum = showPageNumbersAll;
-
-  const headerContent = (
-    <div className="text-xs text-muted-foreground pb-2 mb-4" style={{ borderBottom: `1px solid ${pc}20` }}>
-      {showHeader && headerImage && <img src={headerImage} alt="Header" className="w-full mb-1 object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} />}
-      {showHeader && masterHeader && <span>{masterHeader}</span>}
-      {showPageNum && pageNumber && <span className="float-right">{pageNumber}</span>}
-    </div>
-  );
-
-  const footerContent = (
-    <div className="text-xs text-muted-foreground pt-2 mt-6" style={{ borderTop: `1px solid ${pc}20` }}>
-      {showFooter && masterFooter && <span>{masterFooter}</span>}
-      {showPageNum && !showHeader && pageNumber && <span className="float-right">{pageNumber}</span>}
-      {showFooter && footerImage && <img src={footerImage} alt="Footer" className="w-full mt-1 object-contain" style={{ maxHeight: `${footerImageHeight || 48}px` }} />}
-    </div>
-  );
-
-  const hasImage = section.image_url && section.layout !== 'text_only';
   const isCollapsible = (section.is_collapsible || forceCollapsible) && !isPrint;
+
+  // ── Zone-based header/footer builder ─────────────────────────────
+  const ZoneSlots = ({
+    text, image, imageHeight, showPN, pageNum,
+    textAlign, imageAlign, pnAlign, layout, fontSize
+  }) => {
+    const slots = {
+      left: null, center: null, right: null
+    };
+
+    if (text && textAlign && slots.hasOwnProperty(textAlign)) {
+      slots[textAlign] = (
+        <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground truncate">
+          {text.length > 60 ? text.slice(0, 60) + '...' : text}
+        </span>
+      );
+    }
+    if (image && imageAlign && slots.hasOwnProperty(imageAlign)) {
+      slots[imageAlign] = (
+        <img src={image} alt="" className="object-contain" style={{ maxHeight: `${imageHeight || 48}px`, maxWidth: '100%' }} />
+      );
+    }
+    if (showPN && pnAlign && pnAlign !== 'none' && slots.hasOwnProperty(pnAlign) && pageNum) {
+      slots[pnAlign] = <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
+    }
+
+    const hasAny = Object.values(slots).some(Boolean);
+    if (!hasAny) return null;
+
+    if (layout === 'stacked') {
+      return (
+        <div className="flex flex-col items-center gap-1">
+          {Object.values(slots).filter(Boolean).map((el, i) => <div key={i}>{el}</div>)}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-between w-full gap-2">
+        <div className="flex-1 flex justify-start">{slots.left}</div>
+        <div className="flex-1 flex justify-center">{slots.center}</div>
+        <div className="flex-1 flex justify-end">{slots.right}</div>
+      </div>
+    );
+  };
+
+  const headerContent = showHeader && (
+    <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${pc}20` }}>
+      <ZoneSlots
+        text={masterHeader}
+        image={headerImage}
+        imageHeight={headerImageHeight}
+        showPN={showPageNum}
+        pageNum={pageNumber}
+        textAlign={headerTextAlign || 'left'}
+        imageAlign={headerImageAlign || 'right'}
+        pnAlign={headerPageNumberAlign || 'right'}
+        layout={headerLayout || 'inline'}
+        fontSize={headerFontSize || 12}
+      />
+    </div>
+  );
+
+  const footerContent = showFooter && (
+    <div className="pt-2 mt-6" style={{ borderTop: `1px solid ${pc}20` }}>
+      <ZoneSlots
+        text={masterFooter}
+        image={footerImage}
+        imageHeight={footerImageHeight}
+        showPN={showPageNum && !showHeader}
+        pageNum={pageNumber}
+        textAlign={footerTextAlign || 'left'}
+        imageAlign={footerImageAlign || 'right'}
+        pnAlign={footerPageNumberAlign || 'right'}
+        layout={footerLayout || 'inline'}
+        fontSize={footerFontSize || 12}
+      />
+    </div>
+  );
 
   // ── Branded title bar ──────────────────────────────────────────────
   const TitleBar = () => (
     <div className="relative mb-5">
-      {/* Top gradient rule */}
       <div
         className="h-1 w-full rounded-full mb-4"
-        style={{
-          background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)`,
-        }}
+        style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)` }}
       />
       <div className="flex items-center gap-3">
-        {/* Section number badge */}
         {sectionNumber != null && (
-          <div
-            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ backgroundColor: pc, color: '#fff' }}
-          >
+          <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
             {sectionNumber}
           </div>
         )}
-        <h3
-          className="text-lg font-heading font-bold leading-tight"
-          style={{ color: pc }}
-        >
-          {section.title}
-        </h3>
+        <h3 className="text-lg font-heading font-bold leading-tight" style={{ color: pc }}>{section.title}</h3>
       </div>
-      {/* Subtle decorative dot grid — top-right corner */}
       <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
         <div className="grid grid-cols-3 gap-[3px]">
           {Array.from({ length: 9 }).map((_, i) => (
@@ -80,6 +135,7 @@ export default function SectionRenderer({ section, sectionNumber, dataEntries, b
       </div>
     );
 
+    const hasImage = section.image_url && section.layout !== 'text_only';
     const imageBlock = hasImage ? (
       <div className={section.layout === 'image_full' ? 'my-4' : ''}>
         <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-cover" style={{ maxHeight: isPrint ? '200px' : '300px' }} />
@@ -103,28 +159,13 @@ export default function SectionRenderer({ section, sectionNumber, dataEntries, b
 
     switch (section.layout) {
       case 'image_left':
-        return (
-          <div className="flex gap-4">
-            <div className="w-1/3 shrink-0">{imageBlock}</div>
-            <div className="flex-1">{contentBlock}{dataBlock}</div>
-          </div>
-        );
+        return <div className="flex gap-4"><div className="w-1/3 shrink-0">{imageBlock}</div><div className="flex-1">{contentBlock}{dataBlock}</div></div>;
       case 'image_right':
-        return (
-          <div className="flex gap-4">
-            <div className="flex-1">{contentBlock}{dataBlock}</div>
-            <div className="w-1/3 shrink-0">{imageBlock}</div>
-          </div>
-        );
+        return <div className="flex gap-4"><div className="flex-1">{contentBlock}{dataBlock}</div><div className="w-1/3 shrink-0">{imageBlock}</div></div>;
       case 'image_full':
         return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
       case 'two_column':
-        return (
-          <div className="grid grid-cols-2 gap-6">
-            <div>{contentBlock}</div>
-            <div>{imageBlock}{dataBlock}</div>
-          </div>
-        );
+        return <div className="grid grid-cols-2 gap-6"><div>{contentBlock}</div><div>{imageBlock}{dataBlock}</div></div>;
       default:
         return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
@@ -134,13 +175,8 @@ export default function SectionRenderer({ section, sectionNumber, dataEntries, b
     <div className={isPrint ? 'mb-8' : 'mb-6'}>
       {isCollapsible ? (
         <>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity"
-          >
-            <div className="flex-1">
-              <TitleBar />
-            </div>
+          <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity">
+            <div className="flex-1"><TitleBar /></div>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
           </button>
           <AnimatePresence>

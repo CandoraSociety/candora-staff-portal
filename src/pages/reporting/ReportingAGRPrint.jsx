@@ -128,6 +128,16 @@ export default function ReportingAGRPrint() {
               footerImage={report?.master_footer_image}
               headerImageHeight={report?.header_image_height}
               footerImageHeight={report?.footer_image_height}
+              headerFontSize={report?.header_font_size}
+              footerFontSize={report?.footer_font_size}
+              headerLayout={report?.header_layout}
+              headerTextAlign={report?.header_text_align}
+              headerImageAlign={report?.header_image_align}
+              headerPageNumberAlign={report?.header_page_number_align}
+              footerLayout={report?.footer_layout}
+              footerTextAlign={report?.footer_text_align}
+              footerImageAlign={report?.footer_image_align}
+              footerPageNumberAlign={report?.footer_page_number_align}
               showHeaderAll={report?.show_header_all}
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
