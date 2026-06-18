@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, GripVertical, Check, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, Loader2 } from 'lucide-react';
 
 const STATUS_OPTIONS = {
   pending: { label: 'Pending', color: 'text-amber-600 bg-amber-50' },
@@ -15,8 +15,9 @@ const STATUS_OPTIONS = {
 export default function InfoToGatherPanel({ reportId, sections }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
   const [saving, setSaving] = useState({});
-  const [localValues, setLocalValues] = useState({});
+  const [editValues, setEditValues] = useState({});
 
   useEffect(() => {
     if (reportId) loadItems();
@@ -26,11 +27,6 @@ export default function InfoToGatherPanel({ reportId, sections }) {
     setLoading(true);
     const data = await base44.entities.AGRInfoToGather.filter({ report_id: reportId }, 'sort_order');
     setItems(data);
-    const lv = {};
-    data.forEach(item => {
-      lv[item.id] = { title: item.title || '', details: item.details || '', source: item.source || '' };
-    });
-    setLocalValues(lv);
     setLoading(false);
   };
 
@@ -45,19 +41,56 @@ export default function InfoToGatherPanel({ reportId, sections }) {
       sort_order: items.length,
     });
     setItems(prev => [...prev, created]);
-    setLocalValues(prev => ({ ...prev, [created.id]: { title: '', details: '', source: '' } }));
+    setEditValues(prev => ({ ...prev, [created.id]: { title: '', details: '', source: '' } }));
+    setExpandedId(created.id);
   };
 
-  const handleUpdate = async (id, patch) => {
+  const handleExpand = (id) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+    } else {
+      const item = items.find(i => i.id === id);
+      setEditValues(prev => ({
+        ...prev,
+        [id]: {
+          title: item?.title || '',
+          details: item?.details || '',
+          source: item?.source || '',
+          target_section_id: item?.target_section_id || '',
+          status: item?.status || 'pending',
+        },
+      }));
+      setExpandedId(id);
+    }
+  };
+
+  const handleSave = async (id) => {
+    const vals = editValues[id];
+    if (!vals) return;
     setSaving(prev => ({ ...prev, [id]: true }));
+    const patch = {
+      title: vals.title,
+      details: vals.details,
+      source: vals.source,
+      target_section_id: vals.target_section_id || '',
+      status: vals.status,
+    };
     await base44.entities.AGRInfoToGather.update(id, patch);
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...patch } : i));
     setSaving(prev => ({ ...prev, [id]: false }));
+    setExpandedId(null);
   };
 
   const handleDelete = async (id) => {
     await base44.entities.AGRInfoToGather.delete(id);
     setItems(prev => prev.filter(i => i.id !== id));
+    if (expandedId === id) setExpandedId(null);
+  };
+
+  const getSectionTitle = (sectionId) => {
+    if (!sectionId) return null;
+    const s = sections.find(s => s.id === sectionId);
+    return s?.title || 'Unknown';
   };
 
   if (loading) {
@@ -83,85 +116,68 @@ export default function InfoToGatherPanel({ reportId, sections }) {
           <p className="text-sm text-muted-foreground">No items yet. Add items to track the information you need to gather.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-1">
           {items.map(item => (
-            <div key={item.id} className="border rounded-lg bg-white p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <GripVertical className="w-4 h-4 text-slate-300 mt-2 shrink-0" />
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Select
-                      value={item.status}
-                      onValueChange={v => handleUpdate(item.id, { status: v })}
-                    >
-                      <SelectTrigger className={`w-[110px] h-7 text-xs border-0 ${STATUS_OPTIONS[item.status]?.color}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(STATUS_OPTIONS).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {saving[item.id] && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
-                  </div>
+            <div key={item.id} className="border rounded-lg bg-white overflow-hidden">
+              {/* Collapsed row */}
+              <button
+                onClick={() => handleExpand(item.id)}
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left transition-colors"
+              >
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${STATUS_OPTIONS[item.status]?.color}`}>
+                  {STATUS_OPTIONS[item.status]?.label}
+                </span>
+                <span className="flex-1 text-sm font-medium truncate">
+                  {item.title || 'Untitled'}
+                </span>
+                {item.target_section_id && getSectionTitle(item.target_section_id) && (
+                  <span className="text-[11px] text-muted-foreground truncate max-w-[140px] hidden sm:block">
+                    → {getSectionTitle(item.target_section_id)}
+                  </span>
+                )}
+                {expandedId === item.id ? (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                )}
+              </button>
+
+              {/* Expanded edit form */}
+              {expandedId === item.id && (
+                <div className="px-4 pb-4 pt-1 border-t space-y-3">
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">What's Needed</Label>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Input
-                        value={localValues[item.id]?.title ?? ''}
-                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], title: e.target.value } }))}
-                        onBlur={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })}
-                        placeholder="e.g. Q3 volunteer hours data"
-                        className="text-sm flex-1"
-                      />
-                      {(localValues[item.id]?.title ?? '') !== (item.title || '') && (
-                        <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
-                          <Check className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-                    </div>
+                    <Input
+                      value={editValues[item.id]?.title ?? ''}
+                      onChange={e => setEditValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], title: e.target.value } }))}
+                      placeholder="e.g. Q3 volunteer hours data"
+                      className="text-sm mt-1"
+                    />
                   </div>
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Details</Label>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Input
-                        value={localValues[item.id]?.details ?? ''}
-                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], details: e.target.value } }))}
-                        onBlur={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })}
-                        placeholder="Additional context or specifics"
-                        className="text-sm flex-1"
-                      />
-                      {(localValues[item.id]?.details ?? '') !== (item.details || '') && (
-                        <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
-                          <Check className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-                    </div>
+                    <Input
+                      value={editValues[item.id]?.details ?? ''}
+                      onChange={e => setEditValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], details: e.target.value } }))}
+                      placeholder="Additional context or specifics"
+                      className="text-sm mt-1"
+                    />
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Where to Get It</Label>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Input
-                          value={localValues[item.id]?.source ?? ''}
-                          onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], source: e.target.value } }))}
-                          onBlur={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })}
-                          placeholder="e.g. Sarah from HR, or database export"
-                          className="text-sm flex-1"
-                        />
-                        {(localValues[item.id]?.source ?? '') !== (item.source || '') && (
-                          <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
-                            <Check className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
+                      <Input
+                        value={editValues[item.id]?.source ?? ''}
+                        onChange={e => setEditValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], source: e.target.value } }))}
+                        placeholder="e.g. Sarah from HR"
+                        className="text-sm mt-1"
+                      />
                     </div>
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Target Section</Label>
                       <Select
-                        value={item.target_section_id || ''}
-                        onValueChange={v => handleUpdate(item.id, { target_section_id: v || '' })}
+                        value={editValues[item.id]?.target_section_id || ''}
+                        onValueChange={v => setEditValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], target_section_id: v || '' } }))}
                       >
                         <SelectTrigger className="text-sm mt-1 h-9">
                           <SelectValue placeholder="Select section…" />
@@ -175,16 +191,52 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                       </Select>
                     </div>
                   </div>
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</Label>
+                    <Select
+                      value={editValues[item.id]?.status || 'pending'}
+                      onValueChange={v => setEditValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], status: v } }))}
+                    >
+                      <SelectTrigger className={`w-[110px] h-7 text-xs border mt-1 ${STATUS_OPTIONS[editValues[item.id]?.status || 'pending']?.color}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(STATUS_OPTIONS).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() => handleSave(item.id)}
+                      disabled={saving[item.id]}
+                      className="gap-1"
+                    >
+                      {saving[item.id] ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Save
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setExpandedId(null)}
+                      className="text-muted-foreground"
+                    >
+                      Cancel
+                    </Button>
+                    <div className="flex-1" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-400 hover:text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(item.id)}
-                  className="text-red-400 hover:text-red-600 shrink-0"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              )}
             </div>
           ))}
         </div>
