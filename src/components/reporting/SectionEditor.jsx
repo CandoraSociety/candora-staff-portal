@@ -4,8 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import ReactQuill from 'react-quill';
+
+const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
+
+function parseStyles(raw) {
+  try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+}
 
 const LAYOUT_LABELS = {
   text_only: 'Text Only',
@@ -29,6 +35,7 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [visualCategory, setVisualCategory] = useState('infographic');
   const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
+  const [titleStyles, setTitleStyles] = useState(parseStyles(section.title_styles));
 
   useEffect(() => {
     setTitle(section.title || '');
@@ -36,10 +43,17 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
     setLayout(section.layout || 'text_only');
     setImageUrl(section.image_url || '');
     setImageCaption(section.image_caption || '');
+    setTitleStyles(parseStyles(section.title_styles));
   }, [section]);
 
   const save = () => {
-    onUpdate(section.id, { title, content, layout, image_url: imageUrl, image_caption: imageCaption, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter });
+    onUpdate(section.id, { title, content, layout, image_url: imageUrl, image_caption: imageCaption, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter, title_styles: JSON.stringify(titleStyles) });
+  };
+
+  const updateTitleStyle = (key, value) => {
+    const updated = { ...titleStyles, [key]: value };
+    setTitleStyles(updated);
+    onUpdate(section.id, { title_styles: JSON.stringify(updated) });
   };
 
   const handleGenerateVisual = async () => {
@@ -90,6 +104,60 @@ export default function SectionEditor({ section, onUpdate, onDelete, onGenerateS
             <div className="sm:col-span-2">
               <Label className="text-xs">Section Title</Label>
               <Input value={title} onChange={e => setTitle(e.target.value)} onBlur={save} placeholder="e.g. Executive Message" className="mt-1" />
+              {/* Title Styling Toolbar */}
+              <div className="mt-2 p-2 border rounded bg-gray-50/50 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-1">
+                  <select
+                    value={titleStyles.font_family || 'Inter'}
+                    onChange={e => updateTitleStyle('font_family', e.target.value)}
+                    className="text-[10px] border rounded px-1 py-0.5 h-6 bg-white"
+                  >
+                    {FONT_FAMILIES.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                  <span className="w-px h-5 bg-border mx-0.5" />
+                  <button onClick={() => updateTitleStyle('bold', !titleStyles.bold)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.bold ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Bold"><Bold className="w-3 h-3" /></button>
+                  <button onClick={() => updateTitleStyle('italic', !titleStyles.italic)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.italic ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Italic"><Italic className="w-3 h-3" /></button>
+                  <button onClick={() => updateTitleStyle('underline', !titleStyles.underline)}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.underline ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Underline"><Underline className="w-3 h-3" /></button>
+                  <span className="w-px h-5 bg-border mx-0.5" />
+                  <button onClick={() => updateTitleStyle('align', 'left')}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'left' || !titleStyles.align ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Align Left"><AlignLeft className="w-3 h-3" /></button>
+                  <button onClick={() => updateTitleStyle('align', 'center')}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'center' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Align Center"><AlignCenter className="w-3 h-3" /></button>
+                  <button onClick={() => updateTitleStyle('align', 'right')}
+                    className={`w-6 h-6 flex items-center justify-center rounded border text-[10px] ${titleStyles.align === 'right' ? 'bg-accent text-white border-accent' : 'bg-white hover:bg-gray-100'}`}
+                    title="Align Right"><AlignRight className="w-3 h-3" /></button>
+                  <span className="w-px h-5 bg-border mx-0.5" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">Color</span>
+                    <input
+                      type="color"
+                      value={titleStyles.color || '#000000'}
+                      onChange={e => updateTitleStyle('color', e.target.value)}
+                      className="w-6 h-6 rounded border cursor-pointer p-0.5"
+                    />
+                  </div>
+                  <span className="w-px h-5 bg-border mx-0.5" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground">Size</span>
+                    <input
+                      type="number"
+                      value={titleStyles.font_size || 18}
+                      onChange={e => updateTitleStyle('font_size', parseInt(e.target.value) || 18)}
+                      className="w-12 h-6 text-xs border rounded px-1"
+                      min="8" max="72"
+                    />
+                    <span className="text-[10px] text-muted-foreground">px</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div>
               <Label className="text-xs">Layout</Label>

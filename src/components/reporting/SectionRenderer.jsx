@@ -8,6 +8,10 @@ function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
 
+function parseTitleStyles(raw) {
+  try { return raw ? JSON.parse(raw) : {}; } catch { return {}; }
+}
+
 export default function SectionRenderer({
   section, sectionNumber, dataEntries, branding, isPrint,
   pageNumber, masterHeader, masterFooter, headerImage, footerImage,
@@ -127,29 +131,46 @@ export default function SectionRenderer({
   );
 
   // ── Branded title bar ──────────────────────────────────────────────
-  const TitleBar = () => (
-    <div className="relative mb-5">
-      <div
-        className="h-1 w-full rounded-full mb-4"
-        style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)` }}
-      />
-      <div className="flex items-center gap-3">
-        {sectionNumber != null && (
-          <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
-            {sectionNumber}
+  const ts = parseTitleStyles(section.title_styles);
+  const TitleBar = () => {
+    const titleColor = ts.color || pc;
+    const titleSize = ts.font_size || 18;
+    return (
+      <div className="relative mb-5">
+        <div
+          className="h-1 w-full rounded-full mb-4"
+          style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)` }}
+        />
+        <div className="flex items-center gap-3" style={{ justifyContent: ts.align === 'center' ? 'center' : ts.align === 'right' ? 'flex-end' : 'flex-start' }}>
+          {sectionNumber != null && (
+            <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
+              {sectionNumber}
+            </div>
+          )}
+          <h3
+            className="font-heading font-bold leading-tight"
+            style={{
+              color: titleColor,
+              fontSize: `${titleSize}px`,
+              fontFamily: ts.font_family || undefined,
+              fontWeight: ts.bold !== false ? 'bold' : 'normal',
+              fontStyle: ts.italic ? 'italic' : 'normal',
+              textDecoration: ts.underline ? 'underline' : 'none',
+            }}
+          >
+            {section.title}
+          </h3>
+        </div>
+        <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
+          <div className="grid grid-cols-3 gap-[3px]">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: i % 3 === 0 ? pc : ac }} />
+            ))}
           </div>
-        )}
-        <h3 className="text-lg font-heading font-bold leading-tight" style={{ color: pc }}>{section.title}</h3>
-      </div>
-      <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
-        <div className="grid grid-cols-3 gap-[3px]">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="w-[3px] h-[3px] rounded-full" style={{ backgroundColor: i % 3 === 0 ? pc : ac }} />
-          ))}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     const contentBlock = (
