@@ -36,19 +36,16 @@ export default function ReportingAGREditor() {
   const initRef = useRef(false);
 
   const loadAll = useCallback(async () => {
+    // Phase 1: critical data — render the page immediately
     try {
-      const [r, secs, brandList, dataList, analysisList] = await Promise.all([
+      const [r, secs, brandList] = await Promise.all([
         base44.entities.AGRReport.get(id),
         base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
         base44.entities.AGRBranding.filter({ report_id: id }),
-        base44.entities.AGRReportData.filter({ report_id: id }),
-        base44.entities.AGRAnalysisResult.filter({ report_id: id }),
       ]);
       setReport(r);
       setSections(secs);
       setBranding(brandList[0] || null);
-      setDataEntries(dataList);
-      setAnalysis(analysisList[0] || null);
       if (!initRef.current) {
         setLocalTitle(r?.title || '');
         setLocalHeaderText(r?.master_header_text || '');
@@ -61,6 +58,19 @@ export default function ReportingAGREditor() {
       setError(e.message || 'Failed to load report');
     }
     setLoading(false);
+
+    // Phase 2: heavy data — load in background
+    try {
+      const [dataList, analysisList] = await Promise.all([
+        base44.entities.AGRReportData.filter({ report_id: id }),
+        base44.entities.AGRAnalysisResult.filter({ report_id: id }),
+      ]);
+      setDataEntries(dataList);
+      setAnalysis(analysisList[0] || null);
+    } catch (e) {
+      // Non-critical — page is already visible
+      console.error('Failed to load report data/analysis:', e);
+    }
   }, [id]);
 
   const updateReport = async (patch) => {
