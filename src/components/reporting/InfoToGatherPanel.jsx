@@ -107,34 +107,55 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                   </div>
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">What's Needed</Label>
-                    <Input
-                      value={localValues[item.id]?.title ?? ''}
-                      onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], title: e.target.value } }))}
-                      onBlur={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })}
-                      placeholder="e.g. Q3 volunteer hours data"
-                      className="text-sm mt-1"
-                    />
+                    <div className="flex items-center gap-1 mt-1">
+                      <Input
+                        value={localValues[item.id]?.title ?? ''}
+                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], title: e.target.value } }))}
+                        onBlur={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })}
+                        placeholder="e.g. Q3 volunteer hours data"
+                        className="text-sm flex-1"
+                      />
+                      {(localValues[item.id]?.title ?? '') !== (item.title || '') && (
+                        <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Details</Label>
-                    <Input
-                      value={localValues[item.id]?.details ?? ''}
-                      onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], details: e.target.value } }))}
-                      onBlur={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })}
-                      placeholder="Additional context or specifics"
-                      className="text-sm mt-1"
-                    />
+                    <div className="flex items-center gap-1 mt-1">
+                      <Input
+                        value={localValues[item.id]?.details ?? ''}
+                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], details: e.target.value } }))}
+                        onBlur={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })}
+                        placeholder="Additional context or specifics"
+                        className="text-sm flex-1"
+                      />
+                      {(localValues[item.id]?.details ?? '') !== (item.details || '') && (
+                        <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Where to Get It</Label>
-                      <Input
-                        value={localValues[item.id]?.source ?? ''}
-                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], source: e.target.value } }))}
-                        onBlur={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })}
-                        placeholder="e.g. Sarah from HR, or database export"
-                        className="text-sm mt-1"
-                      />
+                      <div className="flex items-center gap-1 mt-1">
+                        <Input
+                          value={localValues[item.id]?.source ?? ''}
+                          onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], source: e.target.value } }))}
+                          onBlur={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })}
+                          placeholder="e.g. Sarah from HR, or database export"
+                          className="text-sm flex-1"
+                        />
+                        {(localValues[item.id]?.source ?? '') !== (item.source || '') && (
+                          <Button size="icon" variant="ghost" onClick={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })} className="h-8 w-8 text-green-600 shrink-0" title="Apply">
+                            <Check className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Target Section</Label>
