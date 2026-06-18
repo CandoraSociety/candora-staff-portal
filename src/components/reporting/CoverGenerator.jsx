@@ -386,7 +386,7 @@ function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
             {fontFamilies.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
           <select value={el.font_size || 20} onChange={e => onUpdate({ font_size: parseInt(e.target.value) })} className="text-xs border rounded px-1 py-0.5 h-7 bg-white w-16">
-            {[12,14,16,18,20,24,28,32,36,42,48,56,64,72].map(s => <option key={s} value={s}>{s}</option>)}
+            {[6,7,8,9,10,11,12,14,16,18,20,24,28,32,36,42,48,56,64,72].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <input type="color" value={el.color || '#ffffff'} onChange={e => onUpdate({ color: e.target.value })} className="w-7 h-7 rounded border cursor-pointer p-0.5" />
           <Button size="icon" variant={el.bold ? 'default' : 'outline'} onClick={() => onUpdate({ bold: !el.bold })} className="h-7 w-7"><Bold className="w-3.5 h-3.5" /></Button>
