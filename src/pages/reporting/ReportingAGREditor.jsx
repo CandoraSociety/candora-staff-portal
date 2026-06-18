@@ -4,17 +4,17 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X, Check, Monitor, ArrowBigUp, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X, Check, Monitor, ClipboardList } from 'lucide-react';
 import InfoToGatherPanel from '@/components/reporting/InfoToGatherPanel';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import SectionEditor from '@/components/reporting/SectionEditor';
-import SectionRenderer from '@/components/reporting/SectionRenderer';
 import BrandingPanel from '@/components/reporting/BrandingPanel';
 import CoverGenerator from '@/components/reporting/CoverGenerator';
 import TemplatePreview from '@/components/reporting/TemplatePreview';
 import HeaderFooterMapEditor from '@/components/reporting/HeaderFooterMapEditor';
-import StyledCoverPreview from '@/components/reporting/CoverPreview';
 import MasterStyleControl from '@/components/reporting/MasterStyleControl';
+import ReportDigitalView from '@/components/reporting/ReportDigitalView';
+import ReportPrintView from '@/components/reporting/ReportPrintView';
 
 export default function ReportingAGREditor() {
   const { id } = useParams();
@@ -479,237 +479,25 @@ export default function ReportingAGREditor() {
             </div>
 
             {previewMode === 'digital' ? (
-              /* ── Digital Preview (matches ReportingAGRPreview exactly) ── */
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto space-y-0">
-                <div className="max-w-4xl mx-auto">
-                  <StyledCoverPreview coverType="front" report={report} branding={branding} />
-                </div>
-                {report?.inside_front_cover_image && (
-                  <div className="max-w-4xl mx-auto">
-                    <StyledCoverPreview coverType="inside_front" report={report} branding={branding} />
-                  </div>
-                )}
-                <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border overflow-hidden">
-                  <div className="p-8 space-y-6">
-                    {!report?.cover_image && branding && (
-                      <div className="text-center pb-6 border-b">
-                        {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-16 mx-auto mb-3 object-contain" />}
-                        <h2 className="text-2xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>
-                        {branding.tagline && <p className="text-sm text-muted-foreground mt-1">{branding.tagline}</p>}
-                        {branding.common_name && <p className="text-sm font-medium mt-4" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>}
-                      </div>
-                    )}
-                    {sections.length > 0 && (() => {
-                      const tocPage = 1 + (report?.cover_image ? 1 : 0) + (report?.inside_front_cover_image ? 1 : 0);
-                      return (
-                        <div className="min-h-[80vh] bg-white rounded-xl shadow-sm border flex flex-col justify-center p-16">
-                          <h3 className="text-2xl font-heading font-bold mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-                          <div className="space-y-1">
-                            {sections.map((s, i) => (
-                              <div key={s.id} className="flex items-center gap-4 text-base py-2 transition-colors hover:bg-slate-50 rounded px-3 -mx-3" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                                <span className="font-bold w-8 text-right" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                                <span>{s.title || 'Untitled'}</span>
-                                <span className="flex-1 border-b border-dotted mx-3 opacity-30" />
-                                <span className="text-xs opacity-50">{tocPage + 1 + i}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    {sections.map((section, i) => (
-                      <div key={section.id} ref={el => { sectionRefs.current[section.id] = el; }}>
-                        <SectionRenderer
-                          section={section} sectionNumber={i + 1} dataEntries={dataEntries} branding={branding}
-                          masterStyles={report?.master_section_styles} pageNumber={i + 1}
-                          masterHeader={report?.master_header_text} masterFooter={report?.master_footer_text}
-                          headerImage={report?.master_header_image} footerImage={report?.master_footer_image}
-                          headerImageHeight={report?.header_image_height} footerImageHeight={report?.footer_image_height}
-                          headerFontSize={report?.header_font_size} footerFontSize={report?.footer_font_size}
-                          headerLayout={report?.header_layout} headerZones={report?.header_zones}
-                          footerLayout={report?.footer_layout} footerZones={report?.footer_zones}
-                          showHeaderAll={report?.show_header_all} showFooterAll={report?.show_footer_all}
-                          showPageNumbersAll={report?.show_page_numbers_all} forceCollapsible
-                        />
-                      </div>
-                    ))}
-                    {branding?.subsidiary_logos?.length > 0 && (
-                      <div className="border-t pt-6">
-                        <p className="text-xs font-bold uppercase tracking-wider mb-3 text-muted-foreground">Our Sub-Brands</p>
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                          {branding.subsidiary_logos.map((sl, i) => (
-                            <div key={i} className="text-center">
-                              <img src={sl.url} alt={sl.purpose} className="h-10 object-contain mx-auto" />
-                              {sl.purpose && <p className="text-[10px] text-muted-foreground mt-1">{sl.purpose}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {branding?.funder_logos?.length > 0 && (
-                      <div className="border-t pt-6">
-                        <p className="text-xs font-bold uppercase tracking-wider mb-3 text-muted-foreground">Our Funders</p>
-                        <div className="flex flex-wrap items-center justify-center gap-4">
-                          {branding.funder_logos.map((fl, i) => (
-                            <div key={i} className="text-center">
-                              <img src={fl.url} alt={fl.purpose} className="h-10 object-contain mx-auto" />
-                              {fl.purpose && <p className="text-[10px] text-muted-foreground mt-1">{fl.purpose}</p>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {report?.inside_back_cover_image && (
-                  <div className="max-w-4xl mx-auto">
-                    <StyledCoverPreview coverType="inside_back" report={report} branding={branding} />
-                  </div>
-                )}
-                {report?.back_cover_image ? (
-                  <div className="max-w-4xl mx-auto">
-                    <StyledCoverPreview coverType="back" report={report} branding={branding} />
-                  </div>
-                ) : branding ? (
-                  <div className="max-w-4xl mx-auto aspect-[8.5/11] overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
-                    {report?.back_cover_text && (
-                      <p className="text-base md:text-xl text-white drop-shadow-lg whitespace-pre-line text-center p-12">{report.back_cover_text}</p>
-                    )}
-                  </div>
-                ) : null}
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
+                <ReportDigitalView
+                  report={report}
+                  sections={sections}
+                  branding={branding}
+                  dataEntries={dataEntries}
+                  onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                />
               </div>
             ) : (
-              /* ── Print Preview (matches ReportingAGRPrint) ── */
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                <div className="flex flex-col items-center gap-3">
-                  {(() => {
-                    const PagePreview = ({ pageNum, children }) => (
-                      <div className="relative shrink-0 w-full">
-                        <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
-                        <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
-                        <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ minHeight: '11in', width: '210mm', maxWidth: '100%' }}>
-                          {children}
-                        </div>
-                        {pageNum && (
-                          <div className="no-print text-center mt-2">
-                            <span className="text-[10px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">Page {pageNum}</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                    const hasInsideFront = !!report?.inside_front_cover_image;
-                    const tocPageNum = hasInsideFront ? 3 : 2;
-                    const getSectionPage = (idx) => tocPageNum + 1 + idx;
-
-                    const togglePageBreak = async (sectionId, current) => {
-                      await base44.entities.AGRReportSection.update(sectionId, { page_break_before: !current });
-                      setSections(prev => prev.map(s => s.id === sectionId ? { ...s, page_break_before: !current } : s));
-                    };
-
-                    return (
-                      <>
-                        <PagePreview pageNum={1}>
-                          <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
-                        </PagePreview>
-                        {report?.inside_front_cover_image && (
-                          <PagePreview pageNum={2}>
-                            <StyledCoverPreview coverType="inside_front" report={report} branding={branding} noPadding />
-                          </PagePreview>
-                        )}
-                        <PagePreview pageNum={tocPageNum}>
-                          <div className="p-10 flex flex-col" style={{ minHeight: '11in' }}>
-                            <h3 className="text-lg font-heading font-bold uppercase tracking-wider mb-10" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-                            <div className="flex-1 space-y-3">
-                              {sections.map((s, i) => (
-                                <div key={s.id} className="flex items-baseline text-sm" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                                  <span className="font-bold mr-3 shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                                  <span className="flex-1">{s.title || 'Untitled'}</span>
-                                  <span className="flex-1 mx-2 border-b border-dotted" style={{ borderColor: branding?.accent_color ? `${branding.accent_color}40` : '#2b2de840' }} />
-                                  <span className="shrink-0 font-medium tabular-nums" style={{ color: branding?.primary_color || '#1a2744' }}>{getSectionPage(i)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </PagePreview>
-                        {sections.map((section, i) => (
-                          <PagePreview key={section.id} pageNum={getSectionPage(i)}>
-                            <div className="h-1 w-full" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
-                            <div className="p-8 relative">
-                              <button
-                                onClick={() => togglePageBreak(section.id, section.page_break_before)}
-                                className="absolute top-2 right-2 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
-                                title={section.page_break_before ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
-                              >
-                                <ArrowBigUp className={`w-3.5 h-3.5 ${section.page_break_before ? 'text-accent' : ''}`} />
-                                {section.page_break_before ? 'Forced page break' : 'Normal flow'}
-                              </button>
-                              <div ref={el => { sectionRefs.current[section.id] = el; }}>
-                                <SectionRenderer
-                                  section={section} sectionNumber={i + 1} dataEntries={dataEntries} branding={branding} isPrint
-                                  masterStyles={report?.master_section_styles} pageNumber={getSectionPage(i)}
-                                  masterHeader={report?.master_header_text} masterFooter={report?.master_footer_text}
-                                  headerImage={report?.master_header_image} footerImage={report?.master_footer_image}
-                                  headerImageHeight={report?.header_image_height} footerImageHeight={report?.footer_image_height}
-                                  headerFontSize={report?.header_font_size} footerFontSize={report?.footer_font_size}
-                                  headerLayout={report?.header_layout} headerZones={report?.header_zones}
-                                  footerLayout={report?.footer_layout} footerZones={report?.footer_zones}
-                                  showHeaderAll={report?.show_header_all} showFooterAll={report?.show_footer_all}
-                                  showPageNumbersAll={report?.show_page_numbers_all}
-                                />
-                              </div>
-                            </div>
-                          </PagePreview>
-                        ))}
-                        {branding?.subsidiary_logos?.length > 0 && (
-                          <PagePreview>
-                            <div className="p-8">
-                              <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Sub-Brands</p>
-                              <div className="flex flex-wrap items-center justify-center gap-6">
-                                {branding.subsidiary_logos.map((sl, i) => (
-                                  <div key={i} className="text-center">
-                                    <img src={sl.url} alt={sl.purpose} className="h-12 object-contain mx-auto" />
-                                    {sl.purpose && <p className="text-xs text-muted-foreground mt-1">{sl.purpose}</p>}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </PagePreview>
-                        )}
-                        {branding?.funder_logos?.length > 0 && (
-                          <PagePreview>
-                            <div className="p-8">
-                              <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Funders</p>
-                              <div className="flex flex-wrap items-center justify-center gap-6">
-                                {branding.funder_logos.map((fl, i) => (
-                                  <div key={i} className="text-center">
-                                    <img src={fl.url} alt={fl.purpose} className="h-12 object-contain mx-auto" />
-                                    {fl.purpose && <p className="text-xs text-muted-foreground mt-1">{fl.purpose}</p>}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </PagePreview>
-                        )}
-                        {report?.inside_back_cover_image && (
-                          <PagePreview>
-                            <StyledCoverPreview coverType="inside_back" report={report} branding={branding} noPadding />
-                          </PagePreview>
-                        )}
-                        <PagePreview>
-                          {report?.back_cover_image ? (
-                            <StyledCoverPreview coverType="back" report={report} branding={branding} noPadding />
-                          ) : branding ? (
-                            <div className="h-full w-full overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
-                              {report?.back_cover_text && (
-                                <p className="text-xl text-white drop-shadow-lg whitespace-pre-line text-center p-12">{report.back_cover_text}</p>
-                              )}
-                            </div>
-                          ) : null}
-                        </PagePreview>
-                      </>
-                    );
-                  })()}
-                </div>
+                <ReportPrintView
+                  report={report}
+                  sections={sections}
+                  branding={branding}
+                  dataEntries={dataEntries}
+                  onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                  onSectionsUpdate={setSections}
+                />
               </div>
             )}
           </div>
