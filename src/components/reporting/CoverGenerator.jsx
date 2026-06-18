@@ -97,7 +97,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   };
 
   const addTextBox = () => {
-    const el = { id: uid(), type: 'text', content: 'New text', x: 50, y: 50, w: 280, font_size: 20, font_family: 'Inter', color: '#ffffff', bold: false, italic: false, underline: false, align: 'center' };
+    const el = { id: uid(), type: 'text', content: '', x: 50, y: 50, w: 280, font_size: 20, font_family: 'Inter', color: '#ffffff', bold: false, italic: false, underline: false, align: 'center' };
     updateOverlays(prev => [...prev, el]);
     setSelectedId(el.id);
   };
@@ -227,7 +227,9 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
-                      {el.content}
+                      {el.content ? el.content : (
+                        <span className="text-white/30 italic pointer-events-none">Empty text box</span>
+                      )}
                       {/* Resize handle — visible on group hover or when selected */}
                       <div
                         className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
@@ -349,8 +351,16 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
 function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
   const [text, setText] = useState(el.content || '');
   const [applied, setApplied] = useState(true);
+  const textareaRef = useRef(null);
 
   useEffect(() => { setText(el.content || ''); setApplied(true); }, [el.id, el.content]);
+
+  // Auto-focus textarea when a text element is selected
+  useEffect(() => {
+    if (el.type === 'text' && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [el.id]);
 
   if (el.type === 'text') {
     const applyText = () => { onUpdate({ content: text }); setApplied(true); };
@@ -361,8 +371,8 @@ function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
           <Button variant="ghost" size="sm" onClick={onDelete} className="h-6 w-6 p-0 text-red-400 hover:text-red-600"><X className="w-3 h-3" /></Button>
         </div>
         <div className="flex items-start gap-1">
-          <Textarea rows={2} value={text} onChange={e => { setText(e.target.value); setApplied(false); }}
-            className="text-xs flex-1" placeholder="Text content..." />
+          <Textarea ref={textareaRef} rows={2} value={text} onChange={e => { setText(e.target.value); setApplied(false); }}
+            className="text-xs flex-1" placeholder="Type your text..." />
           {!applied && (
             <Button size="icon" variant="outline" onClick={applyText} className="h-8 w-8 shrink-0 text-green-600" title="Apply"><Check className="w-3.5 h-3.5" /></Button>
           )}
