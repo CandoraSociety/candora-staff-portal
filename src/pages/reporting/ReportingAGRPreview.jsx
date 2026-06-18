@@ -193,9 +193,17 @@ export default function ReportingAGRPreview() {
               {branding?.legal_name || branding?.common_name || ''}
             </p>
             {(branding?.address || branding?.address_line1) && (
-              <p className="text-sm md:text-base text-white/90 drop-shadow">
-                {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
-              </p>
+              <div className="text-sm md:text-base text-white/90 drop-shadow text-center">
+                {branding.address ? (
+                  <p>{branding.address}</p>
+                ) : (
+                  <>
+                    <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
+                    <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
+                    {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
+                  </>
+                )}
+              </div>
             )}
             {branding?.website && (
               <p className="text-sm md:text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
@@ -209,9 +217,17 @@ export default function ReportingAGRPreview() {
               {branding.legal_name || branding.common_name || ''}
             </p>
             {(branding.address || branding.address_line1) && (
-              <p className="text-sm md:text-base text-white/90 drop-shadow">
-                {branding.address || [branding.address_line1, branding.address_line2, branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join(', ')}
-              </p>
+              <div className="text-sm md:text-base text-white/90 drop-shadow text-center">
+                {branding.address ? (
+                  <p>{branding.address}</p>
+                ) : (
+                  <>
+                    <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
+                    <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
+                    {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
+                  </>
+                )}
+              </div>
             )}
             {branding?.website && (
               <p className="text-sm md:text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
