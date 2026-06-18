@@ -8,20 +8,11 @@ function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
 
-function defaultZones() {
-  return [
-    { id: 'z1', w: 33, content: 'text' },
-    { id: 'z2', w: 34, content: '' },
-    { id: 'z3', w: 33, content: 'page_number' },
-  ];
-}
-
 export default function SectionRenderer({
   section, sectionNumber, dataEntries, branding, isPrint,
   pageNumber, masterHeader, masterFooter, headerImage, footerImage,
   headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
-  headerLayout, headerTextAlign, headerImageAlign, headerPageNumberAlign,
-  footerLayout, footerTextAlign, footerImageAlign, footerPageNumberAlign,
+  headerLayout, footerLayout,
   headerZones: headerZonesRaw, footerZones: footerZonesRaw,
   showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible
 }) {
@@ -41,8 +32,8 @@ export default function SectionRenderer({
     text, image, imageHeight, showPN, pageNum,
     zones: zonesRaw, layout, fontSize
   }) => {
-    const zonesArr = parseZones(zonesRaw);
-    const zones = (zonesArr.length > 0) ? zonesArr : defaultZones();
+    const zones = parseZones(zonesRaw);
+    if (!zones.length) return null;
     const hasAny = zones.some(z => {
       if (z.content === 'text' && text) return true;
       if (z.content === 'image' && image) return true;
@@ -54,8 +45,8 @@ export default function SectionRenderer({
     const renderSlot = (z) => {
       if (z.content === 'text' && text) {
         return (
-          <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground truncate">
-            {text.length > 60 ? text.slice(0, 60) + '...' : text}
+          <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground break-words">
+            {text}
           </span>
         );
       }
@@ -197,6 +188,7 @@ export default function SectionRenderer({
     <div className={isPrint ? 'mb-8' : 'mb-6'}>
       {isCollapsible ? (
         <>
+          {headerContent}
           <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-2 w-full text-left hover:opacity-80 transition-opacity">
             <div className="flex-1"><TitleBar /></div>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
@@ -204,7 +196,6 @@ export default function SectionRenderer({
           <AnimatePresence>
             {expanded && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
-                {headerContent}
                 {renderContent()}
                 {footerContent}
               </motion.div>
@@ -213,8 +204,8 @@ export default function SectionRenderer({
         </>
       ) : (
         <>
-          <TitleBar />
           {headerContent}
+          <TitleBar />
           {renderContent()}
           {footerContent}
         </>

@@ -328,7 +328,7 @@ export default function ReportingAGREditor() {
               <HeaderFooterMapEditor
                 label="Header"
                 text={report?.master_header_text}
-                hasImage={!!report?.master_header_image}
+                imageUrl={report?.master_header_image}
                 font_size={report?.header_font_size}
                 layout={report?.header_layout || 'inline'}
                 zones={(() => { try { return JSON.parse(report?.header_zones || '[]'); } catch { return []; } })()}
@@ -339,7 +339,7 @@ export default function ReportingAGREditor() {
               <HeaderFooterMapEditor
                 label="Footer"
                 text={report?.master_footer_text}
-                hasImage={!!report?.master_footer_image}
+                imageUrl={report?.master_footer_image}
                 font_size={report?.footer_font_size}
                 layout={report?.footer_layout || 'inline'}
                 zones={(() => { try { return JSON.parse(report?.footer_zones || '[]'); } catch { return []; } })()}

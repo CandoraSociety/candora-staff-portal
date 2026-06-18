@@ -19,7 +19,7 @@ function defaultZones() {
 }
 
 export default function HeaderFooterMapEditor({
-  label, text, hasImage, font_size, layout, zones, onUpdate, onFontSize, onLayout
+  label, text, imageUrl, font_size, layout, zones, onUpdate, onFontSize, onLayout
 }) {
   // ── Derive zones from legacy fields if zones array is empty ──
   const zonesArr = (zones && zones.length > 0) ? zones : defaultZones();
@@ -136,22 +136,25 @@ export default function HeaderFooterMapEditor({
         <p className="text-[10px] text-amber-600 mt-1">Zone widths sum to {totalWidth}% (should be ~100%)</p>
       )}
 
-      {/* Live mini-preview */}
-      <div className="border rounded bg-white p-2 mt-2 min-h-[28px] flex items-center gap-0" style={{ flexDirection: layout === 'stacked' ? 'column' : 'row' }}>
-        {zonesArr.map((z) => {
-          if (layout === 'stacked') {
+      {/* Rich preview */}
+      <div className="border rounded bg-white mt-2 overflow-hidden">
+        <div className="text-[10px] text-muted-foreground px-2 pt-1.5 font-medium">Preview</div>
+        <div className="p-3 min-h-[36px] flex items-center" style={{ flexDirection: layout === 'stacked' ? 'column' : 'row' }}>
+          {zonesArr.map((z) => {
+            if (layout === 'stacked') {
+              return (
+                <div key={z.id} className="flex justify-center py-0.5 w-full">
+                  {renderZonePreview(z, text, imageUrl, font_size)}
+                </div>
+              );
+            }
             return (
-              <div key={z.id} className="flex justify-center py-0.5" style={{ width: '100%' }}>
-                {renderZonePreview(z, text, hasImage, font_size)}
+              <div key={z.id} className="flex justify-center overflow-hidden" style={{ width: `${z.w}%` }}>
+                {renderZonePreview(z, text, imageUrl, font_size)}
               </div>
             );
-          }
-          return (
-            <div key={z.id} className="flex justify-center" style={{ width: `${z.w}%` }}>
-              {renderZonePreview(z, text, hasImage, font_size)}
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
 
       {/* Font size */}
@@ -171,15 +174,18 @@ export default function HeaderFooterMapEditor({
   );
 }
 
-function renderZonePreview(z, text, hasImage, fontSize) {
+function renderZonePreview(z, text, imageUrl, fontSize) {
   if (z.content === 'text' && text) {
-    return <span className="text-[10px] text-muted-foreground truncate max-w-full" style={{ fontSize: `${fontSize || 12}px` }}>{text.slice(0, 24)}</span>;
+    return <span className="text-muted-foreground break-words max-w-full text-center" style={{ fontSize: `${fontSize || 12}px` }}>{text}</span>;
   }
-  if (z.content === 'image' && hasImage) {
-    return <span className="text-[10px] text-amber-600 italic">[image]</span>;
+  if (z.content === 'image' && imageUrl) {
+    return <img src={imageUrl} alt="" className="object-contain max-h-10" style={{ maxWidth: '100%' }} />;
+  }
+  if (z.content === 'image' && !imageUrl) {
+    return <span className="text-[10px] text-amber-600 italic">No image uploaded</span>;
   }
   if (z.content === 'page_number') {
-    return <span className="text-[10px] text-emerald-600">[12]</span>;
+    return <span className="text-muted-foreground" style={{ fontSize: `${fontSize || 12}px` }}>[12]</span>;
   }
   return <span className="text-[10px] text-gray-300">—</span>;
 }

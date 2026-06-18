@@ -138,13 +138,9 @@ export default function ReportingAGRPreview() {
               headerFontSize={report?.header_font_size}
               footerFontSize={report?.footer_font_size}
               headerLayout={report?.header_layout}
-              headerTextAlign={report?.header_text_align}
-              headerImageAlign={report?.header_image_align}
-              headerPageNumberAlign={report?.header_page_number_align}
+              headerZones={report?.header_zones}
               footerLayout={report?.footer_layout}
-              footerTextAlign={report?.footer_text_align}
-              footerImageAlign={report?.footer_image_align}
-              footerPageNumberAlign={report?.footer_page_number_align}
+              footerZones={report?.footer_zones}
               showHeaderAll={report?.show_header_all}
               showFooterAll={report?.show_footer_all}
               showPageNumbersAll={report?.show_page_numbers_all}
