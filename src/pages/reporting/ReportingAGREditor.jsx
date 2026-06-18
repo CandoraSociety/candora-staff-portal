@@ -361,17 +361,29 @@ export default function ReportingAGREditor() {
             )}
             <h3 className="font-heading font-semibold text-base flex items-center gap-2"><Eye className="w-4 h-4" />Live Preview</h3>
             <div className="border rounded-xl bg-white max-h-[calc(100vh-200px)] overflow-y-auto shadow-sm">
-              {/* Front cover — full bleed, no overlays */}
-              {report?.cover_image ? (
-                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative">
+              {/* Front cover — full bleed with manual overlay text */}
+              <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative">
+                {report?.cover_image ? (
                   <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="aspect-[8.5/11] w-full overflow-hidden rounded-t-xl relative" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
-              )}
-              {/* Inside front cover — full bleed */}
+                ) : (
+                  <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
+                )}
+                {report?.front_cover_text && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.25)' : 'transparent' }}>
+                    <p className="text-sm md:text-base text-white drop-shadow-lg whitespace-pre-line">{report.front_cover_text}</p>
+                  </div>
+                )}
+              </div>
+              {/* Inside front cover — full bleed with manual overlay text */}
               {report?.inside_front_cover_image && (
-                <div className="aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+                <div className="aspect-[8.5/11] w-full overflow-hidden relative">
+                  <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  {report?.inside_front_cover_text && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                      <p className="text-sm md:text-base text-white drop-shadow-lg whitespace-pre-line">{report.inside_front_cover_text}</p>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="p-6 space-y-6">
@@ -436,65 +448,34 @@ export default function ReportingAGREditor() {
                 />
               ))}
 
-              {/* Inside back cover */}
+              {/* Inside back cover — full bleed with manual overlay text */}
               {report?.inside_back_cover_image && (
-                <div className="-mx-6 aspect-[8.5/11] overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+                <div className="-mx-6 aspect-[8.5/11] overflow-hidden relative">
+                  <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+                  {report?.inside_back_cover_text && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                      <p className="text-sm text-white drop-shadow-lg whitespace-pre-line">{report.inside_back_cover_text}</p>
+                    </div>
+                  )}
+                </div>
               )}
-              {/* Back cover — full bleed with logo + contact info overlay */}
+              {/* Back cover — full bleed with manual overlay text */}
               {report?.back_cover_image ? (
                 <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative">
                   <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
-                    {branding?.logo_urls?.[0] && (
-                      <img src={branding.logo_urls[0]} alt="Logo" className="h-10 md:h-12 object-contain mb-4 drop-shadow-lg" />
-                    )}
-                    <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
-                      {branding?.legal_name || branding?.common_name || ''}
-                    </p>
-                    {(branding?.address || branding?.address_line1) && (
-                      <div className="text-xs text-white/90 drop-shadow text-center">
-                        {branding.address ? (
-                          <p>{branding.address}</p>
-                        ) : (
-                          <>
-                            <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
-                            <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
-                            {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {branding?.website && (
-                      <p className="text-xs text-white/90 drop-shadow mt-1">{branding.website}</p>
-                    )}
-                  </div>
+                  {report?.back_cover_text && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                      <p className="text-sm text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
+                    </div>
+                  )}
                 </div>
               ) : branding ? (
                 <div className="-mx-6 -mb-6 aspect-[8.5/11] overflow-hidden rounded-b-xl relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                    {branding?.logo_urls?.[0] && (
-                      <img src={branding.logo_urls[0]} alt="Logo" className="h-10 md:h-12 object-contain mb-4 drop-shadow-lg" />
-                    )}
-                    <p className="text-sm font-heading font-bold text-white drop-shadow-lg mb-2">
-                      {branding.legal_name || branding.common_name || ''}
-                    </p>
-                    {(branding.address || branding.address_line1) && (
-                      <div className="text-xs text-white/90 drop-shadow text-center">
-                        {branding.address ? (
-                          <p>{branding.address}</p>
-                        ) : (
-                          <>
-                            <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
-                            <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
-                            {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {branding.website && (
-                      <p className="text-xs text-white/90 drop-shadow mt-1">{branding.website}</p>
-                    )}
-                  </div>
+                  {report?.back_cover_text && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                      <p className="text-sm text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
+                    </div>
+                  )}
                 </div>
               ) : null}
               </div>

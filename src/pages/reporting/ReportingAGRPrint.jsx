@@ -63,33 +63,30 @@ export default function ReportingAGRPrint() {
       )}
 
       <div className="max-w-[210mm] mx-auto bg-white print:shadow-none print:border-0">
-        {/* Front cover — full bleed with required info overlay */}
+        {/* Front cover — full bleed with manual overlay text */}
         <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
           {report?.cover_image ? (
             <img src={report.cover_image} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
           )}
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.3)' : 'transparent' }}>
-            {branding?.logo_urls?.[0] && (
-              <img src={branding.logo_urls[0]} alt="Logo" className="h-24 object-contain mb-6 drop-shadow-lg" />
-            )}
-            <h1 className="text-3xl font-heading font-bold text-white drop-shadow-lg mb-4">{report?.title || 'Annual Report'}</h1>
-            {branding?.tagline && <p className="text-lg text-white/90 mb-6 drop-shadow">{branding.tagline}</p>}
-            {report?.year && (
-              <p className="text-lg text-white/90 font-medium drop-shadow">
-                April 1, {report.year} – March 31, {report.year + 1}
-              </p>
-            )}
-            {branding?.common_name && (
-              <p className="text-sm text-white/80 mt-6 drop-shadow">{branding.common_name}</p>
-            )}
-          </div>
+          {report?.front_cover_text && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: report?.cover_image ? 'rgba(0,0,0,0.3)' : 'transparent' }}>
+              <p className="text-xl md:text-3xl text-white drop-shadow-lg whitespace-pre-line">{report.front_cover_text}</p>
+            </div>
+          )}
         </div>
 
-        {/* Inside front cover — full bleed */}
+        {/* Inside front cover — full bleed with manual overlay text */}
         {report?.inside_front_cover_image && (
-          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_front_cover_image} alt="Inside Front Cover" className="w-full h-full object-cover" /></div>
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
+            <img src={report.inside_front_cover_image} alt="Inside Front Cover" className="absolute inset-0 w-full h-full object-cover" />
+            {report?.inside_front_cover_text && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                <p className="text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_front_cover_text}</p>
+              </div>
+            )}
+          </div>
         )}
 
         <div className="print-break p-8">
@@ -174,72 +171,35 @@ export default function ReportingAGRPrint() {
           </div>
         )}
 
-        {/* Inside back cover — full bleed */}
+        {/* Inside back cover — full bleed with manual overlay text */}
         {report?.inside_back_cover_image && (
-          <div className="print-break aspect-[8.5/11] w-full overflow-hidden"><img src={report.inside_back_cover_image} alt="Inside Back Cover" className="w-full h-full object-cover" /></div>
+          <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
+            <img src={report.inside_back_cover_image} alt="Inside Back Cover" className="absolute inset-0 w-full h-full object-cover" />
+            {report?.inside_back_cover_text && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}>
+                <p className="text-xl text-white drop-shadow-lg whitespace-pre-line">{report.inside_back_cover_text}</p>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Back cover — full bleed with contact info overlay */}
+        {/* Back cover — full bleed with manual overlay text */}
         {report?.back_cover_image ? (
           <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative">
             <img src={report.back_cover_image} alt="Back Cover" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}>
-              {branding?.logo_urls?.[0] && (
-                <img src={branding.logo_urls[0]} alt="Logo" className="h-20 object-contain mb-6 drop-shadow-lg" />
-              )}
-              <p className="text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
-                {branding?.legal_name || branding?.common_name || ''}
-              </p>
-              {(branding?.address || branding?.address_line1) && (
-                <div className="text-base text-white/90 drop-shadow text-center">
-                  {branding.address ? (
-                    <p>{branding.address}</p>
-                  ) : (
-                    <>
-                      <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
-                      <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
-                      {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
-                    </>
-                  )}
-                </div>
-              )}
-              {branding?.website && (
-                <p className="text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
-              )}
-              {branding?.footer_text && (
-                <p className="text-sm text-white/70 drop-shadow mt-4">{branding.footer_text}</p>
-              )}
-            </div>
+            {report?.back_cover_text && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
+                <p className="text-xl text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
+              </div>
+            )}
           </div>
         ) : branding ? (
           <div className="print-break aspect-[8.5/11] w-full overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
-              {branding?.logo_urls?.[0] && (
-                <img src={branding.logo_urls[0]} alt="Logo" className="h-20 object-contain mb-6 drop-shadow-lg" />
-              )}
-              <p className="text-2xl font-heading font-bold text-white drop-shadow-lg mb-4">
-                {branding.legal_name || branding.common_name || ''}
-              </p>
-              {(branding.address || branding.address_line1) && (
-                <div className="text-base text-white/90 drop-shadow text-center">
-                  {branding.address ? (
-                    <p>{branding.address}</p>
-                  ) : (
-                    <>
-                      <p>{[branding.address_line1, branding.address_line2].filter(Boolean).join(', ')}</p>
-                      <p>{[branding.address_city, branding.address_province, branding.address_postal_code].filter(Boolean).join('  ')}</p>
-                      {branding.address_country && branding.address_country !== 'Canada' && <p>{branding.address_country}</p>}
-                    </>
-                  )}
-                </div>
-              )}
-              {branding.website && (
-                <p className="text-base text-white/90 drop-shadow mt-1">{branding.website}</p>
-              )}
-              {branding.footer_text && (
-                <p className="text-sm text-white/70 drop-shadow mt-4">{branding.footer_text}</p>
-              )}
-            </div>
+            {report?.back_cover_text && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+                <p className="text-xl text-white drop-shadow-lg whitespace-pre-line">{report.back_cover_text}</p>
+              </div>
+            )}
           </div>
         ) : null}
       </div>

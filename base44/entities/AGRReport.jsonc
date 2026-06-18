@@ -23,17 +23,33 @@
       "type": "string",
       "description": "Front cover image URL"
     },
+    "front_cover_text": {
+      "type": "string",
+      "description": "Manual text overlay for front cover \u2014 type exactly what you want displayed"
+    },
     "inside_front_cover_image": {
       "type": "string",
       "description": "Inside front cover image URL"
+    },
+    "inside_front_cover_text": {
+      "type": "string",
+      "description": "Manual text overlay for inside front cover"
     },
     "inside_back_cover_image": {
       "type": "string",
       "description": "Inside back cover image URL"
     },
+    "inside_back_cover_text": {
+      "type": "string",
+      "description": "Manual text overlay for inside back cover"
+    },
     "back_cover_image": {
       "type": "string",
       "description": "Back cover image URL"
+    },
+    "back_cover_text": {
+      "type": "string",
+      "description": "Manual text overlay for back cover \u2014 type exactly what you want displayed"
     },
     "description": {
       "type": "string",

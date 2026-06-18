@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star } from 'lucide-react';
+import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Type } from 'lucide-react';
 
 const FIELD_MAP = {
   front: 'cover_image',
@@ -44,6 +44,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
 
   const imageUrl = report?.[FIELD_MAP[type]];
   const label = LABEL_MAP[type];
+  const coverTextField = `${type}_cover_text`;
+  const coverText = report?.[coverTextField] || '';
   const hasUndo = previousRef.current !== null;
   const favs = favourites.filter(f => f.cover_type === type);
   const gen = generating;
@@ -174,6 +176,17 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
+
+      <div>
+        <Label className="text-xs text-muted-foreground flex items-center gap-1"><Type className="w-3 h-3" />Overlay Text</Label>
+        <Textarea
+          rows={3}
+          value={coverText}
+          onChange={e => onUpdate({ [coverTextField]: e.target.value })}
+          placeholder="Text to overlay on this cover (line breaks preserved)..."
+          className="mt-1 text-xs"
+        />
+      </div>
 
       {favs.length > 0 && (
         <div>
