@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { X, Check, ZoomIn } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function CropImageDialog({ open, imageSrc, onCropComplete, onClose }) {
+export default function CropImageDialog({ open, imageSrc, onCropComplete, onClose, aspect = 1, cropShape = 'round' }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -59,8 +59,8 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
               crop={crop}
               zoom={zoom}
               rotation={rotation}
-              aspect={1}
-              cropShape="round"
+              aspect={aspect}
+              cropShape={cropShape}
               showGrid={false}
               onCropChange={setCrop}
               minZoom={0.3}

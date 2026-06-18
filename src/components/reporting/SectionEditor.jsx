@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3, Crop, ImageIcon } from 'lucide-react';
+import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
 
@@ -29,6 +30,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [layout, setLayout] = useState(section.layout || 'text_only');
   const [imageUrl, setImageUrl] = useState(section.image_url || '');
   const [titleImageUrl, setTitleImageUrl] = useState(section.title_image_url || '');
+  const [titleImageWidth, setTitleImageWidth] = useState(section.title_image_width || 80);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageCaption, setImageCaption] = useState(section.image_caption || '');
   const [isCollapsible, setIsCollapsible] = useState(section.is_collapsible || false);
   const [isExpandedDefault, setIsExpandedDefault] = useState(section.is_expanded_default !== false);
@@ -57,6 +60,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setLayout(section.layout || 'text_only');
     setImageUrl(section.image_url || '');
     setTitleImageUrl(section.title_image_url || '');
+    setTitleImageWidth(section.title_image_width || 80);
     setImageCaption(section.image_caption || '');
     setIsCollapsible(section.is_collapsible || false);
     setIsExpandedDefault(section.is_expanded_default !== false);
@@ -213,20 +217,41 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <Input value={title} onChange={e => setTitle(e.target.value)} onBlur={save} placeholder="e.g. Executive Message" className="mt-1" />
               {/* Title Image */}
               <div className="mt-2">
-                <Label className="text-[10px] text-muted-foreground">Title Image</Label>
+                <Label className="text-[10px] text-muted-foreground">Title Image (shown on right)</Label>
                 {titleImageUrl ? (
-                  <div className="relative mt-1 inline-block">
-                    <img src={titleImageUrl} alt="Title" className="h-10 object-contain rounded border" />
-                    <button
-                      onClick={() => { setTitleImageUrl(''); onUpdate(section.id, { title_image_url: null }); }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] hover:bg-red-600"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                  <div className="mt-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <img src={titleImageUrl} alt="Title" className="object-contain rounded border" style={{ height: `${titleImageWidth}px`, maxWidth: `${titleImageWidth}px` }} />
+                      <div className="flex flex-col gap-1">
+                        <button onClick={() => setCropDialogOpen(true)} className="text-[10px] flex items-center gap-1 text-accent hover:underline">
+                          <Crop className="w-3 h-3" /> Crop
+                        </button>
+                        <label className="text-[10px] flex items-center gap-1 text-accent hover:underline cursor-pointer">
+                          <Upload className="w-3 h-3" /> Replace
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                              setTitleImageUrl(file_url);
+                              onUpdate(section.id, { title_image_url: file_url });
+                            } catch {}
+                          }} />
+                        </label>
+                        <button onClick={() => { setTitleImageUrl(''); onUpdate(section.id, { title_image_url: null, title_image_width: null }); }} className="text-[10px] flex items-center gap-1 text-red-400 hover:text-red-600">
+                          <X className="w-3 h-3" /> Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-6">Size</span>
+                      <input type="range" min="24" max="160" value={titleImageWidth} onChange={e => { const v = parseInt(e.target.value); setTitleImageWidth(v); }} onMouseUp={() => onUpdate(section.id, { title_image_width: titleImageWidth })} onTouchEnd={() => onUpdate(section.id, { title_image_width: titleImageWidth })} className="flex-1 h-1 accent-accent" />
+                      <span className="text-[10px] text-muted-foreground w-10 text-right">{titleImageWidth}px</span>
+                    </div>
                   </div>
                 ) : (
                   <label className="inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline mt-1">
-                    <Upload className="w-3 h-3" /> Add title image
+                    <ImageIcon className="w-3 h-3" /> Add title image
                     <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
@@ -241,6 +266,14 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                   </label>
                 )}
               </div>
+              <CropImageDialog
+                open={cropDialogOpen}
+                imageSrc={titleImageUrl}
+                aspect={1.5}
+                cropShape="rect"
+                onCropComplete={(url) => { setTitleImageUrl(url); onUpdate(section.id, { title_image_url: url }); setCropDialogOpen(false); }}
+                onClose={() => setCropDialogOpen(false)}
+              />
               {/* Title Styling Toolbar */}
               <div className="mt-2 p-2 border rounded bg-gray-50/50 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-1">

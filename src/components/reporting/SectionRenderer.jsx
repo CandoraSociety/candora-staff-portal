@@ -148,14 +148,11 @@ export default function SectionRenderer({
           className="h-1 w-full rounded-full mb-4"
           style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)` }}
         />
-        <div className="flex items-center gap-3" style={{ justifyContent: ts.align === 'center' ? 'center' : ts.align === 'right' ? 'flex-end' : 'flex-start' }}>
+        <div className="flex items-center gap-3">
           {sectionNumber != null && (
             <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
               {sectionNumber}
             </div>
-          )}
-          {titleImage && (
-            <img src={titleImage} alt="" className="shrink-0 object-contain rounded" style={{ maxHeight: `${Math.max(titleSize + 8, 36)}px`, maxWidth: '120px' }} />
           )}
           <h3
             className="font-heading font-bold leading-tight"
@@ -170,6 +167,9 @@ export default function SectionRenderer({
           >
             {section.title}
           </h3>
+          {titleImage && (
+            <img src={titleImage} alt="" className="shrink-0 object-contain rounded ml-auto" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px' }} />
+          )}
         </div>
         <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
           <div className="grid grid-cols-3 gap-[3px]">

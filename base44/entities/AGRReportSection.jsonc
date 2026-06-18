@@ -16,7 +16,11 @@
     },
     "title_image_url": {
       "type": "string",
-      "description": "Optional image displayed next to the section title heading"
+      "description": "Optional image displayed on the right side of the section heading"
+    },
+    "title_image_width": {
+      "type": "number",
+      "description": "Width in pixels for the title image (default 80)"
     },
     "content": {
       "type": "string",
