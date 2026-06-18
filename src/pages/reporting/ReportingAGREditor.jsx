@@ -4,7 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X, Check, Monitor, ArrowBigUp } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Printer, Sparkles, ChevronDown, ChevronUp, FileText, Upload, X, Check, Monitor, ArrowBigUp, ClipboardList } from 'lucide-react';
+import InfoToGatherPanel from '@/components/reporting/InfoToGatherPanel';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import SectionEditor from '@/components/reporting/SectionEditor';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
@@ -36,6 +37,7 @@ export default function ReportingAGREditor() {
   const [localFooterImageHeight, setLocalFooterImageHeight] = useState(48);
   const [activeSectionId, setActiveSectionId] = useState(null);
   const [previewMode, setPreviewMode] = useState('digital');
+  const [activeTab, setActiveTab] = useState('editor');
   const sectionRefs = useRef({});
   const previewRef = useRef(null);
   const initRef = useRef(false);
@@ -228,6 +230,29 @@ export default function ReportingAGREditor() {
           </Link>
         </div>
       </div>
+
+      {/* Tab Bar */}
+      <div className="flex items-center gap-0.5 bg-muted rounded-lg p-0.5 w-fit">
+        <button
+          onClick={() => setActiveTab('editor')}
+          className={`px-4 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${activeTab === 'editor' ? 'bg-white shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <FileText className="w-3.5 h-3.5" />Editor
+        </button>
+        <button
+          onClick={() => setActiveTab('info')}
+          className={`px-4 py-1.5 text-sm rounded-md transition-colors flex items-center gap-1.5 ${activeTab === 'info' ? 'bg-white shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <ClipboardList className="w-3.5 h-3.5" />Info to Gather
+        </button>
+      </div>
+
+      {activeTab === 'info' && (
+        <InfoToGatherPanel reportId={id} sections={sections} />
+      )}
+
+      {activeTab === 'editor' && (
+        <>
 
       {/* Master Header & Footer Panel */}
       <div className="border rounded-xl bg-white">
@@ -690,6 +715,9 @@ export default function ReportingAGREditor() {
           </div>
         </div>
       </div>
+
+        </>
+      )}
     </div>
   );
 }

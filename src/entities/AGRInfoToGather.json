@@ -1,0 +1,36 @@
+{
+  "name": "AGRInfoToGather",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "Parent AGR report ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "What information is needed"
+    },
+    "details": {
+      "type": "string",
+      "description": "Additional context about the information needed"
+    },
+    "source": {
+      "type": "string",
+      "description": "Where or who to get the information from"
+    },
+    "target_section_id": {
+      "type": "string",
+      "description": "Which section this info should be added to"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "gathered", "not_applicable"],
+      "default": "pending"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": ["report_id", "title"]
+}
