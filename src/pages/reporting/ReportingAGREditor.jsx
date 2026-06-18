@@ -21,6 +21,7 @@ export default function ReportingAGREditor() {
   const [branding, setBranding] = useState(null);
   const [dataEntries, setDataEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showHeaderPanel, setShowHeaderPanel] = useState(false);
   const [suggestions, setSuggestions] = useState({});
@@ -35,25 +36,29 @@ export default function ReportingAGREditor() {
   const initRef = useRef(false);
 
   const loadAll = useCallback(async () => {
-    const [r, secs, brandList, dataList, analysisList] = await Promise.all([
-      base44.entities.AGRReport.get(id),
-      base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
-      base44.entities.AGRBranding.filter({ report_id: id }),
-      base44.entities.AGRReportData.filter({ report_id: id }),
-      base44.entities.AGRAnalysisResult.filter({ report_id: id }),
-    ]);
-    setReport(r);
-    setSections(secs);
-    setBranding(brandList[0] || null);
-    setDataEntries(dataList);
-    setAnalysis(analysisList[0] || null);
-    if (!initRef.current) {
-      setLocalTitle(r.title || '');
-      setLocalHeaderText(r.master_header_text || '');
-      setLocalFooterText(r.master_footer_text || '');
-      setLocalHeaderImageHeight(r.header_image_height || 48);
-      setLocalFooterImageHeight(r.footer_image_height || 48);
-      initRef.current = true;
+    try {
+      const [r, secs, brandList, dataList, analysisList] = await Promise.all([
+        base44.entities.AGRReport.get(id),
+        base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
+        base44.entities.AGRBranding.filter({ report_id: id }),
+        base44.entities.AGRReportData.filter({ report_id: id }),
+        base44.entities.AGRAnalysisResult.filter({ report_id: id }),
+      ]);
+      setReport(r);
+      setSections(secs);
+      setBranding(brandList[0] || null);
+      setDataEntries(dataList);
+      setAnalysis(analysisList[0] || null);
+      if (!initRef.current) {
+        setLocalTitle(r?.title || '');
+        setLocalHeaderText(r?.master_header_text || '');
+        setLocalFooterText(r?.master_footer_text || '');
+        setLocalHeaderImageHeight(r?.header_image_height || 48);
+        setLocalFooterImageHeight(r?.footer_image_height || 48);
+        initRef.current = true;
+      }
+    } catch (e) {
+      setError(e.message || 'Failed to load report');
     }
     setLoading(false);
   }, [id]);
@@ -144,6 +149,16 @@ export default function ReportingAGREditor() {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-destructive font-semibold">{error ? 'Failed to load report' : 'Report not found'}</p>
+        {error && <p className="text-sm text-muted-foreground">{error}</p>}
+        <Link to="/reporting/agr" className="text-accent hover:underline text-sm">Back to AGR Reports</Link>
       </div>
     );
   }

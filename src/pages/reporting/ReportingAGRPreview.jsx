@@ -13,6 +13,7 @@ export default function ReportingAGRPreview() {
   const [dataEntries, setDataEntries] = useState([]);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -27,6 +28,9 @@ export default function ReportingAGRPreview() {
       setBranding(brandList[0] || null);
       setDataEntries(dataList);
       setAnalysis(analysisList[0] || null);
+    }).catch(e => {
+      setError(e.message || 'Failed to load report');
+    }).finally(() => {
       setLoading(false);
     });
   }, [id]);
@@ -35,6 +39,16 @@ export default function ReportingAGRPreview() {
     return (
       <div className="flex items-center justify-center py-32">
         <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
+      </div>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-destructive font-semibold">{error ? 'Failed to load report' : 'Report not found'}</p>
+        {error && <p className="text-sm text-muted-foreground">{error}</p>}
+        <Link to="/reporting/agr" className="text-accent hover:underline text-sm">Back to AGR Reports</Link>
       </div>
     );
   }
