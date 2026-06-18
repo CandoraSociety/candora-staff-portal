@@ -90,6 +90,10 @@
       "default": "inline",
       "description": "Inline = text beside image, Stacked = stacked vertically"
     },
+    "header_zones": {
+      "type": "string",
+      "description": "JSON: [{id, w (width %), content: 'text'|'image'|'page_number'|''}] \u2014 dynamic zone configuration"
+    },
     "header_text_align": {
       "type": "string",
       "enum": [
@@ -98,7 +102,7 @@
         "right"
       ],
       "default": "left",
-      "description": "Which zone the header text occupies"
+      "description": "Legacy \u2014 which zone the header text occupies"
     },
     "header_image_align": {
       "type": "string",
@@ -108,7 +112,7 @@
         "right"
       ],
       "default": "right",
-      "description": "Which zone the header image occupies"
+      "description": "Legacy \u2014 which zone the header image occupies"
     },
     "header_page_number_align": {
       "type": "string",
@@ -119,7 +123,7 @@
         "none"
       ],
       "default": "right",
-      "description": "Which zone the page number occupies"
+      "description": "Legacy \u2014 which zone the page number occupies"
     },
     "master_footer_text": {
       "type": "string",
@@ -148,6 +152,10 @@
       "default": "inline",
       "description": "Inline = text beside image, Stacked = stacked vertically"
     },
+    "footer_zones": {
+      "type": "string",
+      "description": "JSON: [{id, w (width %), content: 'text'|'image'|'page_number'|''}] \u2014 dynamic zone configuration"
+    },
     "footer_text_align": {
       "type": "string",
       "enum": [
@@ -156,7 +164,7 @@
         "right"
       ],
       "default": "left",
-      "description": "Which zone the footer text occupies"
+      "description": "Legacy \u2014 which zone the footer text occupies"
     },
     "footer_image_align": {
       "type": "string",
@@ -166,7 +174,7 @@
         "right"
       ],
       "default": "right",
-      "description": "Which zone the footer image occupies"
+      "description": "Legacy \u2014 which zone the footer image occupies"
     },
     "footer_page_number_align": {
       "type": "string",
@@ -177,7 +185,7 @@
         "none"
       ],
       "default": "right",
-      "description": "Which zone the page number occupies"
+      "description": "Legacy \u2014 which zone the page number occupies"
     },
     "show_header_all": {
       "type": "boolean",

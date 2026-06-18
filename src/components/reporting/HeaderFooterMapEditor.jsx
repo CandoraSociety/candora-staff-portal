@@ -1,117 +1,156 @@
-import React from 'react';
-import { Type, Image, Hash } from 'lucide-react';
+import React, { useCallback } from 'react';
+import { Type, Image, Hash, Plus, Minus, Trash2, GripVertical } from 'lucide-react';
 
-const ZONES = [
-  { key: 'left', label: 'Left', x: '0%', w: '33.33%' },
-  { key: 'center', label: 'Center', x: '33.33%', w: '33.33%' },
-  { key: 'right', label: 'Right', x: '66.66%', w: '33.33%' },
-];
-
-const ELEMENTS = [
+const CONTENT_TYPES = [
   { value: '', label: 'Empty', icon: null, color: 'bg-gray-100 text-gray-400 border-gray-300' },
   { value: 'text', label: 'Text', icon: Type, color: 'bg-blue-50 text-blue-600 border-blue-300' },
   { value: 'image', label: 'Image', icon: Image, color: 'bg-amber-50 text-amber-600 border-amber-300' },
   { value: 'page_number', label: 'Page #', icon: Hash, color: 'bg-emerald-50 text-emerald-600 border-emerald-300' },
 ];
 
-export default function HeaderFooterMapEditor({ label, text, hasImage, font_size, layout, text_align, image_align, page_number_align, onUpdate, onFontSize, onLayout }) {
-  const getZoneContent = (zone) => {
-    if (text_align === zone) return 'text';
-    if (image_align === zone) return 'image';
-    if (page_number_align === zone) return 'page_number';
-    return '';
+function makeId() { return 'z' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function defaultZones() {
+  return [
+    { id: makeId(), w: 33, content: 'text' },
+    { id: makeId(), w: 34, content: '' },
+    { id: makeId(), w: 33, content: 'page_number' },
+  ];
+}
+
+export default function HeaderFooterMapEditor({
+  label, text, hasImage, font_size, layout, zones, onUpdate, onFontSize, onLayout
+}) {
+  // ── Derive zones from legacy fields if zones array is empty ──
+  const zonesArr = (zones && zones.length > 0) ? zones : defaultZones();
+
+  const totalWidth = zonesArr.reduce((s, z) => s + z.w, 0);
+
+  const cycleContent = (zoneId) => {
+    const updated = zonesArr.map(z => {
+      if (z.id !== zoneId) return z;
+      const idx = CONTENT_TYPES.findIndex(c => c.value === z.content);
+      return { ...z, content: CONTENT_TYPES[(idx + 1) % CONTENT_TYPES.length].value };
+    });
+    onUpdate(updated);
   };
 
-  const handleZoneClick = (zone) => {
-    const current = getZoneContent(zone);
-    const nextIdx = (ELEMENTS.findIndex(e => e.value === current) + 1) % ELEMENTS.length;
-    const next = ELEMENTS[nextIdx].value;
-
-    // Clear previous assignments
-    const patch = {};
-    if (text_align === zone) patch.text_align = '';
-    if (image_align === zone) patch.image_align = '';
-    if (page_number_align === zone) patch.page_number_align = '';
-
-    // Set new assignment
-    if (next === 'text') patch.text_align = zone;
-    else if (next === 'image') patch.image_align = zone;
-    else if (next === 'page_number') patch.page_number_align = zone;
-
-    onUpdate(patch);
+  const adjustWidth = (zoneId, delta) => {
+    const updated = zonesArr.map(z => {
+      if (z.id !== zoneId) return z;
+      return { ...z, w: Math.max(5, Math.min(90, z.w + delta)) };
+    });
+    onUpdate(updated);
   };
 
-  const zoneContent = ZONES.map(z => ({ ...z, content: getZoneContent(z.key) }));
-  const elForZone = (content) => ELEMENTS.find(e => e.value === content) || ELEMENTS[0];
+  const setWidth = (zoneId, val) => {
+    const w = parseInt(val) || 5;
+    const updated = zonesArr.map(z => z.id === zoneId ? { ...z, w: Math.max(5, Math.min(90, w)) } : z);
+    onUpdate(updated);
+  };
+
+  const removeZone = (zoneId) => {
+    if (zonesArr.length <= 1) return;
+    const updated = zonesArr.filter(z => z.id !== zoneId);
+    onUpdate(updated);
+  };
+
+  const addZone = () => {
+    const updated = [...zonesArr, { id: makeId(), w: 20, content: '' }];
+    onUpdate(updated);
+  };
 
   return (
     <div className="border rounded-lg p-3 bg-gray-50/50">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold">{label} Map</span>
-        <label className="flex items-center gap-1.5 text-xs">
-          <span className="text-muted-foreground">Stack</span>
-          <input
-            type="checkbox"
-            checked={layout === 'stacked'}
-            onChange={e => onLayout(e.target.checked ? 'stacked' : 'inline')}
-            className="rounded"
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground">Stack</span>
+            <input
+              type="checkbox"
+              checked={layout === 'stacked'}
+              onChange={e => onLayout(e.target.checked ? 'stacked' : 'inline')}
+              className="rounded"
+            />
+          </label>
+        </div>
       </div>
 
-      {/* Zone map */}
-      <div className="relative h-16 border-2 border-dashed border-gray-300 rounded-lg bg-white mb-2 overflow-hidden">
-        {ZONES.map((z) => {
-          const content = getZoneContent(z.key);
-          const el = elForZone(content);
-          const Icon = el.icon;
+      {/* Zone list */}
+      <div className="space-y-1.5 mb-2">
+        {zonesArr.map((z) => {
+          const ct = CONTENT_TYPES.find(c => c.value === z.content) || CONTENT_TYPES[0];
+          const Icon = ct.icon;
           return (
-            <button
-              key={z.key}
-              onClick={() => handleZoneClick(z.key)}
-              className={`absolute top-1 bottom-1 rounded-md border flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-all cursor-pointer hover:ring-2 hover:ring-accent/50 ${el.color}`}
-              style={{ left: z.x, width: z.w }}
-              title={`Click to change — currently: ${el.label}`}
-            >
-              {Icon && <Icon className="w-3.5 h-3.5" />}
-              <span className="leading-none">{el.label}</span>
-            </button>
+            <div key={z.id} className="flex items-center gap-1.5">
+              {/* Zone bar — visual width indicator */}
+              <div className="flex-1 flex items-center gap-1">
+                <button
+                  onClick={() => cycleContent(z.id)}
+                  className={`h-8 rounded-md border flex items-center justify-center gap-1 text-[10px] font-medium transition-all cursor-pointer hover:ring-2 hover:ring-accent/50 ${ct.color}`}
+                  style={{ width: `${z.w}%` }}
+                  title={`Click to change — currently: ${ct.label}`}
+                >
+                  {Icon && <Icon className="w-3 h-3" />}
+                  <span className="leading-none truncate">{ct.label}</span>
+                </button>
+                <span className="text-[10px] text-muted-foreground w-8 text-right shrink-0">{z.w}%</span>
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button onClick={() => adjustWidth(z.id, -5)} className="w-5 h-5 flex items-center justify-center rounded border bg-white hover:bg-gray-100 text-[10px]" title="Shrink 5%">
+                  <Minus className="w-2.5 h-2.5" />
+                </button>
+                <input
+                  type="number"
+                  value={z.w}
+                  onChange={e => setWidth(z.id, e.target.value)}
+                  className="w-10 h-5 text-[10px] border rounded text-center px-0.5"
+                  min="5" max="90"
+                />
+                <button onClick={() => adjustWidth(z.id, 5)} className="w-5 h-5 flex items-center justify-center rounded border bg-white hover:bg-gray-100 text-[10px]" title="Expand 5%">
+                  <Plus className="w-2.5 h-2.5" />
+                </button>
+                {zonesArr.length > 1 && (
+                  <button onClick={() => removeZone(z.id)} className="w-5 h-5 flex items-center justify-center rounded border bg-white hover:bg-red-50 text-red-400 hover:text-red-600" title="Remove zone">
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
-        {/* Zone dividers */}
-        <div className="absolute left-1/3 top-0 bottom-0 border-l border-dashed border-gray-200" />
-        <div className="absolute left-2/3 top-0 bottom-0 border-l border-dashed border-gray-200" />
       </div>
 
+      <button
+        onClick={addZone}
+        className="w-full text-xs text-accent hover:underline py-1 flex items-center justify-center gap-1 border border-dashed rounded-md hover:border-accent transition-colors"
+      >
+        <Plus className="w-3 h-3" /> Add Zone
+      </button>
+
+      {/* Total warning */}
+      {Math.abs(totalWidth - 100) > 2 && (
+        <p className="text-[10px] text-amber-600 mt-1">Zone widths sum to {totalWidth}% (should be ~100%)</p>
+      )}
+
       {/* Live mini-preview */}
-      <div className="border rounded bg-white p-2 flex items-center gap-2 min-h-[28px]" style={{ flexDirection: layout === 'stacked' ? 'column' : 'row' }}>
-        {zoneContent.map((z) => {
-          const content = z.content;
-          if (!content) return <div key={z.key} className="flex-1" />;
-          if (content === 'text' && text) {
+      <div className="border rounded bg-white p-2 mt-2 min-h-[28px] flex items-center gap-0" style={{ flexDirection: layout === 'stacked' ? 'column' : 'row' }}>
+        {zonesArr.map((z) => {
+          if (layout === 'stacked') {
             return (
-              <div key={z.key} className="flex-1 flex justify-center">
-                <span className="text-[10px] text-muted-foreground truncate max-w-full" style={{ fontSize: `${font_size || 12}px` }}>
-                  {text.slice(0, 30)}
-                </span>
+              <div key={z.id} className="flex justify-center py-0.5" style={{ width: '100%' }}>
+                {renderZonePreview(z, text, hasImage, font_size)}
               </div>
             );
           }
-          if (content === 'image' && hasImage) {
-            return (
-              <div key={z.key} className="flex-1 flex justify-center">
-                <span className="text-[10px] text-amber-600 italic">[image]</span>
-              </div>
-            );
-          }
-          if (content === 'page_number') {
-            return (
-              <div key={z.key} className="flex-1 flex justify-center">
-                <span className="text-[10px] text-emerald-600">[12]</span>
-              </div>
-            );
-          }
-          return <div key={z.key} className="flex-1" />;
+          return (
+            <div key={z.id} className="flex justify-center" style={{ width: `${z.w}%` }}>
+              {renderZonePreview(z, text, hasImage, font_size)}
+            </div>
+          );
         })}
       </div>
 
@@ -130,4 +169,17 @@ export default function HeaderFooterMapEditor({ label, text, hasImage, font_size
       </div>
     </div>
   );
+}
+
+function renderZonePreview(z, text, hasImage, fontSize) {
+  if (z.content === 'text' && text) {
+    return <span className="text-[10px] text-muted-foreground truncate max-w-full" style={{ fontSize: `${fontSize || 12}px` }}>{text.slice(0, 24)}</span>;
+  }
+  if (z.content === 'image' && hasImage) {
+    return <span className="text-[10px] text-amber-600 italic">[image]</span>;
+  }
+  if (z.content === 'page_number') {
+    return <span className="text-[10px] text-emerald-600">[12]</span>;
+  }
+  return <span className="text-[10px] text-gray-300">—</span>;
 }

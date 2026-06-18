@@ -331,16 +331,8 @@ export default function ReportingAGREditor() {
                 hasImage={!!report?.master_header_image}
                 font_size={report?.header_font_size}
                 layout={report?.header_layout || 'inline'}
-                text_align={report?.header_text_align || 'left'}
-                image_align={report?.header_image_align || 'right'}
-                page_number_align={report?.header_page_number_align || 'right'}
-                onUpdate={(patch) => {
-                  const updates = {};
-                  if ('text_align' in patch) updates.header_text_align = patch.text_align || null;
-                  if ('image_align' in patch) updates.header_image_align = patch.image_align || null;
-                  if ('page_number_align' in patch) updates.header_page_number_align = patch.page_number_align || null;
-                  updateReport(updates);
-                }}
+                zones={(() => { try { return JSON.parse(report?.header_zones || '[]'); } catch { return []; } })()}
+                onUpdate={(zonesArr) => updateReport({ header_zones: JSON.stringify(zonesArr) })}
                 onFontSize={(v) => updateReport({ header_font_size: v })}
                 onLayout={(v) => updateReport({ header_layout: v })}
               />
@@ -350,16 +342,8 @@ export default function ReportingAGREditor() {
                 hasImage={!!report?.master_footer_image}
                 font_size={report?.footer_font_size}
                 layout={report?.footer_layout || 'inline'}
-                text_align={report?.footer_text_align || 'left'}
-                image_align={report?.footer_image_align || 'right'}
-                page_number_align={report?.footer_page_number_align || 'right'}
-                onUpdate={(patch) => {
-                  const updates = {};
-                  if ('text_align' in patch) updates.footer_text_align = patch.text_align || null;
-                  if ('image_align' in patch) updates.footer_image_align = patch.image_align || null;
-                  if ('page_number_align' in patch) updates.footer_page_number_align = patch.page_number_align || null;
-                  updateReport(updates);
-                }}
+                zones={(() => { try { return JSON.parse(report?.footer_zones || '[]'); } catch { return []; } })()}
+                onUpdate={(zonesArr) => updateReport({ footer_zones: JSON.stringify(zonesArr) })}
                 onFontSize={(v) => updateReport({ footer_font_size: v })}
                 onLayout={(v) => updateReport({ footer_layout: v })}
               />
@@ -494,13 +478,9 @@ export default function ReportingAGREditor() {
                   headerFontSize={report?.header_font_size}
                   footerFontSize={report?.footer_font_size}
                   headerLayout={report?.header_layout}
-                  headerTextAlign={report?.header_text_align}
-                  headerImageAlign={report?.header_image_align}
-                  headerPageNumberAlign={report?.header_page_number_align}
+                  headerZones={report?.header_zones}
                   footerLayout={report?.footer_layout}
-                  footerTextAlign={report?.footer_text_align}
-                  footerImageAlign={report?.footer_image_align}
-                  footerPageNumberAlign={report?.footer_page_number_align}
+                  footerZones={report?.footer_zones}
                   showHeaderAll={report?.show_header_all}
                   showFooterAll={report?.show_footer_all}
                   showPageNumbersAll={report?.show_page_numbers_all}

@@ -4,18 +4,30 @@ import ReactMarkdown from 'react-markdown';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
+function parseZones(raw) {
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
+
+function defaultZones() {
+  return [
+    { id: 'z1', w: 33, content: 'text' },
+    { id: 'z2', w: 34, content: '' },
+    { id: 'z3', w: 33, content: 'page_number' },
+  ];
+}
+
 export default function SectionRenderer({
   section, sectionNumber, dataEntries, branding, isPrint,
   pageNumber, masterHeader, masterFooter, headerImage, footerImage,
   headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
   headerLayout, headerTextAlign, headerImageAlign, headerPageNumberAlign,
   footerLayout, footerTextAlign, footerImageAlign, footerPageNumberAlign,
+  headerZones: headerZonesRaw, footerZones: footerZonesRaw,
   showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible
 }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const pc = branding?.primary_color || '#1a2744';
-  const sc = branding?.secondary_color || '#3b5998';
   const ac = branding?.accent_color || '#2b2de8';
 
   const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
@@ -27,44 +39,58 @@ export default function SectionRenderer({
   // ── Zone-based header/footer builder ─────────────────────────────
   const ZoneSlots = ({
     text, image, imageHeight, showPN, pageNum,
-    textAlign, imageAlign, pnAlign, layout, fontSize
+    zones: zonesRaw, layout, fontSize
   }) => {
-    const slots = {
-      left: null, center: null, right: null
-    };
-
-    if (text && textAlign && slots.hasOwnProperty(textAlign)) {
-      slots[textAlign] = (
-        <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground truncate">
-          {text.length > 60 ? text.slice(0, 60) + '...' : text}
-        </span>
-      );
-    }
-    if (image && imageAlign && slots.hasOwnProperty(imageAlign)) {
-      slots[imageAlign] = (
-        <img src={image} alt="" className="object-contain" style={{ maxHeight: `${imageHeight || 48}px`, maxWidth: '100%' }} />
-      );
-    }
-    if (showPN && pnAlign && pnAlign !== 'none' && slots.hasOwnProperty(pnAlign) && pageNum) {
-      slots[pnAlign] = <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
-    }
-
-    const hasAny = Object.values(slots).some(Boolean);
+    const zonesArr = parseZones(zonesRaw);
+    const zones = (zonesArr.length > 0) ? zonesArr : defaultZones();
+    const hasAny = zones.some(z => {
+      if (z.content === 'text' && text) return true;
+      if (z.content === 'image' && image) return true;
+      if (z.content === 'page_number' && showPN && pageNum) return true;
+      return false;
+    });
     if (!hasAny) return null;
+
+    const renderSlot = (z) => {
+      if (z.content === 'text' && text) {
+        return (
+          <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground truncate">
+            {text.length > 60 ? text.slice(0, 60) + '...' : text}
+          </span>
+        );
+      }
+      if (z.content === 'image' && image) {
+        return (
+          <img src={image} alt="" className="object-contain" style={{ maxHeight: `${imageHeight || 48}px`, maxWidth: '100%' }} />
+        );
+      }
+      if (z.content === 'page_number' && showPN && pageNum) {
+        return <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
+      }
+      return null;
+    };
 
     if (layout === 'stacked') {
       return (
         <div className="flex flex-col items-center gap-1">
-          {Object.values(slots).filter(Boolean).map((el, i) => <div key={i}>{el}</div>)}
+          {zones.map(z => {
+            const el = renderSlot(z);
+            return el ? <div key={z.id}>{el}</div> : null;
+          })}
         </div>
       );
     }
 
     return (
-      <div className="flex items-center justify-between w-full gap-2">
-        <div className="flex-1 flex justify-start">{slots.left}</div>
-        <div className="flex-1 flex justify-center">{slots.center}</div>
-        <div className="flex-1 flex justify-end">{slots.right}</div>
+      <div className="flex items-center w-full gap-2">
+        {zones.map(z => {
+          const el = renderSlot(z);
+          return (
+            <div key={z.id} className="flex justify-center" style={{ width: `${z.w}%` }}>
+              {el}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -77,9 +103,7 @@ export default function SectionRenderer({
         imageHeight={headerImageHeight}
         showPN={showPageNum}
         pageNum={pageNumber}
-        textAlign={headerTextAlign || 'left'}
-        imageAlign={headerImageAlign || 'right'}
-        pnAlign={headerPageNumberAlign || 'right'}
+        zones={headerZonesRaw}
         layout={headerLayout || 'inline'}
         fontSize={headerFontSize || 12}
       />
@@ -94,9 +118,7 @@ export default function SectionRenderer({
         imageHeight={footerImageHeight}
         showPN={showPageNum && !showHeader}
         pageNum={pageNumber}
-        textAlign={footerTextAlign || 'left'}
-        imageAlign={footerImageAlign || 'right'}
-        pnAlign={footerPageNumberAlign || 'right'}
+        zones={footerZonesRaw}
         layout={footerLayout || 'inline'}
         fontSize={footerFontSize || 12}
       />
