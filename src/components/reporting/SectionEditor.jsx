@@ -40,7 +40,9 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showDataPanel, setShowDataPanel] = useState(false);
   const [dataEntries, setDataEntries] = useState([]);
-  const [dataForm, setDataForm] = useState({ label: '', raw_data: '' });
+  const [chartLabel, setChartLabel] = useState('');
+  const [chartType, setChartType] = useState('bar');
+  const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
   const [analyzing, setAnalyzing] = useState({});
 
   const master = parseStyles(masterStyles);
@@ -122,11 +124,26 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     if (next) loadDataEntries();
   };
 
-  const handleSaveData = async () => {
-    if (!dataForm.label.trim()) return;
-    const entry = await base44.entities.AGRReportData.create({ ...dataForm, report_id: section.report_id, section_id: section.id, data_type: 'manual' });
+  const updateChartRow = (idx, field, val) => {
+    setChartRows(prev => prev.map((r, i) => i === idx ? { ...r, [field]: val } : r));
+  };
+
+  const addChartRow = () => setChartRows(prev => [...prev, { name: '', value: '' }]);
+  const removeChartRow = (idx) => setChartRows(prev => prev.filter((_, i) => i !== idx));
+
+  const handleSaveChart = async () => {
+    const validRows = chartRows.filter(r => r.name.trim() && r.value !== '');
+    if (!validRows.length || !chartLabel.trim()) return;
+    const chartData = validRows.map(r => ({ name: r.name.trim(), value: parseFloat(r.value) || 0 }));
+    const config = { chart_type: chartType, title: chartLabel, data: chartData };
+    const entry = await base44.entities.AGRReportData.create({
+      label: chartLabel, report_id: section.report_id, section_id: section.id,
+      data_type: 'manual', chart_config: JSON.stringify(config), status: 'analyzed'
+    });
     setDataEntries(prev => [...prev, entry]);
-    setDataForm({ label: '', raw_data: '' });
+    setChartLabel('');
+    setChartType('bar');
+    setChartRows([{ name: '', value: '' }, { name: '', value: '' }]);
   };
 
   const handleDataFileUpload = async (e) => {
@@ -353,7 +370,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <span className="ml-auto">{showDataPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}</span>
             </button>
             {showDataPanel && (
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 space-y-3">
+                {/* Existing chart entries */}
                 {dataEntries.map(entry => {
                   const chartConfig = entry.chart_config ? (typeof entry.chart_config === 'string' ? JSON.parse(entry.chart_config) : entry.chart_config) : null;
                   return (
@@ -361,48 +379,95 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-sm font-semibold">{entry.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{entry.data_type === 'file_upload' ? `File: ${entry.source_file_name}` : 'Manual entry'}</p>
+                          <p className="text-[10px] text-muted-foreground">{entry.data_type === 'file_upload' ? `File: ${entry.source_file_name}` : 'Manual chart'}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          {entry.status === 'analyzed' && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Analyzed</span>}
-                          <Button variant="outline" size="sm" onClick={() => handleAnalyze(entry.id)} disabled={analyzing[entry.id]} className="gap-1 text-[10px] h-6">
-                            <Sparkles className="w-3 h-3" />{analyzing[entry.id] ? '...' : 'Analyze'}
-                          </Button>
+                          {entry.data_type === 'file_upload' && entry.status !== 'analyzed' && (
+                            <Button variant="outline" size="sm" onClick={() => handleAnalyze(entry.id)} disabled={analyzing[entry.id]} className="gap-1 text-[10px] h-6">
+                              <Sparkles className="w-3 h-3" />{analyzing[entry.id] ? '...' : 'Analyze'}
+                            </Button>
+                          )}
+                          {entry.status === 'analyzed' && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Ready</span>}
                         </div>
                       </div>
-                      {chartConfig && (
-                        <div className="mt-2">
-                          <ChartRenderer chartConfig={chartConfig} />
-                        </div>
-                      )}
+                      {chartConfig && <ChartRenderer chartConfig={chartConfig} />}
                       {entry.ai_narrative && <p className="text-xs text-slate-700 mt-2">{entry.ai_narrative}</p>}
                     </div>
                   );
                 })}
 
-                <div className="flex flex-col gap-2">
-                  <input
-                    value={dataForm.label}
-                    onChange={e => setDataForm(f => ({ ...f, label: e.target.value }))}
-                    placeholder="Data label (e.g. Program Stats)"
-                    className="text-xs border rounded px-2 py-1.5"
-                  />
-                  <textarea
-                    value={dataForm.raw_data}
-                    onChange={e => setDataForm(f => ({ ...f, raw_data: e.target.value }))}
-                    placeholder='[{"name":"Q1","value":120},{"name":"Q2","value":150}]'
-                    rows={3}
-                    className="text-xs border rounded px-2 py-1.5 font-mono"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Button onClick={handleSaveData} disabled={!dataForm.label.trim()} size="sm" className="gap-1 text-xs h-7">
-                      <Plus className="w-3 h-3" />Add Data
-                    </Button>
-                    <label className="cursor-pointer">
-                      <span className="flex items-center gap-1 text-xs text-accent hover:underline"><Upload className="w-3 h-3" />Upload file</span>
-                      <input type="file" accept=".csv,.xlsx,.json,.pdf" className="hidden" onChange={handleDataFileUpload} />
-                    </label>
+                {/* New chart builder */}
+                <div className="border rounded-lg p-3 bg-blue-50/30">
+                  <p className="text-xs font-semibold mb-2">Add a Chart</p>
+
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Chart Label</Label>
+                      <Input value={chartLabel} onChange={e => setChartLabel(e.target.value)} placeholder="e.g. Program Stats" className="text-xs h-7" />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] text-muted-foreground">Chart Type</Label>
+                      <Select value={chartType} onValueChange={setChartType}>
+                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bar">Bar Chart</SelectItem>
+                          <SelectItem value="line">Line Chart</SelectItem>
+                          <SelectItem value="pie">Pie Chart</SelectItem>
+                          <SelectItem value="area">Area Chart</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  {/* Data entry table */}
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
+                      <span className="flex-1">Label</span>
+                      <span className="w-20">Value</span>
+                      <span className="w-6" />
+                    </div>
+                    {chartRows.map((row, idx) => (
+                      <div key={idx} className="flex items-center gap-2 mb-1">
+                        <Input
+                          value={row.name}
+                          onChange={e => updateChartRow(idx, 'name', e.target.value)}
+                          placeholder={`Data point ${idx + 1}`}
+                          className="flex-1 text-xs h-7"
+                        />
+                        <Input
+                          type="number"
+                          value={row.value}
+                          onChange={e => updateChartRow(idx, 'value', e.target.value)}
+                          placeholder="0"
+                          className="w-20 text-xs h-7"
+                        />
+                        {chartRows.length > 2 && (
+                          <button onClick={() => removeChartRow(idx)} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                        {chartRows.length <= 2 && <span className="w-6" />}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button onClick={addChartRow} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
+                      <Plus className="w-3 h-3" />Add Row
+                    </button>
+                    <div className="flex-1" />
+                    <Button onClick={handleSaveChart} disabled={!chartLabel.trim() || chartRows.filter(r => r.name.trim() && r.value !== '').length === 0} size="sm" className="gap-1 text-xs h-7">
+                      <Check className="w-3 h-3" />Save Chart
+                    </Button>
+                  </div>
+                </div>
+
+                {/* File upload for auto-analysis */}
+                <div className="border-t pt-2">
+                  <label className="flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors cursor-pointer">
+                    <Upload className="w-3 h-3" />Or upload a file for AI analysis
+                    <input type="file" accept=".csv,.xlsx,.json,.pdf" className="hidden" onChange={handleDataFileUpload} />
+                  </label>
                 </div>
               </div>
             )}
