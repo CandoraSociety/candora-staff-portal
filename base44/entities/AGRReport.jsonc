@@ -23,9 +23,13 @@
       "type": "string",
       "description": "Front cover image URL"
     },
+    "cover_overlays": {
+      "type": "string",
+      "description": "JSON string of overlay elements per cover: { front: [{id, type, content, x, y, w, h, font_size, font_family, color, bold, italic, underline, align}], inside_front: [], inside_back: [], back: [] }"
+    },
     "front_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for front cover"
+      "description": "Legacy \u2014 manual text overlay for front cover"
     },
     "inside_front_cover_image": {
       "type": "string",
@@ -33,7 +37,7 @@
     },
     "inside_front_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for inside front cover"
+      "description": "Legacy \u2014 manual text overlay for inside front cover"
     },
     "inside_back_cover_image": {
       "type": "string",
@@ -41,7 +45,7 @@
     },
     "inside_back_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for inside back cover"
+      "description": "Legacy \u2014 manual text overlay for inside back cover"
     },
     "back_cover_image": {
       "type": "string",
@@ -49,7 +53,7 @@
     },
     "back_cover_text": {
       "type": "string",
-      "description": "Manual text overlay for back cover"
+      "description": "Legacy \u2014 manual text overlay for back cover"
     },
     "description": {
       "type": "string",
@@ -57,7 +61,7 @@
     },
     "cover_text_styles": {
       "type": "string",
-      "description": "JSON string of text styling per cover: { front: { font_size, font_family, color, bold, italic, underline, align, x, y }, inside_front: {}, inside_back: {}, back: {} }"
+      "description": "Legacy JSON string of text styling per cover"
     },
     "master_header_text": {
       "type": "string",
