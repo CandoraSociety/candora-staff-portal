@@ -305,7 +305,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
 
       {/* Selected element toolbar */}
       {selectedEl && imageUrl && (
-        <ElementToolbar el={selectedEl} onUpdate={(patch) => updateElement(selectedEl.id, patch)} onDelete={() => deleteElement(selectedEl.id)}
+        <ElementToolbar el={selectedEl} branding={branding} onUpdate={(patch) => updateElement(selectedEl.id, patch)} onDelete={() => deleteElement(selectedEl.id)}
           onCrop={() => setCropTarget(selectedEl)} fontFamilies={fontFamilies} />
       )}
 
@@ -352,7 +352,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   );
 }
 
-function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
+function ElementToolbar({ el, branding, onUpdate, onDelete, onCrop, fontFamilies }) {
   const [text, setText] = useState(el.content || '');
   const [applied, setApplied] = useState(true);
   const textareaRef = useRef(null);
@@ -388,6 +388,14 @@ function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
           <select value={el.font_size || 20} onChange={e => onUpdate({ font_size: parseInt(e.target.value) })} className="text-xs border rounded px-1 py-0.5 h-7 bg-white w-16">
             {[6,7,8,9,10,11,12,14,16,18,20,24,28,32,36,42,48,56,64,72].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
+          <div className="flex items-center gap-0.5">
+            {[branding?.primary_color, branding?.secondary_color, branding?.accent_color, '#000000', '#ffffff', '#666666'].filter(Boolean).map(c => (
+              <button key={c} onClick={() => onUpdate({ color: c })}
+                className="w-4 h-4 rounded-full border hover:scale-110 transition-transform"
+                style={{ backgroundColor: c, borderColor: (el.color || '#ffffff') === c ? '#3b82f6' : '#d1d5db', borderWidth: '2px' }}
+                title={c} />
+            ))}
+          </div>
           <input type="color" value={el.color || '#ffffff'} onChange={e => onUpdate({ color: e.target.value })} className="w-7 h-7 rounded border cursor-pointer p-0.5" />
           <Button size="icon" variant={el.bold ? 'default' : 'outline'} onClick={() => onUpdate({ bold: !el.bold })} className="h-7 w-7"><Bold className="w-3.5 h-3.5" /></Button>
           <Button size="icon" variant={el.italic ? 'default' : 'outline'} onClick={() => onUpdate({ italic: !el.italic })} className="h-7 w-7"><Italic className="w-3.5 h-3.5" /></Button>

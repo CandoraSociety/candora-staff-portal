@@ -12,7 +12,7 @@ function parse(raw) {
   try { return raw ? JSON.parse(raw) : DEFAULTS; } catch { return DEFAULTS; }
 }
 
-export default function MasterStyleControl({ report, onUpdate }) {
+export default function MasterStyleControl({ report, branding, onUpdate }) {
   const [expanded, setExpanded] = useState(false);
   const styles = parse(report?.master_section_styles);
   const title = styles.title || DEFAULTS.title;
@@ -72,6 +72,14 @@ export default function MasterStyleControl({ report, onUpdate }) {
                 <span className="w-px h-5 bg-border mx-0.5" />
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-muted-foreground">Color</span>
+                  <div className="flex items-center gap-0.5">
+                    {[branding?.primary_color, branding?.secondary_color, branding?.accent_color, '#000000', '#ffffff', '#666666'].filter(Boolean).map(c => (
+                      <button key={c} onClick={() => set('title', 'color', c)}
+                        className="w-5 h-5 rounded-full border hover:scale-110 transition-transform"
+                        style={{ backgroundColor: c, borderColor: (title.color || '#1a2744') === c ? '#3b82f6' : '#d1d5db', borderWidth: '2px' }}
+                        title={c} />
+                    ))}
+                  </div>
                   <input type="color" value={title.color || '#1a2744'} onChange={e => set('title', 'color', e.target.value)}
                     className="w-7 h-7 rounded border cursor-pointer p-0.5" />
                 </div>
@@ -103,6 +111,14 @@ export default function MasterStyleControl({ report, onUpdate }) {
                 <span className="w-px h-5 bg-border mx-0.5" />
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-muted-foreground">Color</span>
+                  <div className="flex items-center gap-0.5">
+                    {[branding?.primary_color, branding?.secondary_color, branding?.accent_color, '#000000', '#ffffff', '#666666'].filter(Boolean).map(c => (
+                      <button key={c} onClick={() => set('content', 'color', c)}
+                        className="w-5 h-5 rounded-full border hover:scale-110 transition-transform"
+                        style={{ backgroundColor: c, borderColor: (content.color || '#333333') === c ? '#3b82f6' : '#d1d5db', borderWidth: '2px' }}
+                        title={c} />
+                    ))}
+                  </div>
                   <input type="color" value={content.color || '#333333'} onChange={e => set('content', 'color', e.target.value)}
                     className="w-7 h-7 rounded border cursor-pointer p-0.5" />
                 </div>

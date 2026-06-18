@@ -21,7 +21,7 @@ function defaultZones() {
 }
 
 export default function HeaderFooterMapEditor({
-  label, text, imageUrl, font_size, layout, zones, onUpdate, onFontSize, onLayout
+  label, text, imageUrl, font_size, layout, zones, branding, onUpdate, onFontSize, onLayout
 }) {
   const zonesArr = (zones && zones.length > 0) ? zones : defaultZones();
   const [selectedZoneId, setSelectedZoneId] = useState(null);
@@ -161,6 +161,14 @@ export default function HeaderFooterMapEditor({
             <span className="w-px h-5 bg-border mx-0.5" />
             <div className="flex items-center gap-1">
               <span className="text-[10px] text-muted-foreground">Color</span>
+              <div className="flex items-center gap-0.5">
+                {[branding?.primary_color, branding?.secondary_color, branding?.accent_color, '#000000', '#ffffff', '#666666'].filter(Boolean).map(c => (
+                  <button key={c} onClick={() => updateZone(selectedZone.id, { color: c })}
+                    className="w-4 h-4 rounded-full border hover:scale-110 transition-transform"
+                    style={{ backgroundColor: c, borderColor: (selectedZone.color || '#000000') === c ? '#3b82f6' : '#d1d5db', borderWidth: '2px' }}
+                    title={c} />
+                ))}
+              </div>
               <input
                 type="color"
                 value={selectedZone.color || '#000000'}

@@ -10,7 +10,6 @@ import SectionEditor from '@/components/reporting/SectionEditor';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import BrandingPanel from '@/components/reporting/BrandingPanel';
 import CoverGenerator from '@/components/reporting/CoverGenerator';
-import DataPanel from '@/components/reporting/DataPanel';
 import TemplatePreview from '@/components/reporting/TemplatePreview';
 import HeaderFooterMapEditor from '@/components/reporting/HeaderFooterMapEditor';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
@@ -413,8 +412,6 @@ export default function ReportingAGREditor() {
             )}
           </div>
 
-          {/* Data Panel */}
-          <DataPanel reportId={id} sections={sections} />
         </div>
 
         {/* Right: Preview — always on desktop, toggleable on mobile */}

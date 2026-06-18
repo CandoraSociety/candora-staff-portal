@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, ImageIcon, Trash2, GripVertical, Edit3, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3 } from 'lucide-react';
 import ReactQuill from 'react-quill';
+import ChartRenderer from './ChartRenderer';
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
 
@@ -21,7 +22,7 @@ const LAYOUT_LABELS = {
   two_column: 'Two Column'
 };
 
-export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, onGenerateVisual, suggestions }) {
+export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions }) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState(section.title || '');
   const [content, setContent] = useState(section.content || '');
@@ -36,6 +37,11 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [visualCategory, setVisualCategory] = useState('infographic');
   const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
   const [titleStyles, setTitleStyles] = useState(parseStyles(section.title_styles));
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [showDataPanel, setShowDataPanel] = useState(false);
+  const [dataEntries, setDataEntries] = useState([]);
+  const [dataForm, setDataForm] = useState({ label: '', raw_data: '' });
+  const [analyzing, setAnalyzing] = useState({});
 
   const master = parseStyles(masterStyles);
   const masterTitle = master.title || {};
@@ -86,6 +92,55 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
       await onGenerateSuggestions(section);
     } catch {}
     setGeneratingSuggestions(false);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setImageUrl(file_url);
+      onUpdate(section.id, { image_url: file_url });
+    } catch {}
+    setUploadingImage(false);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    onUpdate(section.id, { image_url: null });
+  };
+
+  const loadDataEntries = async () => {
+    const data = await base44.entities.AGRReportData.filter({ report_id: section.report_id, section_id: section.id });
+    setDataEntries(data);
+  };
+
+  const handleToggleData = () => {
+    const next = !showDataPanel;
+    setShowDataPanel(next);
+    if (next) loadDataEntries();
+  };
+
+  const handleSaveData = async () => {
+    if (!dataForm.label.trim()) return;
+    const entry = await base44.entities.AGRReportData.create({ ...dataForm, report_id: section.report_id, section_id: section.id, data_type: 'manual' });
+    setDataEntries(prev => [...prev, entry]);
+    setDataForm({ label: '', raw_data: '' });
+  };
+
+  const handleDataFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const entry = await base44.entities.AGRReportData.create({ label: file.name, report_id: section.report_id, section_id: section.id, data_type: 'file_upload', source_file_url: file_url, source_file_name: file.name });
+    setDataEntries(prev => [...prev, entry]);
+  };
+
+  const handleAnalyze = async (entryId) => {
+    setAnalyzing(prev => ({ ...prev, [entryId]: true }));
+    try { await base44.functions.invoke('analyzeReportData', { data_entry_id: entryId }); await loadDataEntries(); } catch {}
+    setAnalyzing(prev => ({ ...prev, [entryId]: false }));
   };
 
   return (
@@ -221,9 +276,6 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={generatingSuggestions} className="text-xs gap-1 h-7">
                   <Sparkles className="w-3 h-3" />{generatingSuggestions ? '...' : 'AI Suggestions'}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleGenerateVisual} disabled={generatingVisual} className="text-xs gap-1 h-7">
-                  <ImageIcon className="w-3 h-3" />{generatingVisual ? '...' : 'AI Visual'}
-                </Button>
               </div>
             </div>
             <ReactQuill theme="snow" value={content} onChange={setContent} className="bg-white rounded-lg" style={{ minHeight: 160 }} />
@@ -241,15 +293,36 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             </div>
           )}
 
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Image URL</Label>
-              <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} onBlur={() => onUpdate(section.id, { image_url: imageUrl })} placeholder="https://..." className="mt-1" />
+          {/* Section Image */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Label className="text-xs">Section Image</Label>
+              <Button variant="ghost" size="sm" onClick={handleGenerateVisual} disabled={generatingVisual} className="text-xs gap-1 h-6">
+                <Sparkles className="w-3 h-3" />{generatingVisual ? '...' : 'AI Generate'}
+              </Button>
             </div>
-            <div>
-              <Label className="text-xs">Image Caption</Label>
-              <Input value={imageCaption} onChange={e => setImageCaption(e.target.value)} onBlur={() => onUpdate(section.id, { image_caption: imageCaption })} placeholder="Caption text" className="mt-1" />
-            </div>
+            {imageUrl ? (
+              <div className="relative rounded-lg overflow-hidden border bg-slate-100">
+                <img src={imageUrl} alt="Section" className="w-full h-40 object-cover" />
+                <button onClick={handleRemoveImage} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer hover:border-accent/50 hover:bg-slate-50 transition-colors">
+                {uploadingImage ? (
+                  <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                ) : (
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                )}
+                <span className="text-xs text-muted-foreground">{uploadingImage ? 'Uploading...' : 'Click to upload image'}</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+              </label>
+            )}
+          </div>
+          <div>
+            <Label className="text-xs">Image Caption</Label>
+            <Input value={imageCaption} onChange={e => setImageCaption(e.target.value)} onBlur={() => onUpdate(section.id, { image_caption: imageCaption })} placeholder="Caption text" className="mt-1" />
           </div>
 
           <div className="flex flex-wrap gap-4 text-xs">
@@ -269,6 +342,70 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <input type="checkbox" checked={hideFooter} onChange={e => { setHideFooter(e.target.checked); onUpdate(section.id, { hide_footer: e.target.checked }); }} className="rounded" />
               Hide footer on this page
             </label>
+          </div>
+
+          {/* Inline Data & Charts */}
+          <div className="border-t pt-3 mt-1">
+            <button onClick={handleToggleData} className="flex items-center gap-2 text-xs font-semibold hover:text-accent transition-colors w-full text-left">
+              <BarChart3 className="w-3.5 h-3.5" />
+              Data &amp; Charts
+              {dataEntries.length > 0 && <span className="bg-accent/10 text-accent text-[10px] px-1.5 py-0.5 rounded-full">{dataEntries.length}</span>}
+              <span className="ml-auto">{showDataPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}</span>
+            </button>
+            {showDataPanel && (
+              <div className="mt-2 space-y-2">
+                {dataEntries.map(entry => {
+                  const chartConfig = entry.chart_config ? (typeof entry.chart_config === 'string' ? JSON.parse(entry.chart_config) : entry.chart_config) : null;
+                  return (
+                    <div key={entry.id} className="border rounded-lg p-3 bg-slate-50">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-semibold">{entry.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{entry.data_type === 'file_upload' ? `File: ${entry.source_file_name}` : 'Manual entry'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {entry.status === 'analyzed' && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Analyzed</span>}
+                          <Button variant="outline" size="sm" onClick={() => handleAnalyze(entry.id)} disabled={analyzing[entry.id]} className="gap-1 text-[10px] h-6">
+                            <Sparkles className="w-3 h-3" />{analyzing[entry.id] ? '...' : 'Analyze'}
+                          </Button>
+                        </div>
+                      </div>
+                      {chartConfig && (
+                        <div className="mt-2">
+                          <ChartRenderer chartConfig={chartConfig} />
+                        </div>
+                      )}
+                      {entry.ai_narrative && <p className="text-xs text-slate-700 mt-2">{entry.ai_narrative}</p>}
+                    </div>
+                  );
+                })}
+
+                <div className="flex flex-col gap-2">
+                  <input
+                    value={dataForm.label}
+                    onChange={e => setDataForm(f => ({ ...f, label: e.target.value }))}
+                    placeholder="Data label (e.g. Program Stats)"
+                    className="text-xs border rounded px-2 py-1.5"
+                  />
+                  <textarea
+                    value={dataForm.raw_data}
+                    onChange={e => setDataForm(f => ({ ...f, raw_data: e.target.value }))}
+                    placeholder='[{"name":"Q1","value":120},{"name":"Q2","value":150}]'
+                    rows={3}
+                    className="text-xs border rounded px-2 py-1.5 font-mono"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Button onClick={handleSaveData} disabled={!dataForm.label.trim()} size="sm" className="gap-1 text-xs h-7">
+                      <Plus className="w-3 h-3" />Add Data
+                    </Button>
+                    <label className="cursor-pointer">
+                      <span className="flex items-center gap-1 text-xs text-accent hover:underline"><Upload className="w-3 h-3" />Upload file</span>
+                      <input type="file" accept=".csv,.xlsx,.json,.pdf" className="hidden" onChange={handleDataFileUpload} />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
