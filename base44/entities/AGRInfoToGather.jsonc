@@ -24,7 +24,11 @@
     },
     "status": {
       "type": "string",
-      "enum": ["pending", "gathered", "not_applicable"],
+      "enum": [
+        "pending",
+        "gathered",
+        "not_applicable"
+      ],
       "default": "pending"
     },
     "sort_order": {
@@ -32,5 +36,8 @@
       "default": 0
     }
   },
-  "required": ["report_id", "title"]
+  "required": [
+    "report_id",
+    "title"
+  ]
 }
