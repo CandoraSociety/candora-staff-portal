@@ -396,6 +396,8 @@ function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
           <Button size="icon" variant={el.align === 'left' ? 'default' : 'outline'} onClick={() => onUpdate({ align: 'left' })} className="h-7 w-7"><AlignLeft className="w-3.5 h-3.5" /></Button>
           <Button size="icon" variant={el.align === 'center' ? 'default' : 'outline'} onClick={() => onUpdate({ align: 'center' })} className="h-7 w-7"><AlignCenter className="w-3.5 h-3.5" /></Button>
           <Button size="icon" variant={el.align === 'right' ? 'default' : 'outline'} onClick={() => onUpdate({ align: 'right' })} className="h-7 w-7"><AlignRight className="w-3.5 h-3.5" /></Button>
+          <span className="w-px h-5 bg-border mx-0.5" />
+          <Button variant="outline" size="sm" onClick={() => onUpdate({ x: 50 })} className="h-7 text-[10px] gap-1" title="Center horizontally on cover">↔ Center</Button>
         </div>
         <p className="text-[10px] text-muted-foreground">Drag to reposition • Drag corner to resize</p>
       </div>
@@ -411,6 +413,7 @@ function ElementToolbar({ el, onUpdate, onDelete, onCrop, fontFamilies }) {
       </div>
       <div className="flex gap-1">
         <Button variant="outline" size="sm" onClick={onCrop} className="gap-1 text-xs"><Crop className="w-3 h-3" />Crop</Button>
+        <Button variant="outline" size="sm" onClick={() => onUpdate({ x: 50 })} className="gap-1 text-xs">↔ Center</Button>
       </div>
       <p className="text-[10px] text-muted-foreground">Drag to reposition • Drag corner to resize</p>
     </div>
