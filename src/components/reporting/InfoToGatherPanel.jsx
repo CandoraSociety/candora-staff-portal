@@ -16,6 +16,7 @@ export default function InfoToGatherPanel({ reportId, sections }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  const [localValues, setLocalValues] = useState({});
 
   useEffect(() => {
     if (reportId) loadItems();
@@ -25,6 +26,11 @@ export default function InfoToGatherPanel({ reportId, sections }) {
     setLoading(true);
     const data = await base44.entities.AGRInfoToGather.filter({ report_id: reportId }, 'sort_order');
     setItems(data);
+    const lv = {};
+    data.forEach(item => {
+      lv[item.id] = { title: item.title || '', details: item.details || '', source: item.source || '' };
+    });
+    setLocalValues(lv);
     setLoading(false);
   };
 
@@ -34,11 +40,12 @@ export default function InfoToGatherPanel({ reportId, sections }) {
       title: '',
       details: '',
       source: '',
-      target_section_id: null,
+      target_section_id: '',
       status: 'pending',
       sort_order: items.length,
     });
     setItems(prev => [...prev, created]);
+    setLocalValues(prev => ({ ...prev, [created.id]: { title: '', details: '', source: '' } }));
   };
 
   const handleUpdate = async (id, patch) => {
@@ -101,8 +108,9 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">What's Needed</Label>
                     <Input
-                      value={item.title}
-                      onChange={e => handleUpdate(item.id, { title: e.target.value })}
+                      value={localValues[item.id]?.title ?? ''}
+                      onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], title: e.target.value } }))}
+                      onBlur={() => handleUpdate(item.id, { title: localValues[item.id]?.title || '' })}
                       placeholder="e.g. Q3 volunteer hours data"
                       className="text-sm mt-1"
                     />
@@ -110,8 +118,9 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                   <div>
                     <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Details</Label>
                     <Input
-                      value={item.details || ''}
-                      onChange={e => handleUpdate(item.id, { details: e.target.value })}
+                      value={localValues[item.id]?.details ?? ''}
+                      onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], details: e.target.value } }))}
+                      onBlur={() => handleUpdate(item.id, { details: localValues[item.id]?.details || '' })}
                       placeholder="Additional context or specifics"
                       className="text-sm mt-1"
                     />
@@ -120,8 +129,9 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                     <div>
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Where to Get It</Label>
                       <Input
-                        value={item.source || ''}
-                        onChange={e => handleUpdate(item.id, { source: e.target.value })}
+                        value={localValues[item.id]?.source ?? ''}
+                        onChange={e => setLocalValues(prev => ({ ...prev, [item.id]: { ...prev[item.id], source: e.target.value } }))}
+                        onBlur={() => handleUpdate(item.id, { source: localValues[item.id]?.source || '' })}
                         placeholder="e.g. Sarah from HR, or database export"
                         className="text-sm mt-1"
                       />
@@ -130,13 +140,13 @@ export default function InfoToGatherPanel({ reportId, sections }) {
                       <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Target Section</Label>
                       <Select
                         value={item.target_section_id || ''}
-                        onValueChange={v => handleUpdate(item.id, { target_section_id: v || null })}
+                        onValueChange={v => handleUpdate(item.id, { target_section_id: v || '' })}
                       >
                         <SelectTrigger className="text-sm mt-1 h-9">
                           <SelectValue placeholder="Select section…" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={null}>None</SelectItem>
+                          <SelectItem value="_none">None</SelectItem>
                           {sections.map(s => (
                             <SelectItem key={s.id} value={s.id}>{s.title || 'Untitled'}</SelectItem>
                           ))}
