@@ -35,6 +35,10 @@ export default function ReportingAGREditor() {
   const [localFooterImageHeight, setLocalFooterImageHeight] = useState(48);
   const initRef = useRef(false);
 
+  useEffect(() => {
+    if (id) loadAll();
+  }, [id]);
+
   const loadAll = useCallback(async () => {
     // Phase 1: critical data — render the page immediately
     try {
