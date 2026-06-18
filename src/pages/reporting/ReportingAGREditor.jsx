@@ -454,7 +454,7 @@ export default function ReportingAGREditor() {
             </div>
 
             {previewMode === 'digital' ? (
-              /* ── Digital Preview (matches ReportingAGRPreview) ── */
+              /* ── Digital Preview (matches ReportingAGRPreview exactly) ── */
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto space-y-0">
                 <div className="max-w-4xl mx-auto">
                   <StyledCoverPreview coverType="front" report={report} branding={branding} />
@@ -471,16 +471,17 @@ export default function ReportingAGREditor() {
                         {branding.logo_urls?.[0] && <img src={branding.logo_urls[0]} alt="Logo" className="h-16 mx-auto mb-3 object-contain" />}
                         <h2 className="text-2xl font-heading font-bold" style={{ color: branding.primary_color || '#1a2744' }}>{report?.title}</h2>
                         {branding.tagline && <p className="text-sm text-muted-foreground mt-1">{branding.tagline}</p>}
+                        {branding.common_name && <p className="text-sm font-medium mt-4" style={{ color: branding.primary_color || '#1a2744' }}>{branding.common_name}</p>}
                       </div>
                     )}
                     {sections.length > 0 && (() => {
                       const tocPage = 1 + (report?.cover_image ? 1 : 0) + (report?.inside_front_cover_image ? 1 : 0);
                       return (
-                        <div className="min-h-[80vh] flex flex-col justify-center p-8">
+                        <div className="min-h-[80vh] bg-white rounded-xl shadow-sm border flex flex-col justify-center p-16">
                           <h3 className="text-2xl font-heading font-bold mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
                           <div className="space-y-1">
                             {sections.map((s, i) => (
-                              <div key={s.id} className="flex items-center gap-4 text-base py-2" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                              <div key={s.id} className="flex items-center gap-4 text-base py-2 transition-colors hover:bg-slate-50 rounded px-3 -mx-3" style={{ color: branding?.secondary_color || '#3b5998' }}>
                                 <span className="font-bold w-8 text-right" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
                                 <span>{s.title || 'Untitled'}</span>
                                 <span className="flex-1 border-b border-dotted mx-3 opacity-30" />
