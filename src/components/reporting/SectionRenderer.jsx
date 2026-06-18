@@ -45,7 +45,16 @@ export default function SectionRenderer({
     const renderSlot = (z) => {
       if (z.content === 'text' && text) {
         return (
-          <span style={{ fontSize: `${fontSize || 12}px` }} className="text-muted-foreground break-words">
+          <span className="break-words" style={{
+            fontSize: `${fontSize || 12}px`,
+            fontFamily: z.font_family || 'Inter',
+            fontWeight: z.bold ? 'bold' : 'normal',
+            fontStyle: z.italic ? 'italic' : 'normal',
+            textDecoration: z.underline ? 'underline' : 'none',
+            color: z.color || 'hsl(var(--muted-foreground))',
+            textAlign: z.align || 'left',
+            lineHeight: 1.3,
+          }}>
             {text}
           </span>
         );
@@ -66,7 +75,7 @@ export default function SectionRenderer({
         <div className="flex flex-col items-center gap-1">
           {zones.map(z => {
             const el = renderSlot(z);
-            return el ? <div key={z.id}>{el}</div> : null;
+            return el ? <div key={z.id} style={{ width: '100%', textAlign: z.align || 'left' }}>{el}</div> : null;
           })}
         </div>
       );
@@ -76,8 +85,9 @@ export default function SectionRenderer({
       <div className="flex items-center w-full gap-2">
         {zones.map(z => {
           const el = renderSlot(z);
+          const just = z.align === 'right' ? 'flex-end' : z.align === 'center' ? 'center' : 'flex-start';
           return (
-            <div key={z.id} className="flex justify-center" style={{ width: `${z.w}%` }}>
+            <div key={z.id} className="flex" style={{ width: `${z.w}%`, justifyContent: just }}>
               {el}
             </div>
           );
