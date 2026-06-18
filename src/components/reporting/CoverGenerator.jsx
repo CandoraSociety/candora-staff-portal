@@ -144,6 +144,10 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
       setLocalOverlays(prev => prev.map(el => {
         if (el.id !== dragging.elId) return el;
         if (dragging.kind === 'resize') {
+          if (el.type === 'text') {
+            const nw = Math.max(40, dragging.startW + dx * (pw / 100));
+            return { ...el, w: Math.round(nw) };
+          }
           const nw = Math.max(40, dragging.startW + dx * (pw / 100));
           const nh = Math.max(40, dragging.startH + dy * (ph / 100));
           return { ...el, w: Math.round(nw), h: Math.round(nh) };
