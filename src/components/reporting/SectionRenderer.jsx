@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 
@@ -175,7 +176,18 @@ export default function SectionRenderer({
   const renderContent = () => {
     const contentBlock = (
       <div className="prose prose-sm max-w-none">
-        {section.content ? <ReactMarkdown>{section.content}</ReactMarkdown> : <p className="text-muted-foreground italic">No content yet.</p>}
+        {section.content ? (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              a: ({ href, children, ...props }) => (
+                <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2" {...props}>{children}</a>
+              )
+            }}
+          >
+            {section.content}
+          </ReactMarkdown>
+        ) : <p className="text-muted-foreground italic">No content yet.</p>}
       </div>
     );
 
