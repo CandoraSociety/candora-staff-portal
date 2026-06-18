@@ -21,6 +21,10 @@ export default function ReportingAGRPrint() {
     setSections(prev => prev.map(s => s.id === sectionId ? { ...s, page_break_before: !current } : s));
   };
 
+  const hasInsideFront = !!report?.inside_front_cover_image;
+  const tocPage = hasInsideFront ? 3 : 2;
+  const getSectionPage = (index) => tocPage + 1 + index;
+
   useEffect(() => {
     Promise.all([
       base44.entities.AGRReport.get(id),
@@ -95,14 +99,16 @@ export default function ReportingAGRPrint() {
           </div>
         )}
 
-        <div className="print-break p-10 flex flex-col" style={{ minHeight: 'calc(11in - 0.5in)' }}>
-          <h3 className="text-base font-bold uppercase tracking-wider mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-          <div style={{ borderLeft: `2px solid ${branding?.accent_color || '#2b2de8'}`, paddingLeft: '14px', borderRadius: '0 4px 4px 0' }}>
+        <div className="print-break p-10 flex flex-col" style={{ minHeight: '11in' }}>
+          <h3 className="text-lg font-heading font-bold uppercase tracking-wider mb-10" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
+          <div className="flex-1 space-y-3">
             {sections.map((s, i) => (
-              <p key={s.id} className="text-sm py-0.5" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                <span className="font-bold mr-2" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                {s.title || 'Untitled'}
-              </p>
+              <div key={s.id} className="flex items-baseline text-sm" style={{ color: branding?.secondary_color || '#3b5998' }}>
+                <span className="font-bold mr-3 shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
+                <span className="flex-1">{s.title || 'Untitled'}</span>
+                <span className="flex-1 mx-2 border-b border-dotted" style={{ borderColor: branding?.accent_color ? `${branding.accent_color}40` : '#2b2de840' }} />
+                <span className="shrink-0 font-medium tabular-nums" style={{ color: branding?.primary_color || '#1a2744' }}>{getSectionPage(i)}</span>
+              </div>
             ))}
           </div>
         </div>
