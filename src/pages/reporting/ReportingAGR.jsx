@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Plus, Trash2, Edit3, Eye } from 'lucide-react';
+import { FileText, Upload, Plus, Trash2, Edit3, Eye, Copy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import CreateReportDialog from '@/components/reporting/CreateReportDialog';
 import UploadAnalyzerDialog from '@/components/reporting/UploadAnalyzerDialog';
@@ -26,6 +26,15 @@ export default function ReportingAGR() {
   const handleDelete = async (id) => {
     await base44.entities.AGRReport.delete(id);
     queryClient.invalidateQueries({ queryKey: ['agr-reports'] });
+  };
+
+  const handleDuplicate = async (report) => {
+    try {
+      const res = await base44.functions.invoke('duplicateAGRReport', { report_id: report.id });
+      if (res.data?.id) {
+        queryClient.invalidateQueries({ queryKey: ['agr-reports'] });
+      }
+    } catch {}
   };
 
   if (isLoading) {
@@ -92,6 +101,9 @@ export default function ReportingAGR() {
                       <Link to={`/reporting/agr/${report.id}/preview`} onClick={e => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" title="Preview"><Eye className="w-4 h-4" /></Button>
                       </Link>
+                      <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); e.preventDefault(); handleDuplicate(report); }} title="Duplicate" className="text-accent">
+                        <Copy className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); e.preventDefault(); handleDelete(report.id); }} title="Delete" className="text-red-400 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </Button>
