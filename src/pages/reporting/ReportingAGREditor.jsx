@@ -508,19 +508,16 @@ export default function ReportingAGREditor() {
                 />
               ))}
 
-              {/* Inside back cover — full bleed with styled overlay text */}
-              {report?.inside_back_cover_image && (
+              </div>
+
+              {/* Inside back cover — full bleed outside padded container */}
+              {(report?.inside_back_cover_image || branding) && (
                 <StyledCoverPreview coverType="inside_back" report={report} branding={branding} />
               )}
-              {/* Back cover — full bleed with styled overlay text */}
-              {report?.back_cover_image ? (
+              {/* Back cover — full bleed outside padded container */}
+              {(report?.back_cover_image || branding) && (
                 <StyledCoverPreview coverType="back" report={report} branding={branding} />
-              ) : branding ? (
-                <div className="-mx-6 -mb-6 rounded-b-xl overflow-hidden">
-                  <StyledCoverPreview coverType="back" report={report} branding={branding} />
-                </div>
-              ) : null}
-              </div>
+              )}
             </div>
           </div>
         </div>
