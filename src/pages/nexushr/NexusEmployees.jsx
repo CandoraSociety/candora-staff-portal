@@ -28,6 +28,7 @@ export default function NexusEmployees() {
   const [saving, setSaving] = useState(false);
   const [welcomeInfo, setWelcomeInfo] = useState(null); // shown on step 3
   const [copied, setCopied] = useState(false);
+  const [confirmPurgeId, setConfirmPurgeId] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const outletContext = useOutletContext();
@@ -131,6 +132,13 @@ Welcome aboard!
     await base44.entities.Employee.update(emp.id, { is_deleted: false, deleted_at: null });
     queryClient.invalidateQueries({ queryKey: ['employees'] });
     toast({ title: 'Employee restored', description: `${emp.first_name} ${emp.last_name} has been recovered.` });
+  };
+
+  const handlePurge = async (emp) => {
+    await base44.entities.Employee.delete(emp.id);
+    queryClient.invalidateQueries({ queryKey: ['employees'] });
+    setConfirmPurgeId(null);
+    toast({ title: 'Permanently deleted', description: `${emp.first_name} ${emp.last_name} has been permanently removed.` });
   };
 
 
@@ -324,9 +332,22 @@ Welcome aboard!
                           </span>
                         </td>
                         <td className="p-4">
-                          <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleRestore(emp)}>
-                            <RotateCcw className="w-3.5 h-3.5 mr-1" />Restore
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleRestore(emp)}>
+                              <RotateCcw className="w-3.5 h-3.5 mr-1" />Restore
+                            </Button>
+                            {confirmPurgeId === emp.id ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-red-600 font-medium">Sure?</span>
+                                <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handlePurge(emp)}>Yes, Delete Forever</Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setConfirmPurgeId(null)}>Cancel</Button>
+                              </div>
+                            ) : (
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => setConfirmPurgeId(emp.id)}>
+                                <Trash2 className="w-3.5 h-3.5 mr-1" />Delete Forever
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
