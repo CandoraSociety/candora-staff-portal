@@ -41,8 +41,6 @@ const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
-  if (!showSalary) return null;
-
   // Separate unpaid tiers (practicum + skilled volunteer) from paid staff
   const unpaidTiers = ["practicum_placement", "skilled_volunteer"];
   const practicumPositions = positions.filter(p => unpaidTiers.includes(p.tier));
@@ -117,27 +115,27 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
       <div>
         <span>{filled} filled · {vacant} vacant</span>
       </div>
-      <span className="text-muted-foreground/40">|</span>
-      <div>
-        <span><span className="font-medium text-foreground">Annual:</span> {fmt(annual)}</span>
-        {hasDeltas && diffAnnual !== 0 && (
-          <p className={`text-xs font-semibold italic ${diffColor(diffAnnual)}`}>{fmtDiff(diffAnnual)}</p>
-        )}
-      </div>
-      <div>
-        <span><span className="font-medium text-foreground">Monthly:</span> {fmt(monthly)}</span>
-        {hasDeltas && diffMonthly !== 0 && (
-          <p className={`text-xs font-semibold italic ${diffColor(diffMonthly)}`}>{fmtDiff(diffMonthly)}</p>
-        )}
-      </div>
-      <div>
-        <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
-        {hasDeltas && diffBiweekly !== 0 && (
-          <p className={`text-xs font-semibold italic ${diffColor(diffBiweekly)}`}>{fmtDiff(diffBiweekly)}</p>
-        )}
-      </div>
       {showSalary && (
         <>
+          <span className="text-muted-foreground/40">|</span>
+          <div>
+            <span><span className="font-medium text-foreground">Annual:</span> {fmt(annual)}</span>
+            {hasDeltas && diffAnnual !== 0 && (
+              <p className={`text-xs font-semibold italic ${diffColor(diffAnnual)}`}>{fmtDiff(diffAnnual)}</p>
+            )}
+          </div>
+          <div>
+            <span><span className="font-medium text-foreground">Monthly:</span> {fmt(monthly)}</span>
+            {hasDeltas && diffMonthly !== 0 && (
+              <p className={`text-xs font-semibold italic ${diffColor(diffMonthly)}`}>{fmtDiff(diffMonthly)}</p>
+            )}
+          </div>
+          <div>
+            <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
+            {hasDeltas && diffBiweekly !== 0 && (
+              <p className={`text-xs font-semibold italic ${diffColor(diffBiweekly)}`}>{fmtDiff(diffBiweekly)}</p>
+            )}
+          </div>
           <span className="text-muted-foreground/40">|</span>
           <div>
             <span><span className="font-medium text-foreground">Employer CPP/EI:</span> {fmt(totalEmployerContributions)}</span>
