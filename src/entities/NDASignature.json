@@ -1,0 +1,12 @@
+{
+  "name": "NDASignature",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "employee_id": { "type": "string" },
+    "signed_name": { "type": "string" },
+    "signed_date": { "type": "string", "format": "date-time" },
+    "ip_note": { "type": "string", "description": "Optional context note" }
+  },
+  "required": ["user_id", "signed_name"]
+}

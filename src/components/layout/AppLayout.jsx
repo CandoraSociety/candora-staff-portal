@@ -7,6 +7,10 @@ import TopBar from './TopBar';
 import { useAccessControl } from '@/lib/useAccessControl';
 import { cn } from '@/lib/utils';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
+import NDAGate from '@/components/onboarding/NDAGate';
+import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
+import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
+import { useOnboarding } from '@/lib/useOnboarding';
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -23,6 +27,32 @@ export default function AppLayout() {
   });
 
   const access = useAccessControl(user, permissions);
+
+  const {
+    loading: onboardingLoading,
+    ndaSigned,
+    employee,
+    onboardingTemplates,
+    onboardingRecords,
+    showWizard,
+    setShowWizard,
+    pendingCount,
+    requiredPendingCount,
+    handleNDASigned,
+    handleWizardComplete,
+    handleWizardDismiss,
+  } = useOnboarding(user);
+
+  // Block render until NDA check is done
+  if (user && !onboardingLoading && ndaSigned === false) {
+    return (
+      <NDAGate
+        user={user}
+        employee={employee}
+        onSigned={handleNDASigned}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,11 +77,31 @@ export default function AppLayout() {
         collapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
       )}>
         <TopBar user={user} sidebarCollapsed={collapsed} onToggleMobile={() => setMobileOpen(!mobileOpen)} />
+        {/* Onboarding banner — shown on all pages until complete */}
+        {ndaSigned && pendingCount > 0 && (
+          <OnboardingBanner
+            pendingCount={pendingCount}
+            requiredPendingCount={requiredPendingCount}
+            onClick={() => setShowWizard(true)}
+          />
+        )}
         <main className="p-6 max-w-7xl mx-auto">
           <Outlet context={{ user, access, permissions }} />
         </main>
       </div>
       <EAFloatingWidget />
+
+      {/* Onboarding Wizard */}
+      {showWizard && onboardingTemplates.length > 0 && (
+        <OnboardingWizard
+          user={user}
+          employee={employee}
+          templates={onboardingTemplates}
+          records={onboardingRecords}
+          onComplete={handleWizardComplete}
+          onDismiss={handleWizardDismiss}
+        />
+      )}
     </div>
   );
 }
