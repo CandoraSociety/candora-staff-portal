@@ -15,7 +15,7 @@ const orgTiers = [
   { value: 'assistant', label: 'Assistant' },
 ];
 
-export default function EmployeeForm({ employee, onSubmit, isLoading }) {
+export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabel }) {
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     position: '', department: '', org_tier: '', status: 'active', hire_date: '',
@@ -93,7 +93,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading }) {
         </Select>
       </div>
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? 'Saving...' : (employee ? 'Save Changes' : 'Save Employee')}
+        {isLoading ? 'Saving...' : (submitLabel || (employee ? 'Save Changes' : 'Save Employee'))}
       </Button>
     </form>
   );

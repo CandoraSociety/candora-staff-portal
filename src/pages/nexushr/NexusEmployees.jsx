@@ -1,67 +1,93 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useOutletContext } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus, UserX } from 'lucide-react';
+import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
-import { buildPresetsForTier } from '@/lib/tierPermissionPresets';
-import { Badge } from '@/components/ui/badge';
+import { PORTAL_MODULES, TIER_PRESETS } from '@/lib/tierPermissionPresets';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
 import EmployeeForm from '@/components/employees/EmployeeForm';
+import PortalAccessSelector from '@/components/employees/PortalAccessSelector';
 
 export default function NexusEmployees() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [inviting, setInviting] = useState(false);
+  const [step, setStep] = useState(1); // 1 = employee details, 2 = portal access
+  const [pendingEmployee, setPendingEmployee] = useState(null); // data from step 1
+  const [selectedPortals, setSelectedPortals] = useState([]);
+  const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const outletContext = useOutletContext();
   const user = outletContext?.user;
   const { toast } = useToast();
 
-  // Tiers that get admin role; everyone else gets 'user'
   const ADMIN_TIERS = ['executive_director', 'director'];
 
-  const handleAddEmployee = async (data) => {
-    setInviting(true);
+  const openAddDialog = () => {
+    setPendingEmployee(null);
+    setSelectedPortals([]);
+    setStep(1);
+    setShowForm(true);
+  };
+
+  // Step 1: collect employee data, move to step 2
+  const handleStep1 = (data) => {
+    setPendingEmployee(data);
+    // Pre-populate portals from tier
+    setSelectedPortals(TIER_PRESETS[data.org_tier] || []);
+    setStep(2);
+  };
+
+  // Step 2: finalize — create employee, set permissions, send invite
+  const handleFinalize = async () => {
+    if (!pendingEmployee) return;
+    setSaving(true);
     try {
-      // 1. Create employee record
+      const data = pendingEmployee;
       const role = ADMIN_TIERS.includes(data.org_tier) ? 'admin' : 'user';
+
+      // 1. Create employee record
       const employee = await base44.entities.Employee.create(data);
 
-      // 2. Send platform invite so they can log in
-      let invitedUserId = null;
+      // 2. Save portal access permissions (by email, since user_id not known yet)
+      const permRecords = PORTAL_MODULES.map(mod => ({
+        target_type: 'module',
+        target_id: mod.id,
+        scope_type: 'individual',
+        scope_value: data.email,
+        permission: selectedPortals.includes(mod.id) ? 'allow' : 'deny',
+        is_active: true,
+      }));
+      await Promise.all(permRecords.map(p => base44.entities.AccessPermission.create(p)));
+
+      // 3. Send platform invite
       try {
         const inviteResult = await base44.users.inviteUser(data.email, role);
-        invitedUserId = inviteResult?.id || inviteResult?.user_id || null;
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
       } catch (inviteErr) {
-        // non-fatal — continue
+        // non-fatal
       }
 
-      toast({ title: 'Employee added & invite sent', description: `An invitation email was sent to ${data.email}.` });
-
-      // 3. Apply tier-based access permission presets
-      if (data.org_tier) {
-        const scopeId = invitedUserId || data.email;
-        const presets = buildPresetsForTier(data.org_tier, scopeId);
-        await Promise.all(presets.map(p => base44.entities.AccessPermission.create(p)));
-      }
+      toast({
+        title: 'Employee added',
+        description: `${data.first_name} ${data.last_name} has been created with ${selectedPortals.length} portal(s) enabled. An invite email was sent to ${data.email}.`,
+      });
 
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       setShowForm(false);
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
-      setInviting(false);
+      setSaving(false);
     }
   };
 
@@ -88,7 +114,7 @@ export default function NexusEmployees() {
     <div className="space-y-6">
       <PageHeader
         title="Employees"
-        actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
+        actions={<Button onClick={openAddDialog} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
       />
 
       <div className="relative">
@@ -212,10 +238,40 @@ export default function NexusEmployees() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-h-[90vh] flex flex-col">
-          <DialogHeader><DialogTitle>Add Employee</DialogTitle></DialogHeader>
+        <DialogContent className="max-h-[90vh] flex flex-col max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {step === 1 ? 'Add Employee — Details' : 'Add Employee — Portal Access'}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">Step {step} of 2</p>
+          </DialogHeader>
+
           <div className="overflow-y-auto flex-1 pr-1">
-            <EmployeeForm onSubmit={handleAddEmployee} isLoading={inviting} />
+            {step === 1 && (
+              <EmployeeForm onSubmit={handleStep1} submitLabel="Next: Set Portal Access →" />
+            )}
+
+            {step === 2 && (
+              <div className="space-y-4">
+                <div className="text-sm">
+                  <span className="font-medium">{pendingEmployee?.first_name} {pendingEmployee?.last_name}</span>
+                  <span className="text-muted-foreground"> · {pendingEmployee?.org_tier?.replace(/_/g, ' ')}</span>
+                </div>
+                <PortalAccessSelector
+                  value={selectedPortals}
+                  onChange={setSelectedPortals}
+                  orgTier={null}
+                />
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex items-center gap-1">
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </Button>
+                  <Button onClick={handleFinalize} disabled={saving} className="flex-1">
+                    {saving ? 'Creating...' : `Create Employee & Send Invite`}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
