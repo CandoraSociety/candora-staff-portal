@@ -358,11 +358,25 @@ export default function OrgChartSheet({
             {payrollOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             Financials
           </button>
-          {/* Always show staff count, even when financials are collapsed */}
-          <div className="flex items-center gap-3 text-sm text-muted-foreground border-l border-blue-300 pl-3">
-            <span className="font-semibold text-foreground">{working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} staff position{working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length !== 1 ? "s" : ""}</span>
-            {working.filter(p => ["practicum_placement", "skilled_volunteer"].includes(p.tier)).length > 0 && (
-              <span className="text-xs">{working.filter(p => ["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} unpaid</span>
+          {/* Always show staff count and key totals, even when financials are collapsed */}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground border-l border-blue-300 pl-3">
+            <div>
+              <span className="font-semibold text-foreground">{working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} staff position{working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length !== 1 ? "s" : ""}</span>
+              {working.filter(p => ["practicum_placement", "skilled_volunteer"].includes(p.tier)).length > 0 && (
+                <span className="text-xs ml-2">{working.filter(p => ["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} unpaid</span>
+              )}
+            </div>
+            {showSalary && (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">Annual:</span>
+                  <span className="font-semibold text-foreground">${Math.round(working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).reduce((s, p) => s + (p.salary || 0), 0)).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">Monthly:</span>
+                  <span className="font-semibold text-foreground">${Math.round(working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).reduce((s, p) => s + (p.salary || 0), 0) / 12).toLocaleString()}</span>
+                </div>
+              </>
             )}
           </div>
           {payrollOpen && <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />}
