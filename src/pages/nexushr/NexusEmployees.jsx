@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { buildPresetsForTier } from '@/lib/tierPermissionPresets';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
@@ -40,13 +41,21 @@ export default function NexusEmployees() {
       const employee = await base44.entities.Employee.create(data);
 
       // 2. Send platform invite so they can log in
+      let invitedUserId = null;
       try {
-        await base44.users.inviteUser(data.email, role);
+        const inviteResult = await base44.users.inviteUser(data.email, role);
+        invitedUserId = inviteResult?.id || inviteResult?.user_id || null;
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
         toast({ title: 'Employee added & invite sent', description: `An invitation email was sent to ${data.email}.` });
       } catch (inviteErr) {
-        // Invite may fail if user already exists — that's fine
         toast({ title: 'Employee added', description: `Could not send invite: ${inviteErr.message}. You can resend it later.`, variant: 'destructive' });
+      }
+
+      // 3. Apply tier-based access permission presets (using email as scope_value if no user id yet)
+      if (data.org_tier) {
+        const scopeId = invitedUserId || data.email;
+        const presets = buildPresetsForTier(data.org_tier, scopeId);
+        await Promise.all(presets.map(p => base44.entities.AccessPermission.create(p)));
       }
 
       queryClient.invalidateQueries({ queryKey: ['employees'] });
