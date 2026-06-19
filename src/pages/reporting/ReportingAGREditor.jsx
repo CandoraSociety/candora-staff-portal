@@ -40,8 +40,7 @@ export default function ReportingAGREditor() {
   const [activeTab, setActiveTab] = useState('editor');
   const sectionRefs = useRef({});
   const previewRef = useRef(null);
-  const previewContainerRef = useRef(null);
-  const [previewScale, setPreviewScale] = useState(1);
+
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -55,20 +54,7 @@ export default function ReportingAGREditor() {
     }
   }, [activeSectionId]);
 
-  // Measure preview container and calculate scale
-  useEffect(() => {
-    const el = previewContainerRef.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.offsetWidth;
-      const designWidth = 900;
-      setPreviewScale(Math.min(1, w / designWidth));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [showPreview, activeTab]);
+
 
   const loadAll = useCallback(async () => {
     // Phase 1: critical data — render the page immediately
@@ -423,9 +409,9 @@ export default function ReportingAGREditor() {
       {/* Covers */}
       <CoverGenerator reportId={id} report={report} branding={branding} onUpdate={updateReport} />
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Left: Editor */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4">
           {/* Branding */}
           <BrandingPanel reportId={id} />
 
@@ -495,8 +481,7 @@ export default function ReportingAGREditor() {
               </div>
             </div>
 
-            <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden">
-              <div style={{ zoom: previewScale, width: `${100 / previewScale}%` }}>
+            <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
                 {previewMode === 'digital' ? (
                   <ReportDigitalView
                     report={report}
@@ -515,7 +500,6 @@ export default function ReportingAGREditor() {
                     onSectionsUpdate={setSections}
                   />
                 )}
-              </div>
             </div>
           </div>
         </div>
