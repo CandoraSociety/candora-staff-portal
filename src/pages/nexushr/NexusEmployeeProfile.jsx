@@ -16,6 +16,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { calculateMilestones } from '@/lib/employeeMilestones';
 import { formatPhoneNumber } from '@/lib/utils';
 import { PORTAL_MODULES, TIER_LABELS } from '@/lib/tierPermissionPresets';
+import { appParams } from '@/lib/app-params';
 import ConcludeEmploymentDialog from '@/components/employees/ConcludeEmploymentDialog';
 import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
 
@@ -351,8 +352,9 @@ export default function NexusEmployeeProfile() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Welcome Message</DialogTitle></DialogHeader>
           {(() => {
-            const registerUrl = `${window.location.origin}/register`;
-            const loginUrl = `${window.location.origin}/login`;
+            const baseUrl = (appParams.appBaseUrl || window.location.origin).replace(/\/$/, '');
+            const registerUrl = `${baseUrl}/register`;
+            const loginUrl = `${baseUrl}/login`;
             const message = `Subject: Welcome to the Candora Staff Portal — Action Required
 
 Hi ${employee.first_name},
