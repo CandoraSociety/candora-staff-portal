@@ -12,23 +12,32 @@ Deno.serve(async (req) => {
     }
 
     const appUrl = 'https://app--candora--staffportal.base44.app';
-    const loginUrl = `${appUrl}/login`;
+    const registerUrl = `${appUrl}/register`;
 
     const body = `
-      <h2>Welcome to the Candora Staff Portal, ${employee.first_name}!</h2>
-      <p>Your staff account has been created. Here's how to get started:</p>
-      <ol style="line-height:2;">
-        <li>Check your inbox for a <strong>separate password setup email</strong> (it may be in your junk/spam folder). Click the link in that email to set your password.</li>
-        <li>Once your password is set, return here and click the button below to log in:</li>
-      </ol>
-      <p style="margin: 24px 0;">
-        <a href="${loginUrl}" style="background-color:#f5c116;color:#0f1f6b;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;">
-          Log In to Staff Portal
-        </a>
-      </p>
-      <p style="color:#888;font-size:13px;">Direct link: <a href="${loginUrl}">${loginUrl}</a></p>
-      <p>If you have any trouble, please reach out to your manager or HR.</p>
-      <p>Welcome aboard,<br/>The Candora Society Team</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background-color:#0f1f6b;padding:24px;text-align:center;">
+          <h1 style="color:#f5c116;margin:0;font-size:24px;">Candora Society</h1>
+          <p style="color:#ffffff;margin:8px 0 0;">Staff Portal</p>
+        </div>
+        <div style="padding:32px;background:#ffffff;border:1px solid #e5e7eb;">
+          <h2 style="color:#0f1f6b;">Welcome, ${employee.first_name}!</h2>
+          <p style="color:#374151;line-height:1.6;">You've been added to the <strong>Candora Staff Portal</strong>. To set up your account, simply click the button below and register using <strong>this email address (${employee.email})</strong>.</p>
+          <p style="margin:32px 0;text-align:center;">
+            <a href="${registerUrl}" style="background-color:#f5c116;color:#0f1f6b;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block;">
+              Set Up My Account →
+            </a>
+          </p>
+          <p style="color:#6b7280;font-size:14px;">Or copy this link into your browser:<br/><a href="${registerUrl}" style="color:#0f1f6b;">${registerUrl}</a></p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+          <p style="color:#6b7280;font-size:13px;"><strong>Important:</strong> Use <strong>${employee.email}</strong> when registering — this is the email your account is linked to.</p>
+          <p style="color:#374151;">If you have any questions, contact your manager or HR.</p>
+          <p style="color:#374151;">Welcome aboard,<br/><strong>The Candora Society Team</strong></p>
+        </div>
+        <div style="background:#f9fafb;padding:16px;text-align:center;">
+          <p style="color:#9ca3af;font-size:12px;margin:0;">Candora Society Staff Portal · Confidential</p>
+        </div>
+      </div>
     `;
 
     await base44.asServiceRole.integrations.Core.SendEmail({
