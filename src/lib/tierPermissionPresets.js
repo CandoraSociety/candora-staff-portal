@@ -14,7 +14,6 @@ export const PORTAL_MODULES = [
   { id: 'marketing',   label: 'Marketing & Fundraising',     route: '/marketing' },
   { id: 'reporting',   label: 'Reports Portal',              route: '/reporting' },
   { id: 'filemanager', label: 'File Manager',                route: '/filemanager' },
-  { id: 'ed',          label: 'Executive Director Portal',   route: '/ed' },
 ];
 
 /** Default module access per tier  (true = allowed by default) */
