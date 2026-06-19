@@ -38,6 +38,18 @@
       ],
       "description": "Department"
     },
+    "org_tier": {
+      "type": "string",
+      "enum": [
+        "executive_director",
+        "director",
+        "manager",
+        "supervisor_team_lead",
+        "frontline",
+        "assistant"
+      ],
+      "description": "Organizational hierarchy tier \u2014 determines default access level"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -132,6 +144,15 @@
       "type": "number",
       "default": 0,
       "description": "Total volunteer/work hours"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Linked platform User ID \u2014 set after invite is accepted"
+    },
+    "invite_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a login invite has been sent to this employee"
     }
   },
   "required": [

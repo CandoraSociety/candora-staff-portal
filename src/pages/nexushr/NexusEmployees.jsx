@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck } from 'lucide-react';
+import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
@@ -22,9 +23,40 @@ export default function NexusEmployees() {
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [viewingEmployee, setViewingEmployee] = useState(null);
+  const [inviting, setInviting] = useState(false);
   const queryClient = useQueryClient();
   const outletContext = useOutletContext();
   const user = outletContext?.user;
+  const { toast } = useToast();
+
+  // Tiers that get admin role; everyone else gets 'user'
+  const ADMIN_TIERS = ['executive_director', 'director'];
+
+  const handleAddEmployee = async (data) => {
+    setInviting(true);
+    try {
+      // 1. Create employee record
+      const role = ADMIN_TIERS.includes(data.org_tier) ? 'admin' : 'user';
+      const employee = await base44.entities.Employee.create(data);
+
+      // 2. Send platform invite so they can log in
+      try {
+        await base44.users.inviteUser(data.email, role);
+        await base44.entities.Employee.update(employee.id, { invite_sent: true });
+        toast({ title: 'Employee added & invite sent', description: `An invitation email was sent to ${data.email}.` });
+      } catch (inviteErr) {
+        // Invite may fail if user already exists — that's fine
+        toast({ title: 'Employee added', description: `Could not send invite: ${inviteErr.message}. You can resend it later.`, variant: 'destructive' });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setShowForm(false);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setInviting(false);
+    }
+  };
 
   const { data: employees = [], isLoading } = useQuery({ 
     queryKey: ['employees'], 
@@ -79,6 +111,7 @@ export default function NexusEmployees() {
                   <th className="p-4 font-medium">Position</th>
                   <th className="p-4 font-medium hidden md:table-cell">Department</th>
                   <th className="p-4 font-medium">Status</th>
+                  <th className="p-4 font-medium hidden sm:table-cell">Invite</th>
                   <th className="p-4"></th>
                 </tr>
               </thead>
@@ -105,9 +138,20 @@ export default function NexusEmployees() {
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">{emp.position}</td>
+                    <td className="p-4">
+                      <div>{emp.position}</div>
+                      {emp.org_tier && <div className="text-xs text-muted-foreground capitalize">{emp.org_tier.replace(/_/g, ' ')}</div>}
+                    </td>
                     <td className="p-4 hidden md:table-cell">{emp.department}</td>
-                    <td className="p-4"><StatusBadge status={emp.status} /></td>
+                    <td className="p-4">
+                      <StatusBadge status={emp.status} />
+                    </td>
+                    <td className="p-4 hidden sm:table-cell">
+                      {emp.invite_sent
+                        ? <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full"><UserPlus className="w-3 h-3" />Invited</span>
+                        : <span className="text-xs text-muted-foreground">No invite</span>
+                      }
+                    </td>
                     <td className="p-4"><Eye className="w-4 h-4 text-muted-foreground" /></td>
                   </tr>
                   );
@@ -120,7 +164,7 @@ export default function NexusEmployees() {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent><DialogHeader><DialogTitle>Add Employee</DialogTitle></DialogHeader>
-          <EmployeeForm onSubmit={createMutation.mutate} isLoading={createMutation.isPending} />
+          <EmployeeForm onSubmit={handleAddEmployee} isLoading={inviting} />
         </DialogContent>
       </Dialog>
 

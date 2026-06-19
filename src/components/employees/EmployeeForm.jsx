@@ -6,11 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
 const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
+const orgTiers = [
+  { value: 'executive_director', label: 'Executive Director' },
+  { value: 'director', label: 'Director' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'supervisor_team_lead', label: 'Supervisor / Team Lead' },
+  { value: 'frontline', label: 'Frontline Worker' },
+  { value: 'assistant', label: 'Assistant' },
+];
 
 export default function EmployeeForm({ employee, onSubmit, isLoading }) {
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
-    position: '', department: '', status: 'active', hire_date: '',
+    position: '', department: '', org_tier: '', status: 'active', hire_date: '',
   });
 
   // Populate form when editing an existing employee
@@ -23,6 +31,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading }) {
         phone: employee.phone || '',
         position: employee.position || '',
         department: employee.department || '',
+        org_tier: employee.org_tier || '',
         status: employee.status || 'active',
         hire_date: employee.hire_date || '',
       });
@@ -57,6 +66,13 @@ export default function EmployeeForm({ employee, onSubmit, isLoading }) {
       <div className="space-y-1">
         <Label>Position *</Label>
         <Input value={data.position} onChange={e => setData({ ...data, position: e.target.value })} placeholder="Job title" required />
+      </div>
+      <div className="space-y-1">
+        <Label>Org Tier *</Label>
+        <Select value={data.org_tier} onValueChange={val => setData({ ...data, org_tier: val })}>
+          <SelectTrigger><SelectValue placeholder="Select tier" /></SelectTrigger>
+          <SelectContent>{orgTiers.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+        </Select>
       </div>
       <div className="space-y-1">
         <Label>Department *</Label>
