@@ -41,12 +41,10 @@ export default function ReportingAGREditor() {
   const sectionRefs = useRef({});
   const previewRef = useRef(null);
   const previewContainerRef = useRef(null);
-  const previewInnerRef = useRef(null);
   const [previewContainerWidth, setPreviewContainerWidth] = useState(900);
-  const [previewInnerHeight, setPreviewInnerHeight] = useState(2000);
 
   const PREVIEW_DESIGN_WIDTH = 900;
-  const previewScale = previewContainerWidth > 0 ? Math.min(1, previewContainerWidth / PREVIEW_DESIGN_WIDTH) : 1;
+  const previewScale = Math.min(1, previewContainerWidth / PREVIEW_DESIGN_WIDTH);
 
   const initRef = useRef(false);
 
@@ -63,16 +61,6 @@ export default function ReportingAGREditor() {
     setPreviewContainerWidth(el.offsetWidth);
     return () => ro.disconnect();
   }, []);
-
-  // Measure inner preview natural height so wrapper height can be set correctly
-  useEffect(() => {
-    const el = previewInnerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setPreviewInnerHeight(el.offsetHeight));
-    ro.observe(el);
-    setPreviewInnerHeight(el.offsetHeight);
-    return () => ro.disconnect();
-  }, [sections, report, branding, previewMode]);
 
   // Scroll live preview to active section
   useEffect(() => {
@@ -508,34 +496,27 @@ export default function ReportingAGREditor() {
               </div>
             </div>
 
-            {/* Scaled preview: renders at full 900px then shrinks proportionally */}
+            {/* Scaled preview: fixed 900px design width, zoomed to fit */}
             <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden">
-              <div style={{ height: `${previewInnerHeight * previewScale}px`, position: 'relative', overflow: 'hidden' }}>
-                <div ref={previewInnerRef} style={{
-                  position: 'absolute', top: 0, left: 0,
-                  width: `${PREVIEW_DESIGN_WIDTH}px`,
-                  transform: `scale(${previewScale})`,
-                  transformOrigin: 'top left',
-                }}>
-                  {previewMode === 'digital' ? (
-                    <ReportDigitalView
-                      report={report}
-                      sections={sections}
-                      branding={branding}
-                      dataEntries={dataEntries}
-                      onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
-                    />
-                  ) : (
-                    <ReportPrintView
-                      report={report}
-                      sections={sections}
-                      branding={branding}
-                      dataEntries={dataEntries}
-                      onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
-                      onSectionsUpdate={setSections}
-                    />
-                  )}
-                </div>
+              <div style={{ width: `${PREVIEW_DESIGN_WIDTH}px`, zoom: previewScale }}>
+                {previewMode === 'digital' ? (
+                  <ReportDigitalView
+                    report={report}
+                    sections={sections}
+                    branding={branding}
+                    dataEntries={dataEntries}
+                    onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                  />
+                ) : (
+                  <ReportPrintView
+                    report={report}
+                    sections={sections}
+                    branding={branding}
+                    dataEntries={dataEntries}
+                    onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                    onSectionsUpdate={setSections}
+                  />
+                )}
               </div>
             </div>
           </div>
