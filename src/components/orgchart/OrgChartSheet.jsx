@@ -358,6 +358,17 @@ export default function OrgChartSheet({
             {payrollOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             Financials
           </button>
+          {/* Always show totals, even when collapsed */}
+          <div className="flex items-center gap-3 text-sm">
+            <span className="font-semibold text-foreground">
+              {working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} staff
+            </span>
+            <span className="text-muted-foreground/40">|</span>
+            <span className="font-semibold text-foreground">
+              Total: ${Math.round(working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).reduce((s, p) => s + (p.salary || 0), 0)).toLocaleString()}/yr
+            </span>
+          </div>
+          {/* Full breakdown when expanded */}
           {payrollOpen && <PayrollSummary positions={working} showSalary={showSalary} basePositions={basePositions} />}
         </div>
         <div className="flex items-center gap-2">
