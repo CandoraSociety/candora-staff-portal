@@ -18,8 +18,19 @@ export default function Portal() {
     queryFn: () => base44.entities.PortalCard.list(),
   });
 
+  const getModuleIdFromCard = (card) => {
+    if (!card.url) return null;
+    return card.url.replace(/^\//, '').split('/')[0] || null;
+  };
+
   const accessibleCards = cards
-    .filter(card => access.canAccessCard(card))
+    .filter(card => {
+      if (!card.is_enabled) return false;
+      if (access.isAdmin) return true;
+      const moduleId = getModuleIdFromCard(card);
+      if (moduleId) return access.canAccessModule(moduleId);
+      return access.canAccessCard(card);
+    })
     .filter(card => {
       if (search) {
         const q = search.toLowerCase();
