@@ -84,10 +84,11 @@ export default function NexusEmployees() {
       }));
       await Promise.all(filePermRecords.map(p => base44.entities.AccessPermission.create(p)));
 
-      // 4. Send branded welcome email directing them to self-register
+      // 4. Invite user (creates account) then send branded welcome email
       try {
-        await base44.functions.invoke('sendEmployeeWelcomeEmail', { employee_id: employee.id });
+        await base44.users.inviteUser(data.email, role);
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
+        await base44.functions.invoke('sendEmployeeWelcomeEmail', { employee_id: employee.id });
       } catch (inviteErr) {
         // non-fatal
       }
