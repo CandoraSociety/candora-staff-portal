@@ -23,6 +23,18 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
       
+      // If no token, mark everything as loaded immediately so public pages can render
+      if (!appParams.token) {
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        setAuthChecked(true);
+        setIsLoadingPublicSettings(false);
+        return;
+      }
+      
+      // Set loading states for authenticated flow
+      setIsLoadingAuth(true);
+      
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.
       const appClient = createAxiosClient({
@@ -35,46 +47,32 @@ export const AuthProvider = ({ children }) => {
       });
       
       try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
+        // Add timeout to prevent hanging
+        const publicSettings = await Promise.race([
+          appClient.get(`/prod/public-settings/by-id/${appParams.appId}`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
         setAppPublicSettings(publicSettings);
         
         // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-        setIsLoadingPublicSettings(false);
+        await checkUserAuth();
       } catch (appError) {
         console.error('App state check failed:', appError);
         
-        // Handle app-level errors
+        // Only set authError for specific 403 reasons, not for timeouts/network errors
+        // This allows public pages to render even if the settings call fails
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
           const reason = appError.data.extra_data.reason;
           if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
+            setAuthError({ type: 'auth_required', message: 'Authentication required' });
           } else if (reason === 'user_not_registered') {
-            setAuthError({
-              type: 'user_not_registered',
-              message: 'User not registered for this app'
-            });
+            setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
           } else {
-            setAuthError({
-              type: reason,
-              message: appError.message
-            });
+            setAuthError({ type: reason, message: appError.message });
           }
-        } else {
-          setAuthError({
-            type: 'unknown',
-            message: appError.message || 'Failed to load app'
-          });
         }
+        // For timeouts/network errors, just continue without blocking - ProtectedRoute will handle gating
+      } finally {
         setIsLoadingPublicSettings(false);
         setIsLoadingAuth(false);
       }
