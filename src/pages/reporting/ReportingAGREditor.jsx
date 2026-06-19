@@ -40,6 +40,8 @@ export default function ReportingAGREditor() {
   const [activeTab, setActiveTab] = useState('editor');
   const sectionRefs = useRef({});
   const previewRef = useRef(null);
+  const previewContainerRef = useRef(null);
+  const [previewScale, setPreviewScale] = useState(1);
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -52,6 +54,21 @@ export default function ReportingAGREditor() {
       sectionRefs.current[activeSectionId].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [activeSectionId]);
+
+  // Measure preview container and calculate scale
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.offsetWidth;
+      const designWidth = 900;
+      setPreviewScale(Math.min(1, w / designWidth));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [showPreview, activeTab]);
 
   const loadAll = useCallback(async () => {
     // Phase 1: critical data — render the page immediately
@@ -478,28 +495,28 @@ export default function ReportingAGREditor() {
               </div>
             </div>
 
-            {previewMode === 'digital' ? (
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                <ReportDigitalView
-                  report={report}
-                  sections={sections}
-                  branding={branding}
-                  dataEntries={dataEntries}
-                  onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
-                />
+            <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden">
+              <div style={{ width: `${100 / previewScale}%`, transform: `scale(${previewScale})`, transformOrigin: 'top left' }}>
+                {previewMode === 'digital' ? (
+                  <ReportDigitalView
+                    report={report}
+                    sections={sections}
+                    branding={branding}
+                    dataEntries={dataEntries}
+                    onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                  />
+                ) : (
+                  <ReportPrintView
+                    report={report}
+                    sections={sections}
+                    branding={branding}
+                    dataEntries={dataEntries}
+                    onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                    onSectionsUpdate={setSections}
+                  />
+                )}
               </div>
-            ) : (
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                <ReportPrintView
-                  report={report}
-                  sections={sections}
-                  branding={branding}
-                  dataEntries={dataEntries}
-                  onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
-                  onSectionsUpdate={setSections}
-                />
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
