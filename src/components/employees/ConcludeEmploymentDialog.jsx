@@ -49,14 +49,14 @@ export default function ConcludeEmploymentDialog({ open, onOpenChange, employee,
         </p>
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800 space-y-1">
           <p className="font-semibold">🔐 Additional step required to fully revoke login access:</p>
-          <p>You must also remove this user from the Base44 admin panel to prevent them from logging in.</p>
+          <p>Go to the <strong>Base44 app editor</strong> → <strong>Dashboard</strong> → <strong>Users</strong> and delete this user to prevent them from logging in.</p>
           <a
-            href="https://base44.com/dashboard/users"
+            href="https://app.base44.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-red-700 underline font-medium hover:text-red-900"
           >
-            → Open Base44 User Management
+            → Open Base44 App Editor
           </a>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
