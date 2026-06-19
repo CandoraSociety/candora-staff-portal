@@ -91,6 +91,7 @@ export default function NexusEmployees() {
 
       // 4. Build welcome message for manual sending
       const registerUrl = `${window.location.origin}/register`;
+      const loginUrl = `${window.location.origin}/login`;
       const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
 
 Hi ${data.first_name},
@@ -106,7 +107,7 @@ Once registered, you'll have access to your assigned portals and resources. If y
 Welcome aboard!
 — Candora HR Team`;
 
-      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl });
+      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl, loginUrl });
       setStep(3);
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -406,9 +407,15 @@ Welcome aboard!
                   />
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
-                  <strong>Registration URL:</strong>
-                  <div className="mt-1 font-mono break-all">{welcomeInfo.registerUrl}</div>
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-2">
+                  <div>
+                    <strong>Register (first time):</strong>
+                    <div className="mt-0.5 font-mono break-all">{welcomeInfo.registerUrl}</div>
+                  </div>
+                  <div>
+                    <strong>Login (returning):</strong>
+                    <div className="mt-0.5 font-mono break-all">{welcomeInfo.loginUrl}</div>
+                  </div>
                 </div>
 
                 <Button className="w-full" onClick={() => setShowForm(false)}>Done</Button>
