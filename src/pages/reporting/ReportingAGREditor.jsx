@@ -41,7 +41,7 @@ export default function ReportingAGREditor() {
   const sectionRefs = useRef({});
   const previewRef = useRef(null);
   const previewContainerRef = useRef(null);
-  const [previewContainerWidth, setPreviewContainerWidth] = useState(900);
+  const [previewContainerWidth, setPreviewContainerWidth] = useState(500);
 
   const PREVIEW_DESIGN_WIDTH = 900;
   const previewScale = Math.min(1, previewContainerWidth / PREVIEW_DESIGN_WIDTH);
@@ -60,7 +60,7 @@ export default function ReportingAGREditor() {
     ro.observe(el);
     setPreviewContainerWidth(el.offsetWidth);
     return () => ro.disconnect();
-  }, []);
+  }, [activeTab, showPreview]);
 
   // Scroll live preview to active section
   useEffect(() => {
@@ -497,7 +497,7 @@ export default function ReportingAGREditor() {
             </div>
 
             {/* Scaled preview: fixed 900px design width, zoomed to fit */}
-            <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden">
+            <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto">
               <div style={{ width: `${PREVIEW_DESIGN_WIDTH}px`, zoom: previewScale }}>
                 {previewMode === 'digital' ? (
                   <ReportDigitalView
