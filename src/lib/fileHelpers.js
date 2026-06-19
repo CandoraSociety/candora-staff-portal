@@ -84,12 +84,20 @@ export function generateStandardizedName(originalName, category, accessLevel) {
   return `${category}-${accessLevel}-${year}${month}${day}-${name}`;
 }
 
-export function canAccessFile(file, user) {
+/**
+ * Checks whether a user can access a file.
+ * @param {object} file - The file entity
+ * @param {object} user - The current user (from base44.auth.me())
+ * @param {string[]} grantedFileLevels - Array of file access level IDs granted to this user via AccessPermission records
+ */
+export function canAccessFile(file, user, grantedFileLevels = []) {
   if (!user) return false;
   if (file.access_level === "universal") return true;
-  if (file.access_level === "personal") return file.owner_email === user.email;
-  if (file.access_level === "manager") return user.role === "admin" || user.role === "manager";
-  if (file.access_level === "finance") return user.role === "admin" || file.finance_authorized_emails?.includes(user.email);
-  if (file.access_level === "corporate") return user.role === "admin";
+  if (file.access_level === "personal") return file.owner_email === user.email || user.role === "admin";
+  // For restricted levels, admins always have access; others need an explicit grant
+  const RESTRICTED = ["manager", "finance", "corporate"];
+  if (RESTRICTED.includes(file.access_level)) {
+    return user.role === "admin" || grantedFileLevels.includes(file.access_level);
+  }
   return false;
 }

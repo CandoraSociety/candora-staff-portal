@@ -12,6 +12,8 @@ import SearchBar from "@/components/files/SearchBar";
 import FileSortingDialog from "@/components/files/FileSortingDialog";
 import { canAccessFile } from "@/lib/fileHelpers";
 import { useAuth } from "@/lib/AuthContext";
+import { FilePermissionsContext } from "@/components/filemanager/FileManagerLayout";
+import { useContext } from "react";
 
 export default function FileBrowser() {
   const navigate = useNavigate();
@@ -25,13 +27,15 @@ export default function FileBrowser() {
   const [filesToSort, setFilesToSort] = useState([]);
 
   const queryClient = useQueryClient();
+  const { grantedFileLevels = [], isAdmin = false } = useContext(FilePermissionsContext);
 
   const { data: files = [], isLoading, refetch } = useQuery({
-    queryKey: ["files", filters, search],
+    queryKey: ["files", filters, search, grantedFileLevels],
     queryFn: async () => {
       const allFiles = await base44.entities.File.list("-created_date", 1000);
-      return allFiles.filter((f) => canAccessFile(f, user));
+      return allFiles.filter((f) => canAccessFile(f, user, grantedFileLevels));
     },
+    enabled: !!user,
   });
 
   const deleteFileMutation = useMutation({

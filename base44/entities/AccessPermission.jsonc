@@ -7,13 +7,14 @@
       "enum": [
         "portal_card",
         "feature",
-        "module"
+        "module",
+        "file_access"
       ],
       "description": "What type of thing is being permissioned"
     },
     "target_id": {
       "type": "string",
-      "description": "ID of the portal card, feature, or module"
+      "description": "ID of the portal card, feature, module, or file access level (e.g. 'manager', 'finance', 'corporate')"
     },
     "scope_type": {
       "type": "string",
@@ -26,7 +27,7 @@
     },
     "scope_value": {
       "type": "string",
-      "description": "The role name, department ID, or user ID"
+      "description": "The role name, department ID, or user email"
     },
     "permission": {
       "type": "string",

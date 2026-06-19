@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import FloatingNoteButton from '@/components/notes/FloatingNoteButton';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
@@ -14,21 +14,25 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const NAV_ITEMS = [
-  { path: "/filemanager", label: "Dashboard", icon: Home, roles: null },
-  { path: "/filemanager/files", label: "All Files", icon: FolderOpen, roles: null },
-  { path: "/filemanager/files?access=universal", label: "Universal Files", icon: Globe, roles: null },
-  { path: "/filemanager/files?access=personal", label: "My Files", icon: User, roles: null },
-  { path: "/filemanager/files?access=manager", label: "Manager Files", icon: Shield, roles: ["admin", "manager"] },
-  { path: "/filemanager/files?access=finance", label: "Finance Files", icon: DollarSign, roles: ["admin", "finance"] },
-  { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, roles: ["admin", "corporate"] },
-  { path: "/filemanager/search", label: "Search", icon: Search, roles: null },
-  { path: "/filemanager/upload", label: "Upload", icon: Upload, roles: null },
-  { path: "/filemanager/bulk", label: "Bulk Import", icon: PackagePlus, roles: null },
-  { path: "/filemanager/collections", label: "Collections", icon: FolderHeart, roles: null },
-  { path: "/filemanager/workspace", label: "My Workspace", icon: LayoutDashboard, roles: null },
-  { path: "/filemanager/notes", label: "Notes", icon: StickyNote, roles: null },
-  { path: "/filemanager/editor", label: "File Editor", icon: Pencil, roles: null },
+// Context so FileBrowser and other pages can read granted file access levels
+export const FilePermissionsContext = createContext({ grantedFileLevels: [] });
+
+// Base nav items — file access items are added dynamically based on permissions
+const BASE_NAV_ITEMS = [
+  { path: "/filemanager",                      label: "Dashboard",     icon: Home,          accessLevel: null },
+  { path: "/filemanager/files",                label: "All Files",     icon: FolderOpen,    accessLevel: null },
+  { path: "/filemanager/files?access=universal", label: "Universal Files", icon: Globe,     accessLevel: null },
+  { path: "/filemanager/files?access=personal",  label: "My Files",    icon: User,          accessLevel: "personal" }, // admin + owner only
+  { path: "/filemanager/files?access=manager",   label: "Manager Files",  icon: Shield,     accessLevel: "manager" },
+  { path: "/filemanager/files?access=finance",   label: "Finance Files",  icon: DollarSign, accessLevel: "finance" },
+  { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, accessLevel: "corporate" },
+  { path: "/filemanager/search",               label: "Search",        icon: Search,        accessLevel: null },
+  { path: "/filemanager/upload",               label: "Upload",        icon: Upload,        accessLevel: null },
+  { path: "/filemanager/bulk",                 label: "Bulk Import",   icon: PackagePlus,   accessLevel: null },
+  { path: "/filemanager/collections",          label: "Collections",   icon: FolderHeart,   accessLevel: null },
+  { path: "/filemanager/workspace",            label: "My Workspace",  icon: LayoutDashboard, accessLevel: null },
+  { path: "/filemanager/notes",                label: "Notes",         icon: StickyNote,    accessLevel: null },
+  { path: "/filemanager/editor",               label: "File Editor",   icon: Pencil,        accessLevel: null },
 ];
 
 function AppNav() {
@@ -39,15 +43,33 @@ function AppNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
+  // Fetch file-level access permissions for the current user
+  const { data: filePermissions = [] } = useQuery({
+    queryKey: ['file-permissions', user?.email],
+    enabled: !!user?.email,
+    queryFn: () => base44.entities.AccessPermission.filter({
+      target_type: 'file_access',
+      scope_type: 'individual',
+      scope_value: user.email,
+      permission: 'allow',
+      is_active: true,
+    }),
+  });
+
+  const grantedFileLevels = filePermissions.map(p => p.target_id);
+
   const handleLogout = async () => {
     await base44.auth.logout();
     window.location.href = '/';
   };
 
-  const visibleItems = NAV_ITEMS.filter(item => {
-    if (!item.roles) return true;
-    if (!user) return false;
-    return item.roles.includes(user.role);
+  const isAdmin = user?.role === 'admin';
+
+  const visibleItems = BASE_NAV_ITEMS.filter(item => {
+    if (!item.accessLevel) return true; // always visible
+    if (item.accessLevel === 'personal') return true; // everyone sees My Files (content is filtered server-side)
+    // Restricted access levels: admin or explicitly granted
+    return isAdmin || grantedFileLevels.includes(item.accessLevel);
   });
 
   const NavButton = ({ item }) => {
@@ -195,7 +217,9 @@ function AppNav() {
 
         {/* Page Content */}
         <main className="p-6 max-w-7xl mx-auto">
-          <Outlet />
+          <FilePermissionsContext.Provider value={{ grantedFileLevels, isAdmin }}>
+            <Outlet />
+          </FilePermissionsContext.Provider>
         </main>
       </div>
       <FloatingNoteButton />

@@ -16,13 +16,15 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
 import EmployeeForm from '@/components/employees/EmployeeForm';
 import PortalAccessSelector from '@/components/employees/PortalAccessSelector';
+import FileAccessSelector from '@/components/files/FileAccessSelector';
 
 export default function NexusEmployees() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [step, setStep] = useState(1); // 1 = employee details, 2 = portal access
+  const [step, setStep] = useState(1); // 1 = employee details, 2 = portal + file access
   const [pendingEmployee, setPendingEmployee] = useState(null); // data from step 1
   const [selectedPortals, setSelectedPortals] = useState([]);
+  const [selectedFileAccess, setSelectedFileAccess] = useState([]); // extra file access levels
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ export default function NexusEmployees() {
   const openAddDialog = () => {
     setPendingEmployee(null);
     setSelectedPortals([]);
+    setSelectedFileAccess([]);
     setStep(1);
     setShowForm(true);
   };
@@ -69,9 +72,21 @@ export default function NexusEmployees() {
       }));
       await Promise.all(permRecords.map(p => base44.entities.AccessPermission.create(p)));
 
-      // 3. Send platform invite
+      // 3. Save file access permissions — universal + personal always granted; restricted only if explicitly selected
+      const FILE_ACCESS_LEVELS = ['manager', 'finance', 'corporate'];
+      const filePermRecords = FILE_ACCESS_LEVELS.map(level => ({
+        target_type: 'file_access',
+        target_id: level,
+        scope_type: 'individual',
+        scope_value: data.email,
+        permission: selectedFileAccess.includes(level) ? 'allow' : 'deny',
+        is_active: true,
+      }));
+      await Promise.all(filePermRecords.map(p => base44.entities.AccessPermission.create(p)));
+
+      // 4. Send platform invite
       try {
-        const inviteResult = await base44.users.inviteUser(data.email, role);
+        await base44.users.inviteUser(data.email, role);
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
       } catch (inviteErr) {
         // non-fatal
@@ -311,7 +326,7 @@ export default function NexusEmployees() {
         <DialogContent className="max-h-[90vh] flex flex-col max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {step === 1 ? 'Add Employee — Details' : 'Add Employee — Portal Access'}
+              {step === 1 ? 'Add Employee — Details' : 'Add Employee — Access & Permissions'}
             </DialogTitle>
             <p className="text-xs text-muted-foreground">Step {step} of 2</p>
           </DialogHeader>
@@ -322,16 +337,29 @@ export default function NexusEmployees() {
             )}
 
             {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="text-sm">
                   <span className="font-medium">{pendingEmployee?.first_name} {pendingEmployee?.last_name}</span>
                   <span className="text-muted-foreground"> · {pendingEmployee?.org_tier?.replace(/_/g, ' ')}</span>
                 </div>
-                <PortalAccessSelector
-                  value={selectedPortals}
-                  onChange={setSelectedPortals}
-                  orgTier={null}
-                />
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Portal Access</p>
+                  <PortalAccessSelector
+                    value={selectedPortals}
+                    onChange={setSelectedPortals}
+                    orgTier={null}
+                  />
+                </div>
+
+                <div className="border-t pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">File Access</p>
+                  <FileAccessSelector
+                    value={selectedFileAccess}
+                    onChange={setSelectedFileAccess}
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex items-center gap-1">
                     <ArrowLeft className="w-4 h-4" /> Back
