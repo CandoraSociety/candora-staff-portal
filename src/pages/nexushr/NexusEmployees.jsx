@@ -158,8 +158,11 @@ export default function NexusEmployees() {
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent><DialogHeader><DialogTitle>Add Employee</DialogTitle></DialogHeader>
-          <EmployeeForm onSubmit={handleAddEmployee} isLoading={inviting} />
+        <DialogContent className="max-h-[90vh] flex flex-col">
+          <DialogHeader><DialogTitle>Add Employee</DialogTitle></DialogHeader>
+          <div className="overflow-y-auto flex-1 pr-1">
+            <EmployeeForm onSubmit={handleAddEmployee} isLoading={inviting} />
+          </div>
         </DialogContent>
       </Dialog>
 
