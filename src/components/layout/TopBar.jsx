@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, Settings } from 'lucide-react';
+import { Bell, Search, Menu, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +9,13 @@ import {
 import { base44 } from '@/api/base44Client';
 import { ROLES } from '@/lib/constants';
 import { Link, useNavigate } from 'react-router-dom';
+import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
   const initials = (user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const roleLabel = ROLES.find(r => r.value === user?.role)?.label || user?.role || 'Staff';
   const [open, setOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -60,15 +62,28 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {
-              base44.auth.logout();
-              window.location.href = '/login';
-            }}>
+            <DropdownMenuItem 
+              onClick={() => {
+                setOpen(false);
+                setShowLogoutDialog(true);
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <LogoutConfirmationDialog
+        open={showLogoutDialog}
+        onOpenChange={setShowLogoutDialog}
+        onConfirm={() => {
+          base44.auth.logout();
+          window.location.href = '/login';
+        }}
+      />
     </header>
   );
 }

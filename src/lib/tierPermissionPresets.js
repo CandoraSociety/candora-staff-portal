@@ -18,11 +18,11 @@ export const PORTAL_MODULES = [
 
 /** Default module access per tier  (true = allowed by default) */
 export const TIER_PRESETS = {
-  executive_director: ['nexushr','pathways','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','ed'],
-  director:           ['nexushr','pathways','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager'],
-  manager:            ['nexushr','pathways','volunteermgr','eventsmgr','reporting','filemanager'],
-  supervisor_team_lead: ['pathways','volunteermgr','eventsmgr','filemanager'],
-  frontline:          ['pathways','filemanager'],
+  executive_director: ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','ed'],
+  director:           ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager'],
+  manager:            ['nexushr','volunteermgr','eventsmgr','reporting','filemanager'],
+  supervisor_team_lead: ['volunteermgr','eventsmgr','filemanager'],
+  frontline:          ['filemanager'],
   assistant:          ['filemanager'],
 };
 

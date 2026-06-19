@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, AppWindow, Settings, Users, Bell, 
@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
+import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
@@ -29,6 +30,7 @@ const ADMIN_ITEMS = [
 export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const location = useLocation();
   const { logoUrl, orgName } = useOrgSettings();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -106,19 +108,25 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutDialog(true)}
                 className={cn(
                   "flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors",
                   collapsed && "justify-center px-0"
                 )}
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" />
-                {!collapsed && <span>Sign Out</span>}
+                {!collapsed && <span className="text-sidebar-foreground">Sign Out</span>}
               </button>
             </TooltipTrigger>
             {collapsed && <TooltipContent side="right">Sign Out</TooltipContent>}
           </Tooltip>
         </div>
+
+        <LogoutConfirmationDialog
+          open={showLogoutDialog}
+          onOpenChange={setShowLogoutDialog}
+          onConfirm={handleLogout}
+        />
       </aside>
     </TooltipProvider>
   );
