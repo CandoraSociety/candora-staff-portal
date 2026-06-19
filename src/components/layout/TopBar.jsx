@@ -60,7 +60,10 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => base44.auth.logout('/login')}>
+            <DropdownMenuItem onClick={() => {
+              base44.auth.logout();
+              window.location.href = '/login';
+            }}>
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

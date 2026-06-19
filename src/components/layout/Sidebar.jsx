@@ -36,7 +36,8 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   };
 
   const handleLogout = () => {
-    base44.auth.logout('/login');
+    base44.auth.logout();
+    window.location.href = '/login';
   };
 
   return (
