@@ -130,7 +130,20 @@ export default function Dashboard() {
   const isWidgetActive = (id) =>
     lockedWidgetIds.includes(id) || (userPreferences?.enabled_widgets?.includes(id) ?? false);
 
-  const accessibleCards = cards.filter(card => access.canAccessCard(card));
+  // Derive module ID from card URL (e.g. "/filemanager" → "filemanager")
+  const getModuleIdFromCard = (card) => {
+    if (!card.url) return null;
+    return card.url.replace(/^\//, '').split('/')[0] || null;
+  };
+
+  const accessibleCards = cards.filter(card => {
+    if (!card.is_enabled) return false;
+    if (access.isAdmin) return true;
+    const moduleId = getModuleIdFromCard(card);
+    if (moduleId) return access.canAccessModule(moduleId);
+    // Fallback for cards without a module mapping
+    return access.canAccessCard(card);
+  });
 
   const pinnedPortalId = userPreferences?.pinned_portal_id || null;
   const pinnedCard = pinnedPortalId ? accessibleCards.find(c => c.id === pinnedPortalId) : null;

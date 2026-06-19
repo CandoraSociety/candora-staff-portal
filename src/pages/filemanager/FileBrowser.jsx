@@ -106,7 +106,7 @@ export default function FileBrowser() {
 
       <div className="flex items-center gap-4 flex-wrap">
         <SearchBar value={search} onChange={setSearch} placeholder="Search files..." />
-        <FileFilters filters={filters} onFilterChange={setFilters} />
+        <FileFilters filters={filters} onFilterChange={setFilters} grantedFileLevels={grantedFileLevels} isAdmin={isAdmin} />
         <div className="ml-auto flex items-center gap-1 border rounded-lg p-1">
           <button onClick={() => setViewMode("grid")} className={`h-8 px-3 rounded-md text-sm ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><Grid className="h-4 w-4" /></button>
           <button onClick={() => setViewMode("list")} className={`h-8 px-3 rounded-md text-sm ${viewMode === "list" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}><List className="h-4 w-4" /></button>

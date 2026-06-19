@@ -31,7 +31,14 @@ const ACCESS_LEVELS = [
   { value: "corporate", label: "Corporate", description: "Executive leadership" },
 ];
 
-export default function FileFilters({ filters, onFilterChange }) {
+export default function FileFilters({ filters, onFilterChange, grantedFileLevels = null, isAdmin = false }) {
+  // If grantedFileLevels is provided (non-admin), only show access levels the user can see
+  const visibleAccessLevels = ACCESS_LEVELS.filter(l => {
+    if (isAdmin || grantedFileLevels === null) return true;
+    if (l.value === 'personal' || l.value === 'universal') return true;
+    return grantedFileLevels.includes(l.value);
+  });
+
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Select value={filters.fileType} onValueChange={(v) => onFilterChange({ ...filters, fileType: v })}>
@@ -57,7 +64,7 @@ export default function FileFilters({ filters, onFilterChange }) {
         <SelectTrigger className="w-32 h-8 text-xs"><SelectValue placeholder="Access" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Access</SelectItem>
-          {ACCESS_LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
+          {visibleAccessLevels.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filters.sort} onValueChange={(v) => onFilterChange({ ...filters, sort: v })}>
