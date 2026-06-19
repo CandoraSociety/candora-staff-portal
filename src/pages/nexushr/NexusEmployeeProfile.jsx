@@ -98,12 +98,25 @@ export default function NexusEmployeeProfile() {
     await Promise.all(perms.map(p => base44.entities.AccessPermission.update(p.id, { permission: 'deny' })));
   };
 
+  // Delete the linked platform User record to fully revoke login access
+  const revokeLoginAccess = async (userId) => {
+    if (!userId) return;
+    try {
+      await base44.entities.User.delete(userId);
+    } catch (e) {
+      // User may already be removed — not a fatal error
+    }
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (employee?.email) await revokeAllAccess(employee.email);
+      if (employee?.user_id) await revokeLoginAccess(employee.user_id);
       return base44.entities.Employee.update(id, {
         is_deleted: true,
         deleted_at: new Date().toISOString().split('T')[0],
+        user_id: null,
+        invite_sent: false,
       });
     },
     onSuccess: () => {
@@ -116,12 +129,15 @@ export default function NexusEmployeeProfile() {
   const concludeMutation = useMutation({
     mutationFn: async (data) => {
       if (employee?.email) await revokeAllAccess(employee.email);
+      if (employee?.user_id) await revokeLoginAccess(employee.user_id);
       return base44.entities.Employee.update(id, {
         status: 'terminated',
         access_disabled: true,
         termination_date: data.termination_date,
         termination_reason_code: data.termination_reason_code,
         termination_comments: data.termination_comments,
+        user_id: null,
+        invite_sent: false,
       });
     },
     onSuccess: () => {

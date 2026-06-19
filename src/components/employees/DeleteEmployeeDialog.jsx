@@ -21,17 +21,8 @@ export default function DeleteEmployeeDialog({ open, onOpenChange, employee, onC
           <p className="text-xs text-muted-foreground">
             Note: If you want to end someone's employment while keeping their record, use <strong>Conclude Employment</strong> instead.
           </p>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800 space-y-1">
-            <p className="font-semibold">🔐 Additional step required to fully revoke login access:</p>
-            <p>Go to the <strong>Base44 app editor</strong> → <strong>Dashboard</strong> → <strong>Users</strong> and delete this user to prevent them from logging in.</p>
-            <a
-              href="https://app.base44.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-red-700 underline font-medium hover:text-red-900"
-            >
-              → Open Base44 App Editor
-            </a>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-800">
+            🔐 Login access will be automatically revoked when their record is deleted.
           </div>
           <div className="flex gap-2 pt-1">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
