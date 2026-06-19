@@ -43,6 +43,7 @@ import NexusTimeLogs from '@/pages/nexushr/NexusTimeLogs';
 import NexusRecognition from '@/pages/nexushr/NexusRecognition';
 import NexusOnboarding from '@/pages/nexushr/NexusOnboarding';
 import NexusEmailEmployees from '@/pages/nexushr/NexusEmailEmployees';
+import NexusEmployeeProfile from '@/pages/nexushr/NexusEmployeeProfile';
 
 // Volunteer Manager
 import VolunteerMgrLayout from '@/components/volunteermgr/VolunteerMgrLayout';
@@ -253,6 +254,7 @@ const AuthenticatedApp = () => {
           <Route path="/nexushr/recognition" element={<NexusRecognition />} />
           <Route path="/nexushr/onboarding" element={<NexusOnboarding />} />
           <Route path="/nexushr/email-employees" element={<NexusEmailEmployees />} />
+          <Route path="/nexushr/employees/:id" element={<NexusEmployeeProfile />} />
         </Route>
 
         {/* Grant / Proposal Manager - standalone layout */}

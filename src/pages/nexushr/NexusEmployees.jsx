@@ -5,10 +5,9 @@ import { useOutletContext } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { buildPresetsForTier } from '@/lib/tierPermissionPresets';
 import { Badge } from '@/components/ui/badge';
@@ -17,15 +16,13 @@ import EmptyState from '@/components/shared/EmptyState';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
 import EmployeeForm from '@/components/employees/EmployeeForm';
-import EmployeeDetail from '@/components/employees/EmployeeDetail';
 
 export default function NexusEmployees() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState(null);
-  const [viewingEmployee, setViewingEmployee] = useState(null);
   const [inviting, setInviting] = useState(false);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const outletContext = useOutletContext();
   const user = outletContext?.user;
   const { toast } = useToast();
@@ -72,18 +69,7 @@ export default function NexusEmployees() {
     queryFn: () => base44.entities.Employee.list('-created_date', 500) 
   });
 
-  const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Employee.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['employees'] }); setShowForm(false); },
-  });
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Employee.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['employees'] }); setEditingEmployee(null); },
-  });
-  const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Employee.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['employees'] }); setViewingEmployee(null); },
-  });
+
 
   const filtered = employees.filter(e =>
     `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
@@ -128,7 +114,7 @@ export default function NexusEmployees() {
                 {filtered.map(emp => {
                   const isMe = user?.email && emp.email?.toLowerCase() === user.email.toLowerCase();
                   return (
-                  <tr key={emp.id} className={`cursor-pointer transition-colors ${isMe ? 'bg-emerald-50 hover:bg-emerald-100 border-l-4 border-l-emerald-500' : 'hover:bg-muted/30'}`} onClick={() => setViewingEmployee(emp)}>
+                  <tr key={emp.id} className={`cursor-pointer transition-colors ${isMe ? 'bg-emerald-50 hover:bg-emerald-100 border-l-4 border-l-emerald-500' : 'hover:bg-muted/30'}`} onClick={() => navigate(`/nexushr/employees/${emp.id}`)}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${emp.is_deceased ? 'bg-gray-200 text-gray-600' : isMe ? 'bg-emerald-500 text-white' : 'bg-primary/10 text-primary'}`}>
@@ -177,15 +163,6 @@ export default function NexusEmployees() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!viewingEmployee} onOpenChange={() => setViewingEmployee(null)}>
-        <DialogContent className="max-w-2xl">
-          <EmployeeDetail
-            employee={viewingEmployee}
-            onEdit={() => { setEditingEmployee(viewingEmployee); setViewingEmployee(null); }}
-            onDelete={() => deleteMutation.mutate(viewingEmployee.id)}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
