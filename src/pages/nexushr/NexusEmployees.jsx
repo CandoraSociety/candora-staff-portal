@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, ArrowRight, RotateCcw, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, RotateCcw, Trash2, Copy, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { PORTAL_MODULES, TIER_PRESETS } from '@/lib/tierPermissionPresets';
@@ -26,6 +26,8 @@ export default function NexusEmployees() {
   const [selectedPortals, setSelectedPortals] = useState([]);
   const [selectedFileAccess, setSelectedFileAccess] = useState([]); // extra file access levels
   const [saving, setSaving] = useState(false);
+  const [welcomeInfo, setWelcomeInfo] = useState(null); // shown on step 3
+  const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const outletContext = useOutletContext();
@@ -38,6 +40,8 @@ export default function NexusEmployees() {
     setPendingEmployee(null);
     setSelectedPortals([]);
     setSelectedFileAccess([]);
+    setWelcomeInfo(null);
+    setCopied(false);
     setStep(1);
     setShowForm(true);
   };
@@ -50,18 +54,17 @@ export default function NexusEmployees() {
     setStep(2);
   };
 
-  // Step 2: finalize — create employee, set permissions, send invite
+  // Step 2: finalize — create employee + permissions, then show welcome message
   const handleFinalize = async () => {
     if (!pendingEmployee) return;
     setSaving(true);
     try {
       const data = pendingEmployee;
-      const role = ADMIN_TIERS.includes(data.org_tier) ? 'admin' : 'user';
 
       // 1. Create employee record
       const employee = await base44.entities.Employee.create(data);
 
-      // 2. Save portal access permissions (by email, since user_id not known yet)
+      // 2. Save portal access permissions
       const permRecords = PORTAL_MODULES.map(mod => ({
         target_type: 'module',
         target_id: mod.id,
@@ -72,7 +75,7 @@ export default function NexusEmployees() {
       }));
       await Promise.all(permRecords.map(p => base44.entities.AccessPermission.create(p)));
 
-      // 3. Save file access permissions — universal + personal always granted; restricted only if explicitly selected
+      // 3. Save file access permissions
       const FILE_ACCESS_LEVELS = ['manager', 'finance', 'corporate'];
       const filePermRecords = FILE_ACCESS_LEVELS.map(level => ({
         target_type: 'file_access',
@@ -84,27 +87,38 @@ export default function NexusEmployees() {
       }));
       await Promise.all(filePermRecords.map(p => base44.entities.AccessPermission.create(p)));
 
-      // 4. Invite user (creates account) then send branded welcome email
-      try {
-        await base44.users.inviteUser(data.email, role);
-        await base44.entities.Employee.update(employee.id, { invite_sent: true });
-        await base44.functions.invoke('sendEmployeeWelcomeEmail', { employee_id: employee.id });
-      } catch (inviteErr) {
-        // non-fatal
-      }
-
-      toast({
-        title: 'Employee added',
-        description: `${data.first_name} ${data.last_name} has been created with ${selectedPortals.length} portal(s) enabled. An invite email was sent to ${data.email}.`,
-      });
-
       queryClient.invalidateQueries({ queryKey: ['employees'] });
-      setShowForm(false);
+
+      // 4. Build welcome message for manual sending
+      const registerUrl = `${window.location.origin}/register`;
+      const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
+
+Hi ${data.first_name},
+
+Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
+
+To get started, please create your account using the link below. Make sure to register using this exact email address: ${data.email}
+
+👉 Create Your Account: ${registerUrl}
+
+Once registered, you'll have access to your assigned portals and resources. If you have any trouble, reach out to your manager or HR.
+
+Welcome aboard!
+— Candora HR Team`;
+
+      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl });
+      setStep(3);
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(welcomeInfo.message);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const { data: employees = [], isLoading } = useQuery({ 
@@ -327,9 +341,9 @@ export default function NexusEmployees() {
         <DialogContent className="max-h-[90vh] flex flex-col max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {step === 1 ? 'Add Employee — Details' : 'Add Employee — Access & Permissions'}
+              {step === 1 ? 'Add Employee — Details' : step === 2 ? 'Add Employee — Access & Permissions' : '✅ Employee Created'}
             </DialogTitle>
-            <p className="text-xs text-muted-foreground">Step {step} of 2</p>
+            {step < 3 && <p className="text-xs text-muted-foreground">Step {step} of 2</p>}
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 pr-1">
@@ -366,9 +380,38 @@ export default function NexusEmployees() {
                     <ArrowLeft className="w-4 h-4" /> Back
                   </Button>
                   <Button onClick={handleFinalize} disabled={saving} className="flex-1">
-                    {saving ? 'Creating...' : `Create Employee & Send Invite`}
+                    {saving ? 'Creating...' : 'Create Employee'}
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {step === 3 && welcomeInfo && (
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added successfully. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong>.
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Welcome Message</p>
+                    <Button size="sm" variant="outline" onClick={handleCopy} className="h-7 text-xs gap-1">
+                      {copied ? <><CheckCheck className="w-3.5 h-3.5 text-green-600" />Copied!</> : <><Copy className="w-3.5 h-3.5" />Copy Message</>}
+                    </Button>
+                  </div>
+                  <textarea
+                    readOnly
+                    value={welcomeInfo.message}
+                    className="w-full h-64 text-xs font-mono bg-muted/40 border rounded-md p-3 resize-none focus:outline-none"
+                  />
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800">
+                  <strong>Registration URL:</strong>
+                  <div className="mt-1 font-mono break-all">{welcomeInfo.registerUrl}</div>
+                </div>
+
+                <Button className="w-full" onClick={() => setShowForm(false)}>Done</Button>
               </div>
             )}
           </div>
