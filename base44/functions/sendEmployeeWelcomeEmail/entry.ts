@@ -16,15 +16,18 @@ Deno.serve(async (req) => {
 
     const body = `
       <h2>Welcome to the Candora Staff Portal, ${employee.first_name}!</h2>
-      <p>Your staff account has been created. You can log in to the Candora Staff Portal using the link below:</p>
+      <p>Your staff account has been created. Here's how to get started:</p>
+      <ol style="line-height:2;">
+        <li>Check your inbox for a <strong>separate password setup email</strong> (it may be in your junk/spam folder). Click the link in that email to set your password.</li>
+        <li>Once your password is set, return here and click the button below to log in:</li>
+      </ol>
       <p style="margin: 24px 0;">
         <a href="${loginUrl}" style="background-color:#f5c116;color:#0f1f6b;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;">
           Log In to Staff Portal
         </a>
       </p>
-      <p>Or copy this link into your browser:<br/><a href="${loginUrl}">${loginUrl}</a></p>
-      <p>You should have received a separate email from Base44 to set your password. Once your password is set, use the button above to access the portal.</p>
-      <p>If you have any questions, please reach out to your manager or HR.</p>
+      <p style="color:#888;font-size:13px;">Direct link: <a href="${loginUrl}">${loginUrl}</a></p>
+      <p>If you have any trouble, please reach out to your manager or HR.</p>
       <p>Welcome aboard,<br/>The Candora Society Team</p>
     `;
 
