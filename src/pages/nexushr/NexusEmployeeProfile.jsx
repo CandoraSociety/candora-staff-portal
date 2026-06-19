@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X, UserX, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X, UserX, RotateCcw, MessageSquare, Copy, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import EmployeeForm from '@/components/employees/EmployeeForm';
@@ -45,6 +45,8 @@ export default function NexusEmployeeProfile() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [concludeOpen, setConcludeOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
@@ -263,6 +265,7 @@ export default function NexusEmployeeProfile() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Edit2 className="w-3.5 h-3.5 mr-1" />Edit</Button>
+                  <Button variant="outline" size="sm" onClick={() => setWelcomeOpen(true)}><MessageSquare className="w-3.5 h-3.5 mr-1" />Welcome Msg</Button>
                   {employee.status === 'terminated' ? (
                     <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => reactivateMutation.mutate()} disabled={reactivateMutation.isPending}>
                       <RotateCcw className="w-3.5 h-3.5 mr-1" />Reactivate
@@ -342,6 +345,49 @@ export default function NexusEmployeeProfile() {
         onConfirm={() => deleteMutation.mutate()}
         isLoading={deleteMutation.isPending}
       />
+
+      {/* Welcome Message Dialog */}
+      <Dialog open={welcomeOpen} onOpenChange={setWelcomeOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Welcome Message</DialogTitle></DialogHeader>
+          {(() => {
+            const registerUrl = `${window.location.origin}/register`;
+            const loginUrl = `${window.location.origin}/login`;
+            const message = `Subject: Welcome to the Candora Staff Portal — Action Required
+
+Hi ${employee.first_name},
+
+Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
+
+To get started, please create your account using the link below. Make sure to register using this exact email address: ${employee.email}
+
+👉 Create Your Account: ${registerUrl}
+
+Once you've registered, you can log in at any time here:
+🔑 Staff Portal Login: ${loginUrl}
+
+You'll have access to your assigned portals and resources after logging in. If you have any trouble, reach out to your manager or HR.
+
+Welcome aboard!
+— Candora HR Team`;
+            return (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">Send this to <strong>{employee.email}</strong> manually.</p>
+                <div className="flex justify-end">
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 2500); }}>
+                    {copied ? <><CheckCheck className="w-3.5 h-3.5 text-green-600" />Copied!</> : <><Copy className="w-3.5 h-3.5" />Copy Message</>}
+                  </Button>
+                </div>
+                <textarea readOnly value={message} className="w-full h-64 text-xs font-mono bg-muted/40 border rounded-md p-3 resize-none focus:outline-none" />
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
+                  <div><strong>Register (first time):</strong> <span className="font-mono">{registerUrl}</span></div>
+                  <div><strong>Login (returning):</strong> <span className="font-mono">{loginUrl}</span></div>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       <ConcludeEmploymentDialog
         open={concludeOpen}
