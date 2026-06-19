@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X, UserX, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import EmployeeForm from '@/components/employees/EmployeeForm';
@@ -16,6 +16,8 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { calculateMilestones } from '@/lib/employeeMilestones';
 import { formatPhoneNumber } from '@/lib/utils';
 import { PORTAL_MODULES, TIER_LABELS } from '@/lib/tierPermissionPresets';
+import ConcludeEmploymentDialog from '@/components/employees/ConcludeEmploymentDialog';
+import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
 
 const TABS = [
   { id: 'overview',     label: 'Overview',    icon: Activity },
@@ -41,6 +43,8 @@ export default function NexusEmployeeProfile() {
   const [activeTab, setActiveTab] = useState('overview');
   const [editOpen, setEditOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [concludeOpen, setConcludeOpen] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
@@ -93,6 +97,37 @@ export default function NexusEmployeeProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       navigate('/nexushr/employees');
+    },
+  });
+
+  const concludeMutation = useMutation({
+    mutationFn: (data) => base44.entities.Employee.update(id, {
+      status: 'terminated',
+      access_disabled: true,
+      termination_date: data.termination_date,
+      termination_reason_code: data.termination_reason_code,
+      termination_comments: data.termination_comments,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employee', id] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      setConcludeOpen(false);
+      toast({ title: 'Employment concluded', description: 'Employee has been moved to Former Employees.' });
+    },
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: () => base44.entities.Employee.update(id, {
+      status: 'active',
+      access_disabled: false,
+      termination_date: null,
+      termination_reason_code: null,
+      termination_comments: null,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employee', id] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
+      toast({ title: 'Employee reactivated', description: 'Access and status have been restored.' });
     },
   });
 
@@ -195,7 +230,16 @@ export default function NexusEmployeeProfile() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Edit2 className="w-3.5 h-3.5 mr-1" />Edit</Button>
-                  <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate()}><Trash2 className="w-3.5 h-3.5 mr-1" />Delete</Button>
+                  {employee.status === 'terminated' ? (
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => reactivateMutation.mutate()} disabled={reactivateMutation.isPending}>
+                      <RotateCcw className="w-3.5 h-3.5 mr-1" />Reactivate
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" className="text-orange-700 border-orange-300 hover:bg-orange-50" onClick={() => setConcludeOpen(true)}>
+                      <UserX className="w-3.5 h-3.5 mr-1" />Conclude Employment
+                    </Button>
+                  )}
+                  <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}><Trash2 className="w-3.5 h-3.5 mr-1" />Delete</Button>
                 </div>
               </div>
 
@@ -257,6 +301,22 @@ export default function NexusEmployeeProfile() {
           />
         </DialogContent>
       </Dialog>
+
+      <DeleteEmployeeDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        employee={employee}
+        onConfirm={() => deleteMutation.mutate()}
+        isLoading={deleteMutation.isPending}
+      />
+
+      <ConcludeEmploymentDialog
+        open={concludeOpen}
+        onOpenChange={setConcludeOpen}
+        employee={employee}
+        onConfirm={(data) => concludeMutation.mutate(data)}
+        isLoading={concludeMutation.isPending}
+      />
     </div>
   );
 }

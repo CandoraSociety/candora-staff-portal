@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus } from 'lucide-react';
+import { Plus, Search, Eye, Mail, Phone, MapPin, Pencil, ShieldCheck, UserPlus, UserX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { buildPresetsForTier } from '@/lib/tierPermissionPresets';
@@ -30,6 +30,8 @@ export default function NexusEmployees() {
   // Tiers that get admin role; everyone else gets 'user'
   const ADMIN_TIERS = ['executive_director', 'director'];
 
+  const APP_LOGIN_URL = `${window.location.origin}/login`;
+
   const handleAddEmployee = async (data) => {
     setInviting(true);
     try {
@@ -43,12 +45,29 @@ export default function NexusEmployees() {
         const inviteResult = await base44.users.inviteUser(data.email, role);
         invitedUserId = inviteResult?.id || inviteResult?.user_id || null;
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
-        toast({ title: 'Employee added & invite sent', description: `An invitation email was sent to ${data.email}.` });
       } catch (inviteErr) {
-        toast({ title: 'Employee added', description: `Could not send invite: ${inviteErr.message}. You can resend it later.`, variant: 'destructive' });
+        // non-fatal — continue
       }
 
-      // 3. Apply tier-based access permission presets (using email as scope_value if no user id yet)
+      // 3. Send a custom welcome email with the correct app login link
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: data.email,
+          subject: `Welcome to the team, ${data.first_name}!`,
+          body: `<p>Hi ${data.first_name},</p>
+<p>Your staff account has been created. You can log in to the staff portal using the link below:</p>
+<p><a href="${APP_LOGIN_URL}" style="background:#2b2de8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Log In to Staff Portal</a></p>
+<p>Use your email address <strong>${data.email}</strong> to sign in. If this is your first time, use the "Forgot Password" option to set your password.</p>
+<p>If you have any questions, reach out to HR.</p>
+<p>Welcome aboard!<br/>HR Team</p>`,
+          from_name: 'HR Team',
+        });
+        toast({ title: 'Employee added & welcome email sent', description: `Login link sent to ${data.email}.` });
+      } catch {
+        toast({ title: 'Employee added', description: `Welcome email could not be sent. You can resend it manually.` });
+      }
+
+      // 4. Apply tier-based access permission presets
       if (data.org_tier) {
         const scopeId = invitedUserId || data.email;
         const presets = buildPresetsForTier(data.org_tier, scopeId);
@@ -71,9 +90,17 @@ export default function NexusEmployees() {
 
 
 
-  const filtered = employees.filter(e =>
+  const active = employees.filter(e =>
+    e.status !== 'terminated' &&
     `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
   );
+
+  const former = employees.filter(e =>
+    e.status === 'terminated' &&
+    `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const filtered = active; // kept for compatibility
 
   return (
     <div className="space-y-6">
@@ -155,6 +182,51 @@ export default function NexusEmployees() {
             </table>
           </CardContent>
         </Card>
+      )}
+
+      {/* Former Employees */}
+      {former.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 pt-2">
+            <UserX className="w-4 h-4" /> Former Employees ({former.length})
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-muted/30">
+                  <tr className="text-left text-muted-foreground">
+                    <th className="p-4 font-medium">Name</th>
+                    <th className="p-4 font-medium hidden md:table-cell">Position</th>
+                    <th className="p-4 font-medium hidden md:table-cell">Last Day</th>
+                    <th className="p-4 font-medium hidden lg:table-cell">EI Code</th>
+                    <th className="p-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {former.map(emp => (
+                    <tr key={emp.id} className="hover:bg-muted/20 cursor-pointer text-muted-foreground" onClick={() => navigate(`/nexushr/employees/${emp.id}`)}>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                            {emp.first_name?.[0]}{emp.last_name?.[0]}
+                          </div>
+                          <div>
+                            <p className="font-medium line-through">{emp.first_name} {emp.last_name}</p>
+                            <p className="text-xs">{emp.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 hidden md:table-cell">{emp.position}</td>
+                      <td className="p-4 hidden md:table-cell">{emp.termination_date ? format(new Date(emp.termination_date), 'MMM d, yyyy') : '—'}</td>
+                      <td className="p-4 hidden lg:table-cell text-xs">{emp.termination_reason_code || '—'}</td>
+                      <td className="p-4"><Eye className="w-4 h-4 text-muted-foreground" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
