@@ -118,15 +118,18 @@ function AppNav() {
 }
 
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+import ModuleGate from "@/components/shared/ModuleGate";
 
 export default function PathwaysLayout() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <AppNav />
-      <main className="w-full">
-        <Outlet />
-      </main>
-      <EAFloatingWidget />
-    </div>
+    <ModuleGate moduleId="pathways">
+      <div className="min-h-screen bg-slate-50">
+        <AppNav />
+        <main className="w-full">
+          <Outlet />
+        </main>
+        <EAFloatingWidget />
+      </div>
+    </ModuleGate>
   );
 }

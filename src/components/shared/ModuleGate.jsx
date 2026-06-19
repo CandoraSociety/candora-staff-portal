@@ -1,0 +1,65 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useAccessControl } from '@/lib/useAccessControl';
+import { ShieldOff } from 'lucide-react';
+
+/**
+ * Wraps a portal layout — if the user doesn't have access to the given moduleId,
+ * shows a denial screen and redirects back to the dashboard after 3s.
+ */
+export default function ModuleGate({ moduleId, children }) {
+  const [user, setUser] = useState(null);
+  const [permissions, setPermissions] = useState(null); // null = loading
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    Promise.all([
+      base44.auth.me(),
+      base44.entities.AccessPermission.list(),
+    ]).then(([u, perms]) => {
+      setUser(u);
+      setPermissions(perms);
+    }).catch(() => {
+      setPermissions([]);
+    });
+  }, []);
+
+  const access = useAccessControl(user, permissions || []);
+
+  // Still loading
+  if (permissions === null) return null;
+
+  // Admin always passes
+  if (access.isAdmin) return children;
+
+  // Check module access
+  if (!access.canAccessModule(moduleId)) {
+    return <AccessDeniedScreen onGoHome={() => navigate('/')} />;
+  }
+
+  return children;
+}
+
+function AccessDeniedScreen({ onGoHome }) {
+  useEffect(() => {
+    const t = setTimeout(onGoHome, 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center space-y-4 p-8">
+        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
+          <ShieldOff className="w-8 h-8 text-red-500" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-800">Access Restricted</h2>
+        <p className="text-gray-500 max-w-xs mx-auto">
+          You don't have permission to access this module. Contact your administrator if you believe this is an error.
+        </p>
+        <p className="text-sm text-gray-400">Redirecting to dashboard…</p>
+        <button onClick={onGoHome} className="text-sm text-blue-600 hover:underline">Go now</button>
+      </div>
+    </div>
+  );
+}

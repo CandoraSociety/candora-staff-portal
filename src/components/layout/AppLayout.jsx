@@ -26,6 +26,17 @@ export default function AppLayout() {
     queryFn: () => base44.entities.AccessPermission.list(),
   });
 
+  // Auto-link employee record to user ID on first login
+  useEffect(() => {
+    if (!user?.id || !user?.email) return;
+    base44.entities.Employee.filter({ email: user.email }).then(emps => {
+      const emp = emps[0];
+      if (emp && !emp.user_id) {
+        base44.entities.Employee.update(emp.id, { user_id: user.id });
+      }
+    }).catch(() => {});
+  }, [user?.id]);
+
   const access = useAccessControl(user, permissions);
 
   const {

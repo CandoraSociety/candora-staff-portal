@@ -16,10 +16,34 @@ export function useAccessControl(user, permissions = []) {
   const helpers = useMemo(() => {
     const userRole = user?.role || 'frontline_staff';
     const userId = user?.id;
+    const userEmail = user?.email;
     const userDeptId = user?.department_id;
 
     const isAdmin = ADMIN_ROLES.includes(userRole);
     const isSuperAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+    /**
+     * Check if the current user can access a portal module (e.g. 'nexushr', 'pathways').
+     * Admins always have access. Others need an explicit 'allow' permission.
+     * Permissions may be stored by userId OR by email (before invite is accepted).
+     */
+    function canAccessModule(moduleId) {
+      if (isAdmin) return true;
+
+      // Look up by user ID or by email (for pre-accepted invites)
+      const match = permissions.find(p =>
+        p.target_type === 'module' &&
+        p.target_id === moduleId &&
+        p.scope_type === 'individual' &&
+        (p.scope_value === userId || p.scope_value === userEmail) &&
+        p.is_active
+      );
+
+      if (match) return match.permission === 'allow';
+
+      // No permission record at all — deny by default for non-admins
+      return false;
+    }
 
     function canAccessCard(card) {
       if (!card?.is_enabled) return false;
@@ -67,7 +91,7 @@ export function useAccessControl(user, permissions = []) {
       return (!card.allowed_roles || card.allowed_roles.length === 0);
     }
 
-    return { isAdmin, isSuperAdmin, canAccessCard, userRole, ROLE_HIERARCHY };
+    return { isAdmin, isSuperAdmin, canAccessCard, canAccessModule, userRole, ROLE_HIERARCHY };
   }, [user, permissions]);
 
   return helpers;

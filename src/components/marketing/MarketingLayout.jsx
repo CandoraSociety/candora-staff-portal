@@ -153,19 +153,22 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
 }
 
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+import ModuleGate from "@/components/shared/ModuleGate";
 
 export default function MarketingLayout() {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <MarketingSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-7xl mx-auto">
-          <Outlet />
-        </div>
-      </main>
-      <EAFloatingWidget />
-    </div>
+    <ModuleGate moduleId="marketing">
+      <div className="flex h-screen overflow-hidden bg-background">
+        <MarketingSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-7xl mx-auto">
+            <Outlet />
+          </div>
+        </main>
+        <EAFloatingWidget />
+      </div>
+    </ModuleGate>
   );
 }

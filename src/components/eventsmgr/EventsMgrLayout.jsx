@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
+import ModuleGate from "@/components/shared/ModuleGate";
 import { Calendar, FolderKanban, Target, BookOpen, Users, FileText, Settings, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ export default function EventsMgrLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
+    <ModuleGate moduleId="eventsmgr">
     <div className="min-h-screen bg-background">
       {/* Top Header */}
       <header className="sticky top-0 z-40 border-b bg-sidebar">
@@ -100,5 +102,6 @@ export default function EventsMgrLayout() {
       </main>
       <EAFloatingWidget />
     </div>
+    </ModuleGate>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 
-// Roles that bypass the NDA gate entirely
-const NDA_EXEMPT_ROLES = ['executive_director'];
+// Platform roles that bypass the NDA gate entirely (admins manage the system)
+const NDA_EXEMPT_ROLES = ['admin'];
 
 export function useOnboarding(user) {
   const [ndaSigned, setNdaSigned] = useState(null); // null = loading

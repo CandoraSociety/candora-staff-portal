@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
+import ModuleGate from '@/components/shared/ModuleGate';
 import { LayoutDashboard, FolderOpen, FileText, Bell, Archive, CheckSquare, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -22,6 +23,7 @@ export default function GrantsLayout() {
     item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
 
   return (
+    <ModuleGate moduleId="grants">
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-accent text-accent-foreground shadow-md">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,5 +89,6 @@ export default function GrantsLayout() {
       </main>
       <EAFloatingWidget />
     </div>
+    </ModuleGate>
   );
 }
