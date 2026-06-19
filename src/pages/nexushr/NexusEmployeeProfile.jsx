@@ -92,11 +92,20 @@ export default function NexusEmployeeProfile() {
     },
   });
 
+  // Deny all module permissions for an employee by email
+  const revokeAllAccess = async (email) => {
+    const perms = await base44.entities.AccessPermission.filter({ scope_value: email });
+    await Promise.all(perms.map(p => base44.entities.AccessPermission.update(p.id, { permission: 'deny' })));
+  };
+
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Employee.update(id, {
-      is_deleted: true,
-      deleted_at: new Date().toISOString().split('T')[0],
-    }),
+    mutationFn: async () => {
+      if (employee?.email) await revokeAllAccess(employee.email);
+      return base44.entities.Employee.update(id, {
+        is_deleted: true,
+        deleted_at: new Date().toISOString().split('T')[0],
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       navigate('/nexushr/employees');
@@ -105,16 +114,20 @@ export default function NexusEmployeeProfile() {
   });
 
   const concludeMutation = useMutation({
-    mutationFn: (data) => base44.entities.Employee.update(id, {
-      status: 'terminated',
-      access_disabled: true,
-      termination_date: data.termination_date,
-      termination_reason_code: data.termination_reason_code,
-      termination_comments: data.termination_comments,
-    }),
+    mutationFn: async (data) => {
+      if (employee?.email) await revokeAllAccess(employee.email);
+      return base44.entities.Employee.update(id, {
+        status: 'terminated',
+        access_disabled: true,
+        termination_date: data.termination_date,
+        termination_reason_code: data.termination_reason_code,
+        termination_comments: data.termination_comments,
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employee', id] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['access-permissions', id] });
       setConcludeOpen(false);
       toast({ title: 'Employment concluded', description: 'Employee has been moved to Former Employees.' });
     },
