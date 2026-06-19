@@ -103,7 +103,10 @@ To get started, please create your account using the link below. Make sure to re
 
 👉 Create Your Account: ${registerUrl}
 
-Once registered, you'll have access to your assigned portals and resources. If you have any trouble, reach out to your manager or HR.
+Once you've registered, you can log in at any time here:
+🔑 Staff Portal Login: ${loginUrl}
+
+You'll have access to your assigned portals and resources after logging in. If you have any trouble, reach out to your manager or HR.
 
 Welcome aboard!
 — Candora HR Team`;
@@ -135,10 +138,14 @@ Welcome aboard!
   };
 
   const handlePurge = async (emp) => {
+    // Delete the linked platform User record first to free up the email address
+    if (emp.user_id) {
+      try { await base44.entities.User.delete(emp.user_id); } catch (e) { /* already removed */ }
+    }
     await base44.entities.Employee.delete(emp.id);
     queryClient.invalidateQueries({ queryKey: ['employees'] });
     setConfirmPurgeId(null);
-    toast({ title: 'Permanently deleted', description: `${emp.first_name} ${emp.last_name} has been permanently removed.` });
+    toast({ title: 'Permanently deleted', description: `${emp.first_name} ${emp.last_name} has been permanently removed and their email address freed.` });
   };
 
 
