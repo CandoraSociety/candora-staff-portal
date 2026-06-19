@@ -75,7 +75,6 @@ export default function ReportDigitalView({ report, sections, branding, dataEntr
                 showHeaderAll={report.show_header_all}
                 showFooterAll={report.show_footer_all}
                 showPageNumbersAll={report.show_page_numbers_all}
-                forceCollapsible
               />
             </div>
           ))}
