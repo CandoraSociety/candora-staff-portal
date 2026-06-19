@@ -496,7 +496,7 @@ export default function ReportingAGREditor() {
             </div>
 
             <div ref={previewContainerRef} className="max-h-[calc(100vh-200px)] overflow-y-auto overflow-x-hidden">
-              <div style={{ width: `${100 / previewScale}%`, transform: `scale(${previewScale})`, transformOrigin: 'top left' }}>
+              <div style={{ zoom: previewScale, width: `${100 / previewScale}%` }}>
                 {previewMode === 'digital' ? (
                   <ReportDigitalView
                     report={report}
