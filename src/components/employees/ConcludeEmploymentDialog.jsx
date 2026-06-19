@@ -47,6 +47,18 @@ export default function ConcludeEmploymentDialog({ open, onOpenChange, employee,
         <p className="text-sm text-muted-foreground">
           This will mark <strong>{employee?.first_name} {employee?.last_name}</strong> as terminated and disable their platform access. They will be moved to the Former Employees section.
         </p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800 space-y-1">
+          <p className="font-semibold">🔐 Additional step required to fully revoke login access:</p>
+          <p>You must also remove this user from the Base44 admin panel to prevent them from logging in.</p>
+          <a
+            href="https://base44.com/dashboard/users"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-red-700 underline font-medium hover:text-red-900"
+          >
+            → Open Base44 User Management
+          </a>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-1">
             <Label>Last Day of Employment *</Label>
