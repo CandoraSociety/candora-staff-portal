@@ -30,8 +30,6 @@ export default function NexusEmployees() {
   // Tiers that get admin role; everyone else gets 'user'
   const ADMIN_TIERS = ['executive_director', 'director'];
 
-  const APP_LOGIN_URL = `${window.location.origin}/login`;
-
   const handleAddEmployee = async (data) => {
     setInviting(true);
     try {
@@ -49,25 +47,9 @@ export default function NexusEmployees() {
         // non-fatal — continue
       }
 
-      // 3. Send a custom welcome email with the correct app login link
-      try {
-        await base44.integrations.Core.SendEmail({
-          to: data.email,
-          subject: `Welcome to the team, ${data.first_name}!`,
-          body: `<p>Hi ${data.first_name},</p>
-<p>Your staff account has been created. You can log in to the staff portal using the link below:</p>
-<p><a href="${APP_LOGIN_URL}" style="background:#2b2de8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Log In to Staff Portal</a></p>
-<p>Use your email address <strong>${data.email}</strong> to sign in. If this is your first time, use the "Forgot Password" option to set your password.</p>
-<p>If you have any questions, reach out to HR.</p>
-<p>Welcome aboard!<br/>HR Team</p>`,
-          from_name: 'HR Team',
-        });
-        toast({ title: 'Employee added & welcome email sent', description: `Login link sent to ${data.email}.` });
-      } catch {
-        toast({ title: 'Employee added', description: `Welcome email could not be sent. You can resend it manually.` });
-      }
+      toast({ title: 'Employee added & invite sent', description: `An invitation email was sent to ${data.email}.` });
 
-      // 4. Apply tier-based access permission presets
+      // 3. Apply tier-based access permission presets
       if (data.org_tier) {
         const scopeId = invitedUserId || data.email;
         const presets = buildPresetsForTier(data.org_tier, scopeId);
