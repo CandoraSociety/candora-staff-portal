@@ -168,8 +168,11 @@ import MarketingAnnualReport from '@/pages/marketing/MarketingAnnualReport';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = typeof window !== 'undefined' ? window.location.pathname : '/';
+  const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal'].includes(location);
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Only show loading spinner for protected routes, not public auth pages
+  if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -182,7 +185,7 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
+  if (authError && !isPublicRoute) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
