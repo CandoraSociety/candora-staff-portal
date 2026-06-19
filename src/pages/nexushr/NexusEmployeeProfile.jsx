@@ -93,10 +93,14 @@ export default function NexusEmployeeProfile() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Employee.delete(id),
+    mutationFn: () => base44.entities.Employee.update(id, {
+      is_deleted: true,
+      deleted_at: new Date().toISOString().split('T')[0],
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       navigate('/nexushr/employees');
+      toast({ title: 'Employee deleted', description: 'Recoverable for 30 days from the Employees list.' });
     },
   });
 

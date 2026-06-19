@@ -153,6 +153,16 @@
       "type": "boolean",
       "default": false,
       "description": "Whether a login invite has been sent to this employee"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft-delete flag \u2014 employee is in 30-day recovery window"
+    },
+    "deleted_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the employee was soft-deleted \u2014 permanently removed after 30 days"
     }
   },
   "required": [

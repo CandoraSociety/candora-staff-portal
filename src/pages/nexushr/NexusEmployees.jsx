@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, ArrowRight, RotateCcw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { PORTAL_MODULES, TIER_PRESETS } from '@/lib/tierPermissionPresets';
@@ -96,17 +96,29 @@ export default function NexusEmployees() {
     queryFn: () => base44.entities.Employee.list('-created_date', 500) 
   });
 
+  const handleRestore = async (emp) => {
+    await base44.entities.Employee.update(emp.id, { is_deleted: false, deleted_at: null });
+    queryClient.invalidateQueries({ queryKey: ['employees'] });
+    toast({ title: 'Employee restored', description: `${emp.first_name} ${emp.last_name} has been recovered.` });
+  };
 
 
-  const active = employees.filter(e =>
-    e.status !== 'terminated' &&
-    `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
-  );
 
-  const former = employees.filter(e =>
-    e.status === 'terminated' &&
-    `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const searchStr = search.toLowerCase();
+  const matches = (e) => `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(searchStr);
+
+  const active = employees.filter(e => !e.is_deleted && e.status !== 'terminated' && matches(e));
+  const former = employees.filter(e => !e.is_deleted && e.status === 'terminated' && matches(e));
+
+  // Soft-deleted within 30 days
+  const today = new Date();
+  const deleted = employees.filter(e => {
+    if (!e.is_deleted) return false;
+    if (!matches(e)) return false;
+    if (!e.deleted_at) return true;
+    const daysAgo = (today - new Date(e.deleted_at)) / (1000 * 60 * 60 * 24);
+    return daysAgo <= 30;
+  });
 
   const filtered = active; // kept for compatibility
 
@@ -230,6 +242,64 @@ export default function NexusEmployees() {
                       <td className="p-4"><Eye className="w-4 h-4 text-muted-foreground" /></td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Recently Deleted — 30-day recovery window */}
+      {deleted.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-red-600 flex items-center gap-2 pt-2">
+            <Trash2 className="w-4 h-4" /> Recently Deleted ({deleted.length}) — recoverable for 30 days
+          </h2>
+          <Card>
+            <CardContent className="p-0">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-red-50/50">
+                  <tr className="text-left text-muted-foreground">
+                    <th className="p-4 font-medium">Name</th>
+                    <th className="p-4 font-medium hidden md:table-cell">Position</th>
+                    <th className="p-4 font-medium hidden md:table-cell">Deleted On</th>
+                    <th className="p-4 font-medium">Days Left</th>
+                    <th className="p-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {deleted.map(emp => {
+                    const daysLeft = emp.deleted_at
+                      ? Math.max(0, 30 - Math.floor((today - new Date(emp.deleted_at)) / (1000 * 60 * 60 * 24)))
+                      : 30;
+                    return (
+                      <tr key={emp.id} className="text-muted-foreground opacity-70">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-xs font-bold text-red-500">
+                              {emp.first_name?.[0]}{emp.last_name?.[0]}
+                            </div>
+                            <div>
+                              <p className="font-medium line-through">{emp.first_name} {emp.last_name}</p>
+                              <p className="text-xs">{emp.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 hidden md:table-cell">{emp.position}</td>
+                        <td className="p-4 hidden md:table-cell">{emp.deleted_at ? format(new Date(emp.deleted_at), 'MMM d, yyyy') : '—'}</td>
+                        <td className="p-4">
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${daysLeft <= 5 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {daysLeft}d remaining
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <Button size="sm" variant="outline" className="text-green-700 border-green-300 hover:bg-green-50" onClick={() => handleRestore(emp)}>
+                            <RotateCcw className="w-3.5 h-3.5 mr-1" />Restore
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </CardContent>
