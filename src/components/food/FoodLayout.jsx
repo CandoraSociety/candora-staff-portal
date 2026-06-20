@@ -30,19 +30,18 @@ export default function FoodLayout() {
   const logoUrl = settings?.logo_url;
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ background: 'hsl(20 18% 12%)' }}>
+    <div className="flex flex-col h-full bg-sidebar">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'hsl(20 12% 20%)' }}>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
         {logoUrl ? (
           <img src={logoUrl} alt="Logo" className="w-8 h-8 object-contain rounded" />
         ) : (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-            style={{ background: 'hsl(25 85% 55%)' }}>C</div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 bg-sidebar-primary text-sidebar-primary-foreground">C</div>
         )}
         {!collapsed && (
           <div className="min-w-0">
-            <div className="text-xs font-semibold leading-tight" style={{ color: 'hsl(30 15% 85%)' }}>Candora</div>
-            <div className="text-xs leading-tight" style={{ color: 'hsl(25 85% 65%)' }}>Food Services</div>
+            <div className="text-xs font-semibold leading-tight text-sidebar-foreground">Candora</div>
+            <div className="text-xs leading-tight text-sidebar-primary">Food Services</div>
           </div>
         )}
       </div>
@@ -55,11 +54,8 @@ export default function FoodLayout() {
             <Link key={path} to={path}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
-                ? 'text-white' : 'hover:text-white'}`}
-              style={{
-                background: active ? 'hsl(25 85% 55%)' : 'transparent',
-                color: active ? 'white' : 'hsl(30 15% 70%)',
-              }}>
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               {!collapsed && <span>{label}</span>}
             </Link>
@@ -68,16 +64,15 @@ export default function FoodLayout() {
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t space-y-2" style={{ borderColor: 'hsl(20 12% 20%)' }}>
+      <div className="px-3 py-4 border-t border-sidebar-border space-y-2">
         {!collapsed && (
           <div className="px-2 mb-2">
-            <div className="text-xs font-medium truncate" style={{ color: 'hsl(30 15% 85%)' }}>{user?.full_name}</div>
-            <div className="text-xs capitalize" style={{ color: 'hsl(30 15% 55%)' }}>{user?.role}</div>
+            <div className="text-xs font-medium truncate text-sidebar-foreground">{user?.full_name}</div>
+            <div className="text-xs capitalize text-sidebar-foreground/50">{user?.role}</div>
           </div>
         )}
         <button onClick={() => setShowLogout(true)}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/10"
-          style={{ color: 'hsl(30 15% 70%)' }}>
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Sign Out</span>}
         </button>
@@ -88,8 +83,7 @@ export default function FoodLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Desktop sidebar */}
-      <div className={`hidden md:flex flex-col flex-shrink-0 transition-all duration-200 ${collapsed ? 'w-[72px]' : 'w-56'}`}
-        style={{ background: 'hsl(20 18% 12%)' }}>
+      <div className={`hidden md:flex flex-col flex-shrink-0 transition-all duration-200 bg-sidebar ${collapsed ? 'w-[72px]' : 'w-56'}`}>
         <SidebarContent />
         <button onClick={() => setCollapsed(!collapsed)}
           className="absolute left-0 hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-background border border-border shadow-sm"
