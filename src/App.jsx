@@ -151,6 +151,8 @@ import FoodCustomers from '@/pages/food/FoodCustomers';
 import FoodAreaOrders from '@/pages/food/FoodAreaOrders';
 import FoodAreaMenu from '@/pages/food/FoodAreaMenu';
 import FoodAreaRecipes from '@/pages/food/FoodAreaRecipes';
+import FoodAreaOverview from '@/pages/food/FoodAreaOverview';
+import FoodSales from '@/pages/food/FoodSales';
 
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
@@ -320,13 +322,17 @@ const AuthenticatedApp = () => {
           <Route path="/food/catering" element={<FoodCatering />} />
           <Route path="/food/customers" element={<FoodCustomers />} />
           {/* Area-specific routes */}
-          <Route path="/food/cafe-candeur/orders" element={<FoodAreaOrders />} />
+          <Route path="/food/cafe-candeur" element={<FoodAreaOverview />} />
           <Route path="/food/cafe-candeur/menu" element={<FoodAreaMenu />} />
+          <Route path="/food/cafe-candeur/orders" element={<FoodAreaOrders />} />
           <Route path="/food/cafe-candeur/recipes" element={<FoodAreaRecipes />} />
-          <Route path="/food/auntie-bevs/orders" element={<FoodAreaOrders />} />
+          <Route path="/food/auntie-bevs" element={<FoodAreaOverview />} />
           <Route path="/food/auntie-bevs/menu" element={<FoodAreaMenu />} />
+          <Route path="/food/auntie-bevs/orders" element={<FoodAreaOrders />} />
           <Route path="/food/auntie-bevs/recipes" element={<FoodAreaRecipes />} />
+          <Route path="/food/community-lunch" element={<FoodAreaOverview />} />
           <Route path="/food/community-lunch/orders" element={<FoodAreaOrders />} />
+          <Route path="/food/sales" element={<FoodSales />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}

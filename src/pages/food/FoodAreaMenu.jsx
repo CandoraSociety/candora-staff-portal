@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useLocation } from 'react-router-dom';
 import { UtensilsCrossed, Search, Plus, Pencil, Trash2 } from 'lucide-react';
+import FoodAreaHeader from '@/components/food/FoodAreaHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,12 +52,11 @@ export default function FoodAreaMenu() {
   const CATEGORIES = ['appetizer','entree','side','dessert','beverage','breakfast','lunch_special','catering'];
 
   return (
-    <div className="p-6 space-y-6">
+    <div>
+      <FoodAreaHeader area={areaTag} />
+      <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{areaLabel} — Menu</h1>
-          <p className="text-sm text-muted-foreground mt-1">{items.length} item{items.length !== 1 ? 's' : ''}</p>
-        </div>
+        <p className="text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? 's' : ''}</p>
         <Button onClick={openNew}><Plus className="w-4 h-4" /> Add Item</Button>
       </div>
 
@@ -118,6 +118,7 @@ export default function FoodAreaMenu() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FoodAreaHeader from '@/components/food/FoodAreaHeader';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Search } from 'lucide-react';
@@ -57,9 +58,11 @@ export default function FoodCatering() {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div>
+      <FoodAreaHeader area="catering" />
+      <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Catering Quotes</h1><p className="text-muted-foreground text-sm">Manage catering inquiries and quotes</p></div>
+        <p className="text-muted-foreground text-sm">Manage catering inquiries and quotes</p>
         <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />New Quote</Button>
       </div>
 
@@ -155,6 +158,7 @@ export default function FoodCatering() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

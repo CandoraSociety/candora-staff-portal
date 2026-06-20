@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useParams, useLocation } from 'react-router-dom';
-import { ShoppingBag, Plus, Search } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { ShoppingBag, Search } from 'lucide-react';
+import FoodAreaHeader from '@/components/food/FoodAreaHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,13 +47,10 @@ export default function FoodAreaOrders() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{config.label} — Orders</h1>
-          <p className="text-sm text-muted-foreground mt-1">{orders.length} order{orders.length !== 1 ? 's' : ''}</p>
-        </div>
-      </div>
+    <div>
+      <FoodAreaHeader area={segment} />
+      <div className="p-6 space-y-6">
+      <p className="text-sm text-muted-foreground">{orders.length} order{orders.length !== 1 ? 's' : ''}</p>
 
       <div className="flex gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
@@ -102,6 +100,7 @@ export default function FoodAreaOrders() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
