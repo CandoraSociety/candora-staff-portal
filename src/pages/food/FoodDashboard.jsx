@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ShoppingBag, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ShoppingBag, DollarSign, AlertTriangle, TrendingUp, CalendarDays, Users, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, parseISO, isAfter, startOfDay } from 'date-fns';
 
 const COLORS = ['#f97316','#22c55e','#3b82f6','#a855f7','#ec4899','#14b8a6'];
 
@@ -13,10 +13,11 @@ export default function FoodDashboard() {
   const { data: orders = [] } = useQuery({ queryKey: ['food-orders'], queryFn: () => base44.entities.FoodOrder.list() });
   const { data: menuItems = [] } = useQuery({ queryKey: ['menu-items'], queryFn: () => base44.entities.MenuItem.list() });
   const { data: inventory = [] } = useQuery({ queryKey: ['inventory'], queryFn: () => base44.entities.InventoryItem.list() });
+  const { data: quotes = [] } = useQuery({ queryKey: ['catering-quotes'], queryFn: () => base44.entities.CateringQuote.list() });
 
   const totalRevenue = orders.filter(o => o.status === 'completed').reduce((s, o) => s + (o.total || 0), 0);
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const todayRevenue = orders.filter(o => o.status === 'completed' && o.created_date?.startsWith(today)).reduce((s, o) => s + (o.total || 0), 0);
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayRevenue = orders.filter(o => o.status === 'completed' && o.created_date?.startsWith(todayStr)).reduce((s, o) => s + (o.total || 0), 0);
   const activeOrders = orders.filter(o => ['pending','preparing','ready'].includes(o.status)).length;
   const lowStock = inventory.filter(i => i.is_low_stock || (i.reorder_level && i.quantity <= i.reorder_level));
 
@@ -37,6 +38,27 @@ export default function FoodDashboard() {
     });
   });
   const pieData = Object.entries(catMap).map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }));
+
+  // Upcoming catering: orders with order_type=catering or quotes with future event_date
+  const today = startOfDay(new Date());
+  const upcomingCateringOrders = orders
+    .filter(o => o.order_type === 'catering' && o.event_date && isAfter(parseISO(o.event_date), today))
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
+  const upcomingQuotes = quotes
+    .filter(q => q.event_date && isAfter(parseISO(q.event_date), today) && ['draft','sent','accepted'].includes(q.status))
+    .sort((a, b) => a.event_date.localeCompare(b.event_date));
+
+  const STATUS_COLORS = {
+    draft: 'bg-gray-100 text-gray-700',
+    sent: 'bg-blue-100 text-blue-700',
+    accepted: 'bg-green-100 text-green-700',
+    declined: 'bg-red-100 text-red-700',
+    pending: 'bg-yellow-100 text-yellow-700',
+    preparing: 'bg-orange-100 text-orange-700',
+    ready: 'bg-teal-100 text-teal-700',
+    completed: 'bg-green-100 text-green-700',
+    cancelled: 'bg-red-100 text-red-700',
+  };
 
   const stats = [
     { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
@@ -98,6 +120,64 @@ export default function FoodDashboard() {
                   <Tooltip formatter={v => `$${v}`} />
                 </PieChart>
               </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Upcoming Catering */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader><CardTitle className="text-sm flex items-center gap-2"><CalendarDays className="w-4 h-4 text-amber-500" /> Upcoming Catering Orders</CardTitle></CardHeader>
+          <CardContent>
+            {upcomingCateringOrders.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No upcoming catering orders</p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingCateringOrders.map(o => (
+                  <div key={o.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0">
+                    <div>
+                      <div className="font-medium">{o.customer_name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{format(parseISO(o.event_date), 'MMM d, yyyy')}
+                        {o.notes && <span className="ml-1 truncate max-w-[160px]">— {o.notes}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {o.total && <span className="font-semibold">${o.total.toFixed(2)}</span>}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${STATUS_COLORS[o.status] || ''}`}>{o.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" /> Upcoming Catering Quotes</CardTitle></CardHeader>
+          <CardContent>
+            {upcomingQuotes.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">No upcoming catering quotes</p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingQuotes.map(q => (
+                  <div key={q.id} className="flex items-center justify-between text-sm py-2 border-b last:border-0">
+                    <div>
+                      <div className="font-medium">{q.customer_name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />{format(parseISO(q.event_date), 'MMM d, yyyy')}
+                        {q.event_type && <span className="ml-1 capitalize">· {q.event_type.replace('_', ' ')}</span>}
+                        {q.guest_count && <span>· {q.guest_count} guests</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {q.total && <span className="font-semibold">${q.total.toFixed(2)}</span>}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${STATUS_COLORS[q.status] || ''}`}>{q.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
