@@ -25,6 +25,7 @@ export default function FoodSchedule() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('calendar');
+  const [personnelViewMode, setPersonnelViewMode] = useState('by-date'); // 'by-date' or 'by-person'
   
   // Auto-filter by area from URL param if present
   const urlArea = searchParams.get('area');
@@ -45,11 +46,23 @@ export default function FoodSchedule() {
     notes: '',
     internal_placement: false,
     placement_participant: '',
+    assigned_staff: [],
+    assigned_volunteers: [],
   });
 
   const { data: schedules = [] } = useQuery({
     queryKey: ['food-schedules'],
     queryFn: () => base44.entities.FoodServiceSchedule.list('-start_datetime'),
+  });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['food-employees'],
+    queryFn: () => base44.entities.Employee.filter({ status: 'active' }),
+  });
+
+  const { data: volunteers = [] } = useQuery({
+    queryKey: ['food-volunteers'],
+    queryFn: () => base44.entities.Volunteer.filter({ status: 'active' }),
   });
 
   const createSchedule = useMutation({
@@ -93,6 +106,8 @@ export default function FoodSchedule() {
       notes: '',
       internal_placement: false,
       placement_participant: '',
+      assigned_staff: [],
+      assigned_volunteers: [],
     });
   };
 
@@ -147,6 +162,8 @@ export default function FoodSchedule() {
       notes: item.notes || '',
       internal_placement: item.internal_placement || false,
       placement_participant: item.placement_participant || '',
+      assigned_staff: item.assigned_staff || [],
+      assigned_volunteers: item.assigned_volunteers || [],
     });
     setDialogOpen(true);
   };
@@ -220,6 +237,26 @@ export default function FoodSchedule() {
         </button>
       </div>
 
+      {/* Personnel View Mode Toggle */}
+      {activeTab === 'personnel' && (
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant={personnelViewMode === 'by-date' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPersonnelViewMode('by-date')}
+          >
+            By Date
+          </Button>
+          <Button
+            variant={personnelViewMode === 'by-person' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setPersonnelViewMode('by-person')}
+          >
+            By Person
+          </Button>
+        </div>
+      )}
+
       {activeTab === 'calendar' && (
         <Card>
           <CardContent className="p-0">
@@ -273,7 +310,7 @@ export default function FoodSchedule() {
         </Card>
       )}
 
-      {activeTab === 'personnel' && (
+      {activeTab === 'personnel' && personnelViewMode === 'by-date' && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-6">
@@ -290,7 +327,6 @@ export default function FoodSchedule() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Group by date */}
                   {Object.entries(
                     personnelData.reduce((acc, item) => {
                       const dateKey = format(parseISO(item.start_datetime), 'yyyy-MM-dd');
@@ -331,6 +367,27 @@ export default function FoodSchedule() {
                                       {format(parseISO(item.start_datetime), 'h:mm a')} - {format(parseISO(item.end_datetime), 'h:mm a')}
                                       {item.location && ` • ${item.location}`}
                                     </div>
+                                    {/* Show assigned people */}
+                                    {(item.assigned_staff?.length > 0 || item.assigned_volunteers?.length > 0) && (
+                                      <div className="mt-2 flex flex-wrap gap-1">
+                                        {item.assigned_staff?.map(staffId => {
+                                          const emp = employees.find(e => e.id === staffId);
+                                          return emp ? (
+                                            <span key={staffId} className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                              {emp.first_name} {emp.last_name}
+                                            </span>
+                                          ) : null;
+                                        })}
+                                        {item.assigned_volunteers?.map(volId => {
+                                          const vol = volunteers.find(v => v.id === volId);
+                                          return vol ? (
+                                            <span key={volId} className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                              {vol.first_name} {vol.last_name}
+                                            </span>
+                                          ) : null;
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
                                   <div className="text-xs font-medium bg-white/70 px-2 py-1 rounded">
                                     {item.event_type === 'internal_placement' ? 'Placement' : 'Shift'}
@@ -343,6 +400,153 @@ export default function FoodSchedule() {
                     ))}
                 </div>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'personnel' && personnelViewMode === 'by-person' && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold font-heading mb-3">Roster View</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Schedule organized by person for {format(currentMonth, 'MMMM yyyy')}
+                </p>
+              </div>
+
+              {/* Staff Section */}
+              <div>
+                <h4 className="font-semibold mb-3 text-primary">Staff</h4>
+                <div className="space-y-4">
+                  {employees.map(emp => {
+                    const empShifts = personnelData.filter(item => 
+                      item.assigned_staff?.includes(emp.id)
+                    );
+                    if (empShifts.length === 0) return null;
+                    return (
+                      <div key={emp.id} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                            {emp.first_name[0]}{emp.last_name[0]}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{emp.first_name} {emp.last_name}</div>
+                            <div className="text-xs text-muted-foreground">{emp.position}</div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {empShifts.map(shift => (
+                            <div
+                              key={shift.id}
+                              className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[shift.area]}`}
+                              onClick={() => openEdit(shift)}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium">{shift.title}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {format(parseISO(shift.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
+                                  </div>
+                                </div>
+                                <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{shift.area}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Volunteers Section */}
+              <div>
+                <h4 className="font-semibold mb-3 text-green-600">Volunteers</h4>
+                <div className="space-y-4">
+                  {volunteers.map(vol => {
+                    const volShifts = personnelData.filter(item => 
+                      item.assigned_volunteers?.includes(vol.id)
+                    );
+                    if (volShifts.length === 0) return null;
+                    return (
+                      <div key={vol.id} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">
+                            {vol.first_name[0]}{vol.last_name[0]}
+                          </div>
+                          <div>
+                            <div className="font-semibold">{vol.first_name} {vol.last_name}</div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {volShifts.map(shift => (
+                            <div
+                              key={shift.id}
+                              className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[shift.area]}`}
+                              onClick={() => openEdit(shift)}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-medium">{shift.title}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {format(parseISO(shift.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
+                                  </div>
+                                </div>
+                                <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{shift.area}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Internal Placements Section */}
+              <div>
+                <h4 className="font-semibold mb-3 text-purple-600">Internal Placements</h4>
+                <div className="space-y-4">
+                  {Object.entries(
+                    personnelData.filter(item => item.internal_placement).reduce((acc, item) => {
+                      const name = item.placement_participant || 'Unassigned';
+                      if (!acc[name]) acc[name] = [];
+                      acc[name].push(item);
+                      return acc;
+                    }, {})
+                  ).map(([name, placements]) => (
+                    <div key={name} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-sm">
+                          {name[0]}
+                        </div>
+                        <div className="font-semibold">{name}</div>
+                      </div>
+                      <div className="space-y-2">
+                        {placements.map(placement => (
+                          <div
+                            key={placement.id}
+                            className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[placement.area]}`}
+                            onClick={() => openEdit(placement)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-medium">{placement.title}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {format(parseISO(placement.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(placement.end_datetime), 'h:mm a')}
+                                </div>
+                              </div>
+                              <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{placement.area}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -435,6 +639,64 @@ export default function FoodSchedule() {
                   placeholder="Person's name"
                 />
               </div>
+            )}
+
+            {form.event_type === 'shift' && (
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Assign Staff (optional)</label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                    {employees.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No active employees found</p>
+                    ) : (
+                      employees.map(emp => (
+                        <label key={emp.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={form.assigned_staff.includes(emp.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setForm(f => ({ ...f, assigned_staff: [...f.assigned_staff, emp.id] }));
+                              } else {
+                                setForm(f => ({ ...f, assigned_staff: f.assigned_staff.filter(id => id !== emp.id) }));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span>{emp.first_name} {emp.last_name} ({emp.position})</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Assign Volunteers (optional)</label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                    {volunteers.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No active volunteers found</p>
+                    ) : (
+                      volunteers.map(vol => (
+                        <label key={vol.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded">
+                          <input
+                            type="checkbox"
+                            checked={form.assigned_volunteers.includes(vol.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setForm(f => ({ ...f, assigned_volunteers: [...f.assigned_volunteers, vol.id] }));
+                              } else {
+                                setForm(f => ({ ...f, assigned_volunteers: f.assigned_volunteers.filter(id => id !== vol.id) }));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span>{vol.first_name} {vol.last_name}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
             )}
 
             <div>
