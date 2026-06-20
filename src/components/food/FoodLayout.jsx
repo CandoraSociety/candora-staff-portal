@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard, CalendarDays, Coffee, Heart, Soup,
-  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu
+  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
@@ -57,6 +57,10 @@ export default function FoodLayout() {
       </nav>
 
       <div className="px-3 py-4 border-t border-sidebar-border space-y-2">
+        <a href="/catering-portal" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          <ExternalLink className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && <span>Public Booking Portal</span>}
+        </a>
         <Link to="/" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
           <ChevronLeft className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>Back to Home</span>}
