@@ -34,13 +34,13 @@ export default function FoodLayout() {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
         {collapsed ? (
-          <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/19b5ef5f3_CanadoraFoodServiceslogo.png"
+          <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/dd041111a_CandoraFoodServiceslogoyellowletters.png"
             alt="Candora Food Services"
             className="w-8 h-8 object-contain flex-shrink-0" />
         ) : (
           <div className="flex flex-col leading-tight">
             <div className="overflow-hidden" style={{ height: '36px' }}>
-              <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/19b5ef5f3_CanadoraFoodServiceslogo.png"
+              <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/dd041111a_CandoraFoodServiceslogoyellowletters.png"
                 alt="Candora Food Services"
                 className="w-44 object-cover object-top"
                 style={{ marginTop: '-2px', height: '52px' }} />
