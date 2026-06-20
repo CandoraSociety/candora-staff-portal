@@ -65,24 +65,62 @@ export default function BookingWizard() {
       const setupFee = { full_setup_teardown: 200, setup_only: 100, teardown_only: 100, self_service: 0 }[data.setup_teardown] || 0;
       const estimated_total = (data.space_rental_total || 0) + (data.catering_estimate || 0) + (data.catering_gratuity || 0) + barFee + (data.staffing_fee || 0) + setupFee + (data.equipment_rental_total || 0);
 
-      await base44.entities.BookingRequest.create({
-        ...data,
+      // Strip empty strings from enum fields to avoid validation errors
+      const clean = (val) => val === '' ? undefined : val;
+
+      const payload = {
         confirmation_code: code,
         pin,
         status: 'pending',
+        booking_type: clean(data.booking_type),
+        contact_name: data.contact_name,
+        contact_email: data.contact_email,
+        contact_phone: clean(data.contact_phone),
+        organization: clean(data.organization),
+        event_description: clean(data.event_description),
+        event_location: clean(data.event_location),
+        space: clean(data.space),
+        event_date: data.event_date,
+        start_time: data.start_time,
+        end_time: data.end_time,
         guest_count: parseInt(data.guest_count) || 0,
+        is_recurring: data.is_recurring,
+        recurrence_pattern: clean(data.recurrence_pattern),
+        recurrence_day: clean(data.recurrence_day),
+        recurrence_end_date: clean(data.recurrence_end_date),
+        catering_required: clean(data.catering_required),
+        catering_style: clean(data.catering_style),
+        catering_service_level: clean(data.catering_service_level),
+        catering_custom_request: clean(data.catering_custom_request),
+        catering_selections: data.catering_selections,
         catering_estimate: data.catering_estimate || 0,
         catering_gratuity: data.catering_gratuity || 0,
+        bar_service_addon: data.bar_service_addon,
+        bar_service_type: clean(data.bar_service_type),
+        bar_liquor_source: clean(data.bar_liquor_source),
+        bar_liquor_selections: data.bar_liquor_selections,
+        bar_estimated_sales: parseFloat(data.bar_estimated_sales) || undefined,
         bar_service_fee: barFee,
+        staffing_required: data.staffing_required,
+        staffing_count: parseInt(data.staffing_count) || undefined,
         staffing_fee: data.staffing_required ? (parseInt(data.staffing_count) || 0) * 45 : 0,
+        setup_teardown: clean(data.setup_teardown),
+        equipment_rentals: data.equipment_rentals,
         equipment_rental_total: data.equipment_rental_total || 0,
+        space_rental_total: data.space_rental_total || 0,
+        services_total: data.services_total || 0,
         estimated_total,
-      });
+      };
+
+      // Remove undefined keys entirely
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      await base44.entities.BookingRequest.create(payload);
 
       setConfirmed({ code, pin, total: estimated_total });
     } catch (err) {
       console.error('Booking submission failed:', err);
-      alert('Something went wrong submitting your booking. Please try again.');
+      alert('Something went wrong submitting your booking. Please try again.\n\nDetails: ' + (err?.message || err));
     } finally {
       setSubmitting(false);
     }
