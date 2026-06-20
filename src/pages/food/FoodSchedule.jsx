@@ -231,35 +231,40 @@ export default function FoodSchedule() {
               ))}
             </div>
             <div className="grid grid-cols-7">
-              {days.map(day => {
+              {days.map((day, idx) => {
                 const daySchedules = getSchedulesForDate(day);
+                const isPaddingDay = !isSameMonth(day, currentMonth);
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`min-h-[120px] p-2 border-r border-b ${!isSameMonth(day, currentMonth) ? 'bg-muted/30' : ''}`}
+                    className={`min-h-[120px] p-2 border-r border-b ${isPaddingDay ? 'bg-muted/30' : ''}`}
                   >
-                    <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
-                      {format(day, 'd')}
-                    </div>
-                    <div className="space-y-1">
-                      {daySchedules.slice(0, 3).map(schedule => (
-                        <div
-                          key={schedule.id}
-                          className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general}`}
-                          onClick={() => openEdit(schedule)}
-                        >
-                          <div className="font-medium truncate">{schedule.title}</div>
-                          <div className="text-[10px] opacity-80">
-                            {format(parseISO(schedule.start_datetime), 'h:mm a')}
-                          </div>
+                    {!isPaddingDay && (
+                      <>
+                        <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
+                          {format(day, 'd')}
                         </div>
-                      ))}
-                      {daySchedules.length > 3 && (
-                        <div className="text-[10px] text-muted-foreground pl-1">
-                          +{daySchedules.length - 3} more
+                        <div className="space-y-1">
+                          {daySchedules.slice(0, 3).map(schedule => (
+                            <div
+                              key={schedule.id}
+                              className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general}`}
+                              onClick={() => openEdit(schedule)}
+                            >
+                              <div className="font-medium truncate">{schedule.title}</div>
+                              <div className="text-[10px] opacity-80">
+                                {format(parseISO(schedule.start_datetime), 'h:mm a')}
+                              </div>
+                            </div>
+                          ))}
+                          {daySchedules.length > 3 && (
+                            <div className="text-[10px] text-muted-foreground pl-1">
+                              +{daySchedules.length - 3} more
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
