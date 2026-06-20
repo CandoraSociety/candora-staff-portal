@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChefHat } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+
+const LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/64f97b9c9_CandoraFoodServiceslogoyellowletters.png';
 
 const links = [
   { label: 'Home',          path: '/catering-portal' },
@@ -19,9 +21,12 @@ export default function PublicNav() {
   return (
     <nav className="bg-white border-b border-cp-border sticky top-0 z-50 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-        <Link to="/catering-portal" className="flex items-center gap-2">
-          <ChefHat className="w-6 h-6 text-cp-primary" />
-          <span className="font-heading text-xl font-bold text-cp-primary">Candora Food Services</span>
+        <Link to="/catering-portal" className="flex items-center gap-3">
+          <img src={LOGO} alt="Candora Events and Catering Services" className="h-10 w-auto object-contain" />
+          <span className="font-heading text-base font-bold text-cp-text hidden sm:block leading-tight">
+            Candora Events<br />
+            <span className="text-cp-primary text-xs font-semibold tracking-wide">& Catering Services</span>
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
@@ -29,14 +34,11 @@ export default function PublicNav() {
             <Link
               key={l.path}
               to={l.path}
-              className={`text-sm font-medium transition-colors ${active(l.path) ? 'text-cp-primary font-semibold' : 'text-gray-600 hover:text-cp-primary'}`}
+              className={`text-sm font-medium transition-colors ${active(l.path) ? 'text-cp-primary font-semibold border-b-2 border-cp-primary pb-0.5' : 'text-gray-600 hover:text-cp-primary'}`}
             >
               {l.label}
             </Link>
           ))}
-          <Link to="/catering-portal/admin" className="text-xs text-gray-400 hover:text-cp-primary ml-2 border border-gray-200 px-2 py-1 rounded">
-            Staff Login
-          </Link>
         </div>
 
         <button className="md:hidden" onClick={() => setOpen(!open)}>
@@ -56,9 +58,6 @@ export default function PublicNav() {
               {l.label}
             </Link>
           ))}
-          <Link to="/catering-portal/admin" onClick={() => setOpen(false)} className="block py-2 text-xs text-gray-400">
-            Staff Login →
-          </Link>
         </div>
       )}
     </nav>

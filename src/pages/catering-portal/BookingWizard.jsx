@@ -57,30 +57,35 @@ export default function BookingWizard() {
 
   const submit = async () => {
     setSubmitting(true);
-    const code = generateCode();
-    const pin = generatePin();
+    try {
+      const code = generateCode();
+      const pin = generatePin();
 
-    // Calculate totals
-    const barFee = data.bar_service_addon ? 150 + (data.bar_liquor_source === 'we_provide' ? (parseFloat(data.bar_estimated_sales) || 0) * 0.15 : 0) : 0;
-    const setupFee = { full_setup_teardown: 200, setup_only: 100, teardown_only: 100, self_service: 0 }[data.setup_teardown] || 0;
-    const estimated_total = (data.space_rental_total || 0) + (data.catering_estimate || 0) + (data.catering_gratuity || 0) + barFee + (data.staffing_fee || 0) + setupFee + (data.equipment_rental_total || 0);
+      const barFee = data.bar_service_addon ? 150 + (data.bar_liquor_source === 'we_provide' ? (parseFloat(data.bar_estimated_sales) || 0) * 0.15 : 0) : 0;
+      const setupFee = { full_setup_teardown: 200, setup_only: 100, teardown_only: 100, self_service: 0 }[data.setup_teardown] || 0;
+      const estimated_total = (data.space_rental_total || 0) + (data.catering_estimate || 0) + (data.catering_gratuity || 0) + barFee + (data.staffing_fee || 0) + setupFee + (data.equipment_rental_total || 0);
 
-    const record = await base44.entities.BookingRequest.create({
-      ...data,
-      confirmation_code: code,
-      pin,
-      status: 'pending',
-      guest_count: parseInt(data.guest_count) || 0,
-      catering_estimate: data.catering_estimate || 0,
-      catering_gratuity: data.catering_gratuity || 0,
-      bar_service_fee: barFee,
-      staffing_fee: data.staffing_required ? (parseInt(data.staffing_count) || 0) * 45 : 0,
-      equipment_rental_total: data.equipment_rental_total || 0,
-      estimated_total,
-    });
+      await base44.entities.BookingRequest.create({
+        ...data,
+        confirmation_code: code,
+        pin,
+        status: 'pending',
+        guest_count: parseInt(data.guest_count) || 0,
+        catering_estimate: data.catering_estimate || 0,
+        catering_gratuity: data.catering_gratuity || 0,
+        bar_service_fee: barFee,
+        staffing_fee: data.staffing_required ? (parseInt(data.staffing_count) || 0) * 45 : 0,
+        equipment_rental_total: data.equipment_rental_total || 0,
+        estimated_total,
+      });
 
-    setConfirmed({ code, pin, total: estimated_total });
-    setSubmitting(false);
+      setConfirmed({ code, pin, total: estimated_total });
+    } catch (err) {
+      console.error('Booking submission failed:', err);
+      alert('Something went wrong submitting your booking. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (confirmed) {

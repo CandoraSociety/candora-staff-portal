@@ -60,6 +60,7 @@ module.exports = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
+  			'cp-baby-blue': 'hsl(var(--cp-baby-blue))',
   			'cp-primary': 'hsl(var(--cp-primary))',
   			'cp-bg': 'hsl(var(--cp-bg))',
   			'cp-accent': 'hsl(var(--cp-accent))',
