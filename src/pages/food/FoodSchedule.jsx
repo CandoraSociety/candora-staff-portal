@@ -321,31 +321,71 @@ export default function FoodSchedule() {
 
       {activeTab === 'calendar' && (
         <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-12">
-              <h3 className="text-lg font-bold mb-2">📝 How to Schedule People</h3>
-              <ol className="text-sm space-y-2 max-w-md mx-auto">
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-primary">1.</span>
-                  <span>Click <strong>"Add Event"</strong> to create a shift (title, date/time, location)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-primary">2.</span>
-                  <span>Go to <strong>"Assign People to Shifts"</strong> tab</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-primary">3.</span>
-                  <span>Click on any shift to open the staffing panel</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="font-bold text-primary">4.</span>
-                  <span>Add staff, volunteers, or mark as Pathways placement</span>
-                </li>
-              </ol>
-              <Button className="mt-6" onClick={openNew}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Shift
-              </Button>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-7 border-b">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="p-3 text-center font-semibold text-sm border-r bg-muted/50">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {days.map((day, idx) => {
+                const daySchedules = getSchedulesForDate(day);
+                const isPaddingDay = !isSameMonth(day, currentMonth);
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={`min-h-[120px] p-2 border-r border-b ${isPaddingDay ? 'bg-muted/30' : ''}`}
+                  >
+                    {!isPaddingDay && (
+                      <>
+                        <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
+                          {format(day, 'd')}
+                        </div>
+                        <div className="space-y-1">
+                          {daySchedules.slice(0, 3).map(schedule => {
+                            const startDate = parseISO(schedule.start_datetime);
+                            const endDate = parseISO(schedule.end_datetime);
+                            const isMultiDay = !isSameDay(startDate, endDate);
+                            const isStartDay = isSameDay(startDate, day);
+                            const isEndDay = isSameDay(endDate, day);
+                            const isMiddleDay = !isStartDay && !isEndDay;
+
+                            return (
+                              <div
+                                key={schedule.id}
+                                className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general} ${isMultiDay ? 'opacity-90' : ''}`}
+                                onClick={() => openEdit(schedule)}
+                              >
+                                <div className="font-medium truncate">{schedule.title}</div>
+                                <div className="text-[10px] opacity-80">
+                                  {isMultiDay ? (
+                                    isStartDay ? (
+                                      <>Starts {format(startDate, 'h:mm a')}</>
+                                    ) : isEndDay ? (
+                                      <>Ends {format(endDate, 'h:mm a')}</>
+                                    ) : (
+                                      <>Day {format(day, 'MMM d')}</>
+                                    )
+                                  ) : (
+                                    format(startDate, 'h:mm a')
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {daySchedules.length > 3 && (
+                            <div className="text-[10px] text-muted-foreground pl-1">
+                              +{daySchedules.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
