@@ -37,7 +37,7 @@ export default function FoodLayout() {
           <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/cf619e80d_CanadoraFoodServiceslogo.png"
             alt="Candora Food Services"
             className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 50%', transform: 'scale(1.5)', transformOrigin: '50% 50%' }} />
+            style={{ objectPosition: '50% 60%', transform: 'scale(1.25)', transformOrigin: '50% 60%' }} />
         </div>
       </div>
 
