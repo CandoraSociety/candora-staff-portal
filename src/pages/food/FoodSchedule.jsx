@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 
 const AREA_COLORS = {
@@ -24,6 +24,7 @@ export default function FoodSchedule() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [activeTab, setActiveTab] = useState('calendar');
   
   // Auto-filter by area from URL param if present
   const urlArea = searchParams.get('area');
@@ -99,11 +100,19 @@ export default function FoodSchedule() {
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Get the proper start of week (Sunday) for the first week
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getSchedulesForDate = (date) => {
     return filteredSchedules.filter(s => isSameDay(parseISO(s.start_datetime), date));
   };
+
+  // Get all staff/assignments for personnel view
+  const personnelData = filteredSchedules.filter(s => 
+    s.event_type === 'shift' || s.event_type === 'internal_placement'
+  );
 
   const handleSave = () => {
     const payload = {
@@ -191,51 +200,148 @@ export default function FoodSchedule() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="grid grid-cols-7 border-b">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="p-3 text-center font-semibold text-sm border-r bg-muted/50">
-                {day}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7">
-            {days.map(day => {
-              const daySchedules = getSchedulesForDate(day);
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`min-h-[120px] p-2 border-r border-b ${!isSameMonth(day, currentMonth) ? 'bg-muted/30' : ''}`}
-                >
-                  <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
-                    {format(day, 'd')}
+      {/* Tabs */}
+      <div className="flex gap-2 border-b">
+        <button
+          onClick={() => setActiveTab('calendar')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'calendar' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Calendar View
+        </button>
+        <button
+          onClick={() => setActiveTab('personnel')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'personnel' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Personnel Schedule
+        </button>
+      </div>
+
+      {activeTab === 'calendar' && (
+        <Card>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-7 border-b">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="p-3 text-center font-semibold text-sm border-r bg-muted/50">
+                  {day}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {days.map(day => {
+                const daySchedules = getSchedulesForDate(day);
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={`min-h-[120px] p-2 border-r border-b ${!isSameMonth(day, currentMonth) ? 'bg-muted/30' : ''}`}
+                  >
+                    <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
+                      {format(day, 'd')}
+                    </div>
+                    <div className="space-y-1">
+                      {daySchedules.slice(0, 3).map(schedule => (
+                        <div
+                          key={schedule.id}
+                          className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general}`}
+                          onClick={() => openEdit(schedule)}
+                        >
+                          <div className="font-medium truncate">{schedule.title}</div>
+                          <div className="text-[10px] opacity-80">
+                            {format(parseISO(schedule.start_datetime), 'h:mm a')}
+                          </div>
+                        </div>
+                      ))}
+                      {daySchedules.length > 3 && (
+                        <div className="text-[10px] text-muted-foreground pl-1">
+                          +{daySchedules.length - 3} more
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {daySchedules.slice(0, 3).map(schedule => (
-                      <div
-                        key={schedule.id}
-                        className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general}`}
-                        onClick={() => openEdit(schedule)}
-                      >
-                        <div className="font-medium truncate">{schedule.title}</div>
-                        <div className="text-[10px] opacity-80">
-                          {format(parseISO(schedule.start_datetime), 'h:mm a')}
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'personnel' && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold font-heading mb-3">Staff Shifts & Assignments</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  All scheduled shifts and internal placements for {format(currentMonth, 'MMMM yyyy')}
+                </p>
+              </div>
+
+              {personnelData.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No shifts or placements scheduled for this period.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Group by date */}
+                  {Object.entries(
+                    personnelData.reduce((acc, item) => {
+                      const dateKey = format(parseISO(item.start_datetime), 'yyyy-MM-dd');
+                      if (!acc[dateKey]) acc[dateKey] = [];
+                      acc[dateKey].push(item);
+                      return acc;
+                    }, {})
+                  )
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([date, items]) => (
+                      <div key={date} className="border rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                          <h4 className="font-semibold">
+                            {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
+                          </h4>
+                        </div>
+                        <div className="grid gap-3">
+                          {items
+                            .sort((a, b) => parseISO(a.start_datetime) - parseISO(b.start_datetime))
+                            .map(item => (
+                              <div
+                                key={item.id}
+                                className={`p-3 rounded-lg border cursor-pointer hover:opacity-80 ${AREA_COLORS[item.area] || AREA_COLORS.general}`}
+                                onClick={() => openEdit(item)}
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-bold">{item.title}</span>
+                                      {item.internal_placement && (
+                                        <span className="text-[10px] bg-white/50 px-2 py-0.5 rounded-full">
+                                          Placement: {item.placement_participant || 'TBD'}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs opacity-80">
+                                      {format(parseISO(item.start_datetime), 'h:mm a')} - {format(parseISO(item.end_datetime), 'h:mm a')}
+                                      {item.location && ` • ${item.location}`}
+                                    </div>
+                                  </div>
+                                  <div className="text-xs font-medium bg-white/70 px-2 py-1 rounded">
+                                    {item.event_type === 'internal_placement' ? 'Placement' : 'Shift'}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
                         </div>
                       </div>
                     ))}
-                    {daySchedules.length > 3 && (
-                      <div className="text-[10px] text-muted-foreground pl-1">
-                        +{daySchedules.length - 3} more
-                      </div>
-                    )}
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
