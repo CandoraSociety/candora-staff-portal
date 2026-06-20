@@ -121,7 +121,15 @@ export default function FoodSchedule() {
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getSchedulesForDate = (date) => {
-    return filteredSchedules.filter(s => isSameDay(parseISO(s.start_datetime), date));
+    return filteredSchedules.filter(s => {
+      const startDate = parseISO(s.start_datetime);
+      const endDate = parseISO(s.end_datetime);
+      // Check if date falls within the event's start and end (inclusive)
+      return (
+        (isSameDay(startDate, date) || date > startDate) &&
+        (isSameDay(endDate, date) || date < endDate || isSameDay(endDate, date))
+      );
+    });
   };
 
   // Get all staff/assignments for personnel view
@@ -282,18 +290,37 @@ export default function FoodSchedule() {
                           {format(day, 'd')}
                         </div>
                         <div className="space-y-1">
-                          {daySchedules.slice(0, 3).map(schedule => (
-                            <div
-                              key={schedule.id}
-                              className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general}`}
-                              onClick={() => openEdit(schedule)}
-                            >
-                              <div className="font-medium truncate">{schedule.title}</div>
-                              <div className="text-[10px] opacity-80">
-                                {format(parseISO(schedule.start_datetime), 'h:mm a')}
+                          {daySchedules.slice(0, 3).map(schedule => {
+                            const startDate = parseISO(schedule.start_datetime);
+                            const endDate = parseISO(schedule.end_datetime);
+                            const isMultiDay = !isSameDay(startDate, endDate);
+                            const isStartDay = isSameDay(startDate, day);
+                            const isEndDay = isSameDay(endDate, day);
+                            const isMiddleDay = !isStartDay && !isEndDay;
+
+                            return (
+                              <div
+                                key={schedule.id}
+                                className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general} ${isMultiDay ? 'opacity-90' : ''}`}
+                                onClick={() => openEdit(schedule)}
+                              >
+                                <div className="font-medium truncate">{schedule.title}</div>
+                                <div className="text-[10px] opacity-80">
+                                  {isMultiDay ? (
+                                    isStartDay ? (
+                                      <>Starts {format(startDate, 'h:mm a')}</>
+                                    ) : isEndDay ? (
+                                      <>Ends {format(endDate, 'h:mm a')}</>
+                                    ) : (
+                                      <>Day {format(day, 'MMM d')}</>
+                                    )
+                                  ) : (
+                                    format(startDate, 'h:mm a')
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                           {daySchedules.length > 3 && (
                             <div className="text-[10px] text-muted-foreground pl-1">
                               +{daySchedules.length - 3} more
