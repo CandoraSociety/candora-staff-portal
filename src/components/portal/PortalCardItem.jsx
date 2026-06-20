@@ -18,12 +18,13 @@ export default function PortalCardItem({ card }) {
         <CardContent className="p-5">
           <div className="flex items-start justify-between mb-4">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: (card.color || cat.color) + '15' }}
+              className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ backgroundColor: card.logo_url ? 'transparent' : (card.color || cat.color) + '15' }}
             >
-              <span className="text-base font-display font-bold" style={{ color: card.color || cat.color }}>
-                {card.name?.[0]?.toUpperCase()}
-              </span>
+              {card.logo_url
+                ? <img src={card.logo_url} alt={card.name} className="w-full h-full object-contain" />
+                : <span className="text-base font-display font-bold" style={{ color: card.color || cat.color }}>{card.name?.[0]?.toUpperCase()}</span>
+              }
             </div>
             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
               {card.is_external
