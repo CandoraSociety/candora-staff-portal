@@ -1,0 +1,114 @@
+{
+  "name": "FoodServiceSchedule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Event/shift title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Additional details"
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "catering",
+        "cafe-candeur",
+        "auntie-bevs",
+        "community-lunch",
+        "food-production",
+        "general"
+      ],
+      "description": "Which area this schedule item belongs to"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "shift",
+        "production",
+        "catering_event",
+        "service",
+        "prep",
+        "cleanup",
+        "meeting",
+        "internal_placement"
+      ],
+      "description": "Type of scheduled activity"
+    },
+    "start_datetime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start date and time"
+    },
+    "end_datetime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End date and time"
+    },
+    "assigned_staff": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Employee IDs assigned to this shift/activity"
+    },
+    "assigned_volunteers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Volunteer IDs assigned"
+    },
+    "internal_placement": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is an internal placement for training/practicum"
+    },
+    "placement_participant": {
+      "type": "string",
+      "description": "Name of person in internal placement"
+    },
+    "location": {
+      "type": "string",
+      "description": "Specific location within the area"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "recurring": {
+      "type": "boolean",
+      "default": false
+    },
+    "recurring_pattern": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "biweekly",
+        "monthly"
+      ]
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "area",
+    "event_type",
+    "start_datetime",
+    "end_datetime"
+  ]
+}

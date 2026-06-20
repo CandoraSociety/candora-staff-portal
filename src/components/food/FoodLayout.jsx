@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard, CalendarDays, Coffee, Heart, Soup,
-  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink
+  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
@@ -14,6 +14,7 @@ const NAV = [
   { label: "Auntie Bev's",   icon: Heart,           path: '/food/auntie-bevs' },
   { label: 'Community Lunch', icon: Soup,            path: '/food/community-lunch' },
   { label: 'Sales',           icon: TrendingUp,      path: '/food/sales' },
+  { label: 'Schedule',        icon: Calendar,        path: '/food/schedule' },
 ];
 
 export default function FoodLayout() {

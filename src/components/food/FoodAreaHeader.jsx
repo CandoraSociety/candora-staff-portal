@@ -8,6 +8,7 @@ const AREA_TABS = {
     tabs: [
       { label: 'Quotes & Bookings', path: '/food/catering' },
       { label: 'Customers', path: '/food/customers' },
+      { label: 'Schedule', path: '/food/schedule?area=catering' },
     ],
   },
   'cafe-candeur': {
@@ -17,6 +18,7 @@ const AREA_TABS = {
       { label: 'Menu', path: '/food/cafe-candeur/menu' },
       { label: 'Orders', path: '/food/cafe-candeur/orders' },
       { label: 'Recipes', path: '/food/cafe-candeur/recipes' },
+      { label: 'Schedule', path: '/food/schedule?area=cafe-candeur' },
     ],
   },
   'auntie-bevs': {
@@ -26,14 +28,14 @@ const AREA_TABS = {
       { label: 'Menu', path: '/food/auntie-bevs/menu' },
       { label: 'Orders', path: '/food/auntie-bevs/orders' },
       { label: 'Recipes', path: '/food/auntie-bevs/recipes' },
+      { label: 'Schedule', path: '/food/schedule?area=auntie-bevs' },
     ],
   },
   'community-lunch': {
     label: 'Community Lunch',
     tabs: [
       { label: 'Overview', path: '/food/community-lunch' },
-      { label: 'Orders', path: '/food/community-lunch/orders' },
-      { label: 'Inventory', path: '/food/inventory' },
+      { label: 'Schedule', path: '/food/schedule?area=community-lunch' },
     ],
   },
   sales: {

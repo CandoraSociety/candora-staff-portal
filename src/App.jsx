@@ -153,6 +153,7 @@ import FoodAreaMenu from '@/pages/food/FoodAreaMenu';
 import FoodAreaRecipes from '@/pages/food/FoodAreaRecipes';
 import FoodAreaOverview from '@/pages/food/FoodAreaOverview';
 import CommunityLunch from '@/pages/food/CommunityLunch';
+import FoodSchedule from '@/pages/food/FoodSchedule';
 import FoodSales from '@/pages/food/FoodSales';
 
 // Catering Portal (Public)
@@ -355,6 +356,7 @@ const AuthenticatedApp = () => {
           <Route path="/food/community-lunch" element={<CommunityLunch />} />
           <Route path="/food/community-lunch/orders" element={<FoodAreaOrders />} />
           <Route path="/food/sales" element={<FoodSales />} />
+          <Route path="/food/schedule" element={<FoodSchedule />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}
