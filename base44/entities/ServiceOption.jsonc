@@ -1,0 +1,43 @@
+{
+  "name": "ServiceOption",
+  "type": "object",
+  "properties": {
+    "service_key": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "staffing",
+        "setup_teardown",
+        "bar"
+      ]
+    },
+    "price_type": {
+      "type": "string",
+      "enum": [
+        "flat",
+        "hourly",
+        "per_person"
+      ]
+    },
+    "price": {
+      "type": "number"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "service_key",
+    "display_name",
+    "category"
+  ]
+}

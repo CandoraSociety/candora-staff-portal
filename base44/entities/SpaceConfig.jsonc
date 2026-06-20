@@ -1,0 +1,56 @@
+{
+  "name": "SpaceConfig",
+  "type": "object",
+  "properties": {
+    "space_key": {
+      "type": "string",
+      "enum": [
+        "boardroom",
+        "studio",
+        "private_dining",
+        "lounge"
+      ]
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "square_feet": {
+      "type": "number"
+    },
+    "max_capacity": {
+      "type": "number"
+    },
+    "hourly_rate": {
+      "type": "number"
+    },
+    "daily_rate": {
+      "type": "number"
+    },
+    "amenities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "allowed_event_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "space_key",
+    "display_name"
+  ]
+}

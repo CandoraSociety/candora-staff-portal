@@ -154,6 +154,23 @@ import FoodAreaRecipes from '@/pages/food/FoodAreaRecipes';
 import FoodAreaOverview from '@/pages/food/FoodAreaOverview';
 import FoodSales from '@/pages/food/FoodSales';
 
+// Catering Portal (Public)
+import PublicLayout from '@/components/catering-portal/PublicLayout';
+import CateringHome from '@/pages/catering-portal/CateringHome';
+import CateringMenuPage from '@/pages/catering-portal/CateringMenuPage';
+import OurSpaces from '@/pages/catering-portal/OurSpaces';
+import BookingWizard from '@/pages/catering-portal/BookingWizard';
+import MyBooking from '@/pages/catering-portal/MyBooking';
+// Catering Portal (Admin)
+import AdminLayout from '@/components/catering-portal/AdminLayout';
+import AdminDashboard from '@/pages/catering-portal/admin/AdminDashboard';
+import AdminBookingsList from '@/pages/catering-portal/admin/AdminBookingsList';
+import AdminCalendar from '@/pages/catering-portal/admin/AdminCalendar';
+import AdminMenus from '@/pages/catering-portal/admin/AdminMenus';
+import AdminEquipment from '@/pages/catering-portal/admin/AdminEquipment';
+import AdminAnalytics from '@/pages/catering-portal/admin/AdminAnalytics';
+import AdminFinancials from '@/pages/catering-portal/admin/AdminFinancials';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -214,6 +231,24 @@ const AuthenticatedApp = () => {
       {/* Public portal routes — no auth required */}
       <Route path="/volunteer-portal" element={<VolunteerPortal />} />
       <Route path="/staff-portal" element={<StaffPortal />} />
+
+      {/* Catering Portal — fully public, no auth */}
+      <Route element={<PublicLayout />}>
+        <Route path="/catering-portal" element={<CateringHome />} />
+        <Route path="/catering-portal/menu" element={<CateringMenuPage />} />
+        <Route path="/catering-portal/spaces" element={<OurSpaces />} />
+        <Route path="/catering-portal/book" element={<BookingWizard />} />
+        <Route path="/catering-portal/my-booking" element={<MyBooking />} />
+      </Route>
+      <Route element={<AdminLayout />}>
+        <Route path="/catering-portal/admin" element={<AdminDashboard />} />
+        <Route path="/catering-portal/admin/bookings" element={<AdminBookingsList />} />
+        <Route path="/catering-portal/admin/calendar" element={<AdminCalendar />} />
+        <Route path="/catering-portal/admin/catering" element={<AdminMenus />} />
+        <Route path="/catering-portal/admin/equipment" element={<AdminEquipment />} />
+        <Route path="/catering-portal/admin/analytics" element={<AdminAnalytics />} />
+        <Route path="/catering-portal/admin/financials" element={<AdminFinancials />} />
+      </Route>
 
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

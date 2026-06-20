@@ -1,0 +1,256 @@
+{
+  "name": "BookingRequest",
+  "type": "object",
+  "properties": {
+    "confirmation_code": {
+      "type": "string"
+    },
+    "pin": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "denied",
+        "cancelled",
+        "completed",
+        "more_info_requested"
+      ],
+      "default": "pending"
+    },
+    "booking_type": {
+      "type": "string",
+      "enum": [
+        "external_event",
+        "inhouse_event"
+      ]
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "organization": {
+      "type": "string"
+    },
+    "event_description": {
+      "type": "string"
+    },
+    "event_location": {
+      "type": "string"
+    },
+    "space": {
+      "type": "string",
+      "enum": [
+        "boardroom",
+        "studio",
+        "private_dining",
+        "lounge"
+      ]
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_time": {
+      "type": "string"
+    },
+    "end_time": {
+      "type": "string"
+    },
+    "guest_count": {
+      "type": "number"
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "default": false
+    },
+    "recurrence_pattern": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "biweekly",
+        "monthly"
+      ]
+    },
+    "recurrence_day": {
+      "type": "string"
+    },
+    "recurrence_end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "catering_required": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "skip_for_now"
+      ]
+    },
+    "catering_style": {
+      "type": "string",
+      "enum": [
+        "buffet",
+        "plated"
+      ]
+    },
+    "catering_service_level": {
+      "type": "string",
+      "enum": [
+        "full_service",
+        "light_service",
+        "drop_off_only"
+      ]
+    },
+    "bar_service_addon": {
+      "type": "boolean",
+      "default": false
+    },
+    "bar_service_type": {
+      "type": "string",
+      "enum": [
+        "open_bar",
+        "cash_bar"
+      ]
+    },
+    "bar_liquor_source": {
+      "type": "string",
+      "enum": [
+        "we_provide",
+        "client_provides"
+      ]
+    },
+    "bar_liquor_selections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bar_service_fee": {
+      "type": "number"
+    },
+    "bar_sales_percentage": {
+      "type": "number"
+    },
+    "bar_estimated_sales": {
+      "type": "number"
+    },
+    "catering_preset": {
+      "type": "string"
+    },
+    "catering_selections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "catering_estimate": {
+      "type": "number"
+    },
+    "catering_gratuity": {
+      "type": "number"
+    },
+    "catering_custom_request": {
+      "type": "string"
+    },
+    "staffing_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "staffing_count": {
+      "type": "number"
+    },
+    "staffing_fee": {
+      "type": "number"
+    },
+    "setup_teardown": {
+      "type": "string",
+      "enum": [
+        "full_setup_teardown",
+        "setup_only",
+        "teardown_only",
+        "self_service"
+      ],
+      "default": "self_service"
+    },
+    "equipment_rentals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "equipment_rental_total": {
+      "type": "number"
+    },
+    "space_rental_total": {
+      "type": "number"
+    },
+    "services_total": {
+      "type": "number"
+    },
+    "estimated_total": {
+      "type": "number"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "more_info_request_details": {
+      "type": "string"
+    },
+    "more_info_requested_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "more_info_response": {
+      "type": "string"
+    },
+    "edit_history": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "contact_name",
+    "contact_email",
+    "event_date",
+    "start_time",
+    "end_time"
+  ]
+}

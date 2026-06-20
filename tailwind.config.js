@@ -59,30 +59,31 @@ module.exports = {
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
-  			}
+  			},
+  			'cp-primary': 'hsl(var(--cp-primary))',
+  			'cp-bg': 'hsl(var(--cp-bg))',
+  			'cp-accent': 'hsl(var(--cp-accent))',
+  			'cp-muted': 'hsl(var(--cp-muted))',
+  			'cp-border': 'hsl(var(--cp-border))',
+  			'cp-text': 'hsl(var(--cp-text))',
+  			'cp-admin-sidebar': 'hsl(var(--cp-admin-sidebar))',
+  			'cp-admin-sidebar-accent': 'hsl(var(--cp-admin-sidebar-accent))',
+  			'cp-sidebar-fg': 'hsl(var(--cp-sidebar-fg))',
   		},
   		fontFamily: {
-  			heading: ['var(--font-heading)'],
-  			body: ['var(--font-body)'],
-  			display: ['var(--font-display)'],
+  			heading: ['Playfair Display', 'var(--font-heading)', 'serif'],
+  			body: ['DM Sans', 'var(--font-body)', 'sans-serif'],
+  			display: ['Nunito', 'var(--font-display)', 'sans-serif'],
   			mono: ['var(--font-mono)']
   		},
   		keyframes: {
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
   			}
   		},
   		animation: {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import FoodAreaHeader from '@/components/food/FoodAreaHeader';
+import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Search } from 'lucide-react';
@@ -61,9 +63,14 @@ export default function FoodCatering() {
     <div>
       <FoodAreaHeader area="catering" />
       <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <p className="text-muted-foreground text-sm">Manage catering inquiries and quotes</p>
-        <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />New Quote</Button>
+        <div className="flex items-center gap-2">
+          <Link to="/catering-portal/admin/bookings" target="_blank" className="flex items-center gap-1.5 text-xs border border-border px-3 py-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+            <ExternalLink className="w-3.5 h-3.5" /> Booking Portal Admin
+          </Link>
+          <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" />New Quote</Button>
+        </div>
       </div>
 
       <div className="flex gap-3">

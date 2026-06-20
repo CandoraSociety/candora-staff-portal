@@ -1,0 +1,57 @@
+{
+  "name": "CateringMenuItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "style": {
+      "type": "string",
+      "enum": [
+        "buffet",
+        "plated"
+      ],
+      "default": "buffet"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "appetizers",
+        "entrees",
+        "sides",
+        "desserts",
+        "beverages",
+        "platters"
+      ]
+    },
+    "price_per_person": {
+      "type": "number"
+    },
+    "price_per_unit": {
+      "type": "number"
+    },
+    "minimum_order": {
+      "type": "number"
+    },
+    "dietary_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "RentalEquipment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "serving_equipment",
+        "linens",
+        "furniture",
+        "audio_visual",
+        "kitchen",
+        "other"
+      ]
+    },
+    "quantity_available": {
+      "type": "number"
+    },
+    "price_per_unit": {
+      "type": "number"
+    },
+    "price_per_day": {
+      "type": "number"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "quantity_available"
+  ]
+}
