@@ -16,7 +16,7 @@ export default function PublicFooter() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Navigation</p>
           <div className="space-y-1">
-            {[['Home','/catering-portal'],['Catering Menu','/catering-portal/menu'],['Our Spaces','/catering-portal/spaces'],['Book an Event','/catering-portal/book'],['My Booking','/catering-portal/my-booking']].map(([l,p]) => (
+            {[['Home','/catering-portal'],['Our Story','/catering-portal/our-story'],['Catering Menu','/catering-portal/menu'],['Our Spaces','/catering-portal/spaces'],['Book an Event','/catering-portal/book'],['My Booking','/catering-portal/my-booking']].map(([l,p]) => (
               <Link key={p} to={p} className="block text-sm text-gray-400 hover:text-white transition-colors">{l}</Link>
             ))}
           </div>

@@ -161,6 +161,7 @@ import CateringMenuPage from '@/pages/catering-portal/CateringMenuPage';
 import OurSpaces from '@/pages/catering-portal/OurSpaces';
 import BookingWizard from '@/pages/catering-portal/BookingWizard';
 import MyBooking from '@/pages/catering-portal/MyBooking';
+import OurStory from '@/pages/catering-portal/OurStory';
 
 
 // Events/Projects/Programs Manager
@@ -231,6 +232,7 @@ const AuthenticatedApp = () => {
         <Route path="/catering-portal/spaces" element={<OurSpaces />} />
         <Route path="/catering-portal/book" element={<BookingWizard />} />
         <Route path="/catering-portal/my-booking" element={<MyBooking />} />
+        <Route path="/catering-portal/our-story" element={<OurStory />} />
       </Route>
 
 

@@ -3,11 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChefHat } from 'lucide-react';
 
 const links = [
-  { label: 'Home', path: '/catering-portal' },
+  { label: 'Home',          path: '/catering-portal' },
+  { label: 'Our Story',     path: '/catering-portal/our-story' },
   { label: 'Catering Menu', path: '/catering-portal/menu' },
-  { label: 'Our Spaces', path: '/catering-portal/spaces' },
-  { label: 'Book Now', path: '/catering-portal/book' },
-  { label: 'My Booking', path: '/catering-portal/my-booking' },
+  { label: 'Our Spaces',    path: '/catering-portal/spaces' },
+  { label: 'Book Now',      path: '/catering-portal/book' },
+  { label: 'My Booking',    path: '/catering-portal/my-booking' },
 ];
 
 export default function PublicNav() {
