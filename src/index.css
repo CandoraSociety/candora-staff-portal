@@ -47,17 +47,18 @@
     --sidebar-border: 230 50% 16%;
     --sidebar-ring: 45 92% 53%;
 
-    /* Catering Portal tokens */
+    /* Catering Portal tokens — Candora navy + gold + baby blue */
     --cp-baby-blue: 199 70% 55%;
-    --cp-primary: 162 48% 35%;
-    --cp-bg: 30 20% 98%;
-    --cp-accent: 25 80% 55%;
-    --cp-muted: 30 15% 94%;
-    --cp-border: 30 15% 88%;
-    --cp-text: 220 20% 12%;
-    --cp-admin-sidebar: 220 20% 12%;
-    --cp-admin-sidebar-accent: 220 15% 18%;
-    --cp-sidebar-fg: 30 20% 95%;
+    --cp-primary: 230 75% 25%;
+    --cp-bg: 220 20% 98%;
+    --cp-accent: 45 92% 53%;
+    --cp-accent-text: 230 60% 10%;
+    --cp-muted: 220 20% 94%;
+    --cp-border: 220 20% 88%;
+    --cp-text: 230 60% 8%;
+    --cp-admin-sidebar: 230 70% 12%;
+    --cp-admin-sidebar-accent: 230 55% 18%;
+    --cp-sidebar-fg: 45 60% 92%;
 
     --success: 152 55% 45%;
     --success-foreground: 0 0% 100%;

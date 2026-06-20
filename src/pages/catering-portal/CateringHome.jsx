@@ -13,19 +13,33 @@ export default function CateringHome() {
   return (
     <div className="text-cp-text">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-cp-primary via-cp-primary/90 to-cp-primary/80 text-white py-24 px-4">
+      <section className="bg-gradient-to-br from-[hsl(230,70%,12%)] via-[hsl(230,65%,16%)] to-[hsl(230,60%,20%)] text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="font-heading text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          {/* Prominent Logo */}
+          <div className="mb-8">
+            <img
+              src="https://media.base44.com/images/public/6a249282cb496579542673b7/64f97b9c9_CandoraFoodServiceslogoyellowletters.png"
+              alt="Candora Events and Catering Services"
+              className="h-28 md:h-36 w-auto object-contain mx-auto drop-shadow-xl"
+            />
+          </div>
+          {/* Baby-blue spoon-colour accent line */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px w-16 bg-[hsl(199,70%,55%)]" />
+            <span className="text-[hsl(199,70%,65%)] text-xs font-bold uppercase tracking-widest">Candora Events and Catering Services</span>
+            <div className="h-px w-16 bg-[hsl(199,70%,55%)]" />
+          </div>
+          <h1 className="font-heading text-4xl md:text-5xl font-bold mb-5 leading-tight">
             Full-Service Catering<br />for Every Occasion
           </h1>
-          <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Whether we come to your venue or you host in one of our intimate spaces, Candora Food Services delivers exceptional food and seamless event experiences.
+          <p className="text-lg text-white/70 mb-10 max-w-2xl mx-auto">
+            Whether we come to your venue or you host in one of our intimate spaces, we deliver exceptional food and seamless event experiences — rooted in community.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/catering-portal/book" className="bg-cp-accent text-white font-semibold px-8 py-3 rounded-full hover:opacity-90 transition-opacity text-lg">
+            <Link to="/catering-portal/book" className="bg-[hsl(45,92%,53%)] text-[hsl(230,60%,10%)] font-bold px-8 py-3 rounded-full hover:opacity-90 transition-opacity text-lg shadow-lg">
               Book an Event
             </Link>
-            <Link to="/catering-portal/menu" className="bg-white/20 text-white border border-white/30 font-semibold px-8 py-3 rounded-full hover:bg-white/30 transition-colors text-lg">
+            <Link to="/catering-portal/menu" className="bg-white/10 text-white border border-white/25 font-semibold px-8 py-3 rounded-full hover:bg-white/20 transition-colors text-lg">
               View Our Menu
             </Link>
           </div>
@@ -107,11 +121,11 @@ export default function CateringHome() {
       )}
 
       {/* CTA Banner */}
-      <section className="py-16 px-4 bg-cp-accent">
+      <section className="py-16 px-4 bg-cp-primary">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-heading text-3xl font-bold text-white mb-4">Ready to Plan Your Event?</h2>
-          <p className="text-white/80 mb-8">Let's create something memorable together. Start your booking today.</p>
-          <Link to="/catering-portal/book" className="bg-white text-cp-accent font-bold px-10 py-4 rounded-full hover:bg-cp-bg transition-colors text-lg inline-block">
+          <p className="text-white/70 mb-8">Let's create something memorable together. Start your booking today.</p>
+          <Link to="/catering-portal/book" className="bg-[hsl(45,92%,53%)] text-[hsl(230,60%,10%)] font-bold px-10 py-4 rounded-full hover:opacity-90 transition-opacity text-lg inline-block shadow-md">
             Start Booking
           </Link>
         </div>

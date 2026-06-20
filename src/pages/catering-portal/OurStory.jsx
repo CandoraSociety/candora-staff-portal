@@ -9,6 +9,17 @@ export default function OurStory() {
   return (
     <div className="text-cp-text">
 
+      {/* ⚠️ PLACEHOLDER BANNER */}
+      <div className="bg-amber-50 border-b-2 border-amber-400 px-4 py-3">
+        <div className="max-w-5xl mx-auto flex items-start gap-3">
+          <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
+          <div>
+            <p className="text-sm font-bold text-amber-800">This page is a placeholder draft — content needs review before publishing.</p>
+            <p className="text-xs text-amber-700 mt-0.5">The story, quotes, and details below are approximate. Please review with the team and update with accurate dates, names, and details before this goes live to the public.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-cp-primary via-cp-primary/90 to-cp-primary/80 text-white py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
