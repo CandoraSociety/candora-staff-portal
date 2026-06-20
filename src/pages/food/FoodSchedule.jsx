@@ -48,6 +48,9 @@ export default function FoodSchedule() {
     placement_participant: '',
     assigned_staff: [],
     assigned_volunteers: [],
+    recurring: false,
+    recurring_pattern: 'weekly',
+    recurring_end_date: '',
   });
 
   const { data: schedules = [] } = useQuery({
@@ -108,6 +111,9 @@ export default function FoodSchedule() {
       placement_participant: '',
       assigned_staff: [],
       assigned_volunteers: [],
+      recurring: false,
+      recurring_pattern: 'weekly',
+      recurring_end_date: '',
     });
   };
 
@@ -138,15 +144,80 @@ export default function FoodSchedule() {
   );
 
   const handleSave = () => {
-    const payload = {
-      ...form,
-      start_datetime: new Date(form.start_datetime).toISOString(),
-      end_datetime: new Date(form.end_datetime).toISOString(),
+    const basePayload = {
+      title: form.title,
+      description: form.description,
+      area: form.area,
+      event_type: form.event_type,
+      location: form.location,
+      notes: form.notes,
+      internal_placement: form.internal_placement,
+      placement_participant: form.placement_participant,
+      assigned_staff: form.assigned_staff,
+      assigned_volunteers: form.assigned_volunteers,
     };
 
     if (editing) {
+      const payload = {
+        ...basePayload,
+        start_datetime: new Date(form.start_datetime).toISOString(),
+        end_datetime: new Date(form.end_datetime).toISOString(),
+      };
       updateSchedule.mutate({ id: editing.id, data: payload });
+    } else if (form.recurring && form.recurring_end_date) {
+      // Create multiple recurring events
+      const startDate = new Date(form.start_datetime);
+      const endDate = new Date(form.end_datetime);
+      const endDateTime = new Date(form.recurring_end_date);
+      const durationMs = endDate - startDate;
+      
+      const eventsToCreate = [];
+      let currentDate = new Date(startDate);
+      
+      while (currentDate <= endDateTime) {
+        const eventStart = new Date(currentDate);
+        const eventEnd = new Date(eventStart.getTime() + durationMs);
+        
+        eventsToCreate.push({
+          ...basePayload,
+          start_datetime: eventStart.toISOString(),
+          end_datetime: eventEnd.toISOString(),
+          recurring: true,
+          recurring_pattern: form.recurring_pattern,
+        });
+        
+        // Move to next occurrence based on pattern
+        switch (form.recurring_pattern) {
+          case 'daily':
+            currentDate.setDate(currentDate.getDate() + 1);
+            break;
+          case 'weekly':
+            currentDate.setDate(currentDate.getDate() + 7);
+            break;
+          case 'biweekly':
+            currentDate.setDate(currentDate.getDate() + 14);
+            break;
+          case 'monthly':
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            break;
+          default:
+            currentDate.setDate(currentDate.getDate() + 7);
+        }
+      }
+      
+      // Create all events
+      Promise.all(eventsToCreate.map(event => base44.entities.FoodServiceSchedule.create(event)))
+        .then(() => {
+          qc.invalidateQueries(['food-schedules']);
+          setDialogOpen(false);
+          resetForm();
+        });
     } else {
+      const payload = {
+        ...basePayload,
+        start_datetime: new Date(form.start_datetime).toISOString(),
+        end_datetime: new Date(form.end_datetime).toISOString(),
+      };
       createSchedule.mutate(payload);
     }
   };
@@ -172,6 +243,9 @@ export default function FoodSchedule() {
       placement_participant: item.placement_participant || '',
       assigned_staff: item.assigned_staff || [],
       assigned_volunteers: item.assigned_volunteers || [],
+      recurring: item.recurring || false,
+      recurring_pattern: item.recurring_pattern || 'weekly',
+      recurring_end_date: item.recurring_end_date || '',
     });
     setDialogOpen(true);
   };
@@ -358,9 +432,6 @@ export default function FoodSchedule() {
                     const shift = personnelData.find(s => s.id === selectedShiftId);
                     if (!shift) return null;
 
-                    const staffCount = shift.assigned_staff?.length || 0;
-                    const volunteerCount = shift.assigned_volunteers?.length || 0;
-
                     return (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
@@ -378,7 +449,7 @@ export default function FoodSchedule() {
                           <div className="border rounded-lg p-4 bg-blue-50/50">
                             <h5 className="font-semibold mb-3 text-blue-800 flex items-center gap-2">
                               <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs">S</span>
-                              Staff ({staffCount})
+                              Staff ({shift.assigned_staff?.length || 0})
                             </h5>
                             <div className="space-y-2">
                               {shift.assigned_staff?.map(staffId => {
@@ -436,7 +507,7 @@ export default function FoodSchedule() {
                           <div className="border rounded-lg p-4 bg-green-50/50">
                             <h5 className="font-semibold mb-3 text-green-800 flex items-center gap-2">
                               <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-xs">V</span>
-                              Volunteers ({volunteerCount})
+                              Volunteers ({shift.assigned_volunteers?.length || 0})
                             </h5>
                             <div className="space-y-2">
                               {shift.assigned_volunteers?.map(volId => {
@@ -766,6 +837,63 @@ export default function FoodSchedule() {
                         Placement: {form.placement_participant || 'TBD'}
                       </span>
                     )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recurring Event Section */}
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <h4 className="font-semibold mb-1 flex items-center gap-2">
+                <span>🔄</span> Recurring Event
+              </h4>
+              <p className="text-xs text-muted-foreground mb-4">
+                Make this event repeat automatically
+              </p>
+
+              <label className="flex items-center gap-2 mb-4">
+                <input
+                  type="checkbox"
+                  checked={form.recurring}
+                  onChange={(e) => setForm(f => ({ ...f, recurring: e.target.checked }))}
+                  className="w-4 h-4 rounded"
+                />
+                <span className="text-sm font-medium">This is a recurring event</span>
+              </label>
+
+              {form.recurring && (
+                <div className="space-y-4 ml-6">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Repeat Pattern *</label>
+                    <select
+                      value={form.recurring_pattern}
+                      onChange={(e) => setForm(f => ({ ...f, recurring_pattern: e.target.value }))}
+                      className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Every 2 Weeks</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">End Date *</label>
+                    <Input
+                      type="date"
+                      value={form.recurring_end_date}
+                      onChange={(e) => setForm(f => ({ ...f, recurring_end_date: e.target.value }))}
+                      min={form.start_datetime?.split('T')[0]}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Events will repeat until this date
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <div className="text-xs text-amber-800">
+                      <strong>Preview:</strong> This will create {form.recurring_pattern === 'daily' ? 'daily' : form.recurring_pattern === 'weekly' ? 'weekly' : form.recurring_pattern === 'biweekly' ? 'bi-weekly' : 'monthly'} events starting from {form.start_datetime ? format(parseISO(form.start_datetime), 'MMM d') : 'the start date'} until {form.recurring_end_date ? format(parseISO(form.recurring_end_date), 'MMM d, yyyy') : 'the end date'}.
+                    </div>
                   </div>
                 </div>
               )}
