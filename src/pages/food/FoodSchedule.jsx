@@ -626,78 +626,146 @@ export default function FoodSchedule() {
               <Input
                 value={form.location}
                 onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))}
-                placeholder="e.g., Main Kitchen, Boardroom"
+                placeholder="e.g., Main Kitchen, Boardroom, Cafe Floor"
               />
             </div>
 
-            {form.event_type === 'internal_placement' && (
-              <div>
-                <label className="text-sm font-medium mb-1 block">Placement Participant Name</label>
-                <Input
-                  value={form.placement_participant}
-                  onChange={(e) => setForm(f => ({ ...f, placement_participant: e.target.value }))}
-                  placeholder="Person's name"
-                />
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <h4 className="font-semibold text-sm mb-1 text-blue-800">💡 How to Schedule People:</h4>
+              <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                <li>Fill in the shift details above (title, time, location)</li>
+                <li>Scroll down to "Who's Working This Shift?"</li>
+                <li>Check the boxes for staff and/or volunteers working</li>
+                <li>OR check "Internal Placement" for Pathways participants</li>
+                <li>Click Create to save</li>
+              </ol>
+            </div>
+
+            {/* WHO'S WORKING SECTION - Always visible for shifts */}
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <h4 className="font-semibold mb-1 flex items-center gap-2">
+                <span>👥</span> Who's Working This Shift?
+              </h4>
+              <p className="text-xs text-muted-foreground mb-4">
+                Select staff, volunteers, or mark as internal placement
+              </p>
+
+              {/* Staff Selection */}
+              <div className="mb-4">
+                <label className="text-sm font-medium mb-2 block text-blue-700">
+                  🟦 Staff Members ({form.assigned_staff.length} selected)
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-white">
+                  {employees.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No active employees found</p>
+                  ) : (
+                    employees.map(emp => (
+                      <label key={emp.id} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-blue-50 p-2 rounded transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={form.assigned_staff.includes(emp.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setForm(f => ({ ...f, assigned_staff: [...f.assigned_staff, emp.id] }));
+                            } else {
+                              setForm(f => ({ ...f, assigned_staff: f.assigned_staff.filter(id => id !== emp.id) }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-blue-300 text-blue-600"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{emp.first_name} {emp.last_name}</div>
+                          <div className="text-xs text-muted-foreground">{emp.position}</div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
-            )}
 
-            {form.event_type === 'shift' && (
-              <>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Assign Staff (optional)</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
-                    {employees.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No active employees found</p>
-                    ) : (
-                      employees.map(emp => (
-                        <label key={emp.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded">
-                          <input
-                            type="checkbox"
-                            checked={form.assigned_staff.includes(emp.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setForm(f => ({ ...f, assigned_staff: [...f.assigned_staff, emp.id] }));
-                              } else {
-                                setForm(f => ({ ...f, assigned_staff: f.assigned_staff.filter(id => id !== emp.id) }));
-                              }
-                            }}
-                            className="rounded"
-                          />
-                          <span>{emp.first_name} {emp.last_name} ({emp.position})</span>
-                        </label>
-                      ))
+              {/* Volunteer Selection */}
+              <div className="mb-4">
+                <label className="text-sm font-medium mb-2 block text-green-700">
+                  🟩 Volunteers ({form.assigned_volunteers.length} selected)
+                </label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-white">
+                  {volunteers.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No active volunteers found</p>
+                  ) : (
+                    volunteers.map(vol => (
+                      <label key={vol.id} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-green-50 p-2 rounded transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={form.assigned_volunteers.includes(vol.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setForm(f => ({ ...f, assigned_volunteers: [...f.assigned_volunteers, vol.id] }));
+                            } else {
+                              setForm(f => ({ ...f, assigned_volunteers: f.assigned_volunteers.filter(id => id !== vol.id) }));
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-green-300 text-green-600"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{vol.first_name} {vol.last_name}</div>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Internal Placement Option */}
+              <div className="border-t pt-4">
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={form.internal_placement}
+                    onChange={(e) => setForm(f => ({ ...f, internal_placement: e.target.checked }))}
+                    className="w-4 h-4 rounded"
+                  />
+                  <span className="text-sm font-medium text-purple-700">🟪 This is an Internal Placement (Pathways participant)</span>
+                </label>
+                {form.internal_placement && (
+                  <div className="mt-2 ml-6">
+                    <label className="text-sm font-medium mb-1 block">Participant Name *</label>
+                    <Input
+                      value={form.placement_participant}
+                      onChange={(e) => setForm(f => ({ ...f, placement_participant: e.target.value }))}
+                      placeholder="e.g., John Smith (Pathways client)"
+                      className="border-purple-300 focus:border-purple-500"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      For Pathways program participants doing placements
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Summary */}
+              {(form.assigned_staff.length > 0 || form.assigned_volunteers.length > 0 || form.internal_placement) && (
+                <div className="mt-4 p-3 bg-white rounded border">
+                  <div className="text-sm font-medium mb-2">Summary:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {form.assigned_staff.length > 0 && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        {form.assigned_staff.length} staff member{form.assigned_staff.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {form.assigned_volunteers.length > 0 && (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                        {form.assigned_volunteers.length} volunteer{form.assigned_volunteers.length > 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {form.internal_placement && (
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                        Placement: {form.placement_participant || 'TBD'}
+                      </span>
                     )}
                   </div>
                 </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Assign Volunteers (optional)</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-md p-2">
-                    {volunteers.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">No active volunteers found</p>
-                    ) : (
-                      volunteers.map(vol => (
-                        <label key={vol.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded">
-                          <input
-                            type="checkbox"
-                            checked={form.assigned_volunteers.includes(vol.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setForm(f => ({ ...f, assigned_volunteers: [...f.assigned_volunteers, vol.id] }));
-                              } else {
-                                setForm(f => ({ ...f, assigned_volunteers: f.assigned_volunteers.filter(id => id !== vol.id) }));
-                              }
-                            }}
-                            className="rounded"
-                          />
-                          <span>{vol.first_name} {vol.last_name}</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
+              )}
+            </div>
 
             <div>
               <label className="text-sm font-medium mb-1 block">Notes</label>
