@@ -1,0 +1,49 @@
+{
+  "name": "FoodCustomer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "total_orders": {
+      "type": "number",
+      "default": 0
+    },
+    "total_spent": {
+      "type": "number",
+      "default": 0
+    },
+    "last_order_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "preferred_order_type": {
+      "type": "string",
+      "enum": [
+        "dine_in",
+        "takeout",
+        "catering",
+        "delivery",
+        "kiosk"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

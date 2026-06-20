@@ -139,6 +139,16 @@ import ReportingAGRPreview from '@/pages/reporting/ReportingAGRPreview';
 import ReportingAGRPrint from '@/pages/reporting/ReportingAGRPrint';
 import ReportingAGRAnalysis from '@/pages/reporting/ReportingAGRAnalysis';
 
+// Food Services
+import FoodLayout from '@/components/food/FoodLayout';
+import FoodDashboard from '@/pages/food/FoodDashboard';
+import FoodMenu from '@/pages/food/FoodMenu';
+import FoodOrders from '@/pages/food/FoodOrders';
+import FoodInventory from '@/pages/food/FoodInventory';
+import FoodRecipes from '@/pages/food/FoodRecipes';
+import FoodCatering from '@/pages/food/FoodCatering';
+import FoodCustomers from '@/pages/food/FoodCustomers';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -295,6 +305,17 @@ const AuthenticatedApp = () => {
           <Route path="/reporting/agr/:id/preview" element={<ReportingAGRPreview />} />
           <Route path="/reporting/agr/:id/print" element={<ReportingAGRPrint />} />
           <Route path="/reporting/agr/analysis/:id" element={<ReportingAGRAnalysis />} />
+        </Route>
+
+        {/* Food Services - standalone layout */}
+        <Route element={<FoodLayout />}>
+          <Route path="/food" element={<FoodDashboard />} />
+          <Route path="/food/menu" element={<FoodMenu />} />
+          <Route path="/food/orders" element={<FoodOrders />} />
+          <Route path="/food/inventory" element={<FoodInventory />} />
+          <Route path="/food/recipes" element={<FoodRecipes />} />
+          <Route path="/food/catering" element={<FoodCatering />} />
+          <Route path="/food/customers" element={<FoodCustomers />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}

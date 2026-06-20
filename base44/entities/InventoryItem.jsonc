@@ -1,0 +1,58 @@
+{
+  "name": "InventoryItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "produce",
+        "dairy",
+        "meat",
+        "seafood",
+        "dry_goods",
+        "spices",
+        "beverages",
+        "frozen",
+        "packaging",
+        "other"
+      ]
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "unit": {
+      "type": "string",
+      "enum": [
+        "lbs",
+        "oz",
+        "gal",
+        "each",
+        "cases",
+        "bags",
+        "boxes",
+        "liters",
+        "kg"
+      ]
+    },
+    "unit_cost": {
+      "type": "number"
+    },
+    "reorder_level": {
+      "type": "number"
+    },
+    "supplier": {
+      "type": "string"
+    },
+    "is_low_stock": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "quantity"
+  ]
+}

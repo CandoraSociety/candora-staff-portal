@@ -1,0 +1,48 @@
+{
+  "name": "MenuItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "appetizer",
+        "entree",
+        "side",
+        "dessert",
+        "beverage",
+        "breakfast",
+        "lunch_special",
+        "catering"
+      ]
+    },
+    "price": {
+      "type": "number"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "is_available": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "price"
+  ]
+}

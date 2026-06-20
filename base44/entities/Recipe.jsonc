@@ -1,0 +1,89 @@
+{
+  "name": "Recipe",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "appetizer",
+        "entree",
+        "side",
+        "dessert",
+        "beverage",
+        "breakfast",
+        "sauce",
+        "base"
+      ]
+    },
+    "servings": {
+      "type": "number"
+    },
+    "prep_time_minutes": {
+      "type": "number"
+    },
+    "cook_time_minutes": {
+      "type": "number"
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "inventory_item_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step_number": {
+            "type": "number"
+          },
+          "instruction": {
+            "type": "string"
+          },
+          "duration_minutes": {
+            "type": "number"
+          },
+          "tip": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_menu_item_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

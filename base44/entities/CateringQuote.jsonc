@@ -1,0 +1,130 @@
+{
+  "name": "CateringQuote",
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "corporate",
+        "wedding",
+        "birthday",
+        "funeral",
+        "holiday",
+        "community",
+        "fundraiser",
+        "other"
+      ]
+    },
+    "guest_count": {
+      "type": "number"
+    },
+    "service_style": {
+      "type": "string",
+      "enum": [
+        "buffet",
+        "plated",
+        "family_style",
+        "boxed_meals",
+        "food_stations",
+        "cocktail"
+      ]
+    },
+    "dietary_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preset_package": {
+      "type": "string"
+    },
+    "selected_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "menu_item_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price_per_person": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "is_custom": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "addons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "estimated_ingredient_cost": {
+      "type": "number"
+    },
+    "subtotal": {
+      "type": "number"
+    },
+    "service_fee": {
+      "type": "number"
+    },
+    "total": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "accepted",
+        "declined"
+      ],
+      "default": "draft"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "customer_name",
+    "guest_count"
+  ]
+}
