@@ -59,6 +59,27 @@ function computeLayout(all) {
       childrenOf[p.reports_to_id].push(p.id);
     }
   });
+
+  // Sort each parent's children so same-title siblings are adjacent
+  Object.keys(childrenOf).forEach(parentId => {
+    const kids = childrenOf[parentId];
+    if (kids.length < 2) return;
+    // Group by title+tier key, preserve insertion order of groups
+    const groups = {};
+    const groupOrder = [];
+    kids.forEach(id => {
+      const p = normalized.find(x => x.id === id);
+      const key = `${p?.tier ?? ""}::${p?.title ?? ""}`;
+      if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+      groups[key].push(id);
+    });
+    // Flatten: keep single items in their original relative order, cluster multi-item groups
+    const singles = groupOrder.filter(k => groups[k].length === 1).map(k => groups[k][0]);
+    const clustered = groupOrder.filter(k => groups[k].length > 1).flatMap(k => groups[k]);
+    // Put clusters at the end of the row so they appear as a contiguous block
+    childrenOf[parentId] = [...singles, ...clustered];
+  });
+
   const roots = normalized.filter(p => !p.reports_to_id || !normalized.find(x => x.id === p.reports_to_id));
 
   const subtreeWidth = {};
@@ -334,6 +355,35 @@ export default function OrgTreeLayout({
     return `M ${px} ${py} C ${px} ${py + cpOffset}, ${cx} ${cy - cpOffset}, ${cx} ${cy}`;
   }
 
+  // Compute groups: same tier + same title + same reports_to_id, size >= 2
+  const groupBrackets = [];
+  const byParent = {};
+  positions.forEach(p => {
+    const key = p.reports_to_id || "__root__";
+    if (!byParent[key]) byParent[key] = [];
+    byParent[key].push(p);
+  });
+  Object.values(byParent).forEach(siblings => {
+    // Sub-group by tier + title
+    const subGroups = {};
+    siblings.forEach(p => {
+      const gk = `${p.tier ?? ""}::${p.title ?? ""}`;
+      if (!subGroups[gk]) subGroups[gk] = [];
+      subGroups[gk].push(p);
+    });
+    Object.values(subGroups).forEach(group => {
+      if (group.length < 2) return;
+      // Collect x positions of nodes in this group
+      const xs = group.map(p => posMap[p.id]?.x).filter(x => x != null);
+      if (xs.length < 2) return;
+      const y = posMap[group[0].id]?.y;
+      if (y == null) return;
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      groupBrackets.push({ minX, maxX, y, label: group[0].title, count: group.length });
+    });
+  });
+
   const lines = [];
   positions.forEach(p => {
     if (!p.reports_to_id || p.reports_to_id === "" || p.reports_to_id === null) return;
@@ -416,6 +466,23 @@ export default function OrgTreeLayout({
             {/* SVG lines */}
             <svg style={{ position: "absolute", top: 0, left: 0, width: svgW, height: svgH, pointerEvents: "none" }}>
               {lines}
+              {/* Group brackets — only for positions sharing same tier + title + manager */}
+              {groupBrackets.map((g, i) => {
+                const x1 = g.minX - NODE_W / 2 + TIER_LABEL_W + PAD - 6;
+                const x2 = g.maxX + NODE_W / 2 + TIER_LABEL_W + PAD + 6;
+                const bracketY = g.y + PAD - 10;
+                const tickH = 6;
+                return (
+                  <g key={i}>
+                    {/* Horizontal bar */}
+                    <line x1={x1} y1={bracketY} x2={x2} y2={bracketY} stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+                    {/* Left tick */}
+                    <line x1={x1} y1={bracketY} x2={x1} y2={bracketY + tickH} stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+                    {/* Right tick */}
+                    <line x1={x2} y1={bracketY} x2={x2} y2={bracketY + tickH} stroke="#6366f1" strokeWidth="2" strokeLinecap="round" />
+                  </g>
+                );
+              })}
             </svg>
 
             {/* Cards */}
