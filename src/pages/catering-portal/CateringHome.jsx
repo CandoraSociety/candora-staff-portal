@@ -53,7 +53,7 @@ export default function CateringHome() {
           <p className="text-center text-gray-500 mb-12">Three ways we can make your event exceptional</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Truck, title: 'External Catering', desc: 'We come to you. Our team delivers, sets up, and serves at your chosen venue — no matter the size or style.', color: 'text-cp-accent' },
+              { icon: Truck, title: 'External Catering and Events Services', desc: 'We come to you. Our team delivers, sets up, and serves at your chosen venue — no matter the size or style.', color: 'text-cp-accent' },
               { icon: Building2, title: 'In-House Events', desc: 'Book one of our four intimate spaces (up to 30 guests) with full catering, tables, and ambiance included.', color: 'text-cp-primary' },
               { icon: Wine, title: 'Bar & Beverage', desc: 'Add a full bar service to any event — open bar, cash bar, or custom beverage packages tailored to your needs.', color: 'text-purple-500' },
             ].map(({ icon: Icon, title, desc, color }) => (
