@@ -22,7 +22,7 @@ export default function PortalCardItem({ card }) {
               style={{ backgroundColor: card.logo_url ? 'transparent' : (card.color || cat.color) + '15' }}
             >
               {card.logo_url
-                ? <img src={card.logo_url} alt={card.name} className="w-full h-full object-cover" style={{ objectPosition: '35% 45%', transform: 'scale(2.2)', transformOrigin: '35% 45%' }} />
+                ? <img src={card.logo_url} alt={card.name} className="w-full h-full object-cover"             style={{ objectPosition: '50% 50%', transform: 'scale(1.5)', transformOrigin: '50% 50%' }} />
                 : <span className="text-base font-display font-bold" style={{ color: card.color || cat.color }}>{card.name?.[0]?.toUpperCase()}</span>
               }
             </div>
