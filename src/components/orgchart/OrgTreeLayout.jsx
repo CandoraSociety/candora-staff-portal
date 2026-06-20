@@ -60,23 +60,43 @@ function computeLayout(all) {
     }
   });
 
-  // Sort each parent's children so same-title siblings are adjacent
+  // Sort each parent's children so fuzzy-matched siblings are adjacent
+  const _STOP = new Set(["a","an","the","and","or","of","in","at","to","for","with","&","/"]);
+  function _twords(title) {
+    return (title || "").toLowerCase().split(/[\s\-\/,()]+/).filter(w => w.length > 1 && !_STOP.has(w));
+  }
+  function _tmatch(a, b) {
+    const wa = _twords(a); const wb = _twords(b);
+    const shared = wa.filter(w => wb.includes(w));
+    if (shared.length >= 2) return true;
+    const shorter = wa.length <= wb.length ? wa : wb;
+    const longer = wa.length <= wb.length ? wb : wa;
+    return shorter.length >= 1 && shorter.every(w => longer.includes(w));
+  }
   Object.keys(childrenOf).forEach(parentId => {
     const kids = childrenOf[parentId];
     if (kids.length < 2) return;
-    // Group by title+tier key, preserve insertion order of groups
-    const groups = {};
-    const groupOrder = [];
+    // Union-find: cluster by tier + fuzzy title
+    const posById = {};
+    kids.forEach(id => { posById[id] = normalized.find(x => x.id === id); });
+    const clusterOf = {};
+    const clusterList = [];
     kids.forEach(id => {
-      const p = normalized.find(x => x.id === id);
-      const key = `${p?.tier ?? ""}::${p?.title ?? ""}`;
-      if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
-      groups[key].push(id);
+      if (clusterOf[id] != null) return;
+      const cluster = [id];
+      clusterOf[id] = clusterList.length;
+      kids.forEach(id2 => {
+        if (id2 === id || clusterOf[id2] != null) return;
+        const p = posById[id]; const q = posById[id2];
+        if (p?.tier === q?.tier && _tmatch(p?.title, q?.title)) {
+          cluster.push(id2);
+          clusterOf[id2] = clusterOf[id];
+        }
+      });
+      clusterList.push(cluster);
     });
-    // Flatten: keep single items in their original relative order, cluster multi-item groups
-    const singles = groupOrder.filter(k => groups[k].length === 1).map(k => groups[k][0]);
-    const clustered = groupOrder.filter(k => groups[k].length > 1).flatMap(k => groups[k]);
-    // Put clusters at the end of the row so they appear as a contiguous block
+    const singles = clusterList.filter(c => c.length === 1).flatMap(c => c);
+    const clustered = clusterList.filter(c => c.length > 1).flatMap(c => c);
     childrenOf[parentId] = [...singles, ...clustered];
   });
 
@@ -355,7 +375,25 @@ export default function OrgTreeLayout({
     return `M ${px} ${py} C ${px} ${py + cpOffset}, ${cx} ${cy - cpOffset}, ${cx} ${cy}`;
   }
 
-  // Compute groups: same tier + same title + same reports_to_id, size >= 2
+  // Stop words to ignore when comparing titles
+  const STOP_WORDS = new Set(["a","an","the","and","or","of","in","at","to","for","with","&","/"]);
+  function titleWords(title) {
+    return (title || "").toLowerCase().split(/[\s\-\/,()]+/).filter(w => w.length > 1 && !STOP_WORDS.has(w));
+  }
+  function titlesMatch(a, b) {
+    const wa = titleWords(a);
+    const wb = titleWords(b);
+    // Count shared significant words
+    const shared = wa.filter(w => wb.includes(w));
+    // Match if they share at least 2 words, OR one title contains the other fully
+    if (shared.length >= 2) return true;
+    // Also match if all words of the shorter title appear in the longer
+    const shorter = wa.length <= wb.length ? wa : wb;
+    const longer = wa.length <= wb.length ? wb : wa;
+    return shorter.length >= 1 && shorter.every(w => longer.includes(w));
+  }
+
+  // Compute groups: same tier + matching title + same reports_to_id, size >= 2
   const groupBrackets = [];
   const byParent = {};
   positions.forEach(p => {
@@ -364,16 +402,23 @@ export default function OrgTreeLayout({
     byParent[key].push(p);
   });
   Object.values(byParent).forEach(siblings => {
-    // Sub-group by tier + title
-    const subGroups = {};
-    siblings.forEach(p => {
-      const gk = `${p.tier ?? ""}::${p.title ?? ""}`;
-      if (!subGroups[gk]) subGroups[gk] = [];
-      subGroups[gk].push(p);
+    // Union-find style grouping by tier + fuzzy title match
+    const assigned = new Set();
+    const groups = [];
+    siblings.forEach((p, i) => {
+      if (assigned.has(p.id)) return;
+      const group = [p];
+      assigned.add(p.id);
+      siblings.forEach((q, j) => {
+        if (j <= i || assigned.has(q.id)) return;
+        if (p.tier === q.tier && titlesMatch(p.title, q.title)) {
+          group.push(q);
+          assigned.add(q.id);
+        }
+      });
+      if (group.length >= 2) groups.push(group);
     });
-    Object.values(subGroups).forEach(group => {
-      if (group.length < 2) return;
-      // Collect x positions of nodes in this group
+    groups.forEach(group => {
       const xs = group.map(p => posMap[p.id]?.x).filter(x => x != null);
       if (xs.length < 2) return;
       const y = posMap[group[0].id]?.y;
