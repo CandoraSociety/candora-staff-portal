@@ -59,6 +59,19 @@ function computeLayout(all) {
       childrenOf[p.reports_to_id].push(p.id);
     }
   });
+
+  // Sort children so same-title siblings are adjacent (enables visual grouping)
+  Object.keys(childrenOf).forEach(parentId => {
+    childrenOf[parentId].sort((a, b) => {
+      const pa = normalized.find(p => p.id === a);
+      const pb = normalized.find(p => p.id === b);
+      const ta = pa?.title || "";
+      const tb = pb?.title || "";
+      if (ta === tb) return 0;
+      return ta.localeCompare(tb);
+    });
+  });
+
   const roots = normalized.filter(p => !p.reports_to_id || !normalized.find(x => x.id === p.reports_to_id));
 
   const subtreeWidth = {};
@@ -334,6 +347,29 @@ export default function OrgTreeLayout({
     return `M ${px} ${py} C ${px} ${py + cpOffset}, ${cx} ${cy - cpOffset}, ${cx} ${cy}`;
   }
 
+  // Compute same-title sibling groups (same title + same reports_to_id + same tier) with ≥2 members
+  const groupBrackets = useMemo(() => {
+    const groups = {};
+    positions.forEach(p => {
+      if (!p.title) return;
+      const key = `${p.title}||${p.reports_to_id || "root"}||${p.tier || "__none__"}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    });
+    const brackets = [];
+    Object.values(groups).forEach(members => {
+      if (members.length < 2) return;
+      const xs = members.map(p => posMap[p.id]?.x).filter(x => x != null);
+      const ys = members.map(p => posMap[p.id]?.y).filter(y => y != null);
+      if (xs.length < 2) return;
+      const minX = Math.min(...xs) - NODE_W / 2;
+      const maxX = Math.max(...xs) + NODE_W / 2;
+      const topY = Math.min(...ys);
+      brackets.push({ minX, maxX, topY, count: members.length, title: members[0].title });
+    });
+    return brackets;
+  }, [positions, posMap]);
+
   const lines = [];
   positions.forEach(p => {
     if (!p.reports_to_id || p.reports_to_id === "" || p.reports_to_id === null) return;
@@ -416,6 +452,36 @@ export default function OrgTreeLayout({
             {/* SVG lines */}
             <svg style={{ position: "absolute", top: 0, left: 0, width: svgW, height: svgH, pointerEvents: "none" }}>
               {lines}
+              {/* Group brackets — rendered above connection lines */}
+              {groupBrackets.map((g, i) => {
+                const x1 = g.minX + TIER_LABEL_W + PAD;
+                const x2 = g.maxX + TIER_LABEL_W + PAD;
+                const y = g.topY + PAD - 10; // 10px above the card tops
+                const tickH = 5;
+                const pad = 4;
+                return (
+                  <g key={i}>
+                    {/* Horizontal bar */}
+                    <line x1={x1 - pad} y1={y} x2={x2 + pad} y2={y} stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.55" strokeLinecap="round" />
+                    {/* Left tick */}
+                    <line x1={x1 - pad} y1={y} x2={x1 - pad} y2={y + tickH} stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.55" strokeLinecap="round" />
+                    {/* Right tick */}
+                    <line x1={x2 + pad} y1={y} x2={x2 + pad} y2={y + tickH} stroke="hsl(var(--accent))" strokeWidth="2" opacity="0.55" strokeLinecap="round" />
+                    {/* Count label in the middle */}
+                    <text
+                      x={(x1 + x2) / 2}
+                      y={y - 3}
+                      textAnchor="middle"
+                      fontSize="9"
+                      fill="hsl(var(--accent))"
+                      opacity="0.8"
+                      fontWeight="600"
+                    >
+                      {g.count}× {g.title}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
 
             {/* Cards */}
