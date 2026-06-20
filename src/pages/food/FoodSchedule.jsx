@@ -25,7 +25,7 @@ export default function FoodSchedule() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('calendar');
-  const [personnelViewMode, setPersonnelViewMode] = useState('by-date'); // 'by-date' or 'by-person'
+  const [selectedShiftId, setSelectedShiftId] = useState(null);
   
   // Auto-filter by area from URL param if present
   const urlArea = searchParams.get('area');
@@ -236,344 +236,321 @@ export default function FoodSchedule() {
           Calendar View
         </button>
         <button
-          onClick={() => setActiveTab('personnel')}
+          onClick={() => setActiveTab('shifts')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'personnel' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+            activeTab === 'shifts' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Personnel Schedule
+          Shifts & Staffing
         </button>
       </div>
 
-      {/* Personnel View Mode Toggle */}
-      {activeTab === 'personnel' && (
-        <div className="flex gap-2 mt-4">
-          <Button
-            variant={personnelViewMode === 'by-date' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setPersonnelViewMode('by-date')}
-          >
-            By Date
-          </Button>
-          <Button
-            variant={personnelViewMode === 'by-person' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setPersonnelViewMode('by-person')}
-          >
-            By Person
-          </Button>
-        </div>
-      )}
-
       {activeTab === 'calendar' && (
         <Card>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-7 border-b">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="p-3 text-center font-semibold text-sm border-r bg-muted/50">
-                  {day}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {days.map((day, idx) => {
-                const daySchedules = getSchedulesForDate(day);
-                const isPaddingDay = !isSameMonth(day, currentMonth);
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={`min-h-[120px] p-2 border-r border-b ${isPaddingDay ? 'bg-muted/30' : ''}`}
-                  >
-                    {!isPaddingDay && (
-                      <>
-                        <div className={`text-sm font-medium mb-1 ${isSameDay(day, new Date()) ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center' : ''}`}>
-                          {format(day, 'd')}
-                        </div>
-                        <div className="space-y-1">
-                          {daySchedules.slice(0, 3).map(schedule => {
-                            const startDate = parseISO(schedule.start_datetime);
-                            const endDate = parseISO(schedule.end_datetime);
-                            const isMultiDay = !isSameDay(startDate, endDate);
-                            const isStartDay = isSameDay(startDate, day);
-                            const isEndDay = isSameDay(endDate, day);
-                            const isMiddleDay = !isStartDay && !isEndDay;
-
-                            return (
-                              <div
-                                key={schedule.id}
-                                className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[schedule.area] || AREA_COLORS.general} ${isMultiDay ? 'opacity-90' : ''}`}
-                                onClick={() => openEdit(schedule)}
-                              >
-                                <div className="font-medium truncate">{schedule.title}</div>
-                                <div className="text-[10px] opacity-80">
-                                  {isMultiDay ? (
-                                    isStartDay ? (
-                                      <>Starts {format(startDate, 'h:mm a')}</>
-                                    ) : isEndDay ? (
-                                      <>Ends {format(endDate, 'h:mm a')}</>
-                                    ) : (
-                                      <>Day {format(day, 'MMM d')}</>
-                                    )
-                                  ) : (
-                                    format(startDate, 'h:mm a')
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {daySchedules.length > 3 && (
-                            <div className="text-[10px] text-muted-foreground pl-1">
-                              +{daySchedules.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
+          <CardContent className="p-6">
+            <div className="text-center py-12">
+              <h3 className="text-lg font-bold mb-2">📝 How to Schedule People</h3>
+              <ol className="text-sm space-y-2 max-w-md mx-auto">
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary">1.</span>
+                  <span>Click <strong>"Add Event"</strong> to create a shift (title, date/time, location)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary">2.</span>
+                  <span>Go to <strong>"Assign People to Shifts"</strong> tab</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary">3.</span>
+                  <span>Click on any shift to open the staffing panel</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-bold text-primary">4.</span>
+                  <span>Add staff, volunteers, or mark as Pathways placement</span>
+                </li>
+              </ol>
+              <Button className="mt-6" onClick={openNew}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Shift
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {activeTab === 'personnel' && personnelViewMode === 'by-date' && (
+      {activeTab === 'shifts' && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-bold font-heading mb-3">Staff Shifts & Assignments</h3>
+                <h3 className="text-lg font-bold font-heading mb-3">Shifts & Staffing</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  All scheduled shifts and internal placements for {format(currentMonth, 'MMMM yyyy')}
+                  Click on a shift to add/remove staff, volunteers, and placements
                 </p>
               </div>
 
-              {personnelData.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>No shifts or placements scheduled for this period.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {Object.entries(
-                    personnelData.reduce((acc, item) => {
-                      const dateKey = format(parseISO(item.start_datetime), 'yyyy-MM-dd');
-                      if (!acc[dateKey]) acc[dateKey] = [];
-                      acc[dateKey].push(item);
-                      return acc;
-                    }, {})
-                  )
-                    .sort(([a], [b]) => a.localeCompare(b))
-                    .map(([date, items]) => (
-                      <div key={date} className="border rounded-lg p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                          <h4 className="font-semibold">
-                            {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
-                          </h4>
-                        </div>
-                        <div className="grid gap-3">
-                          {items
-                            .sort((a, b) => parseISO(a.start_datetime) - parseISO(b.start_datetime))
-                            .map(item => (
-                              <div
-                                key={item.id}
-                                className={`p-3 rounded-lg border cursor-pointer hover:opacity-80 ${AREA_COLORS[item.area] || AREA_COLORS.general}`}
-                                onClick={() => openEdit(item)}
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="font-bold">{item.title}</span>
-                                      {item.internal_placement && (
-                                        <span className="text-[10px] bg-white/50 px-2 py-0.5 rounded-full">
-                                          Placement: {item.placement_participant || 'TBD'}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-xs opacity-80">
-                                      {format(parseISO(item.start_datetime), 'h:mm a')} - {format(parseISO(item.end_datetime), 'h:mm a')}
-                                      {item.location && ` • ${item.location}`}
-                                    </div>
-                                    {/* Show assigned people */}
-                                    {(item.assigned_staff?.length > 0 || item.assigned_volunteers?.length > 0) && (
-                                      <div className="mt-2 flex flex-wrap gap-1">
-                                        {item.assigned_staff?.map(staffId => {
-                                          const emp = employees.find(e => e.id === staffId);
-                                          return emp ? (
-                                            <span key={staffId} className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                              {emp.first_name} {emp.last_name}
-                                            </span>
-                                          ) : null;
-                                        })}
-                                        {item.assigned_volunteers?.map(volId => {
-                                          const vol = volunteers.find(v => v.id === volId);
-                                          return vol ? (
-                                            <span key={volId} className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                                              {vol.first_name} {vol.last_name}
-                                            </span>
-                                          ) : null;
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="text-xs font-medium bg-white/70 px-2 py-1 rounded">
-                                    {item.event_type === 'internal_placement' ? 'Placement' : 'Shift'}
-                                  </div>
-                                </div>
+              {/* List of shifts */}
+              <div className="grid gap-3">
+                {personnelData.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No shifts created yet. Create events in the Calendar tab.</p>
+                  </div>
+                ) : (
+                  personnelData
+                    .sort((a, b) => parseISO(a.start_datetime) - parseISO(b.start_datetime))
+                    .map(shift => {
+                      const staffCount = shift.assigned_staff?.length || 0;
+                      const volunteerCount = shift.assigned_volunteers?.length || 0;
+                      const hasPlacement = shift.internal_placement;
+                      const totalAssigned = staffCount + volunteerCount + (hasPlacement ? 1 : 0);
+
+                      return (
+                        <div
+                          key={shift.id}
+                          className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                            selectedShiftId === shift.id ? 'border-primary ring-2 ring-primary/20' : ''
+                          } ${AREA_COLORS[shift.area]}`}
+                          onClick={() => setSelectedShiftId(shift.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-bold text-sm">{shift.title}</span>
+                                <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{shift.area}</span>
                               </div>
-                            ))}
+                              <div className="text-xs opacity-80">
+                                {format(parseISO(shift.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
+                                {shift.location && ` • ${shift.location}`}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {staffCount > 0 && (
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                  {staffCount} staff
+                                </span>
+                              )}
+                              {volunteerCount > 0 && (
+                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                  {volunteerCount} volunteers
+                                </span>
+                              )}
+                              {hasPlacement && (
+                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                  Placement
+                                </span>
+                              )}
+                              {totalAssigned === 0 && (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                  No one assigned
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+
+              {/* Shift Detail Panel */}
+              {selectedShiftId && (
+                <div className="border-t pt-6 mt-4">
+                  {(() => {
+                    const shift = personnelData.find(s => s.id === selectedShiftId);
+                    if (!shift) return null;
+
+                    const staffCount = shift.assigned_staff?.length || 0;
+                    const volunteerCount = shift.assigned_volunteers?.length || 0;
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-lg">{shift.title}</h4>
+                          <Button variant="outline" size="sm" onClick={() => openEdit(shift)}>
+                            Edit Shift Details
+                          </Button>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {format(parseISO(shift.start_datetime), 'EEEE, MMMM d, yyyy')} • {format(parseISO(shift.start_datetime), 'h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-4">
+                          {/* Staff Column */}
+                          <div className="border rounded-lg p-4 bg-blue-50/50">
+                            <h5 className="font-semibold mb-3 text-blue-800 flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs">S</span>
+                              Staff ({staffCount})
+                            </h5>
+                            <div className="space-y-2">
+                              {shift.assigned_staff?.map(staffId => {
+                                const emp = employees.find(e => e.id === staffId);
+                                if (!emp) return null;
+                                return (
+                                  <div key={staffId} className="flex items-center justify-between text-sm p-2 bg-white rounded border">
+                                    <div>
+                                      <div className="font-medium">{emp.first_name} {emp.last_name}</div>
+                                      <div className="text-xs text-muted-foreground">{emp.position}</div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        updateSchedule.mutate({
+                                          id: shift.id,
+                                          data: {
+                                            ...shift,
+                                            assigned_staff: shift.assigned_staff.filter(id => id !== staffId)
+                                          }
+                                        });
+                                      }}
+                                    >
+                                      ×
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs"
+                                onClick={() => {
+                                  const empId = prompt('Enter employee ID to add:');
+                                  if (empId) {
+                                    updateSchedule.mutate({
+                                      id: shift.id,
+                                      data: {
+                                        ...shift,
+                                        assigned_staff: [...(shift.assigned_staff || []), empId]
+                                      }
+                                    });
+                                  }
+                                }}
+                              >
+                                + Add Staff
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Volunteers Column */}
+                          <div className="border rounded-lg p-4 bg-green-50/50">
+                            <h5 className="font-semibold mb-3 text-green-800 flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-xs">V</span>
+                              Volunteers ({volunteerCount})
+                            </h5>
+                            <div className="space-y-2">
+                              {shift.assigned_volunteers?.map(volId => {
+                                const vol = volunteers.find(v => v.id === volId);
+                                if (!vol) return null;
+                                return (
+                                  <div key={volId} className="flex items-center justify-between text-sm p-2 bg-white rounded border">
+                                    <div>
+                                      <div className="font-medium">{vol.first_name} {vol.last_name}</div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        updateSchedule.mutate({
+                                          id: shift.id,
+                                          data: {
+                                            ...shift,
+                                            assigned_volunteers: shift.assigned_volunteers.filter(id => id !== volId)
+                                          }
+                                        });
+                                      }}
+                                    >
+                                      ×
+                                    </Button>
+                                  </div>
+                                );
+                              })}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs"
+                                onClick={() => {
+                                  const volId = prompt('Enter volunteer ID to add:');
+                                  if (volId) {
+                                    updateSchedule.mutate({
+                                      id: shift.id,
+                                      data: {
+                                        ...shift,
+                                        assigned_volunteers: [...(shift.assigned_volunteers || []), volId]
+                                      }
+                                    });
+                                  }
+                                }}
+                              >
+                                + Add Volunteer
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Placements Column */}
+                          <div className="border rounded-lg p-4 bg-purple-50/50">
+                            <h5 className="font-semibold mb-3 text-purple-800 flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs">P</span>
+                              Internal Placement
+                            </h5>
+                            {shift.internal_placement ? (
+                              <div className="space-y-2">
+                                <div className="text-sm p-2 bg-white rounded border">
+                                  <div className="font-medium">{shift.placement_participant || 'TBD'}</div>
+                                  <div className="text-xs text-muted-foreground">Pathways participant</div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full text-xs"
+                                  onClick={() => {
+                                    updateSchedule.mutate({
+                                      id: shift.id,
+                                      data: {
+                                        ...shift,
+                                        internal_placement: false,
+                                        placement_participant: ''
+                                      }
+                                    });
+                                  }}
+                                >
+                                  Remove Placement
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <p className="text-xs text-muted-foreground">Mark this shift as an internal placement for a Pathways participant</p>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    const name = prompt('Enter participant name:');
+                                    if (name) {
+                                      updateSchedule.mutate({
+                                        id: shift.id,
+                                        data: {
+                                          ...shift,
+                                          internal_placement: true,
+                                          placement_participant: name
+                                        }
+                                      });
+                                    }
+                                  }}
+                                >
+                                  + Add Placement
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })()}
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {activeTab === 'personnel' && personnelViewMode === 'by-person' && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold font-heading mb-3">Roster View</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Schedule organized by person for {format(currentMonth, 'MMMM yyyy')}
-                </p>
-              </div>
-
-              {/* Staff Section */}
-              <div>
-                <h4 className="font-semibold mb-3 text-primary">Staff</h4>
-                <div className="space-y-4">
-                  {employees.map(emp => {
-                    const empShifts = personnelData.filter(item => 
-                      item.assigned_staff?.includes(emp.id)
-                    );
-                    if (empShifts.length === 0) return null;
-                    return (
-                      <div key={emp.id} className="border rounded-lg p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                            {emp.first_name[0]}{emp.last_name[0]}
-                          </div>
-                          <div>
-                            <div className="font-semibold">{emp.first_name} {emp.last_name}</div>
-                            <div className="text-xs text-muted-foreground">{emp.position}</div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {empShifts.map(shift => (
-                            <div
-                              key={shift.id}
-                              className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[shift.area]}`}
-                              onClick={() => openEdit(shift)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <div className="font-medium">{shift.title}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {format(parseISO(shift.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
-                                  </div>
-                                </div>
-                                <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{shift.area}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Volunteers Section */}
-              <div>
-                <h4 className="font-semibold mb-3 text-green-600">Volunteers</h4>
-                <div className="space-y-4">
-                  {volunteers.map(vol => {
-                    const volShifts = personnelData.filter(item => 
-                      item.assigned_volunteers?.includes(vol.id)
-                    );
-                    if (volShifts.length === 0) return null;
-                    return (
-                      <div key={vol.id} className="border rounded-lg p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">
-                            {vol.first_name[0]}{vol.last_name[0]}
-                          </div>
-                          <div>
-                            <div className="font-semibold">{vol.first_name} {vol.last_name}</div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {volShifts.map(shift => (
-                            <div
-                              key={shift.id}
-                              className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[shift.area]}`}
-                              onClick={() => openEdit(shift)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <div className="font-medium">{shift.title}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {format(parseISO(shift.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(shift.end_datetime), 'h:mm a')}
-                                  </div>
-                                </div>
-                                <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{shift.area}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Internal Placements Section */}
-              <div>
-                <h4 className="font-semibold mb-3 text-purple-600">Internal Placements</h4>
-                <div className="space-y-4">
-                  {Object.entries(
-                    personnelData.filter(item => item.internal_placement).reduce((acc, item) => {
-                      const name = item.placement_participant || 'Unassigned';
-                      if (!acc[name]) acc[name] = [];
-                      acc[name].push(item);
-                      return acc;
-                    }, {})
-                  ).map(([name, placements]) => (
-                    <div key={name} className="border rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-bold text-sm">
-                          {name[0]}
-                        </div>
-                        <div className="font-semibold">{name}</div>
-                      </div>
-                      <div className="space-y-2">
-                        {placements.map(placement => (
-                          <div
-                            key={placement.id}
-                            className={`text-sm p-2 rounded border cursor-pointer hover:opacity-80 ${AREA_COLORS[placement.area]}`}
-                            onClick={() => openEdit(placement)}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-medium">{placement.title}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {format(parseISO(placement.start_datetime), 'MMM d, h:mm a')} - {format(parseISO(placement.end_datetime), 'h:mm a')}
-                                </div>
-                              </div>
-                              <span className="text-[10px] bg-white/70 px-2 py-0.5 rounded">{placement.area}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
