@@ -33,7 +33,7 @@ export default function FoodLayout() {
     <div className="flex flex-col h-full bg-sidebar">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/cf619e80d_CanadoraFoodServiceslogo.png"
+        <img src="https://media.base44.com/images/public/6a249282cb496579542673b7/19b5ef5f3_CanadoraFoodServiceslogo.png"
           alt="Candora Food Services"
           className={`object-contain flex-shrink-0 ${collapsed ? 'w-8 h-8' : 'w-44 h-14'}`} />
       </div>
