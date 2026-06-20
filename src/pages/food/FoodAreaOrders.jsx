@@ -14,7 +14,6 @@ import { format } from 'date-fns';
 const AREA_CONFIG = {
   'cafe-candeur':    { label: 'Cafe Candeur',    orderType: 'dine_in' },
   'auntie-bevs':    { label: "Auntie Bev's",     orderType: 'takeout' },
-  'community-lunch': { label: 'Community Lunch', orderType: 'delivery' },
 };
 
 const STATUS_COLORS = {

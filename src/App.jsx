@@ -152,6 +152,7 @@ import FoodAreaOrders from '@/pages/food/FoodAreaOrders';
 import FoodAreaMenu from '@/pages/food/FoodAreaMenu';
 import FoodAreaRecipes from '@/pages/food/FoodAreaRecipes';
 import FoodAreaOverview from '@/pages/food/FoodAreaOverview';
+import CommunityLunch from '@/pages/food/CommunityLunch';
 import FoodSales from '@/pages/food/FoodSales';
 
 // Catering Portal (Public)
@@ -351,7 +352,7 @@ const AuthenticatedApp = () => {
           <Route path="/food/auntie-bevs/menu" element={<FoodAreaMenu />} />
           <Route path="/food/auntie-bevs/orders" element={<FoodAreaOrders />} />
           <Route path="/food/auntie-bevs/recipes" element={<FoodAreaRecipes />} />
-          <Route path="/food/community-lunch" element={<FoodAreaOverview />} />
+          <Route path="/food/community-lunch" element={<CommunityLunch />} />
           <Route path="/food/community-lunch/orders" element={<FoodAreaOrders />} />
           <Route path="/food/sales" element={<FoodSales />} />
         </Route>

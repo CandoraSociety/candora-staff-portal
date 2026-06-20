@@ -9,7 +9,6 @@ import FoodAreaHeader from '@/components/food/FoodAreaHeader';
 const AREA_CONFIG = {
   'cafe-candeur':    { label: 'Cafe Candeur',    orderType: 'dine_in',  tag: 'cafe-candeur' },
   'auntie-bevs':    { label: "Auntie Bev's",    orderType: 'takeout',  tag: 'auntie-bevs' },
-  'community-lunch': { label: 'Community Lunch', orderType: 'delivery', tag: 'community-lunch' },
 };
 
 export default function FoodAreaOverview() {
