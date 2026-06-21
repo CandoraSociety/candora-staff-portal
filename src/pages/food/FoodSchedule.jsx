@@ -22,7 +22,7 @@ const AREA_COLORS = {
 export default function FoodSchedule() {
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [activeTab, setActiveTab] = useState('calendar');
@@ -273,11 +273,11 @@ export default function FoodSchedule() {
           </div>
           {areaFilter !== 'cafe-candeur' && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="font-semibold min-w-[150px] text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
