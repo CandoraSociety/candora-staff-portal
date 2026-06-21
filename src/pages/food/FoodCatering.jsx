@@ -89,25 +89,42 @@ function TabDashboard({ bookings, setActiveTab }) {
 }
 
 // ─── Bookings list tab ────────────────────────────────────────────────────────
+const STATUS_SECTION_STYLES = {
+  pending:              { border: 'border-l-yellow-400',  header: 'bg-yellow-50 text-yellow-800',  dot: 'bg-yellow-400'  },
+  more_info_requested:  { border: 'border-l-orange-400',  header: 'bg-orange-50 text-orange-800',  dot: 'bg-orange-400'  },
+  confirmed:            { border: 'border-l-green-400',   header: 'bg-green-50 text-green-800',    dot: 'bg-green-400'   },
+  completed:            { border: 'border-l-blue-400',    header: 'bg-blue-50 text-blue-800',      dot: 'bg-blue-400'    },
+  denied:               { border: 'border-l-red-400',     header: 'bg-red-50 text-red-800',        dot: 'bg-red-400'     },
+  cancelled:            { border: 'border-l-gray-300',    header: 'bg-gray-50 text-gray-500',      dot: 'bg-gray-300'    },
+};
+const STATUS_ORDER = ['pending','more_info_requested','confirmed','completed','denied','cancelled'];
+const STATUS_LABELS = { pending: 'Pending', more_info_requested: 'More Info Requested', confirmed: 'Confirmed', completed: 'Completed', denied: 'Denied', cancelled: 'Cancelled' };
+
 function TabBookings({ bookings }) {
   const qc = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter]     = useState('all');
-  const [dateFrom, setDateFrom]         = useState('');
-  const [dateTo, setDateTo]             = useState('');
-  const [selected, setSelected]         = useState(null);
-  const [tab, setTab]                   = useState('details');
-  const [adminNotes, setAdminNotes]     = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [dateFrom, setDateFrom]     = useState('');
+  const [dateTo, setDateTo]         = useState('');
+  const [selected, setSelected]     = useState(null);
+  const [tab, setTab]               = useState('details');
+  const [adminNotes, setAdminNotes] = useState('');
   const [moreInfoText, setMoreInfoText] = useState('');
   const [showMoreInfo, setShowMoreInfo] = useState(false);
+  const [collapsed, setCollapsed]   = useState({});
 
   const filtered = bookings.filter(b => {
-    if (statusFilter !== 'all' && b.status !== statusFilter) return false;
-    if (typeFilter   !== 'all' && b.booking_type !== typeFilter) return false;
+    if (typeFilter !== 'all' && b.booking_type !== typeFilter) return false;
     if (dateFrom && b.event_date < dateFrom) return false;
     if (dateTo   && b.event_date > dateTo)   return false;
     return true;
   });
+
+  // Group by status in defined order
+  const grouped = STATUS_ORDER.reduce((acc, s) => {
+    const rows = filtered.filter(b => b.status === s);
+    if (rows.length > 0) acc[s] = rows;
+    return acc;
+  }, {});
 
   const updateStatus = async (id, status, extra = {}) => {
     await base44.entities.BookingRequest.update(id, { status, ...extra });
@@ -129,46 +146,87 @@ function TabBookings({ bookings }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-3">
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
-          <option value="all">All Statuses</option>
-          {['pending','confirmed','denied','more_info_requested','completed','cancelled'].map(s => <option key={s} value={s}>{s.replace(/_/g,' ')}</option>)}
-        </select>
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
           <option value="all">All Types</option>
           <option value="external_event">External Event</option>
           <option value="inhouse_event">In-House Event</option>
         </select>
         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
-        <input type="date" value={dateTo}   onChange={e => setDateTo(e.target.value)}   className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+        <span className="text-gray-400 text-sm">to</span>
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm" />
+        <span className="text-xs text-gray-400 ml-auto">{filtered.length} booking{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-400 uppercase tracking-wide">
-              <tr>{['Code','Contact','Org','Event Date','Type','Space/Location','Guests','Status','Total',''].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.map(b => (
-                <tr key={b.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono font-bold text-primary text-xs">{b.confirmation_code}</td>
-                  <td className="px-4 py-3 text-gray-700">{b.contact_name}</td>
-                  <td className="px-4 py-3 text-gray-400">{b.organization || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{b.event_date}</td>
-                  <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLORS[b.booking_type] || ''}`}>{b.booking_type?.replace(/_/g,' ')}</span></td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{b.space || b.event_location || '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{b.guest_count || '—'}</td>
-                  <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[b.status] || ''}`}>{b.status?.replace(/_/g,' ')}</span></td>
-                  <td className="px-4 py-3 text-gray-700">{b.estimated_total > 0 ? `$${b.estimated_total.toFixed(2)}` : '—'}</td>
-                  <td className="px-4 py-3"><button onClick={() => openDetail(b)} className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-full hover:opacity-90">View</button></td>
-                </tr>
-              ))}
-              {filtered.length === 0 && <tr><td colSpan={10} className="text-center py-10 text-gray-400">No bookings found.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+      {/* Status legend */}
+      <div className="flex flex-wrap gap-3">
+        {STATUS_ORDER.map(s => {
+          const style = STATUS_SECTION_STYLES[s];
+          const count = filtered.filter(b => b.status === s).length;
+          return (
+            <div key={s} className="flex items-center gap-1.5 text-xs text-gray-600">
+              <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
+              {STATUS_LABELS[s]} ({count})
+            </div>
+          );
+        })}
       </div>
+
+      {/* Grouped sections */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-gray-400 bg-white border border-gray-200 rounded-xl">No bookings found.</div>
+      ) : (
+        <div className="space-y-4">
+          {STATUS_ORDER.filter(s => grouped[s]).map(status => {
+            const rows = grouped[status];
+            const style = STATUS_SECTION_STYLES[status];
+            const isCollapsed = collapsed[status];
+            return (
+              <div key={status} className={`border border-gray-200 rounded-xl overflow-hidden border-l-4 ${style.border}`}>
+                {/* Section header */}
+                <button
+                  onClick={() => setCollapsed(c => ({ ...c, [status]: !c[status] }))}
+                  className={`w-full flex items-center justify-between px-4 py-3 ${style.header} font-semibold text-sm`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${style.dot}`} />
+                    {STATUS_LABELS[status]}
+                    <span className="font-normal opacity-70">({rows.length})</span>
+                  </div>
+                  <span className="text-xs opacity-60">{isCollapsed ? '▼ Show' : '▲ Hide'}</span>
+                </button>
+
+                {!isCollapsed && (
+                  <div className="overflow-x-auto bg-white">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 text-xs text-gray-400 uppercase tracking-wide">
+                        <tr>{['Code','Contact','Org','Event Date','Type','Space/Location','Guests','Total',''].map(h => <th key={h} className="px-4 py-3 text-left">{h}</th>)}</tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {rows.map(b => (
+                          <tr key={b.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-mono font-bold text-primary text-xs">{b.confirmation_code}</td>
+                            <td className="px-4 py-3 text-gray-700">{b.contact_name}</td>
+                            <td className="px-4 py-3 text-gray-400">{b.organization || '—'}</td>
+                            <td className="px-4 py-3 text-gray-500">{b.event_date}</td>
+                            <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full ${TYPE_COLORS[b.booking_type] || ''}`}>{b.booking_type?.replace(/_/g,' ')}</span></td>
+                            <td className="px-4 py-3 text-gray-400 text-xs">{b.space || b.event_location || '—'}</td>
+                            <td className="px-4 py-3 text-gray-500">{b.guest_count || '—'}</td>
+                            <td className="px-4 py-3 text-gray-700">{b.estimated_total > 0 ? `$${b.estimated_total.toFixed(2)}` : '—'}</td>
+                            <td className="px-4 py-3"><button onClick={() => openDetail(b)} className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded-full hover:opacity-90">View</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -303,6 +361,16 @@ function TabCalendar({ bookings }) {
           <button onClick={() => setDate(new Date(year, month + 1))} className="p-2 rounded-lg hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
         </div>
       </div>
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3">
+        {[['pending','bg-yellow-400','Pending'],['more_info_requested','bg-orange-400','More Info'],['confirmed','bg-green-400','Confirmed'],['completed','bg-blue-400','Completed'],['denied','bg-red-400','Denied'],['cancelled','bg-gray-300','Cancelled']].map(([s, dot, label]) => (
+          <div key={s} className="flex items-center gap-1.5 text-xs text-gray-600">
+            <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
+            {label}
+          </div>
+        ))}
+      </div>
+
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="grid grid-cols-7 border-b border-gray-100">
           {DAYS.map(d => <div key={d} className="px-2 py-3 text-xs font-semibold text-gray-400 text-center">{d}</div>)}
@@ -318,12 +386,15 @@ function TabCalendar({ bookings }) {
               <div key={day} className="min-h-24 border-b border-r border-gray-50 p-1.5">
                 <span className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full mb-1 ${isToday ? 'bg-primary text-primary-foreground' : 'text-gray-600'}`}>{day}</span>
                 <div className="space-y-0.5">
-                  {dayBookings.slice(0,3).map(b => (
+                  {dayBookings.slice(0,3).map(b => {
+                    const cs = { pending: 'bg-yellow-100 text-yellow-800', more_info_requested: 'bg-orange-100 text-orange-800', confirmed: 'bg-green-100 text-green-800', completed: 'bg-blue-100 text-blue-800', denied: 'bg-red-100 text-red-700', cancelled: 'bg-gray-100 text-gray-500' }[b.status] || 'bg-gray-100 text-gray-600';
+                    return (
                     <button key={b.id} onClick={() => setPopover(popover?.id === b.id ? null : b)}
-                      className={`w-full text-left text-xs px-1.5 py-0.5 rounded font-medium truncate ${b.booking_type === 'external_event' ? 'bg-amber-100 text-amber-800' : 'bg-teal-100 text-teal-800'}`}>
+                      className={`w-full text-left text-xs px-1.5 py-0.5 rounded font-medium truncate ${cs}`}>
                       {b.contact_name}
                     </button>
-                  ))}
+                  );})}
+
                   {dayBookings.length > 3 && <p className="text-xs text-gray-400 pl-1">+{dayBookings.length - 3} more</p>}
                 </div>
               </div>
