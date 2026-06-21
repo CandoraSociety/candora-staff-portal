@@ -150,17 +150,17 @@ export default function CafeCandeurSchedule() {
           <p className="text-sm text-muted-foreground">Mon–Fri, 8:00 AM – 3:30 PM • Closed May through August</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
+          <Button variant="outline" size="icon" onClick={() => setWeekStart(w => subWeeks(w, 1))}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <span className="text-sm font-medium min-w-[160px] text-center">
             {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 4), 'MMM d, yyyy')}
           </span>
-          <Button variant="outline" size="icon" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+          <Button variant="outline" size="icon" onClick={() => setWeekStart(w => addWeeks(w, 1))}>
             <ChevronRight className="w-4 h-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
-            Today
+            This Week
           </Button>
         </div>
       </div>
@@ -238,7 +238,7 @@ export default function CafeCandeurSchedule() {
                           onClick={() => openNew(day)}
                           className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
                         >
-                          <Plus className="w-3 h-3" /> Add shift
+                          <Plus className="w-3 h-3" /> Add CSJ Catering Event
                         </button>
                       </>
                     )}
@@ -255,7 +255,7 @@ export default function CafeCandeurSchedule() {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editing ? 'Edit Shift' : 'Add Shift'} — {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
+              {editing ? 'Edit CSJ Catering Event' : 'Add CSJ Catering Event'} — {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">

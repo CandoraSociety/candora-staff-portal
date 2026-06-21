@@ -274,29 +274,35 @@ export default function FoodSchedule() {
               {areaFilter !== 'all' ? `Viewing ${areaFilter.replace('-', ' ')} only` : 'Manage all food service events, bookings, and staffing'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="font-semibold min-w-[150px] text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-            <Button variant="outline" size="icon" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {areaFilter !== 'cafe-candeur' && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => { const d = new Date(prev); d.setMonth(d.getMonth() - 1); return d; })}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="font-semibold min-w-[150px] text-center">{format(currentMonth, 'MMMM yyyy')}</span>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => { const d = new Date(prev); d.setMonth(d.getMonth() + 1); return d; })}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
-          <Button
-            variant={areaFilter !== 'all' ? 'outline' : 'secondary'}
-            size="sm"
-            onClick={() => setAreaFilter('all')}
-            className={areaFilter === 'all' ? 'bg-primary text-primary-foreground' : ''}
-          >
-            All Areas
-          </Button>
-          <Button onClick={openNew} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Event
-          </Button>
+          {areaFilter !== 'cafe-candeur' && (
+            <Button
+              variant={areaFilter !== 'all' ? 'outline' : 'secondary'}
+              size="sm"
+              onClick={() => setAreaFilter('all')}
+              className={areaFilter === 'all' ? 'bg-primary text-primary-foreground' : ''}
+            >
+              All Areas
+            </Button>
+          )}
+          {areaFilter !== 'cafe-candeur' && (
+            <Button onClick={openNew} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Event
+            </Button>
+          )}
         </div>
       </div>
 
