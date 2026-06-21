@@ -356,9 +356,9 @@ function TabCalendar({ bookings }) {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800">Booking Calendar</h2>
         <div className="flex items-center gap-3">
-          <button onClick={() => setDate(new Date(year, month - 1))} className="p-2 rounded-lg hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
+          <button onClick={() => setDate(d => new Date(d.getFullYear(), d.getMonth() - 1))} className="p-2 rounded-lg hover:bg-gray-100"><ChevronLeft className="w-4 h-4" /></button>
           <span className="font-semibold text-gray-700 min-w-[140px] text-center">{MONTHS_LONG[month]} {year}</span>
-          <button onClick={() => setDate(new Date(year, month + 1))} className="p-2 rounded-lg hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
+          <button onClick={() => setDate(d => new Date(d.getFullYear(), d.getMonth() + 1))} className="p-2 rounded-lg hover:bg-gray-100"><ChevronRight className="w-4 h-4" /></button>
         </div>
       </div>
       {/* Legend */}
