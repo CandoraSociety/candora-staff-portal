@@ -1,0 +1,48 @@
+{
+  "name": "StrategicGoal",
+  "type": "object",
+  "properties": {
+    "pillar": {
+      "type": "string",
+      "description": "Strategic pillar name"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "on_track",
+        "at_risk",
+        "completed"
+      ],
+      "default": "not_started"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0
+    },
+    "updates": {
+      "type": "string"
+    },
+    "order_index": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "pillar",
+    "goal"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "MinuteEntry",
+  "type": "object",
+  "properties": {
+    "meeting_id": {
+      "type": "string"
+    },
+    "agenda_item_id": {
+      "type": "string"
+    },
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "motion",
+        "resolution",
+        "action_item",
+        "discussion",
+        "information",
+        "dissent",
+        "abstention",
+        "in_camera",
+        "note"
+      ],
+      "default": "note"
+    },
+    "content": {
+      "type": "string"
+    },
+    "motion_verbiage": {
+      "type": "string"
+    },
+    "moved_by": {
+      "type": "string"
+    },
+    "seconded_by": {
+      "type": "string"
+    },
+    "motion_result": {
+      "type": "string",
+      "enum": [
+        "carried",
+        "defeated",
+        "tabled",
+        "withdrawn",
+        ""
+      ]
+    },
+    "action_assigned_to": {
+      "type": "string"
+    },
+    "action_due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_in_camera": {
+      "type": "boolean",
+      "default": false
+    },
+    "order_index": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "meeting_id",
+    "entry_type"
+  ]
+}

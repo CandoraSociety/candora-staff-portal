@@ -1,0 +1,52 @@
+{
+  "name": "AgendaItem",
+  "type": "object",
+  "properties": {
+    "meeting_id": {
+      "type": "string",
+      "description": "Reference to Meeting"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "call_to_order",
+        "approval_of_agenda",
+        "approval_of_minutes",
+        "business_arising",
+        "new_business",
+        "reports",
+        "in_camera",
+        "adjournment",
+        "other"
+      ],
+      "default": "other"
+    },
+    "presenter": {
+      "type": "string"
+    },
+    "duration_minutes": {
+      "type": "number"
+    },
+    "order_index": {
+      "type": "number"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_in_camera": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "meeting_id",
+    "title"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "BoardMember",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "Chair",
+        "Vice-Chair",
+        "Treasurer",
+        "Secretary",
+        "Director",
+        "ED",
+        "Observer"
+      ],
+      "default": "Director"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "term_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "term_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "committee": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "onboarding_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

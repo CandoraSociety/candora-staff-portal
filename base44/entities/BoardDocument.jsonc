@@ -1,0 +1,56 @@
+{
+  "name": "BoardDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "minutes",
+        "agenda",
+        "financial_report",
+        "ed_report",
+        "committee_report",
+        "policy",
+        "bylaw",
+        "strategic_plan",
+        "training",
+        "corporate_doc",
+        "other"
+      ],
+      "default": "other"
+    },
+    "meeting_id": {
+      "type": "string",
+      "description": "Associated meeting (optional)"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_public_to_board": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uploaded_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "document_type"
+  ]
+}

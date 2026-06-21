@@ -166,6 +166,18 @@ import MyBooking from '@/pages/catering-portal/MyBooking';
 import OurStory from '@/pages/catering-portal/OurStory';
 
 
+// Candora Board
+import BoardLayout from '@/components/board/BoardLayout';
+import BoardDashboard from '@/pages/board/BoardDashboard';
+import BoardMeetings from '@/pages/board/BoardMeetings';
+import BoardDocuments from '@/pages/board/BoardDocuments';
+import BoardMembers from '@/pages/board/BoardMembers';
+import BoardOnboarding from '@/pages/board/BoardOnboarding';
+import BoardStrategicPlan from '@/pages/board/BoardStrategicPlan';
+import BoardAssistant from '@/pages/board/BoardAssistant';
+import BoardAgendaBuilder from '@/pages/board/BoardAgendaBuilder';
+import BoardMinutesTaker from '@/pages/board/BoardMinutesTaker';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -357,6 +369,19 @@ const AuthenticatedApp = () => {
           <Route path="/food/community-lunch/orders" element={<FoodAreaOrders />} />
           <Route path="/food/sales" element={<FoodSales />} />
           <Route path="/food/schedule" element={<FoodSchedule />} />
+        </Route>
+
+        {/* Candora Board - standalone layout */}
+        <Route element={<BoardLayout />}>
+          <Route path="/board" element={<BoardDashboard />} />
+          <Route path="/board/meetings" element={<BoardMeetings />} />
+          <Route path="/board/meetings/:id/agenda" element={<BoardAgendaBuilder />} />
+          <Route path="/board/meetings/:id/minutes" element={<BoardMinutesTaker />} />
+          <Route path="/board/documents" element={<BoardDocuments />} />
+          <Route path="/board/members" element={<BoardMembers />} />
+          <Route path="/board/onboarding" element={<BoardOnboarding />} />
+          <Route path="/board/strategic-plan" element={<BoardStrategicPlan />} />
+          <Route path="/board/assistant" element={<BoardAssistant />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}

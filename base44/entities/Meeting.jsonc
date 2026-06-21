@@ -1,0 +1,66 @@
+{
+  "name": "Meeting",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Meeting title"
+    },
+    "meeting_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time of meeting"
+    },
+    "location": {
+      "type": "string",
+      "description": "Meeting location or video link"
+    },
+    "meeting_type": {
+      "type": "string",
+      "enum": [
+        "Regular Board Meeting",
+        "Special Meeting",
+        "AGM",
+        "In Camera",
+        "Committee Meeting"
+      ],
+      "default": "Regular Board Meeting"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "upcoming"
+    },
+    "quorum_met": {
+      "type": "boolean",
+      "default": false
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of attendee emails"
+    },
+    "apologies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of apology emails"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes"
+    }
+  },
+  "required": [
+    "title",
+    "meeting_date"
+  ]
+}
