@@ -373,21 +373,21 @@ export default function OrgChartSheet({
         </div>
         <div className="flex items-center gap-2">
           {/* Undo / Redo */}
-          <div className="flex items-center border rounded-md overflow-hidden">
+          <div className="flex items-center border-2 border-accent/40 rounded-md overflow-hidden bg-accent/5">
             <button
               onClick={handleUndo}
               disabled={undoStack.length === 0}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs transition-colors disabled:opacity-40 hover:bg-muted"
-              title="Undo"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/15 text-accent-foreground"
+              title={`Undo (${undoStack.length} actions available)`}
             >
-              <Undo2 className="w-3.5 h-3.5" /> Undo
+              <Undo2 className="w-3.5 h-3.5" /> Undo {undoStack.length > 0 && <span className="bg-accent text-accent-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px] leading-none">{undoStack.length}</span>}
             </button>
-            <div className="w-px h-4 bg-border" />
+            <div className="w-px h-5 bg-accent/30" />
             <button
               onClick={handleRedo}
               disabled={redoStack.length === 0}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs transition-colors disabled:opacity-40 hover:bg-muted"
-              title="Redo"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed hover:bg-accent/15 text-accent-foreground"
+              title={`Redo (${redoStack.length} actions available)`}
             >
               <Redo2 className="w-3.5 h-3.5" /> Redo
             </button>
