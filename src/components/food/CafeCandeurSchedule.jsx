@@ -52,6 +52,14 @@ export default function CafeCandeurSchedule() {
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
     .filter(d => isWeekday(d));
 
+  // Jump to first week of a given month
+  const goToMonth = (offset) => {
+    setWeekStart(prev => {
+      const newDate = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
+      return startOfWeek(newDate, { weekStartsOn: 1 });
+    });
+  };
+
   const { data: schedules = [] } = useQuery({
     queryKey: ['food-schedules'],
     queryFn: () => base44.entities.FoodServiceSchedule.list('-start_datetime'),
@@ -149,19 +157,34 @@ export default function CafeCandeurSchedule() {
           <h3 className="text-lg font-bold font-heading">Cafe Candeur Shift Schedule</h3>
           <p className="text-sm text-muted-foreground">Mon–Fri, 8:00 AM – 3:30 PM • Closed May through August</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setWeekStart(w => subWeeks(w, 1))}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium min-w-[160px] text-center">
-            {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 4), 'MMM d, yyyy')}
-          </span>
-          <Button variant="outline" size="icon" onClick={() => setWeekStart(w => addWeeks(w, 1))}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
-            This Week
-          </Button>
+        <div className="flex flex-col gap-2 items-end">
+          {/* Month navigation */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => goToMonth(-1)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold min-w-[120px] text-center">
+              {format(weekStart, 'MMMM yyyy')}
+            </span>
+            <Button variant="outline" size="icon" onClick={() => goToMonth(1)}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          {/* Week navigation */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setWeekStart(w => subWeeks(w, 1))}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground min-w-[160px] text-center">
+              {format(weekStart, 'MMM d')} – {format(addDays(weekStart, 4), 'MMM d, yyyy')}
+            </span>
+            <Button variant="outline" size="icon" onClick={() => setWeekStart(w => addWeeks(w, 1))}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
+              This Week
+            </Button>
+          </div>
         </div>
       </div>
 
