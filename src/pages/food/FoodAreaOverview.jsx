@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import FoodAreaHeader from '@/components/food/FoodAreaHeader';
+import CafeCandeurSchedule from '@/components/food/CafeCandeurSchedule';
 
 const AREA_CONFIG = {
   'cafe-candeur':    { label: 'Cafe Candeur',    orderType: 'dine_in',  tag: 'cafe-candeur' },
@@ -61,6 +62,10 @@ export default function FoodAreaOverview() {
             </CardContent>
           </Card>
         </div>
+
+        {segment === 'cafe-candeur' && (
+          <CafeCandeurSchedule />
+        )}
       </div>
     </div>
   );

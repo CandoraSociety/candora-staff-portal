@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO, startOfWeek, endOfWeek } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
+import CafeCandeurSchedule from '@/components/food/CafeCandeurSchedule';
 
 const AREA_COLORS = {
   'catering': 'bg-blue-100 text-blue-700 border-blue-300',
@@ -299,7 +300,11 @@ export default function FoodSchedule() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Cafe Candeur dedicated scheduler */}
+      {areaFilter === 'cafe-candeur' && <CafeCandeurSchedule />}
+
+      {/* Tabs — shown for all areas except cafe-candeur which has its own UI above */}
+      {areaFilter !== 'cafe-candeur' && (
       <div className="flex gap-2 border-b">
         <button
           onClick={() => setActiveTab('calendar')}
@@ -318,8 +323,9 @@ export default function FoodSchedule() {
           Shifts & Staffing
         </button>
       </div>
+      )}
 
-      {activeTab === 'calendar' && (
+      {areaFilter !== 'cafe-candeur' && activeTab === 'calendar' && (
         <Card>
           <CardContent className="p-0">
             <div className="grid grid-cols-7 border-b">
@@ -391,7 +397,7 @@ export default function FoodSchedule() {
         </Card>
       )}
 
-      {activeTab === 'shifts' && (
+      {areaFilter !== 'cafe-candeur' && activeTab === 'shifts' && (
         <Card>
           <CardContent className="p-6">
             <div className="space-y-6">
