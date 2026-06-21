@@ -73,10 +73,10 @@ export default function BoardLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       {mobileOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
-      <aside className={cn("fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 transition-transform duration-200 lg:hidden", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
+      <aside className={cn("fixed inset-y-0 left-0 z-50 w-64 bg-sidebar transition-transform duration-200 lg:hidden", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
         <SidebarContent />
       </aside>
-      <aside className={cn("hidden lg:flex flex-col bg-slate-900 transition-all duration-200 shrink-0", collapsed ? "w-16" : "w-60")}>
+      <aside className={cn("hidden lg:flex flex-col bg-sidebar transition-all duration-200 shrink-0", collapsed ? "w-16" : "w-60")}>
         <SidebarContent />
       </aside>
       <div className="flex-1 flex flex-col overflow-hidden">
