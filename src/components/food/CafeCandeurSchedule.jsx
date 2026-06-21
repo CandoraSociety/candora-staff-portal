@@ -199,49 +199,46 @@ export default function CafeCandeurSchedule() {
 
                   {/* Day content */}
                   <div className="flex-1 p-2 space-y-1.5">
-                    {closed ? (
-                      <div className="text-center pt-4 text-xs text-amber-600 font-medium">Closed</div>
-                    ) : (
-                      <>
-                        {shifts.map(shift => (
-                          <div
-                            key={shift.id}
-                            onClick={() => openEdit(shift)}
-                            className="p-2 rounded-md bg-amber-100 border border-amber-300 cursor-pointer hover:bg-amber-200 transition-colors"
-                          >
-                            <div className="text-xs font-semibold text-amber-800 truncate">{shift.title}</div>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {(shift.assigned_staff?.length || 0) > 0 && (
-                                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
-                                  {shift.assigned_staff.length} staff
-                                </span>
-                              )}
-                              {(shift.assigned_volunteers?.length || 0) > 0 && (
-                                <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
-                                  {shift.assigned_volunteers.length} vol
-                                </span>
-                              )}
-                              {shift.internal_placement && (
-                                <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">
-                                  placement
-                                </span>
-                              )}
-                              {totalAssigned(shift) === 0 && (
-                                <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
-                                  unassigned
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => openNew(day)}
-                          className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
-                        >
-                          <Plus className="w-3 h-3" /> Add CSJ Catering Event
-                        </button>
-                      </>
+                    {closed && (
+                      <div className="text-center pt-1 pb-1 text-[9px] text-amber-600 font-medium italic">Typically closed</div>
                     )}
+                    {shifts.map(shift => (
+                      <div
+                        key={shift.id}
+                        onClick={() => openEdit(shift)}
+                        className="p-2 rounded-md bg-amber-100 border border-amber-300 cursor-pointer hover:bg-amber-200 transition-colors"
+                      >
+                        <div className="text-xs font-semibold text-amber-800 truncate">{shift.title}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(shift.assigned_staff?.length || 0) > 0 && (
+                            <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                              {shift.assigned_staff.length} staff
+                            </span>
+                          )}
+                          {(shift.assigned_volunteers?.length || 0) > 0 && (
+                            <span className="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">
+                              {shift.assigned_volunteers.length} vol
+                            </span>
+                          )}
+                          {shift.internal_placement && (
+                            <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full">
+                              placement
+                            </span>
+                          )}
+                          {totalAssigned(shift) === 0 && (
+                            <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
+                              unassigned
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => openNew(day)}
+                      className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
+                    >
+                      <Plus className="w-3 h-3" /> Add CSJ Catering Event
+                    </button>
                   </div>
                 </div>
               );
