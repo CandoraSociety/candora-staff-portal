@@ -268,6 +268,12 @@ export default function CafeCandeurSchedule() {
                       onClick={() => openNew(day)}
                       className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
                     >
+                      <Plus className="w-3 h-3" /> Add Shift
+                    </button>
+                    <button
+                      onClick={() => openNew(day)}
+                      className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
+                    >
                       <Plus className="w-3 h-3" /> Add CSJ Catering Event
                     </button>
                   </div>
