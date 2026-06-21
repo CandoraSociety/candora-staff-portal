@@ -273,11 +273,11 @@ export default function FoodSchedule() {
           </div>
           {areaFilter !== 'cafe-candeur' && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => { const d = new Date(prev); d.setMonth(d.getMonth() - 1); return d; })}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <span className="font-semibold min-w-[150px] text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => { const d = new Date(prev); d.setMonth(d.getMonth() + 1); return d; })}>
+              <Button variant="outline" size="icon" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
