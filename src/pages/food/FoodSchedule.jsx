@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Calendar, Plus, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
@@ -28,14 +28,11 @@ export default function FoodSchedule() {
   const [activeTab, setActiveTab] = useState('calendar');
   const [selectedShiftId, setSelectedShiftId] = useState(null);
   
-  // Auto-filter by area from URL param if present
+  // Derive filter directly from URL param (reactive)
   const urlArea = searchParams.get('area');
-  const [areaFilter, setAreaFilter] = useState(urlArea || 'all');
-  
-  // Update filter when URL param changes
-  useEffect(() => {
-    if (urlArea) setAreaFilter(urlArea);
-  }, [urlArea]);
+  const [manualFilter, setManualFilter] = useState(null);
+  const areaFilter = manualFilter || urlArea || 'all';
+  const setAreaFilter = (val) => setManualFilter(val === (urlArea || 'all') ? null : val);
   const [form, setForm] = useState({
     title: '',
     description: '',
