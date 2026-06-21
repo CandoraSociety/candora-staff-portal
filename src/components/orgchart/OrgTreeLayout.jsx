@@ -27,7 +27,7 @@ const ROW_GAP = 80;
 const TIER_LABEL_W = 120;
 const PAD = 24;
 
-const REPARENT_THRESHOLD = 40;
+const REPARENT_THRESHOLD = NODE_H * 0.8; // ~66px — hover anywhere near a higher-tier card
 
 function tierRank(tier) {
   const i = TIER_ORDER.indexOf(tier || "__none__");
@@ -272,14 +272,11 @@ export default function OrgTreeLayout({
       const cardAbsX = cardPos.x + TIER_LABEL_W + PAD;
       const cardAbsY = cardPos.y + PAD;
 
-      const inX = mouseX >= cardAbsX - NODE_W / 2 - REPARENT_THRESHOLD &&
-                  mouseX <= cardAbsX + NODE_W / 2 + REPARENT_THRESHOLD;
-      const inY = mouseY >= cardAbsY - REPARENT_THRESHOLD &&
-                  mouseY <= cardAbsY + NODE_H + REPARENT_THRESHOLD;
-
-      if (inX && inY) {
-        const dist = Math.hypot(mouseX - cardAbsX, mouseY - (cardAbsY + NODE_H / 2));
-        if (dist < bestDist) { bestDist = dist; best = p.id; }
+      // Use center-to-center distance; card center is (cardAbsX, cardAbsY + NODE_H/2)
+      const dist = Math.hypot(mouseX - cardAbsX, mouseY - (cardAbsY + NODE_H / 2));
+      if (dist < NODE_W + REPARENT_THRESHOLD && dist < bestDist) {
+        bestDist = dist;
+        best = p.id;
       }
     });
 
@@ -330,23 +327,24 @@ export default function OrgTreeLayout({
       if (reparentTarget) {
         onReparentRequest?.(drag.id, reparentTarget);
       } else {
+        // Same-tier reorder: find closest sibling (same parent) to where we dropped
         const dragged = positions.find(p => p.id === drag.id);
         if (dragged) {
-          const sameTier = positions.filter(p => p.tier === dragged.tier && p.id !== drag.id);
-          if (sameTier.length > 0) {
+          const sameSiblings = positions.filter(p =>
+            p.id !== drag.id &&
+            p.reports_to_id === dragged.reports_to_id
+          );
+          if (sameSiblings.length > 0) {
             let closestId = null;
             let closestDist = Infinity;
-            sameTier.forEach(p => {
+            sameSiblings.forEach(p => {
               const cardPos = posMap[p.id];
               if (!cardPos) return;
               const cx = cardPos.x + TIER_LABEL_W + PAD;
-              const cy = cardPos.y + PAD;
-              if (Math.abs(cy - drag.currentY) < NODE_H * 2) {
-                const dist = Math.abs(mouseX - cx);
-                if (dist < closestDist) { closestDist = dist; closestId = p.id; }
-              }
+              const dist = Math.abs(mouseX - cx);
+              if (dist < closestDist) { closestDist = dist; closestId = p.id; }
             });
-            if (closestId && closestDist < NODE_W * 1.5) {
+            if (closestId) {
               onReorder?.(drag.id, closestId, mouseX);
             }
           }
