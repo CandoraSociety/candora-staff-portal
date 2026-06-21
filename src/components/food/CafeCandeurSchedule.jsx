@@ -163,6 +163,9 @@ export default function CafeCandeurSchedule() {
           <p className="text-sm text-muted-foreground">Mon–Fri, 8:00 AM – 3:30 PM • Closed May through August</p>
         </div>
         <div className="flex flex-col gap-2 items-end">
+          <Button onClick={() => openNew(new Date())} className="gap-2 self-end">
+            <Plus className="w-4 h-4" /> Add Shift
+          </Button>
           {/* Month navigation */}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => goToMonth(-1)}>
@@ -265,7 +268,7 @@ export default function CafeCandeurSchedule() {
                       onClick={() => openNew(day)}
                       className="w-full text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded p-1 flex items-center justify-center gap-1 transition-colors border border-dashed border-border"
                     >
-                      <Plus className="w-3 h-3" /> Add CSJ Catering Event
+                      <Plus className="w-3 h-3" /> Add Shift
                     </button>
                   </div>
                 </div>
