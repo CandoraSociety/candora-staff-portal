@@ -299,6 +299,9 @@ export default function OrgTreeLayout({
       currentY: cardAbsY,
       offsetX: mouseX - cardAbsX,
       offsetY: mouseY - cardAbsY,
+      startX: mouseX,
+      startY: mouseY,
+      hasMoved: false,
     });
     setDropTargetId(null);
   }, [posMap, zoom]);
@@ -306,50 +309,67 @@ export default function OrgTreeLayout({
   useEffect(() => {
     if (!drag) return;
 
+    const MIN_DRAG_PX = 12; // must move at least 12px before any action fires
+
     const onMove = (e) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
       const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
       const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
-      setDrag(d => ({ ...d, currentX: mouseX - d.offsetX, currentY: mouseY - d.offsetY }));
-      const target = findReparentTarget(drag.id, mouseX, mouseY);
-      setDropTargetId(target);
+
+      const moved = Math.hypot(mouseX - drag.startX, mouseY - drag.startY) > MIN_DRAG_PX;
+      setDrag(d => ({ ...d, currentX: mouseX - d.offsetX, currentY: mouseY - d.offsetY, hasMoved: d.hasMoved || moved }));
+
+      // Only show drop highlight if we've actually moved enough
+      if (moved) {
+        const target = findReparentTarget(drag.id, mouseX, mouseY);
+        setDropTargetId(target);
+      }
     };
 
     const onUp = (e) => {
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) { setDrag(null); setDropTargetId(null); return; }
+
+      // If barely moved, treat as a click — do nothing
+      if (!drag.hasMoved) {
+        setDrag(null);
+        setDropTargetId(null);
+        return;
+      }
+
       const mouseX = (e.clientX - rect.left + containerRef.current.scrollLeft) / zoom;
       const mouseY = (e.clientY - rect.top + containerRef.current.scrollTop) / zoom;
 
+      const dragged = positions.find(p => p.id === drag.id);
+      if (!dragged) { setDrag(null); setDropTargetId(null); return; }
+
+      // Check if dropped on a higher-tier card (reparent)
       const reparentTarget = findReparentTarget(drag.id, mouseX, mouseY);
 
-      if (reparentTarget) {
+      // Check if dropped near a same-parent sibling (reorder)
+      const sameSiblings = positions.filter(p =>
+        p.id !== drag.id &&
+        p.reports_to_id === dragged.reports_to_id
+      );
+      let closestSiblingId = null;
+      let closestSiblingDist = Infinity;
+      sameSiblings.forEach(p => {
+        const cardPos = posMap[p.id];
+        if (!cardPos) return;
+        const cx = cardPos.x + TIER_LABEL_W + PAD;
+        const cy = cardPos.y + PAD + NODE_H / 2;
+        const dist = Math.hypot(mouseX - cx, mouseY - cy);
+        if (dist < closestSiblingDist) { closestSiblingDist = dist; closestSiblingId = p.id; }
+      });
+
+      // Prefer reparent only if a higher-tier card is clearly closer than any sibling
+      if (reparentTarget && (!closestSiblingId || closestSiblingDist > NODE_W)) {
         onReparentRequest?.(drag.id, reparentTarget);
-      } else {
-        // Same-tier reorder: find closest sibling (same parent) to where we dropped
-        const dragged = positions.find(p => p.id === drag.id);
-        if (dragged) {
-          const sameSiblings = positions.filter(p =>
-            p.id !== drag.id &&
-            p.reports_to_id === dragged.reports_to_id
-          );
-          if (sameSiblings.length > 0) {
-            let closestId = null;
-            let closestDist = Infinity;
-            sameSiblings.forEach(p => {
-              const cardPos = posMap[p.id];
-              if (!cardPos) return;
-              const cx = cardPos.x + TIER_LABEL_W + PAD;
-              const dist = Math.abs(mouseX - cx);
-              if (dist < closestDist) { closestDist = dist; closestId = p.id; }
-            });
-            if (closestId) {
-              onReorder?.(drag.id, closestId, mouseX);
-            }
-          }
-        }
+      } else if (closestSiblingId && closestSiblingDist < NODE_W * 2) {
+        onReorder?.(drag.id, closestSiblingId, mouseX);
       }
+      // else: dropped in empty space — do nothing
 
       setDrag(null);
       setDropTargetId(null);
@@ -554,8 +574,8 @@ export default function OrgTreeLayout({
               );
             })}
 
-            {/* Ghost card while dragging */}
-            {drag && (() => {
+            {/* Ghost card while dragging — only show after minimum move distance */}
+            {drag?.hasMoved && (() => {
               const p = positions.find(x => x.id === drag.id);
               if (!p) return null;
               return (
