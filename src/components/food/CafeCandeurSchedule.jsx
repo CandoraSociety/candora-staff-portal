@@ -36,6 +36,7 @@ function buildShiftDatetime(date, timeStr) {
 export default function CafeCandeurSchedule() {
   const qc = useQueryClient();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [displayMonth, setDisplayMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -52,11 +53,15 @@ export default function CafeCandeurSchedule() {
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
     .filter(d => isWeekday(d));
 
-  // Jump to first week of a given month
+  // Jump to first week of a given month (month nav is independent from week nav)
   const goToMonth = (offset) => {
+    setDisplayMonth(m => new Date(m.getFullYear(), m.getMonth() + offset, 1));
     setWeekStart(prev => {
-      const newDate = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
-      return startOfWeek(newDate, { weekStartsOn: 1 });
+      // Only jump the week if it's not already in the target month
+      const targetMonth = new Date(displayMonth.getFullYear(), displayMonth.getMonth() + offset, 1);
+      const weekInTarget = prev >= targetMonth && prev < new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 1);
+      if (weekInTarget) return prev;
+      return startOfWeek(targetMonth, { weekStartsOn: 1 });
     });
   };
 
@@ -164,7 +169,7 @@ export default function CafeCandeurSchedule() {
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="text-sm font-semibold min-w-[120px] text-center">
-              {format(weekStart, 'MMMM yyyy')}
+              {format(displayMonth, 'MMMM yyyy')}
             </span>
             <Button variant="outline" size="icon" onClick={() => goToMonth(1)}>
               <ChevronRight className="w-4 h-4" />
