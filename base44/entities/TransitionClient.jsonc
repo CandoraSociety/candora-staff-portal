@@ -1,0 +1,124 @@
+{
+  "name": "TransitionClient",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Client's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Client's last name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "previous_counsellor": {
+      "type": "string",
+      "enum": [
+        "Lola",
+        "Priscilla",
+        "Other"
+      ],
+      "description": "Counsellor the client is transitioning FROM"
+    },
+    "previous_counsellor_other": {
+      "type": "string",
+      "description": "If previous counsellor is Other, specify name"
+    },
+    "new_counsellor": {
+      "type": "string",
+      "default": "Olena",
+      "description": "Counsellor the client is transitioning TO"
+    },
+    "transition_status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "introduced",
+        "completed"
+      ],
+      "default": "not_started",
+      "description": "Where in the transition process this client is"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium"
+    },
+    "next_checkin_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the next scheduled check-in"
+    },
+    "last_checkin_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the most recent check-in"
+    },
+    "checkin_frequency": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "biweekly",
+        "monthly",
+        "as_needed"
+      ],
+      "default": "weekly"
+    },
+    "checkin_notes": {
+      "type": "string",
+      "description": "Notes from the most recent check-in"
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "missed"
+            ],
+            "default": "pending"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Key milestones in the client's transition"
+    },
+    "program_stage": {
+      "type": "string",
+      "description": "Current stage in the program (e.g. Intake, Assessments, Action Plan, Placement, Follow-up)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes about this client's transition"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}
