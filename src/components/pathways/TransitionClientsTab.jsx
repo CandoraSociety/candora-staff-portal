@@ -2,7 +2,9 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format, differenceInDays, addDays, addWeeks, addMonths } from "date-fns";
-import { Upload, Plus, Trash2, Pencil, X, Calendar, Flag, CheckCircle2, AlertCircle, Clock, ChevronDown, ChevronRight, User, Phone, Mail, FileSpreadsheet, Loader2, Archive, RotateCcw, FolderX } from "lucide-react";
+import { Upload, Plus, Trash2, Pencil, X, Calendar, Flag, CheckCircle2, AlertCircle, Clock, ChevronDown, ChevronRight, User, Phone, Mail, FileSpreadsheet, Loader2, Archive, RotateCcw, FolderX, Target } from "lucide-react";
+import MilestoneDialog from "@/components/pathways/MilestoneDialog";
+import MilestoneListModal from "@/components/pathways/MilestoneListModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -87,6 +89,8 @@ export default function TransitionClientsTab() {
   const [filterFileStatus, setFilterFileStatus] = useState("open");
   const [closeDialog, setCloseDialog] = useState({ open: false, client: null });
   const [closeForm, setCloseForm] = useState({ reason: "completed", reason_other: "", notes: "" });
+  const [milestoneDialog, setMilestoneDialog] = useState({ open: false, client: null });
+  const [listModal, setListModal] = useState({ open: false, title: "", items: [] });
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["transition-clients"],
@@ -206,6 +210,51 @@ export default function TransitionClientsTab() {
     await updateMutation.mutateAsync({ id: client.id, data: { milestones } });
   }
 
+  async function handleSaveMilestones(data) {
+    if (!milestoneDialog.client) return;
+    await updateMutation.mutateAsync({
+      id: milestoneDialog.client.id,
+      data: { milestones: data.milestones },
+    });
+    setMilestoneDialog({ open: false, client: null });
+  }
+
+  function openMilestoneList(category) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const items = [];
+    clients.forEach(c => {
+      (c.milestones || []).forEach(m => {
+        if (m.status !== "pending" || !m.date) return;
+        const d = new Date(m.date);
+        d.setHours(0, 0, 0, 0);
+        const diff = differenceInDays(d, today);
+        const include =
+          category === "overdue" ? diff < 0 :
+          category === "upcoming" ? diff >= 0 && diff <= 7 :
+          true;
+        if (include) {
+          const u = checkinUrgency(m.date);
+          items.push({
+            clientName: `${c.first_name} ${c.last_name}`,
+            title: m.title || "Untitled milestone",
+            dateStr: fmtDate(m.date),
+            rawDate: m.date,
+            urgencyLabel: u?.label || "—",
+            urgencyClass: u?.class || "bg-slate-100 text-slate-500",
+          });
+        }
+      });
+    });
+    items.sort((a, b) => new Date(a.rawDate) - new Date(b.rawDate));
+    const titles = {
+      overdue: "Overdue Milestones",
+      upcoming: "Upcoming Milestones",
+      all: "All Pending Milestones",
+    };
+    setListModal({ open: true, title: titles[category] || category, items });
+  }
+
   async function handleImport(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -249,16 +298,21 @@ export default function TransitionClientsTab() {
     return da - db;
   });
 
-  // Stats
-  const overdueCount = clients.filter(c => {
-    const u = checkinUrgency(c.next_checkin_date);
-    return u && u.label.includes("overdue");
-  }).length;
-  const upcomingCount = clients.filter(c => {
-    const u = checkinUrgency(c.next_checkin_date);
-    return u && !u.label.includes("overdue") && u.label !== "—" && u.label !== "Today";
-  }).length;
-  const pendingMilestones = clients.reduce((s, c) => s + (c.milestones?.filter(m => m.status === "pending").length || 0), 0);
+  // Milestone-based stats — overdue, upcoming (within 7 days), and all pending
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdueCount = clients.reduce((s, c) => s + (c.milestones || []).filter(m => {
+    if (m.status !== "pending" || !m.date) return false;
+    const d = new Date(m.date); d.setHours(0, 0, 0, 0);
+    return d < today;
+  }).length, 0);
+  const upcomingCount = clients.reduce((s, c) => s + (c.milestones || []).filter(m => {
+    if (m.status !== "pending" || !m.date) return false;
+    const d = new Date(m.date); d.setHours(0, 0, 0, 0);
+    const diff = differenceInDays(d, today);
+    return diff >= 0 && diff <= 7;
+  }).length, 0);
+  const pendingMilestones = clients.reduce((s, c) => s + (c.milestones?.filter(m => m.status === "pending" && m.date).length || 0), 0);
 
   return (
     <div>
@@ -326,28 +380,28 @@ export default function TransitionClientsTab() {
         </Button>
       </div>
 
-      {/* Summary banners */}
+      {/* Summary banners — click Overdue/Upcoming/Milestones to see all items */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-white border border-slate-200 rounded-lg p-3">
           <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide">Total</div>
           <div className="text-2xl font-bold" style={{ color: "hsl(231,64%,20%)" }}>{clients.length}</div>
           <div className="text-xs text-slate-400">clients to transition</div>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+        <button onClick={() => openMilestoneList("overdue")} className="bg-red-50 border border-red-200 rounded-lg p-3 text-left hover:ring-2 hover:ring-red-300 transition cursor-pointer">
           <div className="flex items-center gap-2 text-red-600 text-xs font-medium uppercase tracking-wide"><AlertCircle className="w-3.5 h-3.5" />Overdue</div>
           <div className="text-2xl font-bold text-red-700">{overdueCount}</div>
-          <div className="text-xs text-red-400">check-ins past due</div>
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="text-xs text-red-400">milestones past due</div>
+        </button>
+        <button onClick={() => openMilestoneList("upcoming")} className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-left hover:ring-2 hover:ring-blue-300 transition cursor-pointer">
           <div className="flex items-center gap-2 text-blue-600 text-xs font-medium uppercase tracking-wide"><Clock className="w-3.5 h-3.5" />Upcoming</div>
           <div className="text-2xl font-bold text-blue-700">{upcomingCount}</div>
-          <div className="text-xs text-blue-400">check-ins this week</div>
-        </div>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <div className="text-xs text-blue-400">milestones within 7 days</div>
+        </button>
+        <button onClick={() => openMilestoneList("all")} className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-left hover:ring-2 hover:ring-amber-300 transition cursor-pointer">
           <div className="flex items-center gap-2 text-amber-600 text-xs font-medium uppercase tracking-wide"><Flag className="w-3.5 h-3.5" />Milestones</div>
           <div className="text-2xl font-bold text-amber-700">{pendingMilestones}</div>
           <div className="text-xs text-amber-400">pending milestones</div>
-        </div>
+        </button>
       </div>
 
       {/* Add/Edit Form */}
@@ -570,6 +624,9 @@ export default function TransitionClientsTab() {
                   <button onClick={(e) => { e.stopPropagation(); handleQuickCheckin(c); }} className="p-1.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition" title="Mark check-in done & set next date">
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
+                  <button onClick={(e) => { e.stopPropagation(); setMilestoneDialog({ open: true, client: c }); }} className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition" title="Set milestones">
+                    <Target className="w-4 h-4" />
+                  </button>
                   {c.file_status === "closed" ? (
                     <button onClick={(e) => { e.stopPropagation(); setCloseDialog({ open: true, client: c }); }} className="p-1.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition" title="Reopen file">
                       <RotateCcw className="w-4 h-4" />
@@ -766,10 +823,29 @@ export default function TransitionClientsTab() {
                {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : closeDialog.client.file_status === "closed" ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
                {closeDialog.client.file_status === "closed" ? "Reopen File" : "Close File"}
              </Button>
-           </div>
-         </div>
-        </div>
-        )}
-        </div>
-        );
-        }
+             </div>
+             </div>
+             </div>
+             )}
+
+             {/* Milestone Dialog */}
+             {milestoneDialog.open && milestoneDialog.client && (
+             <MilestoneDialog
+             client={milestoneDialog.client}
+             onClose={() => setMilestoneDialog({ open: false, client: null })}
+             onSave={handleSaveMilestones}
+             saving={updateMutation.isPending}
+             />
+             )}
+
+             {/* Milestone List Modal */}
+             {listModal.open && (
+             <MilestoneListModal
+             title={listModal.title}
+             items={listModal.items}
+             onClose={() => setListModal({ open: false, title: "", items: [] })}
+             />
+             )}
+             </div>
+             );
+             }
