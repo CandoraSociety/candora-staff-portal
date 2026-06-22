@@ -80,9 +80,9 @@ export default function NexusEmployeeProfile() {
   });
 
   const { data: accessPerms = [] } = useQuery({
-    queryKey: ['access-permissions', id],
-    queryFn: () => base44.entities.AccessPermission.filter({ scope_value: id }),
-    enabled: !!id,
+    queryKey: ['access-permissions', employee?.email],
+    queryFn: () => base44.entities.AccessPermission.filter({ scope_value: employee?.email }),
+    enabled: !!employee?.email,
   });
 
   const updateMutation = useMutation({
@@ -168,8 +168,20 @@ export default function NexusEmployeeProfile() {
   });
 
   const toggleAccessMutation = useMutation({
-    mutationFn: ({ permId, permission }) => base44.entities.AccessPermission.update(permId, { permission }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['access-permissions', id] }),
+    mutationFn: async ({ perm, email, target_type, target_id, permission }) => {
+      if (perm) {
+        return base44.entities.AccessPermission.update(perm.id, { permission });
+      }
+      return base44.entities.AccessPermission.create({
+        target_type,
+        target_id,
+        scope_type: 'individual',
+        scope_value: email,
+        permission,
+        is_active: true,
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['access-permissions', employee?.email] }),
   });
 
   if (isLoading) {
@@ -324,7 +336,7 @@ export default function NexusEmployeeProfile() {
         <DocumentsTab documents={documents} />
       )}
       {activeTab === 'access' && (
-        <AccessTab accessPerms={accessPerms} employeeId={id} onToggle={toggleAccessMutation} />
+        <AccessTab accessPerms={accessPerms} employee={employee} onToggle={toggleAccessMutation} />
       )}
 
       {/* Edit Dialog */}
@@ -563,45 +575,67 @@ function DocumentsTab({ documents }) {
   );
 }
 
-function AccessTab({ accessPerms, employeeId, onToggle }) {
-  // Map perms by target_id for quick lookup
+const FILE_ACCESS_OPTIONS = [
+  { id: 'manager',   label: 'Manager Files',   description: 'Internal management documents' },
+  { id: 'finance',   label: 'Finance Files',   description: 'Invoices, budgets, financial reports' },
+  { id: 'corporate', label: 'Corporate Files', description: 'Executive-level documents' },
+];
+
+function AccessTab({ accessPerms, employee, onToggle }) {
+  // Map perms by "target_type:target_id" for quick lookup
   const permMap = {};
-  accessPerms.forEach(p => { permMap[p.target_id] = p; });
+  accessPerms.forEach(p => { permMap[`${p.target_type}:${p.target_id}`] = p; });
+
+  const renderRow = (mod, targetType) => {
+    const perm = permMap[`${targetType}:${mod.id}`];
+    const isAllowed = perm?.permission === 'allow';
+    return (
+      <div key={mod.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/20 transition-colors">
+        <div>
+          <p className="text-sm font-medium">{mod.label}</p>
+          {mod.route && <p className="text-xs text-muted-foreground font-mono">{mod.route}</p>}
+          {mod.description && <p className="text-xs text-muted-foreground">{mod.description}</p>}
+        </div>
+        <button
+          onClick={() => onToggle.mutate({ perm, email: employee.email, target_type: targetType, target_id: mod.id, permission: isAllowed ? 'deny' : 'allow' })}
+          disabled={onToggle.isPending}
+          className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${isAllowed ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+        >
+          {isAllowed ? <><Check className="w-3 h-3" />Allowed</> : <><X className="w-3 h-3" />Denied</>}
+        </button>
+      </div>
+    );
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Shield className="w-4 h-4" />Portal Access
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">Toggle individual portal access for this employee.</p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {PORTAL_MODULES.map(mod => {
-            const perm = permMap[mod.id];
-            const isAllowed = perm?.permission === 'allow';
-            return (
-              <div key={mod.id} className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/20 transition-colors">
-                <div>
-                  <p className="text-sm font-medium">{mod.label}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{mod.route}</p>
-                </div>
-                {perm ? (
-                  <button
-                    onClick={() => onToggle.mutate({ permId: perm.id, permission: isAllowed ? 'deny' : 'allow' })}
-                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${isAllowed ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-                  >
-                    {isAllowed ? <><Check className="w-3 h-3" />Allowed</> : <><X className="w-3 h-3" />Denied</>}
-                  </button>
-                ) : (
-                  <span className="text-xs text-muted-foreground italic">No preset</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Shield className="w-4 h-4" />Portal Access
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Toggle individual portal access for this employee.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {PORTAL_MODULES.map(mod => renderRow(mod, 'module'))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <FileText className="w-4 h-4" />File Access
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">All employees get Universal and My Files access. Grant additional access below.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {FILE_ACCESS_OPTIONS.map(opt => renderRow(opt, 'file_access'))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
