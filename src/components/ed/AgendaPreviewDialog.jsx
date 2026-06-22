@@ -165,36 +165,40 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
     setTimeout(() => w.print(), 300);
   };
 
+  const generateAgendaPDF = async () => {
+    const canvas = await html2canvas(previewRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+    });
+    const imgData = canvas.toDataURL("image/png");
+    const doc = new jsPDF("p", "mm", "a4");
+    const margin = 10;
+    const pageW = 210;
+    const pageH = 297;
+    const imgWidth = pageW - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const usablePageHeight = pageH - margin * 2;
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+    heightLeft -= usablePageHeight;
+
+    while (heightLeft > 0) {
+      position = margin - (imgHeight - heightLeft);
+      doc.addPage();
+      doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+      heightLeft -= usablePageHeight;
+    }
+    return doc;
+  };
+
   const handleSavePDF = async () => {
     setIsSaving(true);
     try {
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const doc = new jsPDF("p", "mm", "a4");
-      const margin = 10;
-      const pageW = 210;
-      const pageH = 297;
-      const imgWidth = pageW - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const usablePageHeight = pageH - margin * 2;
-      let heightLeft = imgHeight;
-      let position = margin;
-
-      doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-      heightLeft -= usablePageHeight;
-
-      while (heightLeft > 0) {
-        position = margin - (imgHeight - heightLeft);
-        doc.addPage();
-        doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
-        heightLeft -= usablePageHeight;
-      }
-
+      const doc = await generateAgendaPDF();
       const safeName = (meeting.title || "Agenda").replace(/[^a-z0-9]/gi, "_");
       doc.save(`${safeName}_Agenda.pdf`);
       toast({ title: "PDF saved", description: "Agenda downloaded as PDF." });
@@ -212,23 +216,16 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
 
     setIsSharing(true);
     try {
+      const doc = await generateAgendaPDF();
+      const safeName = (meeting.title || "Agenda").replace(/[^a-z0-9]/gi, "_");
+      const pdfBlob = doc.output("blob");
+      const file = new File([pdfBlob], `${safeName}_Agenda.pdf`, { type: "application/pdf" });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
       const meetingDate = meeting.meeting_date ? format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a") : "";
-      const itemRows = sortedItems.map((item, idx) => {
-        let row = `${idx + 1}. ${item.title}`;
-        if (item.item_type) row += ` [${item.item_type.replace(/_/g, " ")}]`;
-        if (showPresenter && item.presenter) row += ` — ${item.presenter}`;
-        if (showTime && item.duration_minutes > 0) row += ` (${item.duration_minutes} min)`;
-        if (item.description) row += `\n   ${item.description}`;
-        if (includeNotes && item.facilitator_notes) row += `\n   📝 Facilitator Notes: ${item.facilitator_notes}`;
-        if (showNotesLines) row += `\n   (space for notes)`;
-        return row;
-      }).join("\n\n");
+      const personalMsg = shareMessage ? `\n${shareMessage}\n` : "";
 
-      const totalLine = showTime && totalDuration > 0 ? `\n\nTotal Estimated Time: ${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : "";
-      const actionItemsLine = showActionItems ? `\n\n${"─".repeat(40)}\n\nAction Items:\n${Array.from({ length: 5 }, () => "☐ ____________________________________________").join("\n")}` : "";
-      const personalMsg = shareMessage ? `\n\n---\n${shareMessage}` : "";
-
-      const body = `${orgName} — Meeting Agenda\n${"=".repeat(40)}\n\n${meeting.title}${meetingDate ? `\n${meetingDate}` : ""}${meeting.location ? `\nLocation: ${meeting.location}` : ""}${meeting.facilitator ? `\nFacilitator: ${meeting.facilitator}` : ""}${meeting.attendees?.length ? `\nAttendees: ${meeting.attendees.join(", ")}` : ""}\n\n${"─".repeat(40)}\n\n${itemRows}${totalLine}${actionItemsLine}${personalMsg}`;
+      const body = `Hello,\n\nPlease find the meeting agenda from ${orgName} at the link below:\n\n${file_url}\n\nMeeting: ${meeting.title}\n${meetingDate ? `Date: ${meetingDate}\n` : ""}${meeting.location ? `Location: ${meeting.location}\n` : ""}${meeting.facilitator ? `Facilitator: ${meeting.facilitator}\n` : ""}${meeting.attendees?.length ? `Attendees: ${meeting.attendees.join(", ")}\n` : ""}${personalMsg}\n— ${orgName}`;
 
       await base44.integrations.Core.SendEmail({
         to: emails.join(", "),
@@ -236,7 +233,7 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
         body,
       });
 
-      toast({ title: "Agenda shared", description: `Sent to ${emails.length} recipient${emails.length > 1 ? "s" : ""}.` });
+      toast({ title: "Agenda shared", description: `PDF sent to ${emails.length} recipient${emails.length > 1 ? "s" : ""}.` });
       setShowShare(false);
       setShareEmails("");
       setShareMessage("");
