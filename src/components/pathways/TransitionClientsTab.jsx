@@ -482,9 +482,11 @@ export default function TransitionClientsTab() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-400">
+                    {c.compass_hsid && <span className="font-mono">HSID: {c.compass_hsid}</span>}
                     {c.phone && <span className="flex items-center gap-0.5"><Phone className="w-3 h-3" />{c.phone}</span>}
                     {c.email && <span className="flex items-center gap-0.5"><Mail className="w-3 h-3" />{c.email}</span>}
                     {c.program_stage && <span className="flex items-center gap-0.5"><User className="w-3 h-3" />{c.program_stage}</span>}
+                    {c.employed_ftpt && <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded font-medium">{c.employed_ftpt}</span>}
                   </div>
                 </div>
 
@@ -536,6 +538,29 @@ export default function TransitionClientsTab() {
               {/* Expanded details */}
               {isExpanded && (
                 <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-3">
+                  {/* CRT Program Progress */}
+                  {(c.service_outcome || c.placement_outcome || c.service_start_date || c.service_element) && (
+                    <div className="bg-white border border-slate-200 rounded-md p-3">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">CRT Program Progress</span>
+                      <div className="grid sm:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                        {c.service_element && <div><span className="text-slate-400 block">Service Element</span><span className="text-slate-700 font-medium">{c.service_element}</span></div>}
+                        {c.service_start_date && <div><span className="text-slate-400 block">Service Start</span><span className="text-slate-700">{fmtDate(c.service_start_date)}</span></div>}
+                        {c.service_outcome && <div><span className="text-slate-400 block">Service Outcome</span><span className="text-slate-700 font-medium">{c.service_outcome}</span></div>}
+                        {c.service_outcome_date && <div><span className="text-slate-400 block">Outcome Date</span><span className="text-slate-700">{fmtDate(c.service_outcome_date)}</span></div>}
+                        {c.placement_outcome && <div><span className="text-slate-400 block">Placement Outcome</span><span className="text-slate-700 font-medium">{c.placement_outcome}</span></div>}
+                        {c.placement_outcome_date && <div><span className="text-slate-400 block">Placement Date</span><span className="text-slate-700">{fmtDate(c.placement_outcome_date)}</span></div>}
+                        {c.outcome_30day && <div><span className="text-slate-400 block">30-Day</span><span className="text-slate-700">{c.outcome_30day}{c.outcome_30day_date ? ` · ${fmtDate(c.outcome_30day_date)}` : ""}</span></div>}
+                        {c.outcome_60day && <div><span className="text-slate-400 block">60-Day</span><span className="text-slate-700">{c.outcome_60day}{c.outcome_60day_date ? ` · ${fmtDate(c.outcome_60day_date)}` : ""}</span></div>}
+                        {c.outcome_90day && <div><span className="text-slate-400 block">90-Day</span><span className="text-slate-700">{c.outcome_90day}{c.outcome_90day_date ? ` · ${fmtDate(c.outcome_90day_date)}` : ""}</span></div>}
+                        {c.outcome_180day && <div><span className="text-slate-400 block">180-Day</span><span className="text-slate-700">{c.outcome_180day}{c.outcome_180day_date ? ` · ${fmtDate(c.outcome_180day_date)}` : ""}</span></div>}
+                        {c.employed_ftpt && <div><span className="text-slate-400 block">Employed</span><span className="text-slate-700 font-medium">{c.employed_ftpt}</span></div>}
+                        {c.service_navigation_support && <div><span className="text-slate-400 block">Svc Navigation</span><span className="text-emerald-600 font-medium">Yes</span></div>}
+                        {c.work_exposure && <div><span className="text-slate-400 block">Work Exposure</span><span className="text-emerald-600 font-medium">Yes</span></div>}
+                        {c.wage_subsidy && <div><span className="text-slate-400 block">Wage Subsidy</span><span className="text-emerald-600 font-medium">Yes</span></div>}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Check-in info */}
                   <div className="grid sm:grid-cols-4 gap-3 text-sm">
                     <div>

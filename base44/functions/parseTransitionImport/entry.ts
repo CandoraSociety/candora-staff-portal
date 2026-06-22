@@ -67,6 +67,30 @@ Deno.serve(async (req) => {
       // CRT data starts after header row + format hint row
       const dataRows = rows.slice(headerIdx + 2).filter(r => r[0] && String(r[0]).trim());
 
+      // Excel serial date → ISO date string
+      const serialToDate = (val) => {
+        if (!val && val !== 0) return null;
+        const num = Number(val);
+        if (!isNaN(num) && num > 30000 && num < 60000) {
+          const d = new Date(Math.round((num - 25569) * 86400 * 1000));
+          return d.toISOString().split('T')[0];
+        }
+        const str = String(val).trim();
+        if (!str) return null;
+        // Try parsing date strings like MM/DD/YY or MM/DD/YYYY
+        const m = str.match(/^(\d{1,2})[\/\\](\d{1,2})[\/\\](\d{2,4})$/);
+        if (m) {
+          let [_, mm, dd, yy] = m;
+          if (yy.length === 2) yy = '20' + yy;
+          return `${yy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+        }
+        const parsed = new Date(str);
+        if (!isNaN(parsed)) return parsed.toISOString().split('T')[0];
+        return str;
+      };
+
+      const ynToBool = (val) => String(val || '').trim().toLowerCase() === 'y' || String(val || '').trim().toLowerCase() === 'yes';
+
       records = dataRows.map(row => {
         const fullName = String(row[0] || '').trim();
         let firstName = '', lastName = '';
@@ -80,15 +104,17 @@ Deno.serve(async (req) => {
           lastName = parts.slice(1).join(' ') || '';
         }
 
-        const serviceOutcome = String(row[8] || '').trim();  // Service Outcome
-        const serviceElement = String(row[6] || '').trim();   // Service Element
+        const serviceOutcome = String(row[8] || '').trim();
+        const serviceElement = String(row[6] || '').trim();
         const comments = String(row[20] || '').trim().replace(/<br\s*\/?>/gi, '\n');
+        const employedFtPt = String(row[24] || '').trim();
 
         return {
           first_name: firstName,
           last_name: lastName,
           phone: String(row[3] || '').trim(),
           email: String(row[2] || '').trim(),
+          compass_hsid: String(row[1] || '').trim(),
           previous_counsellor: prevCounsellor,
           previous_counsellor_other: counsellorOther,
           new_counsellor: "Olena",
@@ -99,6 +125,24 @@ Deno.serve(async (req) => {
           checkin_frequency: "weekly",
           checkin_notes: "",
           program_stage: serviceOutcome || serviceElement || "",
+          service_element: serviceElement,
+          service_start_date: serialToDate(row[7]),
+          service_outcome: serviceOutcome,
+          service_outcome_date: serialToDate(row[9]),
+          placement_outcome: String(row[10] || '').trim(),
+          placement_outcome_date: serialToDate(row[11]),
+          outcome_30day: String(row[12] || '').trim(),
+          outcome_30day_date: serialToDate(row[13]),
+          outcome_60day: String(row[14] || '').trim(),
+          outcome_60day_date: serialToDate(row[15]),
+          outcome_90day: String(row[16] || '').trim(),
+          outcome_90day_date: serialToDate(row[17]),
+          outcome_180day: String(row[18] || '').trim(),
+          outcome_180day_date: serialToDate(row[19]),
+          employed_ftpt: employedFtPt,
+          service_navigation_support: ynToBool(row[25]),
+          work_exposure: ynToBool(row[22]),
+          wage_subsidy: ynToBool(row[23]),
           notes: comments,
           milestones: [],
         };
