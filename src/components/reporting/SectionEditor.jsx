@@ -256,7 +256,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground w-6">Size</span>
-                      <input type="range" min="24" max="160" value={titleImageWidth} onChange={e => { const v = parseInt(e.target.value); setTitleImageWidth(v); }} onMouseUp={() => onUpdate(section.id, { title_image_width: titleImageWidth })} onTouchEnd={() => onUpdate(section.id, { title_image_width: titleImageWidth })} className="flex-1 h-1 accent-accent" />
+                      <input type="range" min="24" max="200" value={titleImageWidth} onChange={e => { const v = parseInt(e.target.value); setTitleImageWidth(v); onUpdate(section.id, { title_image_width: v }); }} className="flex-1 h-1 accent-accent" />
                       <span className="text-[10px] text-muted-foreground w-10 text-right">{titleImageWidth}px</span>
                     </div>
                   </div>

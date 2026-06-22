@@ -169,7 +169,16 @@ export default function SectionRenderer({
             {section.title}
           </h3>
           {titleImage && (
-            <img src={titleImage} alt="" className="shrink-0 object-contain rounded ml-auto" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px' }} />
+            <div className="relative group/title shrink-0 ml-auto">
+              <img src={titleImage} alt="" className="object-contain rounded" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px' }} />
+              {onUpdate && (
+                <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover/title:opacity-100 transition-opacity">
+                  <span className="text-[10px] text-white shrink-0">Size</span>
+                  <input type="range" min="24" max="200" value={section.title_image_width || 80} onChange={e => onUpdate(section.id, { title_image_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+                  <span className="text-[10px] text-white w-10 text-right tabular-nums">{section.title_image_width || 80}px</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
         <div className="absolute top-0 right-0 flex gap-[3px] opacity-[0.08]" style={{ color: pc }} aria-hidden="true">
