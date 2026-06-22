@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
@@ -6,6 +6,7 @@ import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListCh
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 
 const MEETING_TYPES = ["Staff Meeting", "Leadership Team", "1-on-1", "Board Meeting", "External/Partner", "All-Hands", "Committee", "Other"];
@@ -39,6 +40,7 @@ function toLocalInput(date) {
 
 export default function EDAgendaMaker() {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
@@ -67,10 +69,10 @@ export default function EDAgendaMaker() {
     queryFn: () => base44.entities.EDMeeting.list("-meeting_date"),
   });
 
-  // Auto-select first meeting
-  useState(() => {
+  // Auto-select first meeting when list loads
+  useEffect(() => {
     if (meetings.length > 0 && !selectedMeetingId) setSelectedMeetingId(meetings[0].id);
-  });
+  }, [meetings, selectedMeetingId]);
 
   // Fetch agenda items for selected meeting
   const { data: agendaItems = [], isLoading: loadingItems } = useQuery({
@@ -90,6 +92,10 @@ export default function EDAgendaMaker() {
       qc.invalidateQueries(["ed-meetings"]);
       setSelectedMeetingId(created.id);
       setShowMeetingForm(false);
+      toast({ title: "Meeting created", description: created.title });
+    },
+    onError: (err) => {
+      toast({ title: "Failed to create meeting", description: err?.message || "Unknown error", variant: "destructive" });
     },
   });
 
@@ -107,6 +113,10 @@ export default function EDAgendaMaker() {
     onSuccess: () => {
       qc.invalidateQueries(["ed-agenda-items", selectedMeetingId]);
       setShowItemForm(false);
+      toast({ title: "Agenda item added" });
+    },
+    onError: (err) => {
+      toast({ title: "Failed to add agenda item", description: err?.message || "Unknown error", variant: "destructive" });
     },
   });
 
