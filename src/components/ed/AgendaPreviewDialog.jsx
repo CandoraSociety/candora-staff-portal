@@ -195,9 +195,9 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
         heightLeft -= usablePageHeight;
       }
 
-      const blobUrl = doc.output("bloburl");
-      window.open(blobUrl, "_blank");
-      toast({ title: "PDF ready", description: "Opened in a new tab — you can download from there if needed." });
+      const safeName = (meeting.title || "Agenda").replace(/[^a-z0-9]/gi, "_");
+      doc.save(`${safeName}_Agenda.pdf`);
+      toast({ title: "PDF saved", description: "Agenda downloaded as PDF." });
     } catch (err) {
       toast({ title: "Failed to generate PDF", description: err?.message, variant: "destructive" });
     } finally {
