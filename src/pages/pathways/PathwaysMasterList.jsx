@@ -70,6 +70,7 @@ export default function PathwaysMasterList() {
   const [users, setUsers] = useState([]);
   const [reassigning, setReassigning] = useState(false);
   const [transitionCount, setTransitionCount] = useState(0);
+  const [closedTransitionClients, setClosedTransitionClients] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -82,13 +83,37 @@ export default function PathwaysMasterList() {
       setWorkers(names);
       setUsers(userList);
       setTransitionCount(transitionClients.length);
+      // Normalize closed transition clients to be compatible with the closed files table
+      const closedTrans = transitionClients
+        .filter(tc => tc.file_status === "closed")
+        .map(tc => ({
+          ...tc,
+          _isTransition: true,
+          intake_date: null,
+          service_type: tc.service_element || (tc.program === "CEIS" ? "direct_to_employment" : "pathways"),
+          service_start_date: tc.service_start_date,
+          program_stream_switches: [],
+          program_status: tc.service_outcome === "Complete" ? "complete" : tc.service_outcome === "Cancelled" ? "cancelled" : null,
+          completion_date: tc.eda_completion_date,
+          post_completion_employment_status: tc.employed_ftpt,
+          post_completion_employment_date: null,
+          followup_90day_date: tc.outcome_90day_date,
+          followup_90day_status: tc.outcome_90day,
+          service_navigation_supports: tc.service_navigation_support,
+          assigned_worker_name: tc.new_counsellor,
+          assigned_worker: null,
+          file_closed: true,
+          closed_reason: tc.close_reason,
+          closed_date: tc.close_date,
+        }));
+      setClosedTransitionClients(closedTrans);
       setLoading(false);
     });
   }, []);
 
   const assignedClients = clients.filter(c => c.assigned_worker);
   const activeClients = assignedClients.filter(c => !c.file_closed);
-  const closedClients = assignedClients.filter(c => c.file_closed);
+  const closedClients = [...assignedClients.filter(c => c.file_closed), ...closedTransitionClients];
   const sourceList = activeTab === "active" ? activeClients : closedClients;
   const displayed = applyFiltersAndSort(sourceList, search, filters, sortKey);
 
@@ -235,6 +260,11 @@ export default function PathwaysMasterList() {
                       >
                         <td className="px-3 py-2.5 whitespace-nowrap font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
                           {c.first_name} {c.last_name}
+                          {c._isTransition && (
+                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: "rgba(43,45,232,0.15)", color: "#2b2de8" }}>
+                              Transition
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
                         <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
