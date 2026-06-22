@@ -51,6 +51,40 @@ Deno.serve(async (req) => {
     let records = [];
 
     if (isCRT) {
+      // Build a column-index → field-name map by reading the header row dynamically.
+      // This way, columns in any order (or additional columns to the right of Notes)
+      // are all captured correctly.
+      const headerRow = rows[headerIdx] || [];
+      const fieldByCol = {};
+      headerRow.forEach((h, i) => {
+        const hdr = String(h || '').toLowerCase().trim();
+        if (!hdr) return;
+
+        if (hdr.includes('participant')) fieldByCol[i] = 'full_name';
+        else if (hdr.includes('hsid') || hdr.includes('compass')) fieldByCol[i] = 'compass_hsid';
+        else if (hdr.includes('email') || hdr.includes('e-mail')) fieldByCol[i] = 'email';
+        else if (hdr.includes('phone') || hdr.includes('telephone')) fieldByCol[i] = 'phone';
+        else if (hdr.includes('service element')) fieldByCol[i] = 'service_element';
+        else if (hdr.includes('service start')) fieldByCol[i] = 'service_start_date';
+        else if (hdr.includes('service outcome date')) fieldByCol[i] = 'service_outcome_date';
+        else if (hdr.includes('service outcome')) fieldByCol[i] = 'service_outcome';
+        else if (hdr.includes('placement outcome date')) fieldByCol[i] = 'placement_outcome_date';
+        else if (hdr.includes('placement outcome')) fieldByCol[i] = 'placement_outcome';
+        else if (hdr.includes('180') && hdr.includes('date')) fieldByCol[i] = 'outcome_180day_date';
+        else if (hdr.includes('180')) fieldByCol[i] = 'outcome_180day';
+        else if (hdr.includes('90') && hdr.includes('date')) fieldByCol[i] = 'outcome_90day_date';
+        else if (hdr.includes('90')) fieldByCol[i] = 'outcome_90day';
+        else if (hdr.includes('60') && hdr.includes('date')) fieldByCol[i] = 'outcome_60day_date';
+        else if (hdr.includes('60')) fieldByCol[i] = 'outcome_60day';
+        else if (hdr.includes('30') && hdr.includes('date')) fieldByCol[i] = 'outcome_30day_date';
+        else if (hdr.includes('30')) fieldByCol[i] = 'outcome_30day';
+        else if (hdr.includes('comment') || hdr.includes('note')) fieldByCol[i] = 'notes';
+        else if (hdr.includes('work exposure')) fieldByCol[i] = 'work_exposure';
+        else if (hdr.includes('wage subsidy')) fieldByCol[i] = 'wage_subsidy';
+        else if (hdr.includes('employed')) fieldByCol[i] = 'employed_ftpt';
+        else if (hdr.includes('service navigation')) fieldByCol[i] = 'service_navigation_support';
+      });
+
       // Extract counsellor name from metadata rows above the header
       let prevCounsellor = "Other";
       let counsellorOther = "";
@@ -77,7 +111,6 @@ Deno.serve(async (req) => {
         }
         const str = String(val).trim();
         if (!str) return null;
-        // Try parsing date strings like MM/DD/YY or MM/DD/YYYY
         const m = str.match(/^(\d{1,2})[\/\\](\d{1,2})[\/\\](\d{2,4})$/);
         if (m) {
           let [_, mm, dd, yy] = m;
@@ -91,8 +124,29 @@ Deno.serve(async (req) => {
 
       const ynToBool = (val) => String(val || '').trim().toLowerCase() === 'y' || String(val || '').trim().toLowerCase() === 'yes';
 
+      const DATE_FIELDS = new Set(['service_start_date', 'service_outcome_date', 'placement_outcome_date',
+        'outcome_30day_date', 'outcome_60day_date', 'outcome_90day_date', 'outcome_180day_date']);
+      const BOOL_FIELDS = new Set(['service_navigation_support', 'work_exposure', 'wage_subsidy']);
+
       records = dataRows.map(row => {
-        const fullName = String(row[0] || '').trim();
+        // Extract all mapped fields from the row by column index
+        const data = {};
+        Object.entries(fieldByCol).forEach(([colIdx, field]) => {
+          const val = row[Number(colIdx)];
+          if (val === undefined || val === null || String(val).trim() === '') return;
+          if (DATE_FIELDS.has(field)) {
+            data[field] = serialToDate(val);
+          } else if (BOOL_FIELDS.has(field)) {
+            data[field] = ynToBool(val);
+          } else if (field === 'notes') {
+            data[field] = String(val).trim().replace(/<br\s*\/?>/gi, '\n');
+          } else {
+            data[field] = String(val).trim();
+          }
+        });
+
+        // Split full name into first/last
+        const fullName = data.full_name || '';
         let firstName = '', lastName = '';
         if (fullName.includes(',')) {
           const parts = fullName.split(',').map(s => s.trim()).filter(Boolean);
@@ -103,18 +157,11 @@ Deno.serve(async (req) => {
           firstName = parts[0] || '';
           lastName = parts.slice(1).join(' ') || '';
         }
-
-        const serviceOutcome = String(row[8] || '').trim();
-        const serviceElement = String(row[6] || '').trim();
-        const comments = String(row[20] || '').trim().replace(/<br\s*\/?>/gi, '\n');
-        const employedFtPt = String(row[24] || '').trim();
+        delete data.full_name;
 
         return {
           first_name: firstName,
           last_name: lastName,
-          phone: String(row[3] || '').trim(),
-          email: String(row[2] || '').trim(),
-          compass_hsid: String(row[1] || '').trim(),
           previous_counsellor: prevCounsellor,
           previous_counsellor_other: counsellorOther,
           new_counsellor: "Olena",
@@ -124,27 +171,9 @@ Deno.serve(async (req) => {
           last_checkin_date: null,
           checkin_frequency: "weekly",
           checkin_notes: "",
-          program_stage: serviceOutcome || serviceElement || "",
-          service_element: serviceElement,
-          service_start_date: serialToDate(row[7]),
-          service_outcome: serviceOutcome,
-          service_outcome_date: serialToDate(row[9]),
-          placement_outcome: String(row[10] || '').trim(),
-          placement_outcome_date: serialToDate(row[11]),
-          outcome_30day: String(row[12] || '').trim(),
-          outcome_30day_date: serialToDate(row[13]),
-          outcome_60day: String(row[14] || '').trim(),
-          outcome_60day_date: serialToDate(row[15]),
-          outcome_90day: String(row[16] || '').trim(),
-          outcome_90day_date: serialToDate(row[17]),
-          outcome_180day: String(row[18] || '').trim(),
-          outcome_180day_date: serialToDate(row[19]),
-          employed_ftpt: employedFtPt,
-          service_navigation_support: ynToBool(row[25]),
-          work_exposure: ynToBool(row[22]),
-          wage_subsidy: ynToBool(row[23]),
-          notes: comments,
+          program_stage: data.service_outcome || data.service_element || "",
           milestones: [],
+          ...data,
         };
       }).filter(r => r.first_name && r.last_name);
     } else {
