@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil } from "lucide-react";
 import AgendaPreviewDialog from "@/components/ed/AgendaPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,7 @@ export default function EDAgendaMaker() {
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [editingItemId, setEditingItemId] = useState(null);
 
   const [meetingForm, setMeetingForm] = useState({
     title: "",
@@ -175,6 +176,19 @@ export default function EDAgendaMaker() {
     onSuccess: () => qc.invalidateQueries(["ed-agenda-items", selectedMeetingId]),
   });
 
+  const updateItem = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.EDAgendaItem.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries(["ed-agenda-items", selectedMeetingId]);
+      setShowItemForm(false);
+      setEditingItemId(null);
+      toast({ title: "Agenda item updated" });
+    },
+    onError: (err) => {
+      toast({ title: "Failed to update agenda item", description: err?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
   const moveItem = useMutation({
     mutationFn: async ({ items }) => {
       await Promise.all(items.map((item, i) => base44.entities.EDAgendaItem.update(item.id, { order_index: i })));
@@ -222,12 +236,35 @@ export default function EDAgendaMaker() {
 
   const handleAddItem = (e) => {
     e.preventDefault();
-    createItem.mutate({
+    const payload = {
       ...itemForm,
       meeting_id: selectedMeetingId,
       duration_minutes: itemForm.duration_minutes === "" ? null : Number(itemForm.duration_minutes) || 0,
-      order_index: sortedItems.length,
+    };
+    if (editingItemId) {
+      updateItem.mutate({ id: editingItemId, data: payload });
+    } else {
+      createItem.mutate({ ...payload, order_index: sortedItems.length });
+    }
+    setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "", facilitator_notes: "" });
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItemId(item.id);
+    setItemForm({
+      title: item.title || "",
+      item_type: item.item_type || "",
+      presenter: item.presenter || "",
+      duration_minutes: item.duration_minutes ?? "",
+      description: item.description || "",
+      facilitator_notes: item.facilitator_notes || "",
     });
+    setShowItemForm(true);
+  };
+
+  const handleCancelItemForm = () => {
+    setShowItemForm(false);
+    setEditingItemId(null);
     setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "", facilitator_notes: "" });
   };
 
@@ -419,7 +456,7 @@ export default function EDAgendaMaker() {
                 <p className="text-sm text-muted-foreground">
                   {sortedItems.length} items · {Math.floor(totalDuration / 60)}h {totalDuration % 60}m total
                 </p>
-                <Button size="sm" onClick={() => setShowItemForm(!showItemForm)} className="gap-1.5">
+                <Button size="sm" onClick={() => { setEditingItemId(null); setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "", facilitator_notes: "" }); setShowItemForm(!showItemForm); }} className="gap-1.5">
                   <Plus className="w-4 h-4" /> Add Agenda Item
                 </Button>
               </div>
@@ -449,8 +486,8 @@ export default function EDAgendaMaker() {
               {showItemForm && (
                 <form onSubmit={handleAddItem} className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3 no-print">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm">New Agenda Item</h3>
-                    <button type="button" onClick={() => setShowItemForm(false)} className="text-muted-foreground hover:text-foreground">
+                    <h3 className="font-semibold text-sm">{editingItemId ? "Edit Agenda Item" : "New Agenda Item"}</h3>
+                    <button type="button" onClick={handleCancelItemForm} className="text-muted-foreground hover:text-foreground">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -487,8 +524,8 @@ export default function EDAgendaMaker() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setShowItemForm(false)}>Cancel</Button>
-                    <Button type="submit" size="sm" className="flex-1" disabled={createItem.isPending}>{createItem.isPending ? "Saving..." : "Add Item"}</Button>
+                    <Button type="button" variant="outline" size="sm" className="flex-1" onClick={handleCancelItemForm}>Cancel</Button>
+                    <Button type="submit" size="sm" className="flex-1" disabled={createItem.isPending || updateItem.isPending}>{(createItem.isPending || updateItem.isPending) ? "Saving..." : editingItemId ? "Save Changes" : "Add Item"}</Button>
                   </div>
                 </form>
               )}
@@ -528,9 +565,14 @@ export default function EDAgendaMaker() {
                         </div>
                       )}
                     </div>
-                    <button onClick={() => deleteItem.mutate(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleEditItem(item)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => deleteItem.mutate(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {sortedItems.length === 0 && !loadingItems && (
