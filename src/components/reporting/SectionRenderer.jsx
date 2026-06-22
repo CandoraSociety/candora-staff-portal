@@ -218,7 +218,7 @@ export default function SectionRenderer({
             <CollageRenderer photos={section.collage_photos} layout={section.collage_layout || 'grid'} isPrint={isPrint} />
           </div>
         ) : (
-          <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ maxHeight: isPrint ? '240px' : '400px', border: `3px solid ${pc}`, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }} />
+          <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `3px solid ${pc}`, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }} />
         )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}
         {showImageSlider && (
