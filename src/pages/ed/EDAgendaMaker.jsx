@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Printer, LayoutTemplate, StickyNote } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote } from "lucide-react";
+import AgendaPreviewDialog from "@/components/ed/AgendaPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,6 +83,7 @@ export default function EDAgendaMaker() {
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [meetingForm, setMeetingForm] = useState({
     title: "",
@@ -249,7 +251,7 @@ export default function EDAgendaMaker() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 no-print">
         <div className="flex items-center gap-2 mb-1">
           <ListChecks className="w-6 h-6 text-primary" />
           <h1 className="font-heading text-2xl font-bold">Meeting Agenda Maker</h1>
@@ -373,18 +375,9 @@ export default function EDAgendaMaker() {
                   <h1 className="font-heading text-xl font-bold truncate">{orgName}</h1>
                   <p className="text-sm opacity-80">Meeting Agenda</p>
                 </div>
-                <button onClick={() => window.print()} className="hidden sm:flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
-                  <Printer className="w-4 h-4" /> Print
+                <button onClick={() => setShowPreview(true)} className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
+                  <Eye className="w-4 h-4" /> Preview
                 </button>
-              </div>
-
-              {/* Print-only branded header */}
-              <div className="hidden print:block mb-6 flex items-center gap-4 border-b-2 border-accent pb-4">
-                <img src={logoUrl} alt={orgName} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
-                <div>
-                  <h1 className="font-heading text-2xl font-bold">{orgName}</h1>
-                  <p className="text-sm text-muted-foreground">Meeting Agenda</p>
-                </div>
               </div>
 
               {/* Meeting header */}
@@ -550,6 +543,15 @@ export default function EDAgendaMaker() {
           )}
         </div>
       </div>
+
+      {selectedMeeting && (
+        <AgendaPreviewDialog
+          meeting={selectedMeeting}
+          items={sortedItems}
+          open={showPreview}
+          onOpenChange={setShowPreview}
+        />
+      )}
     </div>
   );
 }
