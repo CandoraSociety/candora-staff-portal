@@ -123,7 +123,7 @@ export default function EDAgendaMaker() {
 
   const selectedMeeting = meetings.find((m) => m.id === selectedMeetingId);
 
-  const { longLogoUrl, orgName } = useOrgSettings();
+  const { logoUrl, orgName } = useOrgSettings();
 
   // Auto-show item form when selecting a meeting with no agenda items
   useEffect(() => {
@@ -367,7 +367,7 @@ export default function EDAgendaMaker() {
             <div>
               {/* Candora Branded Header */}
               <div className="bg-accent text-accent-foreground rounded-xl p-5 mb-4 flex items-center gap-4 no-print">
-                <img src={longLogoUrl} alt={orgName} className="h-12 object-contain flex-shrink-0" />
+                <img src={logoUrl} alt={orgName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <h1 className="font-heading text-xl font-bold truncate">{orgName}</h1>
                   <p className="text-sm opacity-80">Meeting Agenda</p>
@@ -379,7 +379,7 @@ export default function EDAgendaMaker() {
 
               {/* Print-only branded header */}
               <div className="hidden print:block mb-6 flex items-center gap-4 border-b-2 border-accent pb-4">
-                <img src={longLogoUrl} alt={orgName} className="h-14 object-contain flex-shrink-0" />
+                <img src={logoUrl} alt={orgName} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
                 <div>
                   <h1 className="font-heading text-2xl font-bold">{orgName}</h1>
                   <p className="text-sm text-muted-foreground">Meeting Agenda</p>
