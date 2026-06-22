@@ -292,7 +292,7 @@ export default function TransitionClientsTab() {
     }
   }
 
-  // Filter and sort
+  // Filter and sort - open files
   const filtered = clients.filter(c => {
     const program = c.program || (String(c.service_element || "").toUpperCase().includes("CEIS") ? "CEIS" : "WD");
     if (program !== activeProgram) return false;
@@ -311,6 +311,18 @@ export default function TransitionClientsTab() {
     const db = b.next_checkin_date ? new Date(b.next_checkin_date) : new Date(9999, 0, 1);
     return da - db;
   });
+
+  // Closed files section - always show closed files at the bottom (when filter is not "closed")
+  const closedFiles = filterFileStatus !== "closed"
+    ? clients.filter(c => {
+        const program = c.program || (String(c.service_element || "").toUpperCase().includes("CEIS") ? "CEIS" : "WD");
+        return program === activeProgram && c.file_status === "closed";
+      }).sort((a, b) => {
+        const da = a.close_date ? new Date(a.close_date) : new Date(0);
+        const db = b.close_date ? new Date(b.close_date) : new Date(0);
+        return db - da;
+      })
+    : [];
 
   // Scope stats to active program
   const programClients = clients.filter(c => {
@@ -938,6 +950,76 @@ export default function TransitionClientsTab() {
           <div className="text-center py-10 text-slate-400">No clients match your filters.</div>
         )}
         </div>
+
+        {/* Closed Files Section */}
+        {closedFiles.length > 0 && filterFileStatus !== "closed" && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Archive className="w-4 h-4 text-slate-400" />
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Closed Files ({closedFiles.length})</h3>
+            </div>
+            <div className="space-y-2">
+              {closedFiles.map(c => {
+                const isExpanded = expandedId === c.id;
+                const prevName = c.previous_counsellor === "Other" ? (c.previous_counsellor_other || "Other") : c.previous_counsellor;
+                return (
+                  <div key={c.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden opacity-75">
+                    <div
+                      className="flex items-center gap-3 p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                      onClick={() => setExpandedId(isExpanded ? null : c.id)}
+                    >
+                      <button className="text-slate-400 shrink-0">
+                        {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </button>
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0 bg-slate-200" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-slate-400 line-through">{c.first_name} {c.last_name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-slate-700 text-white flex items-center gap-0.5">
+                            <Archive className="w-2.5 h-2.5" /> Closed
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-400">
+                          {c.compass_hsid && <span className="font-mono">HSID: {c.compass_hsid}</span>}
+                          {c.close_date && <span>Closed: {fmtDate(c.close_date)}</span>}
+                        </div>
+                      </div>
+                      <div className="hidden md:flex items-center gap-1.5 shrink-0">
+                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium", COUNSELLOR_BADGE[c.previous_counsellor] || COUNSELLOR_BADGE.Other)}>{prevName}</span>
+                        <span className="text-slate-300 text-xs">→</span>
+                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium", COUNSELLOR_BADGE[c.new_counsellor] || COUNSELLOR_BADGE.Other)}>{c.new_counsellor || "Olena"}</span>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); setCloseDialog({ open: true, client: c }); }} className="p-1.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition" title="Reopen file">
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleEdit(c); }} className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); if (confirm(`Delete ${c.first_name} ${c.last_name}?`)) deleteMutation.mutate(c.id); }} className="p-1.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-3">
+                        <div className="bg-slate-100 border border-slate-300 rounded-md p-3 flex items-start gap-2">
+                          <Archive className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                          <div className="text-xs">
+                            <span className="font-semibold text-slate-600">File Closed</span>
+                            <span className="text-slate-500"> — {c.close_reason === "completed" ? "Program Completed" : c.close_reason === "cancelled" ? "Cancelled" : c.close_reason === "transferred" ? "Transferred Out" : c.close_reason === "not_eligible" ? "Not Eligible" : c.close_reason_other || c.close_reason}</span>
+                            {c.close_date && <span className="text-slate-400"> · {fmtDate(c.close_date)}</span>}
+                            {c.close_notes && <p className="text-slate-500 mt-1 whitespace-pre-wrap">{c.close_notes}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Close File Dialog */}
         {closeDialog.open && closeDialog.client && (
