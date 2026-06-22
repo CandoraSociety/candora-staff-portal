@@ -218,22 +218,30 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
     try {
       const doc = await generateAgendaPDF();
       const safeName = (meeting.title || "Agenda").replace(/[^a-z0-9]/gi, "_");
-      const pdfBlob = doc.output("blob");
-      const file = new File([pdfBlob], `${safeName}_Agenda.pdf`, { type: "application/pdf" });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      doc.save(`${safeName}_Agenda.pdf`);
 
       const meetingDate = meeting.meeting_date ? format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a") : "";
-      const personalMsg = shareMessage ? `\n${shareMessage}\n` : "";
+      const subject = `Agenda: ${meeting.title}${meetingDate ? ` — ${format(new Date(meeting.meeting_date), "MMM d, yyyy")}` : ""}`;
 
-      const body = `Hello,\n\nPlease find the meeting agenda from ${orgName} at the link below:\n\n${file_url}\n\nMeeting: ${meeting.title}\n${meetingDate ? `Date: ${meetingDate}\n` : ""}${meeting.location ? `Location: ${meeting.location}\n` : ""}${meeting.facilitator ? `Facilitator: ${meeting.facilitator}\n` : ""}${meeting.attendees?.length ? `Attendees: ${meeting.attendees.join(", ")}\n` : ""}${personalMsg}\n— ${orgName}`;
+      const bodyLines = [
+        `Hello,`,
+        ``,
+        `Please find the meeting agenda from ${orgName} attached as a PDF.`,
+        ``,
+        `Meeting: ${meeting.title}`,
+      ];
+      if (meetingDate) bodyLines.push(`Date: ${meetingDate}`);
+      if (meeting.location) bodyLines.push(`Location: ${meeting.location}`);
+      if (meeting.facilitator) bodyLines.push(`Facilitator: ${meeting.facilitator}`);
+      if (meeting.attendees?.length) bodyLines.push(`Attendees: ${meeting.attendees.join(", ")}`);
+      if (shareMessage) { bodyLines.push(""); bodyLines.push(shareMessage); }
+      bodyLines.push("");
+      bodyLines.push(`— ${orgName}`);
 
-      await base44.integrations.Core.SendEmail({
-        to: emails.join(", "),
-        subject: `Agenda: ${meeting.title}${meetingDate ? ` — ${format(new Date(meeting.meeting_date), "MMM d, yyyy")}` : ""}`,
-        body,
-      });
+      const mailto = `mailto:${emails.join(",")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyLines.join("\n"))}`;
+      window.location.href = mailto;
 
-      toast({ title: "Agenda shared", description: `PDF sent to ${emails.length} recipient${emails.length > 1 ? "s" : ""}.` });
+      toast({ title: "PDF downloaded", description: "Your email client is opening — attach the downloaded PDF and send." });
       setShowShare(false);
       setShareEmails("");
       setShareMessage("");
