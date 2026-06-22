@@ -2,7 +2,11 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Printer, StickyNote } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { base44 } from "@/api/base44Client";
+import { Printer, StickyNote, Download, Share2, Loader2 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { cn } from "@/lib/utils";
@@ -108,6 +112,12 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes) {
 
 export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange }) {
   const [includeNotes, setIncludeNotes] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [shareEmails, setShareEmails] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const { toast } = useToast();
   const { logoUrl, orgName } = useOrgSettings();
 
   const sortedItems = [...(items || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
@@ -126,27 +136,209 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
     setTimeout(() => w.print(), 300);
   };
 
+  const handleSavePDF = () => {
+    setIsSaving(true);
+    try {
+      const doc = new jsPDF("p", "mm", "a4");
+      const margin = 18;
+      const pageW = 210;
+      const contentW = pageW - margin * 2;
+      let y = margin;
+
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 31, 107);
+      doc.text(orgName, margin, y);
+      y += 6;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(110);
+      doc.text("Meeting Agenda", margin, y);
+      y += 5;
+      doc.setDrawColor(15, 31, 107);
+      doc.setLineWidth(0.8);
+      doc.line(margin, y, pageW - margin, y);
+      y += 8;
+
+      // Meeting info
+      doc.setTextColor(20);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      const titleLines = doc.splitTextToSize(meeting.title, contentW);
+      doc.text(titleLines, margin, y);
+      y += titleLines.length * 6;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80);
+      if (meeting.meeting_date) {
+        doc.text(format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a"), margin, y);
+        y += 5;
+      }
+      if (meeting.location) { doc.text(meeting.location, margin, y); y += 5; }
+      if (meeting.facilitator) { doc.text(`Facilitator: ${meeting.facilitator}`, margin, y); y += 5; }
+      if (meeting.attendees?.length) { doc.text(`Attendees: ${meeting.attendees.join(", ")}`, margin, y); y += 5; }
+      y += 4;
+
+      // Table header
+      doc.setFillColor(240, 240, 245);
+      doc.rect(margin, y - 4, contentW, 8, "F");
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(90);
+      doc.text("#", margin + 2, y);
+      doc.text("Agenda Item", margin + 10, y);
+      doc.text("Presenter", margin + 120, y);
+      doc.text("Time", pageW - margin - 2, y, { align: "right" });
+      y += 8;
+
+      // Rows
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      sortedItems.forEach((item, idx) => {
+        if (y > 270) { doc.addPage(); y = margin; }
+        doc.setTextColor(120);
+        doc.text(String(idx + 1), margin + 2, y);
+        doc.setTextColor(20);
+        doc.setFont("helvetica", "bold");
+        const titleLines = doc.splitTextToSize(item.title, 100);
+        doc.text(titleLines, margin + 10, y);
+        let rowH = titleLines.length * 5;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(80);
+        if (item.item_type) {
+          doc.text(`[${item.item_type.replace(/_/g, " ")}]`, margin + 10, y + rowH);
+          rowH += 5;
+        }
+        if (item.description) {
+          const descLines = doc.splitTextToSize(item.description, 100);
+          doc.text(descLines, margin + 10, y + rowH);
+          rowH += descLines.length * 5;
+        }
+        if (includeNotes && item.facilitator_notes) {
+          doc.setTextColor(146, 64, 14);
+          const noteLines = doc.splitTextToSize(`Notes: ${item.facilitator_notes}`, 100);
+          doc.text(noteLines, margin + 10, y + rowH);
+          rowH += noteLines.length * 5;
+          doc.setTextColor(80);
+        }
+        doc.text(item.presenter || "", margin + 120, y);
+        if (item.duration_minutes > 0) {
+          doc.text(`${item.duration_minutes} min`, pageW - margin - 2, y, { align: "right" });
+        }
+        y += Math.max(rowH, 7);
+        doc.setDrawColor(230);
+        doc.setLineWidth(0.2);
+        doc.line(margin, y, pageW - margin, y);
+        y += 2;
+      });
+
+      if (totalDuration > 0) {
+        y += 4;
+        doc.setFontSize(9);
+        doc.setTextColor(110);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Total Estimated Time: ${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m`, pageW - margin, y, { align: "right" });
+      }
+
+      const safeName = meeting.title.replace(/[^a-z0-9]/gi, "_");
+      doc.save(`${safeName}_Agenda.pdf`);
+      toast({ title: "PDF saved", description: "Agenda downloaded as PDF." });
+    } catch (err) {
+      toast({ title: "Failed to save PDF", description: err?.message, variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    const emails = shareEmails.split(/[,\s]+/).filter(Boolean);
+    if (emails.length === 0) return;
+
+    setIsSharing(true);
+    try {
+      const meetingDate = meeting.meeting_date ? format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a") : "";
+      const itemRows = sortedItems.map((item, idx) => {
+        let row = `${idx + 1}. ${item.title}`;
+        if (item.item_type) row += ` [${item.item_type.replace(/_/g, " ")}]`;
+        if (item.presenter) row += ` — ${item.presenter}`;
+        if (item.duration_minutes > 0) row += ` (${item.duration_minutes} min)`;
+        if (item.description) row += `\n   ${item.description}`;
+        if (includeNotes && item.facilitator_notes) row += `\n   📝 Facilitator Notes: ${item.facilitator_notes}`;
+        return row;
+      }).join("\n\n");
+
+      const totalLine = totalDuration > 0 ? `\n\nTotal Estimated Time: ${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : "";
+      const personalMsg = shareMessage ? `\n\n---\n${shareMessage}` : "";
+
+      const body = `${orgName} — Meeting Agenda\n${"=".repeat(40)}\n\n${meeting.title}${meetingDate ? `\n${meetingDate}` : ""}${meeting.location ? `\nLocation: ${meeting.location}` : ""}${meeting.facilitator ? `\nFacilitator: ${meeting.facilitator}` : ""}${meeting.attendees?.length ? `\nAttendees: ${meeting.attendees.join(", ")}` : ""}\n\n${"─".repeat(40)}\n\n${itemRows}${totalLine}${personalMsg}`;
+
+      await base44.integrations.Core.SendEmail({
+        to: emails.join(", "),
+        subject: `Agenda: ${meeting.title}${meetingDate ? ` — ${format(new Date(meeting.meeting_date), "MMM d, yyyy")}` : ""}`,
+        body,
+      });
+
+      toast({ title: "Agenda shared", description: `Sent to ${emails.length} recipient${emails.length > 1 ? "s" : ""}.` });
+      setShowShare(false);
+      setShareEmails("");
+      setShareMessage("");
+    } catch (err) {
+      toast({ title: "Failed to share", description: err?.message || "Unknown error", variant: "destructive" });
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   if (!meeting) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <DialogTitle>Agenda Preview</DialogTitle>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <Switch checked={includeNotes} onCheckedChange={setIncludeNotes} />
                 <span className="flex items-center gap-1">
                   <StickyNote className="w-3.5 h-3.5 text-amber-500" /> Facilitator Notes
                 </span>
               </label>
+              <Button size="sm" variant="outline" onClick={handleSavePDF} disabled={isSaving} className="gap-1.5">
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Save PDF
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowShare(!showShare)} className="gap-1.5">
+                <Share2 className="w-4 h-4" /> Share
+              </Button>
               <Button size="sm" onClick={handlePrint} className="gap-1.5">
                 <Printer className="w-4 h-4" /> Print
               </Button>
             </div>
           </div>
         </DialogHeader>
+
+        {showShare && (
+          <form onSubmit={handleShare} className="bg-muted/50 border border-border rounded-lg p-4 space-y-3">
+            <div>
+              <label className="text-xs font-medium mb-1 block">Recipients (email addresses, comma or space separated) *</label>
+              <Input required type="text" value={shareEmails} onChange={(e) => setShareEmails(e.target.value)} placeholder="jane@example.com, john@example.com" />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block">Personal Message (optional)</label>
+              <textarea value={shareMessage} onChange={(e) => setShareMessage(e.target.value)} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none" placeholder="Add a note to recipients..." />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <StickyNote className="w-3.5 h-3.5 text-amber-500" />
+              {includeNotes ? "Facilitator notes will be included." : "Facilitator notes will NOT be included. Toggle the switch above to include them."}
+            </div>
+            <Button type="submit" size="sm" disabled={isSharing} className="gap-1.5">
+              {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+              {isSharing ? "Sending..." : "Send Agenda"}
+            </Button>
+          </form>
+        )}
 
         <div className="border border-border rounded-lg p-6 bg-white">
           {/* Branded header */}
