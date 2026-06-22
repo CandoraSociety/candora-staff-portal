@@ -89,7 +89,12 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     try {
       const res = await base44.functions.invoke('generateReportVisual', { section_title: title, section_content: content, category: visualCategory, report_context: '', brand_colors: '#1a2744, #c8952e' });
       const url = res.data?.url;
-      if (url) { setImageUrl(url); onUpdate(section.id, { image_url: url }); }
+      if (url) {
+        setImageUrl(url);
+        const newLayout = layout === 'text_only' ? 'image_full' : layout;
+        if (layout === 'text_only') setLayout('image_full');
+        onUpdate(section.id, { image_url: url, layout: newLayout });
+      }
     } catch {}
     setGeneratingVisual(false);
   };
@@ -109,7 +114,10 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setImageUrl(file_url);
-      onUpdate(section.id, { image_url: file_url });
+      // Auto-switch from text_only to image_full so the uploaded image is visible
+      const newLayout = layout === 'text_only' ? 'image_full' : layout;
+      if (layout === 'text_only') setLayout('image_full');
+      onUpdate(section.id, { image_url: file_url, layout: newLayout });
     } catch {}
     setUploadingImage(false);
   };
