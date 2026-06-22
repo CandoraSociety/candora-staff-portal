@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Plus, Trash2, Edit3, Eye, Copy } from 'lucide-react';
+import { FileText, Upload, Plus, Trash2, Edit3, Eye, Copy, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
 import CreateReportDialog from '@/components/reporting/CreateReportDialog';
 import UploadAnalyzerDialog from '@/components/reporting/UploadAnalyzerDialog';
 
@@ -93,6 +94,12 @@ export default function ReportingAGR() {
                 <div className="p-4">
                   <h3 className="font-semibold text-sm text-accent group-hover:text-primary transition-colors">{report.title}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Fiscal Year {report.year}</p>
+                  {report.updated_date && (
+                    <p className="text-[11px] text-muted-foreground/70 mt-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Updated {format(new Date(report.updated_date), "MMM d, yyyy 'at' h:mm a")}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between mt-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[report.status] || 'bg-slate-100'}`}>
                       {report.status?.replace('_', ' ')}
