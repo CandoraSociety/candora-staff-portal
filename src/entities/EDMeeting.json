@@ -1,0 +1,62 @@
+{
+  "name": "EDMeeting",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Meeting title"
+    },
+    "meeting_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time of meeting"
+    },
+    "location": {
+      "type": "string",
+      "description": "Meeting location or video link"
+    },
+    "meeting_type": {
+      "type": "string",
+      "enum": [
+        "Staff Meeting",
+        "Leadership Team",
+        "1-on-1",
+        "Board Meeting",
+        "External/Partner",
+        "All-Hands",
+        "Committee",
+        "Other"
+      ],
+      "default": "Staff Meeting"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of attendee names"
+    },
+    "facilitator": {
+      "type": "string",
+      "description": "Person facilitating the meeting"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General meeting notes"
+    }
+  },
+  "required": [
+    "title",
+    "meeting_date"
+  ]
+}

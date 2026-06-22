@@ -126,6 +126,7 @@ import EDKPIs from '@/pages/ed/EDKPIs';
 import EDBudgets from '@/pages/ed/EDBudgets';
 import EDOrgChart from '@/pages/ed/EDOrgChart';
 import EDNotes from '@/pages/ed/EDNotes';
+import EDAgendaMaker from '@/pages/ed/EDAgendaMaker';
 
 // Reports Portal
 import ReportingLayout from '@/components/reporting/ReportingLayout';
@@ -332,6 +333,7 @@ const AuthenticatedApp = () => {
           <Route path="/ed/budgets" element={<EDBudgets />} />
           <Route path="/ed/org" element={<EDOrgChart />} />
           <Route path="/ed/notes" element={<EDNotes />} />
+          <Route path="/ed/agendas" element={<EDAgendaMaker />} />
         </Route>
 
         {/* Reports Portal - standalone layout */}

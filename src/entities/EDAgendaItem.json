@@ -1,0 +1,45 @@
+{
+  "name": "EDAgendaItem",
+  "type": "object",
+  "properties": {
+    "meeting_id": {
+      "type": "string",
+      "description": "Reference to EDMeeting"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "opening",
+        "review",
+        "discussion",
+        "decision",
+        "action_item",
+        "update",
+        "presentation",
+        "closing",
+        "other"
+      ],
+      "default": "discussion"
+    },
+    "presenter": {
+      "type": "string"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 10
+    },
+    "order_index": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "meeting_id",
+    "title"
+  ]
+}
