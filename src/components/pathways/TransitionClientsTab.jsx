@@ -72,6 +72,12 @@ program: "WD", previous_counsellor: "Lola", previous_counsellor_other: "",
   next_checkin_date: "", last_checkin_date: "", checkin_frequency: "weekly",
   checkin_notes: "", program_stage: "", notes: "",
   milestones: [],
+  service_element: "", service_start_date: "", service_outcome: "", service_outcome_date: "",
+  placement_outcome: "", placement_outcome_date: "",
+  outcome_30day: "", outcome_30day_date: "", outcome_60day: "", outcome_60day_date: "",
+  outcome_90day: "", outcome_90day_date: "", outcome_180day: "", outcome_180day_date: "",
+  employed_ftpt: "", service_navigation_support: false, work_exposure: false, wage_subsidy: false,
+  ceis_dea: false, dea_start_date: "", eda_completion_date: "",
 };
 
 export default function TransitionClientsTab() {
@@ -92,6 +98,7 @@ export default function TransitionClientsTab() {
   const [closeForm, setCloseForm] = useState({ reason: "completed", reason_other: "", notes: "" });
   const [milestoneDialog, setMilestoneDialog] = useState({ open: false, client: null });
   const [listModal, setListModal] = useState({ open: false, title: "", items: [] });
+  const formRef = useRef(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["transition-clients"],
@@ -163,6 +170,7 @@ export default function TransitionClientsTab() {
       milestones: client.milestones || [],
     });
     setShowForm(true);
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   }
 
   function handleSubmit(e) {
@@ -444,7 +452,7 @@ export default function TransitionClientsTab() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-5 mb-4 space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-5 mb-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-sm" style={{ color: "hsl(231,64%,20%)" }}>{editingId ? "Edit Client" : "New Transition Client"}</h3>
             <button type="button" onClick={resetForm} className="text-slate-400 hover:text-slate-600"><X className="w-4 h-4" /></button>
