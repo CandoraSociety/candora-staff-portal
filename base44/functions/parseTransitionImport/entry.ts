@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { file_url } = await req.json();
+    const { file_url, _debug } = await req.json();
     if (!file_url) return Response.json({ error: 'file_url is required' }, { status: 400 });
 
     // Download the uploaded file
@@ -45,6 +45,7 @@ Deno.serve(async (req) => {
     }
 
     if (headerIdx === -1) {
+      if (_debug) return Response.json({ debug: true, rawFirstRows: rows.slice(0, 12).map(r => r.slice(0, 5)) });
       return Response.json({ error: 'Could not find a header row. Use the CRT format or include First Name / Last Name columns.' }, { status: 400 });
     }
 
@@ -60,10 +61,10 @@ Deno.serve(async (req) => {
         const hdr = String(h || '').toLowerCase().trim();
         if (!hdr) return;
 
-        if (hdr.includes('participant')) fieldByCol[i] = 'full_name';
-        else if (hdr.includes('hsid') || hdr.includes('compass')) fieldByCol[i] = 'compass_hsid';
-        else if (hdr.includes('email') || hdr.includes('e-mail')) fieldByCol[i] = 'email';
+        if (hdr.includes('email') || hdr.includes('e-mail')) fieldByCol[i] = 'email';
         else if (hdr.includes('phone') || hdr.includes('telephone')) fieldByCol[i] = 'phone';
+        else if (hdr.includes('hsid') || hdr.includes('compass')) fieldByCol[i] = 'compass_hsid';
+        else if (hdr.includes('participant') && (hdr.includes('name'))) fieldByCol[i] = 'full_name';
         else if (hdr.includes('service element')) fieldByCol[i] = 'service_element';
         else if (hdr.includes('service start')) fieldByCol[i] = 'service_start_date';
         else if (hdr.includes('service outcome date')) fieldByCol[i] = 'service_outcome_date';
@@ -227,6 +228,7 @@ Deno.serve(async (req) => {
       }).filter(r => r.first_name && r.last_name);
     }
 
+    if (_debug) return Response.json({ debug: true, isCRT, headerIdx, headerRow: rows[headerIdx]?.slice(0, 10), dataSample: rows.slice(headerIdx + 2, headerIdx + 6).map(r => r.slice(0, 5)), totalDataRows: isCRT ? rows.slice(headerIdx + 2).filter(r => r[0] && String(r[0]).trim()).length : rows.slice(headerIdx + 1).filter(r => r.some(c => String(c || '').trim())).length });
     return Response.json({ records, count: records.length, isCRT });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
