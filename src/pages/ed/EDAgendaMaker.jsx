@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Printer, LayoutTemplate } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Printer, LayoutTemplate, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -99,6 +99,7 @@ export default function EDAgendaMaker() {
     presenter: "",
     duration_minutes: "",
     description: "",
+    facilitator_notes: "",
   });
 
   // Fetch meetings
@@ -225,7 +226,7 @@ export default function EDAgendaMaker() {
       duration_minutes: itemForm.duration_minutes === "" ? null : Number(itemForm.duration_minutes) || 0,
       order_index: sortedItems.length,
     });
-    setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "" });
+    setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "", facilitator_notes: "" });
   };
 
   const handleMove = (index, direction) => {
@@ -484,6 +485,13 @@ export default function EDAgendaMaker() {
                       <label className="text-xs font-medium mb-1 block">Description</label>
                       <textarea value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background resize-none" placeholder="Optional details..." />
                     </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs font-medium mb-1 block flex items-center gap-1.5">
+                        <StickyNote className="w-3.5 h-3.5 text-amber-500" /> Facilitator Notes
+                        <span className="text-muted-foreground font-normal">(not shown on printed agenda)</span>
+                      </label>
+                      <textarea value={itemForm.facilitator_notes} onChange={(e) => setItemForm({ ...itemForm, facilitator_notes: e.target.value })} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-amber-50/50 resize-none" placeholder="Private notes for the facilitator..." />
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setShowItemForm(false)}>Cancel</Button>
@@ -520,6 +528,12 @@ export default function EDAgendaMaker() {
                         {item.duration_minutes > 0 && <span>{item.duration_minutes} min</span>}
                       </div>
                       {item.description && <p className="text-xs text-muted-foreground mt-1">{item.description}</p>}
+                      {item.facilitator_notes && (
+                        <div className="mt-2 no-print bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 flex items-start gap-1.5">
+                          <StickyNote className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+                          <p className="text-xs text-amber-900 whitespace-pre-wrap">{item.facilitator_notes}</p>
+                        </div>
+                      )}
                     </div>
                     <button onClick={() => deleteItem.mutate(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />

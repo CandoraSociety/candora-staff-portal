@@ -12,6 +12,10 @@
     "description": {
       "type": "string"
     },
+    "facilitator_notes": {
+      "type": "string",
+      "description": "Private notes for the facilitator, not shown on the printed agenda"
+    },
     "item_type": {
       "type": "string",
       "enum": [
