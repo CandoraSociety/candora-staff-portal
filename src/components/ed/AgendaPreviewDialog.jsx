@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { base44 } from "@/api/base44Client";
-import { Printer, StickyNote, Download, Share2, Loader2, Clock, User } from "lucide-react";
+import { Printer, StickyNote, Download, Share2, Loader2, Clock, User, ClipboardList, PenLine } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { useOrgSettings } from "@/lib/useOrgSettings";
@@ -28,7 +28,7 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes, showTime, showPresenter) {
+function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes, showTime, showPresenter, showNotesLines, showActionItems) {
   const sorted = [...items].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   const total = sorted.reduce((s, i) => s + (i.duration_minutes || 0), 0);
   const meetingDate = meeting.meeting_date ? format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a") : "";
@@ -41,12 +41,12 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes, showTime
         ${item.item_type ? `<span class="badge">${escapeHtml(item.item_type.replace(/_/g, " "))}</span>` : ""}
         ${item.description ? `<div class="desc">${escapeHtml(item.description)}</div>` : ""}
         ${includeNotes && item.facilitator_notes ? `<div class="fac-notes"><strong>Facilitator Notes:</strong> ${escapeHtml(item.facilitator_notes)}</div>` : ""}
-        <div class="note-lines">
+        ${showNotesLines ? `<div class="note-lines">
           <div class="note-line">Notes:</div>
           <div class="note-line"></div>
           <div class="note-line"></div>
           <div class="note-line"><span class="action-label">Action:</span> ________________________________ <span class="action-due">Due: ___________</span></div>
-        </div>
+        </div>` : ""}
       </td>
       ${showPresenter ? `<td class="presenter">${item.presenter ? escapeHtml(item.presenter) : ""}</td>` : ""}
       ${showTime ? `<td class="duration">${item.duration_minutes > 0 ? item.duration_minutes + " min" : ""}</td>` : ""}
@@ -125,10 +125,10 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes, showTime
   </table>
   ${showTime && total > 0 ? `<p class="total">Total Estimated Time: ${Math.floor(total / 60)}h ${total % 60}m</p>` : ""}
 
-  <div class="action-items-section">
+  ${showActionItems ? `<div class="action-items-section">
     <h3>Action Items</h3>
     ${actionItemLines}
-  </div>
+  </div>` : ""}
 </body>
 </html>`;
 }
@@ -137,6 +137,8 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
   const [includeNotes, setIncludeNotes] = useState(false);
   const [showTime, setShowTime] = useState(true);
   const [showPresenter, setShowPresenter] = useState(true);
+  const [showNotesLines, setShowNotesLines] = useState(true);
+  const [showActionItems, setShowActionItems] = useState(true);
   const [showShare, setShowShare] = useState(false);
   const [shareEmails, setShareEmails] = useState("");
   const [shareMessage, setShareMessage] = useState("");
@@ -149,7 +151,7 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
   const totalDuration = sortedItems.reduce((s, i) => s + (i.duration_minutes || 0), 0);
 
   const handlePrint = () => {
-    const html = buildPrintHTML(meeting, sortedItems, logoUrl, orgName, includeNotes, showTime, showPresenter);
+    const html = buildPrintHTML(meeting, sortedItems, logoUrl, orgName, includeNotes, showTime, showPresenter, showNotesLines, showActionItems);
     const w = window.open("", "_blank");
     if (!w) {
       alert("Please allow popups to print the agenda.");
@@ -254,20 +256,22 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
         y += Math.max(rowH, 7) + 2;
 
         // Note lines for handwriting
-        doc.setFontSize(9);
-        doc.setTextColor(180);
-        doc.text("Notes:", margin + 10, y);
-        y += 5;
-        for (let i = 0; i < 2; i++) {
-          if (y > 275) { doc.addPage(); y = margin; }
-          doc.setDrawColor(235);
-          doc.setLineWidth(0.2);
-          doc.line(margin + 10, y, pageW - margin, y);
-          y += 6;
+        if (showNotesLines) {
+          doc.setFontSize(9);
+          doc.setTextColor(180);
+          doc.text("Notes:", margin + 10, y);
+          y += 5;
+          for (let i = 0; i < 2; i++) {
+            if (y > 275) { doc.addPage(); y = margin; }
+            doc.setDrawColor(235);
+            doc.setLineWidth(0.2);
+            doc.line(margin + 10, y, pageW - margin, y);
+            y += 6;
+          }
+          if (y > 270) { doc.addPage(); y = margin; }
+          doc.text("Action: ____________________________  Due: __________", margin + 10, y);
+          y += 7;
         }
-        if (y > 270) { doc.addPage(); y = margin; }
-        doc.text("Action: ____________________________  Due: __________", margin + 10, y);
-        y += 7;
 
         doc.setDrawColor(230);
         doc.setLineWidth(0.2);
@@ -276,27 +280,29 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
       });
 
       // Action items section
-      if (y > 245) { doc.addPage(); y = margin; }
-      y += 6;
-      doc.setDrawColor(15, 31, 107);
-      doc.setLineWidth(0.6);
-      doc.line(margin, y, pageW - margin, y);
-      y += 7;
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(15, 31, 107);
-      doc.text("Action Items", margin, y);
-      y += 8;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(160);
-      for (let i = 0; i < 6; i++) {
-        if (y > 275) { doc.addPage(); y = margin; }
-        doc.text("☐", margin + 2, y);
-        doc.setDrawColor(220);
-        doc.setLineWidth(0.2);
-        doc.line(margin + 8, y, pageW - margin, y);
-        y += 9;
+      if (showActionItems) {
+        if (y > 245) { doc.addPage(); y = margin; }
+        y += 6;
+        doc.setDrawColor(15, 31, 107);
+        doc.setLineWidth(0.6);
+        doc.line(margin, y, pageW - margin, y);
+        y += 7;
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 31, 107);
+        doc.text("Action Items", margin, y);
+        y += 8;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(160);
+        for (let i = 0; i < 6; i++) {
+          if (y > 275) { doc.addPage(); y = margin; }
+          doc.text("☐", margin + 2, y);
+          doc.setDrawColor(220);
+          doc.setLineWidth(0.2);
+          doc.line(margin + 8, y, pageW - margin, y);
+          y += 9;
+        }
       }
 
       if (showTime && totalDuration > 0) {
@@ -332,13 +338,15 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
         if (showTime && item.duration_minutes > 0) row += ` (${item.duration_minutes} min)`;
         if (item.description) row += `\n   ${item.description}`;
         if (includeNotes && item.facilitator_notes) row += `\n   📝 Facilitator Notes: ${item.facilitator_notes}`;
+        if (showNotesLines) row += `\n   (space for notes)`;
         return row;
       }).join("\n\n");
 
       const totalLine = showTime && totalDuration > 0 ? `\n\nTotal Estimated Time: ${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m` : "";
+      const actionItemsLine = showActionItems ? `\n\n${"─".repeat(40)}\n\nAction Items:\n${Array.from({ length: 5 }, () => "☐ ____________________________________________").join("\n")}` : "";
       const personalMsg = shareMessage ? `\n\n---\n${shareMessage}` : "";
 
-      const body = `${orgName} — Meeting Agenda\n${"=".repeat(40)}\n\n${meeting.title}${meetingDate ? `\n${meetingDate}` : ""}${meeting.location ? `\nLocation: ${meeting.location}` : ""}${meeting.facilitator ? `\nFacilitator: ${meeting.facilitator}` : ""}${meeting.attendees?.length ? `\nAttendees: ${meeting.attendees.join(", ")}` : ""}\n\n${"─".repeat(40)}\n\n${itemRows}${totalLine}${personalMsg}`;
+      const body = `${orgName} — Meeting Agenda\n${"=".repeat(40)}\n\n${meeting.title}${meetingDate ? `\n${meetingDate}` : ""}${meeting.location ? `\nLocation: ${meeting.location}` : ""}${meeting.facilitator ? `\nFacilitator: ${meeting.facilitator}` : ""}${meeting.attendees?.length ? `\nAttendees: ${meeting.attendees.join(", ")}` : ""}\n\n${"─".repeat(40)}\n\n${itemRows}${totalLine}${actionItemsLine}${personalMsg}`;
 
       await base44.integrations.Core.SendEmail({
         to: emails.join(", "),
@@ -382,6 +390,18 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
                 <Switch checked={showTime} onCheckedChange={setShowTime} />
                 <span className="flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-emerald-500" /> Time
+                </span>
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Switch checked={showNotesLines} onCheckedChange={setShowNotesLines} />
+                <span className="flex items-center gap-1">
+                  <PenLine className="w-3.5 h-3.5 text-violet-500" /> Notes
+                </span>
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Switch checked={showActionItems} onCheckedChange={setShowActionItems} />
+                <span className="flex items-center gap-1">
+                  <ClipboardList className="w-3.5 h-3.5 text-rose-500" /> Action Items
                 </span>
               </label>
               <Button size="sm" variant="outline" onClick={handleSavePDF} disabled={isSaving} className="gap-1.5">
@@ -470,6 +490,16 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
                         <p className="text-xs text-amber-900"><strong>Facilitator Notes:</strong> {item.facilitator_notes}</p>
                       </div>
                     )}
+                    {showNotesLines && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-[10px] text-muted-foreground/60">Notes:</p>
+                        <div className="border-b border-dashed border-border/50 h-3" />
+                        <div className="border-b border-dashed border-border/50 h-3" />
+                        <p className="text-[10px] text-muted-foreground/60 pt-0.5">
+                          Action: <span className="inline-block border-b border-dashed border-border/50 w-32 h-3 align-bottom" /> Due: <span className="inline-block border-b border-dashed border-border/50 w-16 h-3 align-bottom" />
+                        </p>
+                      </div>
+                    )}
                   </td>
                   {showPresenter && <td className="py-2 pr-2 text-sm text-muted-foreground">{item.presenter || "—"}</td>}
                   {showTime && (
@@ -495,7 +525,7 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
             </p>
           )}
 
-          {sortedItems.length > 0 && (
+          {sortedItems.length > 0 && showActionItems && (
             <div className="mt-6 pt-4 border-t-2 border-accent">
               <h3 className="font-heading text-sm font-bold text-accent mb-3">Action Items</h3>
               <div className="space-y-3">
