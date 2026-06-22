@@ -48,7 +48,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Could not find a header row. Use the CRT format or include First Name / Last Name columns.' }, { status: 400 });
     }
 
-    const today = new Date().toISOString().split('T')[0];
     let records = [];
 
     if (isCRT) {
@@ -95,7 +94,7 @@ Deno.serve(async (req) => {
           new_counsellor: "Olena",
           transition_status: "not_started",
           priority: "medium",
-          next_checkin_date: today,
+          next_checkin_date: null,
           last_checkin_date: null,
           checkin_frequency: "weekly",
           checkin_notes: "",
@@ -140,7 +139,7 @@ Deno.serve(async (req) => {
           new_counsellor: "Olena",
           transition_status: "not_started",
           priority,
-          next_checkin_date: getVal(row, 'next check', 'next_checkin') || today,
+          next_checkin_date: getVal(row, 'next check', 'next_checkin') || null,
           last_checkin_date: getVal(row, 'last check', 'last_checkin') || null,
           checkin_frequency: "weekly",
           checkin_notes: getVal(row, 'checkin notes', 'check-in notes'),
