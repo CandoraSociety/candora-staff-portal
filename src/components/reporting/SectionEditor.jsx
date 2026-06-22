@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, It
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
+import SectionGallery from './SectionGallery';
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
 
@@ -427,6 +428,9 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             <Label className="text-xs">Image Caption</Label>
             <Input value={imageCaption} onChange={e => setImageCaption(e.target.value)} onBlur={() => onUpdate(section.id, { image_caption: imageCaption })} placeholder="Caption text" className="mt-1" />
           </div>
+
+          {/* Photo Gallery & Collage Builder */}
+          <SectionGallery section={section} onUpdate={onUpdate} />
 
           <div className="flex flex-wrap gap-4 text-xs">
             <label className="flex items-center gap-1.5">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
+import CollageRenderer from './CollageRenderer';
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -196,13 +197,18 @@ export default function SectionRenderer({
       </div>
     );
 
-    const hasImage = section.image_url && section.layout !== 'text_only';
+    const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
+    const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const imageWidth = section.image_width || 50;
     const chartWidth = section.chart_width || 100;
     const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full'].includes(section.layout);
     const imageBlock = hasImage ? (
       <div className="relative group">
-        <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-cover" style={{ maxHeight: isPrint ? '200px' : '300px' }} />
+        {hasCollage ? (
+          <CollageRenderer photos={section.collage_photos} layout={section.collage_layout || 'grid'} isPrint={isPrint} />
+        ) : (
+          <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-cover" style={{ maxHeight: isPrint ? '200px' : '300px' }} />
+        )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}
         {showImageSlider && (
           <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">

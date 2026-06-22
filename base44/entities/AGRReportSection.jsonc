@@ -43,6 +43,39 @@
       "description": "Chart/graph width as percentage of container (20-100)",
       "default": 100
     },
+    "gallery_images": {
+      "type": "array",
+      "description": "All uploaded photos for this section",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "collage_photos": {
+      "type": "array",
+      "description": "Selected photo URLs for the collage",
+      "items": {
+        "type": "string"
+      }
+    },
+    "collage_layout": {
+      "type": "string",
+      "enum": [
+        "grid",
+        "mosaic",
+        "strip",
+        "featured"
+      ],
+      "default": "grid",
+      "description": "Collage arrangement style"
+    },
     "layout": {
       "type": "string",
       "enum": [
