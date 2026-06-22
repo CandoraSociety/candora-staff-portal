@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil, PencilLine } from "lucide-react";
 import AgendaPreviewDialog from "@/components/ed/AgendaPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,7 @@ export default function EDAgendaMaker() {
   const { toast } = useToast();
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
   const [showMeetingForm, setShowMeetingForm] = useState(false);
+  const [editingMeetingId, setEditingMeetingId] = useState(null);
   const [showItemForm, setShowItemForm] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
@@ -159,6 +160,19 @@ export default function EDAgendaMaker() {
     },
   });
 
+  const updateMeeting = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.EDMeeting.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries(["ed-meetings"]);
+      setShowMeetingForm(false);
+      setEditingMeetingId(null);
+      toast({ title: "Meeting updated" });
+    },
+    onError: (err) => {
+      toast({ title: "Failed to update meeting", description: err?.message || "Unknown error", variant: "destructive" });
+    },
+  });
+
   const createItem = useMutation({
     mutationFn: (data) => base44.entities.EDAgendaItem.create(data),
     onSuccess: () => {
@@ -228,9 +242,32 @@ export default function EDAgendaMaker() {
       facilitator: meetingForm.facilitator || undefined,
       attendees: meetingForm.attendees ? meetingForm.attendees.split(",").map((s) => s.trim()).filter(Boolean) : [],
       notes: meetingForm.notes || undefined,
-      status: "draft",
     };
-    createMeeting.mutate(payload);
+    if (editingMeetingId) {
+      updateMeeting.mutate({ id: editingMeetingId, data: payload });
+    } else {
+      createMeeting.mutate({ ...payload, status: "draft" });
+    }
+    setMeetingForm({ title: "", meeting_date: "", location: "", meeting_type: "Staff Meeting", facilitator: "", attendees: "", notes: "" });
+  };
+
+  const handleEditMeeting = (meeting) => {
+    setEditingMeetingId(meeting.id);
+    setMeetingForm({
+      title: meeting.title || "",
+      meeting_date: meeting.meeting_date ? toLocalInput(meeting.meeting_date) : "",
+      location: meeting.location || "",
+      meeting_type: meeting.meeting_type || "Staff Meeting",
+      facilitator: meeting.facilitator || "",
+      attendees: meeting.attendees?.length ? meeting.attendees.join(", ") : "",
+      notes: meeting.notes || "",
+    });
+    setShowMeetingForm(true);
+  };
+
+  const handleCancelMeetingForm = () => {
+    setShowMeetingForm(false);
+    setEditingMeetingId(null);
     setMeetingForm({ title: "", meeting_date: "", location: "", meeting_type: "Staff Meeting", facilitator: "", attendees: "", notes: "" });
   };
 
@@ -301,13 +338,19 @@ export default function EDAgendaMaker() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Meetings</h2>
-            <Button size="sm" onClick={() => setShowMeetingForm(!showMeetingForm)} className="gap-1.5 h-7 text-xs">
+            <Button size="sm" onClick={() => { setEditingMeetingId(null); setMeetingForm({ title: "", meeting_date: "", location: "", meeting_type: "Staff Meeting", facilitator: "", attendees: "", notes: "" }); setShowMeetingForm(!showMeetingForm); }} className="gap-1.5 h-7 text-xs">
               <Plus className="w-3.5 h-3.5" /> New
             </Button>
           </div>
 
           {showMeetingForm && (
             <form onSubmit={handleCreateMeeting} className="bg-card border border-border rounded-xl p-4 mb-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{editingMeetingId ? "Edit Meeting" : "New Meeting"}</span>
+                <button type="button" onClick={handleCancelMeetingForm} className="text-muted-foreground hover:text-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
               <div>
                 <label className="text-xs font-medium mb-1 block">Title *</label>
                 <Input required value={meetingForm.title} onChange={(e) => setMeetingForm({ ...meetingForm, title: e.target.value })} className="h-8 text-sm" placeholder="Weekly Staff Check-in" />
@@ -335,8 +378,8 @@ export default function EDAgendaMaker() {
                 <Input value={meetingForm.attendees} onChange={(e) => setMeetingForm({ ...meetingForm, attendees: e.target.value })} className="h-8 text-sm" placeholder="Jane, John, Sarah" />
               </div>
               <div className="flex gap-2">
-                <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => setShowMeetingForm(false)}>Cancel</Button>
-                <Button type="submit" size="sm" className="flex-1" disabled={createMeeting.isPending}>{createMeeting.isPending ? "..." : "Create"}</Button>
+                <Button type="button" variant="outline" size="sm" className="flex-1" onClick={handleCancelMeetingForm}>Cancel</Button>
+                <Button type="submit" size="sm" className="flex-1" disabled={createMeeting.isPending || updateMeeting.isPending}>{(createMeeting.isPending || updateMeeting.isPending) ? "Saving..." : editingMeetingId ? "Save Changes" : "Create"}</Button>
               </div>
             </form>
           )}
@@ -373,12 +416,20 @@ export default function EDAgendaMaker() {
                       <span className="text-[10px] text-muted-foreground">{m.meeting_type}</span>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteMeeting(m.id); }}
-                    className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditMeeting(m); }}
+                      className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-primary"
+                    >
+                      <PencilLine className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteMeeting(m.id); }}
+                      className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </button>
             ))}
