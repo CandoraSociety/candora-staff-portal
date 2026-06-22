@@ -159,9 +159,13 @@ Deno.serve(async (req) => {
         }
         delete data.full_name;
 
+        const se = (data.service_element || "").toUpperCase();
+        const program = se.includes("CEIS") ? "CEIS" : "WD";
+
         return {
           first_name: firstName,
           last_name: lastName,
+          program,
           previous_counsellor: prevCounsellor,
           previous_counsellor_other: counsellorOther,
           new_counsellor: "Olena",

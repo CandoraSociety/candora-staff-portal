@@ -66,8 +66,8 @@ function nextCheckinDate(frequency, fromDate) {
 }
 
 const EMPTY_FORM = {
-  first_name: "", last_name: "", phone: "", email: "",
-  previous_counsellor: "Lola", previous_counsellor_other: "",
+first_name: "", last_name: "", phone: "", email: "",
+program: "WD", previous_counsellor: "Lola", previous_counsellor_other: "",
   new_counsellor: "Olena", transition_status: "not_started", priority: "medium",
   next_checkin_date: "", last_checkin_date: "", checkin_frequency: "weekly",
   checkin_notes: "", program_stage: "", notes: "",
@@ -87,6 +87,7 @@ export default function TransitionClientsTab() {
   const [filterCounsellor, setFilterCounsellor] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterFileStatus, setFilterFileStatus] = useState("open");
+  const [activeProgram, setActiveProgram] = useState("WD");
   const [closeDialog, setCloseDialog] = useState({ open: false, client: null });
   const [closeForm, setCloseForm] = useState({ reason: "completed", reason_other: "", notes: "" });
   const [milestoneDialog, setMilestoneDialog] = useState({ open: false, client: null });
@@ -223,7 +224,7 @@ export default function TransitionClientsTab() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const items = [];
-    clients.forEach(c => {
+    programClients.forEach(c => {
       (c.milestones || []).forEach(m => {
         if (m.status !== "pending" || !m.date) return;
         const d = new Date(m.date);
@@ -282,6 +283,8 @@ export default function TransitionClientsTab() {
 
   // Filter and sort
   const filtered = clients.filter(c => {
+    const program = c.program || (String(c.service_element || "").toUpperCase().includes("CEIS") ? "CEIS" : "WD");
+    if (program !== activeProgram) return false;
     if (filterFileStatus === "open" && c.file_status === "closed") return false;
     if (filterFileStatus === "closed" && c.file_status !== "closed") return false;
     if (search) {
@@ -298,24 +301,56 @@ export default function TransitionClientsTab() {
     return da - db;
   });
 
+  // Scope stats to active program
+  const programClients = clients.filter(c => {
+    const p = c.program || (String(c.service_element || "").toUpperCase().includes("CEIS") ? "CEIS" : "WD");
+    return p === activeProgram;
+  });
+
   // Milestone-based stats — overdue, upcoming (within 7 days), and all pending
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const overdueCount = clients.reduce((s, c) => s + (c.milestones || []).filter(m => {
+  const overdueCount = programClients.reduce((s, c) => s + (c.milestones || []).filter(m => {
     if (m.status !== "pending" || !m.date) return false;
     const d = new Date(m.date); d.setHours(0, 0, 0, 0);
     return d < today;
   }).length, 0);
-  const upcomingCount = clients.reduce((s, c) => s + (c.milestones || []).filter(m => {
+  const upcomingCount = programClients.reduce((s, c) => s + (c.milestones || []).filter(m => {
     if (m.status !== "pending" || !m.date) return false;
     const d = new Date(m.date); d.setHours(0, 0, 0, 0);
     const diff = differenceInDays(d, today);
     return diff >= 0 && diff <= 7;
   }).length, 0);
-  const pendingMilestones = clients.reduce((s, c) => s + (c.milestones?.filter(m => m.status === "pending" && m.date).length || 0), 0);
+  const pendingMilestones = programClients.reduce((s, c) => s + (c.milestones?.filter(m => m.status === "pending" && m.date).length || 0), 0);
 
   return (
     <div>
+      {/* Program toggle */}
+      <div className="flex items-center gap-2 mb-3">
+        <button
+          onClick={() => setActiveProgram("WD")}
+          className={cn(
+            "px-4 py-1.5 rounded-lg text-sm font-semibold transition border",
+            activeProgram === "WD"
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+          )}
+        >
+          Pathways (WD)
+        </button>
+        <button
+          onClick={() => setActiveProgram("CEIS")}
+          className={cn(
+            "px-4 py-1.5 rounded-lg text-sm font-semibold transition border",
+            activeProgram === "CEIS"
+              ? "bg-purple-600 text-white border-purple-600"
+              : "bg-white text-slate-600 border-slate-200 hover:border-purple-300"
+          )}
+        >
+          DEA (CEIS)
+        </button>
+      </div>
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Input
@@ -384,7 +419,7 @@ export default function TransitionClientsTab() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-white border border-slate-200 rounded-lg p-3">
           <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wide">Total</div>
-          <div className="text-2xl font-bold" style={{ color: "hsl(231,64%,20%)" }}>{clients.length}</div>
+          <div className="text-2xl font-bold" style={{ color: "hsl(231,64%,20%)" }}>{programClients.length}</div>
           <div className="text-xs text-slate-400">clients to transition</div>
         </div>
         <button onClick={() => openMilestoneList("overdue")} className="bg-red-50 border border-red-200 rounded-lg p-3 text-left hover:ring-2 hover:ring-red-300 transition cursor-pointer">
@@ -427,6 +462,13 @@ export default function TransitionClientsTab() {
             <div>
               <label className="text-xs font-medium mb-1 block">Email</label>
               <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-8 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium mb-1 block">Program</label>
+              <select value={form.program} onChange={e => setForm({ ...form, program: e.target.value })} className="w-full h-8 border border-input rounded-md px-2 text-sm bg-background">
+                <option value="WD">Pathways (WD)</option>
+                <option value="CEIS">DEA (CEIS)</option>
+              </select>
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Previous Counsellor</label>
