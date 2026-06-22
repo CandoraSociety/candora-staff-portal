@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
 import TransitionClientsTab from "@/components/pathways/TransitionClientsTab";
+import TransitionClientDetailsModal from "@/components/pathways/TransitionClientDetailsModal";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -71,6 +72,7 @@ export default function PathwaysMasterList() {
   const [reassigning, setReassigning] = useState(false);
   const [transitionCount, setTransitionCount] = useState(0);
   const [closedTransitionClients, setClosedTransitionClients] = useState([]);
+  const [detailsClient, setDetailsClient] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -255,7 +257,7 @@ export default function PathwaysMasterList() {
                     {displayed.map(c => (
                       <tr
                         key={c.id}
-                        onClick={() => navigate(`/pathways/client/${c.id}`)}
+                        onClick={() => c._isTransition ? setDetailsClient(c) : navigate(`/pathways/client/${c.id}`)}
                         className={`group transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
                       >
                         <td className="px-3 py-2.5 whitespace-nowrap font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
@@ -425,6 +427,10 @@ export default function PathwaysMasterList() {
             </div>
           </div>
         </div>
+      )}
+
+      {detailsClient && (
+        <TransitionClientDetailsModal client={detailsClient} onClose={() => setDetailsClient(null)} />
       )}
     </div>
   );
