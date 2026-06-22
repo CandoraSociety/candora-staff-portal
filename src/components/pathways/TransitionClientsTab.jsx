@@ -560,6 +560,10 @@ export default function TransitionClientsTab() {
                   <Input value={form.service_element || ""} onChange={e => setForm({ ...form, service_element: e.target.value })} className="h-8 text-sm" placeholder="e.g. WD, CEIS" />
                 </div>
                 <div>
+                  <label className="text-xs font-medium mb-1 block">DEA Start Date</label>
+                  <Input type="date" value={form.dea_start_date || ""} onChange={e => setForm({ ...form, dea_start_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
                   <label className="text-xs font-medium mb-1 block">Service Start Date</label>
                   <Input type="date" value={form.service_start_date || ""} onChange={e => setForm({ ...form, service_start_date: e.target.value })} className="h-8 text-sm" />
                 </div>
@@ -612,6 +616,10 @@ export default function TransitionClientsTab() {
                   <Input type="date" value={form.outcome_180day_date || ""} onChange={e => setForm({ ...form, outcome_180day_date: e.target.value })} className="h-8 text-sm" />
                 </div>
                 <div>
+                  <label className="text-xs font-medium mb-1 block">EDA Completion Date</label>
+                  <Input type="date" value={form.eda_completion_date || ""} onChange={e => setForm({ ...form, eda_completion_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
                   <label className="text-xs font-medium mb-1 block">Employed FT/PT</label>
                   <Input value={form.employed_ftpt || ""} onChange={e => setForm({ ...form, employed_ftpt: e.target.value })} className="h-8 text-sm" placeholder="e.g. FT, PT" />
                 </div>
@@ -629,6 +637,10 @@ export default function TransitionClientsTab() {
                     <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
                       <input type="checkbox" checked={!!form.wage_subsidy} onChange={e => setForm({ ...form, wage_subsidy: e.target.checked })} className="rounded" />
                       Wage Subsidy
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                      <input type="checkbox" checked={!!form.ceis_dea} onChange={e => setForm({ ...form, ceis_dea: e.target.checked })} className="rounded" />
+                      CEIS (DEA)
                     </label>
                   </div>
                 </div>
@@ -822,6 +834,9 @@ export default function TransitionClientsTab() {
                         {c.service_navigation_support && <div><span className="text-slate-400 block">Svc Navigation</span><span className="text-emerald-600 font-medium">Yes</span></div>}
                         {c.work_exposure && <div><span className="text-slate-400 block">Work Exposure</span><span className="text-emerald-600 font-medium">Yes</span></div>}
                         {c.wage_subsidy && <div><span className="text-slate-400 block">Wage Subsidy</span><span className="text-emerald-600 font-medium">Yes</span></div>}
+                        {c.ceis_dea && <div><span className="text-slate-400 block">CEIS (DEA)</span><span className="text-emerald-600 font-medium">Yes</span></div>}
+                        {c.dea_start_date && <div><span className="text-slate-400 block">DEA Start</span><span className="text-slate-700">{fmtDate(c.dea_start_date)}</span></div>}
+                        {c.eda_completion_date && <div><span className="text-slate-400 block">EDA Completed</span><span className="text-slate-700">{fmtDate(c.eda_completion_date)}</span></div>}
                       </div>
                     </div>
                   )}

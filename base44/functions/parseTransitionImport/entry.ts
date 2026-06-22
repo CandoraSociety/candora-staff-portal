@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     }
 
     if (headerIdx === -1) {
-      if (_debug) return Response.json({ debug: true, rawFirstRows: rows.slice(0, 12).map(r => r.slice(0, 5)) });
+      if (_debug) return Response.json({ debug: true, rawFirstRows: rows.slice(0, 12), fullHeaderRow: rows[headerIdx] || [] });
       return Response.json({ error: 'Could not find a header row. Use the CRT format or include First Name / Last Name columns.' }, { status: 400 });
     }
 
@@ -80,10 +80,13 @@ Deno.serve(async (req) => {
         else if (hdr.includes('30') && hdr.includes('date')) fieldByCol[i] = 'outcome_30day_date';
         else if (hdr.includes('30')) fieldByCol[i] = 'outcome_30day';
         else if (hdr.includes('comment') || hdr.includes('note')) fieldByCol[i] = 'notes';
+        else if (hdr.includes('eda completion')) fieldByCol[i] = 'eda_completion_date';
         else if (hdr.includes('work exposure')) fieldByCol[i] = 'work_exposure';
         else if (hdr.includes('wage subsidy')) fieldByCol[i] = 'wage_subsidy';
         else if (hdr.includes('employed')) fieldByCol[i] = 'employed_ftpt';
         else if (hdr.includes('service navigation')) fieldByCol[i] = 'service_navigation_support';
+        else if (hdr.includes('ceis') && hdr.includes('dea')) fieldByCol[i] = 'ceis_dea';
+        else if (hdr.includes('dea') && hdr.includes('start')) fieldByCol[i] = 'dea_start_date';
       });
 
       // Extract counsellor name from metadata rows above the header
@@ -126,8 +129,9 @@ Deno.serve(async (req) => {
       const ynToBool = (val) => String(val || '').trim().toLowerCase() === 'y' || String(val || '').trim().toLowerCase() === 'yes';
 
       const DATE_FIELDS = new Set(['service_start_date', 'service_outcome_date', 'placement_outcome_date',
-        'outcome_30day_date', 'outcome_60day_date', 'outcome_90day_date', 'outcome_180day_date']);
-      const BOOL_FIELDS = new Set(['service_navigation_support', 'work_exposure', 'wage_subsidy']);
+        'outcome_30day_date', 'outcome_60day_date', 'outcome_90day_date', 'outcome_180day_date',
+        'eda_completion_date', 'dea_start_date']);
+      const BOOL_FIELDS = new Set(['service_navigation_support', 'work_exposure', 'wage_subsidy', 'ceis_dea']);
 
       records = dataRows.map(row => {
         // Extract all mapped fields from the row by column index
@@ -228,7 +232,7 @@ Deno.serve(async (req) => {
       }).filter(r => r.first_name && r.last_name);
     }
 
-    if (_debug) return Response.json({ debug: true, isCRT, headerIdx, headerRow: rows[headerIdx]?.slice(0, 10), dataSample: rows.slice(headerIdx + 2, headerIdx + 6).map(r => r.slice(0, 5)), totalDataRows: isCRT ? rows.slice(headerIdx + 2).filter(r => r[0] && String(r[0]).trim()).length : rows.slice(headerIdx + 1).filter(r => r.some(c => String(c || '').trim())).length });
+    if (_debug) return Response.json({ debug: true, isCRT, headerIdx, fullHeaderRow: rows[headerIdx] || [], dataSample: rows.slice(headerIdx + 2, headerIdx + 6), totalDataRows: isCRT ? rows.slice(headerIdx + 2).filter(r => r[0] && String(r[0]).trim()).length : rows.slice(headerIdx + 1).filter(r => r.some(c => String(c || '').trim())).length });
     return Response.json({ records, count: records.length, isCRT });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

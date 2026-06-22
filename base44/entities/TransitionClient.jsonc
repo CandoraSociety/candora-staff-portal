@@ -204,6 +204,20 @@
       "type": "boolean",
       "description": "Wage subsidy accessed Y/N from CRT"
     },
+    "ceis_dea": {
+      "type": "boolean",
+      "description": "CEIS (DEA) flag Y/N from CRT"
+    },
+    "dea_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "DEA program start date from CRT"
+    },
+    "eda_completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "EDA completion date from CRT"
+    },
     "file_status": {
       "type": "string",
       "enum": [
