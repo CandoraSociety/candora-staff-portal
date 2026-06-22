@@ -153,10 +153,12 @@ export default function TransitionClientsTab() {
   }
 
   function handleEdit(client) {
+    const effectiveProgram = client.program || (String(client.service_element || "").toUpperCase().includes("CEIS") ? "CEIS" : "WD");
     setEditingId(client.id);
     setForm({
       ...EMPTY_FORM,
       ...client,
+      program: effectiveProgram,
       previous_counsellor_other: client.previous_counsellor_other || "",
       milestones: client.milestones || [],
     });
@@ -165,8 +167,9 @@ export default function TransitionClientsTab() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    const { _showCrt, ...formData } = form;
     const payload = {
-      ...form,
+      ...formData,
       previous_counsellor: form.previous_counsellor || "Lola",
       new_counsellor: form.new_counsellor || "Olena",
     };
@@ -460,6 +463,10 @@ export default function TransitionClientsTab() {
               <Input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-8 text-sm" />
             </div>
             <div>
+              <label className="text-xs font-medium mb-1 block">COMPASS HSID</label>
+              <Input value={form.compass_hsid || ""} onChange={e => setForm({ ...form, compass_hsid: e.target.value })} className="h-8 text-sm font-mono" placeholder="HSID number" />
+            </div>
+            <div>
               <label className="text-xs font-medium mb-1 block">Email</label>
               <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="h-8 text-sm" />
             </div>
@@ -534,6 +541,99 @@ export default function TransitionClientsTab() {
               <label className="text-xs font-medium mb-1 block">General Notes</label>
               <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background resize-none" />
             </div>
+          </div>
+
+          {/* CRT Program Data */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setForm(prev => ({ ...prev, _showCrt: !prev._showCrt }))}
+              className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-700"
+            >
+              {form._showCrt ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              CRT Program Data
+            </button>
+            {form._showCrt && (
+              <div className="grid sm:grid-cols-3 gap-3 mt-2 bg-slate-50 rounded-lg p-3">
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Service Element</label>
+                  <Input value={form.service_element || ""} onChange={e => setForm({ ...form, service_element: e.target.value })} className="h-8 text-sm" placeholder="e.g. WD, CEIS" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Service Start Date</label>
+                  <Input type="date" value={form.service_start_date || ""} onChange={e => setForm({ ...form, service_start_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Service Outcome</label>
+                  <Input value={form.service_outcome || ""} onChange={e => setForm({ ...form, service_outcome: e.target.value })} className="h-8 text-sm" placeholder="e.g. Complete, Cancelled" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Service Outcome Date</label>
+                  <Input type="date" value={form.service_outcome_date || ""} onChange={e => setForm({ ...form, service_outcome_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Placement Outcome</label>
+                  <Input value={form.placement_outcome || ""} onChange={e => setForm({ ...form, placement_outcome: e.target.value })} className="h-8 text-sm" placeholder="e.g. E-RF, UE-LFW, AoP" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Placement Outcome Date</label>
+                  <Input type="date" value={form.placement_outcome_date || ""} onChange={e => setForm({ ...form, placement_outcome_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">30-Day Outcome</label>
+                  <Input value={form.outcome_30day || ""} onChange={e => setForm({ ...form, outcome_30day: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">30-Day Outcome Date</label>
+                  <Input type="date" value={form.outcome_30day_date || ""} onChange={e => setForm({ ...form, outcome_30day_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">60-Day Outcome</label>
+                  <Input value={form.outcome_60day || ""} onChange={e => setForm({ ...form, outcome_60day: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">60-Day Outcome Date</label>
+                  <Input type="date" value={form.outcome_60day_date || ""} onChange={e => setForm({ ...form, outcome_60day_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">90-Day Outcome</label>
+                  <Input value={form.outcome_90day || ""} onChange={e => setForm({ ...form, outcome_90day: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">90-Day Outcome Date</label>
+                  <Input type="date" value={form.outcome_90day_date || ""} onChange={e => setForm({ ...form, outcome_90day_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">180-Day Outcome</label>
+                  <Input value={form.outcome_180day || ""} onChange={e => setForm({ ...form, outcome_180day: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">180-Day Outcome Date</label>
+                  <Input type="date" value={form.outcome_180day_date || ""} onChange={e => setForm({ ...form, outcome_180day_date: e.target.value })} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block">Employed FT/PT</label>
+                  <Input value={form.employed_ftpt || ""} onChange={e => setForm({ ...form, employed_ftpt: e.target.value })} className="h-8 text-sm" placeholder="e.g. FT, PT" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium">CRT Flags</label>
+                  <div className="flex flex-col gap-1">
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                      <input type="checkbox" checked={!!form.service_navigation_support} onChange={e => setForm({ ...form, service_navigation_support: e.target.checked })} className="rounded" />
+                      Service Navigation Support
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                      <input type="checkbox" checked={!!form.work_exposure} onChange={e => setForm({ ...form, work_exposure: e.target.checked })} className="rounded" />
+                      Work Exposure
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                      <input type="checkbox" checked={!!form.wage_subsidy} onChange={e => setForm({ ...form, wage_subsidy: e.target.checked })} className="rounded" />
+                      Wage Subsidy
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Milestones editor */}
