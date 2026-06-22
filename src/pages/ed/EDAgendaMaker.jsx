@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Printer, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { useOrgSettings } from "@/lib/useOrgSettings";
 
 const MEETING_TYPES = ["Staff Meeting", "Leadership Team", "1-on-1", "Board Meeting", "External/Partner", "All-Hands", "Committee", "Other"];
 const ITEM_TYPES = ["opening", "review", "discussion", "decision", "action_item", "update", "presentation", "closing", "other"];
@@ -29,6 +30,43 @@ const STATUS_BADGE = {
   scheduled: "bg-blue-100 text-blue-700",
   completed: "bg-emerald-100 text-emerald-700",
   cancelled: "bg-rose-100 text-rose-700",
+};
+
+const AGENDA_TEMPLATES = {
+  "Formal Board Meeting": [
+    { title: "Call to Order", item_type: "opening", duration_minutes: 5 },
+    { title: "Roll Call", item_type: "opening", duration_minutes: 5 },
+    { title: "Approval of Agenda", item_type: "decision", duration_minutes: 10 },
+    { title: "Approval of Previous Minutes", item_type: "decision", duration_minutes: 10 },
+    { title: "Business Arising from Minutes", item_type: "review", duration_minutes: 15 },
+    { title: "Chairperson's Report", item_type: "presentation", duration_minutes: 10 },
+    { title: "Treasurer's Report", item_type: "presentation", duration_minutes: 15 },
+    { title: "New Business", item_type: "discussion", duration_minutes: 20 },
+    { title: "Adjournment", item_type: "closing", duration_minutes: 5 },
+  ],
+  "Staff Meeting": [
+    { title: "Welcome & Check-in", item_type: "opening", duration_minutes: 10 },
+    { title: "Agenda Review", item_type: "review", duration_minutes: 5 },
+    { title: "Team Updates", item_type: "update", duration_minutes: 15 },
+    { title: "Discussion Items", item_type: "discussion", duration_minutes: 20 },
+    { title: "Action Items Review", item_type: "action_item", duration_minutes: 10 },
+    { title: "Wrap-up & Next Steps", item_type: "closing", duration_minutes: 5 },
+  ],
+  "1-on-1": [
+    { title: "Wins & Accomplishments", item_type: "opening", duration_minutes: 10 },
+    { title: "Challenges & Blockers", item_type: "discussion", duration_minutes: 15 },
+    { title: "Goal Progress Review", item_type: "review", duration_minutes: 10 },
+    { title: "Feedback (both ways)", item_type: "discussion", duration_minutes: 10 },
+    { title: "Action Items", item_type: "action_item", duration_minutes: 5 },
+  ],
+  "Leadership Team": [
+    { title: "Strategic Priority Updates", item_type: "update", duration_minutes: 20 },
+    { title: "Financial Review", item_type: "presentation", duration_minutes: 15 },
+    { title: "Operations Report", item_type: "presentation", duration_minutes: 15 },
+    { title: "HR & Staffing Updates", item_type: "update", duration_minutes: 10 },
+    { title: "Strategic Decisions", item_type: "decision", duration_minutes: 20 },
+    { title: "Open Discussion", item_type: "discussion", duration_minutes: 15 },
+  ],
 };
 
 function toLocalInput(date) {
@@ -85,6 +123,15 @@ export default function EDAgendaMaker() {
 
   const selectedMeeting = meetings.find((m) => m.id === selectedMeetingId);
 
+  const { logoUrl, orgName } = useOrgSettings();
+
+  // Auto-show item form when selecting a meeting with no agenda items
+  useEffect(() => {
+    if (selectedMeetingId && !loadingItems && sortedItems.length === 0) {
+      setShowItemForm(true);
+    }
+  }, [selectedMeetingId, loadingItems, sortedItems.length]);
+
   // Mutations
   const createMeeting = useMutation({
     mutationFn: (data) => base44.entities.EDMeeting.create(data),
@@ -130,6 +177,28 @@ export default function EDAgendaMaker() {
       await Promise.all(items.map((item, i) => base44.entities.EDAgendaItem.update(item.id, { order_index: i })));
     },
     onSuccess: () => qc.invalidateQueries(["ed-agenda-items", selectedMeetingId]),
+  });
+
+  const applyTemplate = useMutation({
+    mutationFn: async (templateName) => {
+      const template = AGENDA_TEMPLATES[templateName];
+      if (!template) return;
+      const startIdx = sortedItems.length;
+      await base44.entities.EDAgendaItem.bulkCreate(
+        template.map((item, i) => ({
+          ...item,
+          meeting_id: selectedMeetingId,
+          order_index: startIdx + i,
+        }))
+      );
+    },
+    onSuccess: () => {
+      qc.invalidateQueries(["ed-agenda-items", selectedMeetingId]);
+      toast({ title: "Template applied", description: "Agenda items added from template" });
+    },
+    onError: (err) => {
+      toast({ title: "Failed to apply template", description: err?.message || "Unknown error", variant: "destructive" });
+    },
   });
 
   const handleCreateMeeting = (e) => {
@@ -281,12 +350,42 @@ export default function EDAgendaMaker() {
           {!selectedMeeting ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-                <FileText className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                <p className="text-sm text-muted-foreground">Select a meeting from the left to build its agenda.</p>
+                {selectedMeetingId ? (
+                  <>
+                    <div className="w-8 h-8 border-2 border-border border-t-primary rounded-full animate-spin mb-3" />
+                    <p className="text-sm text-muted-foreground">Loading meeting...</p>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                    <p className="text-sm text-muted-foreground">Select a meeting from the left to build its agenda.</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           ) : (
             <div>
+              {/* Candora Branded Header */}
+              <div className="bg-accent text-accent-foreground rounded-xl p-5 mb-4 flex items-center gap-4 no-print">
+                <img src={logoUrl} alt={orgName} className="w-14 h-14 rounded-full object-cover bg-white p-1 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-heading text-xl font-bold truncate">{orgName}</h1>
+                  <p className="text-sm opacity-80">Meeting Agenda</p>
+                </div>
+                <button onClick={() => window.print()} className="hidden sm:flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition">
+                  <Printer className="w-4 h-4" /> Print
+                </button>
+              </div>
+
+              {/* Print-only branded header */}
+              <div className="hidden print:block mb-6 flex items-center gap-4 border-b-2 border-accent pb-4">
+                <img src={logoUrl} alt={orgName} className="w-16 h-16 rounded-full object-cover" />
+                <div>
+                  <h1 className="font-heading text-2xl font-bold">{orgName}</h1>
+                  <p className="text-sm text-muted-foreground">Meeting Agenda</p>
+                </div>
+              </div>
+
               {/* Meeting header */}
               <div className="bg-card border border-border rounded-xl p-5 mb-4">
                 <div className="flex items-start justify-between gap-3">
@@ -322,7 +421,7 @@ export default function EDAgendaMaker() {
               </div>
 
               {/* Agenda summary + add button */}
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 no-print">
                 <p className="text-sm text-muted-foreground">
                   {sortedItems.length} items · {Math.floor(totalDuration / 60)}h {totalDuration % 60}m total
                 </p>
@@ -331,9 +430,30 @@ export default function EDAgendaMaker() {
                 </Button>
               </div>
 
+              {/* Template selector — shown when no agenda items exist */}
+              {sortedItems.length === 0 && !showItemForm && (
+                <div className="bg-muted/50 border border-dashed border-border rounded-xl p-4 mb-4 no-print">
+                  <p className="text-xs font-medium text-muted-foreground mb-2.5 flex items-center gap-1.5">
+                    <LayoutTemplate className="w-3.5 h-3.5" /> Apply a formal agenda template (optional)
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(AGENDA_TEMPLATES).map((name) => (
+                      <button
+                        key={name}
+                        onClick={() => applyTemplate.mutate(name)}
+                        disabled={applyTemplate.isPending}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition disabled:opacity-50"
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Add item form */}
               {showItemForm && (
-                <form onSubmit={handleAddItem} className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3">
+                <form onSubmit={handleAddItem} className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3 no-print">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-sm">New Agenda Item</h3>
                     <button type="button" onClick={() => setShowItemForm(false)} className="text-muted-foreground hover:text-foreground">
@@ -375,7 +495,7 @@ export default function EDAgendaMaker() {
               <div className="space-y-2">
                 {loadingItems && <p className="text-sm text-muted-foreground text-center py-8">Loading agenda...</p>}
                 {sortedItems.map((item, idx) => (
-                  <div key={item.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 group">
+                  <div key={item.id} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 group print:break-inside-avoid">
                     <div className="flex flex-col gap-0.5">
                       <button onClick={() => handleMove(idx, -1)} disabled={idx === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20">
                         <ChevronUp className="w-4 h-4" />
