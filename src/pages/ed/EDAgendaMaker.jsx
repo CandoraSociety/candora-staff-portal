@@ -95,9 +95,9 @@ export default function EDAgendaMaker() {
 
   const [itemForm, setItemForm] = useState({
     title: "",
-    item_type: "discussion",
+    item_type: "",
     presenter: "",
-    duration_minutes: 10,
+    duration_minutes: "",
     description: "",
   });
 
@@ -123,7 +123,7 @@ export default function EDAgendaMaker() {
 
   const selectedMeeting = meetings.find((m) => m.id === selectedMeetingId);
 
-  const { logoUrl, orgName } = useOrgSettings();
+  const { longLogoUrl, orgName } = useOrgSettings();
 
   // Auto-show item form when selecting a meeting with no agenda items
   useEffect(() => {
@@ -222,10 +222,10 @@ export default function EDAgendaMaker() {
     createItem.mutate({
       ...itemForm,
       meeting_id: selectedMeetingId,
-      duration_minutes: Number(itemForm.duration_minutes) || 0,
+      duration_minutes: itemForm.duration_minutes === "" ? null : Number(itemForm.duration_minutes) || 0,
       order_index: sortedItems.length,
     });
-    setItemForm({ title: "", item_type: "discussion", presenter: "", duration_minutes: 10, description: "" });
+    setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "" });
   };
 
   const handleMove = (index, direction) => {
@@ -367,7 +367,7 @@ export default function EDAgendaMaker() {
             <div>
               {/* Candora Branded Header */}
               <div className="bg-accent text-accent-foreground rounded-xl p-5 mb-4 flex items-center gap-4 no-print">
-                <img src={logoUrl} alt={orgName} className="w-14 h-14 rounded-full object-cover bg-white p-1 flex-shrink-0" />
+                <img src={longLogoUrl} alt={orgName} className="h-12 object-contain flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <h1 className="font-heading text-xl font-bold truncate">{orgName}</h1>
                   <p className="text-sm opacity-80">Meeting Agenda</p>
@@ -379,7 +379,7 @@ export default function EDAgendaMaker() {
 
               {/* Print-only branded header */}
               <div className="hidden print:block mb-6 flex items-center gap-4 border-b-2 border-accent pb-4">
-                <img src={logoUrl} alt={orgName} className="w-16 h-16 rounded-full object-cover" />
+                <img src={longLogoUrl} alt={orgName} className="h-14 object-contain flex-shrink-0" />
                 <div>
                   <h1 className="font-heading text-2xl font-bold">{orgName}</h1>
                   <p className="text-sm text-muted-foreground">Meeting Agenda</p>
@@ -466,14 +466,15 @@ export default function EDAgendaMaker() {
                       <Input required value={itemForm.title} onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })} placeholder="Q3 Budget Review" />
                     </div>
                     <div>
-                      <label className="text-xs font-medium mb-1 block">Type</label>
+                      <label className="text-xs font-medium mb-1 block">Type <span className="text-muted-foreground font-normal">(optional)</span></label>
                       <select value={itemForm.item_type} onChange={(e) => setItemForm({ ...itemForm, item_type: e.target.value })} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background">
+                        <option value="">— None —</option>
                         {ITEM_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-medium mb-1 block">Duration (min)</label>
-                      <Input type="number" min="0" value={itemForm.duration_minutes} onChange={(e) => setItemForm({ ...itemForm, duration_minutes: e.target.value })} />
+                      <label className="text-xs font-medium mb-1 block">Duration (min) <span className="text-muted-foreground font-normal">(optional)</span></label>
+                      <Input type="number" min="0" value={itemForm.duration_minutes} onChange={(e) => setItemForm({ ...itemForm, duration_minutes: e.target.value })} placeholder="—" />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="text-xs font-medium mb-1 block">Presenter</label>
@@ -508,9 +509,11 @@ export default function EDAgendaMaker() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-medium">{item.title}</p>
-                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", TYPE_COLORS[item.item_type] || TYPE_COLORS.other)}>
-                          {item.item_type?.replace(/_/g, " ")}
-                        </span>
+                        {item.item_type && (
+                          <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", TYPE_COLORS[item.item_type] || TYPE_COLORS.other)}>
+                            {item.item_type?.replace(/_/g, " ")}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
                         {item.presenter && <span>{item.presenter}</span>}

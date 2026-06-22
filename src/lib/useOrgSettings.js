@@ -11,9 +11,12 @@ export function useOrgSettings() {
     gcTime: 1000 * 60 * 10,
   });
   const s = list[0] || {};
+  const logos = s.logos || [];
+  const longLogo = logos.find((l) => l.name?.toLowerCase().includes('long')) || null;
   return {
     orgName: s.org_name || 'Candora',
     logoUrl: s.logo_url || FALLBACK_LOGO,
+    longLogoUrl: longLogo?.url || s.logo_url || FALLBACK_LOGO,
     primaryColor: s.primary_color || '#f5c116',
     secondaryColor: s.secondary_color || '#0f1f6b',
     accentColor: s.accent_color || '#2b2de8',
