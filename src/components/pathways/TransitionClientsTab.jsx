@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format, differenceInDays, addDays, addWeeks, addMonths } from "date-fns";
-import { Upload, Plus, Trash2, Pencil, X, Calendar, Flag, CheckCircle2, AlertCircle, Clock, ChevronDown, ChevronRight, User, Phone, Mail, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Upload, Plus, Trash2, Pencil, X, Calendar, Flag, CheckCircle2, AlertCircle, Clock, ChevronDown, ChevronRight, User, Phone, Mail, FileSpreadsheet, Loader2, Archive, RotateCcw, FolderX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -84,6 +84,9 @@ export default function TransitionClientsTab() {
   const [search, setSearch] = useState("");
   const [filterCounsellor, setFilterCounsellor] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
+  const [filterFileStatus, setFilterFileStatus] = useState("open");
+  const [closeDialog, setCloseDialog] = useState({ open: false, client: null });
+  const [closeForm, setCloseForm] = useState({ reason: "completed", reason_other: "", notes: "" });
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ["transition-clients"],
@@ -113,6 +116,30 @@ export default function TransitionClientsTab() {
     },
     onError: (err) => toast({ title: "Import failed", description: err?.message, variant: "destructive" }),
   });
+
+  async function handleCloseFile() {
+    if (!closeDialog.client) return;
+    const isClosing = closeDialog.client.file_status !== "closed";
+    const data = isClosing
+      ? {
+          file_status: "closed",
+          close_reason: closeForm.reason,
+          close_reason_other: closeForm.reason === "other" ? closeForm.reason_other : "",
+          close_notes: closeForm.notes,
+          close_date: format(new Date(), "yyyy-MM-dd"),
+        }
+      : {
+          file_status: "open",
+          close_reason: null,
+          close_reason_other: "",
+          close_notes: "",
+          close_date: null,
+        };
+    await updateMutation.mutateAsync({ id: closeDialog.client.id, data });
+    setCloseDialog({ open: false, client: null });
+    setCloseForm({ reason: "completed", reason_other: "", notes: "" });
+    toast({ title: isClosing ? "File closed" : "File reopened" });
+  }
 
   function resetForm() {
     setShowForm(false);
@@ -206,6 +233,8 @@ export default function TransitionClientsTab() {
 
   // Filter and sort
   const filtered = clients.filter(c => {
+    if (filterFileStatus === "open" && c.file_status === "closed") return false;
+    if (filterFileStatus === "closed" && c.file_status !== "closed") return false;
     if (search) {
       const q = search.toLowerCase();
       const name = `${c.first_name} ${c.last_name}`.toLowerCase();
@@ -260,6 +289,15 @@ export default function TransitionClientsTab() {
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
+        </select>
+        <select
+          value={filterFileStatus}
+          onChange={e => setFilterFileStatus(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="open">Open files</option>
+          <option value="closed">Closed files</option>
+          <option value="all">All files</option>
         </select>
         <div className="flex-1" />
         <input
@@ -355,7 +393,7 @@ export default function TransitionClientsTab() {
               <Input value={form.new_counsellor} onChange={e => setForm({ ...form, new_counsellor: e.target.value })} className="h-8 text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium mb-1 block">Transition Status</label>
+              <label className="text-xs font-medium mb-1 block">Transition Status <span className="text-slate-400 normal-case font-normal">(counsellor handoff)</span></label>
               <select value={form.transition_status} onChange={e => setForm({ ...form, transition_status: e.target.value })} className="w-full h-8 border border-input rounded-md px-2 text-sm bg-background">
                 <option value="not_started">Not Started</option>
                 <option value="in_progress">In Progress</option>
@@ -473,13 +511,19 @@ export default function TransitionClientsTab() {
                 {/* Name + contact */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-sm" style={{ color: "hsl(231,64%,20%)" }}>{c.first_name} {c.last_name}</span>
+                    <span className={cn("font-semibold text-sm", c.file_status === "closed" && "text-slate-400 line-through")} style={{ color: c.file_status === "closed" ? undefined : "hsl(231,64%,20%)" }}>{c.first_name} {c.last_name}</span>
                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium border", PRIORITY_COLORS[c.priority] || PRIORITY_COLORS.medium)}>
                       {c.priority}
                     </span>
+                    <span className="text-[10px] text-slate-400 font-medium">Transition:</span>
                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", STATUS_COLORS[c.transition_status] || STATUS_COLORS.not_started)}>
                       {c.transition_status?.replace(/_/g, " ")}
                     </span>
+                    {c.file_status === "closed" && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-slate-700 text-white flex items-center gap-0.5">
+                        <Archive className="w-2.5 h-2.5" /> Closed
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-400">
                     {c.compass_hsid && <span className="font-mono">HSID: {c.compass_hsid}</span>}
@@ -526,6 +570,15 @@ export default function TransitionClientsTab() {
                   <button onClick={(e) => { e.stopPropagation(); handleQuickCheckin(c); }} className="p-1.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition" title="Mark check-in done & set next date">
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
+                  {c.file_status === "closed" ? (
+                    <button onClick={(e) => { e.stopPropagation(); setCloseDialog({ open: true, client: c }); }} className="p-1.5 rounded text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition" title="Reopen file">
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button onClick={(e) => { e.stopPropagation(); setCloseDialog({ open: true, client: c }); setCloseForm({ reason: "completed", reason_other: "", notes: c.service_outcome ? `Program outcome: ${c.service_outcome}` : "" }); }} className="p-1.5 rounded text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition" title="Close file">
+                      <FolderX className="w-4 h-4" />
+                    </button>
+                  )}
                   <button onClick={(e) => { e.stopPropagation(); handleEdit(c); }} className="p-1.5 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition">
                     <Pencil className="w-4 h-4" />
                   </button>
@@ -538,6 +591,19 @@ export default function TransitionClientsTab() {
               {/* Expanded details */}
               {isExpanded && (
                 <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/50 space-y-3">
+                  {/* File closure banner */}
+                  {c.file_status === "closed" && (
+                    <div className="bg-slate-100 border border-slate-300 rounded-md p-3 flex items-start gap-2">
+                      <Archive className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
+                      <div className="text-xs">
+                        <span className="font-semibold text-slate-600">File Closed</span>
+                        <span className="text-slate-500"> — {c.close_reason === "completed" ? "Program Completed" : c.close_reason === "cancelled" ? "Cancelled" : c.close_reason === "transferred" ? "Transferred Out" : c.close_reason === "not_eligible" ? "Not Eligible" : c.close_reason_other || c.close_reason}</span>
+                        {c.close_date && <span className="text-slate-400"> · {fmtDate(c.close_date)}</span>}
+                        {c.close_notes && <p className="text-slate-500 mt-1 whitespace-pre-wrap">{c.close_notes}</p>}
+                      </div>
+                    </div>
+                  )}
+
                   {/* CRT Program Progress */}
                   {(c.service_outcome || c.placement_outcome || c.service_start_date || c.service_element) && (
                     <div className="bg-white border border-slate-200 rounded-md p-3">
@@ -649,7 +715,61 @@ export default function TransitionClientsTab() {
         {filtered.length === 0 && !isLoading && clients.length > 0 && (
           <div className="text-center py-10 text-slate-400">No clients match your filters.</div>
         )}
-      </div>
-    </div>
-  );
-}
+        </div>
+
+        {/* Close File Dialog */}
+        {closeDialog.open && closeDialog.client && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setCloseDialog({ open: false, client: null })}>
+         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-5 space-y-4" onClick={e => e.stopPropagation()}>
+           <div className="flex items-center gap-2">
+             {closeDialog.client.file_status === "closed" ? <RotateCcw className="w-5 h-5 text-emerald-600" /> : <FolderX className="w-5 h-5 text-orange-600" />}
+             <h3 className="font-semibold text-sm" style={{ color: "hsl(231,64%,20%)" }}>
+               {closeDialog.client.file_status === "closed" ? "Reopen File" : "Close File"}
+             </h3>
+           </div>
+           <p className="text-sm text-slate-600">
+             {closeDialog.client.file_status === "closed"
+               ? `Reopen the file for ${closeDialog.client.first_name} ${closeDialog.client.last_name}?`
+               : `Close the file for ${closeDialog.client.first_name} ${closeDialog.client.last_name}?`}
+           </p>
+           {closeDialog.client.file_status !== "closed" && (
+             <>
+               <div>
+                 <label className="text-xs font-medium mb-1 block">Reason for closure</label>
+                 <select
+                   value={closeForm.reason}
+                   onChange={e => setCloseForm({ ...closeForm, reason: e.target.value })}
+                   className="w-full h-9 border border-input rounded-md px-3 text-sm bg-background"
+                 >
+                   <option value="completed">Program Completed</option>
+                   <option value="cancelled">Cancelled</option>
+                   <option value="transferred">Transferred Out</option>
+                   <option value="not_eligible">Not Eligible</option>
+                   <option value="other">Other</option>
+                 </select>
+               </div>
+               {closeForm.reason === "other" && (
+                 <div>
+                   <label className="text-xs font-medium mb-1 block">Specify reason</label>
+                   <Input value={closeForm.reason_other} onChange={e => setCloseForm({ ...closeForm, reason_other: e.target.value })} className="h-9 text-sm" />
+                 </div>
+               )}
+               <div>
+                 <label className="text-xs font-medium mb-1 block">Closure notes</label>
+                 <textarea value={closeForm.notes} onChange={e => setCloseForm({ ...closeForm, notes: e.target.value })} rows={3} className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background resize-none" placeholder="Add any notes about this closure..." />
+               </div>
+             </>
+           )}
+           <div className="flex gap-2 pt-2">
+             <Button variant="outline" size="sm" onClick={() => setCloseDialog({ open: false, client: null })}>Cancel</Button>
+             <Button size="sm" onClick={handleCloseFile} disabled={updateMutation.isPending} className="gap-1.5">
+               {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : closeDialog.client.file_status === "closed" ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+               {closeDialog.client.file_status === "closed" ? "Reopen File" : "Close File"}
+             </Button>
+           </div>
+         </div>
+        </div>
+        )}
+        </div>
+        );
+        }

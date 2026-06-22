@@ -195,6 +195,39 @@
       "type": "boolean",
       "description": "Wage subsidy accessed Y/N from CRT"
     },
+    "file_status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open",
+      "description": "Whether the client file is open or closed"
+    },
+    "close_reason": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "cancelled",
+        "transferred",
+        "not_eligible",
+        "other"
+      ],
+      "description": "Reason the file was closed"
+    },
+    "close_reason_other": {
+      "type": "string",
+      "description": "If close reason is Other, specify"
+    },
+    "close_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the file was closed"
+    },
+    "close_notes": {
+      "type": "string",
+      "description": "Notes about the file closure"
+    },
     "notes": {
       "type": "string",
       "description": "General notes / comments from CRT"
