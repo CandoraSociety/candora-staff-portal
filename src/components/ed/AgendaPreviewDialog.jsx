@@ -41,11 +41,19 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes) {
         ${item.item_type ? `<span class="badge">${escapeHtml(item.item_type.replace(/_/g, " "))}</span>` : ""}
         ${item.description ? `<div class="desc">${escapeHtml(item.description)}</div>` : ""}
         ${includeNotes && item.facilitator_notes ? `<div class="fac-notes"><strong>Facilitator Notes:</strong> ${escapeHtml(item.facilitator_notes)}</div>` : ""}
+        <div class="note-lines">
+          <div class="note-line">Notes:</div>
+          <div class="note-line"></div>
+          <div class="note-line"></div>
+          <div class="note-line"><span class="action-label">Action:</span> ________________________________ <span class="action-due">Due: ___________</span></div>
+        </div>
       </td>
       <td class="presenter">${item.presenter ? escapeHtml(item.presenter) : ""}</td>
       <td class="duration">${item.duration_minutes > 0 ? item.duration_minutes + " min" : ""}</td>
     </tr>
   `).join("");
+
+  const actionItemLines = Array.from({ length: 5 }, () => `<div class="action-line"></div>`).join("");
 
   return `<!DOCTYPE html>
 <html>
@@ -74,6 +82,13 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes) {
   .presenter { color: #666; width: 120px; }
   .duration { color: #666; text-align: right; width: 60px; white-space: nowrap; }
   .total { text-align: right; font-size: 12px; color: #888; margin-top: 12px; font-weight: 500; }
+  .note-lines { margin-top: 8px; }
+  .note-line { border-bottom: 1px solid #e0e0e0; height: 18px; font-size: 11px; color: #999; }
+  .action-label, .action-due { font-size: 11px; color: #aaa; font-style: italic; }
+  .action-items-section { margin-top: 32px; padding-top: 16px; border-top: 2px solid #0f1f6b; }
+  .action-items-section h3 { font-size: 14px; font-weight: 700; color: #0f1f6b; margin-bottom: 12px; }
+  .action-line { border-bottom: 1px solid #ddd; height: 24px; display: flex; }
+  .action-line::before { content: "☐"; font-size: 14px; margin-right: 8px; color: #999; }
   @media print { body { padding: 20px; } .no-print-btn { display: none; } }
 </style>
 </head>
@@ -106,6 +121,11 @@ function buildPrintHTML(meeting, items, logoUrl, orgName, includeNotes) {
     </tbody>
   </table>
   ${total > 0 ? `<p class="total">Total Estimated Time: ${Math.floor(total / 60)}h ${total % 60}m</p>` : ""}
+
+  <div class="action-items-section">
+    <h3>Action Items</h3>
+    ${actionItemLines}
+  </div>
 </body>
 </html>`;
 }
@@ -226,12 +246,53 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
         if (item.duration_minutes > 0) {
           doc.text(`${item.duration_minutes} min`, pageW - margin - 2, y, { align: "right" });
         }
-        y += Math.max(rowH, 7);
+        y += Math.max(rowH, 7) + 2;
+
+        // Note lines for handwriting
+        doc.setFontSize(9);
+        doc.setTextColor(180);
+        doc.text("Notes:", margin + 10, y);
+        y += 5;
+        for (let i = 0; i < 2; i++) {
+          if (y > 275) { doc.addPage(); y = margin; }
+          doc.setDrawColor(235);
+          doc.setLineWidth(0.2);
+          doc.line(margin + 10, y, pageW - margin, y);
+          y += 6;
+        }
+        if (y > 270) { doc.addPage(); y = margin; }
+        doc.text("Action: ____________________________  Due: __________", margin + 10, y);
+        y += 7;
+
         doc.setDrawColor(230);
         doc.setLineWidth(0.2);
         doc.line(margin, y, pageW - margin, y);
-        y += 2;
+        y += 3;
       });
+
+      // Action items section
+      if (y > 245) { doc.addPage(); y = margin; }
+      y += 6;
+      doc.setDrawColor(15, 31, 107);
+      doc.setLineWidth(0.6);
+      doc.line(margin, y, pageW - margin, y);
+      y += 7;
+      doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 31, 107);
+      doc.text("Action Items", margin, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(160);
+      for (let i = 0; i < 6; i++) {
+        if (y > 275) { doc.addPage(); y = margin; }
+        doc.text("☐", margin + 2, y);
+        doc.setDrawColor(220);
+        doc.setLineWidth(0.2);
+        doc.line(margin + 8, y, pageW - margin, y);
+        y += 9;
+      }
 
       if (totalDuration > 0) {
         y += 4;
@@ -413,6 +474,22 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
             <p className="text-xs text-muted-foreground mt-3 text-right font-medium">
               Total Estimated Time: {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
             </p>
+          )}
+
+          {sortedItems.length > 0 && (
+            <div className="mt-6 pt-4 border-t-2 border-accent">
+              <h3 className="font-heading text-sm font-bold text-accent mb-3">Action Items</h3>
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 border-b border-border pb-1">
+                    <span className="text-muted-foreground text-sm">☐</span>
+                    <div className="flex-1 border-b border-dashed border-border/60 h-4" />
+                    <span className="text-[10px] text-muted-foreground">Due:</span>
+                    <div className="w-20 border-b border-dashed border-border/60 h-4" />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </DialogContent>

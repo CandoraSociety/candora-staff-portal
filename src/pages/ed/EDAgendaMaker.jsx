@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil, PencilLine } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil, PencilLine, Lightbulb, X as XIcon } from "lucide-react";
 import AgendaPreviewDialog from "@/components/ed/AgendaPreviewDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +86,12 @@ export default function EDAgendaMaker() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null);
+  const [showRibbon, setShowRibbon] = useState(() => localStorage.getItem("ed_agenda_ribbon_dismissed") !== "true");
+
+  const dismissRibbon = () => {
+    setShowRibbon(false);
+    localStorage.setItem("ed_agenda_ribbon_dismissed", "true");
+  };
 
   const [meetingForm, setMeetingForm] = useState({
     title: "",
@@ -324,6 +330,24 @@ export default function EDAgendaMaker() {
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
+      {/* Reminder Ribbon */}
+      {showRibbon && (
+        <div className="mb-4 no-print bg-gradient-to-r from-amber-500/10 via-amber-400/10 to-orange-500/10 border border-amber-300/40 rounded-xl p-4 flex items-start gap-3">
+          <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-amber-400/20 flex items-center justify-center">
+            <Lightbulb className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-900">Reminder: Build a Meeting Manager module</p>
+            <p className="text-xs text-amber-800/80 mt-1 leading-relaxed">
+              Consider creating a dedicated <strong>Meeting Manager</strong> in another portal (or as a dashboard widget) that includes: this agenda maker, automatic agenda &amp; meeting notices on attendee dashboards, a minute-taking function tied to the agenda, a personal notes section, and Outlook/calendar integration.
+            </p>
+          </div>
+          <button onClick={dismissRibbon} className="flex-shrink-0 text-amber-700/60 hover:text-amber-900 transition mt-0.5">
+            <XIcon className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6 no-print">
         <div className="flex items-center gap-2 mb-1">
