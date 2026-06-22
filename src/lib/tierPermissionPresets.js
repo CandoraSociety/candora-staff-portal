@@ -14,13 +14,19 @@ export const PORTAL_MODULES = [
   { id: 'marketing',   label: 'Marketing & Fundraising',     route: '/marketing' },
   { id: 'reporting',   label: 'Reports Portal',              route: '/reporting' },
   { id: 'filemanager', label: 'File Manager',                route: '/filemanager' },
+  { id: 'food',        label: 'Food Services',               route: '/food' },
 ];
 
-/** Default module access per tier  (true = allowed by default) */
+/**
+ * Default module access per tier (true = allowed by default).
+ * NOTE: The Executive Director portal ('/ed') is admin-only and NOT grantable
+ * through the employee access system. The Board portal ('/board') is restricted
+ * to active board members and admins — also not grantable here.
+ */
 export const TIER_PRESETS = {
-  executive_director: ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','ed'],
-  director:           ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager'],
-  manager:            ['nexushr','volunteermgr','eventsmgr','reporting','filemanager'],
+  executive_director: ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food'],
+  director:           ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food'],
+  manager:            ['nexushr','volunteermgr','eventsmgr','reporting','filemanager','food'],
   supervisor_team_lead: ['volunteermgr','eventsmgr','filemanager'],
   frontline:          ['filemanager'],
   assistant:          ['filemanager'],

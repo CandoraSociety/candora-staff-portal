@@ -1,10 +1,11 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { useState } from "react";
-import { LayoutDashboard, Calendar, FolderOpen, Users, BookOpen, Target, MessageSquare, ChevronLeft, ChevronRight, Menu, LogOut, Home } from "lucide-react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, Calendar, FolderOpen, Users, BookOpen, Target, MessageSquare, ChevronLeft, ChevronRight, Menu, LogOut, Home, ShieldOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LogoutConfirmationDialog from "@/components/auth/LogoutConfirmationDialog";
 import { base44 } from "@/api/base44Client";
 import { useOrgSettings } from "@/lib/useOrgSettings";
+import { useAuth } from "@/lib/AuthContext";
 
 const navItems = [
   { path: "/board", label: "Dashboard", icon: LayoutDashboard },
@@ -20,8 +21,55 @@ export default function BoardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [accessState, setAccessState] = useState({ checked: false, denied: false });
   const location = useLocation();
+  const navigate = useNavigate();
   const { logoUrl } = useOrgSettings();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    async function checkAccess() {
+      if (!user) return;
+      // Admins always have access
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        setAccessState({ checked: true, denied: false });
+        return;
+      }
+      // Check if user is an active board member
+      try {
+        const members = await base44.entities.BoardMember.list();
+        const isBoardMember = members.some(m =>
+          m.email?.toLowerCase() === user.email?.toLowerCase() && m.status !== 'inactive'
+        );
+        setAccessState({ checked: true, denied: !isBoardMember });
+        if (!isBoardMember) setTimeout(() => navigate('/', { replace: true }), 3000);
+      } catch {
+        setAccessState({ checked: true, denied: true });
+        setTimeout(() => navigate('/', { replace: true }), 3000);
+      }
+    }
+    checkAccess();
+  }, [user, navigate]);
+
+  if (accessState.denied) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center space-y-4 p-8">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
+            <ShieldOff className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800">Access Restricted</h2>
+          <p className="text-gray-500 max-w-xs mx-auto">
+            The Board Portal is restricted to active board members and administrators.
+          </p>
+          <p className="text-sm text-gray-400">Redirecting to dashboard…</p>
+          <button onClick={() => navigate('/')} className="text-sm text-blue-600 hover:underline">Go now</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!accessState.checked) return null;
 
   const handleLogout = () => base44.auth.logout("/login");
 
