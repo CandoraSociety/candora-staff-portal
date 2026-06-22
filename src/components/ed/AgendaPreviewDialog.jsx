@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { base44 } from "@/api/base44Client";
 import { Printer, StickyNote, Download, Share2, Loader2, Clock, User, ClipboardList, PenLine } from "lucide-react";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { cn } from "@/lib/utils";
@@ -144,6 +145,7 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
   const [shareMessage, setShareMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const previewRef = useRef(null);
   const { toast } = useToast();
   const { logoUrl, orgName } = useOrgSettings();
 
@@ -163,161 +165,41 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
     setTimeout(() => w.print(), 300);
   };
 
-  const handleSavePDF = () => {
+  const handleSavePDF = async () => {
     setIsSaving(true);
     try {
-      const doc = new jsPDF("p", "mm", "a4");
-      const margin = 18;
-      const pageW = 210;
-      const contentW = pageW - margin * 2;
-      let y = margin;
-
-      // Header
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(15, 31, 107);
-      doc.text(orgName, margin, y);
-      y += 6;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(110);
-      doc.text("Meeting Agenda", margin, y);
-      y += 5;
-      doc.setDrawColor(15, 31, 107);
-      doc.setLineWidth(0.8);
-      doc.line(margin, y, pageW - margin, y);
-      y += 8;
-
-      // Meeting info
-      doc.setTextColor(20);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      const titleLines = doc.splitTextToSize(meeting.title, contentW);
-      doc.text(titleLines, margin, y);
-      y += titleLines.length * 6;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(80);
-      if (meeting.meeting_date) {
-        doc.text(format(new Date(meeting.meeting_date), "EEEE, MMMM d, yyyy 'at' h:mm a"), margin, y);
-        y += 5;
-      }
-      if (meeting.location) { doc.text(meeting.location, margin, y); y += 5; }
-      if (meeting.facilitator) { doc.text(`Facilitator: ${meeting.facilitator}`, margin, y); y += 5; }
-      if (meeting.attendees?.length) { doc.text(`Attendees: ${meeting.attendees.join(", ")}`, margin, y); y += 5; }
-      y += 4;
-
-      // Table header
-      doc.setFillColor(240, 240, 245);
-      doc.rect(margin, y - 4, contentW, 8, "F");
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(90);
-      doc.text("#", margin + 2, y);
-      doc.text("Agenda Item", margin + 10, y);
-      if (showPresenter) doc.text("Presenter", margin + 120, y);
-      if (showTime) doc.text("Time", pageW - margin - 2, y, { align: "right" });
-      y += 8;
-
-      // Rows
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      sortedItems.forEach((item, idx) => {
-        if (y > 270) { doc.addPage(); y = margin; }
-        doc.setTextColor(120);
-        doc.text(String(idx + 1), margin + 2, y);
-        doc.setTextColor(20);
-        doc.setFont("helvetica", "bold");
-        const titleLines = doc.splitTextToSize(item.title, 100);
-        doc.text(titleLines, margin + 10, y);
-        let rowH = titleLines.length * 5;
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(80);
-        if (item.item_type) {
-          doc.text(`[${item.item_type.replace(/_/g, " ")}]`, margin + 10, y + rowH);
-          rowH += 5;
-        }
-        if (item.description) {
-          const descLines = doc.splitTextToSize(item.description, 100);
-          doc.text(descLines, margin + 10, y + rowH);
-          rowH += descLines.length * 5;
-        }
-        if (includeNotes && item.facilitator_notes) {
-          doc.setTextColor(146, 64, 14);
-          const noteLines = doc.splitTextToSize(`Notes: ${item.facilitator_notes}`, 100);
-          doc.text(noteLines, margin + 10, y + rowH);
-          rowH += noteLines.length * 5;
-          doc.setTextColor(80);
-        }
-        if (showPresenter) doc.text(item.presenter || "", margin + 120, y);
-        if (showTime && item.duration_minutes > 0) {
-          doc.text(`${item.duration_minutes} min`, pageW - margin - 2, y, { align: "right" });
-        }
-        y += Math.max(rowH, 7) + 2;
-
-        // Note lines for handwriting
-        if (showNotesLines) {
-          doc.setFontSize(9);
-          doc.setTextColor(180);
-          doc.text("Notes:", margin + 10, y);
-          y += 5;
-          for (let i = 0; i < 2; i++) {
-            if (y > 275) { doc.addPage(); y = margin; }
-            doc.setDrawColor(235);
-            doc.setLineWidth(0.2);
-            doc.line(margin + 10, y, pageW - margin, y);
-            y += 6;
-          }
-          if (y > 270) { doc.addPage(); y = margin; }
-          doc.text("Action: ____________________________  Due: __________", margin + 10, y);
-          y += 7;
-        }
-
-        doc.setDrawColor(230);
-        doc.setLineWidth(0.2);
-        doc.line(margin, y, pageW - margin, y);
-        y += 3;
+      const canvas = await html2canvas(previewRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
       });
+      const imgData = canvas.toDataURL("image/png");
+      const doc = new jsPDF("p", "mm", "a4");
+      const margin = 10;
+      const pageW = 210;
+      const pageH = 297;
+      const imgWidth = pageW - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const usablePageHeight = pageH - margin * 2;
+      let heightLeft = imgHeight;
+      let position = margin;
 
-      // Action items section
-      if (showActionItems) {
-        if (y > 245) { doc.addPage(); y = margin; }
-        y += 6;
-        doc.setDrawColor(15, 31, 107);
-        doc.setLineWidth(0.6);
-        doc.line(margin, y, pageW - margin, y);
-        y += 7;
-        doc.setFontSize(13);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(15, 31, 107);
-        doc.text("Action Items", margin, y);
-        y += 8;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
-        doc.setTextColor(160);
-        for (let i = 0; i < 6; i++) {
-          if (y > 275) { doc.addPage(); y = margin; }
-          doc.text("☐", margin + 2, y);
-          doc.setDrawColor(220);
-          doc.setLineWidth(0.2);
-          doc.line(margin + 8, y, pageW - margin, y);
-          y += 9;
-        }
+      doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+      heightLeft -= usablePageHeight;
+
+      while (heightLeft > 0) {
+        position = margin - (imgHeight - heightLeft);
+        doc.addPage();
+        doc.addImage(imgData, "PNG", margin, position, imgWidth, imgHeight);
+        heightLeft -= usablePageHeight;
       }
 
-      if (showTime && totalDuration > 0) {
-        y += 4;
-        doc.setFontSize(9);
-        doc.setTextColor(110);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Total Estimated Time: ${Math.floor(totalDuration / 60)}h ${totalDuration % 60}m`, pageW - margin, y, { align: "right" });
-      }
-
-      const safeName = meeting.title.replace(/[^a-z0-9]/gi, "_");
-      doc.save(`${safeName}_Agenda.pdf`);
-      toast({ title: "PDF saved", description: "Agenda downloaded as PDF." });
+      const blobUrl = doc.output("bloburl");
+      window.open(blobUrl, "_blank");
+      toast({ title: "PDF ready", description: "Opened in a new tab — you can download from there if needed." });
     } catch (err) {
-      toast({ title: "Failed to save PDF", description: err?.message, variant: "destructive" });
+      toast({ title: "Failed to generate PDF", description: err?.message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -438,7 +320,7 @@ export default function AgendaPreviewDialog({ meeting, items, open, onOpenChange
           </form>
         )}
 
-        <div className="border border-border rounded-lg p-6 bg-white">
+        <div ref={previewRef} className="border border-border rounded-lg p-6 bg-white">
           {/* Branded header */}
           <div className="flex items-center gap-4 border-b-2 border-accent pb-4 mb-4">
             <img src={logoUrl} alt={orgName} className="w-14 h-14 rounded-full object-cover" />
