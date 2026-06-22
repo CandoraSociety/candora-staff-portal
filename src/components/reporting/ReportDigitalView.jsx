@@ -2,7 +2,7 @@ import React from 'react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
 
-export default function ReportDigitalView({ report, sections, branding, dataEntries, onSectionRef }) {
+export default function ReportDigitalView({ report, sections, branding, dataEntries, onSectionRef, onSectionUpdate }) {
   if (!report) return null;
 
   return (
@@ -75,6 +75,7 @@ export default function ReportDigitalView({ report, sections, branding, dataEntr
                 showHeaderAll={report.show_header_all}
                 showFooterAll={report.show_footer_all}
                 showPageNumbersAll={report.show_page_numbers_all}
+                onUpdate={onSectionUpdate}
               />
             </div>
           ))}

@@ -33,6 +33,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [titleImageWidth, setTitleImageWidth] = useState(section.title_image_width || 80);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [imageCaption, setImageCaption] = useState(section.image_caption || '');
+  const [imageWidth, setImageWidth] = useState(section.image_width || 50);
   const [isCollapsible, setIsCollapsible] = useState(section.is_collapsible || false);
   const [isExpandedDefault, setIsExpandedDefault] = useState(section.is_expanded_default !== false);
   const [hideHeader, setHideHeader] = useState(section.hide_header || false);
@@ -62,6 +63,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setTitleImageUrl(section.title_image_url || '');
     setTitleImageWidth(section.title_image_width || 80);
     setImageCaption(section.image_caption || '');
+    setImageWidth(section.image_width || 50);
     setIsCollapsible(section.is_collapsible || false);
     setIsExpandedDefault(section.is_expanded_default !== false);
     setHideHeader(section.hide_header || false);
@@ -70,7 +72,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   }, [section]);
 
   const save = () => {
-    onUpdate(section.id, { title, content, layout, image_url: imageUrl, image_caption: imageCaption, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter, title_styles: JSON.stringify(titleStyles) });
+    onUpdate(section.id, { title, content, layout, image_url: imageUrl, image_caption: imageCaption, image_width: imageWidth, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter, title_styles: JSON.stringify(titleStyles) });
   };
 
   const updateTitleStyle = (key, value) => {
@@ -414,6 +416,13 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               </label>
             )}
           </div>
+          {imageUrl && (layout === 'image_left' || layout === 'image_right' || layout === 'image_full') && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">Image Width</Label>
+              <input type="range" min="10" max="100" value={imageWidth} onChange={e => setImageWidth(parseInt(e.target.value))} onMouseUp={() => onUpdate(section.id, { image_width: imageWidth })} onTouchEnd={() => onUpdate(section.id, { image_width: imageWidth })} className="flex-1 h-1 accent-accent" />
+              <span className="text-xs text-muted-foreground w-10 text-right">{imageWidth}%</span>
+            </div>
+          )}
           <div>
             <Label className="text-xs">Image Caption</Label>
             <Input value={imageCaption} onChange={e => setImageCaption(e.target.value)} onBlur={() => onUpdate(section.id, { image_caption: imageCaption })} placeholder="Caption text" className="mt-1" />

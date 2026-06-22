@@ -33,6 +33,16 @@
     "image_caption": {
       "type": "string"
     },
+    "image_width": {
+      "type": "number",
+      "description": "Image width as percentage of container (10-100). Used by image_left, image_right, and image_full layouts.",
+      "default": 50
+    },
+    "chart_width": {
+      "type": "number",
+      "description": "Chart/graph width as percentage of container (20-100)",
+      "default": 100
+    },
     "layout": {
       "type": "string",
       "enum": [

@@ -506,6 +506,7 @@ export default function ReportingAGREditor() {
                     branding={branding}
                     dataEntries={dataEntries}
                     onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
+                    onSectionUpdate={handleUpdateSection}
                   />
                 ) : (
                   <ReportPrintView
@@ -515,6 +516,7 @@ export default function ReportingAGREditor() {
                     dataEntries={dataEntries}
                     onSectionRef={(sectionId, el) => { sectionRefs.current[sectionId] = el; }}
                     onSectionsUpdate={setSections}
+                    onSectionUpdate={handleUpdateSection}
                   />
                 )}
               </div>

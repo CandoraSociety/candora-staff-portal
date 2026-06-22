@@ -21,7 +21,7 @@ export default function SectionRenderer({
   headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
   headerLayout, footerLayout,
   headerZones: headerZonesRaw, footerZones: footerZonesRaw,
-  showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible
+  showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible, onUpdate
 }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
@@ -197,21 +197,39 @@ export default function SectionRenderer({
     );
 
     const hasImage = section.image_url && section.layout !== 'text_only';
+    const imageWidth = section.image_width || 50;
+    const chartWidth = section.chart_width || 100;
+    const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full'].includes(section.layout);
     const imageBlock = hasImage ? (
-      <div className={section.layout === 'image_full' ? 'my-4' : ''}>
+      <div className="relative group">
         <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-cover" style={{ maxHeight: isPrint ? '200px' : '300px' }} />
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}
+        {showImageSlider && (
+          <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-[10px] text-white shrink-0">Width</span>
+            <input type="range" min="10" max="100" value={imageWidth} onChange={e => onUpdate(section.id, { image_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+            <span className="text-[10px] text-white w-9 text-right tabular-nums">{imageWidth}%</span>
+          </div>
+        )}
       </div>
     ) : null;
 
+    const showChartSlider = onUpdate;
     const dataBlock = sectionData.length > 0 ? (
-      <div className="space-y-4">
+      <div className="space-y-4" style={{ width: chartWidth < 100 ? `${chartWidth}%` : '100%', margin: chartWidth < 100 ? '0 auto' : undefined }}>
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
-            <div key={d.id} className="border rounded-lg p-4" style={{ borderColor: `${ac}30`, backgroundColor: `${ac}05` }}>
+            <div key={d.id} className="relative group border rounded-lg p-4" style={{ borderColor: `${ac}30`, backgroundColor: `${ac}05` }}>
               {chartConfig && <ChartRenderer chartConfig={chartConfig} isPrint={isPrint} />}
               {d.ai_narrative && <p className="text-sm text-slate-700 mt-2">{d.ai_narrative}</p>}
+              {showChartSlider && (
+                <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] text-white shrink-0">Width</span>
+                  <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+                  <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -234,20 +252,24 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-2/5 shrink-0 space-y-4">{imageBlock}{dataBlock}</div>
-            <div className="flex-1">{contentBlock}</div>
+          <div className="overflow-hidden">
+            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
+            {contentBlock}
+            <div style={{ clear: 'both' }} />
+            {dataBlock}
           </div>
         );
       case 'image_right':
         return (
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">{contentBlock}</div>
-            <div className="md:w-2/5 shrink-0 space-y-4">{imageBlock}{dataBlock}</div>
+          <div className="overflow-hidden">
+            <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
+            {contentBlock}
+            <div style={{ clear: 'both' }} />
+            {dataBlock}
           </div>
         );
       case 'image_full':
-        return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
+        return <div><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
       case 'two_column':
         return <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
       default:

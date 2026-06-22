@@ -21,7 +21,7 @@ function PagePreview({ pageNum, children, className }) {
   );
 }
 
-export default function ReportPrintView({ report, sections, branding, dataEntries, onSectionRef, onSectionsUpdate }) {
+export default function ReportPrintView({ report, sections, branding, dataEntries, onSectionRef, onSectionsUpdate, onSectionUpdate }) {
   if (!report) return null;
 
   const hasInsideFront = !!report.inside_front_cover_image;
@@ -103,6 +103,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
                 showHeaderAll={report.show_header_all}
                 showFooterAll={report.show_footer_all}
                 showPageNumbersAll={report.show_page_numbers_all}
+                onUpdate={onSectionUpdate}
               />
             </div>
           </div>
