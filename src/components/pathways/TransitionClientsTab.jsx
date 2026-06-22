@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format, differenceInDays, addDays, addWeeks, addMonths } from "date-fns";
@@ -80,7 +80,7 @@ export default function TransitionClientsTab() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [expandedId, setExpandedId] = useState(null);
   const [importing, setImporting] = useState(false);
-  const fileInputRef = useState(null);
+  const fileInputRef = useRef(null);
   const [search, setSearch] = useState("");
   const [filterCounsellor, setFilterCounsellor] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
@@ -185,71 +185,17 @@ export default function TransitionClientsTab() {
     setImporting(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url,
-        json_schema: {
-          type: "object",
-          properties: {
-            clients: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  first_name: { type: "string" },
-                  last_name: { type: "string" },
-                  phone: { type: "string" },
-                  email: { type: "string" },
-                  previous_counsellor: { type: "string" },
-                  new_counsellor: { type: "string" },
-                  transition_status: { type: "string" },
-                  priority: { type: "string" },
-                  next_checkin_date: { type: "string" },
-                  last_checkin_date: { type: "string" },
-                  checkin_frequency: { type: "string" },
-                  checkin_notes: { type: "string" },
-                  program_stage: { type: "string" },
-                  notes: { type: "string" },
-                },
-              },
-            },
-          },
-        },
-      });
+      const response = await base44.functions.invoke('parseTransitionImport', { file_url });
+      const records = response.data?.records;
 
-      const records = result.output?.clients || result.output || [];
-      if (!Array.isArray(records) || records.length === 0) {
-        toast({ title: "No data found", description: "Could not extract client records from the file.", variant: "destructive" });
+      if (!records || records.length === 0) {
+        toast({ title: "No data found", description: response.data?.error || "Could not extract client records from the file.", variant: "destructive" });
         setImporting(false);
         e.target.value = "";
         return;
       }
 
-      const cleanRecords = records.map(r => ({
-        first_name: r.first_name || "",
-        last_name: r.last_name || "",
-        phone: r.phone || "",
-        email: r.email || "",
-        previous_counsellor: ["Lola", "Priscilla", "Other"].includes(r.previous_counsellor) ? r.previous_counsellor : "Other",
-        new_counsellor: r.new_counsellor || "Olena",
-        transition_status: ["not_started", "in_progress", "introduced", "completed"].includes(r.transition_status) ? r.transition_status : "not_started",
-        priority: ["high", "medium", "low"].includes(r.priority) ? r.priority : "medium",
-        next_checkin_date: r.next_checkin_date || null,
-        last_checkin_date: r.last_checkin_date || null,
-        checkin_frequency: ["weekly", "biweekly", "monthly", "as_needed"].includes(r.checkin_frequency) ? r.checkin_frequency : "weekly",
-        checkin_notes: r.checkin_notes || "",
-        program_stage: r.program_stage || "",
-        notes: r.notes || "",
-        milestones: [],
-      })).filter(r => r.first_name && r.last_name);
-
-      if (cleanRecords.length === 0) {
-        toast({ title: "No valid records", description: "Each row needs at least a first and last name.", variant: "destructive" });
-        setImporting(false);
-        e.target.value = "";
-        return;
-      }
-
-      await bulkCreate.mutateAsync(cleanRecords);
+      await bulkCreate.mutateAsync(records);
     } catch (err) {
       toast({ title: "Import failed", description: err?.message || "Unknown error", variant: "destructive" });
     } finally {
