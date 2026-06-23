@@ -89,16 +89,17 @@ export default function DraggableImageBlock({
       <div
         ref={ref}
         onMouseDown={dragHandle ? undefined : handleMouseDown}
-        className={dragHandle ? '' : (dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all')}
+        className={dragHandle ? 'relative' : (dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all')}
       >
         {dragHandle && onUpdate && (
           <div
             onMouseDown={handleMouseDown}
-            className="no-print flex items-center justify-center gap-1.5 py-1 mb-1 cursor-grab hover:bg-accent/5 rounded text-[10px] text-muted-foreground hover:text-accent transition-colors select-none"
-            title="Drag to reposition"
+            className="no-print relative z-20 flex items-center justify-center gap-2 py-2 mb-2 cursor-grab active:cursor-grabbing bg-accent text-white rounded-t-lg border-2 border-accent border-b-0 text-xs font-semibold select-none hover:bg-accent/90 transition-colors shadow-sm"
+            title="Click and drag here to reposition the chart"
           >
-            <GripHorizontal className="w-3.5 h-3.5" />
-            <span>Drag to reposition</span>
+            <GripHorizontal className="w-4 h-4" />
+            <span>Drag here to reposition</span>
+            <GripHorizontal className="w-4 h-4" />
           </div>
         )}
         {children}
@@ -106,7 +107,7 @@ export default function DraggableImageBlock({
       {dragging && ghost && (
         <>
           {/* Drop zone indicators */}
-          <div className="pointer-events-none absolute inset-0 z-40 flex gap-0.5">
+          <div className="pointer-events-none fixed inset-0 z-40 flex gap-0.5">
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'left' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'full' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'right' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />

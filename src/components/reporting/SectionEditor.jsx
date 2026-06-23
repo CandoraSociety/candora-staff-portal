@@ -56,6 +56,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [chartType, setChartType] = useState('bar');
   const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
   const [analyzing, setAnalyzing] = useState({});
+  const [importingFile, setImportingFile] = useState(false);
 
   const master = parseStyles(masterStyles);
   const masterTitle = master.title || {};
@@ -177,6 +178,42 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setChartLabel('');
     setChartType('bar');
     setChartRows([{ name: '', value: '' }, { name: '', value: '' }]);
+  };
+
+  const handleImportSpreadsheet = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingFile(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            rows: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  value: { type: "number" }
+                }
+              }
+            },
+            suggested_label: { type: "string" }
+          }
+        }
+      });
+      if (result.output?.rows?.length) {
+        setChartRows(result.output.rows.map(r => ({ name: r.name || '', value: r.value != null ? String(r.value) : '' })));
+        if (result.output.suggested_label && !chartLabel) {
+          setChartLabel(result.output.suggested_label);
+        }
+      }
+    } catch {}
+    setImportingFile(false);
+    e.target.value = '';
   };
 
   const handleDataFileUpload = async (e) => {
@@ -627,6 +664,14 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                     <button onClick={addChartRow} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
                       <Plus className="w-3 h-3" />Add Row
                     </button>
+                    <label className="flex items-center gap-1 text-[10px] text-accent hover:underline cursor-pointer">
+                      {importingFile ? (
+                        <><div className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />Parsing...</>
+                      ) : (
+                        <><Upload className="w-3 h-3" />Import from Excel/CSV</>
+                      )}
+                      <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleImportSpreadsheet} disabled={importingFile} />
+                    </label>
                     <div className="flex-1" />
                     <Button onClick={handleSaveChart} disabled={!chartLabel.trim() || chartRows.filter(r => r.name.trim() && r.value !== '').length === 0} size="sm" className="gap-1 text-xs h-7">
                       <Check className="w-3 h-3" />Save Chart
