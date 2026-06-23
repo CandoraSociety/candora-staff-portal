@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
 import DraggableImageBlock from './DraggableImageBlock';
@@ -269,6 +269,16 @@ export default function SectionRenderer({
     const imageBlock = hasImage ? (
       <DraggableImageBlock section={section} onUpdate={onUpdate}>
       <div className="relative group">
+        {onUpdate && !isPrint && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onUpdate(section.id, hasCollage ? { collage_photos: [], collage_layout: 'grid' } : { image_url: null }); }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="no-print absolute top-1 right-1 z-30 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+            title="Remove image"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
         {hasCollage ? (
           <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20` }} className="overflow-hidden">
             <div style={{ border: `2px solid ${pc}`, borderRadius: '0.5rem', outline: `1px solid ${ac}40`, outlineOffset: '2px', overflow: 'hidden' }}>

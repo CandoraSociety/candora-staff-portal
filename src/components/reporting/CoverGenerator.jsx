@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal } from 'lucide-react';
+import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal, Frame } from 'lucide-react';
 import CropDialog from './CropDialog';
 import PasteImageInput from './PasteImageInput';
 
@@ -106,7 +106,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const addImageFile = async (file) => {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    const el = { id: uid(), type: 'image', url: file_url, x: 30, y: 30, w: 160, h: 160 };
+    const el = { id: uid(), type: 'image', url: file_url, x: 30, y: 30, w: 160, h: 160, frame: false, shadow: false };
     updateOverlays(prev => [...prev, el]);
     setSelectedId(el.id);
   };
@@ -264,7 +264,10 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       onClick={(e) => e.stopPropagation()}
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
-                      <img src={el.url} alt="" className="w-full h-full object-cover rounded" />
+                      <img src={el.url} alt="" className="w-full h-full object-cover rounded" style={{
+                        ...(el.frame ? { border: `3px solid ${branding?.primary_color || '#1a2744'}`, outline: `1px solid ${branding?.accent_color || '#2b2de8'}`, outlineOffset: '2px' } : {}),
+                        ...(el.shadow ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : {}),
+                      }} />
                       <div
                         className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
                         onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }}
@@ -433,9 +436,11 @@ function ElementToolbar({ el, branding, onUpdate, onDelete, onCrop, fontFamilies
         <span className="text-xs font-medium">Image</span>
         <Button variant="ghost" size="sm" onClick={onDelete} className="h-6 w-6 p-0 text-red-400 hover:text-red-600"><X className="w-3 h-3" /></Button>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1 flex-wrap">
         <Button variant="outline" size="sm" onClick={onCrop} className="gap-1 text-xs"><Crop className="w-3 h-3" />Crop</Button>
         <Button variant="outline" size="sm" onClick={() => onUpdate({ x: 50 })} className="gap-1 text-xs">↔ Center</Button>
+        <Button variant={el.frame ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ frame: !el.frame })} className="gap-1 text-xs"><Frame className="w-3 h-3" />Frame</Button>
+        <Button variant={el.shadow ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ shadow: !el.shadow })} className="gap-1 text-xs">Shadow</Button>
       </div>
       <p className="text-[10px] text-muted-foreground">Drag to reposition • Drag corner to resize</p>
     </div>
