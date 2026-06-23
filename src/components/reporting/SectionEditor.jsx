@@ -9,6 +9,7 @@ import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
 import SectionGallery from './SectionGallery';
+import PasteImageInput from './PasteImageInput';
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
 
@@ -127,17 +128,29 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setGeneratingSuggestions(false);
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const uploadSectionImage = async (file) => {
     if (!file) return;
     setUploadingImage(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setImageUrl(file_url);
-      // Auto-switch from text_only to image_full so the uploaded image is visible
       const newLayout = layout === 'text_only' ? 'image_full' : layout;
       if (layout === 'text_only') setLayout('image_full');
       onUpdate(section.id, { image_url: file_url, layout: newLayout });
+    } catch {}
+    setUploadingImage(false);
+  };
+
+  const handleImageUpload = async (e) => {
+    uploadSectionImage(e.target.files?.[0]);
+  };
+
+  const handleTitleImagePaste = async (file) => {
+    setUploadingImage(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setTitleImageUrl(file_url);
+      onUpdate(section.id, { title_image_url: file_url });
     } catch {}
     setUploadingImage(false);
   };
@@ -314,20 +327,23 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                     </div>
                   </div>
                 ) : (
-                  <label className="inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline mt-1">
-                    <ImageIcon className="w-3 h-3" /> Add title image
-                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setUploadingImage(true);
-                      try {
-                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                        setTitleImageUrl(file_url);
-                        onUpdate(section.id, { title_image_url: file_url });
-                      } catch {}
-                      setUploadingImage(false);
-                    }} />
-                  </label>
+                  <div className="space-y-1.5 mt-1">
+                    <label className="inline-flex items-center gap-1 text-xs text-accent cursor-pointer hover:underline">
+                      <ImageIcon className="w-3 h-3" /> Add title image
+                      <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploadingImage(true);
+                        try {
+                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                          setTitleImageUrl(file_url);
+                          onUpdate(section.id, { title_image_url: file_url });
+                        } catch {}
+                        setUploadingImage(false);
+                      }} />
+                    </label>
+                    <PasteImageInput onPasteImage={handleTitleImagePaste} disabled={uploadingImage} />
+                  </div>
                 )}
               </div>
               <CropImageDialog
@@ -525,15 +541,18 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer hover:border-accent/50 hover:bg-slate-50 transition-colors">
-                {uploadingImage ? (
-                  <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-                ) : (
-                  <Upload className="w-5 h-5 text-muted-foreground" />
-                )}
-                <span className="text-xs text-muted-foreground">{uploadingImage ? 'Uploading...' : 'Click to upload image'}</span>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
-              </label>
+              <div className="space-y-2">
+                <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer hover:border-accent/50 hover:bg-slate-50 transition-colors">
+                  {uploadingImage ? (
+                    <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-muted-foreground" />
+                  )}
+                  <span className="text-xs text-muted-foreground">{uploadingImage ? 'Uploading...' : 'Click to upload image'}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                </label>
+                <PasteImageInput onPasteImage={uploadSectionImage} disabled={uploadingImage} />
+              </div>
             )}
           </div>
           {imageUrl && (layout === 'image_left' || layout === 'image_right' || layout === 'image_full') && (
