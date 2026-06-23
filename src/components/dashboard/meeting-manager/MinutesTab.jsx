@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { FileText, Clock, Calendar, Plus, Trash2, ChevronDown } from "lucide-react";
+import { FileText, Clock, Calendar, Plus, Trash2, ChevronDown, Printer, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import MinuteEntryForm from "./MinuteEntryForm";
+import { printMinutes } from "./minutesPrint";
 
 const TYPE_COLORS = {
   opening: "bg-emerald-100 text-emerald-700",
@@ -268,15 +269,35 @@ export default function MinutesTab({ selectedMeetingId, onSelectMeeting }) {
         <div className="bg-muted/30 border border-border rounded-lg p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium">{selectedMeeting.title}</p>
-            <select
-              value={selectedMeetingId}
-              onChange={e => onSelectMeeting(e.target.value)}
-              className="border border-input rounded-md px-2 py-1 text-xs bg-background h-7 max-w-[180px]"
-            >
-              {meetings.map(m => (
-                <option key={m.id} value={m.id}>{m.title}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => printMinutes(selectedMeeting, sortedItems, entriesByItem, true)}
+                className="h-7 text-xs gap-1"
+                title="Print official minutes (excludes notes and in camera details)"
+              >
+                <Printer className="w-3.5 h-3.5" /> Official
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => printMinutes(selectedMeeting, sortedItems, entriesByItem, false)}
+                className="h-7 text-xs gap-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                title="Print unofficial minutes with notes and in camera details (Board Chair & ED only)"
+              >
+                <Lock className="w-3.5 h-3.5" /> Unofficial
+              </Button>
+              <select
+                value={selectedMeetingId}
+                onChange={e => onSelectMeeting(e.target.value)}
+                className="border border-input rounded-md px-2 py-1 text-xs bg-background h-7 max-w-[180px]"
+              >
+                {meetings.map(m => (
+                  <option key={m.id} value={m.id}>{m.title}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             {selectedMeeting.meeting_date && (
