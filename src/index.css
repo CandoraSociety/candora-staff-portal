@@ -115,3 +115,15 @@
   .print-break { page-break-before: always; }
   body { background: white !important; }
 }
+
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+  pointer-events: none;
+}
+[contenteditable]:focus {
+  outline: 2px solid hsl(var(--accent) / 0.2);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

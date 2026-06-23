@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
+import DraggableImageBlock from './DraggableImageBlock';
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -25,6 +26,29 @@ export default function SectionRenderer({
   showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible, onUpdate
 }) {
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
+
+  const contentRef = useRef(null);
+  const editingContent = useRef(false);
+  const titleRef = useRef(null);
+  const editingTitle = useRef(false);
+
+  useEffect(() => {
+    if (contentRef.current && !editingContent.current) {
+      const newHtml = section.content || '';
+      if (contentRef.current.innerHTML !== newHtml) {
+        contentRef.current.innerHTML = newHtml;
+      }
+    }
+  }, [section.content]);
+
+  useEffect(() => {
+    if (titleRef.current && !editingTitle.current) {
+      const newTitle = section.title || '';
+      if (titleRef.current.textContent !== newTitle) {
+        titleRef.current.textContent = newTitle;
+      }
+    }
+  }, [section.title]);
 
   const pc = branding?.primary_color || '#1a2744';
   const ac = branding?.accent_color || '#2b2de8';
@@ -156,7 +180,18 @@ export default function SectionRenderer({
             </div>
           )}
           <h3
-            className="font-heading font-bold leading-tight"
+            ref={titleRef}
+            contentEditable={!!onUpdate && !isPrint}
+            suppressContentEditableWarning
+            onMouseDown={!!onUpdate && !isPrint ? (e) => e.stopPropagation() : undefined}
+            onClick={!!onUpdate && !isPrint ? (e) => e.stopPropagation() : undefined}
+            onFocus={() => { editingTitle.current = true; }}
+            onBlur={!!onUpdate && !isPrint ? (e) => {
+              editingTitle.current = false;
+              const newTitle = e.target.textContent.trim();
+              if (newTitle !== section.title) onUpdate(section.id, { title: newTitle });
+            } : undefined}
+            className="font-heading font-bold leading-tight rounded px-1 -mx-1 focus:outline-none focus:bg-accent/5"
             style={{
               color: titleColor,
               fontSize: `${titleSize}px`,
@@ -165,9 +200,7 @@ export default function SectionRenderer({
               fontStyle: ts.italic ? 'italic' : 'normal',
               textDecoration: ts.underline ? 'underline' : 'none',
             }}
-          >
-            {section.title}
-          </h3>
+          />
           {titleImage && (
             <div className="relative group/title shrink-0 ml-auto">
               <img src={titleImage} alt="" className="object-contain rounded" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px' }} />
@@ -200,9 +233,19 @@ export default function SectionRenderer({
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
       }}>
-        {section.content ? (
-          <div dangerouslySetInnerHTML={{ __html: section.content }} />
-        ) : <p className="text-muted-foreground italic">No content yet.</p>}
+        <div
+          ref={contentRef}
+          contentEditable={!!onUpdate && !isPrint}
+          suppressContentEditableWarning
+          data-placeholder="No content yet. Click to edit..."
+          onFocus={() => { editingContent.current = true; }}
+          onBlur={!!onUpdate && !isPrint ? (e) => {
+            editingContent.current = false;
+            const html = e.target.innerHTML;
+            const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
+            if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
+          } : undefined}
+        />
       </div>
     );
 
@@ -212,6 +255,7 @@ export default function SectionRenderer({
     const chartWidth = section.chart_width || 100;
     const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full'].includes(section.layout);
     const imageBlock = hasImage ? (
+      <DraggableImageBlock section={section} onUpdate={onUpdate}>
       <div className="relative group">
         {hasCollage ? (
           <div style={{ border: `3px solid ${pc}`, borderRadius: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }} className="overflow-hidden">
@@ -229,6 +273,7 @@ export default function SectionRenderer({
           </div>
         )}
       </div>
+      </DraggableImageBlock>
     ) : null;
 
     const showChartSlider = onUpdate;
@@ -269,7 +314,7 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="overflow-hidden">
+          <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
             {contentBlock}
             <div style={{ clear: 'both' }} />
@@ -278,7 +323,7 @@ export default function SectionRenderer({
         );
       case 'image_right':
         return (
-          <div className="overflow-hidden">
+          <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
             {contentBlock}
             <div style={{ clear: 'both' }} />
@@ -286,11 +331,11 @@ export default function SectionRenderer({
           </div>
         );
       case 'image_full':
-        return <div><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
+        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
       case 'two_column':
-        return <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
+        return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative" data-section-content><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
       default:
-        return <div>{imageBlock}{contentBlock}{dataBlock}</div>;
+        return <div className="relative" data-section-content>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
   };
 
