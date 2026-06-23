@@ -220,6 +220,15 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
             <div ref={containerRef} className="aspect-[8.5/11] w-full relative">
               <img src={imageUrl} alt={label} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
 
+              <button
+                onClick={(e) => { e.stopPropagation(); deleteCover(); }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="absolute top-2 right-2 z-30 w-7 h-7 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors shadow-lg"
+                title="Delete cover image"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
               {localOverlays.map(el => {
                 if (el.type === 'text') {
                   const isSelected = selectedId === el.id && !dragging;
