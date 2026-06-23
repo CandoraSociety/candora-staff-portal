@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal } from 'lucide-react';
 import CropDialog from './CropDialog';
+import PasteImageInput from './PasteImageInput';
 
 const FIELD_MAP = {
   front: 'cover_image', inside_front: 'inside_front_cover_image',
@@ -181,12 +182,12 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
 
   const undoCover = () => onUpdate({ [FIELD_MAP[type]]: null });
   const deleteCover = () => onUpdate({ [FIELD_MAP[type]]: '' });
-  const uploadCover = async (e) => {
-    const file = e.target.files?.[0];
+  const uploadCoverFile = async (file) => {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     await onUpdate({ [FIELD_MAP[type]]: file_url });
   };
+  const uploadCover = async (e) => uploadCoverFile(e.target.files?.[0]);
 
   const favouriteCover = () => {
     if (!imageUrl) return;
@@ -284,6 +285,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
             <Button variant="outline" size="sm" onClick={deleteCover} className="gap-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" />Delete</Button>
           </div>
 
+          <PasteImageInput onPasteImage={uploadCoverFile} />
+
           {/* Add overlay buttons */}
           <div className="flex gap-2 mt-2">
             <Button variant="ghost" size="sm" onClick={addTextBox} className="gap-1 text-xs"><Type className="w-3 h-3" />Add Text Box</Button>
@@ -294,6 +297,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
           </div>
         </div>
       ) : (
+        <>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button onClick={generateCover} disabled={generating} className="gap-2 flex-1" variant="outline"><Sparkles className="w-4 h-4" />{generating ? 'Generating...' : `AI Generate ${label}`}</Button>
           <label className="flex-1 cursor-pointer">
@@ -301,7 +305,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
             <input type="file" accept="image/*" className="hidden" onChange={uploadCover} />
           </label>
         </div>
-      )}
+        <PasteImageInput onPasteImage={uploadCoverFile} />
+      </>
 
       {/* Selected element toolbar */}
       {selectedEl && imageUrl && (
