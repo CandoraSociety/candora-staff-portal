@@ -1,6 +1,7 @@
 import React from 'react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
+import ScaledTOC from '@/components/reporting/ScaledTOC';
 import { ArrowBigUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -51,19 +52,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
       {/* Table of Contents */}
       <PagePreview pageNum={tocPage}>
-        <div className="p-10 flex flex-col h-full" style={{ minHeight: '11in' }}>
-          <h3 className="text-lg font-heading font-bold uppercase tracking-wider mb-10" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-          <div className="flex-1 space-y-3">
-            {sections.map((s, i) => (
-              <div key={s.id} className="flex items-baseline text-sm" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                <span className="font-bold mr-3 shrink-0" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                <span className="flex-1">{s.title || 'Untitled'}</span>
-                <span className="flex-1 mx-2 border-b border-dotted" style={{ borderColor: branding?.accent_color ? `${branding.accent_color}40` : '#2b2de840' }} />
-                <span className="shrink-0 font-medium tabular-nums" style={{ color: branding?.primary_color || '#1a2744' }}>{getSectionPage(i)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ScaledTOC sections={sections} branding={branding} getPage={getSectionPage} containerHeight="11in" padding="2.5rem" />
       </PagePreview>
 
       {/* Sections */}

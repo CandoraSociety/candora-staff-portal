@@ -1,6 +1,7 @@
 import React from 'react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
+import ScaledTOC from '@/components/reporting/ScaledTOC';
 
 export default function ReportDigitalView({ report, sections, branding, dataEntries, onSectionRef, onSectionUpdate }) {
   if (!report) return null;
@@ -34,18 +35,18 @@ export default function ReportDigitalView({ report, sections, branding, dataEntr
           {sections.length > 0 && (() => {
             const tocPage = 1 + (report.cover_image ? 1 : 0) + (report.inside_front_cover_image ? 1 : 0);
             return (
-              <div className="min-h-[80vh] bg-white rounded-xl shadow-sm border flex flex-col justify-center p-16">
-                <h3 className="text-2xl font-heading font-bold mb-8" style={{ color: branding?.primary_color || '#1a2744' }}>Table of Contents</h3>
-                <div className="space-y-1">
-                  {sections.map((s, i) => (
-                    <div key={s.id} className="flex items-center gap-4 text-base py-2 transition-colors hover:bg-slate-50 rounded px-3 -mx-3" style={{ color: branding?.secondary_color || '#3b5998' }}>
-                      <span className="font-bold w-8 text-right" style={{ color: branding?.primary_color || '#1a2744' }}>{i + 1}.</span>
-                      <span>{s.title || 'Untitled'}</span>
-                      <span className="flex-1 border-b border-dotted mx-3 opacity-30" />
-                      <span className="text-xs opacity-50">{tocPage + 1 + i}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <ScaledTOC
+                  sections={sections}
+                  branding={branding}
+                  getPage={(i) => tocPage + 1 + i}
+                  containerHeight="80vh"
+                  padding="4rem"
+                  titleClass="text-2xl"
+                  entryClass="text-base"
+                  gapClass="space-y-1"
+                  titleMargin="mb-8"
+                />
               </div>
             );
           })()}
