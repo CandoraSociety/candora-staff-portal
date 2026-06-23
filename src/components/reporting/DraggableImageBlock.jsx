@@ -89,7 +89,7 @@ export default function DraggableImageBlock({
       <div
         ref={ref}
         onMouseDown={dragHandle ? undefined : handleMouseDown}
-        className={dragHandle ? 'relative' : (dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all')}
+        className={dragHandle ? '' : (dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all')}
       >
         {dragHandle && onUpdate && (
           <div
@@ -107,7 +107,7 @@ export default function DraggableImageBlock({
       {dragging && ghost && (
         <>
           {/* Drop zone indicators */}
-          <div className="pointer-events-none fixed inset-0 z-40 flex gap-0.5">
+          <div className="pointer-events-none absolute inset-0 z-40 flex gap-0.5">
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'left' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'full' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
             <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'right' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
