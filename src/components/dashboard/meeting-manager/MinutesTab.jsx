@@ -177,7 +177,22 @@ export default function MinutesTab({ selectedMeetingId, onSelectMeeting }) {
             <Trash2 className="w-3 h-3" />
           </button>
         </div>
-        {entry.content && <p className="text-foreground">{entry.content}</p>}
+        {entry.content && (
+          <p
+            className={cn(isMotion && "font-bold italic")}
+            style={{
+              color: isMotion
+                ? entry.motion_result === "carried"
+                  ? "#16a34a"
+                  : entry.motion_result === "defeated"
+                    ? "#dc2626"
+                    : "hsl(var(--accent))"
+                : "hsl(var(--accent))",
+            }}
+          >
+            {entry.content}
+          </p>
+        )}
         {isMotion && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
             {entry.moved_by && <span>Moved: <span className="font-medium text-foreground">{entry.moved_by}</span></span>}
