@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Clipboard } from 'lucide-react';
 
-export default function PasteImageInput({ onPasteImage, disabled = false }) {
+export default function PasteImageInput({ onPasteImage, disabled = false, label = 'Or paste image from clipboard' }) {
   const [focused, setFocused] = useState(false);
   const ref = useRef(null);
 
@@ -41,7 +41,7 @@ export default function PasteImageInput({ onPasteImage, disabled = false }) {
       }`}
     >
       <Clipboard className="w-3.5 h-3.5 shrink-0" />
-      <span>{focused ? 'Press Ctrl+V to paste...' : 'Or paste image from clipboard'}</span>
+      <span>{focused ? 'Press Ctrl+V to paste...' : label}</span>
     </div>
   );
 }

@@ -103,15 +103,14 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
     setSelectedId(el.id);
   };
 
-  const addImage = async (e) => {
-    const file = e.target.files?.[0];
+  const addImageFile = async (file) => {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     const el = { id: uid(), type: 'image', url: file_url, x: 30, y: 30, w: 160, h: 160 };
     updateOverlays(prev => [...prev, el]);
     setSelectedId(el.id);
-    e.target.value = '';
   };
+  const addImage = async (e) => { await addImageFile(e.target.files?.[0]); e.target.value = ''; };
 
   const updateElement = (elId, patch) => {
     updateOverlays(prev => prev.map(el => el.id === elId ? { ...el, ...patch } : el));
@@ -174,18 +173,27 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         reference_image_url: imageUrl || undefined,
         front_cover_url: type !== 'front' ? report?.cover_image || undefined : undefined
       });
-      if (res.data?.url) await onUpdate({ [FIELD_MAP[type]]: res.data.url });
+      if (res.data?.url) await setCoverImage(res.data.url);
       else setError(res.data?.error || 'No image returned');
     } catch (err) { setError(err?.response?.data?.error || err?.message || 'Generation failed'); }
     setGenerating(false);
   };
 
-  const undoCover = () => onUpdate({ [FIELD_MAP[type]]: null });
+  const undoCover = () => {
+    const prev = prevImageRef.current;
+    prevImageRef.current = null;
+    onUpdate({ [FIELD_MAP[type]]: prev || null });
+  };
   const deleteCover = () => onUpdate({ [FIELD_MAP[type]]: '' });
+  const prevImageRef = useRef(null);
+  const setCoverImage = (newUrl) => {
+    prevImageRef.current = imageUrl || null;
+    onUpdate({ [FIELD_MAP[type]]: newUrl });
+  };
   const uploadCoverFile = async (file) => {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    await onUpdate({ [FIELD_MAP[type]]: file_url });
+    setCoverImage(file_url);
   };
   const uploadCover = async (e) => uploadCoverFile(e.target.files?.[0]);
 
@@ -196,7 +204,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
     onFavouritesChange([newFav, ...favourites]);
     setTimeout(() => setFavouriting(false), 600);
   };
-  const pickFavourite = (fav) => onUpdate({ [FIELD_MAP[type]]: fav.image_url });
+  const pickFavourite = (fav) => setCoverImage(fav.image_url);
   const removeFavourite = (favId) => onFavouritesChange(favourites.filter(f => f.id !== favId));
 
   const fontFamilies = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
@@ -285,7 +293,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
             <Button variant="outline" size="sm" onClick={deleteCover} className="gap-1 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" />Delete</Button>
           </div>
 
-          <PasteImageInput onPasteImage={uploadCoverFile} />
+          <PasteImageInput onPasteImage={addImageFile} label="Or paste image overlay from clipboard" />
 
           {/* Add overlay buttons */}
           <div className="flex gap-2 mt-2">
