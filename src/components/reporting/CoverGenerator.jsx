@@ -277,6 +277,14 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                         ...(el.frame ? { border: `3px solid ${branding?.primary_color || '#1a2744'}`, outline: `1px solid ${branding?.accent_color || '#2b2de8'}`, outlineOffset: '2px' } : {}),
                         ...(el.shadow ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : {}),
                       }} />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteElement(el.id); }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className={`absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg transition-opacity z-30 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                        title="Delete image"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                       <div
                         className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
                         onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }}
