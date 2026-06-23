@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { GripHorizontal } from 'lucide-react';
 
 export default function DraggableImageBlock({
   section, onUpdate, children,
@@ -6,6 +7,7 @@ export default function DraggableImageBlock({
   widthField = 'image_width',
   positionMap = { left: 'image_left', right: 'image_right', full: 'image_full' },
   defaultWidth = 50,
+  dragHandle = false,
 }) {
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -86,9 +88,19 @@ export default function DraggableImageBlock({
     <>
       <div
         ref={ref}
-        onMouseDown={handleMouseDown}
-        className={dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all'}
+        onMouseDown={dragHandle ? undefined : handleMouseDown}
+        className={dragHandle ? '' : (dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all')}
       >
+        {dragHandle && onUpdate && (
+          <div
+            onMouseDown={handleMouseDown}
+            className="no-print flex items-center justify-center gap-1.5 py-1 mb-1 cursor-grab hover:bg-accent/5 rounded text-[10px] text-muted-foreground hover:text-accent transition-colors select-none"
+            title="Drag to reposition"
+          >
+            <GripHorizontal className="w-3.5 h-3.5" />
+            <span>Drag to reposition</span>
+          </div>
+        )}
         {children}
       </div>
       {dragging && ghost && (

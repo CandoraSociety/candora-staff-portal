@@ -321,7 +321,8 @@ export default function SectionRenderer({
         <DraggableImageBlock section={section} onUpdate={onUpdate}
           positionField="chart_position" widthField="chart_width"
           positionMap={{ left: 'left', right: 'right', full: 'full' }}
-          defaultWidth={100}>
+          defaultWidth={100}
+          dragHandle>
           {dataBlock}
         </DraggableImageBlock>
       );
