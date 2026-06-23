@@ -333,7 +333,10 @@ export default function SectionRenderer({
       case 'image_full':
         return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
       case 'two_column':
-        return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative" data-section-content><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
+        if (hasVisual) {
+          return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative" data-section-content><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
+        }
+        return <div className="relative" data-section-content style={{ columnCount: 2, columnGap: '1.5rem' }}>{contentBlock}</div>;
       default:
         return <div className="relative" data-section-content>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
