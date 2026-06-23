@@ -1,0 +1,66 @@
+{
+  "name": "EDBoardReport",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Report title"
+    },
+    "report_month": {
+      "type": "string",
+      "format": "date",
+      "description": "The month this report covers (first of month)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "completed",
+        "imported"
+      ],
+      "default": "draft"
+    },
+    "sections": {
+      "type": "array",
+      "description": "Report sections with title and rich text content",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string",
+            "description": "Rich text content (HTML)"
+          },
+          "order_index": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "pdf_url": {
+      "type": "string",
+      "description": "Generated PDF file URL"
+    },
+    "imported_to_board": {
+      "type": "boolean",
+      "default": false
+    },
+    "imported_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "board_document_id": {
+      "type": "string",
+      "description": "Reference to the BoardDocument created on import"
+    }
+  },
+  "required": [
+    "title",
+    "report_month"
+  ]
+}
