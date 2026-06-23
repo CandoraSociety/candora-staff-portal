@@ -10,6 +10,7 @@ import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import OrganizerWidget from '@/components/dashboard/OrganizerWidget';
+import MeetingManagerWidget from '@/components/dashboard/MeetingManagerWidget';
 import HowToSearch from '@/components/howto/HowToSearch';
 import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget';
 import PortalTransition from '@/components/PortalTransition';
@@ -238,6 +239,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-6">
           {isWidgetActive('howto') && <HowToSearch user={user} />}
           {isWidgetActive('organizer') && <OrganizerWidget />}
+          {isWidgetActive('meeting_manager') && <MeetingManagerWidget />}
           {isWidgetActive('google_translate') && <GoogleTranslateWidget />}
           <RecentActivityWidget />
         </div>
