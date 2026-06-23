@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 import WelcomeWidget from '@/components/dashboard/WelcomeWidget';
 import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
@@ -10,12 +12,13 @@ import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import OrganizerWidget from '@/components/dashboard/OrganizerWidget';
-import MeetingManagerWidget from '@/components/dashboard/MeetingManagerWidget';
+import CollapsibleWidget from '@/components/dashboard/CollapsibleWidget';
+import MeetingManagerWindow from '@/components/dashboard/MeetingManagerWindow';
 import HowToSearch from '@/components/howto/HowToSearch';
 import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
-import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
@@ -88,6 +91,7 @@ function PinnedPortalBanner({ card, onUnpin }) {
 
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
+  const [showMeetingManager, setShowMeetingManager] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: cards = [] } = useQuery({
@@ -235,18 +239,50 @@ export default function Dashboard() {
       
       {/* Live data moved to Admin > Users & Access */}
 
+      {/* Meeting Manager ribbon button */}
+      {isWidgetActive('meeting_manager') && (
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            onClick={() => setShowMeetingManager(true)}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Meeting Manager
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {isWidgetActive('howto') && <HowToSearch user={user} />}
-          {isWidgetActive('organizer') && <OrganizerWidget />}
-          {isWidgetActive('meeting_manager') && <MeetingManagerWidget />}
-          {isWidgetActive('google_translate') && <GoogleTranslateWidget />}
-          <RecentActivityWidget />
+          {isWidgetActive('organizer') && (
+            <CollapsibleWidget title="Personal Organizer" icon={Brain}>
+              <OrganizerWidget />
+            </CollapsibleWidget>
+          )}
+          {isWidgetActive('google_translate') && (
+            <CollapsibleWidget title="Translate" icon={Languages}>
+              <GoogleTranslateWidget />
+            </CollapsibleWidget>
+          )}
+          <CollapsibleWidget title="Recent Activity" icon={Activity}>
+            <RecentActivityWidget />
+          </CollapsibleWidget>
         </div>
         <div>
-          <AnnouncementsWidget announcements={userAnnouncements} />
+          <CollapsibleWidget
+            title="Announcements"
+            icon={Megaphone}
+            headerExtra={userAnnouncements.length > 0 ? <Badge variant="secondary" className="text-xs ml-2">{userAnnouncements.length}</Badge> : null}
+          >
+            <AnnouncementsWidget announcements={userAnnouncements} />
+          </CollapsibleWidget>
         </div>
       </div>
+
+      {showMeetingManager && <MeetingManagerWindow onClose={() => setShowMeetingManager(false)} />}
     </div>
   );
 }
