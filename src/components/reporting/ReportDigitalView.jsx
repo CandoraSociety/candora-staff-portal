@@ -42,10 +42,6 @@ export default function ReportDigitalView({ report, sections, branding, dataEntr
                   getPage={(i) => tocPage + 1 + i}
                   containerHeight="80vh"
                   padding="4rem"
-                  titleClass="text-2xl"
-                  entryClass="text-base"
-                  gapClass="space-y-1"
-                  titleMargin="mb-8"
                 />
               </div>
             );
