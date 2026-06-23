@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { FileText, Save, Clock } from "lucide-react";
+import { FileText, Save, Clock, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ const TYPE_COLORS = {
   other: "bg-muted text-muted-foreground",
 };
 
-export default function MinutesTab({ selectedMeetingId }) {
+export default function MinutesTab({ selectedMeetingId, onSelectMeeting }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [minutes, setMinutes] = useState("");
@@ -71,9 +71,35 @@ export default function MinutesTab({ selectedMeetingId }) {
 
   if (!selectedMeetingId) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">Select a meeting from the Meetings tab to take minutes.</p>
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <p className="text-sm font-medium">Select a meeting to take minutes</p>
+        </div>
+        {meetings.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No meetings yet. Create one from the Meetings tab first.</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-h-80 overflow-y-auto">
+            {meetings.map(m => (
+              <div
+                key={m.id}
+                onClick={() => onSelectMeeting(m.id)}
+                className="p-3 rounded-lg border border-border bg-card hover:border-primary/40 cursor-pointer transition-colors"
+              >
+                <p className="text-sm font-medium truncate">{m.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {m.meeting_date ? format(new Date(m.meeting_date), "MMM d, h:mm a") : "No date"}
+                </p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[10px] text-muted-foreground">{m.meeting_type}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -82,7 +108,18 @@ export default function MinutesTab({ selectedMeetingId }) {
     <div>
       {selectedMeeting && (
         <div className="bg-muted/30 border border-border rounded-lg p-3 mb-3">
-          <p className="text-sm font-medium">{selectedMeeting.title}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">{selectedMeeting.title}</p>
+            <select
+              value={selectedMeetingId}
+              onChange={e => onSelectMeeting(e.target.value)}
+              className="border border-input rounded-md px-2 py-1 text-xs bg-background h-7 max-w-[180px]"
+            >
+              {meetings.map(m => (
+                <option key={m.id} value={m.id}>{m.title}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             {selectedMeeting.meeting_date && (
               <span className="flex items-center gap-1">
