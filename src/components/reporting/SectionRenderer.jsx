@@ -270,11 +270,15 @@ export default function SectionRenderer({
       <DraggableImageBlock section={section} onUpdate={onUpdate}>
       <div className="relative group">
         {hasCollage ? (
-          <div style={{ border: `3px solid ${pc}`, borderRadius: '0.5rem', boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }} className="overflow-hidden">
-            <CollageRenderer photos={section.collage_photos} layout={section.collage_layout || 'grid'} isPrint={isPrint} />
+          <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20` }} className="overflow-hidden">
+            <div style={{ border: `2px solid ${pc}`, borderRadius: '0.5rem', outline: `1px solid ${ac}40`, outlineOffset: '2px', overflow: 'hidden' }}>
+              <CollageRenderer photos={section.collage_photos} layout={section.collage_layout || 'grid'} isPrint={isPrint} />
+            </div>
           </div>
         ) : (
-          <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `3px solid ${pc}`, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }} />
+          <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25` }}>
+            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px' }} />
+          </div>
         )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}
         {showImageSlider && (
