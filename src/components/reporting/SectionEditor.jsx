@@ -363,21 +363,6 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Visual Category</Label>
-              <Select value={visualCategory} onValueChange={setVisualCategory}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="infographic">Infographic</SelectItem>
-                  <SelectItem value="graph">Graph / Chart</SelectItem>
-                  <SelectItem value="chart">Data Chart</SelectItem>
-                  <SelectItem value="comparison">Comparison</SelectItem>
-                  <SelectItem value="visual_aide">Visual Aide</SelectItem>
-                  <SelectItem value="timeline">Timeline</SelectItem>
-                  <SelectItem value="diagram">Diagram</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div>
@@ -420,10 +405,25 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
 
           {/* Section Image */}
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <Label className="text-xs">Section Image</Label>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-muted-foreground">AI style:</span>
+                <Select value={visualCategory} onValueChange={setVisualCategory}>
+                  <SelectTrigger className="h-6 text-[10px] w-[130px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="infographic">Infographic</SelectItem>
+                    <SelectItem value="graph">Graph / Chart</SelectItem>
+                    <SelectItem value="chart">Data Chart</SelectItem>
+                    <SelectItem value="comparison">Comparison</SelectItem>
+                    <SelectItem value="visual_aide">Visual Aide</SelectItem>
+                    <SelectItem value="timeline">Timeline</SelectItem>
+                    <SelectItem value="diagram">Diagram</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button variant="ghost" size="sm" onClick={handleGenerateVisual} disabled={generatingVisual} className="text-xs gap-1 h-6">
-                <Sparkles className="w-3 h-3" />{generatingVisual ? '...' : 'AI Generate'}
+                <Sparkles className="w-3 h-3" />{generatingVisual ? 'Generating...' : 'AI Generate'}
               </Button>
             </div>
             {imageUrl ? (
