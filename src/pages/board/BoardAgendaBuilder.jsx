@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, GripVertical, ArrowLeft, ChevronUp, ChevronDown, Lock } from "lucide-react";
 import { format } from "date-fns";
+import ActivitySuggestionsPanel from "@/components/shared/ActivitySuggestionsPanel";
+import { Lightbulb } from "lucide-react";
 
 const ITEM_TYPES = ["call_to_order","approval_of_agenda","approval_of_minutes","business_arising","new_business","reports","in_camera","adjournment","other"];
 
@@ -51,6 +53,18 @@ export default function BoardAgendaBuilder() {
     await Promise.all(updated.map(item => base44.entities.AgendaItem.update(item.id, { order_index: item.order_index })));
   };
 
+  const handleAddSuggestion = async (suggestion) => {
+    const saved = await base44.entities.AgendaItem.create({
+      title: suggestion.title,
+      item_type: "reports",
+      description: suggestion.description || "",
+      meeting_id: id,
+      order_index: items.length,
+      duration_minutes: 10,
+    });
+    setItems(prev => [...prev, saved]);
+  };
+
   const totalDuration = items.reduce((s, i) => s + (i.duration_minutes || 0), 0);
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
@@ -94,6 +108,16 @@ export default function BoardAgendaBuilder() {
           </div>
         </form>
       )}
+
+      {/* My Activity Suggestions */}
+      <div className="mb-6 bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Lightbulb className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold">My Activity Suggestions</h3>
+          <span className="text-[10px] text-muted-foreground ml-1">From your notes, tasks, projects & priorities</span>
+        </div>
+        <ActivitySuggestionsPanel onAddSuggestion={handleAddSuggestion} />
+      </div>
 
       <div className="space-y-2">
         {items.map((item, idx) => (

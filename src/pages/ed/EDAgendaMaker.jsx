@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
 import { Plus, Trash2, ChevronUp, ChevronDown, Calendar, Clock, Users, X, ListChecks, FileText, Eye, LayoutTemplate, StickyNote, Pencil, PencilLine, Lightbulb, X as XIcon } from "lucide-react";
 import AgendaPreviewDialog from "@/components/ed/AgendaPreviewDialog";
+import ActivitySuggestionsPanel from "@/components/shared/ActivitySuggestionsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -311,6 +312,17 @@ export default function EDAgendaMaker() {
     setItemForm({ title: "", item_type: "", presenter: "", duration_minutes: "", description: "", facilitator_notes: "" });
   };
 
+  const handleAddSuggestion = (suggestion) => {
+    createItem.mutate({
+      title: suggestion.title,
+      item_type: suggestion.suggestion_type || "update",
+      description: suggestion.description || "",
+      meeting_id: selectedMeetingId,
+      order_index: sortedItems.length,
+    });
+    toast({ title: "Added from suggestions", description: suggestion.title });
+  };
+
   const handleMove = (index, direction) => {
     const newItems = [...sortedItems];
     const swapIndex = index + direction;
@@ -556,6 +568,18 @@ export default function EDAgendaMaker() {
                   </div>
                 </div>
               )}
+
+              {/* My Activity Suggestions */}
+              <div className="mb-4 no-print">
+                <div className="bg-card border border-border rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-semibold">My Activity Suggestions</h3>
+                    <span className="text-[10px] text-muted-foreground ml-1">From your notes, tasks, projects & priorities</span>
+                  </div>
+                  <ActivitySuggestionsPanel onAddSuggestion={handleAddSuggestion} />
+                </div>
+              </div>
 
               {/* Add item form */}
               {showItemForm && (
