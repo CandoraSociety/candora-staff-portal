@@ -119,20 +119,31 @@ export default function ReportingAGREditor() {
     if ('footer_image_height' in patch) setLocalFooterImageHeight(updated.footer_image_height || 48);
   };
 
+  const touchReport = useCallback(async () => {
+    const now = new Date().toISOString();
+    try {
+      const updated = await base44.entities.AGRReport.update(id, { last_activity_date: now });
+      setReport(updated);
+    } catch {}
+  }, [id]);
+
   const handleAddSection = async () => {
     const order = sections.length + 1;
     const created = await base44.entities.AGRReportSection.create({ report_id: id, title: 'New Section', order_index: order, layout: 'text_only' });
     setSections(prev => [...prev, created]);
+    touchReport();
   };
 
   const handleUpdateSection = async (sectionId, patch) => {
     await base44.entities.AGRReportSection.update(sectionId, patch);
     setSections(prev => prev.map(s => s.id === sectionId ? { ...s, ...patch } : s));
+    touchReport();
   };
 
   const handleDeleteSection = async (sectionId) => {
     await base44.entities.AGRReportSection.delete(sectionId);
     setSections(prev => prev.filter(s => s.id !== sectionId));
+    touchReport();
   };
 
   const handleDragEnd = async (result) => {
@@ -142,6 +153,7 @@ export default function ReportingAGREditor() {
     reordered.splice(result.destination.index, 0, moved);
     setSections(reordered);
     await Promise.all(reordered.map((s, i) => base44.entities.AGRReportSection.update(s.id, { order_index: i + 1 })));
+    touchReport();
   };
 
   const handleGenerateSuggestions = async (section) => {

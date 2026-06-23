@@ -94,10 +94,10 @@ export default function ReportingAGR() {
                 <div className="p-4">
                   <h3 className="font-semibold text-sm text-accent group-hover:text-primary transition-colors">{report.title}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">Fiscal Year {report.year}</p>
-                  {report.updated_date && (
+                  {(report.last_activity_date || report.updated_date) && (
                     <p className="text-[11px] text-muted-foreground/70 mt-1 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      Updated {format(new Date(report.updated_date), "MMM d, yyyy 'at' h:mm a")}
+                      Updated {format(new Date(report.last_activity_date || report.updated_date), "MMM d, yyyy 'at' h:mm a")}
                     </p>
                   )}
                   <div className="flex items-center justify-between mt-3">

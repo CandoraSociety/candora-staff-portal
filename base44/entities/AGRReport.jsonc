@@ -201,6 +201,11 @@
     "show_page_numbers_all": {
       "type": "boolean",
       "default": false
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last section/content edit \u2014 used for accurate draft activity display"
     }
   },
   "required": [
