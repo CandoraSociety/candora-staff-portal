@@ -243,7 +243,6 @@ export default function Dashboard() {
       {isWidgetActive('meeting_manager') && (
         <Button
           onClick={() => setShowMeetingManager(true)}
-          variant="outline"
           className="w-full gap-2"
         >
           <Calendar className="w-4 h-4" />
