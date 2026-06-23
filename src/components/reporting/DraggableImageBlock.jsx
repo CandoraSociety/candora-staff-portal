@@ -22,9 +22,25 @@ export default function DraggableImageBlock({
     const containerRect = container.getBoundingClientRect();
     const imgRect = ref.current.getBoundingClientRect();
 
+    // Account for CSS zoom on ancestor elements (live preview uses zoom to scale)
+    let zoomScale = 1;
+    let el = container.parentElement;
+    while (el) {
+      const z = window.getComputedStyle(el).zoom;
+      if (z && z !== '1' && z !== 'normal' && z !== '') {
+        zoomScale = parseFloat(z);
+        break;
+      }
+      el = el.parentElement;
+    }
+
+    // Convert rendered (zoomed) coordinates to pre-zoom layout coordinates
+    const containerWidth = containerRect.width / zoomScale;
+    const imgHeight = imgRect.height / zoomScale;
+
     const computeGhost = (clientX) => {
-      const dropX = clientX - containerRect.left;
-      const third = containerRect.width / 3;
+      const dropX = (clientX - containerRect.left) / zoomScale;
+      const third = containerWidth / 3;
       let zone;
       if (dropX < third) zone = 'left';
       else if (dropX > third * 2) zone = 'right';
@@ -33,12 +49,12 @@ export default function DraggableImageBlock({
       const widthPct = section[widthField] || defaultWidth;
       const margin = 4;
       const w = zone === 'full'
-        ? containerRect.width - margin * 2
-        : (containerRect.width * widthPct / 100);
+        ? containerWidth - margin * 2
+        : (containerWidth * widthPct / 100);
       const x = zone === 'right'
-        ? containerRect.width - w - margin
+        ? containerWidth - w - margin
         : margin;
-      return { x, y: margin, w, h: imgRect.height, zone };
+      return { x, y: margin, w, h: imgHeight, zone };
     };
 
     setDragging(true);

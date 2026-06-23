@@ -39,7 +39,7 @@ export default function SectionRenderer({
         contentRef.current.innerHTML = newHtml;
       }
     }
-  }, [section.content]);
+  }, [section.content, section.layout]);
 
   useEffect(() => {
     if (titleRef.current && !editingTitle.current) {
@@ -231,7 +231,7 @@ export default function SectionRenderer({
     const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const hasChart = sectionData.length > 0;
     const hasVisual = hasImage || hasChart;
-    const isTwoColText = section.layout === 'two_column' && !hasVisual;
+    const isTwoColText = section.layout === 'two_column';
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
@@ -245,11 +245,12 @@ export default function SectionRenderer({
         } : {}),
       }}>
         <div
+          key={isTwoColText ? 'twocol' : 'single'}
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={isTwoColText ? { columnCount: 2, columnGap: '1.5rem' } : undefined}
+          style={isTwoColText ? { columnCount: 2, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -360,17 +361,14 @@ export default function SectionRenderer({
       case 'image_full':
         return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
       case 'two_column':
-        if (hasVisual) {
-          return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative" data-section-content><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
-        }
-        return <div className="relative" data-section-content>{contentBlock}</div>;
+        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{contentBlock}{dataBlock && <div className="mt-4">{dataBlock}</div>}</div>;
       default:
         return <div className="relative" data-section-content>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
   };
 
   return (
-    <div className={isPrint ? 'mb-8' : 'mb-6'} style={{ borderLeft: !isPrint ? `3px solid ${pc}20` : undefined, paddingLeft: !isPrint ? '0.75rem' : undefined }}>
+    <div className={isPrint ? 'mb-8' : 'mb-6'} style={{ borderLeft: !isPrint ? `3px solid ${pc}40` : undefined, paddingLeft: !isPrint ? '0.75rem' : undefined }}>
       {isCollapsible ? (
         <>
           {headerContent}
