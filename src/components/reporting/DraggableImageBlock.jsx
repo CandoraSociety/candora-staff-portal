@@ -15,33 +15,37 @@ export default function DraggableImageBlock({ section, onUpdate, children }) {
     if (!container) return;
     const containerRect = container.getBoundingClientRect();
     const imgRect = ref.current.getBoundingClientRect();
-    const grabOffsetX = e.clientX - imgRect.left;
-    const grabOffsetY = e.clientY - imgRect.top;
+
+    const computeGhost = (clientX) => {
+      const dropX = clientX - containerRect.left;
+      const third = containerRect.width / 3;
+      let zone;
+      if (dropX < third) zone = 'left';
+      else if (dropX > third * 2) zone = 'right';
+      else zone = 'full';
+
+      const imgWidthPct = section.image_width || 50;
+      const margin = 4;
+      const w = zone === 'full'
+        ? containerRect.width - margin * 2
+        : (containerRect.width * imgWidthPct / 100);
+      const x = zone === 'right'
+        ? containerRect.width - w - margin
+        : margin;
+      return { x, y: margin, w, h: imgRect.height, zone };
+    };
 
     setDragging(true);
-    setGhost({
-      x: imgRect.left - containerRect.left,
-      y: imgRect.top - containerRect.top,
-      w: imgRect.width,
-      h: imgRect.height,
-    });
+    setGhost(computeGhost(e.clientX));
 
     const onMove = (ev) => {
-      const margin = 4;
-      let x = ev.clientX - containerRect.left - grabOffsetX;
-      let y = ev.clientY - containerRect.top - grabOffsetY;
-      x = Math.max(margin, Math.min(x, containerRect.width - imgRect.width - margin));
-      y = Math.max(margin, Math.min(y, containerRect.height - imgRect.height - margin));
-      setGhost({ x, y, w: imgRect.width, h: imgRect.height });
+      setGhost(computeGhost(ev.clientX));
     };
 
     const onUp = (ev) => {
-      const dropX = ev.clientX - containerRect.left;
-      const third = containerRect.width / 3;
-      let newLayout;
-      if (dropX < third) newLayout = 'image_left';
-      else if (dropX > third * 2) newLayout = 'image_right';
-      else newLayout = 'image_full';
+      const g = computeGhost(ev.clientX);
+      const layoutMap = { left: 'image_left', right: 'image_right', full: 'image_full' };
+      const newLayout = layoutMap[g.zone];
       if (newLayout !== section.layout) {
         onUpdate(section.id, { layout: newLayout });
       }
@@ -55,22 +59,33 @@ export default function DraggableImageBlock({ section, onUpdate, children }) {
     window.addEventListener('mouseup', onUp);
   };
 
+  const zoneLabel = ghost?.zone === 'left' ? 'Left' : ghost?.zone === 'right' ? 'Right' : 'Full Width';
+
   return (
     <>
       <div
         ref={ref}
         onMouseDown={handleMouseDown}
-        className={dragging ? 'opacity-30' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all'}
+        className={dragging ? 'opacity-20' : 'cursor-grab hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 rounded-lg transition-all'}
       >
         {children}
       </div>
       {dragging && ghost && (
-        <div
-          className="pointer-events-none absolute z-50 border-2 border-dashed border-accent bg-accent/10 rounded-lg flex items-center justify-center text-xs text-accent font-medium"
-          style={{ left: ghost.x, top: ghost.y, width: ghost.w, height: ghost.h }}
-        >
-          Drop to reposition
-        </div>
+        <>
+          {/* Drop zone indicators */}
+          <div className="pointer-events-none absolute inset-0 z-40 flex gap-0.5">
+            <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'left' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
+            <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'full' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
+            <div className={`flex-1 rounded border-2 border-dashed transition-colors ${ghost.zone === 'right' ? 'border-accent bg-accent/10' : 'border-muted-foreground/30 bg-muted/20'}`} />
+          </div>
+          {/* Ghost preview at actual snap position */}
+          <div
+            className="pointer-events-none absolute z-50 border-2 border-accent bg-accent/20 rounded-lg flex items-center justify-center text-xs text-accent font-semibold"
+            style={{ left: ghost.x, top: ghost.y, width: ghost.w, height: ghost.h }}
+          >
+            {zoneLabel}
+          </div>
+        </>
       )}
     </>
   );
