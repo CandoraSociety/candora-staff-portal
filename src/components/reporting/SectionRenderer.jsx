@@ -231,7 +231,8 @@ export default function SectionRenderer({
     const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const hasChart = sectionData.length > 0;
     const hasVisual = hasImage || hasChart;
-    const isTwoColText = section.layout === 'two_column';
+    const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
+    const isMultiCol = textColumns > 1;
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
@@ -245,12 +246,12 @@ export default function SectionRenderer({
         } : {}),
       }}>
         <div
-          key={isTwoColText ? 'twocol' : 'single'}
+          key={`cols-${textColumns}`}
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={isTwoColText ? { columnCount: 2, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
+          style={isMultiCol ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;

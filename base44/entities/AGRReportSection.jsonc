@@ -101,6 +101,11 @@
       ],
       "default": "text_only"
     },
+    "text_columns": {
+      "type": "number",
+      "description": "Number of text columns for the content area (1-4)",
+      "default": 1
+    },
     "order_index": {
       "type": "number"
     },

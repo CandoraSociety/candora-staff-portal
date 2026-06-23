@@ -29,6 +29,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [title, setTitle] = useState(section.title || '');
   const [content, setContent] = useState(section.content || '');
   const [layout, setLayout] = useState(section.layout || 'text_only');
+  const [textColumns, setTextColumns] = useState(section.text_columns || 1);
   const [imageUrl, setImageUrl] = useState(section.image_url || '');
   const [titleImageUrl, setTitleImageUrl] = useState(section.title_image_url || '');
   const [titleImageWidth, setTitleImageWidth] = useState(section.title_image_width || 80);
@@ -60,6 +61,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setTitle(section.title || '');
     setContent(section.content || '');
     setLayout(section.layout || 'text_only');
+    setTextColumns(section.text_columns || 1);
     setImageUrl(section.image_url || '');
     setTitleImageUrl(section.title_image_url || '');
     setTitleImageWidth(section.title_image_width || 80);
@@ -73,7 +75,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   }, [section]);
 
   const save = () => {
-    onUpdate(section.id, { title, content, layout, image_url: imageUrl, image_caption: imageCaption, image_width: imageWidth, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter, title_styles: JSON.stringify(titleStyles) });
+    onUpdate(section.id, { title, content, layout, text_columns: textColumns, image_url: imageUrl, image_caption: imageCaption, image_width: imageWidth, is_collapsible: isCollapsible, is_expanded_default: isExpandedDefault, hide_header: hideHeader, hide_footer: hideFooter, title_styles: JSON.stringify(titleStyles) });
   };
 
   const updateTitleStyle = (key, value) => {
@@ -346,6 +348,18 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(LAYOUT_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Text Columns</Label>
+              <Select value={String(textColumns)} onValueChange={v => { const n = parseInt(v); setTextColumns(n); onUpdate(section.id, { text_columns: n }); }}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Column</SelectItem>
+                  <SelectItem value="2">2 Columns</SelectItem>
+                  <SelectItem value="3">3 Columns</SelectItem>
+                  <SelectItem value="4">4 Columns</SelectItem>
                 </SelectContent>
               </Select>
             </div>
