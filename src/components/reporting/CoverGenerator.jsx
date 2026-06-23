@@ -307,6 +307,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         </div>
         <PasteImageInput onPasteImage={uploadCoverFile} />
       </>
+      )}
 
       {/* Selected element toolbar */}
       {selectedEl && imageUrl && (
