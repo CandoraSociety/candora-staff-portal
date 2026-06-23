@@ -227,17 +227,29 @@ export default function SectionRenderer({
 
   const renderContent = () => {
     const masterContent = master.content || {};
+    const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
+    const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
+    const hasChart = sectionData.length > 0;
+    const hasVisual = hasImage || hasChart;
+    const isTwoColText = section.layout === 'two_column' && !hasVisual;
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
+        ...(section.content_bg_color ? {
+          backgroundColor: section.content_bg_color,
+          padding: '1rem 1.25rem',
+          borderRadius: '0.5rem',
+          border: `1px solid ${pc}20`,
+        } : {}),
       }}>
         <div
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
+          style={isTwoColText ? { columnCount: 2, columnGap: '1.5rem' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -249,8 +261,6 @@ export default function SectionRenderer({
       </div>
     );
 
-    const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
-    const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const imageWidth = section.image_width || 50;
     const chartWidth = section.chart_width || 100;
     const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full'].includes(section.layout);
@@ -282,7 +292,7 @@ export default function SectionRenderer({
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
-            <div key={d.id} className="relative group border rounded-lg p-4" style={{ borderColor: `${ac}30`, backgroundColor: `${ac}05` }}>
+            <div key={d.id} className="relative group border-2 rounded-lg p-4" style={{ borderColor: `${pc}30`, backgroundColor: `${pc}06`, boxShadow: `0 2px 8px ${pc}10` }}>
               {chartConfig && <ChartRenderer chartConfig={chartConfig} isPrint={isPrint} />}
               {d.ai_narrative && <p className="text-sm text-slate-700 mt-2">{d.ai_narrative}</p>}
               {showChartSlider && (
@@ -298,15 +308,32 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    const hasChart = dataBlock !== null;
-    const hasVisual = hasImage || hasChart;
-
-    // Smart layout: when there are charts but no image in text_only, use a responsive grid
+    // Chart positioning: when text_only with chart but no image, chart can be dragged
     if (section.layout === 'text_only' && hasChart && !hasImage) {
+      const chartPos = section.chart_position || 'full';
+      const chartBlock = (
+        <DraggableImageBlock section={section} onUpdate={onUpdate}
+          positionField="chart_position" widthField="chart_width"
+          positionMap={{ left: 'left', right: 'right', full: 'full' }}
+          defaultWidth={100}>
+          {dataBlock}
+        </DraggableImageBlock>
+      );
+      if (chartPos === 'left' || chartPos === 'right') {
+        return (
+          <div className="overflow-hidden relative" data-section-content>
+            <div style={{ float: chartPos, width: `${chartWidth}%` }} className={chartPos === 'left' ? 'mr-5 mb-3' : 'ml-5 mb-3'}>
+              {chartBlock}
+            </div>
+            {contentBlock}
+            <div style={{ clear: 'both' }} />
+          </div>
+        );
+      }
       return (
-        <div className="grid md:grid-cols-5 gap-6 items-start">
-          <div className="md:col-span-3">{contentBlock}</div>
-          <div className="md:col-span-2">{dataBlock}</div>
+        <div className="relative" data-section-content>
+          {contentBlock}
+          {chartBlock}
         </div>
       );
     }
@@ -336,14 +363,14 @@ export default function SectionRenderer({
         if (hasVisual) {
           return <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative" data-section-content><div>{contentBlock}</div><div className="space-y-4">{imageBlock}{dataBlock}</div></div>;
         }
-        return <div className="relative" data-section-content style={{ columnCount: 2, columnGap: '1.5rem' }}>{contentBlock}</div>;
+        return <div className="relative" data-section-content>{contentBlock}</div>;
       default:
         return <div className="relative" data-section-content>{imageBlock}{contentBlock}{dataBlock}</div>;
     }
   };
 
   return (
-    <div className={isPrint ? 'mb-8' : 'mb-6'}>
+    <div className={isPrint ? 'mb-8' : 'mb-6'} style={{ borderLeft: !isPrint ? `3px solid ${pc}20` : undefined, paddingLeft: !isPrint ? '0.75rem' : undefined }}>
       {isCollapsible ? (
         <>
           {headerContent}

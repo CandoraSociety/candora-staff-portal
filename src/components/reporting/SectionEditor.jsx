@@ -378,6 +378,20 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             <ReactQuill theme="snow" value={content} onChange={setContent} className="bg-white rounded-lg" style={{ minHeight: 160 }} />
             <div className="flex items-center gap-2 mt-1">
               <Button variant="outline" size="sm" onClick={save} className="gap-1 text-xs h-7"><Check className="w-3 h-3" />Apply Content</Button>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <span className="text-[10px] text-muted-foreground">BG Color</span>
+                <input
+                  type="color"
+                  value={section.content_bg_color || '#ffffff'}
+                  onChange={e => onUpdate(section.id, { content_bg_color: e.target.value })}
+                  className="w-6 h-6 rounded border cursor-pointer p-0.5"
+                />
+                {section.content_bg_color && (
+                  <button onClick={() => onUpdate(section.id, { content_bg_color: null })} className="text-[10px] text-red-400 hover:text-red-600 flex items-center" title="Remove background">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

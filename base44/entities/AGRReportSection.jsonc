@@ -26,6 +26,10 @@
       "type": "string",
       "description": "Rich text (HTML)"
     },
+    "content_bg_color": {
+      "type": "string",
+      "description": "Optional background color (hex) for the text content area, creating a colored box behind the text"
+    },
     "image_url": {
       "type": "string",
       "description": "Optional visual"
@@ -42,6 +46,16 @@
       "type": "number",
       "description": "Chart/graph width as percentage of container (20-100)",
       "default": 100
+    },
+    "chart_position": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "full"
+      ],
+      "default": "full",
+      "description": "Chart position within the section (when no image present)"
     },
     "gallery_images": {
       "type": "array",

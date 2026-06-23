@@ -1,6 +1,12 @@
 import React, { useRef, useState } from 'react';
 
-export default function DraggableImageBlock({ section, onUpdate, children }) {
+export default function DraggableImageBlock({
+  section, onUpdate, children,
+  positionField = 'layout',
+  widthField = 'image_width',
+  positionMap = { left: 'image_left', right: 'image_right', full: 'image_full' },
+  defaultWidth = 50,
+}) {
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [ghost, setGhost] = useState(null);
@@ -24,11 +30,11 @@ export default function DraggableImageBlock({ section, onUpdate, children }) {
       else if (dropX > third * 2) zone = 'right';
       else zone = 'full';
 
-      const imgWidthPct = section.image_width || 50;
+      const widthPct = section[widthField] || defaultWidth;
       const margin = 4;
       const w = zone === 'full'
         ? containerRect.width - margin * 2
-        : (containerRect.width * imgWidthPct / 100);
+        : (containerRect.width * widthPct / 100);
       const x = zone === 'right'
         ? containerRect.width - w - margin
         : margin;
@@ -44,10 +50,9 @@ export default function DraggableImageBlock({ section, onUpdate, children }) {
 
     const onUp = (ev) => {
       const g = computeGhost(ev.clientX);
-      const layoutMap = { left: 'image_left', right: 'image_right', full: 'image_full' };
-      const newLayout = layoutMap[g.zone];
-      if (newLayout !== section.layout) {
-        onUpdate(section.id, { layout: newLayout });
+      const newPosition = positionMap[g.zone];
+      if (newPosition !== section[positionField]) {
+        onUpdate(section.id, { [positionField]: newPosition });
       }
       setDragging(false);
       setGhost(null);
