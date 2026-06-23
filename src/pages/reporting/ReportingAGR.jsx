@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import CreateReportDialog from '@/components/reporting/CreateReportDialog';
 import UploadAnalyzerDialog from '@/components/reporting/UploadAnalyzerDialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 const STATUS_COLORS = {
   draft: 'bg-slate-100 text-slate-700',
@@ -18,15 +19,18 @@ export default function ReportingAGR() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState(null);
 
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ['agr-reports'],
     queryFn: () => base44.entities.AGRReport.list('-updated_date'),
   });
 
-  const handleDelete = async (id) => {
-    await base44.entities.AGRReport.delete(id);
+  const confirmDelete = async () => {
+    if (!reportToDelete) return;
+    await base44.entities.AGRReport.delete(reportToDelete.id);
     queryClient.invalidateQueries({ queryKey: ['agr-reports'] });
+    setReportToDelete(null);
   };
 
   const handleDuplicate = async (report) => {
@@ -111,7 +115,7 @@ export default function ReportingAGR() {
                       <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); e.preventDefault(); handleDuplicate(report); }} title="Duplicate" className="text-accent">
                         <Copy className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); e.preventDefault(); handleDelete(report.id); }} title="Delete" className="text-red-400 hover:text-red-600">
+                      <Button variant="ghost" size="icon" onClick={e => { e.stopPropagation(); e.preventDefault(); setReportToDelete(report); }} title="Delete" className="text-red-400 hover:text-red-600">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -125,6 +129,25 @@ export default function ReportingAGR() {
 
       <CreateReportDialog open={showCreate} onClose={() => setShowCreate(false)} />
       <UploadAnalyzerDialog open={showUpload} onClose={() => setShowUpload(false)} />
+
+      <AlertDialog open={!!reportToDelete} onOpenChange={(open) => { if (!open) setReportToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reportToDelete && (
+                <>"<strong>{reportToDelete.title}</strong>" and all of its sections will be permanently deleted. This action cannot be undone.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete Report
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
