@@ -241,17 +241,14 @@ export default function Dashboard() {
 
       {/* Meeting Manager ribbon button */}
       {isWidgetActive('meeting_manager') && (
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            onClick={() => setShowMeetingManager(true)}
-            variant="outline"
-            size="sm"
-            className="gap-2"
-          >
-            <Calendar className="w-4 h-4" />
-            Meeting Manager
-          </Button>
-        </div>
+        <Button
+          onClick={() => setShowMeetingManager(true)}
+          variant="outline"
+          className="w-full gap-2"
+        >
+          <Calendar className="w-4 h-4" />
+          Meeting Manager
+        </Button>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
