@@ -294,7 +294,7 @@ export default function SectionRenderer({
 
     const showChartSlider = onUpdate;
     const dataBlock = sectionData.length > 0 ? (
-      <div className="space-y-4" style={{ width: chartWidth < 100 ? `${chartWidth}%` : '100%', margin: chartWidth < 100 ? '0 auto' : undefined }}>
+      <div className="space-y-4">
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
@@ -314,62 +314,54 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    // Chart positioning: when text_only with chart but no image, chart can be dragged
-    if (section.layout === 'text_only' && hasChart && !hasImage) {
-      const chartPos = section.chart_position || 'full';
-      const chartBlock = (
-        <DraggableImageBlock section={section} onUpdate={onUpdate}
-          positionField="chart_position" widthField="chart_width"
-          positionMap={{ left: 'left', right: 'right', full: 'full' }}
-          defaultWidth={100}
-          dragHandle>
-          {dataBlock}
-        </DraggableImageBlock>
-      );
-      if (chartPos === 'left' || chartPos === 'right') {
-        return (
-          <div className="overflow-hidden relative" data-section-content>
-            <div style={{ float: chartPos, width: `${chartWidth}%` }} className={chartPos === 'left' ? 'mr-5 mb-3' : 'ml-5 mb-3'}>
-              {chartBlock}
-            </div>
-            {contentBlock}
-            <div style={{ clear: 'both' }} />
-          </div>
-        );
-      }
-      return (
-        <div className="relative" data-section-content>
-          {contentBlock}
-          {chartBlock}
-        </div>
-      );
-    }
+    // Chart is always draggable via a drag handle bar; chart_position controls left/right/full
+    const chartPos = section.chart_position || 'full';
+    const draggableChartBlock = dataBlock ? (
+      <DraggableImageBlock section={section} onUpdate={onUpdate}
+        positionField="chart_position" widthField="chart_width"
+        positionMap={{ left: 'left', right: 'right', full: 'full' }}
+        defaultWidth={100}
+        dragHandle>
+        {dataBlock}
+      </DraggableImageBlock>
+    ) : null;
+
+    const floatedChart = draggableChartBlock && (chartPos === 'left' || chartPos === 'right') ? (
+      <div style={{ float: chartPos, width: `${chartWidth}%` }} className={chartPos === 'left' ? 'mr-5 mb-3' : 'ml-5 mb-3'}>
+        {draggableChartBlock}
+      </div>
+    ) : null;
+    const belowChart = draggableChartBlock && !floatedChart ? (
+      <div className="mt-4">{draggableChartBlock}</div>
+    ) : null;
 
     switch (section.layout) {
       case 'image_left':
         return (
           <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
+            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {dataBlock}
+            {belowChart}
           </div>
         );
       case 'image_right':
         return (
           <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
+            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {dataBlock}
+            {belowChart}
           </div>
         );
       case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{contentBlock}{dataBlock}</div>;
+        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       case 'two_column':
-        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{contentBlock}{dataBlock && <div className="mt-4">{dataBlock}</div>}</div>;
+        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       default:
-        return <div className="relative" data-section-content>{imageBlock}{contentBlock}{dataBlock}</div>;
+        return <div className="relative" data-section-content>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
     }
   };
 
