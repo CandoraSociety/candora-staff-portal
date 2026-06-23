@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3, Crop, ImageIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2 } from 'lucide-react';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
@@ -42,6 +42,11 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [hideFooter, setHideFooter] = useState(section.hide_footer || false);
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [visualCategory, setVisualCategory] = useState('infographic');
+  const [visualDescription, setVisualDescription] = useState('');
+  const [visualAspectRatio, setVisualAspectRatio] = useState('landscape');
+  const [useTitleContext, setUseTitleContext] = useState(true);
+  const [useContentContext, setUseContentContext] = useState(true);
+  const [showVisualOptions, setShowVisualOptions] = useState(false);
   const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
   const [titleStyles, setTitleStyles] = useState(parseStyles(section.title_styles));
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -92,7 +97,16 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const handleGenerateVisual = async () => {
     setGeneratingVisual(true);
     try {
-      const res = await base44.functions.invoke('generateReportVisual', { section_title: title, section_content: content, category: visualCategory, report_context: '', brand_colors: '#1a2744, #c8952e' });
+      const plainContent = content ? content.replace(/<[^>]+>/g, '').trim() : '';
+      const res = await base44.functions.invoke('generateReportVisual', {
+        section_title: useTitleContext ? title : '',
+        section_content: useContentContext ? plainContent : '',
+        category: visualCategory,
+        custom_description: visualDescription,
+        aspect_ratio: visualAspectRatio,
+        report_context: '',
+        brand_colors: '#1a2744, #c8952e'
+      });
       const url = res.data?.url;
       if (url) {
         setImageUrl(url);
@@ -425,7 +439,47 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <Button variant="ghost" size="sm" onClick={handleGenerateVisual} disabled={generatingVisual} className="text-xs gap-1 h-6">
                 <Sparkles className="w-3 h-3" />{generatingVisual ? 'Generating...' : 'AI Generate'}
               </Button>
+              <button onClick={() => setShowVisualOptions(!showVisualOptions)} className="text-[10px] text-muted-foreground hover:text-accent flex items-center gap-1">
+                <Settings2 className="w-3 h-3" />{showVisualOptions ? 'Hide options' : 'More options'}
+              </button>
             </div>
+            {showVisualOptions && (
+              <div className="mb-2 p-3 border rounded-lg bg-slate-50/50 space-y-2.5">
+                <div>
+                  <Label className="text-[10px] text-muted-foreground">Describe what you want the image to show</Label>
+                  <textarea
+                    value={visualDescription}
+                    onChange={e => setVisualDescription(e.target.value)}
+                    placeholder="e.g. A diverse group of community members at a workshop, warm and welcoming atmosphere, natural lighting..."
+                    className="w-full mt-1 text-xs border rounded p-2 h-16 resize-none bg-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Aspect Ratio / Size</Label>
+                    <Select value={visualAspectRatio} onValueChange={setVisualAspectRatio}>
+                      <SelectTrigger className="h-7 text-xs mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="landscape">Landscape (16:9)</SelectItem>
+                        <SelectItem value="square">Square (1:1)</SelectItem>
+                        <SelectItem value="portrait">Portrait (3:4)</SelectItem>
+                        <SelectItem value="wide">Wide banner (2:1)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col justify-end gap-1.5">
+                    <label className="flex items-center gap-1.5 text-[10px]">
+                      <input type="checkbox" checked={useTitleContext} onChange={e => setUseTitleContext(e.target.checked)} className="rounded" />
+                      Use section title as context
+                    </label>
+                    <label className="flex items-center gap-1.5 text-[10px]">
+                      <input type="checkbox" checked={useContentContext} onChange={e => setUseContentContext(e.target.checked)} className="rounded" />
+                      Use section text as context
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
             {imageUrl ? (
               <div className="relative rounded-lg overflow-hidden border bg-slate-100">
                 <img src={imageUrl} alt="Section" className="w-full h-40 object-cover" />

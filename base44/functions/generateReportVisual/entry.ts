@@ -6,8 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { section_title, section_content, category, report_context, brand_colors } = await req.json();
-    if (!section_title) return Response.json({ error: 'section_title required' }, { status: 400 });
+    const { section_title, section_content, category, report_context, brand_colors, custom_description, aspect_ratio } = await req.json();
 
     const categoryPrompts = {
       graph: `professional data visualization chart, clean modern style, corporate non-profit branding`,
@@ -23,11 +22,25 @@ Deno.serve(async (req) => {
       ? `Use these brand colors: ${brand_colors}`
       : 'Use professional navy and gold tones';
 
-    const prompt = `${categoryPrompts[category] || categoryPrompts.infographic}.
-${colorHint}.
-Topic: ${section_title}${section_content ? '\nContext: ' + section_content.slice(0, 200) : ''}
-${report_context ? '\nReport context: ' + report_context : ''}
-Generate a clean, publication-quality visual suitable for inclusion in an annual report.`;
+    const aspectHints = {
+      landscape: 'landscape orientation, 16:9 aspect ratio, wide horizontal layout',
+      square: 'square 1:1 aspect ratio, balanced composition',
+      portrait: 'portrait orientation, 3:4 aspect ratio, tall vertical layout',
+      wide: 'wide panoramic banner, 2:1 aspect ratio, extra wide horizontal strip'
+    };
+
+    const parts = [
+      categoryPrompts[category] || categoryPrompts.infographic,
+      colorHint,
+      aspect_ratio && aspectHints[aspect_ratio] ? aspectHints[aspect_ratio] : '',
+      section_title ? `Topic: ${section_title}` : '',
+      section_content ? `Context: ${section_content.slice(0, 300)}` : '',
+      custom_description ? `Specific request: ${custom_description}` : '',
+      report_context ? `Report context: ${report_context}` : '',
+      'Generate a clean, publication-quality visual suitable for inclusion in an annual report.'
+    ].filter(Boolean);
+
+    const prompt = parts.join('.\n');
 
     const result = await base44.integrations.Core.GenerateImage({ prompt });
 
