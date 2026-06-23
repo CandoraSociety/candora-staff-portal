@@ -35,25 +35,15 @@ export default function ScaledTOC({ sections, branding, getPage, containerHeight
   const pc = branding?.primary_color || '#1a2744';
   const sc = branding?.secondary_color || '#3b5998';
   const ac = branding?.accent_color || '#2b2de8';
-  const gold = branding?.accent_color || '#c8952e';
+  const gold = '#c8952e';
 
   return (
-    <div style={{ height: containerHeight, padding, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-      {/* Decorative top accent bar */}
-      <div className="shrink-0" style={{ height: 4, background: `linear-gradient(90deg, ${pc} 0%, ${ac} 50%, transparent 100%)`, borderRadius: 2, marginBottom: '2rem' }} />
-
-      {/* Title block */}
-      <div className="shrink-0" style={{ marginBottom: '1.5rem' }}>
-        <div className="flex items-center gap-3" style={{ marginBottom: '0.5rem' }}>
-          <div style={{ width: 32, height: 3, backgroundColor: gold, borderRadius: 2 }} />
-          <span className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: ac }}>Index</span>
-        </div>
-        <h3 className="font-heading font-bold" style={{ color: pc, fontSize: '1.75rem', lineHeight: 1.1, marginBottom: '0.25rem' }}>
+    <div style={{ height: containerHeight, padding, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Title */}
+      <div className="shrink-0" style={{ marginBottom: '1.25rem' }}>
+        <h3 className="font-heading font-bold" style={{ color: pc, fontSize: '1.6rem', lineHeight: 1.1 }}>
           Table of Contents
         </h3>
-        <p className="text-xs italic" style={{ color: sc, opacity: 0.7 }}>
-          {sections.length} {sections.length === 1 ? 'section' : 'sections'}
-        </p>
       </div>
 
       {/* Scaled entries — fills remaining space */}
@@ -61,29 +51,59 @@ export default function ScaledTOC({ sections, branding, getPage, containerHeight
         <div
           ref={contentRef}
           style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: `${100 / scale}%` }}
-          className="space-y-2"
+          className="space-y-2.5"
         >
-          {sections.map((s, i) => (
-            <div key={s.id} className="flex items-baseline" style={{ color: sc }}>
-              <span
-                className="font-bold shrink-0 text-right tabular-nums"
-                style={{ color: pc, width: '2.5em', marginRight: '0.75rem' }}
+          {sections.map((s, i) => {
+            const isAlt = i % 2 === 1;
+            return (
+              <div
+                key={s.id}
+                className="flex items-center rounded-lg"
+                style={{
+                  backgroundColor: isAlt ? `${pc}06` : 'transparent',
+                  borderLeft: `3px solid ${i % 3 === 0 ? gold : i % 3 === 1 ? ac : pc}`,
+                  padding: '0.6rem 0.85rem',
+                }}
               >
-                {i + 1}.
-              </span>
-              <span className="flex-1 font-medium" style={{ color: pc }}>{s.title || 'Untitled'}</span>
-              <span className="flex-1 mx-3 border-b border-dotted self-end" style={{ borderColor: `${ac}50`, marginBottom: '0.2em' }} />
-              <span className="shrink-0 font-medium tabular-nums" style={{ color: pc, width: '2em', textAlign: 'right' }}>{getPage(i)}</span>
-            </div>
-          ))}
+                {/* Number badge */}
+                <div
+                  className="shrink-0 flex items-center justify-center font-bold tabular-nums"
+                  style={{
+                    width: '2.2em',
+                    height: '2.2em',
+                    borderRadius: '50%',
+                    backgroundColor: pc,
+                    color: '#fff',
+                    fontSize: '0.8em',
+                    marginRight: '0.85rem',
+                  }}
+                >
+                  {i + 1}
+                </div>
+                {/* Title */}
+                <span className="flex-1 font-medium" style={{ color: pc, fontSize: '0.95em' }}>
+                  {s.title || 'Untitled'}
+                </span>
+                {/* Dotted leader */}
+                <span className="flex-1 mx-3 border-b border-dotted self-center" style={{ borderColor: `${ac}40` }} />
+                {/* Page number pill */}
+                <span
+                  className="shrink-0 font-semibold tabular-nums"
+                  style={{
+                    color: pc,
+                    backgroundColor: `${gold}18`,
+                    border: `1px solid ${gold}50`,
+                    borderRadius: '0.375rem',
+                    padding: '0.15em 0.6em',
+                    fontSize: '0.8em',
+                  }}
+                >
+                  {getPage(i)}
+                </span>
+              </div>
+            );
+          })}
         </div>
-      </div>
-
-      {/* Decorative bottom accent */}
-      <div className="shrink-0" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${pc}30, transparent)` }} />
-        <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: gold }} />
-        <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${pc}30, transparent)` }} />
       </div>
     </div>
   );
