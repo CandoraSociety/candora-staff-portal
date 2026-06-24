@@ -45,7 +45,7 @@ export default function MultiImageUploader({ section, onUpdate }) {
       <div className="flex items-center gap-2 mb-2">
         <Images className="w-3.5 h-3.5 text-slate-500" />
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-          Movable Images <span className="text-slate-400 normal-case font-normal">(drag in preview to reposition each independently)</span>
+          Movable Images <span className="text-slate-400 normal-case font-normal">(drag in preview — left/right side + vertical offset; text &amp; tables wrap around)</span>
         </span>
       </div>
 
@@ -61,7 +61,7 @@ export default function MultiImageUploader({ section, onUpdate }) {
                 <X className="w-3 h-3" />
               </button>
               <span className="absolute bottom-0 left-0 right-0 bg-black/55 text-white text-[9px] text-center py-0.5 rounded-b-lg tabular-nums">
-                {img.x != null ? Math.round(img.x) : 50}%, {img.y || 0}px
+                {(img.x != null ? img.x : 50) < 50 ? 'Left' : 'Right'} · {img.y || 0}px
               </span>
             </div>
           ))}
