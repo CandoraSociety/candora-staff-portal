@@ -67,7 +67,7 @@ export function generateBoardReportPdf(report, orgName) {
         if (!para.trim()) { y += 3; continue; }
         const lines = doc.splitTextToSize(para, pageWidth - margin * 2);
         for (const line of lines) {
-          if (y > pageHeight - margin - 10) {
+          if (y > pageHeight - 30) {
             doc.addPage();
             y = margin;
           }
