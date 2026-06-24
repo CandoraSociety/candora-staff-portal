@@ -1,5 +1,6 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { ArrowBigUp } from 'lucide-react';
+import { ribbonGradient } from './imageFilters';
 
 const PAGE_HEIGHT_PX = 11 * 96; // 1056px
 const TOP_BAR_PX = 4; // h-1 = 0.25rem
@@ -30,10 +31,13 @@ function PageFrame({ children, pageNum, primaryColor }) {
   );
 }
 
-function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, headerFontSize, headerLayout, headerZones, primaryColor, pageNum, showPageNumber }) {
+function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, headerFontSize, headerLayout, headerZones, primaryColor, pageNum, showPageNumber, branding }) {
   const zones = parseZones(headerZones);
 
   const renderSlot = (z) => {
+    if (z.content === 'ribbon') {
+      return <div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
+    }
     if (z.content === 'text' && masterHeader) {
       return (
         <span className="break-words" style={{
@@ -76,6 +80,7 @@ function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, head
   }
 
   const hasAny = zones.some(z => {
+    if (z.content === 'ribbon') return true;
     if (z.content === 'text' && masterHeader) return true;
     if (z.content === 'image' && headerImage) return true;
     if (z.content === 'page_number' && showPageNumber && pageNum) return true;
@@ -113,10 +118,13 @@ function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, head
   );
 }
 
-function PageFooter({ masterFooter, footerImage, footerImageHeight, footerFontSize, footerLayout, footerZones, primaryColor, pageNum, showPageNumber, useCssCounter }) {
+function PageFooter({ masterFooter, footerImage, footerImageHeight, footerFontSize, footerLayout, footerZones, primaryColor, pageNum, showPageNumber, useCssCounter, branding }) {
   const zones = parseZones(footerZones);
 
   const renderSlot = (z) => {
+    if (z.content === 'ribbon') {
+      return <div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
+    }
     if (z.content === 'text' && masterFooter) {
       return (
         <span className="break-words" style={{
@@ -158,6 +166,7 @@ function PageFooter({ masterFooter, footerImage, footerImageHeight, footerFontSi
   }
 
   const hasAny = zones.some(z => {
+    if (z.content === 'ribbon') return true;
     if (z.content === 'text' && masterFooter) return true;
     if (z.content === 'image' && footerImage) return true;
     if (z.content === 'page_number' && showPageNumber && (useCssCounter || pageNum)) return true;
@@ -314,6 +323,7 @@ export default function PaginatedSection({
                 footerLayout={footerLayout}
                 footerZones={footerZones}
                 primaryColor={primaryColor}
+                branding={branding}
                 pageNum={pageNum}
                 showPageNumber={showPageNumbersAll}
               />
@@ -359,6 +369,7 @@ export default function PaginatedSection({
                       headerLayout={headerLayout}
                       headerZones={headerZones}
                       primaryColor={primaryColor}
+                      branding={branding}
                       pageNum={pageNum ? pageNum + i : undefined}
                       showPageNumber={showPageNumbersAll}
                     />
@@ -396,6 +407,7 @@ export default function PaginatedSection({
                     footerLayout={footerLayout}
                     footerZones={footerZones}
                     primaryColor={primaryColor}
+                    branding={branding}
                     pageNum={pageNum ? pageNum + i : undefined}
                     showPageNumber={showPageNumbersAll}
                   />
@@ -424,6 +436,7 @@ export default function PaginatedSection({
               footerLayout={footerLayout}
               footerZones={footerZones}
               primaryColor={primaryColor}
+              branding={branding}
               showPageNumber={showPageNumbersAll}
               useCssCounter
             />
@@ -463,6 +476,7 @@ export default function PaginatedSection({
             headerLayout={headerLayout}
             headerZones={headerZones}
             primaryColor={primaryColor}
+            branding={branding}
             pageNum={pageNum ? pageNum + 1 : undefined}
             showPageNumber={showPageNumbersAll}
           />

@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, X, RotateCw } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
 import DraggableImageBlock from './DraggableImageBlock';
-import { getFilterCss } from './imageFilters';
+import { getFilterCss, ribbonGradient } from './imageFilters';
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -96,6 +96,7 @@ export default function SectionRenderer({
     const zones = parseZones(zonesRaw);
     if (!zones.length) return null;
     const hasAny = zones.some(z => {
+      if (z.content === 'ribbon') return true;
       if (z.content === 'text' && text) return true;
       if (z.content === 'image' && image) return true;
       if (z.content === 'page_number' && showPN && pageNum) return true;
@@ -104,6 +105,9 @@ export default function SectionRenderer({
     if (!hasAny) return null;
 
     const renderSlot = (z) => {
+      if (z.content === 'ribbon') {
+        return <div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
+      }
       if (z.content === 'text' && text) {
         return (
           <span className="break-words" style={{

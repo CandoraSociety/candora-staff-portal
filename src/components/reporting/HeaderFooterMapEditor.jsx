@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Type, Image, Hash, Plus, Minus, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Type, Image, Hash, Plus, Minus, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react';
+import { ribbonGradient } from './imageFilters';
 
 const CONTENT_TYPES = [
   { value: '', label: 'Empty', icon: null, color: 'bg-gray-100 text-gray-400 border-gray-300' },
   { value: 'text', label: 'Text', icon: Type, color: 'bg-blue-50 text-blue-600 border-blue-300' },
   { value: 'image', label: 'Image', icon: Image, color: 'bg-amber-50 text-amber-600 border-amber-300' },
   { value: 'page_number', label: 'Page #', icon: Hash, color: 'bg-emerald-50 text-emerald-600 border-emerald-300' },
+  { value: 'ribbon', label: 'Ribbon', icon: Palette, color: 'bg-purple-50 text-purple-600 border-purple-300' },
 ];
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
@@ -180,6 +182,18 @@ export default function HeaderFooterMapEditor({
         </div>
       )}
 
+      {/* Ribbon height control — shown when a ribbon zone is selected */}
+      {selectedZone && selectedZone.content === 'ribbon' && (
+        <div className="mt-2 p-2 border rounded bg-white">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground shrink-0">Ribbon height</span>
+            <input type="range" min="2" max="24" value={selectedZone.ribbon_height || 6} onChange={e => updateZone(selectedZone.id, { ribbon_height: parseInt(e.target.value) })} className="flex-1 h-1 accent-purple-500" />
+            <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">{selectedZone.ribbon_height || 6}px</span>
+          </div>
+          <div className="mt-1.5 h-3 rounded" style={{ background: ribbonGradient(branding) }} />
+        </div>
+      )}
+
       {/* Rich preview */}
       <div className="border rounded bg-white mt-2 overflow-hidden">
         <div className="text-[10px] text-muted-foreground px-2 pt-1.5 font-medium">Preview</div>
@@ -188,13 +202,13 @@ export default function HeaderFooterMapEditor({
             if (layout === 'stacked') {
               return (
                 <div key={z.id} className="flex justify-center py-0.5 w-full">
-                  {renderZonePreview(z, text, imageUrl, font_size)}
+                  {renderZonePreview(z, text, imageUrl, font_size, branding)}
                 </div>
               );
             }
             return (
               <div key={z.id} className="flex overflow-hidden" style={{ width: `${z.w}%`, justifyContent: z.align === 'right' ? 'flex-end' : z.align === 'center' ? 'center' : 'flex-start' }}>
-                {renderZonePreview(z, text, imageUrl, font_size)}
+                {renderZonePreview(z, text, imageUrl, font_size, branding)}
               </div>
             );
           })}
@@ -211,7 +225,7 @@ export default function HeaderFooterMapEditor({
   );
 }
 
-function renderZonePreview(z, text, imageUrl, fontSize) {
+function renderZonePreview(z, text, imageUrl, fontSize, branding) {
   const style = {
     fontSize: `${fontSize || 12}px`,
     fontFamily: z.font_family || 'Inter',
@@ -234,6 +248,9 @@ function renderZonePreview(z, text, imageUrl, fontSize) {
   }
   if (z.content === 'page_number') {
     return <span className="text-muted-foreground" style={{ fontSize: `${fontSize || 12}px` }}>[12]</span>;
+  }
+  if (z.content === 'ribbon') {
+    return <div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
   }
   return <span className="text-[10px] text-gray-300">—</span>;
 }

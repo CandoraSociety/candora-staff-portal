@@ -14,3 +14,15 @@ export const IMAGE_FILTERS = {
 export function getFilterCss(filterKey) {
   return IMAGE_FILTERS[filterKey]?.css || 'none';
 }
+
+/**
+ * Builds a left-to-right fading gradient ribbon from Candora brand colors.
+ * Colors are spread across the first 70% then fade to transparent on the right.
+ */
+export function ribbonGradient(branding) {
+  const colors = [branding?.primary_color, branding?.accent_color, branding?.secondary_color].filter(Boolean);
+  if (colors.length === 0) return 'linear-gradient(90deg, #1a2744, #2b2de8, transparent)';
+  if (colors.length === 1) return `linear-gradient(90deg, ${colors[0]}, transparent)`;
+  const stops = colors.map((c, i) => `${c} ${(i / (colors.length - 1)) * 70}%`).join(', ');
+  return `linear-gradient(90deg, ${stops}, transparent 100%)`;
+}

@@ -398,6 +398,7 @@ export default function ReportingAGREditor() {
                 font_size={report?.header_font_size}
                 layout={report?.header_layout || 'inline'}
                 zones={(() => { try { return JSON.parse(report?.header_zones || '[]'); } catch { return []; } })()}
+                branding={branding}
                 onUpdate={(zonesArr) => updateReport({ header_zones: JSON.stringify(zonesArr) })}
                 onFontSize={(v) => updateReport({ header_font_size: v })}
                 onLayout={(v) => updateReport({ header_layout: v })}
@@ -409,6 +410,7 @@ export default function ReportingAGREditor() {
                 font_size={report?.footer_font_size}
                 layout={report?.footer_layout || 'inline'}
                 zones={(() => { try { return JSON.parse(report?.footer_zones || '[]'); } catch { return []; } })()}
+                branding={branding}
                 onUpdate={(zonesArr) => updateReport({ footer_zones: JSON.stringify(zonesArr) })}
                 onFontSize={(v) => updateReport({ footer_font_size: v })}
                 onLayout={(v) => updateReport({ footer_layout: v })}
