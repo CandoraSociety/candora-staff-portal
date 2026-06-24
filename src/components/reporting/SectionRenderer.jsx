@@ -267,8 +267,11 @@ export default function SectionRenderer({
         } : {}),
         ...(textColumns > 1 && !hasFloatedImage ? {
           columnCount: textColumns,
+          WebkitColumnCount: textColumns,
+          MozColumnCount: textColumns,
           columnGap: '1.5rem',
           columnFill: 'balance',
+          minHeight: '200px',
         } : {}),
       }}>
         <div
@@ -276,6 +279,7 @@ export default function SectionRenderer({
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
+          style={{ minHeight: 'inherit' }}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
