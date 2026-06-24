@@ -286,8 +286,6 @@ export default function SectionRenderer({
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
-        // Add top margin to push content below chart if chart overlaps
-        marginTop: chartY < 0 ? `${Math.abs(chartY) + chartHeight}px` : chartY < chartHeight ? `${chartHeight - chartY}px` : '0',
         ...columnStyle,
       }}
       onFocus={() => { editingContent.current = true; }}
