@@ -265,17 +265,13 @@ export default function SectionRenderer({
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
-        ...(textColumns > 1 && !hasFloatedImage ? {
-          columnCount: textColumns,
-          columnGap: '1.5rem',
-          columnFill: 'balance',
-        } : {}),
       }}>
         <div
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
+          style={textColumns > 1 && !hasFloatedImage ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
