@@ -58,7 +58,6 @@ function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, head
     return null;
   };
 
-  // No zones configured — simple fallback
   if (!zones.length) {
     if (!masterHeader && !headerImage) return null;
     return (
@@ -136,6 +135,11 @@ export default function PaginatedSection({
 
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
+  // All columns use the same height so CSS column breaks are consistent.
+  // First page includes the section header inside the column flow; continuation
+  // pages render the "continued" header above the column, so the column itself
+  // starts below it — both end up with the same usable text height.
+  const columnHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
 
   useLayoutEffect(() => {
     if (fitToPage) {
@@ -145,14 +149,10 @@ export default function PaginatedSection({
 
     const measure = () => {
       if (measureRef.current) {
-        const height = measureRef.current.scrollHeight;
-        if (height <= CONTENT_HEIGHT_PX) {
-          setPageCount(1);
-        } else {
-          const contHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
-          const pages = 1 + Math.ceil((height - CONTENT_HEIGHT_PX) / contHeight);
-          setPageCount(Math.max(1, pages));
-        }
+        // scrollWidth tells us how many column-widths the content produced
+        const sw = measureRef.current.scrollWidth;
+        const pages = Math.max(1, Math.ceil(sw / CONTENT_WIDTH_PX));
+        setPageCount(pages);
       }
     };
 
@@ -192,71 +192,73 @@ export default function PaginatedSection({
     );
   }
 
-  // Cumulative content offset for each page
-  // Page 0 shows CONTENT_HEIGHT_PX of content; pages 1+ show CONTENT_HEIGHT_PX - CONT_HEADER_PX
-  const getContentOffset = (i) => {
-    if (i === 0) return 0;
-    const contHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
-    return CONTENT_HEIGHT_PX + (i - 1) * contHeight;
-  };
-
   return (
     <>
-      {/* Screen view: paginated pages */}
+      {/* Screen view: paginated pages using CSS multi-column flow */}
       <div className="print:hidden">
-        {Array.from({ length: pageCount }).map((_, i) => {
-          const contHeaderOffset = i > 0 && hasContHeader ? CONT_HEADER_PX : 0;
-          return (
-            <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
-              <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-              <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)` }}>
-                {i === 0 && onTogglePageBreak && (
-                  <button
-                    onClick={onTogglePageBreak}
-                    className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
-                    title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
-                  >
-                    <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
-                    {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
-                  </button>
+        {Array.from({ length: pageCount }).map((_, i) => (
+          <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
+            <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
+            <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)` }}>
+              {i === 0 && onTogglePageBreak && (
+                <button
+                  onClick={onTogglePageBreak}
+                  className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
+                  title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
+                >
+                  <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
+                  {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
+                </button>
+              )}
+
+              {/* Content window: positioned at the margins, clips one column at a time */}
+              <div
+                ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
+                style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: CONTENT_HEIGHT_PX, overflow: 'hidden' }}
+              >
+                {/* Continuation header sits at the top of the content window */}
+                {i > 0 && hasContHeader && (
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 }}>
+                    <ContinuationHeader
+                      masterHeader={masterHeader}
+                      headerImage={headerImage}
+                      headerImageHeight={headerImageHeight}
+                      headerFontSize={headerFontSize}
+                      headerLayout={headerLayout}
+                      headerZones={headerZones}
+                      primaryColor={primaryColor}
+                      pageNum={pageNum ? pageNum + i : undefined}
+                      showPageNumber={showPageNumbersAll}
+                    />
+                  </div>
                 )}
 
-                {/* Content window: positioned at the top margin, clipped to the bottom margin */}
+                {/* Multi-column container: CSS flows content column-by-column,
+                    breaking at line boundaries (just like Word page flow).
+                    We translate it horizontally to reveal one column per page. */}
                 <div
-                  ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
-                  style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, right: PADDING_PX, height: CONTENT_HEIGHT_PX }}
+                  className="paginated-content"
+                  style={{
+                    columnWidth: CONTENT_WIDTH_PX,
+                    columnGap: 0,
+                    columnFill: 'auto',
+                    height: columnHeight,
+                    position: 'absolute',
+                    top: i > 0 && hasContHeader ? CONT_HEADER_PX : 0,
+                    left: 0,
+                    width: pageCount * CONTENT_WIDTH_PX,
+                    transform: `translateX(-${i * CONTENT_WIDTH_PX}px)`,
+                  }}
                 >
-                  {/* Continuation header at the top of the content window */}
-                  {i > 0 && hasContHeader && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 }}>
-                      <ContinuationHeader
-                        masterHeader={masterHeader}
-                        headerImage={headerImage}
-                        headerImageHeight={headerImageHeight}
-                        headerFontSize={headerFontSize}
-                        headerLayout={headerLayout}
-                        headerZones={headerZones}
-                        primaryColor={primaryColor}
-                        pageNum={pageNum ? pageNum + i : undefined}
-                        showPageNumber={showPageNumbersAll}
-                      />
-                    </div>
-                  )}
-
-                  {/* Content area: below the continuation header, clipped to the bottom margin */}
-                  <div style={{ position: 'absolute', top: contHeaderOffset, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: `${-getContentOffset(i)}px`, left: 0, right: 0 }}>
-                      {children}
-                    </div>
-                  </div>
+                  {children}
                 </div>
               </div>
-            </PageFrame>
-          );
-        })}
+            </div>
+          </PageFrame>
+        ))}
       </div>
 
-      {/* Print view: single flowing content */}
+      {/* Print view: single flowing content — browser handles pagination natively */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
@@ -266,11 +268,17 @@ export default function PaginatedSection({
         </div>
       </div>
 
-      {/* Hidden measurement container */}
+      {/* Hidden measurement container — same column setup so scrollWidth gives us the page count */}
       <div
         ref={measureRef}
-        className="absolute invisible pointer-events-none print:hidden"
-        style={{ width: `${CONTENT_WIDTH_PX}px` }}
+        className="paginated-content absolute invisible pointer-events-none print:hidden"
+        style={{
+          width: CONTENT_WIDTH_PX,
+          height: columnHeight,
+          columnWidth: CONTENT_WIDTH_PX,
+          columnGap: 0,
+          columnFill: 'auto',
+        }}
         aria-hidden="true"
       >
         {children}

@@ -117,6 +117,10 @@
   .print-flow-page { height: auto !important; overflow: visible !important; }
 }
 
+.paginated-content img, .paginated-content .recharts-wrapper, .paginated-content table {
+  break-inside: avoid;
+}
+
 [contenteditable][data-placeholder]:empty::before {
   content: attr(data-placeholder);
   color: hsl(var(--muted-foreground));
