@@ -357,8 +357,8 @@ export default function SectionRenderer({
     ) : null;
 
     // Chart with free-form horizontal and vertical positioning
-    const chartX = section.chart_x_offset || 0; // percentage 0-100
-    const chartY = section.chart_y_offset || 0; // pixels from top
+    const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
+    const chartY = section.chart_y_offset ?? 0; // pixels from top
     const draggableChartBlock = dataBlock ? (
       <div className="relative group" style={{ position: 'relative', width: '100%', height: `${Math.max(200, chartY + 280)}px` }}>
         <div

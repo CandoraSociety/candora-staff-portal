@@ -97,10 +97,12 @@ export default function DraggableImageBlock({
       const updates = {};
       if (continuousMode) {
         updates[positionField] = Math.round(g.percentX);
-        if (enableVerticalDrag) {
+        if (enableVerticalDrag && verticalPositionField) {
           updates[verticalPositionField] = Math.round(g.verticalOffset);
+          console.log('Updating vertical position:', verticalPositionField, '=', Math.round(g.verticalOffset));
         }
-        onUpdate(section.id, updates);
+        console.log('Dragging update:', updates);
+        if (onUpdate) onUpdate(section.id, updates);
       } else {
         const newPosition = positionMap[g.zone];
         if (newPosition !== section[positionField]) {
