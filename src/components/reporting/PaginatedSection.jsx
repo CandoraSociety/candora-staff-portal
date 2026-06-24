@@ -6,7 +6,8 @@ const PAGE_WIDTH_PX = 8.5 * 96; // 816
 const MARGIN_PX = 72; // 0.75in = 72px
 const CONTENT_WIDTH_PX = PAGE_WIDTH_PX - MARGIN_PX * 2; // 672
 const PAGE_HEIGHT_PX = 11 * 96; // 1056
-const CONTENT_AREA_HEIGHT = PAGE_HEIGHT_PX - MARGIN_PX * 2; // 912
+const HEADER_RESERVE_PX = 10; // ~0.1in extra breathing room below the header
+const CONTENT_AREA_HEIGHT = PAGE_HEIGHT_PX - MARGIN_PX * 2 - HEADER_RESERVE_PX; // 902
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -173,7 +174,7 @@ export default function PaginatedSection({
               )}
 
               {/* Content area — clipped, content translated to show this page's portion */}
-              <div className="absolute overflow-hidden" style={{ top: '0.75in', left: '0.75in', right: '0.75in', bottom: '0.75in' }}>
+              <div className="absolute overflow-hidden" style={{ top: 'calc(0.75in + 0.1in)', left: '0.75in', right: '0.75in', bottom: '0.75in' }}>
                 <div style={{ transform: `translateY(-${pageIndex * CONTENT_AREA_HEIGHT}px)` }}>
                   {children}
                 </div>
@@ -219,6 +220,8 @@ export default function PaginatedSection({
       {/* ── Print: native browser pagination, sections flow naturally ── */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page">
+          {/* Spacer pushes content below the fixed header so text doesn't enter the top margin */}
+          <div className="hidden print:block" style={{ height: '0.1in' }} />
           {/* Content — flows naturally across pages, browser handles breaks.
               Header/footer are rendered as position:fixed elements in ReportPrintView
               so they repeat on every page like Word, sitting within the @page margins. */}
