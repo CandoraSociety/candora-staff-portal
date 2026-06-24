@@ -269,16 +269,16 @@ export default function PaginatedSection({
       </div>
 
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
-        <div className="print-flow-page relative" style={{ width: '8.5in', maxWidth: '100%', minHeight: '11in' }}>
+        <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
           {showHeaderAll && (
             <div className="mb-4" style={{ borderBottom: `1px solid ${primaryColor}20`, paddingBottom: '0.5rem' }}>
               <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
             </div>
           )}
-          <div className="p-8" style={{ paddingBottom: hasFooter ? '3rem' : '2rem' }}>{children}</div>
+          <div className="p-8 pb-12">{children}</div>
           {hasFooter && (
-            <div className="print-footer" style={{ position: 'fixed', bottom: '0.5in', left: '0.5in', right: '0.5in', zIndex: 100 }}>
+            <div className="mt-auto" style={{ position: 'absolute', bottom: '0.5in', left: '0.5in', right: '0.5in' }}>
               <PageFooter masterFooter={masterFooter} footerImage={footerImage} footerImageHeight={footerImageHeight} footerFontSize={footerFontSize} footerLayout={footerLayout} footerZones={footerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} useCssCounter />
             </div>
           )}
