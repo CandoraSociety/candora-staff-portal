@@ -192,7 +192,8 @@ export default function PaginatedSection({
     );
   }
 
-  // Cumulative content offset for each page (page 0 = full height, pages 1+ = reduced by header)
+  // Cumulative content offset for each page
+  // Page 0 shows CONTENT_HEIGHT_PX of content; pages 1+ show CONTENT_HEIGHT_PX - CONT_HEADER_PX
   const getContentOffset = (i) => {
     if (i === 0) return 0;
     const contHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
@@ -203,41 +204,56 @@ export default function PaginatedSection({
     <>
       {/* Screen view: paginated pages */}
       <div className="print:hidden">
-        {Array.from({ length: pageCount }).map((_, i) => (
-          <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
-            <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-            <div className="p-8 relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)`, overflow: 'hidden' }}>
-              {i === 0 && onTogglePageBreak && (
-                <button
-                  onClick={onTogglePageBreak}
-                  className="no-print absolute top-2 right-2 z-10 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
-                  title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
+        {Array.from({ length: pageCount }).map((_, i) => {
+          const contHeaderOffset = i > 0 && hasContHeader ? CONT_HEADER_PX : 0;
+          return (
+            <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
+              <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
+              <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)` }}>
+                {i === 0 && onTogglePageBreak && (
+                  <button
+                    onClick={onTogglePageBreak}
+                    className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
+                    title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
+                  >
+                    <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
+                    {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
+                  </button>
+                )}
+
+                {/* Content window: positioned at the top margin, clipped to the bottom margin */}
+                <div
+                  ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
+                  style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, right: PADDING_PX, height: CONTENT_HEIGHT_PX }}
                 >
-                  <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
-                  {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
-                </button>
-              )}
-              {i > 0 && hasContHeader && (
-                <ContinuationHeader
-                  masterHeader={masterHeader}
-                  headerImage={headerImage}
-                  headerImageHeight={headerImageHeight}
-                  headerFontSize={headerFontSize}
-                  headerLayout={headerLayout}
-                  headerZones={headerZones}
-                  primaryColor={primaryColor}
-                  pageNum={pageNum ? pageNum + i : undefined}
-                  showPageNumber={showPageNumbersAll}
-                />
-              )}
-              <div ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}>
-                <div style={{ position: 'absolute', top: `${(i === 0 ? 0 : (hasContHeader ? CONT_HEADER_PX : 0)) - getContentOffset(i)}px`, left: PADDING_PX, right: PADDING_PX }}>
-                  {children}
+                  {/* Continuation header at the top of the content window */}
+                  {i > 0 && hasContHeader && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 }}>
+                      <ContinuationHeader
+                        masterHeader={masterHeader}
+                        headerImage={headerImage}
+                        headerImageHeight={headerImageHeight}
+                        headerFontSize={headerFontSize}
+                        headerLayout={headerLayout}
+                        headerZones={headerZones}
+                        primaryColor={primaryColor}
+                        pageNum={pageNum ? pageNum + i : undefined}
+                        showPageNumber={showPageNumbersAll}
+                      />
+                    </div>
+                  )}
+
+                  {/* Content area: below the continuation header, clipped to the bottom margin */}
+                  <div style={{ position: 'absolute', top: contHeaderOffset, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: `${-getContentOffset(i)}px`, left: 0, right: 0 }}>
+                      {children}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </PageFrame>
-        ))}
+            </PageFrame>
+          );
+        })}
       </div>
 
       {/* Print view: single flowing content */}
