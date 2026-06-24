@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Printer, FileText } from 'lucide-react';
+import { ArrowLeft, Printer, FileText, Download } from 'lucide-react';
 import ReportPrintView from '@/components/reporting/ReportPrintView';
 
 export default function ReportingAGRPrint() {
@@ -14,6 +14,26 @@ export default function ReportingAGRPrint() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      const response = await base44.functions.invoke('generateAGRPdf', { report_id: id });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${report.title || 'Annual_Report'}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Failed to generate PDF. Please try again or use browser print (Ctrl+P).');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -63,9 +83,15 @@ export default function ReportingAGRPrint() {
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
           <p className="text-xs text-muted-foreground">For best results: Press Ctrl/Cmd+P, then choose "Save as PDF" as your printer</p>
         </div>
-        <Button onClick={() => window.print()} className="gap-2">
-          <Printer className="w-4 h-4" />Print / Save PDF
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleDownloadPdf} disabled={generatingPdf} className="gap-2">
+            <Download className={`w-4 h-4 ${generatingPdf ? 'animate-spin' : ''}`} />
+            {generatingPdf ? 'Generating...' : 'Download PDF'}
+          </Button>
+          <Button onClick={() => window.print()} variant="outline" className="gap-2">
+            <Printer className="w-4 h-4" />Print
+          </Button>
+        </div>
       </div>
 
       {analysis?.source_file_url && (
