@@ -178,7 +178,7 @@ export default function SectionRenderer({
         text={masterFooter}
         image={footerImage}
         imageHeight={footerImageHeight}
-        showPN={showPageNum && !showHeader}
+        showPN={showPageNum}
         pageNum={pageNumber}
         zones={footerZonesRaw}
         layout={footerLayout || 'inline'}
