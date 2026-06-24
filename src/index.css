@@ -124,6 +124,7 @@
     position: relative !important;
     page-break-after: always;
     margin-bottom: 0 !important;
+    break-after: page !important;
   }
   .print-footer {
     position: fixed !important;
@@ -133,6 +134,11 @@
     z-index: 1000 !important;
   }
   .print-page-counter::after { content: counter(page); }
+  /* Prevent content from being cut off */
+  p, li, h1, h2, h3, h4, h5, h6 {
+    orphans: 2;
+    widows: 2;
+  }
 }
 
 .paginated-content {

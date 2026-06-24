@@ -5,7 +5,8 @@ import { ribbonGradient } from './imageFilters';
 const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
 const PADDING_PX = 32; // 0.5in padding on each side
-const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - 48; // minus footer reserve
+const FOOTER_RESERVE_PX = 60; // Reserve space for footer
+const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_RESERVE_PX;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
 
@@ -194,7 +195,7 @@ export default function PaginatedSection({
       <PageFrame pageNum={pageNum} primaryColor={primaryColor}>
         <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
         <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)`, overflow: 'hidden' }}>
-          <div className="p-8" style={{ height: hasFooter ? `calc(100% - ${FOOTER_HEIGHT_PX}px)` : '100%', overflow: 'hidden' }}>{children}</div>
+          <div className="p-8" style={{ height: `calc(100% - ${FOOTER_RESERVE_PX}px)`, overflow: 'hidden' }}>{children}</div>
           {hasFooter && (
             <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 5 }}>
               <PageFooter masterFooter={masterFooter} footerImage={footerImage} footerImageHeight={footerImageHeight} footerFontSize={footerFontSize} footerLayout={footerLayout} footerZones={footerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
@@ -237,9 +238,9 @@ export default function PaginatedSection({
                   ref={i === 0 ? onSectionRef : null}
                   style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: pageAvailableHeight, overflow: 'hidden' }}
                 >
-                  {/* Header on continuation pages */}
+                  {/* Header on continuation pages - rendered inside clipping window, above content */}
                   {!isFirstPage && hasContHeader && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20, backgroundColor: 'white' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: headerHeight, zIndex: 20, backgroundColor: 'white' }}>
                       <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum ? pageNum + i : undefined} showPageNumber={showPageNumbersAll} />
                     </div>
                   )}
