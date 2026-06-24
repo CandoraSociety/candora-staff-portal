@@ -73,11 +73,11 @@ export default function AppLayout() {
       )}
 
       {/* Sidebar - hidden on mobile unless open */}
-      <div className={cn("hidden lg:block")}>
+      <div className={cn("hidden lg:block app-sidebar")}>
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} isAdmin={access.isAdmin} />
       </div>
       {mobileOpen && (
-        <div className="lg:hidden fixed z-40">
+        <div className="lg:hidden fixed z-40 app-sidebar-mobile">
           <Sidebar collapsed={false} setCollapsed={() => setMobileOpen(false)} isAdmin={access.isAdmin} />
         </div>
       )}
@@ -87,7 +87,7 @@ export default function AppLayout() {
         "transition-all duration-300",
         collapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
       )}>
-        <TopBar user={user} sidebarCollapsed={collapsed} onToggleMobile={() => setMobileOpen(!mobileOpen)} />
+        <TopBar user={user} sidebarCollapsed={collapsed} onToggleMobile={() => setMobileOpen(!mobileOpen)} className="app-topbar" />
         {/* Onboarding banner — shown on all pages until complete */}
         {ndaSigned && pendingCount > 0 && (
           <OnboardingBanner

@@ -11,7 +11,7 @@ import { ROLES } from '@/lib/constants';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
-export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
+export default function TopBar({ user, sidebarCollapsed, onToggleMobile, className }) {
   const initials = (user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const roleLabel = ROLES.find(r => r.value === user?.role)?.label || user?.role || 'Staff';
   const [open, setOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile }) {
   const navigate = useNavigate();
 
   return (
-    <header className="h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className={`app-topbar h-16 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-6 sticky top-0 z-30 ${className || ''}`}>
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={onToggleMobile}>
           <Menu className="w-5 h-5" />

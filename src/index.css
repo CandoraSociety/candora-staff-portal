@@ -117,6 +117,10 @@
   }
   .no-print { display: none !important; }
   .print-break { page-break-before: always !important; }
+  /* Hide app layout chrome */
+  .app-sidebar, .app-sidebar-mobile, .app-topbar {
+    display: none !important;
+  }
   body { 
     background: white !important;
     margin: 0 !important;
