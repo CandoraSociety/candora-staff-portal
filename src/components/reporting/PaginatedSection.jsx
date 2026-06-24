@@ -32,32 +32,41 @@ function PageFrame({ children, pageNum, primaryColor }) {
 
 function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, headerFontSize, headerLayout, headerZones, primaryColor, pageNum, showPageNumber, branding }) {
   const zones = parseZones(headerZones);
-  if (!zones.length && !masterHeader && !headerImage) return null;
-  
-  const hasAny = zones.some(z => z.content === 'ribbon' || (z.content === 'text' && masterHeader) || (z.content === 'image' && headerImage) || (z.content === 'page_number' && showPageNumber && pageNum));
-  if (!hasAny && !masterHeader && !headerImage) return null;
+  if (!masterHeader && !headerImage && zones.length === 0) return null;
 
   return (
     <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
       {headerLayout === 'stacked' ? (
         <div className="flex flex-col items-center gap-1">
-          {zones.map(z => {
+          {zones.length > 0 ? zones.map(z => {
             if (z.content === 'ribbon') return <div key={z.id} style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
-            if (z.content === 'text' && masterHeader) return <span key={z.id} className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterHeader} (continued)</span>;
-            if (z.content === 'image' && headerImage) return <img key={z.id} src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} />;
-            if (z.content === 'page_number' && showPageNumber && pageNum) return <span key={z.id} style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
+            if (z.content === 'text') return <span key={z.id} className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterHeader || ''}</span>;
+            if (z.content === 'image') return <img key={z.id} src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} />;
+            if (z.content === 'page_number') return <span key={z.id} style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum || ''}</span>;
             return null;
-          })}
+          }) : (
+            <>
+              {masterHeader && <span className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: 'hsl(var(--muted-foreground))' }}>{masterHeader}</span>}
+              {headerImage && <img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} />}
+              {showPageNumber && pageNum && <span style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>}
+            </>
+          )}
         </div>
       ) : (
         <div className="flex items-center w-full gap-2">
-          {zones.map(z => {
+          {zones.length > 0 ? zones.map(z => {
             if (z.content === 'ribbon') return <div key={z.id} style={{ width: `${z.w}%` }}><div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} /></div>;
-            if (z.content === 'text' && masterHeader) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterHeader} (continued)</span></div>;
-            if (z.content === 'image' && headerImage) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} /></div>;
-            if (z.content === 'page_number' && showPageNumber && pageNum) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span></div>;
+            if (z.content === 'text') return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterHeader || ''}</span></div>;
+            if (z.content === 'image') return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} /></div>;
+            if (z.content === 'page_number') return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum || ''}</span></div>;
             return null;
-          })}
+          }) : (
+            <>
+              {masterHeader && <div style={{ flex: 1 }}><span className="break-words" style={{ fontSize: `${headerFontSize || 12}px`, color: 'hsl(var(--muted-foreground))' }}>{masterHeader}</span></div>}
+              {headerImage && <div><img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} /></div>}
+              {showPageNumber && pageNum && <div><span style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span></div>}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -261,7 +270,7 @@ export default function PaginatedSection({
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-          {hasContHeader && (
+          {showHeaderAll && (masterHeader || headerImage || parseZones(headerZones).length > 0) && (
             <div className="mb-4" style={{ borderBottom: `1px solid ${primaryColor}20`, paddingBottom: '0.5rem' }}>
               <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
             </div>
