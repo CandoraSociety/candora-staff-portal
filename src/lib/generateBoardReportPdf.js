@@ -37,7 +37,7 @@ export function generateBoardReportPdf(report, orgName) {
 
   for (const section of sections) {
     // Page break before section if needed
-    if (y > pageHeight - margin - 30) {
+    if (y > pageHeight - 25) {
       doc.addPage();
       y = margin;
     }
