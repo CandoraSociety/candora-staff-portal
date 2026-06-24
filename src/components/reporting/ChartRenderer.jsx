@@ -77,7 +77,7 @@ export default function ChartRenderer({ chartConfig, branding, isPrint }) {
   };
 
   return (
-    <div className="my-4">
+    <div className={title ? 'my-4' : 'my-2'}>
       {title && <h4 className="text-sm font-semibold text-center mb-2">{title}</h4>}
       {chart_type === 'table' ? renderChart() : (
         <ResponsiveContainer width="100%" height={isPrint ? 220 : 260}>

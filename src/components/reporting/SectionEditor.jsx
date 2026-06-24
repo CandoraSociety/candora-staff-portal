@@ -344,9 +344,9 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
       chartData = validRows.map(r => ({ name: r.name.trim(), value: parseFloat(r.value) || 0 }));
     }
     
-    const config = { chart_type: editChartType, title: editChartLabel, data: chartData };
+    const config = { chart_type: editChartType, title: editChartLabel.trim() || null, data: chartData };
     await base44.entities.AGRReportData.update(editingChartId, {
-      label: editChartLabel,
+      label: editChartLabel.trim() || null,
       chart_config: JSON.stringify(config)
     });
     setEditingChartId(null);
@@ -354,6 +354,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setEditChartType('bar');
     setEditChartRows([]);
     setEditTableColumns([]);
+    // Trigger parent refresh by calling onUpdate with a dummy update
+    if (onUpdate) onUpdate(section.id, { title: section.title });
   };
 
   const handleCancelEdit = () => {
