@@ -73,43 +73,19 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
         return;
       }
 
-      if (aspect) {
-        // Corner resize with locked aspect ratio
-        const isLeft = drag.type.includes('w');
-        const isTop = drag.type.includes('n');
-        const dw = isLeft ? -dxPct : dxPct;
-        const dh = isTop ? -dyPct : dyPct;
-        let newW, newH;
-        if (Math.abs(dw) > Math.abs(dh * aspect)) {
-          newW = sc.w + dw;
-          newH = newW / aspect;
-        } else {
-          newH = sc.h + dh;
-          newW = newH * aspect;
-        }
-        if (newW < 5) { newW = 5; newH = newW / aspect; }
-        let newX = isLeft ? sc.x + sc.w - newW : sc.x;
-        let newY = isTop ? sc.y + sc.h - newH : sc.y;
-        if (newX < 0) { newW += newX; newX = 0; newH = newW / aspect; }
-        if (newY < 0) { newH += newY; newY = 0; newW = newH * aspect; newX = isLeft ? sc.x + sc.w - newW : sc.x; }
-        if (newX + newW > 100) { newW = 100 - newX; newH = newW / aspect; }
-        if (newY + newH > 100) { newH = 100 - newY; newW = newH * aspect; newX = isLeft ? sc.x + sc.w - newW : sc.x; }
-        setCrop({ x: newX, y: newY, w: newW, h: newH });
-      } else {
-        // Free resize with any handle
-        let { x, y, w, h } = sc;
-        if (drag.type.includes('w')) { const nx = sc.x + dxPct; w = sc.w + (sc.x - nx); x = nx; }
-        if (drag.type.includes('e')) { w = sc.w + dxPct; }
-        if (drag.type.includes('n')) { const ny = sc.y + dyPct; h = sc.h + (sc.y - ny); y = ny; }
-        if (drag.type.includes('s')) { h = sc.h + dyPct; }
-        if (w < 5) { if (drag.type.includes('w')) x = sc.x + sc.w - 5; w = 5; }
-        if (h < 5) { if (drag.type.includes('n')) y = sc.y + sc.h - 5; h = 5; }
-        if (x < 0) { w += x; x = 0; }
-        if (y < 0) { h += y; y = 0; }
-        if (x + w > 100) w = 100 - x;
-        if (y + h > 100) h = 100 - y;
-        setCrop({ x, y, w, h });
-      }
+      // Free resize with any handle — width and height adjust independently
+      let { x, y, w, h } = sc;
+      if (drag.type.includes('w')) { const nx = sc.x + dxPct; w = sc.w + (sc.x - nx); x = nx; }
+      if (drag.type.includes('e')) { w = sc.w + dxPct; }
+      if (drag.type.includes('n')) { const ny = sc.y + dyPct; h = sc.h + (sc.y - ny); y = ny; }
+      if (drag.type.includes('s')) { h = sc.h + dyPct; }
+      if (w < 5) { if (drag.type.includes('w')) x = sc.x + sc.w - 5; w = 5; }
+      if (h < 5) { if (drag.type.includes('n')) y = sc.y + sc.h - 5; h = 5; }
+      if (x < 0) { w += x; x = 0; }
+      if (y < 0) { h += y; y = 0; }
+      if (x + w > 100) w = 100 - x;
+      if (y + h > 100) h = 100 - y;
+      setCrop({ x, y, w, h });
     };
     const onUp = (e) => {
       if (e?.target?.releasePointerCapture && e.pointerId != null) {
@@ -153,7 +129,7 @@ export default function CropImageDialog({ open, imageSrc, onCropComplete, onClos
     }
   };
 
-  const handles = aspect ? ['nw', 'ne', 'sw', 'se'] : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
   const handlePos = {
     nw: { left: 0, top: 0, cursor: 'nwse-resize' },
     n: { left: '50%', top: 0, cursor: 'ns-resize', transform: 'translateX(-50%)' },
