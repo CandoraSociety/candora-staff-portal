@@ -261,6 +261,7 @@ export default function SectionRenderer({
   const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
   const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
   const hasChart = sectionData.length > 0;
+  const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
   const contentBlock = (
     <div
@@ -361,7 +362,6 @@ export default function SectionRenderer({
 
     // Chart with free-form horizontal and vertical positioning
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
-    const chartY = section.chart_y_offset ?? 0; // pixels from top
     const handleArrowKeyMove = (direction) => {
       if (!onUpdate) return;
       const step = 10; // pixels per arrow press
