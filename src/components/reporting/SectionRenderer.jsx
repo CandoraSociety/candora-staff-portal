@@ -30,6 +30,12 @@ export default function SectionRenderer({
   const pc = branding?.primary_color || '#1a2744';
   const textColumns = section.text_columns || 1;
   const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
+  // Check if chart is floated (not full-width)
+  const chartX = section.chart_x_offset ?? 50;
+  const chartFloat = chartX < 40 ? 'left' : chartX > 60 ? 'right' : 'none';
+  const hasFloatedChart = sectionData.length > 0 && chartFloat !== 'none';
+  // Disable columns when there's a floated element (image or chart) - columns don't wrap around floats
+  const hasAnyFloatedElement = hasFloatedImage || hasFloatedChart;
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const contentRef = useRef(null);
@@ -84,7 +90,7 @@ export default function SectionRenderer({
   }, [rotating, onUpdate, section.id]);
 
   const ac = branding?.accent_color || '#2b2de8';
-  const columnStyle = textColumns > 1 && !hasFloatedImage ? {
+  const columnStyle = textColumns > 1 && !hasAnyFloatedElement ? {
     columnCount: textColumns,
     WebkitColumnCount: textColumns,
     MozColumnCount: textColumns,
