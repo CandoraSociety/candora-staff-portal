@@ -108,15 +108,6 @@ export default function ReportingAGRPrint() {
 
   return (
     <div className="space-y-4 print:space-y-0">
-      <style>{`
-        @media print {
-          body > * { display: none; }
-          body > .print-content-wrapper { display: block !important; }
-          .no-print, header, nav, footer, aside, [class*="Sidebar"], [class*="TopBar"] { display: none !important; }
-          body { background: white !important; }
-        }
-      `}</style>
-      <div className="print-content-wrapper">
       <div className="no-print flex items-center gap-3 mb-6">
         <Link to={`/reporting/agr/${id}/edit`} className="text-muted-foreground hover:text-accent transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -139,7 +130,6 @@ export default function ReportingAGRPrint() {
       )}
 
       <ReportPrintView report={report} sections={sections} branding={branding} dataEntries={dataEntries} onSectionsUpdate={setSections} />
-      </div>
     </div>
   );
 }
