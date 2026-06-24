@@ -27,6 +27,23 @@ const LAYOUT_LABELS = {
   two_column: 'Two Column'
 };
 
+const QUILL_MODULES = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, 4, false] }],
+    [{ 'font': [] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'align': [] }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'image', 'clean']
+  ]
+};
+
+const QUILL_FORMATS = [
+  'header', 'font', 'bold', 'italic', 'underline', 'strike',
+  'color', 'background', 'align', 'list', 'bullet', 'link', 'image'
+];
+
 export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions, onExpand }) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState(section.title || '');
@@ -452,7 +469,15 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 </Button>
               </div>
             </div>
-            <ReactQuill theme="snow" value={content} onChange={setContent} className="bg-white rounded-lg" style={{ minHeight: 280 }} />
+            <ReactQuill 
+              theme="snow" 
+              value={content} 
+              onChange={setContent} 
+              modules={QUILL_MODULES}
+              formats={QUILL_FORMATS}
+              className="bg-white rounded-lg" 
+              style={{ minHeight: 280 }} 
+            />
             <div className="flex items-center gap-2 mt-1">
               <Button variant="outline" size="sm" onClick={save} className="gap-1 text-xs h-7"><Check className="w-3 h-3" />Apply Content</Button>
               <div className="flex items-center gap-1.5 ml-auto">
