@@ -38,10 +38,12 @@ export default function SectionRenderer({
   const editingTitle = useRef(false);
 
   useEffect(() => {
-    if (contentRef.current && !editingContent.current) {
+    // Sync content to the inner editable div, not the outer wrapper
+    const editableDiv = contentRef.current?.querySelector('[contentEditable]');
+    if (editableDiv && !editingContent.current) {
       const newHtml = section.content || '';
-      if (contentRef.current.innerHTML !== newHtml) {
-        contentRef.current.innerHTML = newHtml;
+      if (editableDiv.innerHTML !== newHtml) {
+        editableDiv.innerHTML = newHtml;
       }
     }
   }, [section.content, section.layout]);
@@ -267,50 +269,43 @@ export default function SectionRenderer({
   const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
   const hasMultiImages = (section.images || []).length > 0;
-  const contentEditableDiv = (
-    <div
-      ref={contentRef}
-      contentEditable={!!onUpdate && !isPrint}
-      suppressContentEditableWarning
-      data-placeholder="No content yet. Click to edit..."
-      data-columns={textColumns}
-      className="prose prose-sm max-w-none"
-      style={{ 
-        fontFamily: masterContent.font_family || 'Inter',
-        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
-        color: masterContent.color || 'hsl(var(--foreground))',
-        minHeight: textColumns > 1 ? '200px' : undefined,
-        overflow: 'visible',
-        lineHeight: 1.6,
-        ...(section.content_bg_color ? {
-          backgroundColor: section.content_bg_color,
-          padding: '1rem 1.25rem',
-          borderRadius: '0.5rem',
-          border: `1px solid ${pc}20`,
-        } : {}),
-        ...columnStyle,
-      }}
-      onFocus={() => { editingContent.current = true; }}
-      onBlur={!!onUpdate && !isPrint ? (e) => {
-        editingContent.current = false;
-        const html = e.target.innerHTML;
-        const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
-        if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
-      } : undefined}
-    />
-  );
-  // When multi-images are present, wrap content + images in a flow-root container
-  // so the browser wraps text/tables around the floated images reliably.
-  const contentBlock = hasMultiImages ? (
-    <div style={{ display: 'flow-root' }}>
+  // When multi-images are present, we need to insert them into the content flow
+  // so text actually wraps around them. We do this by rendering them inside the
+  // contentEditable div's container, not as siblings.
+  const contentBlock = (
+    <div style={{ display: 'flow-root' }} ref={contentRef}>
       <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
-      {contentEditableDiv}
+      <div
+        contentEditable={!!onUpdate && !isPrint}
+        suppressContentEditableWarning
+        data-placeholder="No content yet. Click to edit..."
+        data-columns={textColumns}
+        className="prose prose-sm max-w-none"
+        style={{ 
+          fontFamily: masterContent.font_family || 'Inter',
+          fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
+          color: masterContent.color || 'hsl(var(--foreground))',
+          minHeight: textColumns > 1 ? '200px' : undefined,
+          overflow: 'visible',
+          lineHeight: 1.6,
+          ...(section.content_bg_color ? {
+            backgroundColor: section.content_bg_color,
+            padding: '1rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: `1px solid ${pc}20`,
+          } : {}),
+          ...columnStyle,
+        }}
+        onFocus={() => { editingContent.current = true; }}
+        onBlur={!!onUpdate && !isPrint ? (e) => {
+          editingContent.current = false;
+          const html = e.target.innerHTML;
+          const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
+          if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
+        } : undefined}
+        dangerouslySetInnerHTML={{ __html: section.content || '' }}
+      />
     </div>
-  ) : (
-    <>
-      <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
-      {contentEditableDiv}
-    </>
   );
 
     const imageWidth = section.image_width || 50;
