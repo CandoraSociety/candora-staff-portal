@@ -78,6 +78,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
   const [analyzing, setAnalyzing] = useState({});
   const [importingFile, setImportingFile] = useState(false);
+  const [showPasteData, setShowPasteData] = useState(false);
+  const [pasteDataValue, setPasteDataValue] = useState('');
 
   const master = parseStyles(masterStyles);
   const masterTitle = master.title || {};
@@ -261,6 +263,19 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setAnalyzing(prev => ({ ...prev, [entryId]: true }));
     try { await base44.functions.invoke('analyzeReportData', { data_entry_id: entryId }); await loadDataEntries(); } catch {}
     setAnalyzing(prev => ({ ...prev, [entryId]: false }));
+  };
+
+  const handlePasteData = () => {
+    const lines = pasteDataValue.trim().split('\n');
+    const rows = lines.map(line => {
+      const parts = line.split(/\t|,/).map(p => p.trim());
+      return { name: parts[0] || '', value: parts[1] || '' };
+    }).filter(r => r.name || r.value);
+    if (rows.length > 0) {
+      setChartRows(rows);
+      setShowPasteData(false);
+      setPasteDataValue('');
+    }
   };
 
   return (
@@ -767,6 +782,9 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                     <button onClick={addChartRow} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
                       <Plus className="w-3 h-3" />Add Row
                     </button>
+                    <button onClick={() => setShowPasteData(!showPasteData)} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
+                      <Plus className="w-3 h-3" /> Paste Data
+                    </button>
                     <label className="flex items-center gap-1 text-[10px] text-accent hover:underline cursor-pointer">
                       {importingFile ? (
                         <><div className="w-3 h-3 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />Parsing...</>
@@ -780,6 +798,27 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                       <Check className="w-3 h-3" />Save Chart
                     </Button>
                   </div>
+
+                  {showPasteData && (
+                    <div className="mt-2 p-3 border rounded-lg bg-slate-50">
+                      <p className="text-xs font-semibold mb-2">Paste your data (from Excel, Google Sheets, etc.)</p>
+                      <p className="text-[10px] text-muted-foreground mb-2">Format: Label [tab/comma] Value (one row per line)</p>
+                      <textarea
+                        value={pasteDataValue}
+                        onChange={e => setPasteDataValue(e.target.value)}
+                        placeholder="Program A, 45&#10;Program B, 62&#10;Program C, 38"
+                        className="w-full text-xs border rounded p-2 h-32 font-mono bg-white"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <Button onClick={handlePasteData} size="sm" className="gap-1 text-xs h-7">
+                          <Check className="w-3 h-3" /> Parse Data
+                        </Button>
+                        <Button variant="outline" onClick={() => { setShowPasteData(false); setPasteDataValue(''); }} size="sm" className="text-xs h-7">
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* File upload for auto-analysis */}
