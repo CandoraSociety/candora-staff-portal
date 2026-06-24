@@ -88,6 +88,57 @@ export function PageFooter({ masterFooter, footerImage, footerImageHeight, foote
   );
 }
 
+/**
+ * Calculates page breaks at element boundaries (paragraphs, images, headings, etc.)
+ * so content is never sliced mid-element. Each page is exactly 8.5x11 inches.
+ */
+function calculatePageBreaks(container) {
+  const totalHeight = container.scrollHeight;
+  if (totalHeight <= 0) return [{ start: 0, end: CONTENT_AREA_HEIGHT }];
+
+  // Collect all block-level element boundaries — these are the only places
+  // where a page is allowed to break, ensuring no element is ever sliced.
+  const blockSelector = 'p, h1, h2, h3, h4, h5, h6, li, img, table, tr, blockquote, figure, .recharts-wrapper, .chart-container, [data-section-content] > div';
+  const elements = container.querySelectorAll(blockSelector);
+  const containerRect = container.getBoundingClientRect();
+  const boundaries = new Set([0, totalHeight]);
+
+  elements.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    const top = Math.round(rect.top - containerRect.top);
+    const bottom = Math.round(rect.bottom - containerRect.top);
+    if (top >= 0 && top <= totalHeight) boundaries.add(top);
+    if (bottom >= 0 && bottom <= totalHeight) boundaries.add(bottom);
+  });
+
+  const sorted = Array.from(boundaries).sort((a, b) => a - b);
+
+  // Walk through boundaries and group them into pages.
+  // Each page gets as many elements as fit within CONTENT_AREA_HEIGHT.
+  const breaks = [];
+  let currentStart = 0;
+
+  while (currentStart < totalHeight) {
+    let pageEnd = currentStart;
+    for (const boundary of sorted) {
+      if (boundary <= currentStart) continue;
+      if (boundary - currentStart <= CONTENT_AREA_HEIGHT) {
+        pageEnd = boundary;
+      } else {
+        break;
+      }
+    }
+    // If no boundary fits (element taller than a page), use the max height
+    if (pageEnd <= currentStart) {
+      pageEnd = currentStart + CONTENT_AREA_HEIGHT;
+    }
+    breaks.push({ start: currentStart, end: pageEnd });
+    currentStart = pageEnd;
+  }
+
+  return breaks.length > 0 ? breaks : [{ start: 0, end: CONTENT_AREA_HEIGHT }];
+}
+
 export default function PaginatedSection({
   children,
   pageNum,
@@ -120,85 +171,104 @@ export default function PaginatedSection({
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasFooter = showFooterAll && !hideFooter;
   const measureRef = useRef(null);
-  const [estPages, setEstPages] = useState(1);
+  const [pageBreaks, setPageBreaks] = useState([{ start: 0, end: CONTENT_AREA_HEIGHT }]);
 
-  // Page count based on actual 8.5x11 page height (1056px = 11in)
   useLayoutEffect(() => {
-    if (fitToPage) { setEstPages(1); onPageCountChange?.(sectionId, 1); return; }
+    if (fitToPage) {
+      setPageBreaks([{ start: 0, end: CONTENT_AREA_HEIGHT }]);
+      onPageCountChange?.(sectionId, 1);
+      return;
+    }
+
     const measure = () => {
-      if (measureRef.current) {
-        const h = measureRef.current.scrollHeight;
-        const pages = Math.max(1, Math.ceil(h / CONTENT_AREA_HEIGHT));
-        if (pages !== estPages) { setEstPages(pages); onPageCountChange?.(sectionId, pages); }
+      if (!measureRef.current) return;
+      const newBreaks = calculatePageBreaks(measureRef.current);
+      // Only update state if breaks actually changed (prevents render loops)
+      const changed = newBreaks.length !== pageBreaks.length ||
+        newBreaks.some((p, i) => p.start !== pageBreaks[i]?.start || p.end !== pageBreaks[i]?.end);
+      if (changed) {
+        setPageBreaks(newBreaks);
+        onPageCountChange?.(sectionId, newBreaks.length);
       }
     };
-    const timer = setTimeout(measure, 200);
+
+    const timer = setTimeout(measure, 300);
     const images = measureRef.current?.querySelectorAll('img') || [];
     images.forEach(img => { if (!img.complete) img.addEventListener('load', measure); });
     let observer;
-    if (measureRef.current) { observer = new ResizeObserver(measure); observer.observe(measureRef.current); }
+    if (measureRef.current) {
+      observer = new ResizeObserver(measure);
+      observer.observe(measureRef.current);
+    }
     return () => { clearTimeout(timer); observer?.disconnect(); };
   });
 
   return (
     <>
-      {/* ── Screen preview: single continuous page, content flows naturally (no clipping) ── */}
+      {/* ── Screen preview: full 8.5x11" page containers, content breaks at element boundaries ── */}
       <div className="print:hidden">
-        <div className="relative mx-auto" ref={onSectionRef}>
-          {/* Page background — 8.5in wide, grows with content */}
-          <div className="relative bg-white rounded-lg shadow-lg" style={{ width: '8.5in', maxWidth: '100%' }}>
-            {/* Accent bar */}
-            <div className="h-1 w-full rounded-t-lg" style={{ backgroundColor: primaryColor }} />
+        {pageBreaks.map((page, pageIndex) => (
+          <div key={pageIndex} className="relative mb-4" ref={pageIndex === 0 ? onSectionRef : undefined}>
+            <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
+            <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
+            <div
+              className="relative bg-white rounded-lg shadow-lg overflow-hidden"
+              style={{ width: '8.5in', height: '11in', maxWidth: '100%' }}
+            >
+              {/* Accent bar */}
+              <div className="h-1 w-full absolute top-0 left-0 right-0 z-10" style={{ backgroundColor: primaryColor }} />
 
-            {/* Header — in-flow at the top, within the top margin area */}
-            {showHeaderAll && (
-              <div className="px-[0.75in] pt-[0.3in]">
-                <ContinuationHeader
-                  masterHeader={masterHeader}
-                  headerImage={headerImage}
-                  headerImageHeight={headerImageHeight}
-                  headerFontSize={headerFontSize}
-                  headerLayout={headerLayout}
-                  headerZones={headerZones}
-                  primaryColor={primaryColor}
-                  branding={branding}
-                  pageNum={showPageNumbersAll ? pageNum : undefined}
-                  showPageNumber={showPageNumbersAll}
-                />
+              {/* Header (within top margin) */}
+              {showHeaderAll && (
+                <div className="absolute z-10" style={{ top: '0.3in', left: '0.75in', right: '0.75in' }}>
+                  <ContinuationHeader
+                    masterHeader={masterHeader}
+                    headerImage={headerImage}
+                    headerImageHeight={headerImageHeight}
+                    headerFontSize={headerFontSize}
+                    headerLayout={headerLayout}
+                    headerZones={headerZones}
+                    primaryColor={primaryColor}
+                    branding={branding}
+                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
+                    showPageNumber={showPageNumbersAll}
+                  />
+                </div>
+              )}
+
+              {/* Content area — height ends at an element boundary so nothing is sliced */}
+              <div className="absolute overflow-hidden" style={{ top: '0.85in', left: '0.75in', right: '0.75in', height: `${page.end - page.start}px` }}>
+                <div style={{ transform: `translateY(-${page.start}px)` }}>
+                  {children}
+                </div>
               </div>
-            )}
 
-            {/* Content — flows naturally, no clipping, no slicing */}
-            <div className="px-[0.75in] pt-[0.1in]">
-              {children}
+              {/* Footer (within bottom margin) */}
+              {hasFooter && (
+                <div className="absolute z-10" style={{ bottom: '0.3in', left: '0.75in', right: '0.75in' }}>
+                  <PageFooter
+                    masterFooter={masterFooter}
+                    footerImage={footerImage}
+                    footerImageHeight={footerImageHeight}
+                    footerFontSize={footerFontSize}
+                    footerLayout={footerLayout}
+                    footerZones={footerZones}
+                    primaryColor={primaryColor}
+                    branding={branding}
+                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
+                    showPageNumber={showPageNumbersAll}
+                  />
+                </div>
+              )}
             </div>
-
-            {/* Footer — in-flow at the bottom of the content */}
-            {hasFooter && (
-              <div className="px-[0.75in] pt-4 mt-8 pb-[0.3in]" style={{ borderTop: `1px solid ${primaryColor}20` }}>
-                <PageFooter
-                  masterFooter={masterFooter}
-                  footerImage={footerImage}
-                  footerImageHeight={footerImageHeight}
-                  footerFontSize={footerFontSize}
-                  footerLayout={footerLayout}
-                  footerZones={footerZones}
-                  primaryColor={primaryColor}
-                  branding={branding}
-                  pageNum={showPageNumbersAll ? pageNum : undefined}
-                  showPageNumber={showPageNumbersAll}
-                />
-              </div>
-            )}
           </div>
-
-        </div>
+        ))}
 
         {/* Page label and page break toggle */}
-        <div className="no-print flex items-center justify-center gap-3 my-4">
+        <div className="no-print flex items-center justify-center gap-3 mb-4">
           {pageNum && (
             <span className="text-[10px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
-              {estPages > 1 ? `Pages ${pageNum}–${pageNum + estPages - 1}` : `Page ${pageNum}`}
+              {pageBreaks.length > 1 ? `Pages ${pageNum}–${pageNum + pageBreaks.length - 1}` : `Page ${pageNum}`}
             </span>
           )}
           {onTogglePageBreak && (
@@ -222,8 +292,9 @@ export default function PaginatedSection({
         </div>
       </div>
 
-      {/* Hidden measurement div for TOC page estimate */}
-      <div ref={measureRef} className="paginated-content absolute invisible pointer-events-none print:hidden" style={{ width: CONTENT_WIDTH_PX, position: 'absolute', top: '-9999px' }} aria-hidden="true">
+      {/* Hidden measurement div — renders the content off-screen so we can measure
+          element positions and calculate page breaks at element boundaries */}
+      <div ref={measureRef} className="paginated-content absolute invisible pointer-events-none print:hidden" style={{ width: CONTENT_WIDTH_PX, position: 'absolute', top: '-9999px', left: '-9999px' }} aria-hidden="true">
         {children}
       </div>
     </>
