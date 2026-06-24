@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, X, RotateCw } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
 import DraggableImageBlock from './DraggableImageBlock';
+import MultiImageLayer from './MultiImageLayer';
 import { getFilterCss, ribbonGradient } from './imageFilters';
 
 function parseZones(raw) {
@@ -266,6 +267,8 @@ export default function SectionRenderer({
   const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
   const contentBlock = (
+    <>
+    <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
     <div
       ref={contentRef}
       contentEditable={!!onUpdate && !isPrint}
@@ -298,6 +301,7 @@ export default function SectionRenderer({
         if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
       } : undefined}
     />
+    </>
   );
 
     const imageWidth = section.image_width || 50;

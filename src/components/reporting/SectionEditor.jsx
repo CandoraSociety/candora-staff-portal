@@ -10,6 +10,7 @@ import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
 import TableRenderer from './TableRenderer';
 import SectionGallery from './SectionGallery';
+import MultiImageUploader from './MultiImageUploader';
 import PasteImageInput from './PasteImageInput';
 import { IMAGE_FILTERS } from './imageFilters';
 
@@ -834,6 +835,9 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
 
           {/* Photo Gallery & Collage Builder */}
           <SectionGallery section={section} onUpdate={onUpdate} />
+
+          {/* Additional Independently-Movable Images */}
+          <MultiImageUploader section={section} onUpdate={onUpdate} />
 
           <div className="flex flex-wrap gap-4 text-xs">
             <label className="flex items-center gap-1.5">

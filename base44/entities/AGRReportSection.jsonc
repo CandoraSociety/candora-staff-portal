@@ -67,6 +67,59 @@
       "default": true,
       "description": "Show drop shadow behind the section image"
     },
+    "images": {
+      "type": "array",
+      "description": "Multiple independently-positionable images for the section. Each can be dragged freely in the preview.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number",
+            "description": "Horizontal center position as percentage of container (0-100)",
+            "default": 50
+          },
+          "y": {
+            "type": "number",
+            "description": "Vertical position in pixels from top of content area",
+            "default": 0
+          },
+          "width": {
+            "type": "number",
+            "description": "Width as percentage of container (10-100)",
+            "default": 40
+          },
+          "rotation": {
+            "type": "number",
+            "default": 0
+          },
+          "opacity": {
+            "type": "number",
+            "default": 100
+          },
+          "filter": {
+            "type": "string",
+            "default": "none"
+          },
+          "frame": {
+            "type": "boolean",
+            "default": true
+          },
+          "shadow": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
     "chart_width": {
       "type": "number",
       "description": "Chart/graph width as percentage of container (20-100)",
