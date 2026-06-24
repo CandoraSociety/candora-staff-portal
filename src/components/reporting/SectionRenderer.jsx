@@ -270,14 +270,16 @@ export default function SectionRenderer({
       suppressContentEditableWarning
       data-placeholder="No content yet. Click to edit..."
       data-columns={textColumns}
+      className="prose prose-sm max-w-none"
       style={{ 
-        fontFamily: masterContent.font_family || undefined,
-        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
-        color: masterContent.color || undefined,
+        fontFamily: masterContent.font_family || 'Inter',
+        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
+        color: masterContent.color || 'hsl(var(--foreground))',
         minHeight: textColumns > 1 ? '200px' : undefined,
         width: '100%',
         maxWidth: '100%',
         overflow: 'visible',
+        lineHeight: 1.6,
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
