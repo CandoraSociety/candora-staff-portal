@@ -84,17 +84,11 @@ export default function ReportingAGRPrint() {
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
-          <p className="text-xs text-muted-foreground">For best results: Press Ctrl/Cmd+P, then choose "Save as PDF" as your printer</p>
+          <p className="text-xs text-muted-foreground">Press Ctrl/Cmd+P to save as PDF — this preserves all images, layouts, and formatting exactly as shown</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleDownloadPdf} disabled={generatingPdf} className="gap-2">
-            <Download className={`w-4 h-4 ${generatingPdf ? 'animate-spin' : ''}`} />
-            {generatingPdf ? 'Generating...' : 'Download PDF'}
-          </Button>
-          <Button onClick={() => window.print()} variant="outline" className="gap-2">
-            <Printer className="w-4 h-4" />Print
-          </Button>
-        </div>
+        <Button onClick={() => window.print()} variant="default" className="gap-2">
+          <Printer className="w-4 h-4" />Print / Save as PDF
+        </Button>
       </div>
 
       {analysis?.source_file_url && (
