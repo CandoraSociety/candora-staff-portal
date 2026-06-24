@@ -131,21 +131,39 @@ export default function PaginatedSection({
   showPageNumbersAll
 }) {
   const [pageCount, setPageCount] = useState(1);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const measureRef = useRef(null);
+  const headerMeasureRef = useRef(null);
 
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
+  // Measure the actual continuation header height so the column starts below it.
   // All columns use the same height so CSS column breaks are consistent.
-  // First page includes the section header inside the column flow; continuation
-  // pages render the "continued" header above the column, so the column itself
-  // starts below it — both end up with the same usable text height.
-  const columnHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
+  const columnHeight = hasContHeader ? CONTENT_HEIGHT_PX - headerHeight : CONTENT_HEIGHT_PX;
+
+  // Measure the real header height
+  useLayoutEffect(() => {
+    if (!hasContHeader) {
+      setHeaderHeight(0);
+      return;
+    }
+    const measureHeader = () => {
+      if (headerMeasureRef.current) {
+        const h = headerMeasureRef.current.offsetHeight;
+        if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+      }
+    };
+    measureHeader();
+    const timer = setTimeout(measureHeader, 50);
+    return () => clearTimeout(timer);
+  });
 
   useLayoutEffect(() => {
     if (fitToPage) {
       setPageCount(1);
       return;
     }
+    if (hasContHeader && headerHeight === 0) return; // wait for header measurement
 
     const measure = () => {
       if (measureRef.current) {
@@ -235,7 +253,8 @@ export default function PaginatedSection({
 
                 {/* Multi-column container: CSS flows content column-by-column,
                     breaking at line boundaries (just like Word page flow).
-                    We translate it horizontally to reveal one column per page. */}
+                    We translate it horizontally to reveal one column per page.
+                    On continuation pages the column starts below the measured header height. */}
                 <div
                   className="paginated-content"
                   style={{
@@ -244,7 +263,7 @@ export default function PaginatedSection({
                     columnFill: 'auto',
                     height: columnHeight,
                     position: 'absolute',
-                    top: i > 0 && hasContHeader ? CONT_HEADER_PX : 0,
+                    top: i > 0 && hasContHeader ? headerHeight : 0,
                     left: 0,
                     width: pageCount * CONTENT_WIDTH_PX,
                     transform: `translateX(-${i * CONTENT_WIDTH_PX}px)`,
@@ -283,6 +302,28 @@ export default function PaginatedSection({
       >
         {children}
       </div>
+
+      {/* Hidden header measurement — measures the real continuation header height */}
+      {hasContHeader && (
+        <div
+          ref={headerMeasureRef}
+          className="absolute invisible pointer-events-none print:hidden"
+          style={{ width: CONTENT_WIDTH_PX }}
+          aria-hidden="true"
+        >
+          <ContinuationHeader
+            masterHeader={masterHeader}
+            headerImage={headerImage}
+            headerImageHeight={headerImageHeight}
+            headerFontSize={headerFontSize}
+            headerLayout={headerLayout}
+            headerZones={headerZones}
+            primaryColor={primaryColor}
+            pageNum={pageNum ? pageNum + 1 : undefined}
+            showPageNumber={showPageNumbersAll}
+          />
+        </div>
+      )}
     </>
   );
 }
