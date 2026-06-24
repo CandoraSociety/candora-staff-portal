@@ -266,18 +266,77 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   };
 
   const handlePasteData = () => {
-    const lines = pasteDataValue.trim().split('\n');
-    const rows = lines.map(line => {
-      const parts = line.split(/\t|,/).map(p => p.trim());
-      return { name: parts[0] || '', value: parts[1] || '' };
-    }).filter(r => r.name || r.value);
-    if (rows.length > 0) {
-      setChartRows(rows);
-      setShowPasteData(false);
-      setPasteDataValue('');
-    } else {
-      alert('Please paste your data in the format: Label, Value (one row per line)');
+    const lines = pasteDataValue.trim().split('\n').filter(l => l.trim());
+    if (lines.length === 0) {
+      alert('Please paste your data from Excel, Google Sheets, or CSV');
+      return;
     }
+
+    // Detect delimiter (tab for Excel/Sheets, comma for CSV)
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    
+    // Parse all rows
+    const parsedRows = lines.map(line => {
+      const parts = line.split(delimiter).map(p => p.trim());
+      return parts;
+    });
+
+    // Check if first row looks like headers (contains text, not just numbers)
+    const firstRow = parsedRows[0];
+    const hasHeaders = firstRow.some(cell => isNaN(parseFloat(cell)) && cell.trim() !== '');
+    
+    // Determine data structure
+    const dataRows = hasHeaders ? parsedRows.slice(1) : parsedRows;
+    const headers = hasHeaders ? firstRow : [];
+
+    // If we have 2 columns: Label, Value
+    if (dataRows[0]?.length === 2) {
+      const rows = dataRows.map(row => ({ name: row[0] || '', value: row[1] || '' }));
+      setChartRows(rows);
+      if (hasHeaders && headers[0] && !chartLabel) {
+        setChartLabel(headers[0]);
+      }
+    }
+    // If we have 3+ columns: treat as multi-series data
+    else if (dataRows[0]?.length >= 3) {
+      // First column = labels, remaining columns = data series
+      const numSeries = dataRows[0].length - 1;
+      const series = [];
+      
+      for (let i = 1; i < dataRows[0].length; i++) {
+        const seriesName = hasHeaders ? headers[i] || `Series ${i}` : `Series ${i}`;
+        const seriesData = dataRows.map((row, idx) => ({
+          name: row[0] || `Item ${idx + 1}`,
+          value: row[i] || '0'
+        }));
+        series.push({ name: seriesName, data: seriesData });
+      }
+      
+      // For multi-series, we'll create a combined chart config
+      const chartData = [];
+      dataRows.forEach((row, idx) => {
+        const label = row[0] || `Item ${idx + 1}`;
+        for (let i = 1; i < row.length; i++) {
+          const seriesName = hasHeaders ? headers[i] || `Series ${i}` : `Series ${i}`;
+          chartData.push({
+            name: `${label} - ${seriesName}`,
+            value: row[i] || '0'
+          });
+        }
+      });
+      
+      setChartRows(chartData);
+      if (hasHeaders && headers[0] && !chartLabel) {
+        setChartLabel(headers[0]);
+      }
+    } else {
+      alert('Please paste data with at least 2 columns (Label and Value)');
+      return;
+    }
+
+    setShowPasteData(false);
+    setPasteDataValue('');
   };
 
   return (
