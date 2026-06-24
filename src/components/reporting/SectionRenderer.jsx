@@ -258,8 +258,10 @@ export default function SectionRenderer({
 
   const renderContent = () => {
   const masterContent = master.content || {};
+  const galleryImages = section.gallery_images || [];
   const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
-  const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
+  const hasGallery = !hasCollage && galleryImages.length >= 2 && section.layout !== 'text_only';
+  const hasImage = (hasCollage || hasGallery || section.image_url) && section.layout !== 'text_only';
   const hasChart = sectionData.length > 0;
   const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
@@ -306,7 +308,7 @@ export default function SectionRenderer({
       <div className="relative group">
         {onUpdate && !isPrint && (
           <button
-            onClick={(e) => { e.stopPropagation(); onUpdate(section.id, hasCollage ? { collage_photos: [], collage_layout: 'grid' } : { image_url: null }); }}
+            onClick={(e) => { e.stopPropagation(); onUpdate(section.id, hasCollage ? { collage_photos: [], collage_layout: 'grid' } : hasGallery ? { gallery_images: [] } : { image_url: null }); }}
             onMouseDown={(e) => e.stopPropagation()}
             className="no-print absolute top-1 right-1 z-30 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
             title="Remove image"
@@ -318,6 +320,19 @@ export default function SectionRenderer({
           <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20` }} className="overflow-hidden">
             <div style={{ border: `2px solid ${pc}`, borderRadius: '0.5rem', outline: `1px solid ${ac}40`, outlineOffset: '2px', overflow: 'hidden' }}>
               <CollageRenderer photos={section.collage_photos} layout={section.collage_layout || 'grid'} isPrint={isPrint} />
+            </div>
+          </div>
+        ) : hasGallery ? (
+          <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20` }} className="overflow-hidden">
+            <div style={{ border: `2px solid ${pc}`, borderRadius: '0.5rem', outline: `1px solid ${ac}40`, outlineOffset: '2px', overflow: 'hidden', padding: '6px' }}>
+              <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(galleryImages.length, 3)}, 1fr)` }}>
+                {galleryImages.map((img, i) => (
+                  <div key={i}>
+                    <img src={img.url} alt={img.caption || ''} className="w-full rounded object-cover" style={{ aspectRatio: '4/3' }} />
+                    {img.caption && <p className="text-[10px] text-muted-foreground text-center mt-1 italic leading-tight">{img.caption}</p>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (

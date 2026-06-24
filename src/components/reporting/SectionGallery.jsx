@@ -37,7 +37,7 @@ export default function SectionGallery({ section, onUpdate }) {
   return (
     <div className="border-t pt-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Photo Gallery</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Photo Gallery <span className="text-slate-400 normal-case font-normal">(shown in section)</span></span>
         {gallery.length >= 2 && (
           <Button variant="outline" size="sm" onClick={() => setShowBuilder(true)} className="text-xs gap-1 h-7">
             <Images className="w-3.5 h-3.5" /> {collagePhotos.length > 0 ? 'Edit Collage' : 'Create Collage'}
