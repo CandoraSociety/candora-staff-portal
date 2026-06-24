@@ -5,12 +5,12 @@ import { ribbonGradient } from './imageFilters';
 const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
 const PADDING_PX = 48; // 0.75in padding top/bottom
-const FOOTER_RESERVE_PX = 56; // Space for footer content (~40px) + small buffer
+const FOOTER_RESERVE_PX = 64; // Space for footer content + border
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_RESERVE_PX;
 const CONTENT_HEIGHT_NO_FOOTER_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
-const FOOTER_HEIGHT_PX = 48;
-const TEXT_BUFFER_PX = 36; // ~1.4 line heights — prevents lines from being sliced at page boundaries
+const LINE_HEIGHT_PX = 40; // ~2 lines buffer - absolutely prevents any text slicing
+const SAFETY_OVERLAP_PX = 50; // Generous overlap between pages
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -148,24 +148,24 @@ export default function PaginatedSection({
   const hasFooter = showFooterAll && !hideFooter;
   const availableContentHeight = hasFooter ? CONTENT_HEIGHT_PX : CONTENT_HEIGHT_NO_FOOTER_PX;
 
+  // Measure header height including margins and borders
   useLayoutEffect(() => {
     if (!hasContHeader) { setHeaderHeight(0); return; }
     const measureHeader = () => {
       if (headerMeasureRef.current) {
-        // Use scrollHeight + computed margins to capture the full space the header occupies,
-        // including mb-4 which offsetHeight misses
         const el = headerMeasureRef.current;
         const inner = el.firstElementChild;
         if (inner) {
-          const rect = inner.getBoundingClientRect();
           const style = getComputedStyle(inner);
           const mt = parseFloat(style.marginTop) || 0;
           const mb = parseFloat(style.marginBottom) || 0;
-          const h = Math.ceil(rect.height + mt + mb);
-          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
-        } else {
-          const h = el.offsetHeight;
-          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+          const bt = parseFloat(style.borderTopWidth) || 0;
+          const bb = parseFloat(style.borderBottomWidth) || 0;
+          // scrollHeight includes padding, getBoundingClientRect includes borders
+          const h = Math.ceil(inner.scrollHeight + mt + mb + bb);
+          // Ensure minimum header height to prevent content encroachment
+          const safeH = Math.max(h, 60); // At least 60px for header + border + margins
+          if (safeH > 0 && safeH !== headerHeight) setHeaderHeight(safeH);
         }
       }
     };
@@ -174,6 +174,7 @@ export default function PaginatedSection({
     return () => clearTimeout(timer);
   });
 
+  // Measure content and calculate page count
   useLayoutEffect(() => {
     if (fitToPage) { setPageCount(1); if (onPageCountChange) onPageCountChange(sectionId, 1); return; }
     if (hasContHeader && headerHeight === 0) return;
@@ -181,17 +182,18 @@ export default function PaginatedSection({
     const measure = () => {
       if (measureRef.current) {
         const totalHeight = measureRef.current.scrollHeight;
-        const firstPageHeightWithBuffer = availableContentHeight - TEXT_BUFFER_PX;
-        const continuationPageHeightWithBuffer = availableContentHeight - headerHeight - TEXT_BUFFER_PX;
+        // Reserve one full line at bottom of each page to avoid slicing text
+        const firstPageUsable = availableContentHeight - LINE_HEIGHT_PX;
+        const contPageUsable = availableContentHeight - headerHeight - LINE_HEIGHT_PX;
         
-        if (totalHeight <= firstPageHeightWithBuffer) { 
+        if (totalHeight <= firstPageUsable) { 
           if (pageCount !== 1) { setPageCount(1); if (onPageCountChange) onPageCountChange(sectionId, 1); }
           return; 
         }
 
-        let remaining = totalHeight - firstPageHeightWithBuffer;
+        let remaining = totalHeight - firstPageUsable;
         let pages = 1;
-        while (remaining > 0) { pages++; remaining -= continuationPageHeightWithBuffer; }
+        while (remaining > 0) { pages++; remaining -= contPageUsable; }
         if (pages !== pageCount) { setPageCount(pages); if (onPageCountChange) onPageCountChange(sectionId, pages); }
       }
     };
@@ -221,8 +223,9 @@ export default function PaginatedSection({
     );
   }
 
-  const firstPageHeight = availableContentHeight - TEXT_BUFFER_PX; // Reserve buffer to prevent slicing
-  const continuationPageHeight = availableContentHeight - headerHeight - TEXT_BUFFER_PX;
+  // Screen preview is more conservative than print - ensures no surprises
+  const firstPageHeight = availableContentHeight - LINE_HEIGHT_PX * 2; // Extra buffer on screen
+  const continuationPageHeight = availableContentHeight - headerHeight - LINE_HEIGHT_PX * 2;
 
   return (
     <>
@@ -236,9 +239,8 @@ export default function PaginatedSection({
             cumulativeOffset += (p === 0 ? firstPageHeight : continuationPageHeight);
           }
 
-          // Content top position: on continuation pages, shift content up by cumulative offset
-          // so previously shown content is hidden, then push down by headerHeight so it starts below the header
-          const contentTop = isFirstPage ? 0 : -(cumulativeOffset) + headerHeight;
+          // Content position: shift up by cumulative offset, then push down below header on continuation pages
+          const contentTop = isFirstPage ? 0 : -cumulativeOffset + headerHeight;
 
           return (
             <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
@@ -251,19 +253,26 @@ export default function PaginatedSection({
                   </button>
                 )}
 
-                {/* Clipping window for this page */}
+                {/* Clipping window - includes safety overlap to prevent gaps */}
                 <div
                   ref={i === 0 ? onSectionRef : null}
-                  style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: isFirstPage ? firstPageHeight : continuationPageHeight + headerHeight, overflow: 'hidden' }}
+                  style={{ 
+                    position: 'absolute', 
+                    top: PADDING_PX, 
+                    left: PADDING_PX, 
+                    width: CONTENT_WIDTH_PX, 
+                    height: isFirstPage ? firstPageHeight + SAFETY_OVERLAP_PX : continuationPageHeight + headerHeight + SAFETY_OVERLAP_PX, 
+                    overflow: 'hidden' 
+                  }}
                 >
-                  {/* Header on continuation pages - rendered inside clipping window, above content */}
+                  {/* Header on continuation pages */}
                   {!isFirstPage && hasContHeader && (
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: headerHeight, zIndex: 20, backgroundColor: 'white' }}>
                       <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum ? pageNum + i : undefined} showPageNumber={showPageNumbersAll} />
                     </div>
                   )}
 
-                  {/* Content container - positioned to show correct slice for this page */}
+                  {/* Content container */}
                   <div
                     className="paginated-content"
                     style={{
