@@ -277,7 +277,6 @@ export default function SectionRenderer({
         <div
           key={`cols-${textColumns}`}
           ref={contentRef}
-          className="report-content"
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."

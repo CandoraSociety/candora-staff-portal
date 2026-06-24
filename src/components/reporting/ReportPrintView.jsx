@@ -1,48 +1,17 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
 import ScaledTOC from '@/components/reporting/ScaledTOC';
 import { ArrowBigUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-function PagePreview({ pageNum, children, className, fitToPage }) {
-  const contentRef = useRef(null);
-  const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    if (!fitToPage) { setScale(1); return; }
-    const measure = () => {
-      if (!contentRef.current) return;
-      const availablePx = 11 * 96 - 80; // 11in page minus top color bar + padding
-      const naturalHeight = contentRef.current.scrollHeight;
-      if (naturalHeight > availablePx) {
-        setScale(availablePx / naturalHeight);
-      } else {
-        setScale(1);
-      }
-    };
-    requestAnimationFrame(measure);
-    const ro = new ResizeObserver(measure);
-    if (contentRef.current) ro.observe(contentRef.current);
-    return () => ro.disconnect();
-  }, [fitToPage]);
-
+function PagePreview({ pageNum, children, className }) {
   return (
     <div className={`relative print:shadow-none print:mb-0 mb-6 ${className || ''}`}>
       <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
       <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
-      <div
-        className="bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none"
-        style={fitToPage
-          ? { height: '11in', width: '210mm', maxWidth: '100%', overflow: 'hidden' }
-          : { minHeight: '11in', width: '210mm', maxWidth: '100%', overflow: 'visible' }
-        }
-      >
-        {fitToPage ? (
-          <div ref={contentRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-            {children}
-          </div>
-        ) : children}
+      <div className="bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none overflow-hidden" style={{ minHeight: '11in', width: '210mm', maxWidth: '100%' }}>
+        {children}
       </div>
       {pageNum && (
         <div className="no-print text-center mt-2">
@@ -88,7 +57,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
       {/* Sections */}
       {sections.map((section, i) => (
-        <PagePreview key={section.id} pageNum={getSectionPage(i)} fitToPage={section.fit_to_page}>
+        <PagePreview key={section.id} pageNum={getSectionPage(i)}>
           <div className="h-1 w-full" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
           <div className="p-8 relative">
             <button
