@@ -117,8 +117,11 @@
   }
   .no-print { display: none !important; }
   .print-break { page-break-before: always !important; }
-  /* Hide app layout chrome */
-  .app-sidebar, .app-sidebar-mobile, .app-topbar {
+  /* Hide ALL app layout chrome - aggressive rules */
+  .app-sidebar, .app-sidebar-mobile, .app-topbar,
+  .reporting-portal-header, .reporting-portal-layout > header,
+  header, nav, [class*="Sidebar"], [class*="TopBar"], [class*="Layout"] > header,
+  .sticky.top-0, [class*="sticky"] {
     display: none !important;
   }
   body { 
@@ -126,6 +129,10 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+  }
+  /* Hide any element with navigation role */
+  [role="navigation"], nav, .md\\:flex.items-center.gap-1 {
+    display: none !important;
   }
   /* Remove shadows and effects for faster print rendering */
   * {

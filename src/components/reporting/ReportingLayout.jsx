@@ -23,13 +23,13 @@ export default function ReportingLayout() {
 
   return (
     <ModuleGate moduleId="reporting">
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-accent text-accent-foreground shadow-md">
+    <div className="min-h-screen bg-background print:bg-white reporting-portal-layout">
+      <header className="sticky top-0 z-50 bg-accent text-accent-foreground shadow-md print:hidden reporting-portal-header">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-3">
-              <img src={logoUrl} alt="Candora" className="h-9 w-9 rounded-lg object-contain" />
-              <span className="font-display font-bold text-sm text-primary leading-tight">
+            <Link to="/" className="flex items-center gap-3 print:hidden">
+              <img src={logoUrl} alt="Candora" className="h-9 w-9 rounded-lg object-contain print:hidden" />
+              <span className="font-display font-bold text-sm text-primary leading-tight print:hidden">
                 Reports<br />
                 <span className="text-accent-foreground/60 font-normal text-xs">Portal</span>
               </span>
