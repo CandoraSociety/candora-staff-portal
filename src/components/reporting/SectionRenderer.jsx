@@ -255,7 +255,9 @@ export default function SectionRenderer({
     const hasVisual = hasImage || hasChart;
     const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
     const isMultiCol = textColumns > 1;
-    const hasFloatedImage = ['image_left', 'image_right'].includes(section.layout);
+    const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
+    // Only use columns when there's no floated image - columns and floats don't work together
+    const useColumns = isMultiCol && !hasFloatedImage;
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
@@ -270,12 +272,12 @@ export default function SectionRenderer({
         } : {}),
       }}>
         <div
-          key={`cols-${textColumns}`}
+          key={`cols-${textColumns}-${hasFloatedImage ? 'floated' : 'normal'}`}
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={isMultiCol ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
+          style={useColumns ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -391,7 +393,7 @@ export default function SectionRenderer({
         );
       case 'image_wrap':
         return (
-          <div className="relative" data-section-content>
+          <div className="relative flow-root" data-section-content>
             {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
             {floatedChart}
             {contentBlock}
