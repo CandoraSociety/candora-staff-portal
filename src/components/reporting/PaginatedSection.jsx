@@ -270,7 +270,7 @@ export default function PaginatedSection({
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-          {showHeaderAll && (masterHeader || headerImage || parseZones(headerZones).length > 0) && (
+          {showHeaderAll && (
             <div className="mb-4" style={{ borderBottom: `1px solid ${primaryColor}20`, paddingBottom: '0.5rem' }}>
               <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
             </div>
