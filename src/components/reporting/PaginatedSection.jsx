@@ -420,11 +420,36 @@ export default function PaginatedSection({
         ))}
       </div>
 
-      {/* Print view: single flowing content — browser handles pagination natively */}
+      {/* Print view: single flowing content with sticky continuation headers */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-          <div className="p-8">
+          <div className="p-8" style={{ position: 'relative' }}>
+            {/* Sticky continuation header — appears at top of each printed page */}
+            {hasContHeader && (
+              <div style={{
+                position: 'sticky',
+                top: '-2rem',
+                marginBottom: '1rem',
+                paddingBottom: '0.5rem',
+                borderBottom: `1px solid ${primaryColor}20`,
+                backgroundColor: 'white',
+                zIndex: 10,
+              }}>
+                <ContinuationHeader
+                  masterHeader={masterHeader}
+                  headerImage={headerImage}
+                  headerImageHeight={headerImageHeight}
+                  headerFontSize={headerFontSize}
+                  headerLayout={headerLayout}
+                  headerZones={headerZones}
+                  primaryColor={primaryColor}
+                  branding={branding}
+                  pageNum={pageNum}
+                  showPageNumber={showPageNumbersAll}
+                />
+              </div>
+            )}
             {children}
           </div>
         </div>
