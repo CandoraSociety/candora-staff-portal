@@ -126,11 +126,18 @@
     margin-bottom: 0 !important;
     break-after: page !important;
   }
+  .print-header {
+    position: fixed !important;
+    top: 0.3in !important;
+    left: 0.75in !important;
+    right: 0.75in !important;
+    z-index: 1000 !important;
+  }
   .print-footer {
     position: fixed !important;
-    bottom: 0.5in !important;
-    left: 0.5in !important;
-    right: 0.5in !important;
+    bottom: 0.3in !important;
+    left: 0.75in !important;
+    right: 0.75in !important;
     z-index: 1000 !important;
   }
   .print-page-counter::after { content: counter(page); }
