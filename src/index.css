@@ -127,3 +127,18 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/* Preserve paragraph spacing from rich text editor in report previews.
+   Uses padding instead of margin to prevent CSS margin collapsing,
+   so extra blank lines between paragraphs render accurately. */
+.report-content p {
+  margin: 0;
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}
+.report-content p:first-child {
+  padding-top: 0;
+}
+.report-content p:last-child {
+  padding-bottom: 0;
+}
