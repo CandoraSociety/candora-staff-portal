@@ -253,16 +253,14 @@ export default function SectionRenderer({
     const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const hasChart = sectionData.length > 0;
     const hasVisual = hasImage || hasChart;
-    const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
-    // Only use columns when there's NO floated image - columns and floats are incompatible
-    const textColumns = hasFloatedImage ? 1 : (section.text_columns || (section.layout === 'two_column' ? 2 : 1));
+    const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
     const isMultiCol = textColumns > 1;
+    const hasFloatedImage = ['image_left', 'image_right'].includes(section.layout);
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
-        // flow-root establishes a new block formatting context so text wraps around floats
         ...(hasFloatedImage ? { display: 'flow-root' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
@@ -383,7 +381,7 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="relative" data-section-content>
+          <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
             {floatedChart}
             {contentBlock}
@@ -403,7 +401,7 @@ export default function SectionRenderer({
         );
       case 'image_right':
         return (
-          <div className="relative" data-section-content>
+          <div className="overflow-hidden relative" data-section-content>
             <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
             {floatedChart}
             {contentBlock}
@@ -412,7 +410,7 @@ export default function SectionRenderer({
           </div>
         );
       case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       case 'two_column':
         return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       default:
