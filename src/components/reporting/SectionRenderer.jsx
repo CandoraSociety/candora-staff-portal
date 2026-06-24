@@ -378,7 +378,7 @@ export default function SectionRenderer({
           float: chartFloat,
           marginLeft: chartFloat === 'left' ? '0' : 'auto',
           marginRight: chartFloat === 'right' ? '0' : 'auto',
-          marginBottom: `${chartY}px`,
+          marginBottom: chartY > 0 ? `${chartY}px` : '0.5rem',
           width: `${chartWidth}%`,
           zIndex: 10,
         }}
