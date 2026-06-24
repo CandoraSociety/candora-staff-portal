@@ -360,7 +360,7 @@ export default function SectionRenderer({
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
     const chartY = section.chart_y_offset ?? 0; // pixels from top
     const draggableChartBlock = dataBlock ? (
-      <div className="relative group" style={{ position: 'relative', width: '100%', height: `${Math.max(200, chartY + 280)}px` }}>
+      <div className="relative group" style={{ position: 'relative', width: '100%', minHeight: '400px' }}>
         <div
           className="relative"
           style={{
