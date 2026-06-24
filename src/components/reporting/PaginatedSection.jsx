@@ -6,6 +6,11 @@ const TOP_BAR_PX = 4; // h-1 = 0.25rem
 const PADDING_PX = 32; // p-8 = 2rem
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2; // 988px
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2; // 752px
+const CONT_HEADER_PX = 44; // Height reserved for the continuation header
+
+function parseZones(raw) {
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
+}
 
 function PageFrame({ children, pageNum, primaryColor }) {
   return (
@@ -24,6 +29,90 @@ function PageFrame({ children, pageNum, primaryColor }) {
   );
 }
 
+function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, headerFontSize, headerLayout, headerZones, primaryColor, pageNum, showPageNumber }) {
+  const zones = parseZones(headerZones);
+
+  const renderSlot = (z) => {
+    if (z.content === 'text' && masterHeader) {
+      return (
+        <span className="break-words" style={{
+          fontSize: `${headerFontSize || 12}px`,
+          fontFamily: z.font_family || 'Inter',
+          fontWeight: z.bold ? 'bold' : 'normal',
+          fontStyle: z.italic ? 'italic' : 'normal',
+          textDecoration: z.underline ? 'underline' : 'none',
+          color: z.color || 'hsl(var(--muted-foreground))',
+          textAlign: z.align || 'left',
+          lineHeight: 1.3,
+        }}>
+          {masterHeader} (continued)
+        </span>
+      );
+    }
+    if (z.content === 'image' && headerImage) {
+      return <img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px`, maxWidth: '100%' }} />;
+    }
+    if (z.content === 'page_number' && showPageNumber && pageNum) {
+      return <span style={{ fontSize: `${headerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
+    }
+    return null;
+  };
+
+  // No zones configured — simple fallback
+  if (!zones.length) {
+    if (!masterHeader && !headerImage) return null;
+    return (
+      <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
+        <div className="flex items-center gap-2">
+          {headerImage && <img src={headerImage} alt="" className="object-contain" style={{ maxHeight: `${headerImageHeight || 48}px` }} />}
+          {masterHeader && (
+            <span style={{ fontSize: `${headerFontSize || 12}px`, color: 'hsl(var(--muted-foreground))' }}>
+              {masterHeader} (continued)
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const hasAny = zones.some(z => {
+    if (z.content === 'text' && masterHeader) return true;
+    if (z.content === 'image' && headerImage) return true;
+    if (z.content === 'page_number' && showPageNumber && pageNum) return true;
+    return false;
+  });
+  if (!hasAny) return null;
+
+  if (headerLayout === 'stacked') {
+    return (
+      <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
+        <div className="flex flex-col items-center gap-1">
+          {zones.map(z => {
+            const el = renderSlot(z);
+            return el ? <div key={z.id} style={{ width: '100%', textAlign: z.align || 'left' }}>{el}</div> : null;
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
+      <div className="flex items-center w-full gap-2">
+        {zones.map(z => {
+          const el = renderSlot(z);
+          const just = z.align === 'right' ? 'flex-end' : z.align === 'center' ? 'center' : 'flex-start';
+          return (
+            <div key={z.id} className="flex" style={{ width: `${z.w}%`, justifyContent: just }}>
+              {el}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function PaginatedSection({
   children,
   pageNum,
@@ -32,10 +121,21 @@ export default function PaginatedSection({
   pageBreakBefore,
   onTogglePageBreak,
   onSectionRef,
-  sectionId
+  sectionId,
+  masterHeader,
+  headerImage,
+  headerImageHeight,
+  headerFontSize,
+  headerLayout,
+  headerZones,
+  showHeaderAll,
+  showPageNumbersAll
 }) {
   const [pageCount, setPageCount] = useState(1);
   const measureRef = useRef(null);
+
+  const primaryColor = branding?.primary_color || '#1a2744';
+  const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
 
   useLayoutEffect(() => {
     if (fitToPage) {
@@ -46,8 +146,13 @@ export default function PaginatedSection({
     const measure = () => {
       if (measureRef.current) {
         const height = measureRef.current.scrollHeight;
-        const pages = Math.ceil(height / CONTENT_HEIGHT_PX);
-        setPageCount(Math.max(1, pages));
+        if (height <= CONTENT_HEIGHT_PX) {
+          setPageCount(1);
+        } else {
+          const contHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
+          const pages = 1 + Math.ceil((height - CONTENT_HEIGHT_PX) / contHeight);
+          setPageCount(Math.max(1, pages));
+        }
       }
     };
 
@@ -75,8 +180,6 @@ export default function PaginatedSection({
     };
   });
 
-  const primaryColor = branding?.primary_color || '#1a2744';
-
   // Fit to page: single page with scaling
   if (fitToPage) {
     return (
@@ -88,6 +191,13 @@ export default function PaginatedSection({
       </PageFrame>
     );
   }
+
+  // Cumulative content offset for each page (page 0 = full height, pages 1+ = reduced by header)
+  const getContentOffset = (i) => {
+    if (i === 0) return 0;
+    const contHeight = hasContHeader ? CONTENT_HEIGHT_PX - CONT_HEADER_PX : CONTENT_HEIGHT_PX;
+    return CONTENT_HEIGHT_PX + (i - 1) * contHeight;
+  };
 
   return (
     <>
@@ -107,8 +217,21 @@ export default function PaginatedSection({
                   {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
                 </button>
               )}
+              {i > 0 && hasContHeader && (
+                <ContinuationHeader
+                  masterHeader={masterHeader}
+                  headerImage={headerImage}
+                  headerImageHeight={headerImageHeight}
+                  headerFontSize={headerFontSize}
+                  headerLayout={headerLayout}
+                  headerZones={headerZones}
+                  primaryColor={primaryColor}
+                  pageNum={pageNum ? pageNum + i : undefined}
+                  showPageNumber={showPageNumbersAll}
+                />
+              )}
               <div ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}>
-                <div style={{ position: 'absolute', top: `-${i * CONTENT_HEIGHT_PX}px`, left: PADDING_PX, right: PADDING_PX }}>
+                <div style={{ position: 'absolute', top: `${(i === 0 ? 0 : (hasContHeader ? CONT_HEADER_PX : 0)) - getContentOffset(i)}px`, left: PADDING_PX, right: PADDING_PX }}>
                   {children}
                 </div>
               </div>

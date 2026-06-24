@@ -68,6 +68,14 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
           pageBreakBefore={section.page_break_before}
           onTogglePageBreak={() => togglePageBreak(section.id, section.page_break_before)}
           onSectionRef={onSectionRef}
+          masterHeader={report.master_header_text}
+          headerImage={report.master_header_image}
+          headerImageHeight={report.header_image_height}
+          headerFontSize={report.header_font_size}
+          headerLayout={report.header_layout}
+          headerZones={report.header_zones}
+          showHeaderAll={report.show_header_all}
+          showPageNumbersAll={report.show_page_numbers_all}
         >
           <FitToPage enabled={section.fit_to_page} availableHeightPx={988}>
             <SectionRenderer
