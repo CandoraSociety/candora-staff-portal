@@ -47,6 +47,16 @@
       "description": "Rotation angle in degrees for the section image",
       "default": 0
     },
+    "image_opacity": {
+      "type": "number",
+      "description": "Opacity percentage for the section image (0-100, default 100)",
+      "default": 100
+    },
+    "image_filter": {
+      "type": "string",
+      "description": "CSS filter preset key (none, grayscale, sepia, vintage, warm, cool, dramatic, fade, vivid, invert)",
+      "default": "none"
+    },
     "chart_width": {
       "type": "number",
       "description": "Chart/graph width as percentage of container (20-100)",

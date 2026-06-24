@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal, Frame, RotateCw, RotateCcw } from 'lucide-react';
 import CropDialog from './CropDialog';
 import PasteImageInput from './PasteImageInput';
+import { IMAGE_FILTERS, getFilterCss } from './imageFilters';
 
 const FIELD_MAP = {
   front: 'cover_image', inside_front: 'inside_front_cover_image',
@@ -291,6 +292,8 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                     >
                       <img src={el.url} alt="" className="w-full h-full object-cover rounded" style={{
                         transform: `rotate(${el.rotation || 0}deg)`,
+                        opacity: el.opacity != null ? el.opacity : 1,
+                        filter: getFilterCss(el.filter),
                         ...(el.frame ? { border: `3px solid ${branding?.primary_color || '#1a2744'}`, outline: `1px solid ${branding?.accent_color || '#2b2de8'}`, outlineOffset: '2px' } : {}),
                         ...(el.shadow ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : {}),
                       }} />
@@ -484,6 +487,17 @@ function ElementToolbar({ el, branding, onUpdate, onDelete, onCrop, fontFamilies
         <Button variant="outline" size="sm" onClick={() => onUpdate({ rotation: ((el.rotation || 0) + 90) % 360 })} className="gap-1 text-xs" title="Rotate right 90°"><RotateCw className="w-3 h-3" /></Button>
         <Button variant={el.frame ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ frame: !el.frame })} className="gap-1 text-xs"><Frame className="w-3 h-3" />Frame</Button>
         <Button variant={el.shadow ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ shadow: !el.shadow })} className="gap-1 text-xs">Shadow</Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground shrink-0">Opacity</span>
+        <input type="range" min="0" max="100" value={Math.round((el.opacity != null ? el.opacity : 1) * 100)} onChange={e => onUpdate({ opacity: parseInt(e.target.value) / 100 })} className="flex-1 h-1 accent-blue-500" />
+        <span className="text-[10px] text-muted-foreground w-8 text-right">{Math.round((el.opacity != null ? el.opacity : 1) * 100)}%</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground shrink-0">Filter</span>
+        <select value={el.filter || 'none'} onChange={e => onUpdate({ filter: e.target.value })} className="text-xs border rounded px-1 py-0.5 h-7 bg-white flex-1">
+          {Object.entries(IMAGE_FILTERS).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}
+        </select>
       </div>
       <p className="text-[10px] text-muted-foreground">Drag to reposition • Drag corner to resize</p>
     </div>

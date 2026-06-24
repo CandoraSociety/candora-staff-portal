@@ -10,6 +10,7 @@ import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
 import SectionGallery from './SectionGallery';
 import PasteImageInput from './PasteImageInput';
+import { IMAGE_FILTERS } from './imageFilters';
 
 const FONT_FAMILIES = ['Inter', 'Georgia', 'Montserrat', 'Playfair Display', 'Nunito', 'Roboto', 'Arial'];
 
@@ -571,6 +572,21 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               {(section.image_rotation || 0) !== 0 && (
                 <button onClick={() => onUpdate(section.id, { image_rotation: 0 })} className="text-[10px] text-muted-foreground hover:text-destructive">reset</button>
               )}
+            </div>
+          )}
+          {imageUrl && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">Opacity</Label>
+              <input type="range" min="0" max="100" value={section.image_opacity != null ? section.image_opacity : 100} onChange={e => onUpdate(section.id, { image_opacity: parseInt(e.target.value) })} className="flex-1 h-1 accent-accent" />
+              <span className="text-xs text-muted-foreground w-10 text-right">{section.image_opacity != null ? section.image_opacity : 100}%</span>
+            </div>
+          )}
+          {imageUrl && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">Filter</Label>
+              <select value={section.image_filter || 'none'} onChange={e => onUpdate(section.id, { image_filter: e.target.value })} className="text-xs border rounded px-1 py-0.5 h-7 bg-white flex-1">
+                {Object.entries(IMAGE_FILTERS).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}
+              </select>
             </div>
           )}
           <div>

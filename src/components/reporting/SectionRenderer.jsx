@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, X, RotateCw } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
 import DraggableImageBlock from './DraggableImageBlock';
+import { getFilterCss } from './imageFilters';
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -324,7 +325,7 @@ export default function SectionRenderer({
                 <RotateCw className="w-3.5 h-3.5 text-white" />
               </div>
             )}
-            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px', transform: `rotate(${section.image_rotation || 0}deg)` }} />
+            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px', transform: `rotate(${section.image_rotation || 0}deg)`, opacity: section.image_opacity != null ? section.image_opacity / 100 : 1, filter: getFilterCss(section.image_filter) }} />
           </div>
         )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}
