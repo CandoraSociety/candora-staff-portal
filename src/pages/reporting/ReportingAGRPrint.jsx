@@ -39,23 +39,28 @@ export default function ReportingAGRPrint() {
   };
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.AGRReport.get(id),
-      base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
-      base44.entities.AGRBranding.filter({ report_id: id }),
-      base44.entities.AGRReportData.filter({ report_id: id }),
-      base44.entities.AGRAnalysisResult.filter({ report_id: id }),
-    ]).then(([r, secs, brandList, dataList, analysisList]) => {
-      setReport(r);
-      setSections(secs);
-      setBranding(brandList[0] || null);
-      setDataEntries(dataList);
-      setAnalysis(analysisList[0] || null);
-    }).catch(e => {
-      setError(e.message || 'Failed to load report');
-    }).finally(() => {
-      setLoading(false);
-    });
+    const loadData = async () => {
+      try {
+        const [r, secs, brandList, dataList, analysisList] = await Promise.all([
+          base44.entities.AGRReport.get(id),
+          base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
+          base44.entities.AGRBranding.filter({ report_id: id }),
+          base44.entities.AGRReportData.filter({ report_id: id }),
+          base44.entities.AGRAnalysisResult.filter({ report_id: id }),
+        ]);
+        setReport(r);
+        setSections(secs);
+        setBranding(brandList[0] || null);
+        setDataEntries(dataList);
+        setAnalysis(analysisList[0] || null);
+      } catch (e) {
+        console.error('Load error:', e);
+        setError(e.message || 'Failed to load report');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, [id]);
 
   if (loading) {
