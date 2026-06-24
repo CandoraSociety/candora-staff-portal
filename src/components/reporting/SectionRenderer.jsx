@@ -374,11 +374,9 @@ export default function SectionRenderer({
       <div
         className="relative group"
         style={{
-          position: 'absolute',
-          left: `${chartX}%`,
-          top: `${chartY}px`,
+          float: chartX < 35 ? 'left' : chartX > 65 ? 'right' : 'none',
+          ...(chartX >= 35 && chartX <= 65 ? { position: 'relative', left: `${chartX}%`, transform: 'translateX(-50%)', top: `${chartY}px` } : { marginLeft: chartX < 35 ? '0' : 'auto', marginRight: chartX > 65 ? '0' : 'auto', marginBottom: `${chartY}px` }),
           width: `${chartWidth}%`,
-          transform: 'translateX(-50%)',
           zIndex: 10,
         }}
       >
