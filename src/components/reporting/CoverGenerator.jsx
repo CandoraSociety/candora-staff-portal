@@ -129,6 +129,15 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
     const el = localOverlays.find(o => o.id === elId);
     if (!el) return;
     setSelectedId(elId);
+    if (kind === 'rotate') {
+      const elNode = e.currentTarget.parentElement;
+      const rect = elNode.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+      setDragging({ elId, kind, cx, cy, startAngle, startRotation: el.rotation || 0 });
+      return;
+    }
     setDragging({ elId, kind, startX: e.clientX, startY: e.clientY, startElX: el.x, startElY: el.y, startW: el.w || 200, startH: el.h || 200 });
   };
 
@@ -143,6 +152,13 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
       const dy = ((e.clientY - dragging.startY) / ph) * 100;
       setLocalOverlays(prev => prev.map(el => {
         if (el.id !== dragging.elId) return el;
+        if (dragging.kind === 'rotate') {
+          const currentAngle = Math.atan2(e.clientY - dragging.cy, e.clientX - dragging.cx) * 180 / Math.PI;
+          const delta = currentAngle - dragging.startAngle;
+          let newRotation = (dragging.startRotation + delta) % 360;
+          if (newRotation < 0) newRotation += 360;
+          return { ...el, rotation: Math.round(newRotation) };
+        }
         if (dragging.kind === 'resize') {
           if (el.type === 'text') {
             const nw = Math.max(40, dragging.startW + dx * (pw / 100));
@@ -286,6 +302,13 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       >
                         <X className="w-3 h-3" />
                       </button>
+                      <div
+                        className={`absolute -top-6 left-1/2 -translate-x-1/2 w-6 h-6 bg-blue-500 border-2 border-white rounded-full cursor-grab shadow-sm flex items-center justify-center transition-opacity z-30 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
+                        onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'rotate'); }}
+                        title="Click and drag to rotate"
+                      >
+                        <RotateCw className="w-3 h-3 text-white" />
+                      </div>
                       <div
                         className={`absolute -bottom-1 -right-1 w-4 h-4 bg-blue-400 border-2 border-white rounded-full cursor-se-resize shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-90'}`}
                         onPointerDown={(e) => { e.stopPropagation(); startDrag(e, el.id, 'resize'); }}

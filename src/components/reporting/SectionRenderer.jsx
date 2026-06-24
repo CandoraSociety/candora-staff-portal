@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, RotateCw } from 'lucide-react';
 import ChartRenderer from './ChartRenderer';
 import CollageRenderer from './CollageRenderer';
 import DraggableImageBlock from './DraggableImageBlock';
@@ -49,6 +49,34 @@ export default function SectionRenderer({
       }
     }
   }, [section.title]);
+
+  const [rotating, setRotating] = useState(null);
+  const imageRef = useRef(null);
+
+  const startRotate = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+    setRotating({ cx, cy, startAngle, startRotation: section.image_rotation || 0 });
+  };
+
+  useEffect(() => {
+    if (!rotating || !onUpdate) return;
+    const onMove = (e) => {
+      const currentAngle = Math.atan2(e.clientY - rotating.cy, e.clientX - rotating.cx) * 180 / Math.PI;
+      const delta = currentAngle - rotating.startAngle;
+      let newRotation = (rotating.startRotation + delta) % 360;
+      if (newRotation < 0) newRotation += 360;
+      onUpdate(section.id, { image_rotation: Math.round(newRotation) });
+    };
+    const onUp = () => setRotating(null);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+  }, [rotating, onUpdate, section.id]);
 
   const pc = branding?.primary_color || '#1a2744';
   const ac = branding?.accent_color || '#2b2de8';
@@ -286,7 +314,16 @@ export default function SectionRenderer({
             </div>
           </div>
         ) : (
-          <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25` }}>
+          <div ref={imageRef} className="relative" style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25` }}>
+            {onUpdate && !isPrint && (
+              <div
+                className={`no-print absolute -top-7 left-1/2 -translate-x-1/2 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-grab shadow-lg flex items-center justify-center transition-opacity z-30 ${rotating ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                onPointerDown={startRotate}
+                title="Click and drag to rotate"
+              >
+                <RotateCw className="w-3.5 h-3.5 text-white" />
+              </div>
+            )}
             <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px', transform: `rotate(${section.image_rotation || 0}deg)` }} />
           </div>
         )}
