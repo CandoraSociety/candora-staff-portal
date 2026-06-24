@@ -86,7 +86,7 @@ export default function SectionRenderer({
   const showHeader = showHeaderAll && !section.hide_header;
   const showFooter = showFooterAll && !section.hide_footer;
   const showPageNum = showPageNumbersAll && isPrint;
-  const isCollapsible = (section.is_collapsible || forceCollapsible) && !isPrint;
+  const isCollapsible = false;
 
   // ── Zone-based header/footer builder ─────────────────────────────
   const ZoneSlots = ({
@@ -203,8 +203,8 @@ export default function SectionRenderer({
     return (
       <div className="relative mb-5">
         <div
-          className="h-1 w-full rounded-full mb-4"
-          style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)` }}
+          className="h-1 w-full rounded-full mb-4 print:block"
+          style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)`, printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
         />
         <div className="flex items-center gap-3">
           {sectionNumber != null && (
@@ -224,7 +224,7 @@ export default function SectionRenderer({
               const newTitle = e.target.textContent.trim();
               if (newTitle !== section.title) onUpdate(section.id, { title: newTitle });
             } : undefined}
-            className="font-heading font-bold leading-tight rounded px-1 -mx-1 focus:outline-none focus:bg-accent/5"
+            className="font-heading font-bold leading-tight rounded px-1 -mx-1 focus:outline-none focus:bg-accent/5 print:text-black"
             style={{
               color: titleColor,
               fontSize: `${titleSize}px`,
@@ -232,6 +232,8 @@ export default function SectionRenderer({
               fontWeight: ts.bold !== false ? 'bold' : 'normal',
               fontStyle: ts.italic ? 'italic' : 'normal',
               textDecoration: ts.underline ? 'underline' : 'none',
+              printColorAdjust: 'exact',
+              WebkitPrintColorAdjust: 'exact',
             }}
           />
           {titleImage && (
