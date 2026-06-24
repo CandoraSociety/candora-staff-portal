@@ -368,7 +368,7 @@ export default function SectionRenderer({
       if (direction === 'right') onUpdate(section.id, { chart_x_offset: Math.min(100, chartX + 2) });
     };
     const draggableChartBlock = dataBlock ? (
-      <div className="relative group" style={{ position: 'relative', width: '100%', minHeight: '400px' }}>
+      <div className="relative group" style={{ position: 'relative', width: '100%', minHeight: '400px', overflow: 'visible' }}>
         {/* Arrow key controls */}
         {onUpdate && !isPrint && (
           <div className="no-print absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
@@ -409,8 +409,8 @@ export default function SectionRenderer({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-white shrink-0">Vertical</span>
-              <button onClick={() => onUpdate(section.id, { chart_y_offset: Math.max(0, (section.chart_y_offset || 0) - 10) })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↑</button>
-              <span className="text-[10px] text-white w-10 text-right tabular-nums">{section.chart_y_offset || 0}px</span>
+              <button onClick={() => onUpdate(section.id, { chart_y_offset: ((section.chart_y_offset || 0) - 10) })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↑</button>
+              <span className="text-[10px] text-white w-12 text-right tabular-nums">{section.chart_y_offset || 0}px</span>
               <button onClick={() => onUpdate(section.id, { chart_y_offset: (section.chart_y_offset || 0) + 10 })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↓</button>
             </div>
           </div>
