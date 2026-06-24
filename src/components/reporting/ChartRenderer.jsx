@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import TableRenderer from './TableRenderer';
 
 const COLORS = ['#1a2744', '#c8952e', '#2d5f8a', '#8b4513', '#4a7c59', '#7c3aed', '#db2777', '#0891b2'];
 
@@ -68,6 +69,8 @@ export default function ChartRenderer({ chartConfig, isPrint }) {
             <Bar dataKey="value" stackId="a" fill="#1a2744" radius={[4, 4, 0, 0]} />
           </BarChart>
         );
+      case 'table':
+        return <TableRenderer chartConfig={config} isPrint={isPrint} />;
       default:
         return <p className="text-sm text-muted-foreground">Unsupported chart type: {chart_type}</p>;
     }
@@ -76,9 +79,11 @@ export default function ChartRenderer({ chartConfig, isPrint }) {
   return (
     <div className="my-4">
       {title && <h4 className="text-sm font-semibold text-center mb-2">{title}</h4>}
-      <ResponsiveContainer width="100%" height={isPrint ? 220 : 260}>
-        {renderChart()}
-      </ResponsiveContainer>
+      {chart_type === 'table' ? renderChart() : (
+        <ResponsiveContainer width="100%" height={isPrint ? 220 : 260}>
+          {renderChart()}
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

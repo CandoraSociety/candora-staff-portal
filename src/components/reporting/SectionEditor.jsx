@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, It
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
+import TableRenderer from './TableRenderer';
 import SectionGallery from './SectionGallery';
 import PasteImageInput from './PasteImageInput';
 import { IMAGE_FILTERS } from './imageFilters';
@@ -76,6 +77,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [chartLabel, setChartLabel] = useState('');
   const [chartType, setChartType] = useState('bar');
   const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
+  const [tableData, setTableData] = useState([]);
   const [analyzing, setAnalyzing] = useState({});
   const [importingFile, setImportingFile] = useState(false);
   const [showPasteData, setShowPasteData] = useState(false);
@@ -203,7 +205,19 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const handleSaveChart = async () => {
     const validRows = chartRows.filter(r => r.name.trim() && r.value !== '');
     if (!validRows.length || !chartLabel.trim()) return;
-    const chartData = validRows.map(r => ({ name: r.name.trim(), value: parseFloat(r.value) || 0 }));
+    
+    let chartData;
+    if (chartType === 'table') {
+      // For tables, keep the multi-column structure
+      chartData = validRows.map(r => ({
+        name: r.name.trim(),
+        value: r.value,
+        columns: r.columns || {}
+      }));
+    } else {
+      chartData = validRows.map(r => ({ name: r.name.trim(), value: parseFloat(r.value) || 0 }));
+    }
+    
     const config = { chart_type: chartType, title: chartLabel, data: chartData };
     const entry = await base44.entities.AGRReportData.create({
       label: chartLabel, report_id: section.report_id, section_id: section.id,
@@ -298,38 +312,27 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
         setChartLabel(headers[0]);
       }
     }
-    // If we have 3+ columns: treat as multi-series data
+    // If we have 3+ columns: multi-column data (perfect for tables)
     else if (dataRows[0]?.length >= 3) {
-      // First column = labels, remaining columns = data series
-      const numSeries = dataRows[0].length - 1;
-      const series = [];
-      
-      for (let i = 1; i < dataRows[0].length; i++) {
-        const seriesName = hasHeaders ? headers[i] || `Series ${i}` : `Series ${i}`;
-        const seriesData = dataRows.map((row, idx) => ({
-          name: row[0] || `Item ${idx + 1}`,
-          value: row[i] || '0'
-        }));
-        series.push({ name: seriesName, data: seriesData });
-      }
-      
-      // For multi-series, we'll create a combined chart config
-      const chartData = [];
-      dataRows.forEach((row, idx) => {
-        const label = row[0] || `Item ${idx + 1}`;
-        for (let i = 1; i < row.length; i++) {
-          const seriesName = hasHeaders ? headers[i] || `Series ${i}` : `Series ${i}`;
-          chartData.push({
-            name: `${label} - ${seriesName}`,
-            value: row[i] || '0'
-          });
-        }
+      // Create multi-column format: each row object has all columns
+      const multiColumnData = dataRows.map(row => {
+        const rowData = {};
+        row.forEach((cell, idx) => {
+          const key = hasHeaders ? headers[idx] || `Column ${idx}` : `Column ${idx}`;
+          rowData[key] = cell || '';
+        });
+        return rowData;
       });
       
+      // For chart rows, store each row with its multi-column data
+      const chartData = multiColumnData.map((rowData, idx) => ({
+        name: Object.values(rowData)[0] || `Item ${idx + 1}`,
+        value: Object.values(rowData)[1] || '0',
+        columns: rowData
+      }));
+      
       setChartRows(chartData);
-      if (hasHeaders && headers[0] && !chartLabel) {
-        setChartLabel(headers[0]);
-      }
+      setChartLabel(hasHeaders && headers[0] ? headers[0] : 'Data Table');
     } else {
       alert('Please paste data with at least 2 columns (Label and Value)');
       return;
@@ -794,7 +797,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                       <Input value={chartLabel} onChange={e => setChartLabel(e.target.value)} placeholder="e.g. Program Stats" className="text-xs h-7" />
                     </div>
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Chart Type</Label>
+                      <Label className="text-[10px] text-muted-foreground">Type</Label>
                       <Select value={chartType} onValueChange={setChartType}>
                         <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -802,6 +805,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                           <SelectItem value="line">Line Chart</SelectItem>
                           <SelectItem value="pie">Pie Chart</SelectItem>
                           <SelectItem value="area">Area Chart</SelectItem>
+                          <SelectItem value="table">Table</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -863,11 +867,11 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                   {showPasteData && (
                     <div className="mt-2 p-3 border rounded-lg bg-slate-50">
                       <p className="text-xs font-semibold mb-2">Paste your data (from Excel, Google Sheets, etc.)</p>
-                      <p className="text-[10px] text-muted-foreground mb-2">Format: Label [tab/comma] Value (one row per line)</p>
+                      <p className="text-[10px] text-muted-foreground mb-2">Paste from Excel, Google Sheets, or CSV (multiple columns supported)</p>
                       <textarea
                         value={pasteDataValue}
                         onChange={e => setPasteDataValue(e.target.value)}
-                        placeholder="Program A, 45&#10;Program B, 62&#10;Program C, 38"
+                        placeholder="Program&#09;Q1&#09;Q2&#09;Q3&#10;Program A&#09;45&#09;52&#09;48&#10;Program B&#09;62&#09;58&#09;65"
                         className="w-full text-xs border rounded p-2 h-32 font-mono bg-white"
                       />
                       <div className="flex gap-2 mt-2">
