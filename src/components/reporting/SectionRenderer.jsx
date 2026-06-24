@@ -249,6 +249,8 @@ export default function SectionRenderer({
 
   const renderContent = () => {
     const masterContent = master.content || {};
+    const imageWidth = section.image_width || 50;
+    const chartWidth = section.chart_width || 100;
     const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
     const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const hasChart = sectionData.length > 0;
@@ -289,8 +291,6 @@ export default function SectionRenderer({
       </div>
     );
 
-    const imageWidth = section.image_width || 50;
-    const chartWidth = section.chart_width || 100;
     const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full', 'image_wrap'].includes(section.layout);
     const imageBlock = hasImage ? (
       <DraggableImageBlock section={section} onUpdate={onUpdate}>
