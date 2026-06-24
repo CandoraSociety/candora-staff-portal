@@ -1,5 +1,6 @@
 import React from 'react';
 import { getFilterCss } from './imageFilters';
+import { useCoverScale } from './useCoverScale';
 
 const IMG_MAP = {
   front: 'cover_image', inside_front: 'inside_front_cover_image',
@@ -11,11 +12,12 @@ function parseOverlays(raw) {
 }
 
 export default function StyledCoverPreview({ coverType, report, branding, roundedTop, noPadding }) {
+  const [containerRef, scale] = useCoverScale();
   const imageUrl = report?.[IMG_MAP[coverType]];
   const overlays = parseOverlays(report?.cover_overlays)[coverType] || [];
 
   return (
-    <div className={`${noPadding ? '' : ''} aspect-[8.5/11] w-full overflow-hidden relative${roundedTop ? ' rounded-t-xl' : ''}`}>
+    <div ref={containerRef} className={`${noPadding ? '' : ''} aspect-[8.5/11] w-full overflow-hidden relative${roundedTop ? ' rounded-t-xl' : ''}`}>
       {imageUrl ? (
         <img src={imageUrl} alt={coverType} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
       ) : (
@@ -28,8 +30,8 @@ export default function StyledCoverPreview({ coverType, report, branding, rounde
             <div key={el.id} className="absolute select-none pointer-events-none"
               style={{
                 left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-                width: `${el.w || 280}px`, minHeight: el.h ? `${el.h}px` : undefined,
-                fontSize: `${el.font_size || 20}px`, fontFamily: el.font_family || 'Inter',
+                width: `${(el.w || 280) * scale}px`, minHeight: el.h ? `${el.h * scale}px` : undefined,
+                fontSize: `${(el.font_size || 20) * scale}px`, fontFamily: el.font_family || 'Inter',
                 color: el.color || '#fff', fontWeight: el.bold ? 'bold' : 'normal',
                 fontStyle: el.italic ? 'italic' : 'normal', textDecoration: el.underline ? 'underline' : 'none',
                 textAlign: el.align || 'center', textShadow: '0 2px 8px rgba(0,0,0,0.5)',
@@ -45,7 +47,7 @@ export default function StyledCoverPreview({ coverType, report, branding, rounde
           return (
             <div key={el.id} className="absolute" style={{
               left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-              width: `${el.w || 160}px`, height: `${el.h || 160}px`, zIndex: 10,
+              width: `${(el.w || 160) * scale}px`, height: `${(el.h || 160) * scale}px`, zIndex: 10,
             }}>
               <img src={el.url} alt="" className="w-full h-full object-cover rounded" style={{
                 transform: `rotate(${el.rotation || 0}deg)`,

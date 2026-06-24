@@ -7,6 +7,7 @@ import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, I
 import CropDialog from './CropDialog';
 import PasteImageInput from './PasteImageInput';
 import { IMAGE_FILTERS, getFilterCss } from './imageFilters';
+import { useCoverScale } from './useCoverScale';
 
 const FIELD_MAP = {
   front: 'cover_image', inside_front: 'inside_front_cover_image',
@@ -58,7 +59,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
   const [dragging, setDragging] = useState(null); // { elId, kind: 'move'|'resize', startX, startY, ... }
   const [selectedId, setSelectedId] = useState(null);
   const [cropTarget, setCropTarget] = useState(null); // element to crop
-  const containerRef = useRef(null);
+  const [containerRef, scale] = useCoverScale();
 
   const imageUrl = report?.[FIELD_MAP[type]];
   const label = LABEL_MAP[type];
@@ -162,11 +163,11 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         }
         if (dragging.kind === 'resize') {
           if (el.type === 'text') {
-            const nw = Math.max(40, dragging.startW + dx * (pw / 100));
+            const nw = Math.max(40, dragging.startW + dx * (pw / 100) / scale);
             return { ...el, w: Math.round(nw) };
           }
-          const nw = Math.max(40, dragging.startW + dx * (pw / 100));
-          const nh = Math.max(40, dragging.startH + dy * (ph / 100));
+          const nw = Math.max(40, dragging.startW + dx * (pw / 100) / scale);
+          const nh = Math.max(40, dragging.startH + dy * (ph / 100) / scale);
           return { ...el, w: Math.round(nw), h: Math.round(nh) };
         }
         return { ...el, x: Math.max(2, Math.min(95, dragging.startElX + dx)), y: Math.max(2, Math.min(95, dragging.startElY + dy)) };
@@ -179,7 +180,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
-  }, [dragging]);
+  }, [dragging, scale]);
 
   // ── Cover generation ──
   const generateCover = async () => {
@@ -254,9 +255,9 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       className={`group absolute select-none ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                       style={{
                         left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-                        width: `${el.w || 280}px`, minHeight: el.h ? `${el.h}px` : undefined,
+                        width: `${(el.w || 280) * scale}px`, minHeight: el.h ? `${el.h * scale}px` : undefined,
                         cursor: dragging?.elId === el.id ? 'grabbing' : 'grab',
-                        fontSize: `${el.font_size || 20}px`, fontFamily: el.font_family || 'Inter',
+                        fontSize: `${(el.font_size || 20) * scale}px`, fontFamily: el.font_family || 'Inter',
                         color: el.color || '#fff', fontWeight: el.bold ? 'bold' : 'normal',
                         fontStyle: el.italic ? 'italic' : 'normal', textDecoration: el.underline ? 'underline' : 'none',
                         textAlign: el.align || 'center', textShadow: '0 2px 8px rgba(0,0,0,0.5)',
@@ -284,7 +285,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       className={`group absolute ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                       style={{
                         left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
-                        width: `${el.w || 160}px`, height: `${el.h || 160}px`,
+                        width: `${(el.w || 160) * scale}px`, height: `${(el.h || 160) * scale}px`,
                         cursor: dragging?.elId === el.id ? 'grabbing' : 'grab', zIndex: isSelected ? 20 : 10,
                       }}
                       onClick={(e) => e.stopPropagation()}
