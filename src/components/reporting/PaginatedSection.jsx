@@ -140,8 +140,8 @@ export default function PaginatedSection({
   const headerMeasureRef = useRef(null);
 
   const primaryColor = branding?.primary_color || '#1a2744';
-  const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
-  const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
+  const hasContHeader = showHeaderAll;
+  const hasFooter = showFooterAll && !hideFooter;
   const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
   const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 8;
 
