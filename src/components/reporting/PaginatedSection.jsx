@@ -32,7 +32,8 @@ function PageFrame({ children, pageNum, primaryColor }) {
 
 function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, headerFontSize, headerLayout, headerZones, primaryColor, pageNum, showPageNumber, branding }) {
   const zones = parseZones(headerZones);
-  if (!masterHeader && !headerImage && zones.length === 0) return null;
+  const hasContent = masterHeader || headerImage || zones.length > 0 || (showPageNumber && pageNum);
+  if (!hasContent) return null;
 
   return (
     <div className="pb-2 mb-4" style={{ borderBottom: `1px solid ${primaryColor}20` }}>
