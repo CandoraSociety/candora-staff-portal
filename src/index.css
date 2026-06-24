@@ -117,47 +117,53 @@
   }
   .no-print { display: none !important; }
   .print-break { page-break-before: always !important; }
-  body { background: white !important; }
+  body { 
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
   /* Remove shadows and effects for faster print rendering */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
   }
-  /* Force flex containers to block in print so children can break across pages */
-  .force-block-print {
-    display: block !important;
-  }
-  .print-flow-page { 
+  /* Force everything to block display for proper page flow */
+  .force-block-print, .print-flow-page, .print-page-end {
     display: block !important;
     height: auto !important; 
-    width: auto !important;
+    width: 100% !important;
     max-width: 100% !important;
     overflow: visible !important; 
     position: static !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-  .print-page-end {
-    page-break-after: always !important;
-    break-after: page !important;
-  }
-
-  /* Remove min-height constraints from section content so pages fill consistently */
+  /* Remove min-height constraints from section content */
   [data-section-content] {
     min-height: 0 !important;
     height: auto !important;
   }
-  /* Prevent paragraphs and headings from being split across pages */
+  /* Prevent elements from being split across pages */
   p, h1, h2, h3, h4, h5, h6, li, blockquote, figure, img, table, .recharts-wrapper, .chart-container {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     orphans: 3;
     widows: 3;
   }
-  /* Ensure all content is visible and printable */
+  /* Ensure colors print correctly */
   * {
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
+  }
+  /* Page breaks */
+  .print\\:break-after-page {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+  .print\\:break-before-page {
+    page-break-before: always !important;
+    break-before: page !important;
   }
 }
 

@@ -54,19 +54,16 @@ export default function ReportingAGRPrint() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 print:space-y-0">
       <div className="no-print flex items-center gap-3 mb-6">
         <Link to={`/reporting/agr/${id}/edit`} className="text-muted-foreground hover:text-accent transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
-          <p className="text-xs text-muted-foreground">Print-optimized view • Tip: If Save as PDF hangs, try using your browser's print dialog (Ctrl/Cmd+P) and select "Save as PDF"</p>
+          <p className="text-xs text-muted-foreground">For best results: Press Ctrl/Cmd+P, then choose "Save as PDF" as your printer</p>
         </div>
-        <Button onClick={() => {
-          // Simple print with a small delay to let the browser settle
-          setTimeout(() => window.print(), 500);
-        }} className="gap-2">
+        <Button onClick={() => window.print()} className="gap-2">
           <Printer className="w-4 h-4" />Print / Save PDF
         </Button>
       </div>

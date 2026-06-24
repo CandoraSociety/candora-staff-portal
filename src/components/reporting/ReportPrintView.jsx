@@ -34,7 +34,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
   const primaryColor = branding?.primary_color || '#1a2744';
 
   return (
-    <div className="print:block print:w-full print:max-w-[8.5in] print:mx-auto">
+    <div className="print:block">
       {/* Front cover - print only */}
       <div className="print:block print:break-after-page" style={{ width: '8.5in', height: '11in', backgroundColor: branding?.primary_color || '#1a2744' }}>
         <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
