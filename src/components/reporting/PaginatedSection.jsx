@@ -7,7 +7,6 @@ const TOP_BAR_PX = 4; // h-1 = 0.25rem
 const PADDING_PX = 32; // p-8 = 2rem
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2; // 988px
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2; // 752px
-const CONT_HEADER_PX = 44; // Height reserved for the continuation header
 const FOOTER_HEIGHT_PX = 48; // Height reserved for the page footer
 
 function parseZones(raw) {
@@ -240,9 +239,7 @@ export default function PaginatedSection({
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
   const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
   const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
-  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 4;
-  // Only subtract header height on continuation pages (i > 0), not the first page
-  const columnHeight = availableContentHeight;
+  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 8;
 
   // Measure the real header height
   useLayoutEffect(() => {
@@ -267,19 +264,32 @@ export default function PaginatedSection({
       if (onPageCountChange) onPageCountChange(sectionId, 1);
       return;
     }
-    if (hasContHeader && headerHeight === 0) return; // wait for header measurement
+    if (hasContHeader && headerHeight === 0) return;
 
     const measure = () => {
       if (measureRef.current) {
-        // Measure total content height and calculate pages needed
         const totalHeight = measureRef.current.scrollHeight;
-        const pages = Math.max(1, Math.ceil(totalHeight / availableContentHeight));
+        const firstPageHeight = availableContentHeight;
+        const continuationPageHeight = availableContentHeight - headerHeight;
+        
+        if (totalHeight <= firstPageHeight) {
+          setPageCount(1);
+          if (onPageCountChange) onPageCountChange(sectionId, 1);
+          return;
+        }
+
+        let remaining = totalHeight - firstPageHeight;
+        let pages = 1;
+        while (remaining > 0) {
+          pages++;
+          remaining -= continuationPageHeight;
+        }
         setPageCount(pages);
         if (onPageCountChange) onPageCountChange(sectionId, pages);
       }
     };
 
-    const timer = setTimeout(measure, 50);
+    const timer = setTimeout(measure, 100);
 
     const images = measureRef.current?.querySelectorAll('img') || [];
     const imageLoaders = [];
@@ -333,47 +343,86 @@ export default function PaginatedSection({
     );
   }
 
+  // Calculate content height for each page
+  const firstPageContentHeight = availableContentHeight;
+  const continuationPageContentHeight = availableContentHeight - headerHeight;
+
   return (
     <>
-      {/* Screen view: paginated pages - each page renders content at its vertical offset, clipped */}
+      {/* Screen view: paginated pages */}
       <div className="print:hidden">
-        {Array.from({ length: pageCount }).map((_, i) => (
-          <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
-            <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-            <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)` }}>
-              {i === 0 && onTogglePageBreak && (
-                <button
-                  onClick={onTogglePageBreak}
-                  className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
-                  title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
-                >
-                  <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
-                  {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
-                </button>
-              )}
+        {Array.from({ length: pageCount }).map((_, i) => {
+          const isFirstPage = i === 0;
+          const contentHeight = isFirstPage ? firstPageContentHeight : continuationPageContentHeight;
+          const contentTop = isFirstPage ? 0 : -(i * continuationPageContentHeight + headerHeight);
 
-              {/* Content window: clips content at this page's offset */}
-              <div
-                ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
-                style={{
-                  position: 'absolute',
-                  top: PADDING_PX,
-                  left: PADDING_PX,
-                  width: CONTENT_WIDTH_PX,
-                  height: availableContentHeight,
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Continuation header on pages 2+ */}
-                {i > 0 && hasContHeader && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-                    <ContinuationHeader
-                      masterHeader={masterHeader}
-                      headerImage={headerImage}
-                      headerImageHeight={headerImageHeight}
-                      headerFontSize={headerFontSize}
-                      headerLayout={headerLayout}
-                      headerZones={headerZones}
+          return (
+            <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
+              <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
+              <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)` }}>
+                {i === 0 && onTogglePageBreak && (
+                  <button
+                    onClick={onTogglePageBreak}
+                    className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
+                    title={pageBreakBefore ? 'Click to let this section flow naturally' : 'Click to force this section to start on a new page'}
+                  >
+                    <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
+                    {pageBreakBefore ? 'Forced page break' : 'Normal flow'}
+                  </button>
+                )}
+
+                {/* Content clipping window */}
+                <div
+                  ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
+                  style={{
+                    position: 'absolute',
+                    top: PADDING_PX,
+                    left: PADDING_PX,
+                    width: CONTENT_WIDTH_PX,
+                    height: contentHeight,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Continuation header on pages 2+ */}
+                  {!isFirstPage && hasContHeader && (
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+                      <ContinuationHeader
+                        masterHeader={masterHeader}
+                        headerImage={headerImage}
+                        headerImageHeight={headerImageHeight}
+                        headerFontSize={headerFontSize}
+                        headerLayout={headerLayout}
+                        headerZones={headerZones}
+                        primaryColor={primaryColor}
+                        branding={branding}
+                        pageNum={pageNum ? pageNum + i : undefined}
+                        showPageNumber={showPageNumbersAll}
+                      />
+                    </div>
+                  )}
+
+                  {/* Content positioned for this page */}
+                  <div
+                    className="paginated-content"
+                    style={{
+                      position: 'absolute',
+                      top: isFirstPage ? 0 : contentTop,
+                      width: CONTENT_WIDTH_PX,
+                    }}
+                  >
+                    {children}
+                  </div>
+                </div>
+
+                {hasFooter && (
+                  <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 10 }}>
+                    <PageFooter
+                      masterFooter={masterFooter}
+                      footerImage={footerImage}
+                      footerImageHeight={footerImageHeight}
+                      footerFontSize={footerFontSize}
+                      footerLayout={footerLayout}
+                      footerZones={footerZones}
                       primaryColor={primaryColor}
                       branding={branding}
                       pageNum={pageNum ? pageNum + i : undefined}
@@ -381,40 +430,13 @@ export default function PaginatedSection({
                     />
                   </div>
                 )}
-                {/* Content positioned at negative offset for this page */}
-                <div
-                  className="paginated-content"
-                  style={{
-                    position: 'relative',
-                    top: -(i * availableContentHeight),
-                    width: CONTENT_WIDTH_PX,
-                  }}
-                >
-                  {children}
-                </div>
               </div>
-              {hasFooter && (
-                <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 10 }}>
-                  <PageFooter
-                    masterFooter={masterFooter}
-                    footerImage={footerImage}
-                    footerImageHeight={footerImageHeight}
-                    footerFontSize={footerFontSize}
-                    footerLayout={footerLayout}
-                    footerZones={footerZones}
-                    primaryColor={primaryColor}
-                    branding={branding}
-                    pageNum={pageNum ? pageNum + i : undefined}
-                    showPageNumber={showPageNumbersAll}
-                  />
-                </div>
-              )}
-            </div>
-          </PageFrame>
-        ))}
+            </PageFrame>
+          );
+        })}
       </div>
 
-      {/* Print view: single flowing content — browser handles pagination natively */}
+      {/* Print view: browser handles pagination */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%' }}>
           <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
@@ -440,7 +462,7 @@ export default function PaginatedSection({
         )}
       </div>
 
-      {/* Hidden measurement container — measures total content height for page count */}
+      {/* Hidden measurement container */}
       <div
         ref={measureRef}
         className="paginated-content absolute invisible pointer-events-none print:hidden"
@@ -454,7 +476,7 @@ export default function PaginatedSection({
         {children}
       </div>
 
-      {/* Hidden header measurement — measures the real continuation header height */}
+      {/* Hidden header measurement */}
       {hasContHeader && (
         <div
           ref={headerMeasureRef}
