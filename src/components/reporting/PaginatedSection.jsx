@@ -239,8 +239,8 @@ export default function PaginatedSection({
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
   const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
-  const footerReservedHeight = hasFooter ? 24 : 0;
-  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight;
+  const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
+  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight + 80;
   // Only subtract header height on continuation pages (i > 0), not the first page
   const columnHeight = availableContentHeight;
 
