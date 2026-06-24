@@ -142,67 +142,60 @@ export default function PaginatedSection({
 
   return (
     <>
-      {/* ── Screen preview: full 8.5x11" page containers with header/footer ── */}
+      {/* ── Screen preview: single continuous page, content flows naturally (no clipping) ── */}
       <div className="print:hidden">
-        {Array.from({ length: estPages }).map((_, pageIndex) => (
-          <div key={pageIndex} className="relative mb-4" ref={pageIndex === 0 ? onSectionRef : undefined}>
-            <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
-            <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
-            <div
-              className="relative bg-white rounded-lg shadow-lg overflow-hidden"
-              style={{ width: '8.5in', height: '11in', maxWidth: '100%' }}
-            >
-              {/* Accent bar */}
-              <div className="h-1 w-full absolute top-0 left-0 right-0 z-10" style={{ backgroundColor: primaryColor }} />
+        <div className="relative mx-auto" ref={onSectionRef}>
+          {/* Page background — 8.5in wide, grows with content */}
+          <div className="relative bg-white rounded-lg shadow-lg" style={{ width: '8.5in', maxWidth: '100%' }}>
+            {/* Accent bar */}
+            <div className="h-1 w-full rounded-t-lg" style={{ backgroundColor: primaryColor }} />
 
-              {/* Header (within top margin) */}
-              {showHeaderAll && (
-                <div className="absolute z-10" style={{ top: '0.3in', left: '0.75in', right: '0.75in' }}>
-                  <ContinuationHeader
-                    masterHeader={masterHeader}
-                    headerImage={headerImage}
-                    headerImageHeight={headerImageHeight}
-                    headerFontSize={headerFontSize}
-                    headerLayout={headerLayout}
-                    headerZones={headerZones}
-                    primaryColor={primaryColor}
-                    branding={branding}
-                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
-                    showPageNumber={showPageNumbersAll}
-                  />
-                </div>
-              )}
-
-              {/* Content area — clipped, content translated to show this page's portion */}
-              <div className="absolute overflow-hidden" style={{ top: 'calc(0.75in + 0.1in)', left: '0.75in', right: '0.75in', bottom: '0.75in' }}>
-                <div style={{ transform: `translateY(-${pageIndex * CONTENT_AREA_HEIGHT}px)` }}>
-                  {children}
-                </div>
+            {/* Header — in-flow at the top, within the top margin area */}
+            {showHeaderAll && (
+              <div className="px-[0.75in] pt-[0.3in]">
+                <ContinuationHeader
+                  masterHeader={masterHeader}
+                  headerImage={headerImage}
+                  headerImageHeight={headerImageHeight}
+                  headerFontSize={headerFontSize}
+                  headerLayout={headerLayout}
+                  headerZones={headerZones}
+                  primaryColor={primaryColor}
+                  branding={branding}
+                  pageNum={showPageNumbersAll ? pageNum : undefined}
+                  showPageNumber={showPageNumbersAll}
+                />
               </div>
+            )}
 
-              {/* Footer (within bottom margin) */}
-              {hasFooter && (
-                <div className="absolute z-10" style={{ bottom: '0.3in', left: '0.75in', right: '0.75in' }}>
-                  <PageFooter
-                    masterFooter={masterFooter}
-                    footerImage={footerImage}
-                    footerImageHeight={footerImageHeight}
-                    footerFontSize={footerFontSize}
-                    footerLayout={footerLayout}
-                    footerZones={footerZones}
-                    primaryColor={primaryColor}
-                    branding={branding}
-                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
-                    showPageNumber={showPageNumbersAll}
-                  />
-                </div>
-              )}
+            {/* Content — flows naturally, no clipping, no slicing */}
+            <div className="px-[0.75in] pt-[0.1in]">
+              {children}
             </div>
+
+            {/* Footer — in-flow at the bottom of the content */}
+            {hasFooter && (
+              <div className="px-[0.75in] pt-4 mt-8 pb-[0.3in]" style={{ borderTop: `1px solid ${primaryColor}20` }}>
+                <PageFooter
+                  masterFooter={masterFooter}
+                  footerImage={footerImage}
+                  footerImageHeight={footerImageHeight}
+                  footerFontSize={footerFontSize}
+                  footerLayout={footerLayout}
+                  footerZones={footerZones}
+                  primaryColor={primaryColor}
+                  branding={branding}
+                  pageNum={showPageNumbersAll ? pageNum : undefined}
+                  showPageNumber={showPageNumbersAll}
+                />
+              </div>
+            )}
           </div>
-        ))}
+
+        </div>
 
         {/* Page label and page break toggle */}
-        <div className="no-print flex items-center justify-center gap-3 mb-4">
+        <div className="no-print flex items-center justify-center gap-3 my-4">
           {pageNum && (
             <span className="text-[10px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
               {estPages > 1 ? `Pages ${pageNum}–${pageNum + estPages - 1}` : `Page ${pageNum}`}
