@@ -5,8 +5,9 @@ import { ribbonGradient } from './imageFilters';
 const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
 const PADDING_PX = 48; // 0.75in padding top/bottom
-const FOOTER_RESERVE_PX = 96; // Reserve space for footer (increased for safety)
+const FOOTER_RESERVE_PX = 56; // Space for footer content (~40px) + small buffer
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_RESERVE_PX;
+const CONTENT_HEIGHT_NO_FOOTER_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
 const TEXT_BUFFER_PX = 8; // Extra buffer to prevent letters being sliced
@@ -145,7 +146,7 @@ export default function PaginatedSection({
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll;
   const hasFooter = showFooterAll && !hideFooter;
-  const availableContentHeight = CONTENT_HEIGHT_PX;
+  const availableContentHeight = hasFooter ? CONTENT_HEIGHT_PX : CONTENT_HEIGHT_NO_FOOTER_PX;
 
   useLayoutEffect(() => {
     if (!hasContHeader) { setHeaderHeight(0); return; }
