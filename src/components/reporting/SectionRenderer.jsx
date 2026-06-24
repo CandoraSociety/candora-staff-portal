@@ -261,7 +261,9 @@ export default function SectionRenderer({
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
-        ...(hasFloatedImage ? { display: 'flow-root' } : {}),
+        ...(section.layout === 'image_left' ? { marginLeft: `${imageWidth}%`, paddingLeft: '1.25rem' } : {}),
+        ...(section.layout === 'image_right' ? { marginRight: `${imageWidth}%`, paddingRight: '1.25rem' } : {}),
+        ...(section.layout === 'image_wrap' ? { marginLeft: `${imageWidth}%`, paddingLeft: '1.25rem' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
@@ -381,7 +383,7 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="overflow-hidden relative" data-section-content>
+          <div className="relative" data-section-content>
             <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
             {floatedChart}
             {contentBlock}
@@ -401,7 +403,7 @@ export default function SectionRenderer({
         );
       case 'image_right':
         return (
-          <div className="overflow-hidden relative" data-section-content>
+          <div className="relative" data-section-content>
             <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
             {floatedChart}
             {contentBlock}
@@ -410,7 +412,7 @@ export default function SectionRenderer({
           </div>
         );
       case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return <div className="relative" data-section-content><div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       case 'two_column':
         return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
       default:
