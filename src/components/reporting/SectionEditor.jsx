@@ -367,7 +367,6 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const handleDeleteChart = async (entryId) => {
     if (confirm('Delete this chart/table?')) {
       await base44.entities.AGRReportData.delete(entryId);
-      await loadDataEntries();
     }
   };
 
@@ -854,13 +853,13 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             <button onClick={handleToggleData} className="flex items-center gap-2 text-xs font-semibold hover:text-accent transition-colors w-full text-left">
               <BarChart3 className="w-3.5 h-3.5" />
               Data &amp; Charts
-              {dataEntries.length > 0 && <span className="bg-accent/10 text-accent text-[10px] px-1.5 py-0.5 rounded-full">{dataEntries.length}</span>}
+              {dataEntries.filter(d => d.section_id === section.id).length > 0 && <span className="bg-accent/10 text-accent text-[10px] px-1.5 py-0.5 rounded-full">{dataEntries.filter(d => d.section_id === section.id).length}</span>}
               <span className="ml-auto">{showDataPanel ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}</span>
             </button>
             {showDataPanel && (
               <div className="mt-2 space-y-3">
                 {/* Existing chart entries */}
-                {dataEntries.map(entry => {
+                {dataEntries.filter(d => d.section_id === section.id).map(entry => {
                   const chartConfig = entry.chart_config ? (typeof entry.chart_config === 'string' ? JSON.parse(entry.chart_config) : entry.chart_config) : null;
                   const isEditing = editingChartId === entry.id;
                   
