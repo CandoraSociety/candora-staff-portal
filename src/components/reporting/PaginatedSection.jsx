@@ -120,6 +120,7 @@ export default function PaginatedSection({
   pageBreakBefore,
   onTogglePageBreak,
   onSectionRef,
+  onPageCountChange,
   sectionId,
   masterHeader,
   headerImage,
@@ -161,6 +162,7 @@ export default function PaginatedSection({
   useLayoutEffect(() => {
     if (fitToPage) {
       setPageCount(1);
+      if (onPageCountChange) onPageCountChange(sectionId, 1);
       return;
     }
     if (hasContHeader && headerHeight === 0) return; // wait for header measurement
@@ -171,6 +173,7 @@ export default function PaginatedSection({
         const sw = measureRef.current.scrollWidth;
         const pages = Math.max(1, Math.ceil(sw / CONTENT_WIDTH_PX));
         setPageCount(pages);
+        if (onPageCountChange) onPageCountChange(sectionId, pages);
       }
     };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
 import ScaledTOC from '@/components/reporting/ScaledTOC';
@@ -25,11 +25,26 @@ function PagePreview({ pageNum, children, className, fitToPage }) {
 }
 
 export default function ReportPrintView({ report, sections, branding, dataEntries, onSectionRef, onSectionsUpdate, onSectionUpdate }) {
+  const [sectionPageCounts, setSectionPageCounts] = useState({});
+
   if (!report) return null;
 
   const hasInsideFront = !!report.inside_front_cover_image;
   const tocPage = hasInsideFront ? 3 : 2;
-  const getSectionPage = (index) => tocPage + 1 + index;
+
+  // Calculate section start pages based on actual measured page counts.
+  // Page numbering starts at 1 for the first section — covers and TOC are excluded.
+  const getSectionPage = (index) => {
+    let page = 1;
+    for (let i = 0; i < index; i++) {
+      page += sectionPageCounts[sections[i]?.id] || 1;
+    }
+    return page;
+  };
+
+  const handlePageCountChange = (sectionId, count) => {
+    setSectionPageCounts(prev => prev[sectionId] === count ? prev : { ...prev, [sectionId]: count });
+  };
 
   const togglePageBreak = async (sectionId, current) => {
     await base44.entities.AGRReportSection.update(sectionId, { page_break_before: !current });
@@ -68,6 +83,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
           pageBreakBefore={section.page_break_before}
           onTogglePageBreak={() => togglePageBreak(section.id, section.page_break_before)}
           onSectionRef={onSectionRef}
+          onPageCountChange={handlePageCountChange}
           masterHeader={report.master_header_text}
           headerImage={report.master_header_image}
           headerImageHeight={report.header_image_height}
