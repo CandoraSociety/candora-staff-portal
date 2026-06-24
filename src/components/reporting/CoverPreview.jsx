@@ -1,4 +1,5 @@
 import React from 'react';
+import { getFilterCss } from './imageFilters';
 
 const IMG_MAP = {
   front: 'cover_image', inside_front: 'inside_front_cover_image',
@@ -46,7 +47,13 @@ export default function StyledCoverPreview({ coverType, report, branding, rounde
               left: `${el.x}%`, top: `${el.y}%`, transform: 'translate(-50%, -50%)',
               width: `${el.w || 160}px`, height: `${el.h || 160}px`, zIndex: 10,
             }}>
-              <img src={el.url} alt="" className="w-full h-full object-cover rounded" />
+              <img src={el.url} alt="" className="w-full h-full object-cover rounded" style={{
+                transform: `rotate(${el.rotation || 0}deg)`,
+                opacity: el.opacity != null ? el.opacity : 1,
+                filter: getFilterCss(el.filter),
+                ...(el.frame ? { border: `3px solid ${branding?.primary_color || '#1a2744'}`, outline: `1px solid ${branding?.accent_color || '#2b2de8'}`, outlineOffset: '2px' } : {}),
+                ...(el.shadow ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : {}),
+              }} />
             </div>
           );
         }
