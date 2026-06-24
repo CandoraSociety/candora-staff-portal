@@ -4,7 +4,7 @@ import TableRenderer from './TableRenderer';
 
 const COLORS = ['#1a2744', '#c8952e', '#2d5f8a', '#8b4513', '#4a7c59', '#7c3aed', '#db2777', '#0891b2'];
 
-export default function ChartRenderer({ chartConfig, isPrint }) {
+export default function ChartRenderer({ chartConfig, branding, isPrint }) {
   if (!chartConfig) return null;
 
   let config;
@@ -70,7 +70,7 @@ export default function ChartRenderer({ chartConfig, isPrint }) {
           </BarChart>
         );
       case 'table':
-        return <TableRenderer chartConfig={config} isPrint={isPrint} />;
+        return <TableRenderer chartConfig={config} branding={branding} isPrint={isPrint} />;
       default:
         return <p className="text-sm text-muted-foreground">Unsupported chart type: {chart_type}</p>;
     }
