@@ -17,9 +17,9 @@ export default function StyledCoverPreview({ coverType, report, branding, rounde
   const overlays = parseOverlays(report?.cover_overlays)[coverType] || [];
 
   return (
-    <div ref={containerRef} className={`${noPadding ? '' : ''} aspect-[8.5/11] w-full overflow-hidden relative${roundedTop ? ' rounded-t-xl' : ''}`}>
+    <div ref={containerRef} className={`${noPadding ? '' : ''} w-full overflow-hidden relative${roundedTop ? ' rounded-t-xl' : ''}`} style={{ height: '11in' }}>
       {imageUrl ? (
-        <img src={imageUrl} alt={coverType} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+        <img src={imageUrl} alt={coverType} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: 'none' }} />
       ) : (
         <div className="absolute inset-0" style={{ backgroundColor: branding?.primary_color || '#1a2744' }} />
       )}

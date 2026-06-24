@@ -36,7 +36,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
   return (
     <div className="print:block">
       {/* Front cover */}
-      <div className="print:break-after-page" style={{ width: '8.5in', minHeight: '11in', backgroundColor: branding?.primary_color || '#1a2744' }}>
+      <div className="print:break-after-page" style={{ width: '8.5in', height: '11in', backgroundColor: branding?.primary_color || '#1a2744', overflow: 'hidden', position: 'relative' }}>
         <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
       </div>
 
