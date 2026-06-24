@@ -95,10 +95,14 @@ export function PageFooter({ masterFooter, footerImage, footerImageHeight, foote
  * so content is never sliced mid-element. Each page is exactly 8.5x11 inches.
  */
 function calculatePageBreaks(container, availableHeight) {
-  const totalHeight = container.scrollHeight;
+  const containerRect = container.getBoundingClientRect();
+  // The preview may be rendered inside a CSS zoom container, which scales
+  // getBoundingClientRect() values. Compute the zoom factor and divide it
+  // out so all measurements are in unscaled CSS pixels — matching availableHeight.
+  const zoomScale = containerRect.width > 0 ? containerRect.width / CONTENT_WIDTH_PX : 1;
+  const totalHeight = containerRect.height / zoomScale;
   if (totalHeight <= 0) return [{ start: 0, end: availableHeight }];
 
-  const containerRect = container.getBoundingClientRect();
   const boundaries = new Set([0, totalHeight]);
 
   // 1. Block-level element boundaries (paragraphs, images, headings, etc.)
@@ -106,8 +110,8 @@ function calculatePageBreaks(container, availableHeight) {
   const elements = container.querySelectorAll(blockSelector);
   elements.forEach(el => {
     const rect = el.getBoundingClientRect();
-    const top = Math.round(rect.top - containerRect.top);
-    const bottom = Math.round(rect.bottom - containerRect.top);
+    const top = Math.round((rect.top - containerRect.top) / zoomScale);
+    const bottom = Math.round((rect.bottom - containerRect.top) / zoomScale);
     if (top >= 0 && top <= totalHeight) boundaries.add(top);
     if (bottom >= 0 && bottom <= totalHeight) boundaries.add(bottom);
   });
@@ -124,8 +128,8 @@ function calculatePageBreaks(container, availableHeight) {
       range.selectNodeContents(node);
       const rects = range.getClientRects();
       for (const rect of rects) {
-        const top = Math.round(rect.top - containerRect.top);
-        const bottom = Math.round(rect.bottom - containerRect.top);
+        const top = Math.round((rect.top - containerRect.top) / zoomScale);
+        const bottom = Math.round((rect.bottom - containerRect.top) / zoomScale);
         if (top >= 0 && top <= totalHeight) boundaries.add(top);
         if (bottom >= 0 && bottom <= totalHeight) boundaries.add(bottom);
       }
