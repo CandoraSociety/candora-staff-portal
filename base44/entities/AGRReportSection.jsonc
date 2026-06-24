@@ -144,6 +144,11 @@
       "type": "boolean",
       "default": false,
       "description": "Force this section to start on a new page when printing"
+    },
+    "fit_to_page": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, scale the section content down so it fits on a single page. When false (default), content flows naturally and carries over to subsequent pages."
     }
   },
   "required": [

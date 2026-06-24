@@ -614,6 +614,10 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <input type="checkbox" checked={hideFooter} onChange={e => { setHideFooter(e.target.checked); onUpdate(section.id, { hide_footer: e.target.checked }); }} className="rounded" />
               Hide footer on this page
             </label>
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={section.fit_to_page || false} onChange={e => onUpdate(section.id, { fit_to_page: e.target.checked })} className="rounded" />
+              Fit to one page (scale text to fit)
+            </label>
           </div>
 
           {/* Inline Data & Charts */}
