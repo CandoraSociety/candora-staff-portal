@@ -5,10 +5,11 @@ import { ribbonGradient } from './imageFilters';
 const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
 const PADDING_PX = 48; // 0.75in padding top/bottom
-const FOOTER_RESERVE_PX = 80; // Reserve space for footer
+const FOOTER_RESERVE_PX = 96; // Reserve space for footer (increased for safety)
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_RESERVE_PX;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
+const TEXT_BUFFER_PX = 8; // Extra buffer to prevent letters being sliced
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -166,17 +167,17 @@ export default function PaginatedSection({
     const measure = () => {
       if (measureRef.current) {
         const totalHeight = measureRef.current.scrollHeight;
-        const firstPageHeight = availableContentHeight;
-        const continuationPageHeight = availableContentHeight - headerHeight;
+        const firstPageHeightWithBuffer = availableContentHeight - TEXT_BUFFER_PX;
+        const continuationPageHeightWithBuffer = availableContentHeight - headerHeight - TEXT_BUFFER_PX;
         
-        if (totalHeight <= firstPageHeight) { 
+        if (totalHeight <= firstPageHeightWithBuffer) { 
           if (pageCount !== 1) { setPageCount(1); if (onPageCountChange) onPageCountChange(sectionId, 1); }
           return; 
         }
 
-        let remaining = totalHeight - firstPageHeight;
+        let remaining = totalHeight - firstPageHeightWithBuffer;
         let pages = 1;
-        while (remaining > 0) { pages++; remaining -= continuationPageHeight; }
+        while (remaining > 0) { pages++; remaining -= continuationPageHeightWithBuffer; }
         if (pages !== pageCount) { setPageCount(pages); if (onPageCountChange) onPageCountChange(sectionId, pages); }
       }
     };
@@ -206,15 +207,14 @@ export default function PaginatedSection({
     );
   }
 
-  const firstPageHeight = availableContentHeight;
-  const continuationPageHeight = availableContentHeight - headerHeight;
+  const firstPageHeight = availableContentHeight - TEXT_BUFFER_PX; // Reserve buffer to prevent slicing
+  const continuationPageHeight = availableContentHeight - headerHeight - TEXT_BUFFER_PX;
 
   return (
     <>
       <div className="print:hidden">
         {Array.from({ length: pageCount }).map((_, i) => {
           const isFirstPage = i === 0;
-          const pageAvailableHeight = isFirstPage ? firstPageHeight : continuationPageHeight;
           
           // Calculate cumulative content offset BEFORE this page
           let cumulativeOffset = 0;
@@ -222,7 +222,8 @@ export default function PaginatedSection({
             cumulativeOffset += (p === 0 ? firstPageHeight : continuationPageHeight);
           }
 
-          // For continuation pages, content must be shifted up to account for header
+          // Content top position: on continuation pages, shift content up by cumulative offset
+          // and add headerHeight so content starts BELOW the header
           const contentTop = isFirstPage ? 0 : -(cumulativeOffset - headerHeight);
 
           return (
@@ -239,7 +240,7 @@ export default function PaginatedSection({
                 {/* Clipping window for this page */}
                 <div
                   ref={i === 0 ? onSectionRef : null}
-                  style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: pageAvailableHeight, overflow: 'hidden' }}
+                  style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: isFirstPage ? firstPageHeight : continuationPageHeight + headerHeight, overflow: 'hidden' }}
                 >
                   {/* Header on continuation pages - rendered inside clipping window, above content */}
                   {!isFirstPage && hasContHeader && (
@@ -253,7 +254,7 @@ export default function PaginatedSection({
                     className="paginated-content"
                     style={{
                       position: 'absolute',
-                      top: contentTop,
+                      top: isFirstPage ? 0 : contentTop + headerHeight,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
@@ -280,7 +281,7 @@ export default function PaginatedSection({
               <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
             </div>
           )}
-          <div className="px-12 py-10" style={{ paddingBottom: '3rem' }}>{children}</div>
+          <div className="px-12" style={{ paddingTop: '3rem', paddingBottom: '3.5rem' }}>{children}</div>
           {hasFooter && (
             <div className="print-footer" style={{ position: 'fixed', bottom: '0.5in', left: '0.5in', right: '0.5in' }}>
               <PageFooter masterFooter={masterFooter} footerImage={footerImage} footerImageHeight={footerImageHeight} footerFontSize={footerFontSize} footerLayout={footerLayout} footerZones={footerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} useCssCounter />
