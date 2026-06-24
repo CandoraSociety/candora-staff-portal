@@ -359,8 +359,25 @@ export default function SectionRenderer({
     // Chart with free-form horizontal and vertical positioning
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
     const chartY = section.chart_y_offset ?? 0; // pixels from top
+    const handleArrowKeyMove = (direction) => {
+      if (!onUpdate) return;
+      const step = 10; // pixels per arrow press
+      if (direction === 'up') onUpdate(section.id, { chart_y_offset: Math.max(0, chartY - step) });
+      if (direction === 'down') onUpdate(section.id, { chart_y_offset: chartY + step });
+      if (direction === 'left') onUpdate(section.id, { chart_x_offset: Math.max(0, chartX - 2) });
+      if (direction === 'right') onUpdate(section.id, { chart_x_offset: Math.min(100, chartX + 2) });
+    };
     const draggableChartBlock = dataBlock ? (
       <div className="relative group" style={{ position: 'relative', width: '100%', minHeight: '400px' }}>
+        {/* Arrow key controls */}
+        {onUpdate && !isPrint && (
+          <div className="no-print absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+            <button onClick={() => handleArrowKeyMove('up')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move up (↑)">↑</button>
+            <button onClick={() => handleArrowKeyMove('down')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move down (↓)">↓</button>
+            <button onClick={() => handleArrowKeyMove('left')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move left (←)">←</button>
+            <button onClick={() => handleArrowKeyMove('right')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move right (→)">→</button>
+          </div>
+        )}
         <div
           className="relative"
           style={{
@@ -382,12 +399,20 @@ export default function SectionRenderer({
             {dataBlock}
           </DraggableImageBlock>
         </div>
-        {/* Width slider */}
+        {/* Position controls */}
         {onUpdate && !isPrint && (
-          <div className="no-print absolute -bottom-6 left-0 right-0 bg-black/55 rounded px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-            <span className="text-[10px] text-white shrink-0">Width</span>
-            <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-            <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+          <div className="no-print absolute -bottom-8 left-0 right-0 bg-black/55 rounded px-2 py-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-white shrink-0">Width</span>
+              <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+              <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-white shrink-0">Vertical</span>
+              <button onClick={() => onUpdate(section.id, { chart_y_offset: Math.max(0, (section.chart_y_offset || 0) - 10) })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↑</button>
+              <span className="text-[10px] text-white w-10 text-right tabular-nums">{section.chart_y_offset || 0}px</span>
+              <button onClick={() => onUpdate(section.id, { chart_y_offset: (section.chart_y_offset || 0) + 10 })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↓</button>
+            </div>
           </div>
         )}
       </div>
