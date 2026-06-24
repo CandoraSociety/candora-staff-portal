@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, RotateCw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2, Frame } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, RotateCw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2, Frame, ChartNoAxesCombined } from 'lucide-react';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
@@ -45,7 +45,7 @@ const QUILL_FORMATS = [
   'color', 'background', 'align', 'list', 'bullet', 'link', 'image'
 ];
 
-export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions, onExpand }) {
+export default function SectionEditor({ section, masterStyles, onUpdate, onDelete, onGenerateSuggestions, suggestions, onExpand, dataEntries = [], branding }) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState(section.title || '');
   const [content, setContent] = useState(section.content || '');
@@ -73,7 +73,6 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [titleStyles, setTitleStyles] = useState(parseStyles(section.title_styles));
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showDataPanel, setShowDataPanel] = useState(false);
-  const [dataEntries, setDataEntries] = useState([]);
   const [chartLabel, setChartLabel] = useState('');
   const [chartType, setChartType] = useState('bar');
   const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
@@ -83,6 +82,11 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [importingFile, setImportingFile] = useState(false);
   const [showPasteData, setShowPasteData] = useState(false);
   const [pasteDataValue, setPasteDataValue] = useState('');
+  const [editingChartId, setEditingChartId] = useState(null);
+  const [editChartLabel, setEditChartLabel] = useState('');
+  const [editChartType, setEditChartType] = useState('bar');
+  const [editChartRows, setEditChartRows] = useState([]);
+  const [editTableColumns, setEditTableColumns] = useState([]);
 
   const master = parseStyles(masterStyles);
   const masterTitle = master.title || {};
@@ -185,15 +189,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     onUpdate(section.id, { image_url: null });
   };
 
-  const loadDataEntries = async () => {
-    const data = await base44.entities.AGRReportData.filter({ report_id: section.report_id, section_id: section.id });
-    setDataEntries(data);
-  };
-
   const handleToggleData = () => {
-    const next = !showDataPanel;
-    setShowDataPanel(next);
-    if (next) loadDataEntries();
+    setShowDataPanel(!showDataPanel);
   };
 
   const updateChartRow = (idx, field, val) => {
@@ -247,11 +244,10 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     }
     
     const config = { chart_type: chartType, title: chartLabel, data: chartData };
-    const entry = await base44.entities.AGRReportData.create({
+    await base44.entities.AGRReportData.create({
       label: chartLabel, report_id: section.report_id, section_id: section.id,
       data_type: 'manual', chart_config: JSON.stringify(config), status: 'analyzed'
     });
-    setDataEntries(prev => [...prev, entry]);
     setChartLabel('');
     setChartType('bar');
     setChartRows([{ name: '', value: '' }, { name: '', value: '' }]);
@@ -298,14 +294,81 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     const file = e.target.files?.[0];
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    const entry = await base44.entities.AGRReportData.create({ label: file.name, report_id: section.report_id, section_id: section.id, data_type: 'file_upload', source_file_url: file_url, source_file_name: file.name });
-    setDataEntries(prev => [...prev, entry]);
+    await base44.entities.AGRReportData.create({ label: file.name, report_id: section.report_id, section_id: section.id, data_type: 'file_upload', source_file_url: file_url, source_file_name: file.name });
   };
 
   const handleAnalyze = async (entryId) => {
     setAnalyzing(prev => ({ ...prev, [entryId]: true }));
-    try { await base44.functions.invoke('analyzeReportData', { data_entry_id: entryId }); await loadDataEntries(); } catch {}
+    try { await base44.functions.invoke('analyzeReportData', { data_entry_id: entryId }); } catch {}
     setAnalyzing(prev => ({ ...prev, [entryId]: false }));
+  };
+
+  const handleEditChart = (entry) => {
+    setEditingChartId(entry.id);
+    const chartConfig = entry.chart_config ? (typeof entry.chart_config === 'string' ? JSON.parse(entry.chart_config) : entry.chart_config) : null;
+    if (chartConfig) {
+      setEditChartLabel(chartConfig.title || '');
+      setEditChartType(chartConfig.chart_type || 'bar');
+      const data = chartConfig.data || [];
+      setEditChartRows(data.map(r => ({ name: r.name || '', value: r.value != null ? String(r.value) : '', columns: r.columns || {} })));
+      // Extract table columns from first row if it's a table
+      if (chartConfig.chart_type === 'table' && data.length > 0 && data[0].columns) {
+        setEditTableColumns(Object.keys(data[0].columns));
+      } else {
+        setEditTableColumns(['Item', 'Value']);
+      }
+    }
+  };
+
+  const handleSaveEditChart = async () => {
+    let validRows;
+    if (editChartType === 'table') {
+      validRows = editChartRows.filter(r => {
+        if (!r.columns) return false;
+        return editTableColumns.some(col => r.columns[col] && r.columns[col].trim() !== '');
+      });
+      if (validRows.length === 0) return;
+    } else {
+      validRows = editChartRows.filter(r => r.name.trim() && r.value !== '');
+      if (!validRows.length) return;
+    }
+    
+    let chartData;
+    if (editChartType === 'table') {
+      chartData = validRows.map(r => ({
+        name: r.name || r.columns?.[editTableColumns[0]] || '',
+        value: r.value || r.columns?.[editTableColumns[1]] || '',
+        columns: r.columns || {}
+      }));
+    } else {
+      chartData = validRows.map(r => ({ name: r.name.trim(), value: parseFloat(r.value) || 0 }));
+    }
+    
+    const config = { chart_type: editChartType, title: editChartLabel, data: chartData };
+    await base44.entities.AGRReportData.update(editingChartId, {
+      label: editChartLabel,
+      chart_config: JSON.stringify(config)
+    });
+    setEditingChartId(null);
+    setEditChartLabel('');
+    setEditChartType('bar');
+    setEditChartRows([]);
+    setEditTableColumns([]);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingChartId(null);
+    setEditChartLabel('');
+    setEditChartType('bar');
+    setEditChartRows([]);
+    setEditTableColumns([]);
+  };
+
+  const handleDeleteChart = async (entryId) => {
+    if (confirm('Delete this chart/table?')) {
+      await base44.entities.AGRReportData.delete(entryId);
+      await loadDataEntries();
+    }
   };
 
   const handlePasteData = () => {
@@ -799,6 +862,108 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 {/* Existing chart entries */}
                 {dataEntries.map(entry => {
                   const chartConfig = entry.chart_config ? (typeof entry.chart_config === 'string' ? JSON.parse(entry.chart_config) : entry.chart_config) : null;
+                  const isEditing = editingChartId === entry.id;
+                  
+                  if (isEditing) {
+                    return (
+                      <div key={entry.id} className="border rounded-lg p-3 bg-blue-50/30">
+                        <p className="text-xs font-semibold mb-2">Edit {editChartType === 'table' ? 'Table' : 'Chart'}</p>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">Label</Label>
+                            <Input value={editChartLabel} onChange={e => setEditChartLabel(e.target.value)} placeholder="Leave empty for no label" className="text-xs h-7" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground">Type</Label>
+                            <Select value={editChartType} onValueChange={setEditChartType}>
+                              <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="bar">Bar Chart</SelectItem>
+                                <SelectItem value="line">Line Chart</SelectItem>
+                                <SelectItem value="pie">Pie Chart</SelectItem>
+                                <SelectItem value="area">Area Chart</SelectItem>
+                                <SelectItem value="table">Table</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        {editChartType === 'table' ? (
+                          <div className="mb-2">
+                            <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
+                              <span className="text-[10px] text-accent font-semibold">Columns:</span>
+                              {editTableColumns.map((col, idx) => (
+                                <div key={idx} className="flex items-center gap-1 flex-1">
+                                  <Input value={col} onChange={e => {
+                                    const newCols = [...editTableColumns];
+                                    newCols[idx] = e.target.value;
+                                    setEditTableColumns(newCols);
+                                  }} placeholder={`Column ${idx + 1}`} className="text-xs h-6" />
+                                  {editTableColumns.length > 2 && (
+                                    <button onClick={() => setEditTableColumns(prev => prev.filter((_, i) => i !== idx))} className="w-5 h-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button onClick={() => setEditTableColumns(prev => [...prev, `Column ${prev.length + 1}`])} className="w-6 h-6 flex items-center justify-center rounded text-accent hover:bg-accent/10">
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                            <div className="space-y-1 mt-2">
+                              {editChartRows.map((row, rowIdx) => (
+                                <div key={rowIdx} className="flex items-center gap-2">
+                                  {editTableColumns.map((col, colIdx) => (
+                                    <Input key={colIdx} value={row.columns?.[col] || ''} onChange={e => {
+                                      const newRow = { ...row, columns: { ...row.columns, [col]: e.target.value } };
+                                      setEditChartRows(prev => prev.map((r, i) => i === rowIdx ? newRow : r));
+                                    }} placeholder={col} className="text-xs h-7 flex-1" />
+                                  ))}
+                                  {editChartRows.length > 1 && (
+                                    <button onClick={() => setEditChartRows(prev => prev.filter((_, i) => i !== rowIdx))} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <button onClick={() => setEditChartRows(prev => [...prev, {}])} className="flex items-center gap-1 text-[10px] text-accent hover:underline mt-2">
+                              <Plus className="w-3 h-3" />Add Row
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mb-2">
+                            <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
+                              <span className="flex-1">Label</span>
+                              <span className="w-20">Value</span>
+                              <span className="w-6" />
+                            </div>
+                            {editChartRows.map((row, idx) => (
+                              <div key={idx} className="flex items-center gap-2 mb-1">
+                                <Input value={row.name} onChange={e => setEditChartRows(prev => prev.map((r, i) => i === idx ? { ...r, name: e.target.value } : r))} placeholder={`Data point ${idx + 1}`} className="flex-1 text-xs h-7" />
+                                <Input type="number" value={row.value} onChange={e => setEditChartRows(prev => prev.map((r, i) => i === idx ? { ...r, value: e.target.value } : r))} placeholder="0" className="w-20 text-xs h-7" />
+                                {editChartRows.length > 2 && (
+                                  <button onClick={() => setEditChartRows(prev => prev.filter((_, i) => i !== idx))} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {editChartRows.length <= 2 && <span className="w-6" />}
+                              </div>
+                            ))}
+                            <button onClick={() => setEditChartRows(prev => [...prev, { name: '', value: '' }])} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
+                              <Plus className="w-3 h-3" />Add Row
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <Button onClick={handleSaveEditChart} size="sm" className="gap-1 text-xs h-7" disabled={!editChartLabel.trim() && editChartType !== 'table'}>
+                            <Check className="w-3 h-3" />Save Changes
+                          </Button>
+                          <Button variant="outline" onClick={handleCancelEdit} size="sm" className="text-xs h-7">Cancel</Button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
                   return (
                     <div key={entry.id} className="border rounded-lg p-3 bg-slate-50">
                       <div className="flex items-center justify-between mb-2">
@@ -807,6 +972,12 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                           <p className="text-[10px] text-muted-foreground">{entry.data_type === 'file_upload' ? `File: ${entry.source_file_name}` : 'Manual chart'}</p>
                         </div>
                         <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditChart(entry)} className="text-xs gap-1 h-6">
+                            <Settings2 className="w-3 h-3" />Edit
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteChart(entry.id)} className="text-xs gap-1 h-6 text-red-400 hover:text-red-600">
+                            <Trash2 className="w-3 h-3" />Delete
+                          </Button>
                           {entry.data_type === 'file_upload' && entry.status !== 'analyzed' && (
                             <Button variant="outline" size="sm" onClick={() => handleAnalyze(entry.id)} disabled={analyzing[entry.id]} className="gap-1 text-[10px] h-6">
                               <Sparkles className="w-3 h-3" />{analyzing[entry.id] ? '...' : 'Analyze'}
@@ -815,7 +986,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                           {entry.status === 'analyzed' && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Ready</span>}
                         </div>
                       </div>
-                      {chartConfig && <ChartRenderer chartConfig={chartConfig} />}
+                      {chartConfig && <ChartRenderer chartConfig={chartConfig} branding={branding} />}
                       {entry.ai_narrative && <p className="text-xs text-slate-700 mt-2">{entry.ai_narrative}</p>}
                     </div>
                   );

@@ -466,6 +466,8 @@ export default function ReportingAGREditor() {
                               onGenerateSuggestions={handleGenerateSuggestions}
                               suggestions={suggestions[section.id]}
                               onExpand={setActiveSectionId}
+                              dataEntries={dataEntries}
+                              branding={branding}
                             />
                           </div>
                         )}
