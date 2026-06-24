@@ -240,7 +240,7 @@ export default function PaginatedSection({
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
   const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
   const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
-  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 16;
+  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 4;
   // Only subtract header height on continuation pages (i > 0), not the first page
   const columnHeight = availableContentHeight;
 
@@ -384,7 +384,7 @@ export default function PaginatedSection({
                     columnWidth: CONTENT_WIDTH_PX,
                     columnGap: 0,
                     columnFill: 'auto',
-                    height: availableContentHeight - (i > 0 && hasContHeader ? headerHeight + 8 : 8),
+                    height: availableContentHeight - (i > 0 && hasContHeader ? headerHeight : 0),
                     position: 'absolute',
                     top: i > 0 && hasContHeader ? headerHeight : 0,
                     left: 0,
