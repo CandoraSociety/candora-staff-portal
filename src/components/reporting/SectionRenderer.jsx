@@ -347,32 +347,35 @@ export default function SectionRenderer({
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
-            <div key={d.id} className="relative group border-2 rounded-lg p-4 hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 transition-all" style={{ borderColor: `${pc}30`, backgroundColor: `${pc}06`, boxShadow: `0 2px 8px ${pc}10` }}>
+            <div key={d.id} className="border-2 rounded-lg p-4 transition-all" style={{ borderColor: `${pc}30`, backgroundColor: `${pc}06`, boxShadow: `0 2px 8px ${pc}10` }}>
               {chartConfig && <ChartRenderer chartConfig={chartConfig} branding={branding} isPrint={isPrint} />}
               {d.ai_narrative && <p className="text-sm text-slate-700 mt-2">{d.ai_narrative}</p>}
-              {onUpdate && !isPrint && (
-                <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] text-white shrink-0">Width</span>
-                  <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-                  <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
     ) : null;
 
-    // Chart is always draggable via a drag handle bar; chart_position controls left/right/full
+    // Chart is draggable via a drag handle bar; chart_position controls left/right/full
     const chartPos = section.chart_position || 'full';
     const draggableChartBlock = dataBlock ? (
-      <DraggableImageBlock section={section} onUpdate={onUpdate}
-        positionField="chart_position" widthField="chart_width"
-        positionMap={{ left: 'left', right: 'right', full: 'full' }}
-        defaultWidth={chartWidth || 100}
-        dragHandle>
-        {dataBlock}
-      </DraggableImageBlock>
+      <div className="relative group">
+        <DraggableImageBlock section={section} onUpdate={onUpdate}
+          positionField="chart_position" widthField="chart_width"
+          positionMap={{ left: 'left', right: 'right', full: 'full' }}
+          defaultWidth={chartWidth || 100}
+          dragHandle>
+          {dataBlock}
+        </DraggableImageBlock>
+        {/* Width slider - always visible on hover of the wrapper */}
+        {onUpdate && !isPrint && (
+          <div className="no-print absolute -bottom-6 left-0 right-0 bg-black/55 rounded px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+            <span className="text-[10px] text-white shrink-0">Width</span>
+            <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+            <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+          </div>
+        )}
+      </div>
     ) : null;
 
     const floatedChart = draggableChartBlock && (chartPos === 'left' || chartPos === 'right') ? (
