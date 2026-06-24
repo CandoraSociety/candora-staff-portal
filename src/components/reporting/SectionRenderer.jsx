@@ -281,8 +281,6 @@ export default function SectionRenderer({
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
         color: masterContent.color || 'hsl(var(--foreground))',
         minHeight: textColumns > 1 ? '200px' : undefined,
-        width: '100%',
-        maxWidth: '100%',
         overflow: 'visible',
         lineHeight: 1.6,
         ...(section.content_bg_color ? {

@@ -89,7 +89,6 @@ export default function MultiImageLayer({ section, onUpdate, branding, isPrint }
               opacity: img.opacity != null ? img.opacity / 100 : 1,
               transform: `rotate(${img.rotation || 0}deg)`,
               zIndex: 5,
-              clear: 'both',
             }}
           >
             {editable && (
