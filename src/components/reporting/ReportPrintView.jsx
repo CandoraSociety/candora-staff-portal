@@ -3,7 +3,7 @@ import SectionRenderer from '@/components/reporting/SectionRenderer';
 import StyledCoverPreview from '@/components/reporting/CoverPreview';
 import ScaledTOC from '@/components/reporting/ScaledTOC';
 import FitToPage from '@/components/reporting/FitToPage';
-import PaginatedSection from '@/components/reporting/PaginatedSection';
+import PaginatedSection, { ContinuationHeader, PageFooter } from '@/components/reporting/PaginatedSection';
 import { base44 } from '@/api/base44Client';
 
 function PagePreview({ pageNum, children, className, fitToPage }) {
@@ -53,8 +53,45 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
     }
   };
 
+  const primaryColor = branding?.primary_color || '#1a2744';
+
   return (
-    <div className="flex flex-col items-center gap-3 print:block">
+    <div className="flex flex-col items-center gap-3 force-block-print">
+      {/* ── Fixed print header — repeats on every page via position:fixed, sits in top margin ── */}
+      {report.show_header_all && (
+        <div className="hidden print:block print-header">
+          <ContinuationHeader
+            masterHeader={report.master_header_text}
+            headerImage={report.master_header_image}
+            headerImageHeight={report.header_image_height}
+            headerFontSize={report.header_font_size}
+            headerLayout={report.header_layout}
+            headerZones={report.header_zones}
+            primaryColor={primaryColor}
+            branding={branding}
+            showPageNumber={false}
+          />
+        </div>
+      )}
+
+      {/* ── Fixed print footer — repeats on every page via position:fixed, sits in bottom margin ── */}
+      {report.show_footer_all && (
+        <div className="hidden print:block print-footer">
+          <PageFooter
+            masterFooter={report.master_footer_text}
+            footerImage={report.master_footer_image}
+            footerImageHeight={report.footer_image_height}
+            footerFontSize={report.footer_font_size}
+            footerLayout={report.footer_layout}
+            footerZones={report.footer_zones}
+            primaryColor={primaryColor}
+            branding={branding}
+            showPageNumber={report.show_page_numbers_all}
+            useCssCounter
+          />
+        </div>
+      )}
+
       {/* Front cover */}
       <PagePreview pageNum={1}>
         <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
