@@ -118,6 +118,8 @@
   .no-print { display: none !important; }
   .print-break { page-break-before: always; }
   body { background: white !important; }
+  /* Ensure the body and root allow printing */
+  body.print-ready { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   /* Force flex containers to block in print so children can break across pages */
   .force-block-print {
     display: block !important;
@@ -165,6 +167,11 @@
   img, table, .recharts-wrapper {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+  }
+  /* Ensure all content is visible and printable */
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
 }
 

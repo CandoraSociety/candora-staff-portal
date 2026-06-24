@@ -63,7 +63,15 @@ export default function ReportingAGRPrint() {
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
           <p className="text-xs text-muted-foreground">Print-optimized view • Click a section heading to toggle page break</p>
         </div>
-        <Button onClick={() => window.print()} className="gap-2">
+        <Button onClick={() => {
+          // Ensure print styles are ready
+          document.body.classList.add('print-ready');
+          // Small delay to let styles apply
+          setTimeout(() => {
+            window.print();
+            document.body.classList.remove('print-ready');
+          }, 100);
+        }} className="gap-2">
           <Printer className="w-4 h-4" />Print / Save PDF
         </Button>
       </div>
