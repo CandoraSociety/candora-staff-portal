@@ -223,8 +223,8 @@ export default function PaginatedSection({
           }
 
           // Content top position: on continuation pages, shift content up by cumulative offset
-          // and add headerHeight so content starts BELOW the header
-          const contentTop = isFirstPage ? 0 : -(cumulativeOffset - headerHeight);
+          // so previously shown content is hidden, then push down by headerHeight so it starts below the header
+          const contentTop = isFirstPage ? 0 : -(cumulativeOffset) + headerHeight;
 
           return (
             <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
@@ -254,7 +254,7 @@ export default function PaginatedSection({
                     className="paginated-content"
                     style={{
                       position: 'absolute',
-                      top: isFirstPage ? 0 : contentTop + headerHeight,
+                      top: contentTop,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
