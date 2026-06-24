@@ -368,7 +368,15 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
 
   const handleDeleteChart = async (entryId) => {
     if (confirm('Delete this chart/table?')) {
-      await base44.entities.AGRReportData.delete(entryId);
+      try {
+        await base44.entities.AGRReportData.delete(entryId);
+      } catch (error) {
+        if (error.message?.includes('not found')) {
+          // Entity already deleted, silently ignore
+          return;
+        }
+        throw error;
+      }
     }
   };
 
