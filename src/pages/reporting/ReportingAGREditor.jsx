@@ -134,10 +134,20 @@ export default function ReportingAGREditor() {
     touchReport();
   };
 
+  // Debounced update for rapid changes (e.g., arrow key positioning)
+  const updateTimeouts = useRef({});
   const handleUpdateSection = async (sectionId, patch) => {
-    await base44.entities.AGRReportSection.update(sectionId, patch);
-    setSections(prev => prev.map(s => s.id === sectionId ? { ...s, ...patch } : s));
-    touchReport();
+    // Clear pending update for this section
+    if (updateTimeouts.current[sectionId]) {
+      clearTimeout(updateTimeouts.current[sectionId]);
+    }
+    // Debounce by 300ms to avoid rate limits
+    updateTimeouts.current[sectionId] = setTimeout(async () => {
+      await base44.entities.AGRReportSection.update(sectionId, patch);
+      setSections(prev => prev.map(s => s.id === sectionId ? { ...s, ...patch } : s));
+      touchReport();
+      delete updateTimeouts.current[sectionId];
+    }, 300);
   };
 
   const handleDeleteSection = async (sectionId) => {
