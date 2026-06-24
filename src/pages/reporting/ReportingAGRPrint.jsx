@@ -41,21 +41,29 @@ export default function ReportingAGRPrint() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [r, secs, brandList, dataList, analysisList] = await Promise.all([
-          base44.entities.AGRReport.get(id),
-          base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index'),
-          base44.entities.AGRBranding.filter({ report_id: id }),
-          base44.entities.AGRReportData.filter({ report_id: id }),
-          base44.entities.AGRAnalysisResult.filter({ report_id: id }),
-        ]);
+        console.log('Loading report:', id);
+        const r = await base44.entities.AGRReport.get(id);
+        console.log('Report loaded:', r);
         setReport(r);
+        
+        const secs = await base44.entities.AGRReportSection.filter({ report_id: id }, 'order_index');
+        console.log('Sections loaded:', secs.length);
         setSections(secs);
+        
+        const brandList = await base44.entities.AGRBranding.filter({ report_id: id });
+        console.log('Branding loaded:', brandList?.length);
         setBranding(brandList[0] || null);
+        
+        const dataList = await base44.entities.AGRReportData.filter({ report_id: id });
+        console.log('Data loaded:', dataList?.length);
         setDataEntries(dataList);
+        
+        const analysisList = await base44.entities.AGRAnalysisResult.filter({ report_id: id });
+        console.log('Analysis loaded:', analysisList?.length);
         setAnalysis(analysisList[0] || null);
       } catch (e) {
         console.error('Load error:', e);
-        setError(e.message || 'Failed to load report');
+        setError(e.message || 'Failed to load report: ' + e.message);
       } finally {
         setLoading(false);
       }
@@ -71,11 +79,21 @@ export default function ReportingAGRPrint() {
     );
   }
 
-  if (error || !report) {
+  if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <p className="text-destructive font-semibold">{error ? 'Failed to load report' : 'Report not found'}</p>
-        {error && <p className="text-sm text-muted-foreground">{error}</p>}
+        <p className="text-destructive font-semibold">Error loading report</p>
+        <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+        <p className="text-xs text-muted-foreground">Check browser console (F12) for details</p>
+        <Link to="/reporting/agr" className="text-accent hover:underline text-sm">Back to AGR Reports</Link>
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-destructive font-semibold">Report not found</p>
         <Link to="/reporting/agr" className="text-accent hover:underline text-sm">Back to AGR Reports</Link>
       </div>
     );
