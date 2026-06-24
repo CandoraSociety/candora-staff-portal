@@ -120,13 +120,15 @@ export default function PaginatedSection({
   const measureRef = useRef(null);
   const [estPages, setEstPages] = useState(1);
 
-  // Simple page count estimate for TOC only — no clipping involved
+  // Page count based on actual 8.5x11 page height (1056px = 11in)
   useLayoutEffect(() => {
     if (fitToPage) { setEstPages(1); onPageCountChange?.(sectionId, 1); return; }
     const measure = () => {
       if (measureRef.current) {
         const h = measureRef.current.scrollHeight;
-        const pages = Math.max(1, Math.ceil(h / PAGE_CONTENT_HEIGHT));
+        // Total card height = content + top/bottom padding + accent bar (4px)
+        const totalCardHeight = h + PADDING_PX * 2 + 4;
+        const pages = Math.max(1, Math.ceil(totalCardHeight / 1056));
         if (pages !== estPages) { setEstPages(pages); onPageCountChange?.(sectionId, pages); }
       }
     };
@@ -140,14 +142,14 @@ export default function PaginatedSection({
 
   return (
     <>
-      {/* ── Screen preview: natural flow, NO clipping ── */}
+      {/* ── Screen preview: content flows naturally with visual page boundary lines ── */}
       <div className="print:hidden">
         <div className="relative mb-6">
           <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
           <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
           <div
             ref={onSectionRef}
-            className="relative bg-white rounded-lg shadow-lg overflow-hidden"
+            className="relative bg-white rounded-lg shadow-lg overflow-visible"
             style={{ width: '8.5in', maxWidth: '100%' }}
           >
             <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
@@ -161,6 +163,19 @@ export default function PaginatedSection({
             <div style={{ padding: `${PADDING_PX}px` }}>
               {children}
             </div>
+            {/* Visual page boundary lines at every 11in (1056px) mark */}
+            {Array.from({ length: Math.max(0, estPages - 1) }).map((_, i) => (
+              <div
+                key={i}
+                className="no-print absolute left-0 right-0 z-40 pointer-events-none"
+                style={{ top: `${(i + 1) * 1056}px` }}
+              >
+                <div className="border-t-2 border-dashed border-red-400" />
+                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-red-500 bg-white px-2 py-0.5 rounded-full shadow border border-red-200 whitespace-nowrap">
+                  ↕ Page break — page {i + 2}
+                </span>
+              </div>
+            ))}
           </div>
           {pageNum && (
             <div className="no-print text-center mt-2">
