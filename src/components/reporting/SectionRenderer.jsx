@@ -356,15 +356,17 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    // Chart with free-form horizontal positioning
+    // Chart with free-form horizontal and vertical positioning
     const chartX = section.chart_x_offset || 0; // percentage 0-100
+    const chartY = section.chart_y_offset || 0; // pixels from top
     const draggableChartBlock = dataBlock ? (
-      <div className="relative group" style={{ position: 'relative', width: '100%' }}>
+      <div className="relative group" style={{ position: 'relative', width: '100%', height: `${Math.max(200, chartY + 280)}px` }}>
         <div
           className="relative"
           style={{
-            position: 'relative',
+            position: 'absolute',
             left: `${chartX}%`,
+            top: `${chartY}px`,
             width: `${chartWidth}%`,
             transform: 'translateX(-50%)',
           }}
@@ -378,12 +380,19 @@ export default function SectionRenderer({
             {dataBlock}
           </DraggableImageBlock>
         </div>
-        {/* Width slider */}
+        {/* Width and vertical sliders */}
         {onUpdate && !isPrint && (
-          <div className="no-print absolute -bottom-6 left-0 right-0 bg-black/55 rounded px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-            <span className="text-[10px] text-white shrink-0">Width</span>
-            <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-            <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+          <div className="no-print absolute -bottom-8 left-0 right-0 bg-black/55 rounded px-2 py-1.5 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-white shrink-0">Width</span>
+              <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+              <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-white shrink-0">Vertical</span>
+              <input type="range" min="0" max="800" value={chartY} onChange={e => onUpdate(section.id, { chart_y_offset: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+              <span className="text-[10px] text-white w-10 text-right tabular-nums">{chartY}px</span>
+            </div>
           </div>
         )}
       </div>
