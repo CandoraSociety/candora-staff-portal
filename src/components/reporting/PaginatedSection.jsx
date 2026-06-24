@@ -2,10 +2,10 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import { ArrowBigUp } from 'lucide-react';
 import { ribbonGradient } from './imageFilters';
 
-const PAGE_HEIGHT_PX = 11 * 96;
+const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
-const PADDING_PX = 32;
-const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2;
+const PADDING_PX = 32; // 0.5in padding on each side
+const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - 48; // minus footer reserve
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
 
@@ -143,8 +143,7 @@ export default function PaginatedSection({
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll;
   const hasFooter = showFooterAll && !hideFooter;
-  const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
-  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight - 8;
+  const availableContentHeight = CONTENT_HEIGHT_PX;
 
   useLayoutEffect(() => {
     if (!hasContHeader) { setHeaderHeight(0); return; }
@@ -169,17 +168,19 @@ export default function PaginatedSection({
         const firstPageHeight = availableContentHeight;
         const continuationPageHeight = availableContentHeight - headerHeight;
         
-        if (totalHeight <= firstPageHeight) { setPageCount(1); if (onPageCountChange) onPageCountChange(sectionId, 1); return; }
+        if (totalHeight <= firstPageHeight) { 
+          if (pageCount !== 1) { setPageCount(1); if (onPageCountChange) onPageCountChange(sectionId, 1); }
+          return; 
+        }
 
         let remaining = totalHeight - firstPageHeight;
         let pages = 1;
         while (remaining > 0) { pages++; remaining -= continuationPageHeight; }
-        setPageCount(pages);
-        if (onPageCountChange) onPageCountChange(sectionId, pages);
+        if (pages !== pageCount) { setPageCount(pages); if (onPageCountChange) onPageCountChange(sectionId, pages); }
       }
     };
 
-    const timer = setTimeout(measure, 100);
+    const timer = setTimeout(measure, 150);
     const images = measureRef.current?.querySelectorAll('img') || [];
     images.forEach(img => { if (!img.complete) { img.addEventListener('load', measure); } });
     let observer;
@@ -212,7 +213,6 @@ export default function PaginatedSection({
       <div className="print:hidden">
         {Array.from({ length: pageCount }).map((_, i) => {
           const isFirstPage = i === 0;
-          const isLastPage = i === pageCount - 1;
           const pageAvailableHeight = isFirstPage ? firstPageHeight : continuationPageHeight;
           
           // Calculate cumulative content offset BEFORE this page
@@ -220,9 +220,6 @@ export default function PaginatedSection({
           for (let p = 0; p < i; p++) {
             cumulativeOffset += (p === 0 ? firstPageHeight : continuationPageHeight);
           }
-
-          // For continuation pages, content needs to start below the header
-          const contentTopOffset = isFirstPage ? 0 : headerHeight;
 
           return (
             <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
@@ -247,12 +244,12 @@ export default function PaginatedSection({
                     </div>
                   )}
 
-                  {/* Content container - positioned to show this page's slice */}
+                  {/* Content container - offset by cumulative height of previous pages */}
                   <div
                     className="paginated-content"
                     style={{
                       position: 'absolute',
-                      top: -(cumulativeOffset - contentTopOffset),
+                      top: -cumulativeOffset,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >

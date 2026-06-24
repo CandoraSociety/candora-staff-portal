@@ -135,12 +135,18 @@
   .print-page-counter::after { content: counter(page); }
 }
 
-.paginated-content img, .paginated-content .recharts-wrapper, .paginated-content table {
+.paginated-content {
+  position: relative;
+}
+.paginated-content img, .paginated-content .recharts-wrapper, .paginated-content table, .paginated-content .chart-container {
   break-inside: avoid;
+  page-break-inside: avoid;
 }
 .paginated-content p, .paginated-content li, .paginated-content h1, .paginated-content h2, .paginated-content h3, .paginated-content h4, .paginated-content h5, .paginated-content h6 {
   break-inside: avoid;
   page-break-inside: avoid;
+  orphans: 3;
+  widows: 3;
 }
 
 [contenteditable][data-placeholder]:empty::before {
