@@ -464,6 +464,12 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             <div className="flex items-center justify-between mb-1">
               <Label className="text-xs">Content</Label>
               <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => {
+                  const subHeading = '<h3>Sub-heading</h3><p>Your text here...</p>';
+                  setContent(prev => prev + subHeading);
+                }} className="text-xs gap-1 h-7">
+                  <Plus className="w-3 h-3" /> Add Sub-heading
+                </Button>
                 <Button variant="ghost" size="sm" onClick={handleGenerateSuggestions} disabled={generatingSuggestions} className="text-xs gap-1 h-7">
                   <Sparkles className="w-3 h-3" />{generatingSuggestions ? '...' : 'AI Suggestions'}
                 </Button>
