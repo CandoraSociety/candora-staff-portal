@@ -29,6 +29,7 @@ export default function SectionRenderer({
 }) {
   const pc = branding?.primary_color || '#1a2744';
   const textColumns = section.text_columns || 1;
+  const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
   const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
   // Check if chart is floated (not full-width)
   const chartX = section.chart_x_offset ?? 50;
@@ -98,7 +99,6 @@ export default function SectionRenderer({
     columnFill: 'balance',
   } : {};
 
-  const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
   const showHeader = showHeaderAll && !section.hide_header;
   const showFooter = showFooterAll && !section.hide_footer;
   const showPageNum = showPageNumbersAll && isPrint;
