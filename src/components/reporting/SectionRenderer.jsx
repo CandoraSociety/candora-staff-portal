@@ -266,9 +266,8 @@ export default function SectionRenderer({
   const hasChart = sectionData.length > 0;
   const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
-  const contentBlock = (
-    <>
-    <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
+  const hasMultiImages = (section.images || []).length > 0;
+  const contentEditableDiv = (
     <div
       ref={contentRef}
       contentEditable={!!onUpdate && !isPrint}
@@ -299,6 +298,18 @@ export default function SectionRenderer({
         if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
       } : undefined}
     />
+  );
+  // When multi-images are present, wrap content + images in a flow-root container
+  // so the browser wraps text/tables around the floated images reliably.
+  const contentBlock = hasMultiImages ? (
+    <div style={{ display: 'flow-root', width: '100%' }}>
+      <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
+      {contentEditableDiv}
+    </div>
+  ) : (
+    <>
+      <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
+      {contentEditableDiv}
     </>
   );
 
