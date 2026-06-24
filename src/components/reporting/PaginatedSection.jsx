@@ -271,9 +271,9 @@ export default function PaginatedSection({
 
     const measure = () => {
       if (measureRef.current) {
-        // scrollWidth tells us how many column-widths the content produced
-        const sw = measureRef.current.scrollWidth;
-        const pages = Math.max(1, Math.ceil(sw / CONTENT_WIDTH_PX));
+        // Measure total content height and calculate pages needed
+        const totalHeight = measureRef.current.scrollHeight;
+        const pages = Math.max(1, Math.ceil(totalHeight / availableContentHeight));
         setPageCount(pages);
         if (onPageCountChange) onPageCountChange(sectionId, pages);
       }
@@ -335,7 +335,7 @@ export default function PaginatedSection({
 
   return (
     <>
-      {/* Screen view: paginated pages using CSS multi-column flow */}
+      {/* Screen view: paginated pages - each page renders content at its vertical offset, clipped */}
       <div className="print:hidden">
         {Array.from({ length: pageCount }).map((_, i) => (
           <PageFrame key={i} pageNum={i === 0 ? pageNum : undefined} primaryColor={primaryColor}>
@@ -352,14 +352,21 @@ export default function PaginatedSection({
                 </button>
               )}
 
-              {/* Content window: positioned at the margins, clips one column at a time */}
+              {/* Content window: clips content at this page's offset */}
               <div
                 ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
-                style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: availableContentHeight, overflow: 'hidden' }}
+                style={{
+                  position: 'absolute',
+                  top: PADDING_PX,
+                  left: PADDING_PX,
+                  width: CONTENT_WIDTH_PX,
+                  height: availableContentHeight,
+                  overflow: 'hidden',
+                }}
               >
-                {/* Continuation header sits at the top of the content window */}
+                {/* Continuation header on pages 2+ */}
                 {i > 0 && hasContHeader && (
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5 }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
                     <ContinuationHeader
                       masterHeader={masterHeader}
                       headerImage={headerImage}
@@ -374,29 +381,20 @@ export default function PaginatedSection({
                     />
                   </div>
                 )}
-
-                {/* Multi-column container: CSS flows content column-by-column,
-                    breaking at line boundaries (just like Word page flow).
-                    We translate it horizontally to reveal one column per page. */}
+                {/* Content positioned at negative offset for this page */}
                 <div
                   className="paginated-content"
                   style={{
-                    columnWidth: CONTENT_WIDTH_PX,
-                    columnGap: 0,
-                    columnFill: 'auto',
-                    height: availableContentHeight - (i > 0 && hasContHeader ? headerHeight : 0),
-                    position: 'absolute',
-                    top: i > 0 && hasContHeader ? headerHeight : 0,
-                    left: 0,
-                    width: pageCount * CONTENT_WIDTH_PX,
-                    transform: `translateX(-${i * CONTENT_WIDTH_PX}px)`,
+                    position: 'relative',
+                    top: -(i * availableContentHeight),
+                    width: CONTENT_WIDTH_PX,
                   }}
                 >
                   {children}
                 </div>
               </div>
               {hasFooter && (
-                <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 5 }}>
+                <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 10 }}>
                   <PageFooter
                     masterFooter={masterFooter}
                     footerImage={footerImage}
@@ -442,16 +440,14 @@ export default function PaginatedSection({
         )}
       </div>
 
-      {/* Hidden measurement container — same column setup so scrollWidth gives us the page count */}
+      {/* Hidden measurement container — measures total content height for page count */}
       <div
         ref={measureRef}
         className="paginated-content absolute invisible pointer-events-none print:hidden"
         style={{
           width: CONTENT_WIDTH_PX,
-          height: hasContHeader ? columnHeight - headerHeight : columnHeight,
-          columnWidth: CONTENT_WIDTH_PX,
-          columnGap: 0,
-          columnFill: 'auto',
+          position: 'absolute',
+          top: '-9999px',
         }}
         aria-hidden="true"
       >
