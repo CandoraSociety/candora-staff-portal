@@ -122,16 +122,11 @@
     height: auto !important; 
     overflow: visible !important; 
     position: relative !important;
-    page-break-after: always;
     margin-bottom: 0 !important;
-    break-after: page !important;
   }
-  .print-header {
-    position: fixed !important;
-    top: 0.3in !important;
-    left: 0.75in !important;
-    right: 0.75in !important;
-    z-index: 1000 !important;
+  .print-page-end {
+    page-break-after: always;
+    break-after: page;
   }
   .print-footer {
     position: fixed !important;

@@ -111,7 +111,9 @@ export default function PaginatedSection({
   footerLayout,
   footerZones,
   showFooterAll,
-  hideFooter
+  hideFooter,
+  isFirstSection,
+  isLastSection
 }) {
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasFooter = showFooterAll && !hideFooter;
@@ -170,14 +172,12 @@ export default function PaginatedSection({
         </div>
       </div>
 
-      {/* ── Print: native browser pagination ── */}
+      {/* ── Print: native browser pagination, sections flow naturally ── */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%', position: 'relative' }}>
-          <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-
-          {/* Repeating header — position:fixed makes it appear on every printed page */}
-          {showHeaderAll && (
-            <div className="print-header" style={{ position: 'fixed', top: '0.3in', left: '0.75in', right: '0.75in', zIndex: 100 }}>
+          {/* Header — only on first section so it doesn't duplicate */}
+          {isFirstSection && showHeaderAll && (
+            <div style={{ padding: '0.75in 0.75in 0 0.75in' }}>
               <ContinuationHeader
                 masterHeader={masterHeader}
                 headerImage={headerImage}
@@ -193,14 +193,14 @@ export default function PaginatedSection({
             </div>
           )}
 
-          {/* Content — flows naturally, browser paginates */}
-          <div style={{ padding: `${PADDING_PX}px`, paddingTop: showHeaderAll ? '1.2in' : `${PADDING_PX}px` }}>
+          {/* Content — flows naturally across pages, browser handles breaks */}
+          <div style={{ padding: `${PADDING_PX}px` }}>
             {children}
           </div>
 
-          {/* Repeating footer — position:fixed makes it appear on every printed page */}
-          {hasFooter && (
-            <div className="print-footer" style={{ position: 'fixed', bottom: '0.3in', left: '0.75in', right: '0.75in', zIndex: 100 }}>
+          {/* Footer — only on last section so it doesn't duplicate */}
+          {isLastSection && hasFooter && (
+            <div style={{ padding: '0 0.75in 0.75in 0.75in' }}>
               <PageFooter
                 masterFooter={masterFooter}
                 footerImage={footerImage}
