@@ -387,7 +387,7 @@ export default function PaginatedSection({
                 >
                   {/* Continuation header on pages 2+ */}
                   {!isFirstPage && hasContHeader && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }}>
                       <ContinuationHeader
                         masterHeader={masterHeader}
                         headerImage={headerImage}
@@ -403,12 +403,13 @@ export default function PaginatedSection({
                     </div>
                   )}
 
-                  {/* Content positioned for this page */}
+                  {/* Content positioned for this page - pushed below header on continuation pages */}
                   <div
                     className="paginated-content"
                     style={{
                       position: 'relative',
                       top: isFirstPage ? 0 : contentTop,
+                      paddingTop: isFirstPage ? 0 : headerHeight,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
