@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, RotateCw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, RotateCw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2, Frame } from 'lucide-react';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
@@ -601,6 +601,13 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <select value={section.image_filter || 'none'} onChange={e => onUpdate(section.id, { image_filter: e.target.value })} className="text-xs border rounded px-1 py-0.5 h-7 bg-white flex-1">
                 {Object.entries(IMAGE_FILTERS).map(([k, f]) => <option key={k} value={k}>{f.label}</option>)}
               </select>
+            </div>
+          )}
+          {imageUrl && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">Effects</Label>
+              <Button variant={section.image_frame !== false ? 'default' : 'outline'} size="sm" onClick={() => onUpdate(section.id, { image_frame: section.image_frame === false })} className="h-7 px-2 text-xs gap-1"><Frame className="w-3 h-3" />Frame</Button>
+              <Button variant={section.image_shadow !== false ? 'default' : 'outline'} size="sm" onClick={() => onUpdate(section.id, { image_shadow: section.image_shadow === false })} className="h-7 px-2 text-xs">Shadow</Button>
             </div>
           )}
           <div>

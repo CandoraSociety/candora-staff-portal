@@ -317,7 +317,7 @@ export default function SectionRenderer({
             </div>
           </div>
         ) : (
-          <div ref={imageRef} className="relative" style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25` }}>
+          <div ref={imageRef} className="relative" style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', ...(section.image_frame !== false ? { border: `1px solid ${pc}25` } : {}) }}>
             {onUpdate && !isPrint && (
               <div
                 className={`no-print absolute -top-7 left-1/2 -translate-x-1/2 w-7 h-7 bg-blue-500 border-2 border-white rounded-full cursor-grab shadow-lg flex items-center justify-center transition-opacity z-30 ${rotating ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
@@ -327,7 +327,7 @@ export default function SectionRenderer({
                 <RotateCw className="w-3.5 h-3.5 text-white" />
               </div>
             )}
-            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px', transform: `rotate(${section.image_rotation || 0}deg)`, opacity: section.image_opacity != null ? section.image_opacity / 100 : 1, filter: getFilterCss(section.image_filter) }} />
+            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ ...(section.image_frame !== false ? { border: `2px solid ${pc}`, outline: `1px solid ${ac}40`, outlineOffset: '2px' } : {}), ...(section.image_shadow !== false ? { boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20` } : {}), transform: `rotate(${section.image_rotation || 0}deg)`, opacity: section.image_opacity != null ? section.image_opacity / 100 : 1, filter: getFilterCss(section.image_filter) }} />
           </div>
         )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}

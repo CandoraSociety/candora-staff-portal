@@ -57,6 +57,16 @@
       "description": "CSS filter preset key (none, grayscale, sepia, vintage, warm, cool, dramatic, fade, vivid, invert)",
       "default": "none"
     },
+    "image_frame": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show branded border frame around the section image"
+    },
+    "image_shadow": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show drop shadow behind the section image"
+    },
     "chart_width": {
       "type": "number",
       "description": "Chart/graph width as percentage of container (20-100)",
