@@ -239,11 +239,10 @@ export default function PaginatedSection({
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
   const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
-  const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
+  const footerReservedHeight = hasFooter ? 24 : 0;
   const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight;
-  // Measure the actual continuation header height so the column starts below it.
-  // All columns use the same height so CSS column breaks are consistent.
-  const columnHeight = hasContHeader ? availableContentHeight - headerHeight : availableContentHeight;
+  // Only subtract header height on continuation pages (i > 0), not the first page
+  const columnHeight = availableContentHeight;
 
   // Measure the real header height
   useLayoutEffect(() => {
@@ -378,17 +377,16 @@ export default function PaginatedSection({
 
                 {/* Multi-column container: CSS flows content column-by-column,
                     breaking at line boundaries (just like Word page flow).
-                    We translate it horizontally to reveal one column per page.
-                    On continuation pages the column starts below the measured header height. */}
+                    We translate it horizontally to reveal one column per page. */}
                 <div
                   className="paginated-content"
                   style={{
                     columnWidth: CONTENT_WIDTH_PX,
                     columnGap: 0,
                     columnFill: 'auto',
-                    height: columnHeight,
+                    height: availableContentHeight,
                     position: 'absolute',
-                    top: i > 0 && hasContHeader ? headerHeight : 0,
+                    top: 0,
                     left: 0,
                     width: pageCount * CONTENT_WIDTH_PX,
                     transform: `translateX(-${i * CONTENT_WIDTH_PX}px)`,
