@@ -42,6 +42,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [isExpandedDefault, setIsExpandedDefault] = useState(section.is_expanded_default !== false);
   const [hideHeader, setHideHeader] = useState(section.hide_header || false);
   const [hideFooter, setHideFooter] = useState(section.hide_footer || false);
+  const [fitToPage, setFitToPage] = useState(section.fit_to_page || false);
   const [generatingVisual, setGeneratingVisual] = useState(false);
   const [visualCategory, setVisualCategory] = useState('infographic');
   const [visualDescription, setVisualDescription] = useState('');
@@ -79,6 +80,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setIsExpandedDefault(section.is_expanded_default !== false);
     setHideHeader(section.hide_header || false);
     setHideFooter(section.hide_footer || false);
+    setFitToPage(section.fit_to_page || false);
     setTitleStyles(parseStyles(section.title_styles));
   }, [section]);
 
@@ -613,6 +615,10 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             <label className="flex items-center gap-1.5">
               <input type="checkbox" checked={hideFooter} onChange={e => { setHideFooter(e.target.checked); onUpdate(section.id, { hide_footer: e.target.checked }); }} className="rounded" />
               Hide footer on this page
+            </label>
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={fitToPage} onChange={e => { setFitToPage(e.target.checked); onUpdate(section.id, { fit_to_page: e.target.checked }); }} className="rounded" />
+              Fit to one page
             </label>
           </div>
 
