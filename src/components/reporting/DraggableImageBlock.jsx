@@ -99,9 +99,7 @@ export default function DraggableImageBlock({
         updates[positionField] = Math.round(g.percentX);
         if (enableVerticalDrag && verticalPositionField) {
           updates[verticalPositionField] = Math.round(g.verticalOffset);
-          console.log('Updating vertical position:', verticalPositionField, '=', Math.round(g.verticalOffset));
         }
-        console.log('Dragging update:', updates);
         if (onUpdate) onUpdate(section.id, updates);
       } else {
         const newPosition = positionMap[g.zone];

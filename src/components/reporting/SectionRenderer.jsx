@@ -373,6 +373,7 @@ export default function SectionRenderer({
         >
           <DraggableImageBlock section={section} onUpdate={onUpdate}
             positionField="chart_x_offset" widthField="chart_width"
+            verticalPositionField="chart_y_offset"
             positionMap={{}}
             defaultWidth={chartWidth || 100}
             dragHandle
