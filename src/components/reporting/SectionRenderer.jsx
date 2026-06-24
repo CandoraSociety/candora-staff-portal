@@ -252,18 +252,13 @@ export default function SectionRenderer({
     const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
     const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
     const hasChart = sectionData.length > 0;
-    const hasVisual = hasImage || hasChart;
-    const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
-    const isMultiCol = textColumns > 1;
+    const textColumns = section.text_columns || 1;
     const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
-    // Only use columns when there's no floated image - columns and floats don't work together
-    const useColumns = isMultiCol && !hasFloatedImage;
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
-        ...(hasFloatedImage ? { display: 'flow-root' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
@@ -272,12 +267,11 @@ export default function SectionRenderer({
         } : {}),
       }}>
         <div
-          key={`cols-${textColumns}-${hasFloatedImage ? 'floated' : 'normal'}`}
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={useColumns ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
+          style={textColumns > 1 && !hasFloatedImage ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -383,40 +377,47 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="overflow-hidden relative" data-section-content>
+          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
             <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
-            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_wrap':
         return (
-          <div className="relative flow-root" data-section-content>
-            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart}
+          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
+            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_right':
         return (
-          <div className="overflow-hidden relative" data-section-content>
+          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
             <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
-            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>
+            {contentBlock}
+          </div>
+        );
       case 'two_column':
-        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            {contentBlock}
+          </div>
+        );
       default:
-        return <div className="relative" data-section-content>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            {contentBlock}
+          </div>
+        );
     }
   };
 
