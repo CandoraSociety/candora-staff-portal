@@ -201,30 +201,22 @@ export default function SectionRenderer({
     const titleSize = ts.font_size || 18;
     const titleImage = section.title_image_url;
     return (
-      <div className="relative mb-5">
+      <div className="relative mb-5 print:mb-6 print:block">
         <div
-          className="h-1 w-full rounded-full mb-4 print:block"
-          style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac}60 45%, transparent 100%)`, printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
+          className="h-1 w-full rounded-full mb-4 print:block print:mb-4"
+          style={{ background: `linear-gradient(90deg, ${pc} 0%, ${ac} 100%)`, printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 print:flex">
           {sectionNumber != null && (
-            <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: pc, color: '#fff' }}>
+            <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold print:print-color-adjust" style={{ backgroundColor: pc, color: '#fff', printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }}>
               {sectionNumber}
             </div>
           )}
           <h3
             ref={titleRef}
-            contentEditable={!!onUpdate && !isPrint}
+            contentEditable={false}
             suppressContentEditableWarning
-            onMouseDown={!!onUpdate && !isPrint ? (e) => e.stopPropagation() : undefined}
-            onClick={!!onUpdate && !isPrint ? (e) => e.stopPropagation() : undefined}
-            onFocus={() => { editingTitle.current = true; }}
-            onBlur={!!onUpdate && !isPrint ? (e) => {
-              editingTitle.current = false;
-              const newTitle = e.target.textContent.trim();
-              if (newTitle !== section.title) onUpdate(section.id, { title: newTitle });
-            } : undefined}
-            className="font-heading font-bold leading-tight rounded px-1 -mx-1 focus:outline-none focus:bg-accent/5 print:text-black"
+            className="font-heading font-bold leading-tight rounded px-1 -mx-1 print:text-black print:font-bold"
             style={{
               color: titleColor,
               fontSize: `${titleSize}px`,
@@ -235,17 +227,12 @@ export default function SectionRenderer({
               printColorAdjust: 'exact',
               WebkitPrintColorAdjust: 'exact',
             }}
-          />
+          >
+            {section.title}
+          </h3>
           {titleImage && (
-            <div className="relative group/title shrink-0 ml-auto">
-              <img src={titleImage} alt="" className="object-contain rounded" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px' }} />
-              {onUpdate && (
-                <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover/title:opacity-100 transition-opacity">
-                  <span className="text-[10px] text-white shrink-0">Size</span>
-                  <input type="range" min="24" max="200" value={section.title_image_width || 80} onChange={e => onUpdate(section.id, { title_image_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-                  <span className="text-[10px] text-white w-10 text-right tabular-nums">{section.title_image_width || 80}px</span>
-                </div>
-              )}
+            <div className="shrink-0 ml-auto">
+              <img src={titleImage} alt="" className="object-contain rounded print:print-color-adjust" style={{ maxHeight: section.title_image_width ? `${section.title_image_width}px` : `${Math.max(titleSize + 8, 36)}px`, maxWidth: section.title_image_width ? `${section.title_image_width}px` : '120px', printColorAdjust: 'exact', WebkitPrintColorAdjust: 'exact' }} />
             </div>
           )}
         </div>
@@ -452,7 +439,9 @@ export default function SectionRenderer({
       ) : (
         <>
           {headerContent}
-          <TitleBar />
+          <div className="print:block">
+            <TitleBar />
+          </div>
           {renderContent()}
           {footerContent}
         </>
