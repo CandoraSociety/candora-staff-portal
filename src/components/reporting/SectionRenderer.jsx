@@ -255,7 +255,7 @@ export default function SectionRenderer({
     const textColumns = section.text_columns || 1;
     const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
     const contentBlock = (
-      <div className="prose prose-sm max-w-none" style={{
+      <div style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
@@ -265,13 +265,17 @@ export default function SectionRenderer({
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
+        ...(textColumns > 1 && !hasFloatedImage ? {
+          columnCount: textColumns,
+          columnGap: '1.5rem',
+          columnFill: 'balance',
+        } : {}),
       }}>
         <div
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={textColumns > 1 && !hasFloatedImage ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
