@@ -77,6 +77,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [chartLabel, setChartLabel] = useState('');
   const [chartType, setChartType] = useState('bar');
   const [chartRows, setChartRows] = useState([{ name: '', value: '' }, { name: '', value: '' }]);
+  const [tableColumns, setTableColumns] = useState(['Item', 'Value']);
   const [tableData, setTableData] = useState([]);
   const [analyzing, setAnalyzing] = useState({});
   const [importingFile, setImportingFile] = useState(false);
@@ -202,16 +203,43 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const addChartRow = () => setChartRows(prev => [...prev, { name: '', value: '' }]);
   const removeChartRow = (idx) => setChartRows(prev => prev.filter((_, i) => i !== idx));
 
+  // Table-specific handlers
+  const updateTableColumn = (idx, val) => {
+    setTableColumns(prev => prev.map((c, i) => i === idx ? val : c));
+  };
+
+  const addTableColumn = () => setTableColumns(prev => [...prev, `Column ${prev.length + 1}`]);
+  const removeTableColumn = (idx) => setTableColumns(prev => prev.filter((_, i) => i !== idx));
+
+  const updateTableCell = (rowIdx, colIdx, val) => {
+    setChartRows(prev => prev.map((r, i) => {
+      if (i !== rowIdx) return r;
+      const updated = { ...r };
+      if (!updated.columns) updated.columns = {};
+      updated.columns[tableColumns[colIdx]] = val;
+      return updated;
+    }));
+  };
+
   const handleSaveChart = async () => {
-    const validRows = chartRows.filter(r => r.name.trim() && r.value !== '');
-    if (!validRows.length || !chartLabel.trim()) return;
+    let validRows;
+    if (chartType === 'table') {
+      // For tables, validate that all cells have data
+      validRows = chartRows.filter(r => {
+        if (!r.columns) return false;
+        return tableColumns.some(col => r.columns[col] && r.columns[col].trim() !== '');
+      });
+      if (validRows.length === 0 || !chartLabel.trim()) return;
+    } else {
+      validRows = chartRows.filter(r => r.name.trim() && r.value !== '');
+      if (!validRows.length || !chartLabel.trim()) return;
+    }
     
     let chartData;
     if (chartType === 'table') {
-      // For tables, keep the multi-column structure
       chartData = validRows.map(r => ({
-        name: r.name.trim(),
-        value: r.value,
+        name: r.name || r.columns?.[tableColumns[0]] || '',
+        value: r.value || r.columns?.[tableColumns[1]] || '',
         columns: r.columns || {}
       }));
     } else {
@@ -227,6 +255,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     setChartLabel('');
     setChartType('bar');
     setChartRows([{ name: '', value: '' }, { name: '', value: '' }]);
+    setTableColumns(['Item', 'Value']);
   };
 
   const handleImportSpreadsheet = async (e) => {
@@ -304,7 +333,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     const dataRows = hasHeaders ? parsedRows.slice(1) : parsedRows;
     const headers = hasHeaders ? firstRow : [];
 
-    // If we have 2 columns: Label, Value
+    // If we have 2 columns: Label, Value (for charts)
     if (dataRows[0]?.length === 2) {
       const rows = dataRows.map(row => ({ name: row[0] || '', value: row[1] || '' }));
       setChartRows(rows);
@@ -314,11 +343,15 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
     }
     // If we have 3+ columns: multi-column data (perfect for tables)
     else if (dataRows[0]?.length >= 3) {
+      // Set column headers
+      const columnNames = hasHeaders ? headers : headers.map((_, idx) => `Column ${idx + 1}`);
+      setTableColumns(columnNames);
+      
       // Create multi-column format: each row object has all columns
       const multiColumnData = dataRows.map(row => {
         const rowData = {};
         row.forEach((cell, idx) => {
-          const key = hasHeaders ? headers[idx] || `Column ${idx}` : `Column ${idx}`;
+          const key = columnNames[idx] || `Column ${idx}`;
           rowData[key] = cell || '';
         });
         return rowData;
@@ -332,7 +365,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
       }));
       
       setChartRows(chartData);
-      setChartLabel(hasHeaders && headers[0] ? headers[0] : 'Data Table');
+      setChartLabel(hasHeaders && columnNames[0] ? columnNames[0] : 'Data Table');
+      setChartType('table'); // Auto-switch to table type
     } else {
       alert('Please paste data with at least 2 columns (Label and Value)');
       return;
@@ -789,16 +823,21 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
 
                 {/* New chart builder */}
                 <div className="border rounded-lg p-3 bg-blue-50/30">
-                  <p className="text-xs font-semibold mb-2">Add a Chart</p>
+                  <p className="text-xs font-semibold mb-2">Add a {chartType === 'table' ? 'Table' : 'Chart'}</p>
 
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Chart Label</Label>
-                      <Input value={chartLabel} onChange={e => setChartLabel(e.target.value)} placeholder="e.g. Program Stats" className="text-xs h-7" />
+                      <Label className="text-[10px] text-muted-foreground">Label</Label>
+                      <Input value={chartLabel} onChange={e => setChartLabel(e.target.value)} placeholder={chartType === 'table' ? "e.g. Program Summary" : "e.g. Program Stats"} className="text-xs h-7" />
                     </div>
                     <div>
                       <Label className="text-[10px] text-muted-foreground">Type</Label>
-                      <Select value={chartType} onValueChange={setChartType}>
+                      <Select value={chartType} onValueChange={(v) => {
+                        setChartType(v);
+                        if (v === 'table' && chartRows.length < 2) {
+                          setTableColumns(['Item', 'Value']);
+                        }
+                      }}>
                         <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="bar">Bar Chart</SelectItem>
@@ -811,42 +850,98 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                     </div>
                   </div>
 
-                  {/* Data entry table */}
-                  <div className="mb-2">
-                    <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
-                      <span className="flex-1">Label</span>
-                      <span className="w-20">Value</span>
-                      <span className="w-6" />
-                    </div>
-                    {chartRows.map((row, idx) => (
-                      <div key={idx} className="flex items-center gap-2 mb-1">
-                        <Input
-                          value={row.name}
-                          onChange={e => updateChartRow(idx, 'name', e.target.value)}
-                          placeholder={`Data point ${idx + 1}`}
-                          className="flex-1 text-xs h-7"
-                        />
-                        <Input
-                          type="number"
-                          value={row.value}
-                          onChange={e => updateChartRow(idx, 'value', e.target.value)}
-                          placeholder="0"
-                          className="w-20 text-xs h-7"
-                        />
-                        {chartRows.length > 2 && (
-                          <button onClick={() => removeChartRow(idx)} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
-                        {chartRows.length <= 2 && <span className="w-6" />}
+                  {chartType === 'table' ? (
+                    // Table input mode
+                    <div className="mb-2">
+                      {/* Column headers */}
+                      <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
+                        <span className="text-[10px] text-accent font-semibold">Columns:</span>
+                        {tableColumns.map((col, idx) => (
+                          <div key={idx} className="flex items-center gap-1 flex-1">
+                            <Input
+                              value={col}
+                              onChange={e => updateTableColumn(idx, e.target.value)}
+                              placeholder={`Column ${idx + 1}`}
+                              className="text-xs h-6"
+                            />
+                            {tableColumns.length > 2 && (
+                              <button onClick={() => removeTableColumn(idx)} className="w-5 h-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button onClick={addTableColumn} className="w-6 h-6 flex items-center justify-center rounded text-accent hover:bg-accent/10">
+                          <Plus className="w-3 h-3" />
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                      {/* Data rows */}
+                      <div className="space-y-1 mt-2">
+                        {chartRows.map((row, rowIdx) => (
+                          <div key={rowIdx} className="flex items-center gap-2">
+                            {tableColumns.map((col, colIdx) => (
+                              <Input
+                                key={colIdx}
+                                value={row.columns?.[col] || ''}
+                                onChange={e => updateTableCell(rowIdx, colIdx, e.target.value)}
+                                placeholder={col}
+                                className="text-xs h-7 flex-1"
+                              />
+                            ))}
+                            {chartRows.length > 1 && (
+                              <button onClick={() => {
+                                setChartRows(prev => prev.filter((_, i) => i !== rowIdx));
+                              }} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={() => setChartRows(prev => [...prev, {}])} className="flex items-center gap-1 text-[10px] text-accent hover:underline mt-2">
+                        <Plus className="w-3 h-3" />Add Row
+                      </button>
+                    </div>
+                  ) : (
+                    // Chart input mode (2 columns)
+                    <div className="mb-2">
+                      <div className="flex items-center gap-2 mb-1 text-[10px] text-muted-foreground font-medium">
+                        <span className="flex-1">Label</span>
+                        <span className="w-20">Value</span>
+                        <span className="w-6" />
+                      </div>
+                      {chartRows.map((row, idx) => (
+                        <div key={idx} className="flex items-center gap-2 mb-1">
+                          <Input
+                            value={row.name}
+                            onChange={e => updateChartRow(idx, 'name', e.target.value)}
+                            placeholder={`Data point ${idx + 1}`}
+                            className="flex-1 text-xs h-7"
+                          />
+                          <Input
+                            type="number"
+                            value={row.value}
+                            onChange={e => updateChartRow(idx, 'value', e.target.value)}
+                            placeholder="0"
+                            className="w-20 text-xs h-7"
+                          />
+                          {chartRows.length > 2 && (
+                            <button onClick={() => removeChartRow(idx)} className="w-6 h-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50">
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                          {chartRows.length <= 2 && <span className="w-6" />}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2">
-                    <button onClick={addChartRow} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
-                      <Plus className="w-3 h-3" />Add Row
-                    </button>
+                    {chartType !== 'table' && (
+                      <button onClick={addChartRow} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
+                        <Plus className="w-3 h-3" />Add Row
+                      </button>
+                    )}
                     <button onClick={() => setShowPasteData(!showPasteData)} className="flex items-center gap-1 text-[10px] text-accent hover:underline">
                       <Plus className="w-3 h-3" /> Paste Data
                     </button>
@@ -859,19 +954,38 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                       <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleImportSpreadsheet} disabled={importingFile} />
                     </label>
                     <div className="flex-1" />
-                    <Button onClick={handleSaveChart} disabled={!chartLabel.trim() || chartRows.filter(r => r.name.trim() && r.value !== '').length === 0} size="sm" className="gap-1 text-xs h-7">
-                      <Check className="w-3 h-3" />Save Chart
+                    <Button 
+                      onClick={handleSaveChart} 
+                      disabled={
+                        !chartLabel.trim() || 
+                        (chartType === 'table' 
+                          ? chartRows.filter(r => r.columns && Object.keys(r.columns).length > 0).length === 0
+                          : chartRows.filter(r => r.name.trim() && r.value !== '').length === 0
+                        )
+                      } 
+                      size="sm" 
+                      className="gap-1 text-xs h-7"
+                    >
+                      <Check className="w-3 h-3" />Save {chartType === 'table' ? 'Table' : 'Chart'}
                     </Button>
                   </div>
 
                   {showPasteData && (
                     <div className="mt-2 p-3 border rounded-lg bg-slate-50">
                       <p className="text-xs font-semibold mb-2">Paste your data (from Excel, Google Sheets, etc.)</p>
-                      <p className="text-[10px] text-muted-foreground mb-2">Paste from Excel, Google Sheets, or CSV (multiple columns supported)</p>
+                      <p className="text-[10px] text-muted-foreground mb-2">
+                        {chartType === 'table' 
+                          ? 'Paste from Excel/Google Sheets with multiple columns (headers auto-detected)'
+                          : 'Paste two columns: Label and Value'}
+                      </p>
                       <textarea
                         value={pasteDataValue}
                         onChange={e => setPasteDataValue(e.target.value)}
-                        placeholder="Program&#09;Q1&#09;Q2&#09;Q3&#10;Program A&#09;45&#09;52&#09;48&#10;Program B&#09;62&#09;58&#09;65"
+                        placeholder={
+                          chartType === 'table'
+                            ? 'Program\tParticipants\tCompleted\tEmployed\nPathways\t45\t38\t32\nDEA\t62\t55\t48'
+                            : 'Program A\t45\nProgram B\t62\nProgram C\t38'
+                        }
                         className="w-full text-xs border rounded p-2 h-32 font-mono bg-white"
                       />
                       <div className="flex gap-2 mt-2">
