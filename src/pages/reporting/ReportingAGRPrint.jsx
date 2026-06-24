@@ -40,6 +40,11 @@ export default function ReportingAGRPrint() {
 
   useEffect(() => {
     const loadData = async () => {
+      const timeout = setTimeout(() => {
+        setLoading(false);
+        setError('Loading timed out - please refresh or go back and try again');
+      }, 8000);
+      
       try {
         console.log('Loading report:', id);
         const r = await base44.entities.AGRReport.get(id);
@@ -61,11 +66,13 @@ export default function ReportingAGRPrint() {
         const analysisList = await base44.entities.AGRAnalysisResult.filter({ report_id: id });
         console.log('Analysis loaded:', analysisList?.length);
         setAnalysis(analysisList[0] || null);
+        
+        clearTimeout(timeout);
+        setLoading(false);
       } catch (e) {
+        clearTimeout(timeout);
         console.error('Load error:', e);
         setError(e.message || 'Failed to load report: ' + e.message);
-      } finally {
-        setLoading(false);
       }
     };
     loadData();
