@@ -443,7 +443,7 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
             {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
@@ -452,7 +452,7 @@ export default function SectionRenderer({
         );
       case 'image_wrap':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
             {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
@@ -461,7 +461,7 @@ export default function SectionRenderer({
         );
       case 'image_right':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>}
             {floatedChart && <div style={{ float: 'right', width: `${chartWidth}%`, marginRight: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
@@ -488,7 +488,7 @@ export default function SectionRenderer({
         );
       default:
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
