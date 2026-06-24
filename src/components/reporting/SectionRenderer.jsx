@@ -272,6 +272,7 @@ export default function SectionRenderer({
         suppressContentEditableWarning
         data-placeholder="No content yet. Click to edit..."
         style={{ 
+          display: 'block',
           ...(textColumns > 1 && !hasFloatedImage ? {
             columnCount: textColumns,
             WebkitColumnCount: textColumns,
@@ -435,7 +436,7 @@ export default function SectionRenderer({
         );
       default:
         return (
-          <div className="relative" data-section-content>
+          <div className="relative" data-section-content style={textColumns > 1 && !hasFloatedImage ? {} : { display: 'flow-root' }}>
             {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
