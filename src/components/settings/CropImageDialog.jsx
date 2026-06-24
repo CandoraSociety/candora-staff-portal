@@ -159,21 +159,26 @@ async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
   rotCtx.translate(-image.naturalWidth / 2, -image.naturalHeight / 2);
   rotCtx.drawImage(image, 0, 0);
 
-  // Step 2: extract crop area from the rotated canvas, output at max 400x400
-  const outputSize = Math.min(Math.round(pixelCrop.width), 400);
+  // Step 2: extract crop area from the rotated canvas, preserving the crop's aspect ratio
+  const maxDim = 1200;
+  const cropW = Math.round(pixelCrop.width);
+  const cropH = Math.round(pixelCrop.height);
+  const scale = Math.min(1, maxDim / Math.max(cropW, cropH));
+  const outW = Math.round(cropW * scale);
+  const outH = Math.round(cropH * scale);
   const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = outputSize;
-  cropCanvas.height = outputSize;
+  cropCanvas.width = outW;
+  cropCanvas.height = outH;
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(
     rotCanvas,
     Math.round(pixelCrop.x),
     Math.round(pixelCrop.y),
-    Math.round(pixelCrop.width),
-    Math.round(pixelCrop.height),
+    cropW,
+    cropH,
     0, 0,
-    outputSize,
-    outputSize
+    outW,
+    outH
   );
 
   return cropCanvas.toDataURL('image/jpeg', 0.9);

@@ -36,6 +36,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
   const [titleImageUrl, setTitleImageUrl] = useState(section.title_image_url || '');
   const [titleImageWidth, setTitleImageWidth] = useState(section.title_image_width || 80);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [sectionCropOpen, setSectionCropOpen] = useState(false);
   const [imageCaption, setImageCaption] = useState(section.image_caption || '');
   const [imageWidth, setImageWidth] = useState(section.image_width || 50);
   const [isCollapsible, setIsCollapsible] = useState(section.is_collapsible || false);
@@ -355,6 +356,14 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
                 onCropComplete={(url) => { setTitleImageUrl(url); onUpdate(section.id, { title_image_url: url }); setCropDialogOpen(false); }}
                 onClose={() => setCropDialogOpen(false)}
               />
+              <CropImageDialog
+                open={sectionCropOpen}
+                imageSrc={imageUrl}
+                aspect={4 / 3}
+                cropShape="rect"
+                onCropComplete={(url) => { setImageUrl(url); onUpdate(section.id, { image_url: url }); setSectionCropOpen(false); }}
+                onClose={() => setSectionCropOpen(false)}
+              />
               {/* Title Styling Toolbar */}
               <div className="mt-2 p-2 border rounded bg-gray-50/50 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-1">
@@ -537,9 +546,14 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
             {imageUrl ? (
               <div className="relative rounded-lg overflow-hidden border bg-slate-100">
                 <img src={imageUrl} alt="Section" className="w-full h-40 object-cover" />
-                <button onClick={handleRemoveImage} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button onClick={() => setSectionCropOpen(true)} className="bg-black/60 text-white rounded-full p-1 hover:bg-black/80" title="Crop image">
+                    <Crop className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={handleRemoveImage} className="bg-black/60 text-white rounded-full p-1 hover:bg-red-500" title="Remove image">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-2">
