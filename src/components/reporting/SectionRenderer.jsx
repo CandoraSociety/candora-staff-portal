@@ -275,7 +275,7 @@ export default function SectionRenderer({
         suppressContentEditableWarning
         data-placeholder="No content yet. Click to edit..."
         data-columns={textColumns}
-        className="prose prose-sm max-w-none"
+        className="text-sm"
         style={{ 
           fontFamily: masterContent.font_family || 'Inter',
           fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
@@ -283,6 +283,7 @@ export default function SectionRenderer({
           minHeight: textColumns > 1 ? '200px' : undefined,
           overflow: 'visible',
           lineHeight: 1.6,
+          width: 'auto',
           ...(section.content_bg_color ? {
             backgroundColor: section.content_bg_color,
             padding: '1rem 1.25rem',
