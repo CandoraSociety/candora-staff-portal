@@ -338,11 +338,10 @@ Deno.serve(async (req) => {
       pdf.text(lines, pageWidth / 2, pageHeight / 2, { align: 'center', maxWidth: contentWidth });
     }
 
-    // Generate PDF blob
-    const pdfBlob = pdf.output('blob');
-    const arrayBuffer = await pdfBlob.arrayBuffer();
+    // Generate PDF as arraybuffer
+    const pdfArrayBuffer = pdf.output('arraybuffer');
     
-    return new Response(arrayBuffer, {
+    return new Response(pdfArrayBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
