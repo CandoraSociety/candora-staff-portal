@@ -160,9 +160,10 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
               headerZones={report.header_zones}
               footerLayout={report.footer_layout}
               footerZones={report.footer_zones}
-              showHeaderAll={report.show_header_all}
-              showFooterAll={report.show_footer_all}
-              showPageNumbersAll={report.show_page_numbers_all}
+              showHeaderAll={false}
+              showFooterAll={false}
+              showPageNumbersAll={false}
+              noBorder
               onUpdate={onSectionUpdate}
             />
           </FitToPage>

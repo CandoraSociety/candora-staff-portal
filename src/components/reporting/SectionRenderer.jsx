@@ -24,7 +24,7 @@ export default function SectionRenderer({
   headerImageHeight, footerImageHeight, headerFontSize, footerFontSize,
   headerLayout, footerLayout,
   headerZones: headerZonesRaw, footerZones: footerZonesRaw,
-  showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible, onUpdate
+  showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible, noBorder, onUpdate
 }) {
   const pc = branding?.primary_color || '#1a2744';
   const textColumns = section.text_columns || 1;
@@ -481,7 +481,7 @@ export default function SectionRenderer({
   };
 
   return (
-    <div className="mb-8 print:mb-8" style={{ borderLeft: `3px solid ${pc}40`, paddingLeft: '0.75rem' }}>
+    <div className="mb-8 print:mb-8" style={{ ...(noBorder ? {} : { borderLeft: `3px solid ${pc}40`, paddingLeft: '0.75rem' }) }}>
       {isCollapsible ? (
         <>
           {headerContent}
