@@ -4,8 +4,8 @@ import { ribbonGradient } from './imageFilters';
 
 const PAGE_HEIGHT_PX = 11 * 96; // 11 inches at 96 DPI
 const TOP_BAR_PX = 4;
-const PADDING_PX = 32; // 0.5in padding on each side
-const FOOTER_RESERVE_PX = 60; // Reserve space for footer
+const PADDING_PX = 48; // 0.75in padding top/bottom
+const FOOTER_RESERVE_PX = 80; // Reserve space for footer
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_RESERVE_PX;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
@@ -195,7 +195,7 @@ export default function PaginatedSection({
       <PageFrame pageNum={pageNum} primaryColor={primaryColor}>
         <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
         <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)`, overflow: 'hidden' }}>
-          <div className="p-8" style={{ height: `calc(100% - ${FOOTER_RESERVE_PX}px)`, overflow: 'hidden' }}>{children}</div>
+          <div className="p-8" style={{ height: `calc(100% - ${FOOTER_RESERVE_PX}px)`, paddingBottom: `${FOOTER_RESERVE_PX + 20}px`, overflow: 'hidden' }}>{children}</div>
           {hasFooter && (
             <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 5 }}>
               <PageFooter masterFooter={masterFooter} footerImage={footerImage} footerImageHeight={footerImageHeight} footerFontSize={footerFontSize} footerLayout={footerLayout} footerZones={footerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
@@ -222,6 +222,9 @@ export default function PaginatedSection({
             cumulativeOffset += (p === 0 ? firstPageHeight : continuationPageHeight);
           }
 
+          // For continuation pages, content must be shifted up to account for header
+          const contentTop = isFirstPage ? 0 : -(cumulativeOffset - headerHeight);
+
           return (
             <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
               <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
@@ -245,12 +248,12 @@ export default function PaginatedSection({
                     </div>
                   )}
 
-                  {/* Content container - offset by cumulative height of previous pages */}
+                  {/* Content container - positioned to show correct slice for this page */}
                   <div
                     className="paginated-content"
                     style={{
                       position: 'absolute',
-                      top: -cumulativeOffset,
+                      top: contentTop,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
@@ -277,7 +280,7 @@ export default function PaginatedSection({
               <ContinuationHeader masterHeader={masterHeader} headerImage={headerImage} headerImageHeight={headerImageHeight} headerFontSize={headerFontSize} headerLayout={headerLayout} headerZones={headerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} />
             </div>
           )}
-          <div className="p-8" style={{ paddingBottom: '2.5rem' }}>{children}</div>
+          <div className="px-12 py-10" style={{ paddingBottom: '3rem' }}>{children}</div>
           {hasFooter && (
             <div className="print-footer" style={{ position: 'fixed', bottom: '0.5in', left: '0.5in', right: '0.5in' }}>
               <PageFooter masterFooter={masterFooter} footerImage={footerImage} footerImageHeight={footerImageHeight} footerFontSize={footerFontSize} footerLayout={footerLayout} footerZones={footerZones} primaryColor={primaryColor} branding={branding} pageNum={pageNum} showPageNumber={showPageNumbersAll} useCssCounter />

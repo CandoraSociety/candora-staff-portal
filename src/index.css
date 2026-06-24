@@ -113,7 +113,7 @@
 @media print {
   @page {
     size: letter;
-    margin: 0.5in;
+    margin: 0.75in;
   }
   .no-print { display: none !important; }
   .print-break { page-break-before: always; }
@@ -136,8 +136,12 @@
   .print-page-counter::after { content: counter(page); }
   /* Prevent content from being cut off */
   p, li, h1, h2, h3, h4, h5, h6 {
-    orphans: 2;
-    widows: 2;
+    orphans: 3;
+    widows: 3;
+  }
+  img, table, .recharts-wrapper {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
 
