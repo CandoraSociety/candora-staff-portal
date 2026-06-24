@@ -241,9 +241,10 @@ export default function PaginatedSection({
   const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
   const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
   const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight;
-  // Measure the actual continuation header height so the column starts below it.
-  // All columns use the same height so CSS column breaks are consistent.
-  const columnHeight = hasContHeader ? availableContentHeight - headerHeight : availableContentHeight;
+  // First page gets the full height (no continuation header).
+  // Continuation pages get reduced height (continuation header takes space at top).
+  const firstPageHeight = availableContentHeight;
+  const contPageHeight = hasContHeader ? availableContentHeight - headerHeight : availableContentHeight;
 
   // Measure the real header height
   useLayoutEffect(() => {
@@ -272,9 +273,15 @@ export default function PaginatedSection({
 
     const measure = () => {
       if (measureRef.current) {
-        // scrollWidth tells us how many column-widths the content produced
-        const sw = measureRef.current.scrollWidth;
-        const pages = Math.max(1, Math.ceil(sw / CONTENT_WIDTH_PX));
+        // scrollHeight tells us the total content height.
+        // First page holds firstPageHeight; each continuation page holds contPageHeight.
+        const sh = measureRef.current.scrollHeight;
+        let pages;
+        if (sh <= firstPageHeight) {
+          pages = 1;
+        } else {
+          pages = 1 + Math.ceil((sh - firstPageHeight) / contPageHeight);
+        }
         setPageCount(pages);
         if (onPageCountChange) onPageCountChange(sectionId, pages);
       }
@@ -376,22 +383,17 @@ export default function PaginatedSection({
                   </div>
                 )}
 
-                {/* Multi-column container: CSS flows content column-by-column,
-                    breaking at line boundaries (just like Word page flow).
-                    We translate it horizontally to reveal one column per page.
-                    On continuation pages the column starts below the measured header height. */}
+                {/* Content: translated vertically to reveal one page-worth at a time.
+                    First page gets full height; continuation pages start below the header.
+                    The content behind the continuation header is from the previous page
+                    (already shown), so nothing is lost — the header just covers the overlap. */}
                 <div
-                  className="paginated-content"
                   style={{
-                    columnWidth: CONTENT_WIDTH_PX,
-                    columnGap: 0,
-                    columnFill: 'auto',
-                    height: columnHeight,
                     position: 'absolute',
                     top: i > 0 && hasContHeader ? headerHeight : 0,
                     left: 0,
-                    width: pageCount * CONTENT_WIDTH_PX,
-                    transform: `translateX(-${i * CONTENT_WIDTH_PX}px)`,
+                    width: CONTENT_WIDTH_PX,
+                    transform: `translateY(-${i === 0 ? 0 : firstPageHeight + (i - 1) * contPageHeight}px)`,
                   }}
                 >
                   {children}
@@ -444,16 +446,12 @@ export default function PaginatedSection({
         )}
       </div>
 
-      {/* Hidden measurement container — same column setup so scrollWidth gives us the page count */}
+      {/* Hidden measurement container — measures total content height (scrollHeight) */}
       <div
         ref={measureRef}
-        className="paginated-content absolute invisible pointer-events-none print:hidden"
+        className="absolute invisible pointer-events-none print:hidden"
         style={{
           width: CONTENT_WIDTH_PX,
-          height: columnHeight,
-          columnWidth: CONTENT_WIDTH_PX,
-          columnGap: 0,
-          columnFill: 'auto',
         }}
         aria-hidden="true"
       >
