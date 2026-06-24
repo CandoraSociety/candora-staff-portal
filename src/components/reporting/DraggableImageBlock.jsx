@@ -45,19 +45,19 @@ export default function DraggableImageBlock({
     const imgHeight = imgRect.height / zoomScale;
     const imgWidth = imgRect.width / zoomScale;
 
-    // For vertical drag, track starting Y offset
+    // For vertical drag, track starting Y offset and mouse delta
     const startY = enableVerticalDrag ? (section[verticalPositionField] || 0) : 0;
     const startMouseY = e.clientY;
 
-    const computeGhost = (clientX, clientY) => {
+    const computeGhost = (clientX, currentY) => {
       const dropX = (clientX - containerRect.left) / zoomScale;
-      const dropY = enableVerticalDrag ? (clientY - containerRect.top) / zoomScale : 0;
       
       if (continuousMode) {
         const percentX = Math.max(0, Math.min(100, (dropX / containerWidth) * 100));
         const widthPct = section[widthField] || defaultWidth;
         const w = (widthPct / 100) * containerWidth;
-        const y = enableVerticalDrag ? Math.max(0, dropY - imgHeight / 2) : 0;
+        // currentY is already the calculated vertical offset from delta
+        const y = enableVerticalDrag ? Math.max(0, currentY) : 0;
         return { x: dropX - w / 2, y, w, h: imgHeight, zone: 'custom', percentX, verticalOffset: y };
       } else {
         const third = containerWidth / 3;
@@ -77,10 +77,13 @@ export default function DraggableImageBlock({
     };
 
     setDragging(true);
-    setGhost(computeGhost(e.clientX, e.clientY));
+    setGhost(computeGhost(e.clientX, startY));
 
     const onMove = (ev) => {
-      const g = computeGhost(ev.clientX, ev.clientY);
+      // For vertical, use delta from start position
+      const deltaY = enableVerticalDrag ? (ev.clientY - startMouseY) : 0;
+      const newY = enableVerticalDrag ? Math.max(0, startY + deltaY) : 0;
+      const g = computeGhost(ev.clientX, newY);
       setGhost(g);
       if (!continuousMode) {
         setDropZones({ left: g.zone === 'left', full: g.zone === 'full', right: g.zone === 'right' });
@@ -88,7 +91,9 @@ export default function DraggableImageBlock({
     };
 
     const onUp = (ev) => {
-      const g = computeGhost(ev.clientX, ev.clientY);
+      const deltaY = enableVerticalDrag ? (ev.clientY - startMouseY) : 0;
+      const newY = enableVerticalDrag ? Math.max(0, startY + deltaY) : 0;
+      const g = computeGhost(ev.clientX, newY);
       const updates = {};
       if (continuousMode) {
         updates[positionField] = Math.round(g.percentX);
