@@ -137,3 +137,23 @@
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+.multi-column-content {
+  column-count: 2;
+  -webkit-column-count: 2;
+  -moz-column-count: 2;
+  column-gap: 1.5rem;
+  column-fill: balance;
+}
+
+.multi-column-content[data-columns="3"] {
+  column-count: 3 !important;
+  -webkit-column-count: 3 !important;
+  -moz-column-count: 3 !important;
+}
+
+.multi-column-content[data-columns="4"] {
+  column-count: 4 !important;
+  -webkit-column-count: 4 !important;
+  -moz-column-count: 4 !important;
+}

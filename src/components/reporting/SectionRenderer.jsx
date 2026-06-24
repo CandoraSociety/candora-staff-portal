@@ -260,6 +260,8 @@ export default function SectionRenderer({
       contentEditable={!!onUpdate && !isPrint}
       suppressContentEditableWarning
       data-placeholder="No content yet. Click to edit..."
+      className={textColumns > 1 && !hasFloatedImage ? 'multi-column-content' : ''}
+      data-columns={textColumns > 1 ? textColumns : undefined}
       style={{ 
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
@@ -270,13 +272,6 @@ export default function SectionRenderer({
           padding: '1rem 1.25rem',
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
-        } : {}),
-        ...(textColumns > 1 && !hasFloatedImage ? {
-          columnCount: textColumns,
-          WebkitColumnCount: textColumns,
-          MozColumnCount: textColumns,
-          columnGap: '1.5rem',
-          columnFill: 'balance',
         } : {}),
       }}
       onFocus={() => { editingContent.current = true; }}
