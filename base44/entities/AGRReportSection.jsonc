@@ -122,6 +122,7 @@
         "image_left",
         "image_right",
         "image_full",
+        "image_wrap",
         "two_column"
       ],
       "default": "text_only"

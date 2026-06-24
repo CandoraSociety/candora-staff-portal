@@ -23,6 +23,7 @@ const LAYOUT_LABELS = {
   image_left: 'Image Left',
   image_right: 'Image Right',
   image_full: 'Full Image',
+  image_wrap: 'Text Wrap Around',
   two_column: 'Two Column'
 };
 
@@ -570,7 +571,7 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               </div>
             )}
           </div>
-          {imageUrl && (layout === 'image_left' || layout === 'image_right' || layout === 'image_full') && (
+          {imageUrl && (layout === 'image_left' || layout === 'image_right' || layout === 'image_full' || layout === 'image_wrap') && (
             <div className="flex items-center gap-2">
               <Label className="text-xs shrink-0">Image Width</Label>
               <input type="range" min="10" max="100" value={imageWidth} onChange={e => setImageWidth(parseInt(e.target.value))} onMouseUp={() => onUpdate(section.id, { image_width: imageWidth })} onTouchEnd={() => onUpdate(section.id, { image_width: imageWidth })} className="flex-1 h-1 accent-accent" />
