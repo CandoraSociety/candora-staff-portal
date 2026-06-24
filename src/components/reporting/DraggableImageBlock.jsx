@@ -12,6 +12,7 @@ export default function DraggableImageBlock({
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [ghost, setGhost] = useState(null);
+  const [dropZones, setDropZones] = useState({ left: false, full: false, right: false });
 
   if (!onUpdate) return <>{children}</>;
 
@@ -49,13 +50,17 @@ export default function DraggableImageBlock({
       else zone = 'full';
 
       const widthPct = section[widthField] || defaultWidth;
-      const margin = 4;
+      const margin = 6;
+      const gap = 8;
+      const zoneWidth = (containerWidth - margin * 2 - gap * 2) / 3;
       const w = zone === 'full'
         ? containerWidth - margin * 2
-        : (containerWidth * widthPct / 100);
-      const x = zone === 'right'
-        ? containerWidth - w - margin
-        : margin;
+        : (zoneWidth - margin);
+      const x = zone === 'left'
+        ? margin
+        : zone === 'right'
+          ? containerWidth - w - margin
+          : margin + zoneWidth + gap;
       return { x, y: margin, w, h: imgHeight, zone };
     };
 
@@ -63,7 +68,9 @@ export default function DraggableImageBlock({
     setGhost(computeGhost(e.clientX));
 
     const onMove = (ev) => {
-      setGhost(computeGhost(ev.clientX));
+      const g = computeGhost(ev.clientX);
+      setGhost(g);
+      setDropZones({ left: g.zone === 'left', full: g.zone === 'full', right: g.zone === 'right' });
     };
 
     const onUp = (ev) => {
@@ -74,6 +81,7 @@ export default function DraggableImageBlock({
       }
       setDragging(false);
       setGhost(null);
+      setDropZones({ left: false, full: false, right: false });
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
