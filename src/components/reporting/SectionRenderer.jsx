@@ -266,50 +266,39 @@ export default function SectionRenderer({
   const hasChart = sectionData.length > 0;
   const chartY = section.chart_y_offset ?? 0;
   const chartHeight = 280; // approximate chart height
-  const hasMultiImages = (section.images || []).length > 0;
-  const contentEditableDiv = (
-    <div
-      ref={contentRef}
-      contentEditable={!!onUpdate && !isPrint}
-      suppressContentEditableWarning
-      data-placeholder="No content yet. Click to edit..."
-      data-columns={textColumns}
-      className="prose prose-sm max-w-none"
-      style={{ 
-        fontFamily: masterContent.font_family || 'Inter',
-        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
-        color: masterContent.color || 'hsl(var(--foreground))',
-        minHeight: textColumns > 1 ? '200px' : undefined,
-        overflow: 'visible',
-        lineHeight: 1.6,
-        ...(section.content_bg_color ? {
-          backgroundColor: section.content_bg_color,
-          padding: '1rem 1.25rem',
-          borderRadius: '0.5rem',
-          border: `1px solid ${pc}20`,
-        } : {}),
-        ...columnStyle,
-      }}
-      onFocus={() => { editingContent.current = true; }}
-      onBlur={!!onUpdate && !isPrint ? (e) => {
-        editingContent.current = false;
-        const html = e.target.innerHTML;
-        const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
-        if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
-      } : undefined}
-    />
-  );
-  // When multi-images are present, wrap content + images in a flow-root container
-  // so the browser wraps text/tables around the floated images reliably.
-  const contentBlock = hasMultiImages ? (
-    <div style={{ display: 'flow-root' }}>
-      <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
-      {contentEditableDiv}
-    </div>
-  ) : (
+  const contentBlock = (
     <>
       <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
-      {contentEditableDiv}
+      <div
+        ref={contentRef}
+        contentEditable={!!onUpdate && !isPrint}
+        suppressContentEditableWarning
+        data-placeholder="No content yet. Click to edit..."
+        data-columns={textColumns}
+        className="prose prose-sm max-w-none"
+        style={{ 
+          fontFamily: masterContent.font_family || 'Inter',
+          fontSize: masterContent.font_size ? `${masterContent.font_size}px` : '16px',
+          color: masterContent.color || 'hsl(var(--foreground))',
+          minHeight: textColumns > 1 ? '200px' : undefined,
+          overflow: 'visible',
+          lineHeight: 1.6,
+          ...(section.content_bg_color ? {
+            backgroundColor: section.content_bg_color,
+            padding: '1rem 1.25rem',
+            borderRadius: '0.5rem',
+            border: `1px solid ${pc}20`,
+          } : {}),
+          ...columnStyle,
+        }}
+        onFocus={() => { editingContent.current = true; }}
+        onBlur={!!onUpdate && !isPrint ? (e) => {
+          editingContent.current = false;
+          const html = e.target.innerHTML;
+          const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
+          if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
+        } : undefined}
+      />
     </>
   );
 
