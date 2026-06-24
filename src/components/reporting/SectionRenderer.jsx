@@ -302,7 +302,7 @@ export default function SectionRenderer({
   // When multi-images are present, wrap content + images in a flow-root container
   // so the browser wraps text/tables around the floated images reliably.
   const contentBlock = hasMultiImages ? (
-    <div style={{ display: 'flow-root', width: '100%' }}>
+    <div style={{ display: 'flow-root' }}>
       <MultiImageLayer section={section} onUpdate={onUpdate} branding={branding} isPrint={isPrint} />
       {contentEditableDiv}
     </div>
