@@ -107,7 +107,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
               sectionNumber={i + 1}
               dataEntries={dataEntries}
               branding={branding}
-              isPrint
+              isPrint={false}
               masterStyles={report.master_section_styles}
               pageNumber={getSectionPage(i)}
               masterHeader={report.master_header_text}
