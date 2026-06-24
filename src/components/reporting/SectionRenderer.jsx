@@ -430,7 +430,7 @@ export default function SectionRenderer({
   };
 
   return (
-    <div className={isPrint ? 'mb-8' : 'mb-6'} style={{ borderLeft: !isPrint ? `3px solid ${pc}40` : undefined, paddingLeft: !isPrint ? '0.75rem' : undefined }}>
+    <div className="mb-8 print:mb-8" style={{ borderLeft: `3px solid ${pc}40`, paddingLeft: '0.75rem' }}>
       {isCollapsible ? (
         <>
           {headerContent}
