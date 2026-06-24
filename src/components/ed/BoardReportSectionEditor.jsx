@@ -62,7 +62,7 @@ export default function BoardReportSectionEditor({ section, index, total, onUpda
         value={content}
         onChange={setContent}
         className="bg-white rounded-lg"
-        style={{ minHeight: 100 }}
+        style={{ minHeight: 200 }}
       />
     </div>
   );
