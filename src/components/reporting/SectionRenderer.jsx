@@ -380,7 +380,7 @@ export default function SectionRenderer({
 
     // Chart with free-form horizontal and vertical positioning - controls move with chart, text wraps around
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
-    const chartFloat = chartX < 40 ? 'left' : chartX > 60 ? 'right' : 'left'; // Always float for text wrapping
+    const chartFloat = chartX < 40 ? 'left' : chartX > 60 ? 'right' : 'none'; // none = full width, text above/below
     const handleArrowKeyMove = (direction) => {
       if (!onUpdate) return;
       const step = 10; // pixels per arrow press
@@ -393,11 +393,11 @@ export default function SectionRenderer({
       <div
         className="relative group"
         style={{
-          float: chartFloat,
-          marginLeft: chartFloat === 'left' ? '0' : 'auto',
-          marginRight: chartFloat === 'right' ? '0' : 'auto',
+          float: chartFloat === 'none' ? undefined : chartFloat,
+          marginLeft: chartFloat === 'left' ? '0' : chartFloat === 'right' ? 'auto' : '0',
+          marginRight: chartFloat === 'right' ? '0' : chartFloat === 'left' ? 'auto' : '0',
           marginBottom: chartY > 0 ? `${chartY}px` : '0.5rem',
-          width: `${chartWidth}%`,
+          width: chartFloat === 'none' ? '100%' : `${chartWidth}%`,
           zIndex: 10,
         }}
       >
@@ -445,8 +445,9 @@ export default function SectionRenderer({
       case 'image_left':
         return (
           <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
-            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
+            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%`, marginRight: '1.25rem', marginBottom: '0.75rem' }}>{imageBlock}</div>}
+            {floatedChart && chartFloat !== 'none' && <div style={{ float: chartFloat, width: `${chartWidth}%`, marginLeft: chartFloat === 'left' && imageBlock ? '0.5rem' : '0', marginRight: chartFloat === 'right' && imageBlock ? '0.5rem' : '0', marginBottom: '0.75rem' }}>{floatedChart}</div>}
+            {floatedChart && chartFloat === 'none' && <div className="mb-4 w-full">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
           </div>
@@ -454,8 +455,9 @@ export default function SectionRenderer({
       case 'image_wrap':
         return (
           <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
-            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
+            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%`, marginRight: '1.25rem', marginBottom: '0.75rem' }}>{imageBlock}</div>}
+            {floatedChart && chartFloat !== 'none' && <div style={{ float: chartFloat, width: `${chartWidth}%`, marginLeft: chartFloat === 'left' && imageBlock ? '0.5rem' : '0', marginRight: chartFloat === 'right' && imageBlock ? '0.5rem' : '0', marginBottom: '0.75rem' }}>{floatedChart}</div>}
+            {floatedChart && chartFloat === 'none' && <div className="mb-4 w-full">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
           </div>
@@ -463,8 +465,9 @@ export default function SectionRenderer({
       case 'image_right':
         return (
           <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
-            {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>}
-            {floatedChart && <div style={{ float: 'right', width: `${chartWidth}%`, marginRight: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
+            {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%`, marginLeft: '1.25rem', marginBottom: '0.75rem' }}>{imageBlock}</div>}
+            {floatedChart && chartFloat !== 'none' && <div style={{ float: chartFloat, width: `${chartWidth}%`, marginLeft: chartFloat === 'left' && imageBlock ? '0.5rem' : '0', marginRight: chartFloat === 'right' && imageBlock ? '0.5rem' : '0', marginBottom: '0.75rem' }}>{floatedChart}</div>}
+            {floatedChart && chartFloat === 'none' && <div className="mb-4 w-full">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
           </div>
