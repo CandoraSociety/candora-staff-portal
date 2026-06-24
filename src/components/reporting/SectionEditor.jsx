@@ -275,6 +275,8 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
       setChartRows(rows);
       setShowPasteData(false);
       setPasteDataValue('');
+    } else {
+      alert('Please paste your data in the format: Label, Value (one row per line)');
     }
   };
 
