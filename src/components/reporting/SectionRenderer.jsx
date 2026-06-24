@@ -261,6 +261,7 @@ export default function SectionRenderer({
   const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
   const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
   const hasChart = sectionData.length > 0;
+  const chartHeight = 280; // approximate chart height
   const contentBlock = (
     <div
       ref={contentRef}
@@ -282,6 +283,8 @@ export default function SectionRenderer({
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
+        // Add top margin to push content below chart if chart overlaps
+        marginTop: chartY < 0 ? `${Math.abs(chartY) + chartHeight}px` : chartY < chartHeight ? `${chartHeight - chartY}px` : '0',
         ...columnStyle,
       }}
       onFocus={() => { editingContent.current = true; }}
@@ -409,9 +412,9 @@ export default function SectionRenderer({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-white shrink-0">Vertical</span>
-              <button onClick={() => onUpdate(section.id, { chart_y_offset: ((section.chart_y_offset || 0) - 10) })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↑</button>
+              <button onClick={() => onUpdate(section.id, { chart_y_offset: ((section.chart_y_offset || 0) - 50) })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↑</button>
               <span className="text-[10px] text-white w-12 text-right tabular-nums">{section.chart_y_offset || 0}px</span>
-              <button onClick={() => onUpdate(section.id, { chart_y_offset: (section.chart_y_offset || 0) + 10 })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↓</button>
+              <button onClick={() => onUpdate(section.id, { chart_y_offset: (section.chart_y_offset || 0) + 50 })} className="w-5 h-5 bg-white/20 rounded text-white flex items-center justify-center hover:bg-white/40">↓</button>
             </div>
           </div>
         )}
