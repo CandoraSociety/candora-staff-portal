@@ -342,16 +342,15 @@ export default function SectionRenderer({
       </DraggableImageBlock>
     ) : null;
 
-    const showChartSlider = onUpdate;
     const dataBlock = sectionData.length > 0 ? (
       <div className="space-y-4">
         {sectionData.map(d => {
           const chartConfig = d.chart_config ? (typeof d.chart_config === 'string' ? JSON.parse(d.chart_config) : d.chart_config) : null;
           return (
-            <div key={d.id} className="relative group border-2 rounded-lg p-4" style={{ borderColor: `${pc}30`, backgroundColor: `${pc}06`, boxShadow: `0 2px 8px ${pc}10` }}>
+            <div key={d.id} className="relative group border-2 rounded-lg p-4 hover:ring-2 hover:ring-accent/40 hover:ring-offset-1 transition-all" style={{ borderColor: `${pc}30`, backgroundColor: `${pc}06`, boxShadow: `0 2px 8px ${pc}10` }}>
               {chartConfig && <ChartRenderer chartConfig={chartConfig} branding={branding} isPrint={isPrint} />}
               {d.ai_narrative && <p className="text-sm text-slate-700 mt-2">{d.ai_narrative}</p>}
-              {showChartSlider && (
+              {onUpdate && !isPrint && (
                 <div className="no-print absolute bottom-0 left-0 right-0 bg-black/55 rounded-b-lg px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="text-[10px] text-white shrink-0">Width</span>
                   <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
@@ -370,7 +369,7 @@ export default function SectionRenderer({
       <DraggableImageBlock section={section} onUpdate={onUpdate}
         positionField="chart_position" widthField="chart_width"
         positionMap={{ left: 'left', right: 'right', full: 'full' }}
-        defaultWidth={100}
+        defaultWidth={chartWidth || 100}
         dragHandle>
         {dataBlock}
       </DraggableImageBlock>
