@@ -354,8 +354,8 @@ export default function PaginatedSection({
         {Array.from({ length: pageCount }).map((_, i) => {
           const isFirstPage = i === 0;
           const contentHeight = isFirstPage ? firstPageContentHeight : continuationPageContentHeight;
-          // For continuation pages, content starts after the header
-          const contentOffset = isFirstPage ? 0 : (i - 1) * continuationPageContentHeight + firstPageContentHeight;
+          // For continuation pages, content starts after the header - push content down by headerHeight
+          const contentOffset = isFirstPage ? 0 : (i - 1) * continuationPageContentHeight + firstPageContentHeight - headerHeight;
           const contentTop = isFirstPage ? 0 : -contentOffset;
 
           return (
@@ -407,9 +407,8 @@ export default function PaginatedSection({
                   <div
                     className="paginated-content"
                     style={{
-                      position: 'absolute',
+                      position: 'relative',
                       top: isFirstPage ? 0 : contentTop,
-                      marginTop: isFirstPage ? 0 : headerHeight,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
