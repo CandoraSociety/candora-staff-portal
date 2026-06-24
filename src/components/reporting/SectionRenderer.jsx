@@ -248,48 +248,58 @@ export default function SectionRenderer({
   };
 
   const renderContent = () => {
-    const masterContent = master.content || {};
-    const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
-    const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
-    const hasChart = sectionData.length > 0;
-    const textColumns = section.text_columns || 1;
-    const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
-    const contentBlock = (
-      <div style={{
-        fontFamily: masterContent.font_family || undefined,
-        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
-        color: masterContent.color || undefined,
-        ...(section.content_bg_color ? {
-          backgroundColor: section.content_bg_color,
-          padding: '1rem 1.25rem',
-          borderRadius: '0.5rem',
-          border: `1px solid ${pc}20`,
-        } : {}),
-        ...(textColumns > 1 && !hasFloatedImage ? {
-          columnCount: textColumns,
-          WebkitColumnCount: textColumns,
-          MozColumnCount: textColumns,
-          columnGap: '1.5rem',
-          columnFill: 'balance',
-          minHeight: '200px',
-        } : {}),
-      }}>
-        <div
-          ref={contentRef}
-          contentEditable={!!onUpdate && !isPrint}
-          suppressContentEditableWarning
-          data-placeholder="No content yet. Click to edit..."
-          style={{ minHeight: 'inherit' }}
-          onFocus={() => { editingContent.current = true; }}
-          onBlur={!!onUpdate && !isPrint ? (e) => {
-            editingContent.current = false;
-            const html = e.target.innerHTML;
-            const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
-            if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
-          } : undefined}
-        />
+  const masterContent = master.content || {};
+  const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
+  const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
+  const hasChart = sectionData.length > 0;
+  const textColumns = section.text_columns || 1;
+  const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
+  const contentBlock = (
+    <div style={{
+      fontFamily: masterContent.font_family || undefined,
+      fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
+      color: masterContent.color || undefined,
+      ...(section.content_bg_color ? {
+        backgroundColor: section.content_bg_color,
+        padding: '1rem 1.25rem',
+        borderRadius: '0.5rem',
+        border: `1px solid ${pc}20`,
+      } : {}),
+      ...(textColumns > 1 && !hasFloatedImage ? {
+        columnCount: textColumns,
+        WebkitColumnCount: textColumns,
+        MozColumnCount: textColumns,
+        columnGap: '1.5rem',
+        columnFill: 'balance',
+      } : {}),
+    }}>
+      <div
+        ref={contentRef}
+        contentEditable={!!onUpdate && !isPrint}
+        suppressContentEditableWarning
+        data-placeholder="No content yet. Click to edit..."
+        style={{ 
+          minHeight: textColumns > 1 && !hasFloatedImage ? '300px' : 'inherit',
+          breakInside: 'avoid',
+          WebkitColumnBreakInside: 'avoid',
+          pageBreakInside: 'avoid',
+        }}
+        onFocus={() => { editingContent.current = true; }}
+        onBlur={!!onUpdate && !isPrint ? (e) => {
+          editingContent.current = false;
+          const html = e.target.innerHTML;
+          const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
+          if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
+        } : undefined}
+      >
+        {textColumns > 1 && !hasFloatedImage && !section.content && (
+          <div style={{ padding: '20px', color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
+            Add content to see {textColumns}-column layout
+          </div>
+        )}
       </div>
-    );
+    </div>
+  );
 
     const imageWidth = section.image_width || 50;
     const chartWidth = section.chart_width || 100;
