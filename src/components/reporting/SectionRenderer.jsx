@@ -360,8 +360,9 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    // Chart with free-form horizontal and vertical positioning - controls move with chart
+    // Chart with free-form horizontal and vertical positioning - controls move with chart, text wraps around
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
+    const chartFloat = chartX < 40 ? 'left' : chartX > 60 ? 'right' : 'left'; // Always float for text wrapping
     const handleArrowKeyMove = (direction) => {
       if (!onUpdate) return;
       const step = 10; // pixels per arrow press
@@ -374,8 +375,10 @@ export default function SectionRenderer({
       <div
         className="relative group"
         style={{
-          float: chartX < 35 ? 'left' : chartX > 65 ? 'right' : 'none',
-          ...(chartX >= 35 && chartX <= 65 ? { position: 'relative', left: `${chartX}%`, transform: 'translateX(-50%)', top: `${chartY}px` } : { marginLeft: chartX < 35 ? '0' : 'auto', marginRight: chartX > 65 ? '0' : 'auto', marginBottom: `${chartY}px` }),
+          float: chartFloat,
+          marginLeft: chartFloat === 'left' ? '0' : 'auto',
+          marginRight: chartFloat === 'right' ? '0' : 'auto',
+          marginBottom: `${chartY}px`,
           width: `${chartWidth}%`,
           zIndex: 10,
         }}
@@ -454,6 +457,7 @@ export default function SectionRenderer({
             {imageBlock && <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>}
             {floatedChart && <div className="mx-auto mb-4" style={{ width: `${chartWidth}%` }}>{floatedChart}</div>}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
           </div>
         );
       case 'two_column':
@@ -462,13 +466,15 @@ export default function SectionRenderer({
             {imageBlock && <div className="mb-4">{imageBlock}</div>}
             {floatedChart && <div className="mb-4">{floatedChart}</div>}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
           </div>
         );
       default:
         return (
-          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
+          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
             {floatedChart}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
           </div>
         );
     }
