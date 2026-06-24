@@ -356,18 +356,29 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    // Chart is draggable via a drag handle bar; chart_position controls left/right/full
-    const chartPos = section.chart_position || 'full';
+    // Chart with free-form horizontal positioning
+    const chartX = section.chart_x_offset || 0; // percentage 0-100
     const draggableChartBlock = dataBlock ? (
-      <div className="relative group">
-        <DraggableImageBlock section={section} onUpdate={onUpdate}
-          positionField="chart_position" widthField="chart_width"
-          positionMap={{ left: 'left', right: 'right', full: 'full' }}
-          defaultWidth={chartWidth || 100}
-          dragHandle>
-          {dataBlock}
-        </DraggableImageBlock>
-        {/* Width slider - always visible on hover of the wrapper */}
+      <div className="relative group" style={{ position: 'relative', width: '100%' }}>
+        <div
+          className="relative"
+          style={{
+            position: 'relative',
+            left: `${chartX}%`,
+            width: `${chartWidth}%`,
+            transform: 'translateX(-50%)',
+          }}
+        >
+          <DraggableImageBlock section={section} onUpdate={onUpdate}
+            positionField="chart_x_offset" widthField="chart_width"
+            positionMap={{}}
+            defaultWidth={chartWidth || 100}
+            dragHandle
+            continuousMode>
+            {dataBlock}
+          </DraggableImageBlock>
+        </div>
+        {/* Width slider */}
         {onUpdate && !isPrint && (
           <div className="no-print absolute -bottom-6 left-0 right-0 bg-black/55 rounded px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
             <span className="text-[10px] text-white shrink-0">Width</span>
@@ -377,15 +388,8 @@ export default function SectionRenderer({
         )}
       </div>
     ) : null;
-
-    const floatedChart = draggableChartBlock && (chartPos === 'left' || chartPos === 'right') ? (
-      <div style={{ float: chartPos, width: `${chartWidth}%` }} className={chartPos === 'left' ? 'mr-5 mb-3' : 'ml-5 mb-3'}>
-        {draggableChartBlock}
-      </div>
-    ) : null;
-    const belowChart = draggableChartBlock && !floatedChart ? (
-      <div className="mt-4">{draggableChartBlock}</div>
-    ) : null;
+    const floatedChart = null;
+    const belowChart = draggableChartBlock;
 
     switch (section.layout) {
       case 'image_left':

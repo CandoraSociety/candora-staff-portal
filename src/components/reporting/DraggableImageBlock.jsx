@@ -8,6 +8,7 @@ export default function DraggableImageBlock({
   positionMap = { left: 'image_left', right: 'image_right', full: 'image_full' },
   defaultWidth = 50,
   dragHandle = false,
+  continuousMode = false, // For charts: allows continuous horizontal positioning
 }) {
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -43,25 +44,35 @@ export default function DraggableImageBlock({
 
     const computeGhost = (clientX) => {
       const dropX = (clientX - containerRect.left) / zoomScale;
-      const third = containerWidth / 3;
-      let zone;
-      if (dropX < third) zone = 'left';
-      else if (dropX > third * 2) zone = 'right';
-      else zone = 'full';
+      
+      if (continuousMode) {
+        // Continuous mode: calculate exact percentage position
+        const percentX = Math.max(0, Math.min(100, (dropX / containerWidth) * 100));
+        const widthPct = section[widthField] || defaultWidth;
+        const w = (widthPct / 100) * containerWidth;
+        return { x: dropX - w / 2, y: 0, w, h: imgHeight, zone: 'custom', percentX };
+      } else {
+        // Discrete zone mode (original behavior)
+        const third = containerWidth / 3;
+        let zone;
+        if (dropX < third) zone = 'left';
+        else if (dropX > third * 2) zone = 'right';
+        else zone = 'full';
 
-      const widthPct = section[widthField] || defaultWidth;
-      const margin = 6;
-      const gap = 8;
-      const zoneWidth = (containerWidth - margin * 2 - gap * 2) / 3;
-      const w = zone === 'full'
-        ? containerWidth - margin * 2
-        : (zoneWidth - margin);
-      const x = zone === 'left'
-        ? margin
-        : zone === 'right'
-          ? containerWidth - w - margin
-          : margin + zoneWidth + gap;
-      return { x, y: margin, w, h: imgHeight, zone };
+        const widthPct = section[widthField] || defaultWidth;
+        const margin = 6;
+        const gap = 8;
+        const zoneWidth = (containerWidth - margin * 2 - gap * 2) / 3;
+        const w = zone === 'full'
+          ? containerWidth - margin * 2
+          : (zoneWidth - margin);
+        const x = zone === 'left'
+          ? margin
+          : zone === 'right'
+            ? containerWidth - w - margin
+            : margin + zoneWidth + gap;
+        return { x, y: margin, w, h: imgHeight, zone };
+      }
     };
 
     setDragging(true);
@@ -70,14 +81,21 @@ export default function DraggableImageBlock({
     const onMove = (ev) => {
       const g = computeGhost(ev.clientX);
       setGhost(g);
-      setDropZones({ left: g.zone === 'left', full: g.zone === 'full', right: g.zone === 'right' });
+      if (!continuousMode) {
+        setDropZones({ left: g.zone === 'left', full: g.zone === 'full', right: g.zone === 'right' });
+      }
     };
 
     const onUp = (ev) => {
       const g = computeGhost(ev.clientX);
-      const newPosition = positionMap[g.zone];
-      if (newPosition !== section[positionField]) {
-        onUpdate(section.id, { [positionField]: newPosition });
+      if (continuousMode) {
+        // Save exact percentage position
+        onUpdate(section.id, { [positionField]: Math.round(g.percentX) });
+      } else {
+        const newPosition = positionMap[g.zone];
+        if (newPosition !== section[positionField]) {
+          onUpdate(section.id, { [positionField]: newPosition });
+        }
       }
       setDragging(false);
       setGhost(null);
@@ -90,7 +108,7 @@ export default function DraggableImageBlock({
     window.addEventListener('mouseup', onUp);
   };
 
-  const zoneLabel = ghost?.zone === 'left' ? 'Left' : ghost?.zone === 'right' ? 'Right' : 'Full Width';
+  const zoneLabel = ghost?.zone === 'left' ? 'Left' : ghost?.zone === 'right' ? 'Right' : ghost?.zone === 'custom' ? `${Math.round(ghost.percentX)}%` : 'Full Width';
 
   return (
     <>
