@@ -131,6 +131,11 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
     const el = localOverlays.find(o => o.id === elId);
     if (!el) return;
     setSelectedId(elId);
+    // Capture the pointer so pointerup is always received by the same element,
+    // even if the cursor leaves the handle during the drag.
+    if (e.pointerId != null && e.currentTarget?.setPointerCapture) {
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
+    }
     if (kind === 'rotate') {
       const elNode = e.currentTarget.parentElement;
       const rect = elNode.getBoundingClientRect();
@@ -173,7 +178,10 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
         return { ...el, x: Math.max(2, Math.min(95, dragging.startElX + dx)), y: Math.max(2, Math.min(95, dragging.startElY + dy)) };
       }));
     };
-    const onUp = () => {
+    const onUp = (e) => {
+      if (e?.pointerId != null && e.target?.releasePointerCapture) {
+        try { e.target.releasePointerCapture(e.pointerId); } catch {}
+      }
       setDragging(null);
       persistOverlays(overlayRef.current);
     };
