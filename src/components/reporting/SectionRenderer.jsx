@@ -265,13 +265,17 @@ export default function SectionRenderer({
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
+        ...(textColumns > 1 && !hasFloatedImage ? {
+          columnCount: textColumns,
+          columnGap: '1.5rem',
+          columnFill: 'balance',
+        } : {}),
       }}>
         <div
           ref={contentRef}
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={textColumns > 1 && !hasFloatedImage ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -378,44 +382,60 @@ export default function SectionRenderer({
       case 'image_left':
         return (
           <div className="relative" data-section-content style={{ display: 'flow-root' }}>
-            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
+            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
+            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
       case 'image_wrap':
         return (
           <div className="relative" data-section-content style={{ display: 'flow-root' }}>
-            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
+            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
+            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
       case 'image_right':
         return (
           <div className="relative" data-section-content style={{ display: 'flow-root' }}>
-            <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
+            {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>}
+            {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
       case 'image_full':
         return (
           <div className="relative" data-section-content>
-            <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>
+            {imageBlock && <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>}
+            {floatedChart}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
       case 'two_column':
         return (
           <div className="relative" data-section-content>
+            {imageBlock && <div className="mb-4">{imageBlock}</div>}
+            {floatedChart}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
       default:
         return (
           <div className="relative" data-section-content>
+            {floatedChart}
             {contentBlock}
+            <div style={{ clear: 'both' }} />
+            {belowChart}
           </div>
         );
     }
