@@ -108,6 +108,12 @@ export default function ReportingAGRPrint() {
 
   return (
     <div className="space-y-4 print:space-y-0">
+      <style>{`
+        @media print {
+          [data-sidebar], [data-topbar], .no-print { display: none !important; }
+          body { background: white !important; }
+        }
+      `}</style>
       <div className="no-print flex items-center gap-3 mb-6">
         <Link to={`/reporting/agr/${id}/edit`} className="text-muted-foreground hover:text-accent transition-colors">
           <ArrowLeft className="w-5 h-5" />

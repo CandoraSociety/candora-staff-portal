@@ -35,28 +35,28 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
   return (
     <div className="print:block">
-      {/* Front cover - print only */}
-      <div className="print:block print:break-after-page" style={{ width: '8.5in', height: '11in', backgroundColor: branding?.primary_color || '#1a2744' }}>
+      {/* Front cover */}
+      <div className="print:break-after-page" style={{ width: '8.5in', minHeight: '11in', backgroundColor: branding?.primary_color || '#1a2744' }}>
         <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
       </div>
 
       {/* Inside front cover */}
       {report.inside_front_cover_image && (
-        <div className="print:block print:break-after-page" style={{ width: '8.5in', height: '11in' }}>
+        <div className="print:break-after-page" style={{ width: '8.5in', minHeight: '11in' }}>
           <StyledCoverPreview coverType="inside_front" report={report} branding={branding} noPadding />
         </div>
       )}
 
       {/* Table of Contents */}
-      <div className="print:block print:break-after-page" style={{ width: '8.5in', minHeight: '11in' }}>
+      <div className="print:break-after-page" style={{ width: '8.5in', minHeight: '11in' }}>
         <div className="p-8">
           <ScaledTOC sections={sections} branding={branding} getPage={getSectionPage} containerHeight="11in" padding="2.5rem" />
         </div>
       </div>
 
-      {/* Sections - simple flow layout for print */}
+      {/* Sections - simple flow layout */}
       {sections.map((section, i) => (
-        <div key={section.id} className="print:block" style={{ width: '8.5in' }}>
+        <div key={section.id} style={{ width: '8.5in' }}>
           {section.page_break_before && <div className="print:break-before-page" />}
           <SectionRenderer
             section={section}
