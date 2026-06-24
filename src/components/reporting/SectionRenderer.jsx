@@ -262,11 +262,13 @@ export default function SectionRenderer({
     const hasVisual = hasImage || hasChart;
     const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
     const isMultiCol = textColumns > 1;
+    const hasFloatedImage = ['image_left', 'image_right'].includes(section.layout);
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
+        ...(hasFloatedImage ? { display: 'flow-root' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
