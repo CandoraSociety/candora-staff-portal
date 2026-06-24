@@ -376,23 +376,17 @@ export default function SectionRenderer({
             positionMap={{}}
             defaultWidth={chartWidth || 100}
             dragHandle
-            continuousMode>
+            continuousMode
+            enableVerticalDrag>
             {dataBlock}
           </DraggableImageBlock>
         </div>
-        {/* Width and vertical sliders */}
+        {/* Width slider */}
         {onUpdate && !isPrint && (
-          <div className="no-print absolute -bottom-8 left-0 right-0 bg-black/55 rounded px-2 py-1.5 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-white shrink-0">Width</span>
-              <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-              <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-white shrink-0">Vertical</span>
-              <input type="range" min="0" max="800" value={chartY} onChange={e => onUpdate(section.id, { chart_y_offset: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
-              <span className="text-[10px] text-white w-10 text-right tabular-nums">{chartY}px</span>
-            </div>
+          <div className="no-print absolute -bottom-6 left-0 right-0 bg-black/55 rounded px-2 py-1 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-30">
+            <span className="text-[10px] text-white shrink-0">Width</span>
+            <input type="range" min="20" max="100" value={chartWidth} onChange={e => onUpdate(section.id, { chart_width: parseInt(e.target.value) })} className="flex-1 h-1 accent-white" />
+            <span className="text-[10px] text-white w-9 text-right tabular-nums">{chartWidth}%</span>
           </div>
         )}
       </div>

@@ -5,10 +5,12 @@ export default function DraggableImageBlock({
   section, onUpdate, children,
   positionField = 'layout',
   widthField = 'image_width',
+  verticalPositionField = 'chart_y_offset',
   positionMap = { left: 'image_left', right: 'image_right', full: 'image_full' },
   defaultWidth = 50,
   dragHandle = false,
-  continuousMode = false, // For charts: allows continuous horizontal positioning
+  continuousMode = false,
+  enableVerticalDrag = false,
 }) {
   const ref = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -26,7 +28,7 @@ export default function DraggableImageBlock({
     const containerRect = container.getBoundingClientRect();
     const imgRect = ref.current.getBoundingClientRect();
 
-    // Account for CSS zoom on ancestor elements (live preview uses zoom to scale)
+    // Account for CSS zoom on ancestor elements
     let zoomScale = 1;
     let el = container.parentElement;
     while (el) {
@@ -38,21 +40,26 @@ export default function DraggableImageBlock({
       el = el.parentElement;
     }
 
-    // Convert rendered (zoomed) coordinates to pre-zoom layout coordinates
     const containerWidth = containerRect.width / zoomScale;
+    const containerHeight = containerRect.height / zoomScale;
     const imgHeight = imgRect.height / zoomScale;
+    const imgWidth = imgRect.width / zoomScale;
 
-    const computeGhost = (clientX) => {
+    // For vertical drag, track starting Y offset
+    const startY = enableVerticalDrag ? (section[verticalPositionField] || 0) : 0;
+    const startMouseY = e.clientY;
+
+    const computeGhost = (clientX, clientY) => {
       const dropX = (clientX - containerRect.left) / zoomScale;
+      const dropY = enableVerticalDrag ? (clientY - containerRect.top) / zoomScale : 0;
       
       if (continuousMode) {
-        // Continuous mode: calculate exact percentage position
         const percentX = Math.max(0, Math.min(100, (dropX / containerWidth) * 100));
         const widthPct = section[widthField] || defaultWidth;
         const w = (widthPct / 100) * containerWidth;
-        return { x: dropX - w / 2, y: 0, w, h: imgHeight, zone: 'custom', percentX };
+        const y = enableVerticalDrag ? Math.max(0, dropY - imgHeight / 2) : 0;
+        return { x: dropX - w / 2, y, w, h: imgHeight, zone: 'custom', percentX, verticalOffset: y };
       } else {
-        // Discrete zone mode (original behavior)
         const third = containerWidth / 3;
         let zone;
         if (dropX < third) zone = 'left';
@@ -63,23 +70,17 @@ export default function DraggableImageBlock({
         const margin = 6;
         const gap = 8;
         const zoneWidth = (containerWidth - margin * 2 - gap * 2) / 3;
-        const w = zone === 'full'
-          ? containerWidth - margin * 2
-          : (zoneWidth - margin);
-        const x = zone === 'left'
-          ? margin
-          : zone === 'right'
-            ? containerWidth - w - margin
-            : margin + zoneWidth + gap;
-        return { x, y: margin, w, h: imgHeight, zone };
+        const w = zone === 'full' ? containerWidth - margin * 2 : (zoneWidth - margin);
+        const x = zone === 'left' ? margin : zone === 'right' ? containerWidth - w - margin : margin + zoneWidth + gap;
+        return { x, y: margin, w, h: imgHeight, zone, verticalOffset: 0 };
       }
     };
 
     setDragging(true);
-    setGhost(computeGhost(e.clientX));
+    setGhost(computeGhost(e.clientX, e.clientY));
 
     const onMove = (ev) => {
-      const g = computeGhost(ev.clientX);
+      const g = computeGhost(ev.clientX, ev.clientY);
       setGhost(g);
       if (!continuousMode) {
         setDropZones({ left: g.zone === 'left', full: g.zone === 'full', right: g.zone === 'right' });
@@ -87,10 +88,14 @@ export default function DraggableImageBlock({
     };
 
     const onUp = (ev) => {
-      const g = computeGhost(ev.clientX);
+      const g = computeGhost(ev.clientX, ev.clientY);
+      const updates = {};
       if (continuousMode) {
-        // Save exact percentage position
-        onUpdate(section.id, { [positionField]: Math.round(g.percentX) });
+        updates[positionField] = Math.round(g.percentX);
+        if (enableVerticalDrag) {
+          updates[verticalPositionField] = Math.round(g.verticalOffset);
+        }
+        onUpdate(section.id, updates);
       } else {
         const newPosition = positionMap[g.zone];
         if (newPosition !== section[positionField]) {
