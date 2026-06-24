@@ -265,6 +265,13 @@ export default function SectionRenderer({
         borderRadius: '0.5rem',
         border: `1px solid ${pc}20`,
       } : {}),
+      ...(textColumns > 1 && !hasFloatedImage ? {
+        columnCount: textColumns,
+        WebkitColumnCount: textColumns,
+        MozColumnCount: textColumns,
+        columnGap: '1.5rem',
+        columnFill: 'balance',
+      } : {}),
     }}>
       <div
         ref={contentRef}
@@ -273,13 +280,6 @@ export default function SectionRenderer({
         data-placeholder="No content yet. Click to edit..."
         style={{ 
           display: 'block',
-          ...(textColumns > 1 && !hasFloatedImage ? {
-            columnCount: textColumns,
-            WebkitColumnCount: textColumns,
-            MozColumnCount: textColumns,
-            columnGap: '1.5rem',
-            columnFill: 'balance',
-          } : {}),
         }}
         onFocus={() => { editingContent.current = true; }}
         onBlur={!!onUpdate && !isPrint ? (e) => {
