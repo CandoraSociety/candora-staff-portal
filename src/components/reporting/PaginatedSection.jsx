@@ -174,47 +174,41 @@ export default function PaginatedSection({
 
       {/* ── Print: native browser pagination, sections flow naturally ── */}
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
-        <div className="print-flow-page" style={{ width: '8.5in', maxWidth: '100%', position: 'relative' }}>
+        <div className="print-flow-page">
           {/* Header — only on first section so it doesn't duplicate */}
           {isFirstSection && showHeaderAll && (
-            <div style={{ padding: '0.75in 0.75in 0 0.75in' }}>
-              <ContinuationHeader
-                masterHeader={masterHeader}
-                headerImage={headerImage}
-                headerImageHeight={headerImageHeight}
-                headerFontSize={headerFontSize}
-                headerLayout={headerLayout}
-                headerZones={headerZones}
-                primaryColor={primaryColor}
-                branding={branding}
-                pageNum={pageNum}
-                showPageNumber={showPageNumbersAll}
-              />
-            </div>
+            <ContinuationHeader
+              masterHeader={masterHeader}
+              headerImage={headerImage}
+              headerImageHeight={headerImageHeight}
+              headerFontSize={headerFontSize}
+              headerLayout={headerLayout}
+              headerZones={headerZones}
+              primaryColor={primaryColor}
+              branding={branding}
+              pageNum={pageNum}
+              showPageNumber={showPageNumbersAll}
+            />
           )}
 
           {/* Content — flows naturally across pages, browser handles breaks */}
-          <div style={{ padding: `${PADDING_PX}px` }}>
-            {children}
-          </div>
+          {children}
 
           {/* Footer — only on last section so it doesn't duplicate */}
           {isLastSection && hasFooter && (
-            <div style={{ padding: '0 0.75in 0.75in 0.75in' }}>
-              <PageFooter
-                masterFooter={masterFooter}
-                footerImage={footerImage}
-                footerImageHeight={footerImageHeight}
-                footerFontSize={footerFontSize}
-                footerLayout={footerLayout}
-                footerZones={footerZones}
-                primaryColor={primaryColor}
-                branding={branding}
-                pageNum={pageNum}
-                showPageNumber={showPageNumbersAll}
-                useCssCounter
-              />
-            </div>
+            <PageFooter
+              masterFooter={masterFooter}
+              footerImage={footerImage}
+              footerImageHeight={footerImageHeight}
+              footerFontSize={footerFontSize}
+              footerLayout={footerLayout}
+              footerZones={footerZones}
+              primaryColor={primaryColor}
+              branding={branding}
+              pageNum={pageNum}
+              showPageNumber={showPageNumbersAll}
+              useCssCounter
+            />
           )}
         </div>
       </div>

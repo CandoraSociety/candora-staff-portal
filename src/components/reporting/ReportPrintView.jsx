@@ -54,7 +54,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3 print:block">
       {/* Front cover */}
       <PagePreview pageNum={1}>
         <StyledCoverPreview coverType="front" report={report} branding={branding} noPadding />
@@ -135,7 +135,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
       {/* Subsidiary logos */}
       {branding?.subsidiary_logos?.length > 0 && (
-        <PagePreview pageNum={tocPage + sections.length + 1}>
+        <PagePreview pageNum={tocPage + sections.length + 1} className="print-break">
           <div className="p-8">
             <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Sub-Brands</p>
             <div className="flex flex-wrap items-center justify-center gap-6">
@@ -152,7 +152,7 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
       {/* Funder logos */}
       {branding?.funder_logos?.length > 0 && (
-        <PagePreview>
+        <PagePreview className="print-break">
           <div className="p-8">
             <p className="text-sm font-bold uppercase tracking-wider mb-4 text-muted-foreground">Our Funders</p>
             <div className="flex flex-wrap items-center justify-center gap-6">
@@ -169,18 +169,18 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
 
       {/* Inside back cover */}
       {report.inside_back_cover_image && (
-        <PagePreview>
+        <PagePreview className="print-break">
           <StyledCoverPreview coverType="inside_back" report={report} branding={branding} noPadding />
         </PagePreview>
       )}
 
       {/* Back cover */}
       {report.back_cover_image ? (
-        <PagePreview>
+        <PagePreview className="print-break">
           <StyledCoverPreview coverType="back" report={report} branding={branding} noPadding />
         </PagePreview>
       ) : branding ? (
-        <PagePreview>
+        <PagePreview className="print-break">
           <div className="h-full w-full overflow-hidden relative" style={{ backgroundColor: branding.primary_color || '#1a2744' }}>
             {report.back_cover_text && (
               <p className="text-xl text-white drop-shadow-lg whitespace-pre-line text-center p-12">{report.back_cover_text}</p>

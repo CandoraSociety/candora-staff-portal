@@ -120,9 +120,12 @@
   body { background: white !important; }
   .print-flow-page { 
     height: auto !important; 
+    width: auto !important;
+    max-width: 100% !important;
     overflow: visible !important; 
     position: relative !important;
-    margin-bottom: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   .print-page-end {
     page-break-after: always;
