@@ -255,41 +255,38 @@ export default function SectionRenderer({
   const textColumns = section.text_columns || 1;
   const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
   const contentBlock = (
-    <div style={{
-      fontFamily: masterContent.font_family || undefined,
-      fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
-      color: masterContent.color || undefined,
-      ...(section.content_bg_color ? {
-        backgroundColor: section.content_bg_color,
-        padding: '1rem 1.25rem',
-        borderRadius: '0.5rem',
-        border: `1px solid ${pc}20`,
-      } : {}),
-      ...(textColumns > 1 && !hasFloatedImage ? {
-        columnCount: textColumns,
-        WebkitColumnCount: textColumns,
-        MozColumnCount: textColumns,
-        columnGap: '1.5rem',
-        columnFill: 'balance',
-      } : {}),
-    }}>
-      <div
-        ref={contentRef}
-        contentEditable={!!onUpdate && !isPrint}
-        suppressContentEditableWarning
-        data-placeholder="No content yet. Click to edit..."
-        style={{ 
-          display: 'block',
-        }}
-        onFocus={() => { editingContent.current = true; }}
-        onBlur={!!onUpdate && !isPrint ? (e) => {
-          editingContent.current = false;
-          const html = e.target.innerHTML;
-          const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
-          if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
-        } : undefined}
-      />
-    </div>
+    <div
+      ref={contentRef}
+      contentEditable={!!onUpdate && !isPrint}
+      suppressContentEditableWarning
+      data-placeholder="No content yet. Click to edit..."
+      style={{ 
+        fontFamily: masterContent.font_family || undefined,
+        fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
+        color: masterContent.color || undefined,
+        minHeight: textColumns > 1 ? '200px' : undefined,
+        ...(section.content_bg_color ? {
+          backgroundColor: section.content_bg_color,
+          padding: '1rem 1.25rem',
+          borderRadius: '0.5rem',
+          border: `1px solid ${pc}20`,
+        } : {}),
+        ...(textColumns > 1 && !hasFloatedImage ? {
+          columnCount: textColumns,
+          WebkitColumnCount: textColumns,
+          MozColumnCount: textColumns,
+          columnGap: '1.5rem',
+          columnFill: 'balance',
+        } : {}),
+      }}
+      onFocus={() => { editingContent.current = true; }}
+      onBlur={!!onUpdate && !isPrint ? (e) => {
+        editingContent.current = false;
+        const html = e.target.innerHTML;
+        const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
+        if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
+      } : undefined}
+    />
   );
 
     const imageWidth = section.image_width || 50;
