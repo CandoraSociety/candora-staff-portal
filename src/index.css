@@ -115,6 +115,7 @@
   .print-break { page-break-before: always; }
   body { background: white !important; }
   .print-flow-page { height: auto !important; overflow: visible !important; }
+  .print-page-counter::after { content: counter(page); }
 }
 
 .paginated-content img, .paginated-content .recharts-wrapper, .paginated-content table {

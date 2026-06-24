@@ -85,7 +85,7 @@ export default function SectionRenderer({
   const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
   const showHeader = showHeaderAll && !section.hide_header;
   const showFooter = showFooterAll && !section.hide_footer;
-  const showPageNum = showPageNumbersAll;
+  const showPageNum = showPageNumbersAll && isPrint;
   const isCollapsible = (section.is_collapsible || forceCollapsible) && !isPrint;
 
   // ── Zone-based header/footer builder ─────────────────────────────
@@ -172,7 +172,7 @@ export default function SectionRenderer({
     </div>
   );
 
-  const footerContent = showFooter && (
+  const footerContent = showFooter && !isPrint && (
     <div className="pt-2 mt-6" style={{ borderTop: `1px solid ${pc}20` }}>
       <ZoneSlots
         text={masterFooter}

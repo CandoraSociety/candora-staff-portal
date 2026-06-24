@@ -4,7 +4,7 @@ import React, { useRef, useState, useLayoutEffect } from 'react';
  * Renders a Table of Contents that scales to fill the available page space —
  * scaling up when there are few entries, down when there are many.
  */
-export default function ScaledTOC({ sections, branding, getPage, containerHeight = '11in', padding = '2.5rem', maxScale = 1.6 }) {
+export default function ScaledTOC({ sections, branding, getPage, containerHeight = '11in', padding = '2.5rem', maxScale = 1.6, showPageNumbers = true }) {
   const wrapperRef = useRef(null);
   const contentRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -84,22 +84,26 @@ export default function ScaledTOC({ sections, branding, getPage, containerHeight
                 <span className="flex-1 font-medium" style={{ color: pc, fontSize: '0.95em' }}>
                   {s.title || 'Untitled'}
                 </span>
-                {/* Dotted leader */}
-                <span className="flex-1 mx-3 border-b border-dotted self-center" style={{ borderColor: `${ac}40` }} />
-                {/* Page number pill */}
-                <span
-                  className="shrink-0 font-semibold tabular-nums"
-                  style={{
-                    color: pc,
-                    backgroundColor: `${gold}18`,
-                    border: `1px solid ${gold}50`,
-                    borderRadius: '0.375rem',
-                    padding: '0.15em 0.6em',
-                    fontSize: '0.8em',
-                  }}
-                >
-                  {getPage(i)}
-                </span>
+                {showPageNumbers && (
+                  <>
+                    {/* Dotted leader */}
+                    <span className="flex-1 mx-3 border-b border-dotted self-center" style={{ borderColor: `${ac}40` }} />
+                    {/* Page number pill */}
+                    <span
+                      className="shrink-0 font-semibold tabular-nums"
+                      style={{
+                        color: pc,
+                        backgroundColor: `${gold}18`,
+                        border: `1px solid ${gold}50`,
+                        borderRadius: '0.375rem',
+                        padding: '0.15em 0.6em',
+                        fontSize: '0.8em',
+                      }}
+                    >
+                      {getPage(i)}
+                    </span>
+                  </>
+                )}
               </div>
             );
           })}

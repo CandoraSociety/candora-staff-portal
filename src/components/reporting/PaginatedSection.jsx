@@ -7,6 +7,7 @@ const PADDING_PX = 32; // p-8 = 2rem
 const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2; // 988px
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2; // 752px
 const CONT_HEADER_PX = 44; // Height reserved for the continuation header
+const FOOTER_HEIGHT_PX = 48; // Height reserved for the page footer
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -112,6 +113,88 @@ function ContinuationHeader({ masterHeader, headerImage, headerImageHeight, head
   );
 }
 
+function PageFooter({ masterFooter, footerImage, footerImageHeight, footerFontSize, footerLayout, footerZones, primaryColor, pageNum, showPageNumber, useCssCounter }) {
+  const zones = parseZones(footerZones);
+
+  const renderSlot = (z) => {
+    if (z.content === 'text' && masterFooter) {
+      return (
+        <span className="break-words" style={{
+          fontSize: `${footerFontSize || 12}px`,
+          fontFamily: z.font_family || 'Inter',
+          fontWeight: z.bold ? 'bold' : 'normal',
+          fontStyle: z.italic ? 'italic' : 'normal',
+          textDecoration: z.underline ? 'underline' : 'none',
+          color: z.color || 'hsl(var(--muted-foreground))',
+          textAlign: z.align || 'left',
+          lineHeight: 1.3,
+        }}>
+          {masterFooter}
+        </span>
+      );
+    }
+    if (z.content === 'image' && footerImage) {
+      return <img src={footerImage} alt="" className="object-contain" style={{ maxHeight: `${footerImageHeight || 48}px`, maxWidth: '100%' }} />;
+    }
+    if (z.content === 'page_number' && showPageNumber && (useCssCounter || pageNum)) {
+      if (useCssCounter) {
+        return <span className="print-page-counter" style={{ fontSize: `${footerFontSize || 12}px` }} />;
+      }
+      return <span style={{ fontSize: `${footerFontSize || 12}px` }} className="text-muted-foreground">{pageNum}</span>;
+    }
+    return null;
+  };
+
+  if (!zones.length) {
+    if (!masterFooter && !footerImage) return null;
+    return (
+      <div className="pt-2" style={{ borderTop: `1px solid ${primaryColor}20` }}>
+        <div className="flex items-center gap-2">
+          {footerImage && <img src={footerImage} alt="" className="object-contain" style={{ maxHeight: `${footerImageHeight || 48}px` }} />}
+          {masterFooter && <span style={{ fontSize: `${footerFontSize || 12}px`, color: 'hsl(var(--muted-foreground))' }}>{masterFooter}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  const hasAny = zones.some(z => {
+    if (z.content === 'text' && masterFooter) return true;
+    if (z.content === 'image' && footerImage) return true;
+    if (z.content === 'page_number' && showPageNumber && (useCssCounter || pageNum)) return true;
+    return false;
+  });
+  if (!hasAny) return null;
+
+  if (footerLayout === 'stacked') {
+    return (
+      <div className="pt-2" style={{ borderTop: `1px solid ${primaryColor}20` }}>
+        <div className="flex flex-col items-center gap-1">
+          {zones.map(z => {
+            const el = renderSlot(z);
+            return el ? <div key={z.id} style={{ width: '100%', textAlign: z.align || 'left' }}>{el}</div> : null;
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-2" style={{ borderTop: `1px solid ${primaryColor}20` }}>
+      <div className="flex items-center w-full gap-2">
+        {zones.map(z => {
+          const el = renderSlot(z);
+          const just = z.align === 'right' ? 'flex-end' : z.align === 'center' ? 'center' : 'flex-start';
+          return (
+            <div key={z.id} className="flex" style={{ width: `${z.w}%`, justifyContent: just }}>
+              {el}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function PaginatedSection({
   children,
   pageNum,
@@ -129,7 +212,15 @@ export default function PaginatedSection({
   headerLayout,
   headerZones,
   showHeaderAll,
-  showPageNumbersAll
+  showPageNumbersAll,
+  masterFooter,
+  footerImage,
+  footerImageHeight,
+  footerFontSize,
+  footerLayout,
+  footerZones,
+  showFooterAll,
+  hideFooter
 }) {
   const [pageCount, setPageCount] = useState(1);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -138,9 +229,12 @@ export default function PaginatedSection({
 
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasContHeader = showHeaderAll && !!(masterHeader || headerImage);
+  const hasFooter = showFooterAll && !hideFooter && parseZones(footerZones).length > 0;
+  const footerReservedHeight = hasFooter ? FOOTER_HEIGHT_PX : 0;
+  const availableContentHeight = CONTENT_HEIGHT_PX - footerReservedHeight;
   // Measure the actual continuation header height so the column starts below it.
   // All columns use the same height so CSS column breaks are consistent.
-  const columnHeight = hasContHeader ? CONTENT_HEIGHT_PX - headerHeight : CONTENT_HEIGHT_PX;
+  const columnHeight = hasContHeader ? availableContentHeight - headerHeight : availableContentHeight;
 
   // Measure the real header height
   useLayoutEffect(() => {
@@ -206,8 +300,25 @@ export default function PaginatedSection({
     return (
       <PageFrame pageNum={pageNum} primaryColor={primaryColor}>
         <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-        <div className="p-8 relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)`, overflow: 'hidden' }}>
-          {children}
+        <div className="relative" style={{ height: `calc(11in - ${TOP_BAR_PX}px)`, overflow: 'hidden' }}>
+          <div className="p-8" style={{ height: hasFooter ? `calc(100% - ${FOOTER_HEIGHT_PX}px)` : '100%', overflow: 'hidden' }}>
+            {children}
+          </div>
+          {hasFooter && (
+            <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 5 }}>
+              <PageFooter
+                masterFooter={masterFooter}
+                footerImage={footerImage}
+                footerImageHeight={footerImageHeight}
+                footerFontSize={footerFontSize}
+                footerLayout={footerLayout}
+                footerZones={footerZones}
+                primaryColor={primaryColor}
+                pageNum={pageNum}
+                showPageNumber={showPageNumbersAll}
+              />
+            </div>
+          )}
         </div>
       </PageFrame>
     );
@@ -235,7 +346,7 @@ export default function PaginatedSection({
               {/* Content window: positioned at the margins, clips one column at a time */}
               <div
                 ref={i === 0 ? (el => { if (onSectionRef) onSectionRef(sectionId, el); }) : null}
-                style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: CONTENT_HEIGHT_PX, overflow: 'hidden' }}
+                style={{ position: 'absolute', top: PADDING_PX, left: PADDING_PX, width: CONTENT_WIDTH_PX, height: availableContentHeight, overflow: 'hidden' }}
               >
                 {/* Continuation header sits at the top of the content window */}
                 {i > 0 && hasContHeader && (
@@ -275,6 +386,21 @@ export default function PaginatedSection({
                   {children}
                 </div>
               </div>
+              {hasFooter && (
+                <div style={{ position: 'absolute', bottom: PADDING_PX, left: PADDING_PX, right: PADDING_PX, zIndex: 5 }}>
+                  <PageFooter
+                    masterFooter={masterFooter}
+                    footerImage={footerImage}
+                    footerImageHeight={footerImageHeight}
+                    footerFontSize={footerFontSize}
+                    footerLayout={footerLayout}
+                    footerZones={footerZones}
+                    primaryColor={primaryColor}
+                    pageNum={pageNum ? pageNum + i : undefined}
+                    showPageNumber={showPageNumbersAll}
+                  />
+                </div>
+              )}
             </div>
           </PageFrame>
         ))}
@@ -288,6 +414,21 @@ export default function PaginatedSection({
             {children}
           </div>
         </div>
+        {hasFooter && (
+          <div className="hidden print:block" style={{ position: 'fixed', bottom: '0.4in', left: '0.5in', right: '0.5in', zIndex: 100 }}>
+            <PageFooter
+              masterFooter={masterFooter}
+              footerImage={footerImage}
+              footerImageHeight={footerImageHeight}
+              footerFontSize={footerFontSize}
+              footerLayout={footerLayout}
+              footerZones={footerZones}
+              primaryColor={primaryColor}
+              showPageNumber={showPageNumbersAll}
+              useCssCounter
+            />
+          </div>
+        )}
       </div>
 
       {/* Hidden measurement container — same column setup so scrollWidth gives us the page count */}

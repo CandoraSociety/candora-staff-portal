@@ -92,6 +92,14 @@ export default function ReportPrintView({ report, sections, branding, dataEntrie
           headerZones={report.header_zones}
           showHeaderAll={report.show_header_all}
           showPageNumbersAll={report.show_page_numbers_all}
+          masterFooter={report.master_footer_text}
+          footerImage={report.master_footer_image}
+          footerImageHeight={report.footer_image_height}
+          footerFontSize={report.footer_font_size}
+          footerLayout={report.footer_layout}
+          footerZones={report.footer_zones}
+          showFooterAll={report.show_footer_all}
+          hideFooter={section.hide_footer}
         >
           <FitToPage enabled={section.fit_to_page} availableHeightPx={988}>
             <SectionRenderer

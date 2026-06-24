@@ -42,6 +42,7 @@ export default function ReportDigitalView({ report, sections, branding, dataEntr
                   getPage={(i) => tocPage + 1 + i}
                   containerHeight="80vh"
                   padding="4rem"
+                  showPageNumbers={false}
                 />
               </div>
             );
