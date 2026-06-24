@@ -6,8 +6,10 @@ const PAGE_WIDTH_PX = 8.5 * 96; // 816
 const MARGIN_PX = 72; // 0.75in = 72px
 const CONTENT_WIDTH_PX = PAGE_WIDTH_PX - MARGIN_PX * 2; // 672
 const PAGE_HEIGHT_PX = 11 * 96; // 1056
-const HEADER_RESERVE_PX = 10; // ~0.1in extra breathing room below the header
-const CONTENT_AREA_HEIGHT = PAGE_HEIGHT_PX - MARGIN_PX * 2 - HEADER_RESERVE_PX; // 902
+const CONTENT_TOP_IN = 1.15; // content starts 1.15in from top — clears the header
+const CONTENT_TOP_PX = CONTENT_TOP_IN * 96; // 110.4px
+const CONTENT_BOTTOM_PX = PAGE_HEIGHT_PX - MARGIN_PX; // 984px (bottom margin line)
+const FOOTER_RESERVE_PX = 60; // space reserved above the footer
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -92,9 +94,9 @@ export function PageFooter({ masterFooter, footerImage, footerImageHeight, foote
  * Calculates page breaks at element boundaries (paragraphs, images, headings, etc.)
  * so content is never sliced mid-element. Each page is exactly 8.5x11 inches.
  */
-function calculatePageBreaks(container) {
+function calculatePageBreaks(container, availableHeight) {
   const totalHeight = container.scrollHeight;
-  if (totalHeight <= 0) return [{ start: 0, end: CONTENT_AREA_HEIGHT }];
+  if (totalHeight <= 0) return [{ start: 0, end: availableHeight }];
 
   const containerRect = container.getBoundingClientRect();
   const boundaries = new Set([0, totalHeight]);
@@ -141,7 +143,7 @@ function calculatePageBreaks(container) {
     let pageEnd = currentStart;
     for (const boundary of sorted) {
       if (boundary <= currentStart) continue;
-      if (boundary - currentStart <= CONTENT_AREA_HEIGHT) {
+      if (boundary - currentStart <= availableHeight) {
         pageEnd = boundary;
       } else {
         break;
@@ -149,13 +151,13 @@ function calculatePageBreaks(container) {
     }
     // If no boundary fits (element taller than a page), use the max height
     if (pageEnd <= currentStart) {
-      pageEnd = currentStart + CONTENT_AREA_HEIGHT;
+      pageEnd = currentStart + availableHeight;
     }
     breaks.push({ start: currentStart, end: pageEnd });
     currentStart = pageEnd;
   }
 
-  return breaks.length > 0 ? breaks : [{ start: 0, end: CONTENT_AREA_HEIGHT }];
+  return breaks.length > 0 ? breaks : [{ start: 0, end: availableHeight }];
 }
 
 export default function PaginatedSection({
@@ -189,19 +191,22 @@ export default function PaginatedSection({
 }) {
   const primaryColor = branding?.primary_color || '#1a2744';
   const hasFooter = showFooterAll && !hideFooter;
+  const availableHeight = hasFooter
+    ? CONTENT_BOTTOM_PX - FOOTER_RESERVE_PX - CONTENT_TOP_PX
+    : CONTENT_BOTTOM_PX - CONTENT_TOP_PX;
   const measureRef = useRef(null);
-  const [pageBreaks, setPageBreaks] = useState([{ start: 0, end: CONTENT_AREA_HEIGHT }]);
+  const [pageBreaks, setPageBreaks] = useState([{ start: 0, end: availableHeight }]);
 
   useLayoutEffect(() => {
     if (fitToPage) {
-      setPageBreaks([{ start: 0, end: CONTENT_AREA_HEIGHT }]);
+      setPageBreaks([{ start: 0, end: availableHeight }]);
       onPageCountChange?.(sectionId, 1);
       return;
     }
 
     const measure = () => {
       if (!measureRef.current) return;
-      const newBreaks = calculatePageBreaks(measureRef.current);
+      const newBreaks = calculatePageBreaks(measureRef.current, availableHeight);
       // Only update state if breaks actually changed (prevents render loops)
       const changed = newBreaks.length !== pageBreaks.length ||
         newBreaks.some((p, i) => p.start !== pageBreaks[i]?.start || p.end !== pageBreaks[i]?.end);
@@ -239,7 +244,7 @@ export default function PaginatedSection({
 
               {/* Header (within top margin) */}
               {showHeaderAll && (
-                <div className="absolute z-10" style={{ top: '0.3in', left: '0.75in', right: '0.75in' }}>
+                <div className="absolute z-10" style={{ top: '0.35in', left: '0.75in', right: '0.75in' }}>
                   <ContinuationHeader
                     masterHeader={masterHeader}
                     headerImage={headerImage}
@@ -256,7 +261,7 @@ export default function PaginatedSection({
               )}
 
               {/* Content area — height ends at an element boundary so nothing is sliced */}
-              <div className="absolute overflow-hidden" style={{ top: '0.85in', left: '0.75in', right: '0.75in', height: `${page.end - page.start}px` }}>
+              <div className="absolute overflow-hidden" style={{ top: `${CONTENT_TOP_IN}in`, left: '0.75in', right: '0.75in', height: `${page.end - page.start}px` }}>
                 <div style={{ transform: `translateY(-${page.start}px)` }}>
                   {children}
                 </div>
@@ -264,7 +269,7 @@ export default function PaginatedSection({
 
               {/* Footer (within bottom margin) */}
               {hasFooter && (
-                <div className="absolute z-10" style={{ bottom: '0.3in', left: '0.75in', right: '0.75in' }}>
+                <div className="absolute z-10" style={{ bottom: '0.35in', left: '0.75in', right: '0.75in' }}>
                   <PageFooter
                     masterFooter={masterFooter}
                     footerImage={footerImage}
@@ -303,7 +308,7 @@ export default function PaginatedSection({
       <div className={`hidden print:block ${pageBreakBefore ? 'print-break' : ''}`}>
         <div className="print-flow-page">
           {/* Spacer pushes content below the fixed header so text doesn't enter the top margin */}
-          <div className="hidden print:block" style={{ height: '0.1in' }} />
+          <div className="hidden print:block" style={{ height: '0.35in' }} />
           {/* Content — flows naturally across pages, browser handles breaks.
               Header/footer are rendered as position:fixed elements in ReportPrintView
               so they repeat on every page like Word, sitting within the @page margins. */}
