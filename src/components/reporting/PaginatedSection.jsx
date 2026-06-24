@@ -354,7 +354,9 @@ export default function PaginatedSection({
         {Array.from({ length: pageCount }).map((_, i) => {
           const isFirstPage = i === 0;
           const contentHeight = isFirstPage ? firstPageContentHeight : continuationPageContentHeight;
-          const contentTop = isFirstPage ? 0 : -(i * continuationPageContentHeight + headerHeight);
+          // For continuation pages, content starts after the header
+          const contentOffset = isFirstPage ? 0 : (i - 1) * continuationPageContentHeight + firstPageContentHeight;
+          const contentTop = isFirstPage ? 0 : -contentOffset;
 
           return (
             <PageFrame key={i} pageNum={pageNum ? pageNum + i : undefined} primaryColor={primaryColor}>
@@ -407,6 +409,7 @@ export default function PaginatedSection({
                     style={{
                       position: 'absolute',
                       top: isFirstPage ? 0 : contentTop,
+                      marginTop: isFirstPage ? 0 : headerHeight,
                       width: CONTENT_WIDTH_PX,
                     }}
                   >
