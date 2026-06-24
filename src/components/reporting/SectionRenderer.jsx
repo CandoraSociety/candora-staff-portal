@@ -255,13 +255,11 @@ export default function SectionRenderer({
     const hasVisual = hasImage || hasChart;
     const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
     const isMultiCol = textColumns > 1;
-    const hasFloatedImage = ['image_left', 'image_right'].includes(section.layout);
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
-        ...(hasFloatedImage ? { display: 'flow-root' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
@@ -290,9 +288,10 @@ export default function SectionRenderer({
     const imageWidth = section.image_width || 50;
     const chartWidth = section.chart_width || 100;
     const showImageSlider = onUpdate && ['image_left', 'image_right', 'image_full', 'image_wrap'].includes(section.layout);
+    const wrapsText = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
     const imageBlock = hasImage ? (
       <DraggableImageBlock section={section} onUpdate={onUpdate}>
-      <div className="relative group">
+      <div className={`relative group ${wrapsText ? 'float-left mr-5 mb-3' : ''}`} style={wrapsText ? { width: `${imageWidth}%` } : {}}>
         {onUpdate && !isPrint && (
           <button
             onClick={(e) => { e.stopPropagation(); onUpdate(section.id, hasCollage ? { collage_photos: [], collage_layout: 'grid' } : { image_url: null }); }}
@@ -378,44 +377,15 @@ export default function SectionRenderer({
       <div className="mt-4">{draggableChartBlock}</div>
     ) : null;
 
-    switch (section.layout) {
-      case 'image_left':
-        return (
-          <div className="overflow-hidden relative" data-section-content>
-            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
-            {floatedChart}
-            {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
-          </div>
-        );
-      case 'image_wrap':
-        return (
-          <div className="relative" data-section-content>
-            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart}
-            {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
-          </div>
-        );
-      case 'image_right':
-        return (
-          <div className="overflow-hidden relative" data-section-content>
-            <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
-            {floatedChart}
-            {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
-          </div>
-        );
-      case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
-      case 'two_column':
-        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
-      default:
-        return <div className="relative" data-section-content>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
-    }
+    return (
+      <div className="relative flow-root" data-section-content>
+        {imageBlock}
+        {floatedChart}
+        {contentBlock}
+        <div style={{ clear: 'both' }} />
+        {belowChart}
+      </div>
+    );
   };
 
   return (
