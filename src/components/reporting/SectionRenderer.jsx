@@ -265,13 +265,6 @@ export default function SectionRenderer({
         borderRadius: '0.5rem',
         border: `1px solid ${pc}20`,
       } : {}),
-      ...(textColumns > 1 && !hasFloatedImage ? {
-        columnCount: textColumns,
-        WebkitColumnCount: textColumns,
-        MozColumnCount: textColumns,
-        columnGap: '1.5rem',
-        columnFill: 'balance',
-      } : {}),
     }}>
       <div
         ref={contentRef}
@@ -279,10 +272,13 @@ export default function SectionRenderer({
         suppressContentEditableWarning
         data-placeholder="No content yet. Click to edit..."
         style={{ 
-          minHeight: textColumns > 1 && !hasFloatedImage ? '300px' : 'inherit',
-          breakInside: 'avoid',
-          WebkitColumnBreakInside: 'avoid',
-          pageBreakInside: 'avoid',
+          ...(textColumns > 1 && !hasFloatedImage ? {
+            columnCount: textColumns,
+            WebkitColumnCount: textColumns,
+            MozColumnCount: textColumns,
+            columnGap: '1.5rem',
+            columnFill: 'balance',
+          } : {}),
         }}
         onFocus={() => { editingContent.current = true; }}
         onBlur={!!onUpdate && !isPrint ? (e) => {
@@ -291,13 +287,7 @@ export default function SectionRenderer({
           const cleaned = html === '<br>' || html === '<br/>' ? '' : html;
           if (cleaned !== (section.content || '')) onUpdate(section.id, { content: cleaned });
         } : undefined}
-      >
-        {textColumns > 1 && !hasFloatedImage && !section.content && (
-          <div style={{ padding: '20px', color: '#999', fontSize: '13px', fontStyle: 'italic' }}>
-            Add content to see {textColumns}-column layout
-          </div>
-        )}
-      </div>
+      />
     </div>
   );
 
