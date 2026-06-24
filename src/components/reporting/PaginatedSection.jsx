@@ -10,7 +10,7 @@ const CONTENT_HEIGHT_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2 - FOOTER_
 const CONTENT_HEIGHT_NO_FOOTER_PX = PAGE_HEIGHT_PX - TOP_BAR_PX - PADDING_PX * 2;
 const CONTENT_WIDTH_PX = 8.5 * 96 - PADDING_PX * 2;
 const FOOTER_HEIGHT_PX = 48;
-const TEXT_BUFFER_PX = 8; // Extra buffer to prevent letters being sliced
+const TEXT_BUFFER_PX = 36; // ~1.4 line heights — prevents lines from being sliced at page boundaries
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -152,8 +152,21 @@ export default function PaginatedSection({
     if (!hasContHeader) { setHeaderHeight(0); return; }
     const measureHeader = () => {
       if (headerMeasureRef.current) {
-        const h = headerMeasureRef.current.offsetHeight;
-        if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+        // Use scrollHeight + computed margins to capture the full space the header occupies,
+        // including mb-4 which offsetHeight misses
+        const el = headerMeasureRef.current;
+        const inner = el.firstElementChild;
+        if (inner) {
+          const rect = inner.getBoundingClientRect();
+          const style = getComputedStyle(inner);
+          const mt = parseFloat(style.marginTop) || 0;
+          const mb = parseFloat(style.marginBottom) || 0;
+          const h = Math.ceil(rect.height + mt + mb);
+          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+        } else {
+          const h = el.offsetHeight;
+          if (h > 0 && h !== headerHeight) setHeaderHeight(h);
+        }
       }
     };
     measureHeader();
