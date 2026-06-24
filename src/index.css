@@ -116,15 +116,19 @@
     margin: 0.75in;
   }
   .no-print { display: none !important; }
-  .print-break { page-break-before: always; }
+  .print-break { page-break-before: always !important; }
   body { background: white !important; }
-  /* Ensure the body and root allow printing */
-  body.print-ready { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  /* Remove shadows and effects for faster print rendering */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
   /* Force flex containers to block in print so children can break across pages */
   .force-block-print {
     display: block !important;
   }
   .print-flow-page { 
+    display: block !important;
     height: auto !important; 
     width: auto !important;
     max-width: 100% !important;
@@ -134,39 +138,21 @@
     padding: 0 !important;
   }
   .print-page-end {
-    page-break-after: always;
-    break-after: page;
+    page-break-after: always !important;
+    break-after: page !important;
   }
-  .print-header {
-    position: fixed !important;
-    top: 0.35in !important;
-    left: 0.75in !important;
-    right: 0.75in !important;
-    z-index: 1000 !important;
-  }
-  .print-footer {
-    position: fixed !important;
-    bottom: 0.35in !important;
-    left: 0.75in !important;
-    right: 0.75in !important;
-    z-index: 1000 !important;
-  }
-  .print-page-counter::after { content: counter(page); }
+
   /* Remove min-height constraints from section content so pages fill consistently */
   [data-section-content] {
     min-height: 0 !important;
     height: auto !important;
   }
   /* Prevent paragraphs and headings from being split across pages */
-  p, h1, h2, h3, h4, h5, h6, li, blockquote, figure {
+  p, h1, h2, h3, h4, h5, h6, li, blockquote, figure, img, table, .recharts-wrapper, .chart-container {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     orphans: 3;
     widows: 3;
-  }
-  img, table, .recharts-wrapper {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
   }
   /* Ensure all content is visible and printable */
   * {

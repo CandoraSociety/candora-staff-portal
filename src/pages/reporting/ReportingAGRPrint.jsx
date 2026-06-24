@@ -61,16 +61,11 @@ export default function ReportingAGRPrint() {
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-heading font-bold text-accent">{report?.title || 'Annual Report'}</h1>
-          <p className="text-xs text-muted-foreground">Print-optimized view • Click a section heading to toggle page break</p>
+          <p className="text-xs text-muted-foreground">Print-optimized view • Tip: If Save as PDF hangs, try using your browser's print dialog (Ctrl/Cmd+P) and select "Save as PDF"</p>
         </div>
         <Button onClick={() => {
-          // Ensure print styles are ready
-          document.body.classList.add('print-ready');
-          // Small delay to let styles apply
-          setTimeout(() => {
-            window.print();
-            document.body.classList.remove('print-ready');
-          }, 100);
+          // Simple print with a small delay to let the browser settle
+          setTimeout(() => window.print(), 500);
         }} className="gap-2">
           <Printer className="w-4 h-4" />Print / Save PDF
         </Button>
