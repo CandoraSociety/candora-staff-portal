@@ -11,9 +11,8 @@ function PagePreview({ pageNum, children, className, fitToPage }) {
     <div className={`relative print:shadow-none print:mb-0 mb-6 ${className || ''}`}>
       <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
       <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
-      <div className={`relative bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none ${fitToPage ? 'overflow-hidden' : 'overflow-visible print-flow-page print-page-end'}`} style={{ height: '11in', width: '8.5in', maxWidth: '100%' }}>
+      <div className={`relative bg-white rounded-lg shadow-lg print:shadow-none print:rounded-none overflow-hidden print-flow-page print-page-end`} style={{ height: '11in', width: '8.5in', maxWidth: '100%' }}>
         {children}
-        {!fitToPage && <div className="no-print absolute bottom-0 left-0 right-0 border-t-2 border-dashed border-red-300 z-50 pointer-events-none" />}
       </div>
       {pageNum && (
         <div className="no-print text-center mt-2">

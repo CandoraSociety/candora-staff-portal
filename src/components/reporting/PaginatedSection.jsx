@@ -2,10 +2,11 @@ import React, { useRef, useLayoutEffect, useState } from 'react';
 import { ArrowBigUp } from 'lucide-react';
 import { ribbonGradient } from './imageFilters';
 
-const PAGE_WIDTH_PX = 8.5 * 96;
-const PADDING_PX = 48; // 0.75in
-const CONTENT_WIDTH_PX = PAGE_WIDTH_PX - PADDING_PX * 2;
-const PAGE_CONTENT_HEIGHT = 11 * 96 - PADDING_PX * 2 - 80; // for TOC page estimate only
+const PAGE_WIDTH_PX = 8.5 * 96; // 816
+const MARGIN_PX = 72; // 0.75in = 72px
+const CONTENT_WIDTH_PX = PAGE_WIDTH_PX - MARGIN_PX * 2; // 672
+const PAGE_HEIGHT_PX = 11 * 96; // 1056
+const CONTENT_AREA_HEIGHT = PAGE_HEIGHT_PX - MARGIN_PX * 2; // 912
 
 function parseZones(raw) {
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -67,7 +68,7 @@ export function PageFooter({ masterFooter, footerImage, footerImageHeight, foote
             if (z.content === 'ribbon') return <div key={z.id} style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} />;
             if (z.content === 'text' && masterFooter) return <span key={z.id} className="break-words" style={{ fontSize: `${footerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterFooter}</span>;
             if (z.content === 'image' && footerImage) return <img key={z.id} src={footerImage} alt="" className="object-contain" style={{ maxHeight: `${footerImageHeight || 48}px` }} />;
-            if (z.content === 'page_number' && showPageNumber) return <span key={z.id} style={{ fontSize: `${footerFontSize || 12}px` }} className="text-muted-foreground print-page-counter" />;
+            if (z.content === 'page_number' && showPageNumber) return <span key={z.id} style={{ fontSize: `${footerFontSize || 12}px` }} className="text-muted-foreground"><span className="print:hidden">{pageNum || ''}</span><span className="hidden print:inline print-page-counter" /></span>;
             return null;
           })}
         </div>
@@ -77,7 +78,7 @@ export function PageFooter({ masterFooter, footerImage, footerImageHeight, foote
             if (z.content === 'ribbon') return <div key={z.id} style={{ width: `${z.w}%` }}><div style={{ width: '100%', height: `${z.ribbon_height || 6}px`, background: ribbonGradient(branding), borderRadius: '2px' }} /></div>;
             if (z.content === 'text' && masterFooter) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span className="break-words" style={{ fontSize: `${footerFontSize || 12}px`, color: z.color || 'hsl(var(--muted-foreground))' }}>{masterFooter}</span></div>;
             if (z.content === 'image' && footerImage) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><img src={footerImage} alt="" className="object-contain" style={{ maxHeight: `${footerImageHeight || 48}px` }} /></div>;
-            if (z.content === 'page_number' && showPageNumber) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span style={{ fontSize: `${footerFontSize || 12}px` }} className="text-muted-foreground print-page-counter" /></div>;
+            if (z.content === 'page_number' && showPageNumber) return <div key={z.id} style={{ width: `${z.w}%`, textAlign: z.align || 'left' }}><span style={{ fontSize: `${footerFontSize || 12}px` }} className="text-muted-foreground"><span className="print:hidden">{pageNum || ''}</span><span className="hidden print:inline print-page-counter" /></span></div>;
             return null;
           })}
         </div>
@@ -126,9 +127,7 @@ export default function PaginatedSection({
     const measure = () => {
       if (measureRef.current) {
         const h = measureRef.current.scrollHeight;
-        // Total card height = content + top/bottom padding + accent bar (4px)
-        const totalCardHeight = h + PADDING_PX * 2 + 4;
-        const pages = Math.max(1, Math.ceil(totalCardHeight / 1056));
+        const pages = Math.max(1, Math.ceil(h / CONTENT_AREA_HEIGHT));
         if (pages !== estPages) { setEstPages(pages); onPageCountChange?.(sectionId, pages); }
       }
     };
@@ -142,47 +141,77 @@ export default function PaginatedSection({
 
   return (
     <>
-      {/* ── Screen preview: content flows naturally with visual page boundary lines ── */}
+      {/* ── Screen preview: full 8.5x11" page containers with header/footer ── */}
       <div className="print:hidden">
-        <div className="relative mb-6">
-          <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
-          <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
-          <div
-            ref={onSectionRef}
-            className="relative bg-white rounded-lg shadow-lg overflow-visible"
-            style={{ width: '8.5in', maxWidth: '100%' }}
-          >
-            <div className="h-1 w-full" style={{ backgroundColor: primaryColor }} />
-            {onTogglePageBreak && (
-              <button onClick={onTogglePageBreak} className="no-print absolute top-2 right-2 z-20 text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1">
-                <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
-                {pageBreakBefore ? 'Page break' : 'Normal'}
-              </button>
-            )}
-            {/* Content flows naturally — grows as tall as it needs */}
-            <div style={{ padding: `${PADDING_PX}px` }}>
-              {children}
-            </div>
-            {/* Visual page boundary lines at every 11in (1056px) mark */}
-            {Array.from({ length: Math.max(0, estPages - 1) }).map((_, i) => (
-              <div
-                key={i}
-                className="no-print absolute left-0 right-0 z-40 pointer-events-none"
-                style={{ top: `${(i + 1) * 1056}px` }}
-              >
-                <div className="border-t-2 border-dashed border-red-400" />
-                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-red-500 bg-white px-2 py-0.5 rounded-full shadow border border-red-200 whitespace-nowrap">
-                  ↕ Page break — page {i + 2}
-                </span>
+        {Array.from({ length: estPages }).map((_, pageIndex) => (
+          <div key={pageIndex} className="relative mb-4" ref={pageIndex === 0 ? onSectionRef : undefined}>
+            <div className="no-print absolute -inset-1 bg-gray-200 rounded-lg -z-10 translate-y-1" />
+            <div className="no-print absolute -inset-2 bg-gray-100 rounded-lg -z-20 translate-y-2" />
+            <div
+              className="relative bg-white rounded-lg shadow-lg overflow-hidden"
+              style={{ width: '8.5in', height: '11in', maxWidth: '100%' }}
+            >
+              {/* Accent bar */}
+              <div className="h-1 w-full absolute top-0 left-0 right-0 z-10" style={{ backgroundColor: primaryColor }} />
+
+              {/* Header (within top margin) */}
+              {showHeaderAll && (
+                <div className="absolute z-10" style={{ top: '0.3in', left: '0.75in', right: '0.75in' }}>
+                  <ContinuationHeader
+                    masterHeader={masterHeader}
+                    headerImage={headerImage}
+                    headerImageHeight={headerImageHeight}
+                    headerFontSize={headerFontSize}
+                    headerLayout={headerLayout}
+                    headerZones={headerZones}
+                    primaryColor={primaryColor}
+                    branding={branding}
+                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
+                    showPageNumber={showPageNumbersAll}
+                  />
+                </div>
+              )}
+
+              {/* Content area — clipped, content translated to show this page's portion */}
+              <div className="absolute overflow-hidden" style={{ top: '0.75in', left: '0.75in', right: '0.75in', bottom: '0.75in' }}>
+                <div style={{ transform: `translateY(-${pageIndex * CONTENT_AREA_HEIGHT}px)` }}>
+                  {children}
+                </div>
               </div>
-            ))}
-          </div>
-          {pageNum && (
-            <div className="no-print text-center mt-2">
-              <span className="text-[10px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
-                Page {pageNum}{estPages > 1 ? ` (≈${estPages} pages)` : ''}
-              </span>
+
+              {/* Footer (within bottom margin) */}
+              {hasFooter && (
+                <div className="absolute z-10" style={{ bottom: '0.3in', left: '0.75in', right: '0.75in' }}>
+                  <PageFooter
+                    masterFooter={masterFooter}
+                    footerImage={footerImage}
+                    footerImageHeight={footerImageHeight}
+                    footerFontSize={footerFontSize}
+                    footerLayout={footerLayout}
+                    footerZones={footerZones}
+                    primaryColor={primaryColor}
+                    branding={branding}
+                    pageNum={showPageNumbersAll ? (pageNum + pageIndex) : undefined}
+                    showPageNumber={showPageNumbersAll}
+                  />
+                </div>
+              )}
             </div>
+          </div>
+        ))}
+
+        {/* Page label and page break toggle */}
+        <div className="no-print flex items-center justify-center gap-3 mb-4">
+          {pageNum && (
+            <span className="text-[10px] text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">
+              {estPages > 1 ? `Pages ${pageNum}–${pageNum + estPages - 1}` : `Page ${pageNum}`}
+            </span>
+          )}
+          {onTogglePageBreak && (
+            <button onClick={onTogglePageBreak} className="text-xs text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+              <ArrowBigUp className={`w-3.5 h-3.5 ${pageBreakBefore ? 'text-accent' : ''}`} />
+              {pageBreakBefore ? 'Starts on new page' : 'Normal flow'}
+            </button>
           )}
         </div>
       </div>
