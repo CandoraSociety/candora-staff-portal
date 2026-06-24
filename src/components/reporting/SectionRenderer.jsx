@@ -360,7 +360,7 @@ export default function SectionRenderer({
       </div>
     ) : null;
 
-    // Chart with free-form horizontal and vertical positioning
+    // Chart with free-form horizontal and vertical positioning - controls move with chart
     const chartX = section.chart_x_offset ?? 50; // percentage 0-100, default center
     const handleArrowKeyMove = (direction) => {
       if (!onUpdate) return;
@@ -371,8 +371,18 @@ export default function SectionRenderer({
       if (direction === 'right') onUpdate(section.id, { chart_x_offset: Math.min(100, chartX + 2) });
     };
     const draggableChartBlock = dataBlock ? (
-      <div className="relative group" style={{ position: 'relative', width: '100%', minHeight: '400px', overflow: 'visible' }}>
-        {/* Arrow key controls */}
+      <div
+        className="relative group"
+        style={{
+          position: 'absolute',
+          left: `${chartX}%`,
+          top: `${chartY}px`,
+          width: `${chartWidth}%`,
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+        }}
+      >
+        {/* Arrow key controls - positioned relative to chart container */}
         {onUpdate && !isPrint && (
           <div className="no-print absolute -top-8 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
             <button onClick={() => handleArrowKeyMove('up')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move up (↑)">↑</button>
@@ -381,28 +391,17 @@ export default function SectionRenderer({
             <button onClick={() => handleArrowKeyMove('right')} className="w-7 h-7 bg-black/60 text-white rounded hover:bg-accent flex items-center justify-center" title="Move right (→)">→</button>
           </div>
         )}
-        <div
-          className="relative"
-          style={{
-            position: 'absolute',
-            left: `${chartX}%`,
-            top: `${chartY}px`,
-            width: `${chartWidth}%`,
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <DraggableImageBlock section={section} onUpdate={onUpdate}
-            positionField="chart_x_offset" widthField="chart_width"
-            verticalPositionField="chart_y_offset"
-            positionMap={{}}
-            defaultWidth={chartWidth || 100}
-            dragHandle
-            continuousMode
-            enableVerticalDrag>
-            {dataBlock}
-          </DraggableImageBlock>
-        </div>
-        {/* Position controls */}
+        <DraggableImageBlock section={section} onUpdate={onUpdate}
+          positionField="chart_x_offset" widthField="chart_width"
+          verticalPositionField="chart_y_offset"
+          positionMap={{}}
+          defaultWidth={chartWidth || 100}
+          dragHandle
+          continuousMode
+          enableVerticalDrag>
+          {dataBlock}
+        </DraggableImageBlock>
+        {/* Position controls - positioned relative to chart container */}
         {onUpdate && !isPrint && (
           <div className="no-print absolute -bottom-8 left-0 right-0 bg-black/55 rounded px-2 py-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-30">
             <div className="flex items-center gap-1.5">
@@ -420,67 +419,58 @@ export default function SectionRenderer({
         )}
       </div>
     ) : null;
-    const floatedChart = null;
-    const belowChart = draggableChartBlock;
+    const floatedChart = draggableChartBlock;
+    const belowChart = null;
 
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
+          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart}
+            {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_wrap':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
+          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
-            {floatedChart}
+            {floatedChart && <div style={{ float: 'left', width: `${chartWidth}%`, marginLeft: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_right':
         return (
-          <div className="relative" data-section-content style={{ display: 'flow-root' }}>
+          <div className="relative" data-section-content style={{ display: 'flow-root', position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>}
-            {floatedChart}
+            {floatedChart && <div style={{ float: 'right', width: `${chartWidth}%`, marginRight: imageBlock ? `${imageWidth + 2}%` : '0' }} className="mb-3">{floatedChart}</div>}
             {contentBlock}
             <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'image_full':
         return (
-          <div className="relative" data-section-content>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>}
-            {floatedChart}
+            {floatedChart && <div className="mx-auto mb-4" style={{ width: `${chartWidth}%` }}>{floatedChart}</div>}
             {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       case 'two_column':
         return (
-          <div className="relative" data-section-content>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {imageBlock && <div className="mb-4">{imageBlock}</div>}
-            {floatedChart}
+            {floatedChart && <div className="mb-4">{floatedChart}</div>}
             {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
       default:
         return (
-          <div className="relative" data-section-content style={textColumns > 1 && !hasFloatedImage ? {} : { display: 'flow-root' }}>
+          <div className="relative" data-section-content style={{ position: 'relative', minHeight: '400px' }}>
             {floatedChart}
             {contentBlock}
-            <div style={{ clear: 'both' }} />
-            {belowChart}
           </div>
         );
     }
