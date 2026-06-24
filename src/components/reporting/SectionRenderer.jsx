@@ -26,6 +26,9 @@ export default function SectionRenderer({
   headerZones: headerZonesRaw, footerZones: footerZonesRaw,
   showHeaderAll, showFooterAll, showPageNumbersAll, forceCollapsible, onUpdate
 }) {
+  const pc = branding?.primary_color || '#1a2744';
+  const textColumns = section.text_columns || 1;
+  const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
   const [expanded, setExpanded] = useState(section.is_expanded_default !== false);
 
   const contentRef = useRef(null);
@@ -79,8 +82,14 @@ export default function SectionRenderer({
     return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
   }, [rotating, onUpdate, section.id]);
 
-  const pc = branding?.primary_color || '#1a2744';
   const ac = branding?.accent_color || '#2b2de8';
+  const columnStyle = textColumns > 1 && !hasFloatedImage ? {
+    columnCount: textColumns,
+    WebkitColumnCount: textColumns,
+    MozColumnCount: textColumns,
+    columnGap: '1.5rem',
+    columnFill: 'balance',
+  } : {};
 
   const sectionData = dataEntries?.filter(d => d.section_id === section.id) || [];
   const showHeader = showHeaderAll && !section.hide_header;
@@ -252,27 +261,28 @@ export default function SectionRenderer({
   const hasCollage = (section.collage_photos || []).length >= 2 && section.layout !== 'text_only';
   const hasImage = (hasCollage || section.image_url) && section.layout !== 'text_only';
   const hasChart = sectionData.length > 0;
-  const textColumns = section.text_columns || 1;
-  const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
   const contentBlock = (
     <div
       ref={contentRef}
       contentEditable={!!onUpdate && !isPrint}
       suppressContentEditableWarning
       data-placeholder="No content yet. Click to edit..."
-      className={textColumns > 1 && !hasFloatedImage ? 'multi-column-content' : ''}
-      data-columns={textColumns > 1 ? textColumns : undefined}
+      data-columns={textColumns}
       style={{ 
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
         minHeight: textColumns > 1 ? '200px' : undefined,
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'visible',
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
           borderRadius: '0.5rem',
           border: `1px solid ${pc}20`,
         } : {}),
+        ...columnStyle,
       }}
       onFocus={() => { editingContent.current = true; }}
       onBlur={!!onUpdate && !isPrint ? (e) => {
