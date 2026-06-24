@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Sparkles, Trash2, GripVertical, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, RotateCcw, RotateCw, Upload, Plus, X, BarChart3, Crop, ImageIcon, Settings2 } from 'lucide-react';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import ReactQuill from 'react-quill';
 import ChartRenderer from './ChartRenderer';
@@ -560,6 +560,17 @@ export default function SectionEditor({ section, masterStyles, onUpdate, onDelet
               <Label className="text-xs shrink-0">Image Width</Label>
               <input type="range" min="10" max="100" value={imageWidth} onChange={e => setImageWidth(parseInt(e.target.value))} onMouseUp={() => onUpdate(section.id, { image_width: imageWidth })} onTouchEnd={() => onUpdate(section.id, { image_width: imageWidth })} className="flex-1 h-1 accent-accent" />
               <span className="text-xs text-muted-foreground w-10 text-right">{imageWidth}%</span>
+            </div>
+          )}
+          {imageUrl && (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs shrink-0">Rotate</Label>
+              <Button variant="outline" size="sm" onClick={() => onUpdate(section.id, { image_rotation: ((section.image_rotation || 0) - 90 + 360) % 360 })} className="h-7 px-2 text-xs gap-1"><RotateCcw className="w-3 h-3" />90°</Button>
+              <Button variant="outline" size="sm" onClick={() => onUpdate(section.id, { image_rotation: ((section.image_rotation || 0) + 90) % 360 })} className="h-7 px-2 text-xs gap-1"><RotateCw className="w-3 h-3" />90°</Button>
+              <span className="text-xs text-muted-foreground">{section.image_rotation || 0}°</span>
+              {(section.image_rotation || 0) !== 0 && (
+                <button onClick={() => onUpdate(section.id, { image_rotation: 0 })} className="text-[10px] text-muted-foreground hover:text-destructive">reset</button>
+              )}
             </div>
           )}
           <div>

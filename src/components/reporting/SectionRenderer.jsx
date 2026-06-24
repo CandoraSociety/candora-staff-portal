@@ -287,7 +287,7 @@ export default function SectionRenderer({
           </div>
         ) : (
           <div style={{ padding: '6px', backgroundColor: `${pc}08`, borderRadius: '0.75rem', border: `1px solid ${pc}25` }}>
-            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px' }} />
+            <img src={section.image_url} alt={section.image_caption || section.title} className="w-full rounded-lg object-contain" style={{ border: `2px solid ${pc}`, boxShadow: `0 10px 28px ${pc}35, 0 4px 10px ${ac}20`, outline: `1px solid ${ac}40`, outlineOffset: '2px', transform: `rotate(${section.image_rotation || 0}deg)` }} />
           </div>
         )}
         {section.image_caption && <p className="text-xs text-muted-foreground text-center mt-1 italic">{section.image_caption}</p>}

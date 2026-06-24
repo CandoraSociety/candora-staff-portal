@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal, Frame } from 'lucide-react';
+import { Upload, RefreshCw, Sparkles, Trash2, Heart, Undo2, Star, Check, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type, Image, X, Crop, GripHorizontal, Frame, RotateCw, RotateCcw } from 'lucide-react';
 import CropDialog from './CropDialog';
 import PasteImageInput from './PasteImageInput';
 
@@ -274,6 +274,7 @@ function CoverSlot({ type, reportId, report, branding, onUpdate, favourites, onF
                       onPointerDown={(e) => { e.stopPropagation(); setSelectedId(el.id); startDrag(e, el.id, 'move'); }}
                     >
                       <img src={el.url} alt="" className="w-full h-full object-cover rounded" style={{
+                        transform: `rotate(${el.rotation || 0}deg)`,
                         ...(el.frame ? { border: `3px solid ${branding?.primary_color || '#1a2744'}`, outline: `1px solid ${branding?.accent_color || '#2b2de8'}`, outlineOffset: '2px' } : {}),
                         ...(el.shadow ? { boxShadow: '0 8px 24px rgba(0,0,0,0.35)' } : {}),
                       }} />
@@ -456,6 +457,8 @@ function ElementToolbar({ el, branding, onUpdate, onDelete, onCrop, fontFamilies
       <div className="flex gap-1 flex-wrap">
         <Button variant="outline" size="sm" onClick={onCrop} className="gap-1 text-xs"><Crop className="w-3 h-3" />Crop</Button>
         <Button variant="outline" size="sm" onClick={() => onUpdate({ x: 50 })} className="gap-1 text-xs">↔ Center</Button>
+        <Button variant="outline" size="sm" onClick={() => onUpdate({ rotation: ((el.rotation || 0) - 90 + 360) % 360 })} className="gap-1 text-xs" title="Rotate left 90°"><RotateCcw className="w-3 h-3" /></Button>
+        <Button variant="outline" size="sm" onClick={() => onUpdate({ rotation: ((el.rotation || 0) + 90) % 360 })} className="gap-1 text-xs" title="Rotate right 90°"><RotateCw className="w-3 h-3" /></Button>
         <Button variant={el.frame ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ frame: !el.frame })} className="gap-1 text-xs"><Frame className="w-3 h-3" />Frame</Button>
         <Button variant={el.shadow ? 'default' : 'outline'} size="sm" onClick={() => onUpdate({ shadow: !el.shadow })} className="gap-1 text-xs">Shadow</Button>
       </div>

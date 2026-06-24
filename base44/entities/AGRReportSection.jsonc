@@ -42,6 +42,11 @@
       "description": "Image width as percentage of container (10-100). Used by image_left, image_right, and image_full layouts.",
       "default": 50
     },
+    "image_rotation": {
+      "type": "number",
+      "description": "Rotation angle in degrees for the section image",
+      "default": 0
+    },
     "chart_width": {
       "type": "number",
       "description": "Chart/graph width as percentage of container (20-100)",
