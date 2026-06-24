@@ -150,8 +150,15 @@
     z-index: 1000 !important;
   }
   .print-page-counter::after { content: counter(page); }
-  /* Prevent content from being cut off */
-  p, li, h1, h2, h3, h4, h5, h6 {
+  /* Remove min-height constraints from section content so pages fill consistently */
+  [data-section-content] {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  /* Prevent paragraphs and headings from being split across pages */
+  p, h1, h2, h3, h4, h5, h6, li, blockquote, figure {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
     orphans: 3;
     widows: 3;
   }

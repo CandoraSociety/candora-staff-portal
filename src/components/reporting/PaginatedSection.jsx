@@ -96,13 +96,12 @@ function calculatePageBreaks(container) {
   const totalHeight = container.scrollHeight;
   if (totalHeight <= 0) return [{ start: 0, end: CONTENT_AREA_HEIGHT }];
 
-  // Collect all block-level element boundaries — these are the only places
-  // where a page is allowed to break, ensuring no element is ever sliced.
-  const blockSelector = 'p, h1, h2, h3, h4, h5, h6, li, img, table, tr, blockquote, figure, .recharts-wrapper, .chart-container, [data-section-content] > div';
-  const elements = container.querySelectorAll(blockSelector);
   const containerRect = container.getBoundingClientRect();
   const boundaries = new Set([0, totalHeight]);
 
+  // 1. Block-level element boundaries (paragraphs, images, headings, etc.)
+  const blockSelector = 'p, h1, h2, h3, h4, h5, h6, li, ul, ol, img, table, tr, blockquote, figure, div, .recharts-wrapper, .chart-container';
+  const elements = container.querySelectorAll(blockSelector);
   elements.forEach(el => {
     const rect = el.getBoundingClientRect();
     const top = Math.round(rect.top - containerRect.top);
@@ -110,6 +109,26 @@ function calculatePageBreaks(container) {
     if (top >= 0 && top <= totalHeight) boundaries.add(top);
     if (bottom >= 0 && bottom <= totalHeight) boundaries.add(bottom);
   });
+
+  // 2. Line-level boundaries via getClientRects() on every text node.
+  //    This gives us the exact top/bottom of each rendered line of text,
+  //    so pages break BETWEEN lines — never slicing a word in half.
+  try {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    let node;
+    while (node = walker.nextNode()) {
+      if (!node.textContent || !node.textContent.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      const rects = range.getClientRects();
+      for (const rect of rects) {
+        const top = Math.round(rect.top - containerRect.top);
+        const bottom = Math.round(rect.bottom - containerRect.top);
+        if (top >= 0 && top <= totalHeight) boundaries.add(top);
+        if (bottom >= 0 && bottom <= totalHeight) boundaries.add(bottom);
+      }
+    }
+  } catch (e) { /* TreeWalker not available */ }
 
   const sorted = Array.from(boundaries).sort((a, b) => a - b);
 
