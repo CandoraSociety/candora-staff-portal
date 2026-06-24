@@ -255,13 +255,14 @@ export default function SectionRenderer({
     const hasVisual = hasImage || hasChart;
     const textColumns = section.text_columns || (section.layout === 'two_column' ? 2 : 1);
     const isMultiCol = textColumns > 1;
-    const hasFloatedImage = ['image_left', 'image_right'].includes(section.layout);
+    const hasFloatedImage = ['image_left', 'image_right', 'image_wrap'].includes(section.layout);
+    // Disable columns when image is floated - CSS columns break float wrapping
+    const useColumns = isMultiCol && !hasFloatedImage;
     const contentBlock = (
       <div className="prose prose-sm max-w-none" style={{
         fontFamily: masterContent.font_family || undefined,
         fontSize: masterContent.font_size ? `${masterContent.font_size}px` : undefined,
         color: masterContent.color || undefined,
-        ...(hasFloatedImage ? { display: 'flow-root' } : {}),
         ...(section.content_bg_color ? {
           backgroundColor: section.content_bg_color,
           padding: '1rem 1.25rem',
@@ -275,7 +276,7 @@ export default function SectionRenderer({
           contentEditable={!!onUpdate && !isPrint}
           suppressContentEditableWarning
           data-placeholder="No content yet. Click to edit..."
-          style={isMultiCol ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
+          style={useColumns ? { columnCount: textColumns, columnGap: '1.5rem', columnFill: 'balance' } : undefined}
           onFocus={() => { editingContent.current = true; }}
           onBlur={!!onUpdate && !isPrint ? (e) => {
             editingContent.current = false;
@@ -381,8 +382,8 @@ export default function SectionRenderer({
     switch (section.layout) {
       case 'image_left':
         return (
-          <div className="overflow-hidden relative" data-section-content>
-            <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>
+          <div className="relative" data-section-content>
+            {imageBlock && <div style={{ float: 'left', width: `${imageWidth}%` }} className="mr-5 mb-3">{imageBlock}</div>}
             {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
@@ -401,8 +402,8 @@ export default function SectionRenderer({
         );
       case 'image_right':
         return (
-          <div className="overflow-hidden relative" data-section-content>
-            <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>
+          <div className="relative" data-section-content>
+            {imageBlock && <div style={{ float: 'right', width: `${imageWidth}%` }} className="ml-5 mb-3">{imageBlock}</div>}
             {floatedChart}
             {contentBlock}
             <div style={{ clear: 'both' }} />
@@ -410,11 +411,28 @@ export default function SectionRenderer({
           </div>
         );
       case 'image_full':
-        return <div className="relative" data-section-content><div className="mx-auto" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            {imageBlock && <div className="mx-auto mb-4" style={{ width: `${imageWidth}%` }}>{imageBlock}</div>}
+            {belowChart}
+            {contentBlock}
+          </div>
+        );
       case 'two_column':
-        return <div className="relative" data-section-content>{imageBlock && <div className="mb-4">{imageBlock}</div>}{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            {imageBlock && <div className="mb-4">{imageBlock}</div>}
+            {belowChart}
+            {contentBlock}
+          </div>
+        );
       default:
-        return <div className="relative" data-section-content>{floatedChart}{contentBlock}<div style={{ clear: 'both' }} />{belowChart}</div>;
+        return (
+          <div className="relative" data-section-content>
+            {belowChart}
+            {contentBlock}
+          </div>
+        );
     }
   };
 
@@ -439,9 +457,7 @@ export default function SectionRenderer({
       ) : (
         <>
           {headerContent}
-          <div className="print:block">
-            <TitleBar />
-          </div>
+          <TitleBar />
           {renderContent()}
           {footerContent}
         </>
