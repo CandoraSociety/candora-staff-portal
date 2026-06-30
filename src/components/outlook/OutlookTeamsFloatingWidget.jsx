@@ -5,7 +5,7 @@ import EmailList from '@/components/outlook/EmailList';
 import EmailReader from '@/components/outlook/EmailReader';
 import ComposeEmail from '@/components/outlook/ComposeEmail';
 import CalendarView from '@/components/outlook/CalendarView';
-import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, X, Link2, Unlink } from 'lucide-react';
+import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, X, Link2, Unlink, ShieldCheck, Copy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -23,6 +23,8 @@ export default function OutlookTeamsFloatingWidget() {
   const [connected, setConnected] = useState(false);
   const [checking, setChecking] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [adminUrl, setAdminUrl] = useState(null);
+  const [fetchingAdminUrl, setFetchingAdminUrl] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
   const [emails, setEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
@@ -246,6 +248,61 @@ export default function OutlookTeamsFloatingWidget() {
                     Complete the Microsoft login in the popup window.
                   </p>
                 )}
+
+                {/* Admin consent helper */}
+                <div className="mt-6 w-full border-t pt-4">
+                  {adminUrl ? (
+                    <div className="space-y-2 text-left">
+                      <p className="text-xs font-semibold flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                        Admin Consent Link
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Send this link to your IT admin. They must open it and click "Accept" — this is a one-time step.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          readOnly
+                          value={adminUrl}
+                          className="flex-1 text-xs px-2 py-1.5 rounded border bg-muted truncate"
+                          onClick={(e) => e.target.select()}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 flex-shrink-0"
+                          onClick={() => {
+                            navigator.clipboard.writeText(adminUrl);
+                            toast({ title: 'Link copied to clipboard!' });
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs gap-1.5 text-muted-foreground"
+                      disabled={fetchingAdminUrl}
+                      onClick={async () => {
+                        setFetchingAdminUrl(true);
+                        try {
+                          const res = await base44.functions.invoke('getOutlookAdminConsentUrl', {});
+                          setAdminUrl(res.data.adminConsentUrl);
+                        } catch (err) {
+                          toast({ title: 'Could not generate link', description: err.message, variant: 'destructive' });
+                        }
+                        setFetchingAdminUrl(false);
+                      }}
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {fetchingAdminUrl ? 'Generating...' : 'Need admin approval? Get the link'}
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <>
