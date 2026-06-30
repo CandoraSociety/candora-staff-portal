@@ -19,14 +19,14 @@ import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget'
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
-import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation } from 'lucide-react';
+import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
 const ICON_MAP = {
   FolderOpen, LayoutGrid, Users, Megaphone, FileText, BarChart2,
   Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Sparkles,
-  Presentation,
+  Presentation, Mail,
 };
 
 function PortalCard({ card, pinned, onPin }) {

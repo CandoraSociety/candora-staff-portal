@@ -180,6 +180,10 @@ import BoardAssistant from '@/pages/board/BoardAssistant';
 import BoardAgendaBuilder from '@/pages/board/BoardAgendaBuilder';
 import BoardMinutesTaker from '@/pages/board/BoardMinutesTaker';
 
+// Outlook Portal
+import OutlookLayout from '@/components/outlook/OutlookLayout';
+import OutlookDashboard from '@/pages/outlook/OutlookDashboard';
+
 // Presentations Portal
 import PresentationsLayout from '@/components/presentations/PresentationsLayout';
 import PresentationsHome from '@/pages/presentations/PresentationsHome';
@@ -391,6 +395,11 @@ const AuthenticatedApp = () => {
           <Route path="/board/onboarding" element={<BoardOnboarding />} />
           <Route path="/board/strategic-plan" element={<BoardStrategicPlan />} />
           <Route path="/board/assistant" element={<BoardAssistant />} />
+        </Route>
+
+        {/* Outlook Portal - standalone layout */}
+        <Route element={<OutlookLayout />}>
+          <Route path="/outlook" element={<OutlookDashboard />} />
         </Route>
 
         {/* Presentations Portal - standalone layout */}
