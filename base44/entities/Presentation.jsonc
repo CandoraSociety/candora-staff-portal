@@ -1,0 +1,82 @@
+{
+  "name": "Presentation",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Presentation title"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "marketing",
+        "board",
+        "grants",
+        "events",
+        "ed",
+        "general"
+      ],
+      "default": "general",
+      "description": "Department or purpose category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description or subtitle shown on title slide"
+    },
+    "slides": {
+      "type": "array",
+      "description": "Presentation slides",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "layout": {
+            "type": "string",
+            "enum": [
+              "title",
+              "section",
+              "title_content",
+              "title_image",
+              "title_content_image"
+            ],
+            "default": "title_content"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string",
+            "description": "Slide body text \u2014 one bullet per line"
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Speaker notes"
+          }
+        }
+      }
+    },
+    "sharepoint_file_url": {
+      "type": "string",
+      "description": "SharePoint file web URL"
+    },
+    "sharepoint_file_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "completed"
+      ],
+      "default": "draft"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

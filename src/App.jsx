@@ -180,6 +180,11 @@ import BoardAssistant from '@/pages/board/BoardAssistant';
 import BoardAgendaBuilder from '@/pages/board/BoardAgendaBuilder';
 import BoardMinutesTaker from '@/pages/board/BoardMinutesTaker';
 
+// Presentations Portal
+import PresentationsLayout from '@/components/presentations/PresentationsLayout';
+import PresentationsHome from '@/pages/presentations/PresentationsHome';
+import PresentationEditor from '@/pages/presentations/PresentationEditor';
+
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -386,6 +391,12 @@ const AuthenticatedApp = () => {
           <Route path="/board/onboarding" element={<BoardOnboarding />} />
           <Route path="/board/strategic-plan" element={<BoardStrategicPlan />} />
           <Route path="/board/assistant" element={<BoardAssistant />} />
+        </Route>
+
+        {/* Presentations Portal - standalone layout */}
+        <Route element={<PresentationsLayout />}>
+          <Route path="/presentations" element={<PresentationsHome />} />
+          <Route path="/presentations/editor/:id" element={<PresentationEditor />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}
