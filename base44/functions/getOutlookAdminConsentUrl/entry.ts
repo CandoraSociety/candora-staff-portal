@@ -13,14 +13,42 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Azure credentials not configured' }, { status: 500 });
     }
 
-    // Construct the admin consent URL — a Global Admin must visit this once
-    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=https://api.base44.com/v2/connectors/app-user/callback`;
+    const redirectUri = 'https://api.base44.com/v2/connectors/app-user/callback';
+
+    // All scopes the Outlook integration needs — these MUST all have admin consent in Azure
+    const scopes = [
+      'openid',
+      'profile',
+      'offline_access',
+      'User.Read',
+      'Mail.Read',
+      'Mail.ReadWrite',
+      'Mail.Send',
+      'Calendars.Read',
+      'Calendars.ReadWrite',
+    ].join(' ');
+
+    const encodedScopes = encodeURIComponent(scopes);
+
+    // Admin consent URL — grants consent for ALL users in the tenant at once
+    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+    // User consent URL with explicit scopes — for testing individual sign-in
+    const userConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=select_account`;
 
     return Response.json({
-      adminConsentUrl,
       clientId,
       tenantId,
-      instructions: 'A Global Admin must visit the adminConsentUrl and click Accept. This grants consent for all users in the tenant.',
+      redirectUri,
+      requiredScopes: scopes.split(' '),
+      adminConsentUrl,
+      userConsentUrl,
+      checklist: {
+        step1: `In Azure → App registrations → ${clientId} → Authentication: ensure Redirect URI is exactly: ${redirectUri}`,
+        step2: 'In Azure → API permissions: ensure ALL of these Microsoft Graph delegated permissions are added: ' + scopes,
+        step3: 'In Azure → API permissions: click "Grant admin consent for [tenant]" — a green checkmark must appear next to EVERY permission',
+        step4: 'After steps 1-3, try the userConsentUrl — if it still shows "need admin approval", one of the scopes is missing admin consent',
+      },
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

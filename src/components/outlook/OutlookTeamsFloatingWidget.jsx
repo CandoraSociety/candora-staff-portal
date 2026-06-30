@@ -23,7 +23,7 @@ export default function OutlookTeamsFloatingWidget() {
   const [connected, setConnected] = useState(false);
   const [checking, setChecking] = useState(true);
   const [connecting, setConnecting] = useState(false);
-  const [adminUrl, setAdminUrl] = useState(null);
+  const [adminData, setAdminData] = useState(null);
   const [fetchingAdminUrl, setFetchingAdminUrl] = useState(false);
   const [activeTab, setActiveTab] = useState('inbox');
   const [emails, setEmails] = useState([]);
@@ -250,35 +250,49 @@ export default function OutlookTeamsFloatingWidget() {
                 )}
 
                 {/* Admin consent helper */}
-                <div className="mt-6 w-full border-t pt-4">
-                  {adminUrl ? (
-                    <div className="space-y-2 text-left">
+                <div className="mt-6 w-full border-t pt-4 space-y-3">
+                  {adminData ? (
+                    <div className="space-y-3 text-left max-h-[300px] overflow-y-auto">
                       <p className="text-xs font-semibold flex items-center gap-1.5">
                         <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                        Admin Consent Link
+                        IT Admin Checklist
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Send this link to your IT admin. They must open it and click "Accept" — this is a one-time step.
-                      </p>
-                      <div className="flex gap-2">
-                        <input
-                          readOnly
-                          value={adminUrl}
-                          className="flex-1 text-xs px-2 py-1.5 rounded border bg-muted truncate"
-                          onClick={(e) => e.target.select()}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 flex-shrink-0"
-                          onClick={() => {
-                            navigator.clipboard.writeText(adminUrl);
-                            toast({ title: 'Link copied to clipboard!' });
-                          }}
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          Copy
-                        </Button>
+
+                      {/* Redirect URI */}
+                      <div className="bg-muted rounded p-2 space-y-1">
+                        <p className="text-xs font-medium">1. Redirect URI (Azure → Authentication)</p>
+                        <div className="flex gap-1">
+                          <input readOnly value={adminData.redirectUri} className="flex-1 text-[10px] px-1.5 py-1 rounded border bg-background truncate" onClick={(e) => e.target.select()} />
+                          <button onClick={() => { navigator.clipboard.writeText(adminData.redirectUri); toast({ title: 'Copied!' }); }} className="text-[10px] px-2 rounded border bg-background hover:bg-muted-foreground/10"><Copy className="h-3 w-3" /></button>
+                        </div>
+                      </div>
+
+                      {/* Required scopes */}
+                      <div className="bg-muted rounded p-2 space-y-1">
+                        <p className="text-xs font-medium">2. Required API permissions (all must have ✓ admin consent)</p>
+                        <div className="flex flex-wrap gap-1">
+                          {adminData.requiredScopes.map(s => (
+                            <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-background border font-mono">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Admin consent URL */}
+                      <div className="bg-muted rounded p-2 space-y-1">
+                        <p className="text-xs font-medium">3. Admin consent link (send to IT)</p>
+                        <div className="flex gap-1">
+                          <input readOnly value={adminData.adminConsentUrl} className="flex-1 text-[10px] px-1.5 py-1 rounded border bg-background truncate" onClick={(e) => e.target.select()} />
+                          <button onClick={() => { navigator.clipboard.writeText(adminData.adminConsentUrl); toast({ title: 'Copied!' }); }} className="text-[10px] px-2 rounded border bg-background hover:bg-muted-foreground/10"><Copy className="h-3 w-3" /></button>
+                        </div>
+                      </div>
+
+                      {/* Test URL */}
+                      <div className="bg-muted rounded p-2 space-y-1">
+                        <p className="text-xs font-medium">4. Test sign-in (after admin consent)</p>
+                        <a href={adminData.userConsentUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline break-all">
+                          Open test sign-in →
+                        </a>
+                        <p className="text-[10px] text-muted-foreground">If this still says "need admin approval", a scope is missing consent in Azure.</p>
                       </div>
                     </div>
                   ) : (
@@ -291,15 +305,15 @@ export default function OutlookTeamsFloatingWidget() {
                         setFetchingAdminUrl(true);
                         try {
                           const res = await base44.functions.invoke('getOutlookAdminConsentUrl', {});
-                          setAdminUrl(res.data.adminConsentUrl);
+                          setAdminData(res.data);
                         } catch (err) {
-                          toast({ title: 'Could not generate link', description: err.message, variant: 'destructive' });
+                          toast({ title: 'Could not generate links', description: err.message, variant: 'destructive' });
                         }
                         setFetchingAdminUrl(false);
                       }}
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      {fetchingAdminUrl ? 'Generating...' : 'Need admin approval? Get the link'}
+                      {fetchingAdminUrl ? 'Generating...' : 'IT admin says done? Get diagnostic checklist'}
                     </Button>
                   )}
                 </div>
