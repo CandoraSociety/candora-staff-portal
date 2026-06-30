@@ -5,7 +5,7 @@ import EmailList from '@/components/outlook/EmailList';
 import EmailReader from '@/components/outlook/EmailReader';
 import ComposeEmail from '@/components/outlook/ComposeEmail';
 import CalendarView from '@/components/outlook/CalendarView';
-import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, Link2, Unlink, AlertCircle } from 'lucide-react';
+import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, Link2, Unlink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -82,22 +82,11 @@ export default function OutlookDashboard() {
     });
   }, []);
 
-  // Rule 3: open OAuth popup, poll for close, then re-fetch
+  // Full-page redirect to OAuth consent, then user returns to this page
   const handleConnect = async () => {
     try {
       const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
-      const popup = window.open(url, '_blank');
-      const timer = setInterval(async () => {
-        if (!popup || popup.closed) {
-          clearInterval(timer);
-          const isConnected = await fetchProfile();
-          if (isConnected) {
-            fetchEmails();
-            fetchEvents();
-            toast({ title: 'Outlook connected successfully!' });
-          }
-        }
-      }, 500);
+      window.location.href = url;
     } catch (err) {
       toast({ title: 'Connection failed', description: err.message, variant: 'destructive' });
     }
