@@ -89,14 +89,25 @@ export default function OutlookTeamsFloatingWidget() {
   const handleConnect = async () => {
     if (connecting) return;
     setConnecting(true);
+
+    // Open popup synchronously to preserve the user gesture (avoids popup blocker)
+    const popup = window.open('about:blank', '_blank', 'width=600,height=700');
+
     try {
       const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
       if (!url) {
+        if (popup) popup.close();
         toast({ title: 'Connection failed', description: 'No OAuth URL returned.', variant: 'destructive' });
         setConnecting(false);
         return;
       }
-      const popup = window.open(url, '_blank', 'width=600,height=700');
+      if (popup) {
+        popup.location.href = url;
+      } else {
+        // Popup was blocked — fall back to full-page redirect
+        window.location.href = url;
+        return;
+      }
       const timer = setInterval(() => {
         if (!popup || popup.closed) {
           clearInterval(timer);
@@ -107,6 +118,7 @@ export default function OutlookTeamsFloatingWidget() {
         }
       }, 1000);
     } catch (err) {
+      if (popup) popup.close();
       setConnecting(false);
       toast({ title: 'Connection failed', description: err.message, variant: 'destructive' });
     }
