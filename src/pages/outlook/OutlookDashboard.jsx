@@ -82,12 +82,21 @@ export default function OutlookDashboard() {
     });
   }, []);
 
-  // Full-page redirect to OAuth consent, then user returns to this page
   const handleConnect = async () => {
     try {
       const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
+      console.log('Outlook connect URL:', url);
+      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+        toast({
+          title: 'Connection failed',
+          description: 'Invalid OAuth URL returned. Check console for details.',
+          variant: 'destructive',
+        });
+        return;
+      }
       window.location.href = url;
     } catch (err) {
+      console.error('Outlook connect error:', err);
       toast({ title: 'Connection failed', description: err.message, variant: 'destructive' });
     }
   };
