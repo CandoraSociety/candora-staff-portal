@@ -82,21 +82,30 @@ export default function OutlookDashboard() {
     });
   }, []);
 
+  const [connecting, setConnecting] = useState(false);
+
   const handleConnect = async () => {
+    if (connecting) return;
+    setConnecting(true);
     try {
       const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
-      console.log('Outlook connect URL:', url);
-      if (!url || typeof url !== 'string' || !url.startsWith('http')) {
-        toast({
-          title: 'Connection failed',
-          description: 'Invalid OAuth URL returned. Check console for details.',
-          variant: 'destructive',
-        });
+      if (!url) {
+        toast({ title: 'Connection failed', description: 'No OAuth URL returned.', variant: 'destructive' });
+        setConnecting(false);
         return;
       }
-      window.location.href = url;
+      const popup = window.open(url, '_blank', 'width=600,height=700');
+      const timer = setInterval(() => {
+        if (!popup || popup.closed) {
+          clearInterval(timer);
+          setConnecting(false);
+          fetchProfile().then((ok) => {
+            if (ok) { fetchEmails(); fetchEvents(); }
+          });
+        }
+      }, 1000);
     } catch (err) {
-      console.error('Outlook connect error:', err);
+      setConnecting(false);
       toast({ title: 'Connection failed', description: err.message, variant: 'destructive' });
     }
   };
@@ -166,10 +175,24 @@ export default function OutlookDashboard() {
         <p className="text-muted-foreground text-center max-w-md mb-6">
           Connect your Microsoft 365 account to read and send emails, and manage your calendar — all from within the Candora portal.
         </p>
-        <Button onClick={handleConnect} size="lg" className="gap-2">
-          <Link2 className="w-4 h-4" />
-          Connect Outlook
+        <Button onClick={handleConnect} size="lg" className="gap-2" disabled={connecting}>
+          {connecting ? (
+            <>
+              <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+              Waiting for sign-in...
+            </>
+          ) : (
+            <>
+              <Link2 className="w-4 h-4" />
+              Connect Outlook
+            </>
+          )}
         </Button>
+        {connecting && (
+          <p className="text-sm text-muted-foreground mt-2">
+            A sign-in window opened. Complete the Microsoft login there, then this page will refresh automatically.
+          </p>
+        )}
       </div>
     );
   }
