@@ -1,0 +1,50 @@
+{
+  "name": "AppChangeRequest",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short title/summary of the request"
+    },
+    "request_text": {
+      "type": "string",
+      "description": "The full suggestion/request details"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "description": "Full name of the staff member who submitted"
+    },
+    "submitted_by_email": {
+      "type": "string",
+      "description": "Email of the staff member who submitted"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "adjustment",
+        "addition",
+        "change_request",
+        "bug",
+        "other"
+      ],
+      "default": "change_request",
+      "description": "Type of request"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "reviewed",
+        "in_progress",
+        "completed",
+        "dismissed"
+      ],
+      "default": "new",
+      "description": "Processing status of the request"
+    }
+  },
+  "required": [
+    "request_text",
+    "submitted_by_email"
+  ]
+}

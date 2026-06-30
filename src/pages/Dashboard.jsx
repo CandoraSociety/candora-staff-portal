@@ -18,6 +18,7 @@ import HowToSearch from '@/components/howto/HowToSearch';
 import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget';
 import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
+import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
@@ -219,6 +220,11 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* App Change Requests — admin review panel */}
+      {user?.email?.toLowerCase() === 'gncurrie@gmail.com' && (
+        <AppChangeRequestsWidget />
+      )}
 
       {/* Portal Quick Links — horizontal scrolling row */}
       <div className="overflow-x-auto pb-2 -mx-1 px-1">
