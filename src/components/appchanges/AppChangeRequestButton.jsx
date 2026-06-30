@@ -16,7 +16,7 @@ const ALLOWED_EMAILS = [
   'luis.valbuena@candorasociety.com',
   'yazmin.escobar@candorasociety.com',
   'carla.bosse@candorasociety.com',
-  'gncurrie@gmail.com',
+  'graham.currie@candorasociety.com',
 ];
 
 const CATEGORIES = [

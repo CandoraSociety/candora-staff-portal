@@ -222,7 +222,7 @@ export default function Dashboard() {
       </div>
 
       {/* App Change Requests — admin review panel */}
-      {user?.email?.toLowerCase() === 'gncurrie@gmail.com' && (
+      {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (
         <AppChangeRequestsWidget />
       )}
 
