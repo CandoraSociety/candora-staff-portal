@@ -160,7 +160,7 @@ export default function OutlookTeamsFloatingWidget() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 left-[4.5rem] z-50 flex items-center justify-center w-12 h-12 rounded-full shadow-lg bg-primary text-primary-foreground hover:shadow-xl hover:scale-105 transition-all"
+          className="fixed bottom-4 right-4 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-primary text-primary-foreground hover:shadow-xl hover:scale-105 transition-all"
           title="Outlook"
         >
           <Mail className="h-6 w-6" />

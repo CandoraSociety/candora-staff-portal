@@ -30,7 +30,7 @@ export default function EAFloatingWidget() {
       {/* Floating chat window */}
       {open && (
         <div
-          className="fixed bottom-20 right-4 z-[9999] w-[420px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl"
+          className="fixed bottom-52 right-4 z-[9999] w-[420px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl"
           style={{ maxHeight: "calc(100vh - 120px)" }}
         >
           <div className="relative">
@@ -50,7 +50,7 @@ export default function EAFloatingWidget() {
       {/* Floating action button */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-4 right-4 z-[9999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-36 right-4 z-[9999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         style={{
           background: open
             ? "hsl(230,70%,15%)"
