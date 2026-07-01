@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ExternalLink, Edit, Share2, Info } from "lucide-react";
 import { getFileExtension, getFileTypeStyle } from "@/lib/fileHelpers";
+
+const OFFICE_EXTS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
 import FileSummaryDialog from "@/components/files/FileSummaryDialog";
 import ShareDialog from "@/components/files/ShareDialog";
 
@@ -27,6 +29,7 @@ export default function FileViewer() {
   const style = getFileTypeStyle(ext);
   const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(ext);
   const isPdf = ext === "pdf";
+  const isOffice = OFFICE_EXTS.includes(ext);
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,6 +57,8 @@ export default function FileViewer() {
             <img src={file.file_url} alt={file.display_name} className="w-full h-full object-contain" />
           ) : isPdf ? (
             <iframe src={file.file_url} className="w-full h-full" title={file.display_name} />
+          ) : isOffice ? (
+            <iframe src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.file_url)}`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
           ) : (
             <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.file_url)}&embedded=true`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
           )}

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Mail, MessageSquare } from 'lucide-react';
+import { Mail, MessageSquare, FileText, Table } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OutlookTeamsFloatingWidget from '@/components/outlook/OutlookTeamsFloatingWidget';
 import TeamsFloatingWidget from '@/components/teams/TeamsFloatingWidget';
+import OfficeEditorPanel from '@/components/layout/OfficeEditorPanel';
 
 const APPS = [
   { id: 'outlook', label: 'Outlook', icon: Mail },
   { id: 'teams', label: 'Teams', icon: MessageSquare },
+  { id: 'word', label: 'New Word', icon: FileText },
+  { id: 'excel', label: 'New Excel', icon: Table },
 ];
 
 export default function MicrosoftRibbon() {
@@ -55,6 +58,7 @@ export default function MicrosoftRibbon() {
       {/* Slide-out panels */}
       <OutlookTeamsFloatingWidget open={activePanel === 'outlook'} onClose={() => setActivePanel(null)} />
       <TeamsFloatingWidget open={activePanel === 'teams'} onClose={() => setActivePanel(null)} />
+      <OfficeEditorPanel open={activePanel === 'word' || activePanel === 'excel'} onClose={() => setActivePanel(null)} docType={activePanel === 'excel' ? 'excel' : 'word'} />
     </>
   );
 }
