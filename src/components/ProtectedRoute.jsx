@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppChangeRequestButton from '@/components/appchanges/AppChangeRequestButton';
 import OutlookTeamsFloatingWidget from '@/components/outlook/OutlookTeamsFloatingWidget';
+import TeamsFloatingWidget from '@/components/teams/TeamsFloatingWidget';
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -40,6 +41,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
       <Outlet />
       <AppChangeRequestButton />
       <OutlookTeamsFloatingWidget />
+      <TeamsFloatingWidget />
     </>
   );
 }
