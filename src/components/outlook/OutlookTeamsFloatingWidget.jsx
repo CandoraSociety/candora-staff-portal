@@ -5,7 +5,7 @@ import EmailList from '@/components/outlook/EmailList';
 import EmailReader from '@/components/outlook/EmailReader';
 import ComposeEmail from '@/components/outlook/ComposeEmail';
 import CalendarView from '@/components/outlook/CalendarView';
-import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, X, Link2, Unlink, ShieldCheck, Copy } from 'lucide-react';
+import { Mail, Calendar as CalendarIcon, PenSquare, RefreshCw, X, Link2, Unlink, ShieldCheck, Copy, Bug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -25,6 +25,7 @@ export default function OutlookTeamsFloatingWidget() {
   const [connecting, setConnecting] = useState(false);
   const [adminData, setAdminData] = useState(null);
   const [fetchingAdminUrl, setFetchingAdminUrl] = useState(false);
+  const [debugUrl, setDebugUrl] = useState(null);
   const [activeTab, setActiveTab] = useState('inbox');
   const [emails, setEmails] = useState([]);
   const [selectedEmail, setSelectedEmail] = useState(null);
@@ -230,6 +231,27 @@ export default function OutlookTeamsFloatingWidget() {
                 <p className="text-sm text-muted-foreground mb-6">
                   Connect your Microsoft 365 account to read and send emails, and manage your calendar.
                 </p>
+                <Button onClick={async () => {
+                  try {
+                    const url = await base44.connectors.connectAppUser(OUTLOOK_CONNECTOR_ID);
+                    setDebugUrl(url);
+                  } catch (err) {
+                    toast({ title: 'Error', description: err.message, variant: 'destructive' });
+                  }
+                }} variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground mb-2">
+                  <Bug className="h-3.5 w-3.5" />
+                  Debug: show OAuth URL
+                </Button>
+                {debugUrl && (
+                  <div className="mb-4 w-full bg-amber-50 border border-amber-200 rounded p-2 text-left">
+                    <p className="text-xs font-semibold mb-1">OAuth URL (check the scope= parameter):</p>
+                    <div className="flex gap-1">
+                      <input readOnly value={debugUrl} className="flex-1 text-[10px] px-1.5 py-1 rounded border bg-white truncate" onClick={(e) => e.target.select()} />
+                      <button onClick={() => { navigator.clipboard.writeText(debugUrl); toast({ title: 'Copied!' }); }} className="text-[10px] px-2 rounded border bg-white hover:bg-amber-100"><Copy className="h-3 w-3" /></button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">Look at the <code>scope=</code> part — those are the scopes being requested. They must ALL have admin consent in Azure.</p>
+                  </div>
+                )}
                 <Button onClick={handleConnect} size="lg" className="gap-2" disabled={connecting}>
                   {connecting ? (
                     <>
