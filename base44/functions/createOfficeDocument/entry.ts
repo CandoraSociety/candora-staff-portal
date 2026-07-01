@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     const itemData = await uploadRes.json();
 
-    // Get embed URL via preview endpoint
+    // Get embed URL via preview endpoint — request editable, with full UI (not chromeless)
     let embedUrl = itemData.webUrl;
     const previewRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemData.id}/preview`, {
       method: 'POST',
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ viewer: 'office_online' })
+      body: JSON.stringify({ viewer: 'office_online', chromeless: false, allowEdit: true })
     });
 
     if (previewRes.ok) {

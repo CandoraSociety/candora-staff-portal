@@ -133,7 +133,7 @@ export default function OfficeEditorPanel({ open, onClose, docType }) {
               src={embedUrl}
               className="w-full h-full border-0"
               title={createdName}
-              allow="fullscreen"
+              allow="fullscreen; clipboard-read; clipboard-write"
             />
           </div>
         )}
