@@ -30,8 +30,9 @@ Deno.serve(async (req) => {
 
     const encodedScopes = encodeURIComponent(scopes);
 
-    // Admin consent URL — grants consent for ALL users in the tenant at once
-    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    // Admin consent URL using v2 authorize endpoint with prompt=admin_consent — this explicitly
+    // lists ALL scopes so the admin sees and consents to every permission at once.
+    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=admin_consent`;
 
     // User consent URL with explicit scopes — for testing individual sign-in
     const userConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=select_account`;
