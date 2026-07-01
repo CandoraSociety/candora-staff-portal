@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { FileText, Table, X, ExternalLink, Loader2 } from 'lucide-react';
+import { FileText, Table, Presentation, X, ExternalLink, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function OfficeEditorPanel({ open, onClose, docType }) {
@@ -13,18 +13,23 @@ export default function OfficeEditorPanel({ open, onClose, docType }) {
   const [createdName, setCreatedName] = useState(null);
   const [sharepointUrl, setSharepointUrl] = useState(null);
 
-  const isWord = docType === 'word';
-  const Icon = isWord ? FileText : Table;
-  const accentColor = isWord ? '#2b579a' : '#217346';
-  const label = isWord ? 'Word Document' : 'Excel Workbook';
-  const ext = isWord ? '.docx' : '.xlsx';
+  const docConfig = {
+    word: { icon: FileText, color: '#2b579a', label: 'Word Document', ext: '.docx' },
+    excel: { icon: Table, color: '#217346', label: 'Excel Workbook', ext: '.xlsx' },
+    powerpoint: { icon: Presentation, color: '#d24726', label: 'PowerPoint Presentation', ext: '.pptx' },
+  };
+  const config = docConfig[docType] || docConfig.word;
+  const Icon = config.icon;
+  const accentColor = config.color;
+  const label = config.label;
+  const ext = config.ext;
 
   const handleCreate = async () => {
     setCreating(true);
     try {
       const res = await base44.functions.invoke('createOfficeDocument', {
         docType,
-        fileName: fileName || `New ${isWord ? 'Document' : 'Workbook'}`
+        fileName: fileName || `New ${label}`
       });
       setEmbedUrl(res.data.embed_url);
       setCreatedName(res.data.file_name);

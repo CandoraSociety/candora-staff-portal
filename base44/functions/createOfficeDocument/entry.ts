@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import JSZip from 'npm:jszip@3.10.1';
+import pptxgen from 'npm:pptxgenjs@3.12.0';
 
 const DRIVE_ID = 'b!hxKx8kC6-E-Lnj84eAg_LC-uIFP5HdVPkWTwcDFuP1P7ca7jYKZ5Ra_M7gnd5aOy';
 
@@ -80,6 +81,14 @@ async function createBlankXlsx() {
   <sheetData/>
 </worksheet>`);
   return await zip.generateAsync({ type: 'uint8array' });
+}
+
+async function createBlankPptx() {
+  const pptx = new pptxgen();
+  pptx.layout = 'LAYOUT_WIDE';
+  pptx.addSlide();
+  const pptxBase64 = await pptx.write({ outputType: 'base64' });
+  return Uint8Array.from(atob(pptxBase64), c => c.charCodeAt(0));
 }
 
 /**
@@ -167,15 +176,16 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { docType, fileName } = body;
 
-    if (!docType || !['word', 'excel'].includes(docType)) {
-      return Response.json({ error: 'Invalid docType. Use "word" or "excel"' }, { status: 400 });
+    if (!docType || !['word', 'excel', 'powerpoint'].includes(docType)) {
+      return Response.json({ error: 'Invalid docType. Use "word", "excel", or "powerpoint"' }, { status: 400 });
     }
 
-    const ext = docType === 'word' ? 'docx' : 'xlsx';
-    const baseName = (fileName || `New ${docType === 'word' ? 'Document' : 'Workbook'}`).replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+    const ext = docType === 'word' ? 'docx' : docType === 'excel' ? 'xlsx' : 'pptx';
+    const defaultNames = { word: 'Document', excel: 'Workbook', powerpoint: 'Presentation' };
+    const baseName = (fileName || `New ${defaultNames[docType] || 'Document'}`).replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9 _-]/g, '').trim();
     const fullName = `${baseName}.${ext}`;
 
-    const fileBytes = docType === 'word' ? await createBlankDocx() : await createBlankXlsx();
+    const fileBytes = docType === 'word' ? await createBlankDocx() : docType === 'excel' ? await createBlankXlsx() : await createBlankPptx();
     const accessToken = await getAccessToken();
 
     // Ensure user's private folder exists (created on first use, permissions locked to this user)
