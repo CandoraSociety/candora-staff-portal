@@ -140,8 +140,18 @@ async function ensurePrivateFolder(accessToken, userEmail) {
 
   const folderData = await createRes.json();
 
-  // Break permission inheritance and grant ONLY this user write access.
+  // Break permission inheritance and grant access to: (1) folder owner, (2) app owner.
   // retainInheritedPermissions: false removes all inherited permissions.
+  const recipients = [{ email: userEmail }];
+  try {
+    const settings = await base44.asServiceRole.entities.OrgSettings.filter({});
+    if (settings.length > 0 && settings[0].owner_email && settings[0].owner_email !== userEmail) {
+      recipients.push({ email: settings[0].owner_email });
+    }
+  } catch (e) {
+    // Non-critical — folder still gets owner access
+  }
+
   const inviteRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${folderData.id}/invite`, {
     method: 'POST',
     headers: {
@@ -149,7 +159,7 @@ async function ensurePrivateFolder(accessToken, userEmail) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      recipients: [{ email: userEmail }],
+      recipients: recipients,
       roles: ['write'],
       requireSignIn: true,
       sendInvitation: false,
@@ -159,8 +169,6 @@ async function ensurePrivateFolder(accessToken, userEmail) {
 
   if (!inviteRes.ok) {
     const errText = await inviteRes.text();
-    // Folder exists but permissions may not be set — log but don't fail.
-    // App-level admin access (client credentials) bypasses item permissions regardless.
     console.log(`Warning: could not set folder permissions for ${userEmail}: ${errText}`);
   }
 

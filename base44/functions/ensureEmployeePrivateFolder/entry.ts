@@ -92,7 +92,13 @@ Deno.serve(async (req) => {
     const folderData = await createRes.json();
 
     // Break permission inheritance (retainInheritedPermissions: false) and grant
-    // ONLY this user write access — no one else can see or access the folder.
+    // access to: (1) the folder owner, and (2) the app owner (stored in OrgSettings.owner_email).
+    const recipients = [{ email }];
+    const settings = await base44.asServiceRole.entities.OrgSettings.filter({});
+    if (settings.length > 0 && settings[0].owner_email && settings[0].owner_email !== email) {
+      recipients.push({ email: settings[0].owner_email });
+    }
+
     const inviteRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${folderData.id}/invite`, {
       method: 'POST',
       headers: {
@@ -100,7 +106,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        recipients: [{ email }],
+        recipients: recipients,
         roles: ['write'],
         requireSignIn: true,
         sendInvitation: false,

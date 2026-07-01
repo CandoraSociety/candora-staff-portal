@@ -26,7 +26,8 @@
             "type": "string"
           },
           "is_active": {
-            "boolean": false
+            "type": "boolean",
+            "default": false
           }
         }
       }
