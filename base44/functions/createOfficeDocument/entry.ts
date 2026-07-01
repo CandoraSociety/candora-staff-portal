@@ -2,7 +2,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import JSZip from 'npm:jszip@3.10.1';
 
 const DRIVE_ID = 'b!hxKx8kC6-E-Lnj84eAg_LC-uIFP5HdVPkWTwcDFuP1P7ca7jYKZ5Ra_M7gnd5aOy';
-const FOLDER = 'Office Documents';
 
 async function getAccessToken() {
   const clientId = Deno.env.get('AZURE_CLIENT_ID');
@@ -83,6 +82,82 @@ async function createBlankXlsx() {
   return await zip.generateAsync({ type: 'uint8array' });
 }
 
+/**
+ * Ensures a private SharePoint folder exists for the user.
+ * Folder is named _PRIVATE_<email> and has broken permission inheritance —
+ * only the user (and app-level admin) can access it.
+ */
+async function ensurePrivateFolder(accessToken, userEmail) {
+  if (!userEmail) throw new Error('User email is required to create private folder');
+  const folderName = `_PRIVATE_${userEmail}`;
+  const folderPath = `/${folderName}`;
+
+  // Try to get existing folder by path
+  const getRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:${folderPath}`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+
+  if (getRes.ok) {
+    const existing = await getRes.json();
+    return { id: existing.id, name: existing.name, path: folderPath };
+  }
+
+  // Folder doesn't exist — create it
+  const createRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root/children`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: folderName,
+      folder: {},
+      '@microsoft.graph.conflictBehavior': 'fail'
+    })
+  });
+
+  if (!createRes.ok) {
+    // Race condition — another request may have created it. Try fetching again.
+    const retryRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:${folderPath}`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (retryRes.ok) {
+      const retryData = await retryRes.json();
+      return { id: retryData.id, name: retryData.name, path: folderPath };
+    }
+    const errText = await createRes.text();
+    throw new Error(`Failed to create private folder: ${errText}`);
+  }
+
+  const folderData = await createRes.json();
+
+  // Break permission inheritance and grant ONLY this user write access.
+  // retainInheritedPermissions: false removes all inherited permissions.
+  const inviteRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${folderData.id}/invite`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      recipients: [{ email: userEmail }],
+      roles: ['write'],
+      requireSignIn: true,
+      sendInvitation: false,
+      retainInheritedPermissions: false
+    })
+  });
+
+  if (!inviteRes.ok) {
+    const errText = await inviteRes.text();
+    // Folder exists but permissions may not be set — log but don't fail.
+    // App-level admin access (client credentials) bypasses item permissions regardless.
+    console.log(`Warning: could not set folder permissions for ${userEmail}: ${errText}`);
+  }
+
+  return { id: folderData.id, name: folderData.name, path: folderPath };
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -99,12 +174,15 @@ Deno.serve(async (req) => {
     const ext = docType === 'word' ? 'docx' : 'xlsx';
     const baseName = (fileName || `New ${docType === 'word' ? 'Document' : 'Workbook'}`).replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9 _-]/g, '').trim();
     const fullName = `${baseName}.${ext}`;
-    const filePath = `/${FOLDER}/${fullName}`;
 
     const fileBytes = docType === 'word' ? await createBlankDocx() : await createBlankXlsx();
     const accessToken = await getAccessToken();
 
-    // Upload to SharePoint
+    // Ensure user's private folder exists (created on first use, permissions locked to this user)
+    const folder = await ensurePrivateFolder(accessToken, user.email);
+    const filePath = `${folder.path}/${fullName}`;
+
+    // Upload to user's private SharePoint folder
     const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:${filePath}:/content`;
     const uploadRes = await fetch(uploadUrl, {
       method: 'PUT',
@@ -122,7 +200,7 @@ Deno.serve(async (req) => {
 
     const itemData = await uploadRes.json();
 
-    // Get embed URL via preview endpoint — request editable, with full UI (not chromeless)
+    // Get embed URL via preview endpoint — editable, with full UI
     let embedUrl = itemData.webUrl;
     const previewRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemData.id}/preview`, {
       method: 'POST',
@@ -138,13 +216,13 @@ Deno.serve(async (req) => {
       if (previewData.getUrl) embedUrl = previewData.getUrl;
     }
 
-    // Also create a File entity record so it appears in the File Manager
+    // Create a File entity record — personal access level, only the owner sees it
     await base44.asServiceRole.entities.File.create({
       original_name: fullName,
       display_name: baseName,
       file_url: itemData.webUrl,
       file_type: ext,
-      access_level: 'universal',
+      access_level: 'personal',
       category: 'other',
       owner_email: user.email,
       owner_name: user.full_name,
@@ -156,7 +234,8 @@ Deno.serve(async (req) => {
       embed_url: embedUrl,
       file_name: fullName,
       sharepoint_web_url: itemData.webUrl,
-      sharepoint_item_id: itemData.id
+      sharepoint_item_id: itemData.id,
+      private_folder: folder.name
     });
 
   } catch (error) {
