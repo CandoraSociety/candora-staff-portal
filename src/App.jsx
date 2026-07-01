@@ -24,6 +24,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import Dashboard from '@/pages/Dashboard';
 import Portal from '@/pages/Portal';
 import WidgetCustomization from '@/pages/WidgetCustomization';
+import MeetingManager from '@/pages/MeetingManager';
 
 // NexusHR
 import NexusLayout from '@/components/nexushr/NexusLayout';
@@ -270,6 +271,7 @@ const AuthenticatedApp = () => {
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/portal" element={<Portal />} />
+          <Route path="/meeting-manager" element={<MeetingManager />} />
           <Route path="/widget-customization" element={<WidgetCustomization />} />
           <Route path="/admin/cards" element={<ManageCards />} />
           <Route path="/admin/widgets" element={<ManageWidgets />} />

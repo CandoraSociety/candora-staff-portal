@@ -17,9 +17,8 @@ const TABS = [
   { id: 'compose', label: 'Compose', icon: PenSquare },
 ];
 
-export default function OutlookTeamsFloatingWidget() {
+export default function OutlookTeamsFloatingWidget({ open, onClose }) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [checking, setChecking] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -171,26 +170,10 @@ export default function OutlookTeamsFloatingWidget() {
 
   return (
     <>
-      {/* Floating button */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-4 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-primary text-primary-foreground hover:shadow-xl hover:scale-105 transition-all"
-          title="Outlook"
-        >
-          <Mail className="h-6 w-6" />
-          {connected && unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
-      )}
-
       {/* Slide-out panel */}
       {open && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
           <div className="relative w-full max-w-md bg-background shadow-2xl flex flex-col h-full ml-auto animate-in slide-in-from-right duration-200">
             {/* Header */}
@@ -215,7 +198,7 @@ export default function OutlookTeamsFloatingWidget() {
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpen(false)} title="Close">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close">
                   <X className="h-4 w-4" />
                 </Button>
               </div>

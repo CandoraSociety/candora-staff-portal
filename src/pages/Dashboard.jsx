@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -13,7 +13,6 @@ import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
 import OrganizerWidget from '@/components/dashboard/OrganizerWidget';
 import CollapsibleWidget from '@/components/dashboard/CollapsibleWidget';
-import MeetingManagerWindow from '@/components/dashboard/MeetingManagerWindow';
 import HowToSearch from '@/components/howto/HowToSearch';
 import GoogleTranslateWidget from '@/components/dashboard/GoogleTranslateWidget';
 import PortalTransition from '@/components/PortalTransition';
@@ -93,7 +92,6 @@ function PinnedPortalBanner({ card, onUnpin }) {
 
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
-  const [showMeetingManager, setShowMeetingManager] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: cards = [] } = useQuery({
@@ -246,17 +244,6 @@ export default function Dashboard() {
       
       {/* Live data moved to Admin > Users & Access */}
 
-      {/* Meeting Manager ribbon button */}
-      {isWidgetActive('meeting_manager') && (
-        <Button
-          onClick={() => setShowMeetingManager(true)}
-          className="w-full gap-2"
-        >
-          <Calendar className="w-4 h-4" />
-          Meeting Manager
-        </Button>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {isWidgetActive('howto') && <HowToSearch user={user} />}
@@ -285,7 +272,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {showMeetingManager && <MeetingManagerWindow onClose={() => setShowMeetingManager(false)} />}
     </div>
   );
 }

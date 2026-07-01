@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, AppWindow, Settings, Users, Bell, 
   Building2, Shield, ChevronLeft, ChevronRight, LogOut,
-  Megaphone, CheckCircle2, LayoutPanelLeft
+  Megaphone, CheckCircle2, LayoutPanelLeft, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -15,6 +15,7 @@ import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
   { path: '/portal', label: 'Portals', icon: AppWindow, adminOnly: false },
+  { path: '/meeting-manager', label: 'Meetings', icon: Calendar, adminOnly: false },
   { path: '/widget-customization', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
 ];
 

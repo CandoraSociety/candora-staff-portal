@@ -15,9 +15,8 @@ const TABS = [
   { id: 'channels', label: 'Channels', icon: Hash },
 ];
 
-export default function TeamsFloatingWidget() {
+export default function TeamsFloatingWidget({ open, onClose }) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [checking, setChecking] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -144,19 +143,9 @@ export default function TeamsFloatingWidget() {
 
   return (
     <>
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-4 right-20 z-50 flex items-center justify-center w-14 h-14 rounded-full shadow-lg bg-accent text-accent-foreground hover:shadow-xl hover:scale-105 transition-all"
-          title="Microsoft Teams"
-        >
-          <MessageSquare className="h-6 w-6" />
-        </button>
-      )}
-
       {open && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/30" onClick={onClose} />
           <div className="relative w-full max-w-md bg-background shadow-2xl flex flex-col h-full ml-auto animate-in slide-in-from-right duration-200">
             <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0">
               <div className="flex items-center gap-2 min-w-0">
@@ -179,7 +168,7 @@ export default function TeamsFloatingWidget() {
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setOpen(false)} title="Close">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} title="Close">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
