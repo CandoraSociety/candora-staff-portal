@@ -26,8 +26,7 @@
             "type": "string"
           },
           "is_active": {
-            "type": "boolean",
-            "default": false
+            "boolean": false
           }
         }
       }
@@ -48,6 +47,10 @@
     "welcome_message": {
       "type": "string",
       "default": "Welcome to the Candora Staff Portal"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "App owner's email \u2014 granted full access to all SharePoint folders. Managed by admins. Succession: update this field when ownership changes."
     }
   },
   "required": [
