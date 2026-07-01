@@ -21,8 +21,7 @@ export const FilePermissionsContext = createContext({ grantedFileLevels: [] });
 const BASE_NAV_ITEMS = [
   { path: "/filemanager",                      label: "Dashboard",     icon: Home,          accessLevel: null },
   { path: "/filemanager/files",                label: "All Files",     icon: FolderOpen,    accessLevel: null },
-  { path: "/filemanager/files?access=universal", label: "Universal Files", icon: Globe,     accessLevel: null },
-  { path: "/filemanager/files?access=personal",  label: "My Files",    icon: User,          accessLevel: "personal" }, // admin + owner only
+  { path: "/filemanager/files?access=personal",  label: "My Files (Private)", icon: User,    accessLevel: "personal" }, // user's private SharePoint folder
   { path: "/filemanager/files?access=manager",   label: "Manager Files",  icon: Shield,     accessLevel: "manager" },
   { path: "/filemanager/files?access=finance",   label: "Finance Files",  icon: DollarSign, accessLevel: "finance" },
   { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, accessLevel: "corporate" },
