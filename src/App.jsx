@@ -185,11 +185,6 @@ import BoardMinutesTaker from '@/pages/board/BoardMinutesTaker';
 import OutlookLayout from '@/components/outlook/OutlookLayout';
 import OutlookDashboard from '@/pages/outlook/OutlookDashboard';
 
-// Presentations Portal
-import PresentationsLayout from '@/components/presentations/PresentationsLayout';
-import PresentationsHome from '@/pages/presentations/PresentationsHome';
-import PresentationEditor from '@/pages/presentations/PresentationEditor';
-
 // Events/Projects/Programs Manager
 import EventsMgrLayout from '@/components/eventsmgr/EventsMgrLayout';
 import EventsMgrDashboard from '@/pages/eventsmgr/EventsMgrDashboard';
@@ -412,12 +407,6 @@ const AuthenticatedApp = () => {
         {/* Outlook Portal - standalone layout */}
         <Route element={<OutlookLayout />}>
           <Route path="/outlook" element={<OutlookDashboard />} />
-        </Route>
-
-        {/* Presentations Portal - standalone layout */}
-        <Route element={<PresentationsLayout />}>
-          <Route path="/presentations" element={<PresentationsHome />} />
-          <Route path="/presentations/editor/:id" element={<PresentationEditor />} />
         </Route>
 
         {/* Events/Projects/Programs Manager - standalone layout */}
