@@ -266,6 +266,16 @@ import EmpowerUIntake from '@/pages/empoweru/EmpowerUIntake';
 import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
 import EmpowerUServiceNav from '@/pages/empoweru/EmpowerUServiceNav';
 
+// Reception Portal
+import ReceptionLayout from '@/components/reception/ReceptionLayout';
+import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
+import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
+import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
+import ReceptionStaffDirectory from '@/pages/reception/ReceptionStaffDirectory';
+import ReceptionProgramRegistration from '@/pages/reception/ReceptionProgramRegistration';
+import ReceptionResourceFinder from '@/pages/reception/ReceptionResourceFinder';
+import ReceptionUrgentAlerts from '@/pages/reception/ReceptionUrgentAlerts';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -539,6 +549,17 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/intake" element={<EmpowerUIntake />} />
           <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
           <Route path="/empoweru/service-nav" element={<EmpowerUServiceNav />} />
+        </Route>
+
+        {/* Reception Portal - standalone layout */}
+        <Route element={<ReceptionLayout />}>
+          <Route path="/reception" element={<ReceptionDashboard />} />
+          <Route path="/reception/appointments" element={<ReceptionAppointments />} />
+          <Route path="/reception/dropins" element={<ReceptionDropIns />} />
+          <Route path="/reception/staff" element={<ReceptionStaffDirectory />} />
+          <Route path="/reception/registration" element={<ReceptionProgramRegistration />} />
+          <Route path="/reception/resources" element={<ReceptionResourceFinder />} />
+          <Route path="/reception/urgent" element={<ReceptionUrgentAlerts />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

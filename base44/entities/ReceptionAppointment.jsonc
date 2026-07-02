@@ -1,0 +1,60 @@
+{
+  "name": "ReceptionAppointment",
+  "type": "object",
+  "properties": {
+    "visitor_name": {
+      "type": "string",
+      "description": "Visitor's full name"
+    },
+    "visitor_phone": {
+      "type": "string"
+    },
+    "visitor_email": {
+      "type": "string"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time of appointment"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 30
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Purpose of visit"
+    },
+    "staff_member": {
+      "type": "string",
+      "description": "Staff member being visited"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department being visited"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "checked_in",
+        "completed",
+        "cancelled",
+        "no_show"
+      ],
+      "default": "scheduled"
+    },
+    "check_in_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When visitor checked in at reception"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "visitor_name",
+    "appointment_date"
+  ]
+}

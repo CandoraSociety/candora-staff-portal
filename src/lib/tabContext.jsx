@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
   FileText, BarChart3, Utensils, Megaphone, Archive, Calendar,
   FolderOpen, Mail, CalendarDays, GraduationCap,
-  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank
+  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank, ConciergeBell
 } from 'lucide-react';
 
 const PORTAL_REGISTRY = {
@@ -29,6 +29,7 @@ const PORTAL_REGISTRY = {
   '/phac': { label: 'PHAC Programs', icon: Baby },
   '/rc': { label: 'Resource Centre', icon: LifeBuoy },
   '/empoweru': { label: 'EmpowerU', icon: PiggyBank },
+  '/reception': { label: 'Reception', icon: ConciergeBell },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };

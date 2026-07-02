@@ -1,0 +1,102 @@
+{
+  "name": "DirectoryResource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Resource/program/service name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what the resource offers"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food",
+        "housing",
+        "employment",
+        "education",
+        "health",
+        "childcare",
+        "legal",
+        "financial",
+        "mental_health",
+        "settlement",
+        "family_support",
+        "community",
+        "other"
+      ],
+      "description": "Primary category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "More specific subcategory"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external"
+      ],
+      "description": "Internal = offered by Candora; External = outside organization"
+    },
+    "provider_organization": {
+      "type": "string",
+      "description": "Organization providing the resource"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "eligibility_criteria": {
+      "type": "string",
+      "description": "Who can access this resource"
+    },
+    "service_area": {
+      "type": "string",
+      "description": "Geographic area served"
+    },
+    "cost": {
+      "type": "string",
+      "description": "Free, sliding scale, or cost details"
+    },
+    "hours": {
+      "type": "string",
+      "description": "Operating hours"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Search keywords"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "type"
+  ]
+}

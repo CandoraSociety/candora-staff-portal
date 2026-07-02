@@ -1,0 +1,72 @@
+{
+  "name": "UrgentAlert",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short title for the alert"
+    },
+    "message": {
+      "type": "string",
+      "description": "Detailed message"
+    },
+    "urgency_level": {
+      "type": "string",
+      "enum": [
+        "info",
+        "urgent",
+        "critical"
+      ],
+      "default": "urgent",
+      "description": "How urgent this alert is"
+    },
+    "sent_by_name": {
+      "type": "string",
+      "description": "Receptionist who sent the alert"
+    },
+    "sent_by_email": {
+      "type": "string"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "all_managers",
+        "specific_staff",
+        "all_staff",
+        "specific_department"
+      ],
+      "description": "Who should receive this alert"
+    },
+    "recipient_emails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Specific recipient email addresses"
+    },
+    "recipient_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized recipient names for display"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "acknowledged"
+      ],
+      "default": "sent"
+    },
+    "sent_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "urgency_level"
+  ]
+}

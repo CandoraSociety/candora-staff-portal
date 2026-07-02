@@ -1,0 +1,71 @@
+{
+  "name": "StaffProgramRole",
+  "type": "object",
+  "properties": {
+    "staff_email": {
+      "type": "string",
+      "description": "Employee email \u2014 links to Employee record"
+    },
+    "staff_name": {
+      "type": "string",
+      "description": "Denormalized staff full name"
+    },
+    "program_portal": {
+      "type": "string",
+      "enum": [
+        "ell",
+        "frn",
+        "phac",
+        "empoweru",
+        "rc",
+        "pathways",
+        "food",
+        "board",
+        "volunteermgr",
+        "grants",
+        "marketing",
+        "nexushr",
+        "eventsmgr",
+        "archives",
+        "ed",
+        "other"
+      ],
+      "description": "Which program portal this role is associated with"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Specific program name (e.g. 'EmpowerU Fall 2026', 'PHAC Drop-in')"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "facilitator",
+        "manager",
+        "coordinator",
+        "assistant",
+        "contractor",
+        "admin",
+        "other"
+      ],
+      "description": "Role in the program"
+    },
+    "role_label": {
+      "type": "string",
+      "description": "Custom label if role is 'other' or more specific title"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this role assignment is current"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "staff_email",
+    "staff_name",
+    "program_portal",
+    "role"
+  ]
+}

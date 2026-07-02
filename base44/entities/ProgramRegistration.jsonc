@@ -1,0 +1,114 @@
+{
+  "name": "ProgramRegistration",
+  "type": "object",
+  "properties": {
+    "participant_first_name": {
+      "type": "string"
+    },
+    "participant_last_name": {
+      "type": "string"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized full name"
+    },
+    "participant_phone": {
+      "type": "string"
+    },
+    "participant_email": {
+      "type": "string"
+    },
+    "program_portal": {
+      "type": "string",
+      "enum": [
+        "ell",
+        "frn",
+        "phac",
+        "empoweru",
+        "rc",
+        "pathways",
+        "other"
+      ],
+      "description": "Which program portal this registration is for"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Specific program/cohort name"
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_approval",
+        "approved",
+        "waitlisted",
+        "declined",
+        "enrolled",
+        "completed",
+        "withdrawn"
+      ],
+      "default": "pending_approval",
+      "description": "Registration status"
+    },
+    "requires_approval": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether facilitator/manager approval is needed"
+    },
+    "approver_name": {
+      "type": "string",
+      "description": "Who needs to approve"
+    },
+    "approver_email": {
+      "type": "string",
+      "description": "Approver's email for notification"
+    },
+    "approval_request_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "approval_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "approval_notes": {
+      "type": "string"
+    },
+    "waitlist_position": {
+      "type": "number",
+      "default": 0
+    },
+    "eligibility_assessed": {
+      "type": "boolean",
+      "default": false
+    },
+    "eligibility_notes": {
+      "type": "string"
+    },
+    "eligibility_status": {
+      "type": "string",
+      "enum": [
+        "eligible",
+        "conditionally_eligible",
+        "not_eligible",
+        "not_assessed"
+      ],
+      "default": "not_assessed"
+    },
+    "accommodation_needs": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_first_name",
+    "participant_last_name",
+    "program_portal",
+    "registration_date"
+  ]
+}

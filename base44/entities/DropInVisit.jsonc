@@ -1,0 +1,53 @@
+{
+  "name": "DropInVisit",
+  "type": "object",
+  "properties": {
+    "visitor_name": {
+      "type": "string",
+      "description": "Visitor's full name"
+    },
+    "visitor_phone": {
+      "type": "string"
+    },
+    "visit_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of visit"
+    },
+    "arrival_time": {
+      "type": "string",
+      "description": "Arrival time (HH:MM)"
+    },
+    "departure_time": {
+      "type": "string",
+      "description": "Departure time (HH:MM)"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Purpose of visit"
+    },
+    "staff_visited": {
+      "type": "string",
+      "description": "Staff member they met with"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department visited"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "checked_in",
+        "checked_out"
+      ],
+      "default": "checked_in"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "visitor_name",
+    "visit_date"
+  ]
+}
