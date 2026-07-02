@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
   FileText, BarChart3, Utensils, Megaphone, Archive, Calendar,
   FolderOpen, Mail, CalendarDays, GraduationCap,
-  Code, HelpCircle, AppWindow
+  Code, HelpCircle, AppWindow, Baby
 } from 'lucide-react';
 
 const PORTAL_REGISTRY = {
@@ -26,6 +26,7 @@ const PORTAL_REGISTRY = {
   '/meeting-manager': { label: 'Meetings', icon: CalendarDays },
   '/ell': { label: 'ELL Program', icon: GraduationCap },
   '/frn': { label: 'FRN Programs', icon: Users },
+  '/phac': { label: 'PHAC Programs', icon: Baby },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };

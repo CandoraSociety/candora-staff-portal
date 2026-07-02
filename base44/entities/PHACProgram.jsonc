@@ -1,0 +1,82 @@
+{
+  "name": "PHACProgram",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Drop-in program name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the program involves"
+    },
+    "target_age_min_months": {
+      "type": "number",
+      "default": 0,
+      "description": "Minimum child age in months"
+    },
+    "target_age_max_months": {
+      "type": "number",
+      "default": 72,
+      "description": "Maximum child age in months (72 = 6 years)"
+    },
+    "schedule_days": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ]
+      },
+      "description": "Days of the week this program runs"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Room or location"
+    },
+    "season_start_month": {
+      "type": "number",
+      "default": 9,
+      "description": "Month the program season starts (1-12). Default September."
+    },
+    "season_end_month": {
+      "type": "number",
+      "default": 6,
+      "description": "Month the program season ends (1-12). Default June. Programs do not run July/August."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "ended"
+      ],
+      "default": "active",
+      "description": "Whether this program is currently running"
+    },
+    "facilitator": {
+      "type": "string",
+      "description": "Staff member facilitating the program"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

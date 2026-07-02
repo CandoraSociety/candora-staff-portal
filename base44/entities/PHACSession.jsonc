@@ -1,0 +1,68 @@
+{
+  "name": "PHACSession",
+  "type": "object",
+  "properties": {
+    "program_id": {
+      "type": "string",
+      "description": "Reference to PHACProgram"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Denormalized program name"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the drop-in session"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Location for this session"
+    },
+    "facilitator": {
+      "type": "string",
+      "description": "Who facilitated this session"
+    },
+    "attendee_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of attendees (headcount)"
+    },
+    "adult_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of adults/parents"
+    },
+    "child_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of children"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled",
+      "description": "Session status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Session notes / observations"
+    }
+  },
+  "required": [
+    "program_id",
+    "session_date"
+  ]
+}

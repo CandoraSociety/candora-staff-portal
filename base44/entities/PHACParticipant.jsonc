@@ -1,0 +1,61 @@
+{
+  "name": "PHACParticipant",
+  "type": "object",
+  "properties": {
+    "child_first_name": {
+      "type": "string",
+      "description": "Child's first name"
+    },
+    "child_last_name": {
+      "type": "string",
+      "description": "Child's last name"
+    },
+    "child_date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Child's date of birth"
+    },
+    "parent_guardian_name": {
+      "type": "string",
+      "description": "Parent or guardian full name"
+    },
+    "parent_guardian_phone": {
+      "type": "string",
+      "description": "Parent/guardian phone"
+    },
+    "parent_guardian_email": {
+      "type": "string",
+      "description": "Parent/guardian email"
+    },
+    "address": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "string"
+    },
+    "preferred_language": {
+      "type": "string",
+      "description": "Preferred language"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
+    },
+    "first_visit_date": {
+      "type": "string",
+      "format": "date",
+      "description": "First time the family attended a session"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Allergies, special needs, or other notes"
+    }
+  },
+  "required": [
+    "child_first_name",
+    "child_last_name"
+  ]
+}

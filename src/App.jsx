@@ -239,6 +239,13 @@ import FRNParticipants from '@/pages/frn/FRNParticipants';
 import FRNIntake from '@/pages/frn/FRNIntake';
 import FRNAssessments from '@/pages/frn/FRNAssessments';
 
+// PHAC Programs Portal
+import PHACLayout from '@/components/phac/PHACLayout';
+import PHACDashboard from '@/pages/phac/PHACDashboard';
+import PHACPrograms from '@/pages/phac/PHACPrograms';
+import PHACSessions from '@/pages/phac/PHACSessions';
+import PHACParticipants from '@/pages/phac/PHACParticipants';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -482,6 +489,14 @@ const AuthenticatedApp = () => {
           <Route path="/frn/participants" element={<FRNParticipants />} />
           <Route path="/frn/intake" element={<FRNIntake />} />
           <Route path="/frn/assessments" element={<FRNAssessments />} />
+        </Route>
+
+        {/* PHAC Programs Portal - standalone layout */}
+        <Route element={<PHACLayout />}>
+          <Route path="/phac" element={<PHACDashboard />} />
+          <Route path="/phac/programs" element={<PHACPrograms />} />
+          <Route path="/phac/sessions" element={<PHACSessions />} />
+          <Route path="/phac/participants" element={<PHACParticipants />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}
