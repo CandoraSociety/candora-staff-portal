@@ -276,6 +276,13 @@ import ChildmindingIntake from '@/pages/childminding/ChildmindingIntake';
 // Pathways Childminding
 import PathwaysChildminding from '@/pages/pathways/PathwaysChildminding';
 
+// Digital Literacy Portal
+import DigiLitLayout from '@/components/digilit/DigiLitLayout';
+import DigiLitDashboard from '@/pages/digilit/DigiLitDashboard';
+import DigiLitParticipants from '@/pages/digilit/DigiLitParticipants';
+import DigiLitSessions from '@/pages/digilit/DigiLitSessions';
+import DigiLitEvaluations from '@/pages/digilit/DigiLitEvaluations';
+
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
@@ -559,6 +566,14 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/intake" element={<EmpowerUIntake />} />
           <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
           <Route path="/empoweru/service-nav" element={<EmpowerUServiceNav />} />
+        </Route>
+
+        {/* Digital Literacy Portal - standalone layout */}
+        <Route element={<DigiLitLayout />}>
+          <Route path="/digilit" element={<DigiLitDashboard />} />
+          <Route path="/digilit/participants" element={<DigiLitParticipants />} />
+          <Route path="/digilit/sessions" element={<DigiLitSessions />} />
+          <Route path="/digilit/evaluations" element={<DigiLitEvaluations />} />
         </Route>
 
         {/* Childminding Portal - standalone layout */}

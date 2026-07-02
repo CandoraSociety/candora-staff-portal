@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
   FileText, BarChart3, Utensils, Megaphone, Archive, Calendar,
   FolderOpen, Mail, CalendarDays, GraduationCap,
-  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank, ConciergeBell, ClipboardList
+  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank, ConciergeBell, ClipboardList, Monitor
 } from 'lucide-react';
 
 const PORTAL_REGISTRY = {
@@ -31,6 +31,7 @@ const PORTAL_REGISTRY = {
   '/empoweru': { label: 'EmpowerU', icon: PiggyBank },
   '/reception': { label: 'Reception', icon: ConciergeBell },
   '/childminding': { label: 'Childminding', icon: ClipboardList },
+  '/digilit': { label: 'Digital Literacy', icon: Monitor },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };

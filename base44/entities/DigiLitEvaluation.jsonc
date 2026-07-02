@@ -1,0 +1,92 @@
+{
+  "name": "DigiLitEvaluation",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to DigiLitParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Reference to DigiLitSession (optional \u2014 can be general)"
+    },
+    "session_title": {
+      "type": "string",
+      "description": "Denormalized session title"
+    },
+    "evaluation_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "evaluator_name": {
+      "type": "string",
+      "description": "Facilitator/volunteer doing the evaluation"
+    },
+    "evaluator_email": {
+      "type": "string"
+    },
+    "attendance": {
+      "type": "string",
+      "enum": [
+        "present",
+        "partial",
+        "absent"
+      ],
+      "default": "present"
+    },
+    "engagement": {
+      "type": "string",
+      "enum": [
+        "high",
+        "moderate",
+        "low",
+        "not_engaged"
+      ],
+      "description": "Level of engagement during session"
+    },
+    "skill_demonstration": {
+      "type": "string",
+      "enum": [
+        "exceeded",
+        "met",
+        "partially_met",
+        "not_met"
+      ],
+      "description": "How well participant demonstrated the skills taught"
+    },
+    "topics_covered": {
+      "type": "string",
+      "description": "What topics/skills were covered"
+    },
+    "progress_observed": {
+      "type": "string",
+      "description": "What progress was observed"
+    },
+    "areas_for_improvement": {
+      "type": "string",
+      "description": "Areas where participant needs more help"
+    },
+    "recommended_next_steps": {
+      "type": "string",
+      "description": "Suggested next steps for the participant"
+    },
+    "overall_rating": {
+      "type": "number",
+      "description": "Overall rating (1-5)",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 3
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_id",
+    "evaluation_date"
+  ]
+}

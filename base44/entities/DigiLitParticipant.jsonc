@@ -1,0 +1,89 @@
+{
+  "name": "DigiLitParticipant",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Participant's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Participant's last name"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "pathways_client_id": {
+      "type": "string",
+      "description": "Reference to Pathways Client entity (if linked)"
+    },
+    "is_pathways_participant": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this participant is also a Pathways CM client"
+    },
+    "partner_organization": {
+      "type": "string",
+      "description": "Partner org (e.g. PALS)"
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "started",
+        "completed",
+        "withdrawn",
+        "waitlisted"
+      ],
+      "default": "registered",
+      "description": "Current status in the Digital Literacy program"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date participant started the program"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date participant completed the program"
+    },
+    "skill_level_start": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "not_assessed"
+      ],
+      "default": "not_assessed",
+      "description": "Initial digital skill assessment"
+    },
+    "skill_level_current": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "not_assessed"
+      ],
+      "default": "not_assessed",
+      "description": "Current digital skill level"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "registration_date"
+  ]
+}

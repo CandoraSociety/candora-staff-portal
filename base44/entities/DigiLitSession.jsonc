@@ -1,0 +1,83 @@
+{
+  "name": "DigiLitSession",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Session title/topic (e.g. 'Email Basics', 'Internet Safety')"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the session"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where the session is held"
+    },
+    "facilitator_name": {
+      "type": "string",
+      "description": "Volunteer facilitator leading the session"
+    },
+    "facilitator_email": {
+      "type": "string"
+    },
+    "topic_area": {
+      "type": "string",
+      "enum": [
+        "computer_basics",
+        "internet_email",
+        "smartphone_basics",
+        "online_safety",
+        "job_search_online",
+        "office_software",
+        "social_media",
+        "other"
+      ],
+      "default": "computer_basics",
+      "description": "Topic category"
+    },
+    "max_participants": {
+      "type": "number",
+      "default": 10
+    },
+    "registered_participant_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of registered DigiLitParticipants"
+    },
+    "attended_participant_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of participants who attended"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "session_date"
+  ]
+}
