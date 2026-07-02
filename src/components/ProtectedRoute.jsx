@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppChangeRequestButton from '@/components/appchanges/AppChangeRequestButton';
 import MicrosoftRibbon from '@/components/layout/MicrosoftRibbon';
+import GlobalTabBar from '@/components/layout/GlobalTabBar';
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -37,6 +38,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
 
   return (
     <>
+      <GlobalTabBar />
       <Outlet />
       <AppChangeRequestButton />
       <MicrosoftRibbon />

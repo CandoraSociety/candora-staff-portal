@@ -224,3 +224,26 @@
   -webkit-column-count: 4 !important;
   -moz-column-count: 4 !important;
 }
+
+/* ===== Global Tab Bar ===== */
+body.has-tabbar .sticky.top-0:not(.global-tabbar),
+body.has-tabbar .fixed.top-0:not(.global-tabbar) {
+  top: 36px !important;
+}
+body.has-tabbar aside.fixed.top-0.h-screen {
+  height: calc(100vh - 36px) !important;
+}
+.global-tabbar-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+.global-tabbar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.global-tabbar-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--sidebar-border));
+  border-radius: 2px;
+}
+.global-tabbar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--sidebar-border)) transparent;
+}

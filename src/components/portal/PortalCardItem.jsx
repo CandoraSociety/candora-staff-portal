@@ -3,15 +3,24 @@ import { ExternalLink, ArrowRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORY_MAP } from '@/lib/constants';
+import { useTabs } from '@/lib/tabContext';
 
 export default function PortalCardItem({ card }) {
   const cat = CATEGORY_MAP[card.category] || { label: card.category, color: '#6b7280' };
+  const { openTab } = useTabs();
+
+  const handleClick = (e) => {
+    if (card.is_external) return;
+    e.preventDefault();
+    openTab(card.url, { label: card.name });
+  };
 
   return (
     <a
       href={card.url || '#'}
       target={card.is_external ? '_blank' : '_self'}
       rel={card.is_external ? 'noopener noreferrer' : undefined}
+      onClick={handleClick}
       className="block group"
     >
       <Card className="h-full shadow-sm border-border/50 hover:shadow-md hover:border-primary/20 transition-all duration-300 overflow-hidden">

@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { TabProvider } from '@/lib/tabContext';
 
 // Public portal pages
 import VolunteerPortal from '@/pages/portal/VolunteerPortal';
@@ -514,8 +515,9 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
-
+          <TabProvider>
+            <AuthenticatedApp />
+          </TabProvider>
         </Router>
         <Toaster />
       </QueryClientProvider>
