@@ -217,6 +217,16 @@ import MarketingContent from '@/pages/marketing/MarketingContent';
 import MarketingDonationPages from '@/pages/marketing/MarketingDonationPages';
 import MarketingAnnualReport from '@/pages/marketing/MarketingAnnualReport';
 
+// Candora Archives
+import ArchivesLayout from '@/components/archives/ArchivesLayout';
+import ArchivesHome from '@/pages/archives/ArchivesHome';
+import ArchivesTimeline from '@/pages/archives/ArchivesTimeline';
+import ArchivesTimelineDetail from '@/pages/archives/ArchivesTimelineDetail';
+import ArchivesTimelineDocument from '@/pages/archives/ArchivesTimelineDocument';
+import ArchivesBios from '@/pages/archives/ArchivesBios';
+import ArchivesStories from '@/pages/archives/ArchivesStories';
+import ArchivesDocuments from '@/pages/archives/ArchivesDocuments';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -437,6 +447,17 @@ const AuthenticatedApp = () => {
           <Route path="/marketing/content" element={<MarketingContent />} />
           <Route path="/marketing/donation-pages" element={<MarketingDonationPages />} />
           <Route path="/marketing/annual-report" element={<MarketingAnnualReport />} />
+        </Route>
+
+        {/* Candora Archives - standalone layout */}
+        <Route element={<ArchivesLayout />}>
+          <Route path="/archives" element={<ArchivesHome />} />
+          <Route path="/archives/timeline" element={<ArchivesTimeline />} />
+          <Route path="/archives/timeline/chronicle" element={<ArchivesTimelineDocument />} />
+          <Route path="/archives/timeline/:id" element={<ArchivesTimelineDetail />} />
+          <Route path="/archives/bios" element={<ArchivesBios />} />
+          <Route path="/archives/stories" element={<ArchivesStories />} />
+          <Route path="/archives/documents" element={<ArchivesDocuments />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

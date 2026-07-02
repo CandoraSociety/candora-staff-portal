@@ -1,0 +1,95 @@
+{
+  "name": "ArchiveTimelineItem",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the timeline event"
+    },
+    "year": {
+      "type": "number",
+      "description": "Year the event occurred"
+    },
+    "month": {
+      "type": "number",
+      "description": "Month (1-12) for more precise ordering"
+    },
+    "day": {
+      "type": "number",
+      "description": "Day of month"
+    },
+    "era": {
+      "type": "string",
+      "enum": [
+        "founding",
+        "growth",
+        "expansion",
+        "milestone",
+        "modern"
+      ],
+      "default": "milestone",
+      "description": "Era category for grouping"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "founding",
+        "program_launch",
+        "partnership",
+        "award",
+        "leadership_change",
+        "building_expansion",
+        "crisis_response",
+        "community_impact",
+        "other"
+      ],
+      "default": "other",
+      "description": "Type of timeline event"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short summary shown on timeline click"
+    },
+    "detailed_content": {
+      "type": "string",
+      "description": "Rich text HTML with full details for the detail page"
+    },
+    "media": {
+      "type": "array",
+      "description": "Photos, videos, clippings attached to this event",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "video",
+              "document",
+              "clipping"
+            ]
+          }
+        }
+      }
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Highlight on the archives home page"
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Manual sort override (defaults to chronological by year/month)"
+    }
+  },
+  "required": [
+    "title",
+    "year"
+  ]
+}

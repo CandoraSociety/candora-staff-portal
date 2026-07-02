@@ -1,0 +1,65 @@
+{
+  "name": "ArchiveBio",
+  "type": "object",
+  "properties": {
+    "person_name": {
+      "type": "string",
+      "description": "Full name of the person"
+    },
+    "role_title": {
+      "type": "string",
+      "enum": [
+        "executive_director",
+        "board_chair",
+        "board_member",
+        "founder",
+        "key_staff",
+        "community_champion",
+        "other"
+      ],
+      "description": "Significant role category"
+    },
+    "role_label": {
+      "type": "string",
+      "description": "Custom role label (used when role_title is 'other' or to display a more specific title)"
+    },
+    "term_start": {
+      "type": "string",
+      "format": "date",
+      "description": "When their term/role began"
+    },
+    "term_end": {
+      "type": "string",
+      "format": "date",
+      "description": "When their term/role ended (blank if current)"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false,
+      "description": "Currently in this role"
+    },
+    "bio_content": {
+      "type": "string",
+      "description": "Rich text HTML biography"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "Portrait photo URL"
+    },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key achievements or notable contributions"
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Sort order within role group"
+    }
+  },
+  "required": [
+    "person_name",
+    "role_title"
+  ]
+}

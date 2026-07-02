@@ -1,0 +1,62 @@
+{
+  "name": "ArchiveStory",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Story title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Rich text HTML story content"
+    },
+    "story_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the story takes place (historical date)"
+    },
+    "era": {
+      "type": "string",
+      "description": "Era label for grouping (e.g. 'The Early Years')"
+    },
+    "media": {
+      "type": "array",
+      "description": "Photos, videos, clippings attached to this story",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "caption": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "video",
+              "document",
+              "clipping"
+            ]
+          }
+        }
+      }
+    },
+    "author": {
+      "type": "string",
+      "description": "Who wrote or curated this story"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Highlight on the archives home page"
+    },
+    "order_index": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
