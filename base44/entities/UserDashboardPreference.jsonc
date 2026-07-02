@@ -38,13 +38,6 @@
       },
       "description": "List of widget IDs enabled on the Executive Assistant portal dashboard"
     },
-    "enabled_microsoft_apps": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Which Microsoft apps appear in the sidebar ribbon (outlook, teams, onenote, word, excel, powerpoint). Empty = show all."
-    },
     "custom_welcome_message": {
       "type": "string",
       "description": "Optional custom welcome message for this user"
