@@ -1,0 +1,109 @@
+{
+  "name": "RCClient",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Client's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Client's last name"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "address": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "string"
+    },
+    "postal_code": {
+      "type": "string"
+    },
+    "preferred_language": {
+      "type": "string",
+      "description": "Preferred language"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
+    },
+    "funder_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "phac_caregiver_capacity",
+          "pathways",
+          "frn",
+          "other"
+        ]
+      },
+      "description": "Funding sources/categories. phac_caregiver_capacity = caregiver support for families/parents with children 0-6 (PHAC-funded, isolatable for reporting)"
+    },
+    "has_children_0_6": {
+      "type": "boolean",
+      "description": "Has children aged 0-6 (PHAC caregiver capacity field)"
+    },
+    "children_count_0_6": {
+      "type": "number",
+      "description": "Number of children aged 0-6"
+    },
+    "children_ages_detail": {
+      "type": "string",
+      "description": "Details about children's ages (PHAC field)"
+    },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Assigned resource worker"
+    },
+    "case_status": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "active",
+        "monitoring",
+        "closed",
+        "waitlisted"
+      ],
+      "default": "intake",
+      "description": "Current case management status"
+    },
+    "intake_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of intake"
+    },
+    "presenting_needs": {
+      "type": "string",
+      "description": "Client's presenting needs at intake"
+    },
+    "referral_source": {
+      "type": "string",
+      "description": "How they came to the resource centre"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General case notes"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

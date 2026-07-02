@@ -246,6 +246,15 @@ import PHACPrograms from '@/pages/phac/PHACPrograms';
 import PHACSessions from '@/pages/phac/PHACSessions';
 import PHACParticipants from '@/pages/phac/PHACParticipants';
 
+// Resource Centre Portal
+import RCLayout from '@/components/rc/RCLayout';
+import RCDashboard from '@/pages/rc/RCDashboard';
+import RCClients from '@/pages/rc/RCClients';
+import RCClientDetail from '@/pages/rc/RCClientDetail';
+import RCIntake from '@/pages/rc/RCIntake';
+import RCAppointments from '@/pages/rc/RCAppointments';
+import RCReferrals from '@/pages/rc/RCReferrals';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -497,6 +506,16 @@ const AuthenticatedApp = () => {
           <Route path="/phac/programs" element={<PHACPrograms />} />
           <Route path="/phac/sessions" element={<PHACSessions />} />
           <Route path="/phac/participants" element={<PHACParticipants />} />
+        </Route>
+
+        {/* Resource Centre Portal - standalone layout */}
+        <Route element={<RCLayout />}>
+          <Route path="/rc" element={<RCDashboard />} />
+          <Route path="/rc/clients" element={<RCClients />} />
+          <Route path="/rc/clients/:id" element={<RCClientDetail />} />
+          <Route path="/rc/intake" element={<RCIntake />} />
+          <Route path="/rc/appointments" element={<RCAppointments />} />
+          <Route path="/rc/referrals" element={<RCReferrals />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

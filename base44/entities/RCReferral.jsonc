@@ -1,0 +1,78 @@
+{
+  "name": "RCReferral",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to RCClient"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client name"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "incoming",
+        "outgoing"
+      ],
+      "description": "Incoming = received from another org; Outgoing = sent to another org"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external_partner"
+      ],
+      "description": "Internal = within Candora; External = outside organization"
+    },
+    "organization": {
+      "type": "string",
+      "description": "Partner organization name"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Contact person at the organization"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "service_program": {
+      "type": "string",
+      "description": "Program or service referred to/from"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for referral"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "referral_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "response_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "direction",
+    "referral_date"
+  ]
+}

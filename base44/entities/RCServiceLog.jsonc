@@ -1,0 +1,77 @@
+{
+  "name": "RCServiceLog",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to RCClient"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client name"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the service was provided"
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "information_referral",
+        "advocacy",
+        "navigation",
+        "practical_support",
+        "caregiver_support",
+        "crisis_intervention",
+        "follow_up",
+        "other"
+      ],
+      "description": "Type of service provided"
+    },
+    "funder_category": {
+      "type": "string",
+      "enum": [
+        "phac_caregiver_capacity",
+        "pathways",
+        "frn",
+        "other"
+      ],
+      "description": "Which funder this service is attributed to (for PHAC reporting isolation)"
+    },
+    "worker_name": {
+      "type": "string",
+      "description": "Resource worker who provided the service"
+    },
+    "description": {
+      "type": "string",
+      "description": "What was done"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Duration in minutes"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Outcome or result"
+    },
+    "follow_up_needed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether follow-up is needed"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Scheduled follow-up date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "service_date"
+  ]
+}

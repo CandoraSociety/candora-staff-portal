@@ -1,0 +1,74 @@
+{
+  "name": "RCAppointment",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to RCClient"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client name"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "Client email (denormalized for reminder emails)"
+    },
+    "worker_name": {
+      "type": "string",
+      "description": "Resource worker"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time of appointment"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 60
+    },
+    "location_type": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "phone",
+        "video"
+      ],
+      "default": "in_person"
+    },
+    "location_detail": {
+      "type": "string",
+      "description": "Room, address, or meeting link"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "Purpose of the appointment"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled",
+        "no_show"
+      ],
+      "default": "scheduled"
+    },
+    "reminder_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether reminder email was sent"
+    },
+    "reminder_sent_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "appointment_date"
+  ]
+}
