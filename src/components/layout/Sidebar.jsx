@@ -20,6 +20,7 @@ const NAV_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
+  { path: '/admin', label: 'Admin Dashboard', icon: Shield, adminOnly: true },
   { path: '/admin/cards', label: 'Manage Cards', icon: AppWindow, adminOnly: true },
   { path: '/admin/widgets', label: 'Manage Widgets', icon: LayoutDashboard, adminOnly: true },
   { path: '/admin/users', label: 'Users & Access', icon: Users, adminOnly: true },

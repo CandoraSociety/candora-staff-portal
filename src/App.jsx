@@ -68,6 +68,7 @@ import VolunteerMgrSchedule from '@/pages/volunteermgr/VolunteerMgrSchedule';
 import VolunteerMgrStaffRequests from '@/pages/volunteermgr/VolunteerMgrStaffRequests';
 
 // Admin pages
+import AdminDashboard from '@/pages/admin/AdminDashboard';
 import ManageCards from '@/pages/admin/ManageCards';
 import ManageWidgets from '@/pages/admin/ManageWidgets';
 import UsersAccess from '@/pages/admin/UsersAccess';
@@ -364,6 +365,7 @@ const AuthenticatedApp = () => {
           <Route path="/portal" element={<Portal />} />
           <Route path="/meeting-manager" element={<MeetingManager />} />
           <Route path="/widget-customization" element={<WidgetCustomization />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/cards" element={<ManageCards />} />
           <Route path="/admin/widgets" element={<ManageWidgets />} />
           <Route path="/admin/users" element={<UsersAccess />} />
