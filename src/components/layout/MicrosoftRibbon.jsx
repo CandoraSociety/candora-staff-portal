@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { Mail, MessageSquare, FileText, Table, Presentation } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Mail, MessageSquare, FileText, Table, Presentation, Notebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import OutlookTeamsFloatingWidget from '@/components/outlook/OutlookTeamsFloatingWidget';
 import TeamsFloatingWidget from '@/components/teams/TeamsFloatingWidget';
+import OneNoteFloatingWidget from '@/components/onenote/OneNoteFloatingWidget';
 import OfficeEditorPanel from '@/components/layout/OfficeEditorPanel';
 
-const APPS = [
+const ALL_APPS = [
   { id: 'outlook', label: 'Outlook', icon: Mail },
   { id: 'teams', label: 'Teams', icon: MessageSquare },
+  { id: 'onenote', label: 'OneNote', icon: Notebook },
   { id: 'word', label: 'New Word', icon: FileText },
   { id: 'excel', label: 'New Excel', icon: Table },
   { id: 'powerpoint', label: 'New PowerPoint', icon: Presentation },
@@ -15,6 +19,25 @@ const APPS = [
 
 export default function MicrosoftRibbon() {
   const [activePanel, setActivePanel] = useState(null);
+
+  const { data: preferences } = useQuery({
+    queryKey: ['microsoftRibbonPrefs'],
+    queryFn: async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return null;
+        const data = await base44.entities.UserDashboardPreference.filter({ user_id: user.id });
+        return data[0] || null;
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  const enabledApps = preferences?.enabled_microsoft_apps;
+  const apps = (!enabledApps || enabledApps.length === 0)
+    ? ALL_APPS
+    : ALL_APPS.filter(app => enabledApps.includes(app.id));
 
   const togglePanel = (id) => {
     setActivePanel(prev => prev === id ? null : id);
@@ -35,7 +58,7 @@ export default function MicrosoftRibbon() {
         </div>
         <div className="h-px bg-border mx-2 mb-1" />
 
-        {APPS.map(app => {
+        {apps.map(app => {
           const Icon = app.icon;
           const isActive = activePanel === app.id;
           return (
@@ -59,6 +82,7 @@ export default function MicrosoftRibbon() {
       {/* Slide-out panels */}
       <OutlookTeamsFloatingWidget open={activePanel === 'outlook'} onClose={() => setActivePanel(null)} />
       <TeamsFloatingWidget open={activePanel === 'teams'} onClose={() => setActivePanel(null)} />
+      <OneNoteFloatingWidget open={activePanel === 'onenote'} onClose={() => setActivePanel(null)} />
       <OfficeEditorPanel open={['word', 'excel', 'powerpoint'].includes(activePanel)} onClose={() => setActivePanel(null)} docType={activePanel} />
     </>
   );
