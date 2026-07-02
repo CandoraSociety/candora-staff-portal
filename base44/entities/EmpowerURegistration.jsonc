@@ -1,0 +1,70 @@
+{
+  "name": "EmpowerURegistration",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUCohort"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of registration"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "waitlisted",
+        "enrolled",
+        "withdrawn",
+        "completed",
+        "declined"
+      ],
+      "default": "registered",
+      "description": "Registration status in the cohort"
+    },
+    "waitlist_position": {
+      "type": "number",
+      "description": "Position on the waitlist (if waitlisted)"
+    },
+    "preferred_delivery_mode": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "virtual",
+        "no_preference"
+      ],
+      "default": "no_preference",
+      "description": "Participant's preferred delivery mode"
+    },
+    "accommodation_needs": {
+      "type": "string",
+      "description": "Any accommodation needs (childcare, accessibility, etc.)"
+    },
+    "intake_notes": {
+      "type": "string",
+      "description": "Notes from intake/registration"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_id",
+    "cohort_id",
+    "registration_date"
+  ]
+}

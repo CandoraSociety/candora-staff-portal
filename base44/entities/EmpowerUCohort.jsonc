@@ -1,0 +1,77 @@
+{
+  "name": "EmpowerUCohort",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Cohort name (e.g. 'EmpowerU Fall 2026')"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program end date (10 weeks after start)"
+    },
+    "delivery_mode": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "virtual",
+        "hybrid"
+      ],
+      "default": "virtual",
+      "description": "How the program is delivered"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location or meeting link"
+    },
+    "facilitator_name": {
+      "type": "string",
+      "description": "Contractor facilitating the program"
+    },
+    "facilitator_email": {
+      "type": "string"
+    },
+    "facilitator_phone": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 15,
+      "description": "Maximum number of participants"
+    },
+    "registration_open": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether registration is currently open"
+    },
+    "registration_deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Registration cutoff date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "registration_open",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning",
+      "description": "Cohort lifecycle status"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

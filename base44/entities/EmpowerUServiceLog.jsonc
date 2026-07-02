@@ -1,0 +1,66 @@
+{
+  "name": "EmpowerUServiceLog",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUCohort (optional)"
+    },
+    "cohort_name": {
+      "type": "string"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the service was provided"
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "information_referral",
+        "advocacy",
+        "navigation",
+        "practical_support",
+        "crisis_support",
+        "follow_up",
+        "other"
+      ],
+      "description": "Type of service provided"
+    },
+    "worker_name": {
+      "type": "string",
+      "description": "Staff member who provided the service"
+    },
+    "description": {
+      "type": "string",
+      "description": "What was done"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "Outcome or result"
+    },
+    "follow_up_needed": {
+      "type": "boolean",
+      "default": false
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_id",
+    "service_date"
+  ]
+}

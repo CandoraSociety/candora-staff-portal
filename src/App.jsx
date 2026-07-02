@@ -255,6 +255,17 @@ import RCIntake from '@/pages/rc/RCIntake';
 import RCAppointments from '@/pages/rc/RCAppointments';
 import RCReferrals from '@/pages/rc/RCReferrals';
 
+// EmpowerU Portal
+import EmpowerULayout from '@/components/empoweru/EmpowerULayout';
+import EmpowerUDashboard from '@/pages/empoweru/EmpowerUDashboard';
+import EmpowerUCohorts from '@/pages/empoweru/EmpowerUCohorts';
+import EmpowerUCohortDetail from '@/pages/empoweru/EmpowerUCohortDetail';
+import EmpowerUParticipants from '@/pages/empoweru/EmpowerUParticipants';
+import EmpowerUParticipantDetail from '@/pages/empoweru/EmpowerUParticipantDetail';
+import EmpowerUIntake from '@/pages/empoweru/EmpowerUIntake';
+import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
+import EmpowerUServiceNav from '@/pages/empoweru/EmpowerUServiceNav';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -516,6 +527,18 @@ const AuthenticatedApp = () => {
           <Route path="/rc/intake" element={<RCIntake />} />
           <Route path="/rc/appointments" element={<RCAppointments />} />
           <Route path="/rc/referrals" element={<RCReferrals />} />
+        </Route>
+
+        {/* EmpowerU Portal - standalone layout */}
+        <Route element={<EmpowerULayout />}>
+          <Route path="/empoweru" element={<EmpowerUDashboard />} />
+          <Route path="/empoweru/cohorts" element={<EmpowerUCohorts />} />
+          <Route path="/empoweru/cohorts/:id" element={<EmpowerUCohortDetail />} />
+          <Route path="/empoweru/participants" element={<EmpowerUParticipants />} />
+          <Route path="/empoweru/participants/:id" element={<EmpowerUParticipantDetail />} />
+          <Route path="/empoweru/intake" element={<EmpowerUIntake />} />
+          <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
+          <Route path="/empoweru/service-nav" element={<EmpowerUServiceNav />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

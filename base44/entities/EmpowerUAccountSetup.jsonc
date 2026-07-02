@@ -1,0 +1,108 @@
+{
+  "name": "EmpowerUAccountSetup",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "participant_email": {
+      "type": "string",
+      "description": "Denormalized for quick reference"
+    },
+    "participant_phone": {
+      "type": "string",
+      "description": "Denormalized for quick reference"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUCohort"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "contacting",
+        "appointment_scheduled",
+        "forms_sent",
+        "forms_completed",
+        "account_opened",
+        "completed",
+        "participant_unresponsive",
+        "declined"
+      ],
+      "default": "not_started",
+      "description": "Stage in the ATB savings account setup workflow"
+    },
+    "atb_branch_location": {
+      "type": "string",
+      "description": "ATB branch location for appointment"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled appointment with ATB"
+    },
+    "forms_sent_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When forms were sent to participant"
+    },
+    "forms_completed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When forms were returned completed"
+    },
+    "account_opened_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the savings account was opened"
+    },
+    "savings_amount": {
+      "type": "number",
+      "default": 300,
+      "description": "Amount deposited by ATB (approx $300)"
+    },
+    "atb_contact_name": {
+      "type": "string",
+      "description": "ATB contact person"
+    },
+    "atb_contact_phone": {
+      "type": "string"
+    },
+    "atb_contact_email": {
+      "type": "string"
+    },
+    "follow_up_attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times staff has tried to contact participant about account setup"
+    },
+    "last_contact_attempt_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When staff last tried to reach the participant"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When to follow up next"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes about the account setup process"
+    }
+  },
+  "required": [
+    "participant_id",
+    "cohort_id"
+  ]
+}
