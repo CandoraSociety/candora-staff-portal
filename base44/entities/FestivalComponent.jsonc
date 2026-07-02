@@ -1,0 +1,69 @@
+{
+  "name": "FestivalComponent",
+  "type": "object",
+  "properties": {
+    "festival_id": {
+      "type": "string",
+      "description": "Reference to WinterFestival"
+    },
+    "festival_year": {
+      "type": "number",
+      "description": "Denormalized festival year"
+    },
+    "name": {
+      "type": "string",
+      "description": "Component name (e.g. Kids Gift Shop, Santa's Village)"
+    },
+    "component_type": {
+      "type": "string",
+      "enum": [
+        "kids_gift_shop",
+        "santas_village",
+        "community_lunch",
+        "fundraiser",
+        "other"
+      ],
+      "default": "other",
+      "description": "Type of festival component"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this component involves"
+    },
+    "lead_name": {
+      "type": "string",
+      "description": "Primary lead for this component"
+    },
+    "lead_email": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where this component takes place"
+    },
+    "schedule_description": {
+      "type": "string",
+      "description": "Human-readable schedule (e.g. 'Thursday 11am-2pm')"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "ready",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning",
+      "description": "Component readiness status"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "festival_id",
+    "name",
+    "component_type"
+  ]
+}

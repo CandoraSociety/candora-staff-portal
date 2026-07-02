@@ -175,6 +175,28 @@ export default function EventsMgrDashboard() {
         </Card>
       </div>
 
+      {/* Winter Wonderland Portal Link */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-900">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold">Winter Wonderland Festival</h3>
+                <p className="text-sm text-muted-foreground">Manage the annual festival — Kids Gift Shop, Santa's Village, Community Lunch & Fundraiser</p>
+              </div>
+            </div>
+            <Link to="/winter-wonderland">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 transition-colors">
+                Open Festival Portal
+              </button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>

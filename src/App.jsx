@@ -285,6 +285,13 @@ import DigiLitEvaluations from '@/pages/digilit/DigiLitEvaluations';
 
 // Community Programs Portal
 import CommunityLayout from '@/components/community/CommunityLayout';
+
+// Winter Wonderland Festival Portal
+import WinterWonderlandLayout from '@/components/winterwonderland/WinterWonderlandLayout';
+import WinterWonderlandDashboard from '@/pages/winterwonderland/WinterWonderlandDashboard';
+import WinterWonderlandComponents from '@/pages/winterwonderland/WinterWonderlandComponents';
+import WinterWonderlandSchedule from '@/pages/winterwonderland/WinterWonderlandSchedule';
+import WinterWonderlandFundraiser from '@/pages/winterwonderland/WinterWonderlandFundraiser';
 import CommunityDashboard from '@/pages/community/CommunityDashboard';
 import CommunityPrograms from '@/pages/community/CommunityPrograms';
 import CommunityParticipants from '@/pages/community/CommunityParticipants';
@@ -599,6 +606,14 @@ const AuthenticatedApp = () => {
           <Route path="/community/participants" element={<CommunityParticipants />} />
           <Route path="/community/sessions" element={<CommunitySessions />} />
           <Route path="/community/evaluations" element={<CommunityEvaluations />} />
+        </Route>
+
+        {/* Winter Wonderland Festival Portal - standalone layout */}
+        <Route element={<WinterWonderlandLayout />}>
+          <Route path="/winter-wonderland" element={<WinterWonderlandDashboard />} />
+          <Route path="/winter-wonderland/components" element={<WinterWonderlandComponents />} />
+          <Route path="/winter-wonderland/schedule" element={<WinterWonderlandSchedule />} />
+          <Route path="/winter-wonderland/fundraiser" element={<WinterWonderlandFundraiser />} />
         </Route>
 
         {/* Reception Portal - standalone layout */}

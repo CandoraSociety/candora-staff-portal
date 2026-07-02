@@ -1,0 +1,49 @@
+{
+  "name": "WinterFestival",
+  "type": "object",
+  "properties": {
+    "year": {
+      "type": "number",
+      "description": "Festival year (e.g. 2026)"
+    },
+    "theme": {
+      "type": "string",
+      "description": "Festival theme/display name"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Festival start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Festival end date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning",
+      "description": "Current festival status"
+    },
+    "description": {
+      "type": "string",
+      "description": "General description of the festival"
+    },
+    "fundraiser_name": {
+      "type": "string",
+      "description": "Name of the annual fundraiser (currently being rebranded)"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "year"
+  ]
+}

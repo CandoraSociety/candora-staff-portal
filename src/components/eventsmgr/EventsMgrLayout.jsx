@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
 import ModuleGate from "@/components/shared/ModuleGate";
-import { Calendar, FolderKanban, Target, BookOpen, Users, FileText, Settings, Menu, X } from "lucide-react";
+import { Calendar, FolderKanban, Target, BookOpen, Users, FileText, Settings, Menu, X, Snowflake } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Contacts", href: "/eventsmgr/contacts", icon: Users },
   { name: "Resources", href: "/eventsmgr/resources", icon: BookOpen },
   { name: "Documents", href: "/eventsmgr/documents", icon: FileText },
+  { name: "Winter Wonderland", href: "/winter-wonderland", icon: Snowflake, external: true },
 ];
 
 export default function EventsMgrLayout() {
