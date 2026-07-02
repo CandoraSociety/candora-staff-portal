@@ -62,6 +62,13 @@
         "mixed"
       ],
       "default": "grid"
+    },
+    "enabled_microsoft_apps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of Microsoft app IDs (outlook, teams, word, excel, powerpoint) the user wants in the sidebar ribbon. Empty/null = all apps shown."
     }
   },
   "required": [

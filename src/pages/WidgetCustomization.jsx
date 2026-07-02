@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock, Languages } from 'lucide-react';
+import { MICROSOFT_APPS, DEFAULT_MS_APP_IDS } from '@/lib/microsoftApps';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
@@ -34,6 +35,11 @@ export default function WidgetCustomization() {
   });
 
   const [visiblePortals, setVisiblePortals] = useState(preferences?.visible_portal_ids || []);
+  const [enabledMsApps, setEnabledMsApps] = useState(
+    preferences?.enabled_microsoft_apps?.length > 0
+      ? preferences.enabled_microsoft_apps
+      : DEFAULT_MS_APP_IDS
+  );
   const [enabledWidgets, setEnabledWidgets] = useState(() => {
     const saved = preferences?.enabled_widgets;
     if (saved && saved.length > 0) return saved;
@@ -92,6 +98,14 @@ export default function WidgetCustomization() {
     setVisiblePortals(prev => {
       const next = prev.includes(portalId) ? prev.filter(id => id !== portalId) : [...prev, portalId];
       savePref({ visible_portal_ids: next });
+      return next;
+    });
+  };
+
+  const toggleMsApp = (appId) => {
+    setEnabledMsApps(prev => {
+      const next = prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId];
+      savePref({ enabled_microsoft_apps: next });
       return next;
     });
   };
@@ -198,6 +212,46 @@ export default function WidgetCustomization() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Microsoft Sidebar Apps */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Microsoft Sidebar Apps</CardTitle>
+            <CardDescription>Choose which Microsoft apps appear in your sidebar ribbon</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {MICROSOFT_APPS.map(app => {
+                const Icon = app.icon;
+                const enabled = enabledMsApps.includes(app.id);
+                return (
+                  <div
+                    key={app.id}
+                    onClick={() => toggleMsApp(app.id)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all select-none cursor-pointer ${
+                      enabled
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/40 opacity-60 hover:opacity-80'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: app.color + '22' }}>
+                      <Icon className="w-5 h-5" style={{ color: app.color }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{app.label}</p>
+                    </div>
+                    <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${enabled ? 'bg-primary border-primary' : 'border-muted-foreground/40'}`}>
+                      {enabled && <div className="w-full h-full rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      </div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">{enabledMsApps.length} of {MICROSOFT_APPS.length} apps enabled</p>
           </CardContent>
         </Card>
 

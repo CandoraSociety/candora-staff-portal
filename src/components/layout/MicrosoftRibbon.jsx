@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
-import { Mail, MessageSquare, FileText, Table, Presentation } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { cn } from '@/lib/utils';
+import { MICROSOFT_APPS, DEFAULT_MS_APP_IDS } from '@/lib/microsoftApps';
 import OutlookTeamsFloatingWidget from '@/components/outlook/OutlookTeamsFloatingWidget';
 import TeamsFloatingWidget from '@/components/teams/TeamsFloatingWidget';
 import OfficeEditorPanel from '@/components/layout/OfficeEditorPanel';
 
-const APPS = [
-  { id: 'outlook', label: 'Outlook', icon: Mail },
-  { id: 'teams', label: 'Teams', icon: MessageSquare },
-  { id: 'word', label: 'New Word', icon: FileText },
-  { id: 'excel', label: 'New Excel', icon: Table },
-  { id: 'powerpoint', label: 'New PowerPoint', icon: Presentation },
-];
-
 export default function MicrosoftRibbon() {
   const [activePanel, setActivePanel] = useState(null);
+  const { user } = useAuth();
+
+  const { data: preferences } = useQuery({
+    queryKey: ['dashboardPreferences', user?.id],
+    queryFn: () => base44.entities.UserDashboardPreference.filter({ user_id: user?.id }).then(data => data[0]),
+    enabled: !!user?.id,
+  });
+
+  const enabledIds = preferences?.enabled_microsoft_apps?.length > 0
+    ? preferences.enabled_microsoft_apps
+    : DEFAULT_MS_APP_IDS;
+
+  const visibleApps = MICROSOFT_APPS.filter(app => enabledIds.includes(app.id));
 
   const togglePanel = (id) => {
     setActivePanel(prev => prev === id ? null : id);
   };
+
+  if (visibleApps.length === 0) return null;
 
   return (
     <>
@@ -35,7 +45,7 @@ export default function MicrosoftRibbon() {
         </div>
         <div className="h-px bg-border mx-2 mb-1" />
 
-        {APPS.map(app => {
+        {visibleApps.map(app => {
           const Icon = app.icon;
           const isActive = activePanel === app.id;
           return (
