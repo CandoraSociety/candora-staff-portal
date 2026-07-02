@@ -1,0 +1,103 @@
+{
+  "name": "FRNReferral",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to FRNParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant full name"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "connect_parent_group",
+        "nobodys_perfect",
+        "neurodivergent_coffee_group",
+        "wellness_compass",
+        "other"
+      ],
+      "description": "Targeted FRN program"
+    },
+    "referral_source": {
+      "type": "string",
+      "enum": [
+        "internal",
+        "external_partner"
+      ],
+      "default": "internal",
+      "description": "Where the referral came from"
+    },
+    "referring_organization": {
+      "type": "string",
+      "description": "Partner organization name (for external referrals)"
+    },
+    "referring_person_name": {
+      "type": "string",
+      "description": "Name of the person making the referral"
+    },
+    "referring_person_email": {
+      "type": "string",
+      "description": "Email of referring person"
+    },
+    "referring_person_phone": {
+      "type": "string",
+      "description": "Phone of referring person"
+    },
+    "referral_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the referral was received"
+    },
+    "referral_reason": {
+      "type": "string",
+      "description": "Reason for referral / participant's needs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "assessment_scheduled",
+        "assessed",
+        "accepted",
+        "declined",
+        "enrolled",
+        "completed",
+        "withdrawn"
+      ],
+      "default": "pending",
+      "description": "Current status in the intake workflow"
+    },
+    "enrollment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date participant was enrolled in the program"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date participant completed the program"
+    },
+    "withdrawal_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date participant withdrew"
+    },
+    "withdrawal_reason": {
+      "type": "string",
+      "description": "Reason for withdrawal"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes"
+    }
+  },
+  "required": [
+    "participant_id",
+    "program",
+    "referral_source",
+    "referral_date"
+  ]
+}

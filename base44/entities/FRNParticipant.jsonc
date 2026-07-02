@@ -1,0 +1,63 @@
+{
+  "name": "FRNParticipant",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Participant's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Participant's last name"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of birth"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "address": {
+      "type": "string",
+      "description": "Street address"
+    },
+    "city": {
+      "type": "string",
+      "description": "City"
+    },
+    "preferred_language": {
+      "type": "string",
+      "description": "Preferred language for communication"
+    },
+    "guardian_name": {
+      "type": "string",
+      "description": "Guardian name (if participant is a minor)"
+    },
+    "guardian_phone": {
+      "type": "string",
+      "description": "Guardian phone number"
+    },
+    "emergency_contact_name": {
+      "type": "string",
+      "description": "Emergency contact name"
+    },
+    "emergency_contact_phone": {
+      "type": "string",
+      "description": "Emergency contact phone"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes about the participant"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}

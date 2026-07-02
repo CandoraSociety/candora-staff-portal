@@ -232,6 +232,13 @@ import ArchivesBios from '@/pages/archives/ArchivesBios';
 import ArchivesStories from '@/pages/archives/ArchivesStories';
 import ArchivesDocuments from '@/pages/archives/ArchivesDocuments';
 
+// FRN Programs Portal
+import FRNLayout from '@/components/frn/FRNLayout';
+import FRNDashboard from '@/pages/frn/FRNDashboard';
+import FRNParticipants from '@/pages/frn/FRNParticipants';
+import FRNIntake from '@/pages/frn/FRNIntake';
+import FRNAssessments from '@/pages/frn/FRNAssessments';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -467,6 +474,14 @@ const AuthenticatedApp = () => {
           <Route path="/archives/bios" element={<ArchivesBios />} />
           <Route path="/archives/stories" element={<ArchivesStories />} />
           <Route path="/archives/documents" element={<ArchivesDocuments />} />
+        </Route>
+
+        {/* FRN Programs Portal - standalone layout */}
+        <Route element={<FRNLayout />}>
+          <Route path="/frn" element={<FRNDashboard />} />
+          <Route path="/frn/participants" element={<FRNParticipants />} />
+          <Route path="/frn/intake" element={<FRNIntake />} />
+          <Route path="/frn/assessments" element={<FRNAssessments />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

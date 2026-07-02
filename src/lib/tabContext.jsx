@@ -25,6 +25,7 @@ const PORTAL_REGISTRY = {
   '/outlook': { label: 'Outlook', icon: Mail },
   '/meeting-manager': { label: 'Meetings', icon: CalendarDays },
   '/ell': { label: 'ELL Program', icon: GraduationCap },
+  '/frn': { label: 'FRN Programs', icon: Users },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };

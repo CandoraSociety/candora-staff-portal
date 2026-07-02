@@ -1,0 +1,92 @@
+{
+  "name": "FRNAssessment",
+  "type": "object",
+  "properties": {
+    "referral_id": {
+      "type": "string",
+      "description": "Reference to FRNReferral"
+    },
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to FRNParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "connect_parent_group",
+        "nobodys_perfect",
+        "neurodivergent_coffee_group",
+        "wellness_compass",
+        "other"
+      ],
+      "description": "Program being assessed for"
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the assessment was conducted"
+    },
+    "assessor_name": {
+      "type": "string",
+      "description": "Name of the person conducting the assessment"
+    },
+    "relevance": {
+      "type": "string",
+      "enum": [
+        "high",
+        "moderate",
+        "low",
+        "not_suitable"
+      ],
+      "description": "How relevant the program is to the participant's needs"
+    },
+    "ability_to_participate": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "with_support",
+        "no"
+      ],
+      "description": "Participant's ability to participate"
+    },
+    "willingness_to_participate": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "uncertain",
+        "no"
+      ],
+      "description": "Participant's willingness to participate"
+    },
+    "supports_needed": {
+      "type": "string",
+      "description": "Supports the participant would need to participate"
+    },
+    "assessment_notes": {
+      "type": "string",
+      "description": "Detailed assessment observations"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "accept",
+        "accept_with_support",
+        "defer",
+        "decline"
+      ],
+      "description": "Assessment recommendation"
+    },
+    "recommendation_notes": {
+      "type": "string",
+      "description": "Notes supporting the recommendation"
+    }
+  },
+  "required": [
+    "referral_id",
+    "assessment_date"
+  ]
+}
