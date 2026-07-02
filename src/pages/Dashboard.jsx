@@ -150,8 +150,15 @@ export default function Dashboard() {
     return access.canAccessCard(card);
   });
 
+  // Apply user's portal visibility selections from "Add Functions" page.
+  // If the user has selected specific portals, only show those.
+  const visiblePortalIds = userPreferences?.visible_portal_ids;
+  const displayCards = (visiblePortalIds && visiblePortalIds.length > 0)
+    ? accessibleCards.filter(c => visiblePortalIds.includes(c.id))
+    : accessibleCards;
+
   const pinnedPortalId = userPreferences?.pinned_portal_id || null;
-  const pinnedCard = pinnedPortalId ? accessibleCards.find(c => c.id === pinnedPortalId) : null;
+  const pinnedCard = pinnedPortalId ? displayCards.find(c => c.id === pinnedPortalId) : null;
 
   const handlePin = async (cardId) => {
     const newPinnedId = pinnedPortalId === cardId ? null : cardId;
@@ -228,7 +235,7 @@ export default function Dashboard() {
       {/* Portal Quick Links — horizontal scrolling row */}
       <div className="overflow-x-auto pb-2 -mx-1 px-1">
         <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
-          {accessibleCards.filter(c => c.is_enabled).map(card => (
+          {displayCards.filter(c => c.is_enabled).map(card => (
             card.is_external ? (
               <a key={card.id} href={card.url} target="_blank" rel="noopener noreferrer" className="block flex-shrink-0">
                 <PortalCard card={card} pinned={pinnedPortalId === card.id} onPin={handlePin} />
