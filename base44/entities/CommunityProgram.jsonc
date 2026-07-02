@@ -1,0 +1,89 @@
+{
+  "name": "CommunityProgram",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Program name (e.g. Sewing Group, Seniors Circle)"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the program is about"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "recreation",
+        "social",
+        "wellness",
+        "arts",
+        "education",
+        "support",
+        "girls_program",
+        "other"
+      ],
+      "default": "social",
+      "description": "Program category"
+    },
+    "funder_category": {
+      "type": "string",
+      "enum": [
+        "none",
+        "phac",
+        "frn",
+        "pathways",
+        "other"
+      ],
+      "default": "none",
+      "description": "Funder for reporting isolation (none = internal only)"
+    },
+    "funder_name": {
+      "type": "string",
+      "description": "Specific funder name if applicable"
+    },
+    "lead_facilitator_name": {
+      "type": "string",
+      "description": "Primary volunteer/staff lead"
+    },
+    "lead_facilitator_email": {
+      "type": "string"
+    },
+    "is_volunteer_run": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the program is volunteer-led"
+    },
+    "schedule_description": {
+      "type": "string",
+      "description": "Human-readable schedule (e.g. 'Every Tuesday 1-3pm')"
+    },
+    "location": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "completed",
+        "discontinued"
+      ],
+      "default": "active"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category"
+  ]
+}

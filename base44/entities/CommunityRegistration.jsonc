@@ -1,0 +1,46 @@
+{
+  "name": "CommunityRegistration",
+  "type": "object",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to CommunityParticipant"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Reference to CommunityProgram"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Denormalized program name"
+    },
+    "registration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "active",
+        "completed",
+        "withdrawn",
+        "waitlisted"
+      ],
+      "default": "registered",
+      "description": "Registration status in this program"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_id",
+    "program_id",
+    "registration_date"
+  ]
+}

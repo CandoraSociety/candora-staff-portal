@@ -32,6 +32,7 @@ const PORTAL_REGISTRY = {
   '/reception': { label: 'Reception', icon: ConciergeBell },
   '/childminding': { label: 'Childminding', icon: ClipboardList },
   '/digilit': { label: 'Digital Literacy', icon: Monitor },
+  '/community': { label: 'Community Programs', icon: Heart },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };

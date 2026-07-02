@@ -1,0 +1,71 @@
+{
+  "name": "CommunitySession",
+  "type": "object",
+  "properties": {
+    "program_id": {
+      "type": "string",
+      "description": "Reference to CommunityProgram"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Denormalized program name"
+    },
+    "title": {
+      "type": "string",
+      "description": "Session title/topic"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the session"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM)"
+    },
+    "location": {
+      "type": "string"
+    },
+    "facilitator_name": {
+      "type": "string",
+      "description": "Volunteer/staff facilitating"
+    },
+    "facilitator_email": {
+      "type": "string"
+    },
+    "registered_participant_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of registered CommunityParticipants"
+    },
+    "attended_participant_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of participants who attended"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "program_id",
+    "session_date"
+  ]
+}

@@ -283,6 +283,14 @@ import DigiLitParticipants from '@/pages/digilit/DigiLitParticipants';
 import DigiLitSessions from '@/pages/digilit/DigiLitSessions';
 import DigiLitEvaluations from '@/pages/digilit/DigiLitEvaluations';
 
+// Community Programs Portal
+import CommunityLayout from '@/components/community/CommunityLayout';
+import CommunityDashboard from '@/pages/community/CommunityDashboard';
+import CommunityPrograms from '@/pages/community/CommunityPrograms';
+import CommunityParticipants from '@/pages/community/CommunityParticipants';
+import CommunitySessions from '@/pages/community/CommunitySessions';
+import CommunityEvaluations from '@/pages/community/CommunityEvaluations';
+
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
@@ -582,6 +590,15 @@ const AuthenticatedApp = () => {
           <Route path="/childminding/records" element={<ChildmindingRecords />} />
           <Route path="/childminding/schedule" element={<ChildmindingSchedule />} />
           <Route path="/childminding/intake" element={<ChildmindingIntake />} />
+        </Route>
+
+        {/* Community Programs Portal - standalone layout */}
+        <Route element={<CommunityLayout />}>
+          <Route path="/community" element={<CommunityDashboard />} />
+          <Route path="/community/programs" element={<CommunityPrograms />} />
+          <Route path="/community/participants" element={<CommunityParticipants />} />
+          <Route path="/community/sessions" element={<CommunitySessions />} />
+          <Route path="/community/evaluations" element={<CommunityEvaluations />} />
         </Route>
 
         {/* Reception Portal - standalone layout */}
