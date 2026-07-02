@@ -1,0 +1,72 @@
+{
+  "name": "ChildmindingRecord",
+  "type": "object",
+  "properties": {
+    "child_first_name": {
+      "type": "string",
+      "description": "Child's first name"
+    },
+    "parent_first_name": {
+      "type": "string",
+      "description": "Parent/guardian's first name"
+    },
+    "parent_last_name": {
+      "type": "string",
+      "description": "Parent/guardian's last name"
+    },
+    "parent_name": {
+      "type": "string",
+      "description": "Denormalized parent/guardian full name"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of childminding session"
+    },
+    "hours": {
+      "type": "number",
+      "description": "Number of hours of childminding",
+      "default": 0
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "pathways",
+        "ell",
+        "other"
+      ],
+      "description": "Program the parent/guardian is attending while child is in childminding"
+    },
+    "program_other": {
+      "type": "string",
+      "description": "Specify program if 'other'"
+    },
+    "billing_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "Calculated billing: hours \u00d7 $20 for Pathways, $0 for others"
+    },
+    "billing_status": {
+      "type": "string",
+      "enum": [
+        "unbilled",
+        "billed",
+        "paid",
+        "n/a"
+      ],
+      "default": "unbilled",
+      "description": "Billing status (only Pathways is billed)"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "child_first_name",
+    "parent_first_name",
+    "parent_last_name",
+    "date",
+    "hours",
+    "program"
+  ]
+}

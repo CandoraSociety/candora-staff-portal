@@ -266,6 +266,16 @@ import EmpowerUIntake from '@/pages/empoweru/EmpowerUIntake';
 import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
 import EmpowerUServiceNav from '@/pages/empoweru/EmpowerUServiceNav';
 
+// Childminding Portal
+import ChildmindingLayout from '@/components/childminding/ChildmindingLayout';
+import ChildmindingDashboard from '@/pages/childminding/ChildmindingDashboard';
+import ChildmindingRecords from '@/pages/childminding/ChildmindingRecords';
+import ChildmindingSchedule from '@/pages/childminding/ChildmindingSchedule';
+import ChildmindingIntake from '@/pages/childminding/ChildmindingIntake';
+
+// Pathways Childminding
+import PathwaysChildminding from '@/pages/pathways/PathwaysChildminding';
+
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
@@ -551,6 +561,14 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/service-nav" element={<EmpowerUServiceNav />} />
         </Route>
 
+        {/* Childminding Portal - standalone layout */}
+        <Route element={<ChildmindingLayout />}>
+          <Route path="/childminding" element={<ChildmindingDashboard />} />
+          <Route path="/childminding/records" element={<ChildmindingRecords />} />
+          <Route path="/childminding/schedule" element={<ChildmindingSchedule />} />
+          <Route path="/childminding/intake" element={<ChildmindingIntake />} />
+        </Route>
+
         {/* Reception Portal - standalone layout */}
         <Route element={<ReceptionLayout />}>
           <Route path="/reception" element={<ReceptionDashboard />} />
@@ -593,6 +611,7 @@ const AuthenticatedApp = () => {
           <Route path="/pathways/resources" element={<PathwaysResources />} />
           <Route path="/pathways/compass" element={<PathwaysCompass />} />
           <Route path="/pathways/billing" element={<PathwaysBilling />} />
+          <Route path="/pathways/childminding" element={<PathwaysChildminding />} />
           <Route path="/pathways/employers" element={<PathwaysEmployers />} />
           <Route path="/pathways/training" element={<PathwaysInternalTraining />} />
         </Route>
