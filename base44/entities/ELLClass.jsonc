@@ -1,0 +1,99 @@
+{
+  "name": "ELLClass",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Class/course name"
+    },
+    "clb_level": {
+      "type": "string",
+      "enum": [
+        "clb_1",
+        "clb_2",
+        "clb_3",
+        "clb_4",
+        "clb_5",
+        "clb_6",
+        "clb_7",
+        "clb_8",
+        "clb_9",
+        "clb_10",
+        "clb_11",
+        "clb_12",
+        "mixed"
+      ],
+      "default": "mixed",
+      "description": "CLB level targeted by this class"
+    },
+    "description": {
+      "type": "string",
+      "description": "Class description / curriculum summary"
+    },
+    "instructor_id": {
+      "type": "string",
+      "description": "Reference to ELLInstructor"
+    },
+    "instructor_name": {
+      "type": "string",
+      "description": "Instructor name (denormalized for display)"
+    },
+    "schedule_days": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ]
+      },
+      "description": "Days of the week the class meets"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM format)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM format)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Room or location where the class meets"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 15,
+      "description": "Maximum number of learners"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Class start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Class end date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning",
+      "description": "Class status"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -212,6 +212,15 @@ import MarketingContent from '@/pages/marketing/MarketingContent';
 import MarketingDonationPages from '@/pages/marketing/MarketingDonationPages';
 import MarketingAnnualReport from '@/pages/marketing/MarketingAnnualReport';
 
+// ELL (English Language Learning) Portal
+import ELLLayout from '@/components/ell/ELLLayout';
+import ELLDashboard from '@/pages/ell/ELLDashboard';
+import ELLLearners from '@/pages/ell/ELLLearners';
+import ELLClasses from '@/pages/ell/ELLClasses';
+import ELLSchedule from '@/pages/ell/ELLSchedule';
+import ELLInstructors from '@/pages/ell/ELLInstructors';
+import ELLAssessments from '@/pages/ell/ELLAssessments';
+
 // Candora Archives
 import ArchivesLayout from '@/components/archives/ArchivesLayout';
 import ArchivesHome from '@/pages/archives/ArchivesHome';
@@ -436,6 +445,16 @@ const AuthenticatedApp = () => {
           <Route path="/marketing/content" element={<MarketingContent />} />
           <Route path="/marketing/donation-pages" element={<MarketingDonationPages />} />
           <Route path="/marketing/annual-report" element={<MarketingAnnualReport />} />
+        </Route>
+
+        {/* ELL (English Language Learning) Portal - standalone layout */}
+        <Route element={<ELLLayout />}>
+          <Route path="/ell" element={<ELLDashboard />} />
+          <Route path="/ell/learners" element={<ELLLearners />} />
+          <Route path="/ell/classes" element={<ELLClasses />} />
+          <Route path="/ell/schedule" element={<ELLSchedule />} />
+          <Route path="/ell/instructors" element={<ELLInstructors />} />
+          <Route path="/ell/assessments" element={<ELLAssessments />} />
         </Route>
 
         {/* Candora Archives - standalone layout */}

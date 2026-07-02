@@ -1,0 +1,84 @@
+{
+  "name": "ELLAssessment",
+  "type": "object",
+  "properties": {
+    "learner_id": {
+      "type": "string",
+      "description": "Reference to ELLLearner"
+    },
+    "learner_name": {
+      "type": "string",
+      "description": "Learner full name (denormalized for display)"
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the assessment was conducted"
+    },
+    "clb_level_before": {
+      "type": "string",
+      "enum": [
+        "not_assessed",
+        "clb_1",
+        "clb_2",
+        "clb_3",
+        "clb_4",
+        "clb_5",
+        "clb_6",
+        "clb_7",
+        "clb_8",
+        "clb_9",
+        "clb_10",
+        "clb_11",
+        "clb_12"
+      ],
+      "default": "not_assessed",
+      "description": "CLB level before this assessment"
+    },
+    "clb_level_after": {
+      "type": "string",
+      "enum": [
+        "not_assessed",
+        "clb_1",
+        "clb_2",
+        "clb_3",
+        "clb_4",
+        "clb_5",
+        "clb_6",
+        "clb_7",
+        "clb_8",
+        "clb_9",
+        "clb_10",
+        "clb_11",
+        "clb_12"
+      ],
+      "default": "not_assessed",
+      "description": "CLB level assessed"
+    },
+    "assessor_name": {
+      "type": "string",
+      "description": "Name of the person who conducted the assessment"
+    },
+    "skill_areas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "listening",
+          "speaking",
+          "reading",
+          "writing"
+        ]
+      },
+      "description": "Skill areas assessed"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Assessment notes and observations"
+    }
+  },
+  "required": [
+    "learner_id",
+    "assessment_date"
+  ]
+}

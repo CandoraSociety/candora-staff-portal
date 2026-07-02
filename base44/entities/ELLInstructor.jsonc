@@ -1,0 +1,50 @@
+{
+  "name": "ELLInstructor",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "Instructor's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Instructor's last name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "qualifications": {
+      "type": "string",
+      "description": "Teaching qualifications and certifications (e.g. TESL, CELTA)"
+    },
+    "languages_spoken": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Languages the instructor can speak"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active",
+      "description": "Instructor availability status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name"
+  ]
+}
