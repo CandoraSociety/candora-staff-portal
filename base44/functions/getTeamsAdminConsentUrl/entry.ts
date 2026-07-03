@@ -13,32 +13,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Azure credentials not configured' }, { status: 500 });
     }
 
-    const redirectUri = 'https://api.base44.com/v2/connectors/app-user/callback';
+    // This must match a Redirect URI registered in Azure → App registrations → Authentication
+    const redirectUri = 'https://auth.base44.io/api/v1/integrations/oauth/callback';
 
-    // Teams scopes — these MUST all have admin consent in Azure
-    const scopes = [
-      'openid',
-      'profile',
-      'offline_access',
-      'User.Read',
-      'Chat.ReadWrite',
-      'ChannelMessage.Send',
-      'Team.ReadBasic.All',
-      'Channel.ReadBasic.All',
-      'OnlineMeetings.ReadWrite',
-    ].join(' ');
-
-    const encodedScopes = encodeURIComponent(scopes);
-
-    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=admin_consent`;
+    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     return Response.json({
       clientId,
       tenantId,
       redirectUri,
-      requiredScopes: scopes.split(' '),
       adminConsentUrl,
-      instructions: 'Have your IT admin open the adminConsentUrl in a browser and sign in with an admin account. This grants admin consent for ALL Teams scopes at once. After that, users can connect without seeing the "need admin approval" error.',
+      instructions: 'Open adminConsentUrl in a browser and sign in with a Global Admin account. After consent is granted, individual users can connect their Teams without seeing "need admin approval".',
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

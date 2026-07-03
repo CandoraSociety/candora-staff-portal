@@ -13,42 +13,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Azure credentials not configured' }, { status: 500 });
     }
 
-    const redirectUri = 'https://api.base44.com/v2/connectors/app-user/callback';
+    // This must match a Redirect URI registered in Azure → App registrations → Authentication
+    const redirectUri = 'https://auth.base44.io/api/v1/integrations/oauth/callback';
 
-    // All scopes the Outlook integration needs — these MUST all have admin consent in Azure
-    const scopes = [
-      'openid',
-      'profile',
-      'offline_access',
-      'User.Read',
-      'Mail.Read',
-      'Mail.ReadWrite',
-      'Mail.Send',
-      'Calendars.Read',
-      'Calendars.ReadWrite',
-    ].join(' ');
-
-    const encodedScopes = encodeURIComponent(scopes);
-
-    // Admin consent URL using v2 authorize endpoint with prompt=admin_consent — this explicitly
-    // lists ALL scopes so the admin sees and consents to every permission at once.
-    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=admin_consent`;
-
-    // User consent URL with explicit scopes — for testing individual sign-in
-    const userConsentUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodedScopes}&prompt=select_account`;
+    const adminConsentUrl = `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     return Response.json({
       clientId,
       tenantId,
       redirectUri,
-      requiredScopes: scopes.split(' '),
       adminConsentUrl,
-      userConsentUrl,
+      instructions: 'Open adminConsentUrl in a browser and sign in with a Global Admin account. After consent is granted, individual users can connect their Outlook without seeing "need admin approval".',
       checklist: {
         step1: `In Azure → App registrations → ${clientId} → Authentication: ensure Redirect URI is exactly: ${redirectUri}`,
-        step2: 'In Azure → API permissions: ensure ALL of these Microsoft Graph delegated permissions are added: ' + scopes,
-        step3: 'In Azure → API permissions: click "Grant admin consent for [tenant]" — a green checkmark must appear next to EVERY permission',
-        step4: 'After steps 1-3, try the userConsentUrl — if it still shows "need admin approval", one of the scopes is missing admin consent',
+        step2: 'In Azure → API permissions: ensure all required Microsoft Graph delegated permissions are added (Mail.Read, Mail.ReadWrite, Mail.Send, Calendars.Read, Calendars.ReadWrite, offline_access, User.Read)',
+        step3: 'After steps 1-2, open the adminConsentUrl and sign in with a Global Admin account to grant tenant-wide consent',
       },
     });
   } catch (error) {
