@@ -1,0 +1,86 @@
+{
+  "name": "TrainingPlan",
+  "type": "object",
+  "properties": {
+    "employee_name": {
+      "type": "string",
+      "description": "Full name of the person being trained or onboarded"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Work email (optional)"
+    },
+    "plan_type": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "lateral_move",
+        "new_hire",
+        "training",
+        "role_transition"
+      ],
+      "default": "onboarding",
+      "description": "Type of training plan"
+    },
+    "position_title": {
+      "type": "string",
+      "description": "New role or position title"
+    },
+    "previous_position": {
+      "type": "string",
+      "description": "Previous role (for lateral moves or transitions)"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department the person is moving into"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "First day in the new role"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Direct supervisor for this role"
+    },
+    "supervisor_email": {
+      "type": "string"
+    },
+    "buddy_mentor_name": {
+      "type": "string",
+      "description": "Assigned buddy or mentor"
+    },
+    "buddy_mentor_email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "planning",
+        "in_progress",
+        "completed",
+        "on_hold"
+      ],
+      "default": "draft",
+      "description": "Current status of the training plan"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0,
+      "description": "Overall completion percentage (auto-calculated or manual)"
+    },
+    "key_objectives": {
+      "type": "string",
+      "description": "What success looks like \u2014 key goals for this transition"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "employee_name",
+    "position_title",
+    "start_date"
+  ]
+}
