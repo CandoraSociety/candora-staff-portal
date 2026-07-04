@@ -14,8 +14,7 @@
     },
     "org_tier": {
       "type": "string",
-      "enum": ["executive_director","director","manager","supervisor_team_lead","frontline","assistant"],
-      "description": "Organizational hierarchy tier"
+      "description": "Position type / organizational tier. Managed via OrgSettings.tier_configs."
     },
     "status": {
       "type": "string",

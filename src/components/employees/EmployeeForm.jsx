@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
 
 const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
 const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
-const orgTiers = [
-  { value: 'executive_director', label: 'Executive Director' },
-  { value: 'director', label: 'Director' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'supervisor_team_lead', label: 'Supervisor / Team Lead' },
-  { value: 'frontline', label: 'Frontline Worker' },
-  { value: 'assistant', label: 'Assistant' },
-];
 
 export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabel }) {
   const [data, setData] = useState({
@@ -21,7 +16,17 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
     position: '', department: '', org_tier: '', status: 'active', hire_date: '',
   });
 
-  // Populate form when editing an existing employee
+  const { data: orgSettingsList = [] } = useQuery({
+    queryKey: ['orgSettings'],
+    queryFn: () => base44.entities.OrgSettings.list(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const orgTiers = (orgSettingsList[0]?.tier_configs?.length > 0
+    ? orgSettingsList[0].tier_configs
+    : DEFAULT_TIER_CONFIGS
+  ).map(t => ({ value: t.id, label: t.label }));
+
   useEffect(() => {
     if (employee) {
       setData({
@@ -68,9 +73,9 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         <Input value={data.position} onChange={e => setData({ ...data, position: e.target.value })} placeholder="Job title" required />
       </div>
       <div className="space-y-1">
-        <Label>Org Tier *</Label>
+        <Label>Position Type *</Label>
         <Select value={data.org_tier} onValueChange={val => setData({ ...data, org_tier: val })}>
-          <SelectTrigger><SelectValue placeholder="Select tier" /></SelectTrigger>
+          <SelectTrigger><SelectValue placeholder="Select position type" /></SelectTrigger>
           <SelectContent>{orgTiers.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
         </Select>
       </div>

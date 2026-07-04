@@ -26,18 +26,28 @@ export default function AppLayout() {
     queryFn: () => base44.entities.AccessPermission.list(),
   });
 
+  const { data: employeeRecord } = useQuery({
+    queryKey: ['currentEmployee', user?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: user?.email }).then(emps => emps[0] || null),
+    enabled: !!user?.email,
+  });
+
+  const { data: orgSettingsList = [] } = useQuery({
+    queryKey: ['orgSettings'],
+    queryFn: () => base44.entities.OrgSettings.list(),
+    staleTime: 1000 * 60 * 5,
+  });
+  const tierPortalAccess = orgSettingsList[0]?.tier_portal_access || {};
+
   // Auto-link employee record to user ID on first login
   useEffect(() => {
-    if (!user?.id || !user?.email) return;
-    base44.entities.Employee.filter({ email: user.email }).then(emps => {
-      const emp = emps[0];
-      if (emp && !emp.user_id) {
-        base44.entities.Employee.update(emp.id, { user_id: user.id });
-      }
-    }).catch(() => {});
-  }, [user?.id]);
+    if (!user?.id || !employeeRecord) return;
+    if (!employeeRecord.user_id) {
+      base44.entities.Employee.update(employeeRecord.id, { user_id: user.id });
+    }
+  }, [user?.id, employeeRecord]);
 
-  const access = useAccessControl(user, permissions);
+  const access = useAccessControl(user, permissions, employeeRecord?.org_tier, tierPortalAccess);
 
   const {
     loading: onboardingLoading,

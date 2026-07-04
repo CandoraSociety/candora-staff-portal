@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { LOCKED_PORTAL_ACCESS } from '@/lib/tierPermissionPresets';
 
 const ADMIN_ROLES = ['super_admin', 'executive_director', 'admin'];
 
@@ -12,7 +13,7 @@ const ROLE_HIERARCHY = {
   extended: 1,
 };
 
-export function useAccessControl(user, permissions = []) {
+export function useAccessControl(user, permissions = [], orgTier = null, tierPortalAccess = {}) {
   const helpers = useMemo(() => {
     const userRole = user?.role || 'frontline_staff';
     const userId = user?.id;
@@ -22,26 +23,25 @@ export function useAccessControl(user, permissions = []) {
     const isAdmin = ADMIN_ROLES.includes(userRole);
     const isSuperAdmin = userRole === 'super_admin' || userRole === 'admin';
 
-    /**
-     * Check if the current user can access a portal module (e.g. 'nexushr', 'pathways').
-     * Admins always have access. Others need an explicit 'allow' permission.
-     * Permissions may be stored by userId OR by email (before invite is accepted).
-     */
     function canAccessModule(moduleId) {
       if (isAdmin) return true;
 
-      // Look up by user ID or by email (for pre-accepted invites)
-      const match = permissions.find(p =>
+      // 1. Individual override (allow or deny)
+      const individual = permissions.find(p =>
         p.target_type === 'module' &&
         p.target_id === moduleId &&
         p.scope_type === 'individual' &&
         (p.scope_value === userId || p.scope_value === userEmail) &&
         p.is_active
       );
+      if (individual) return individual.permission === 'allow';
 
-      if (match) return match.permission === 'allow';
+      // 2. Locked portal (e.g. ED portal always allowed for executive_director tier)
+      if (LOCKED_PORTAL_ACCESS[moduleId] === orgTier) return true;
 
-      // No permission record at all — deny by default for non-admins
+      // 3. Tier-based access from OrgSettings
+      if (orgTier && tierPortalAccess?.[orgTier]?.includes(moduleId)) return true;
+
       return false;
     }
 
@@ -49,7 +49,6 @@ export function useAccessControl(user, permissions = []) {
       if (!card?.is_enabled) return false;
       if (isSuperAdmin) return true;
 
-      // Check individual override first
       const individualOverride = permissions.find(
         p => p.target_type === 'portal_card' &&
           p.target_id === card.id &&
@@ -59,7 +58,6 @@ export function useAccessControl(user, permissions = []) {
       );
       if (individualOverride) return individualOverride.permission === 'allow';
 
-      // Check department permissions
       if (userDeptId) {
         const deptPermission = permissions.find(
           p => p.target_type === 'portal_card' &&
@@ -71,12 +69,10 @@ export function useAccessControl(user, permissions = []) {
         if (deptPermission) return deptPermission.permission === 'allow';
       }
 
-      // Check role-based (card's allowed_roles)
       if (card.allowed_roles && card.allowed_roles.length > 0) {
         return card.allowed_roles.includes(userRole);
       }
 
-      // Check role permissions in AccessPermission entity
       const rolePermission = permissions.find(
         p => p.target_type === 'portal_card' &&
           p.target_id === card.id &&
@@ -86,13 +82,12 @@ export function useAccessControl(user, permissions = []) {
       );
       if (rolePermission) return rolePermission.permission === 'allow';
 
-      // Default: admins can see everything, others see cards with no restrictions
       if (isAdmin) return true;
       return (!card.allowed_roles || card.allowed_roles.length === 0);
     }
 
-    return { isAdmin, isSuperAdmin, canAccessCard, canAccessModule, userRole, ROLE_HIERARCHY };
-  }, [user, permissions]);
+    return { isAdmin, isSuperAdmin, canAccessCard, canAccessModule, userRole, orgTier, ROLE_HIERARCHY };
+  }, [user, permissions, orgTier, tierPortalAccess]);
 
   return helpers;
 }

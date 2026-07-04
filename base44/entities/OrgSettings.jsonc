@@ -52,6 +52,33 @@
     "owner_email": {
       "type": "string",
       "description": "App owner's email \u2014 granted full access to all SharePoint folders. Managed by admins. Succession: update this field when ownership changes."
+    },
+    "tier_configs": {
+      "type": "array",
+      "description": "Position type definitions. Each entry is {id, label}. Editable from Users & Access.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique slug (e.g. 'executive_director')"
+          },
+          "label": {
+            "type": "string",
+            "description": "Display label (e.g. 'Executive Director')"
+          }
+        }
+      }
+    },
+    "tier_portal_access": {
+      "type": "object",
+      "description": "Maps tier_id to an array of module_ids that tier can access. Editable from Users & Access.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [
