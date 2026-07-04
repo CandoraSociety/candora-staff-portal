@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Folder, Trash2, ExternalLink, AlertTriangle, Loader2, Search, FileWarning, FolderTree, RefreshCw } from 'lucide-react';
+import { Folder, Trash2, ExternalLink, AlertTriangle, Loader2, Search, FileWarning, FolderTree, RefreshCw, Link2, Unlink, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,12 +30,14 @@ export default function FolderManagerPanel() {
     queryFn: () => base44.entities.PortalCard.list(),
   });
 
-  // Map portal names for matching
-  const portalNames = useMemo(() => {
+  // Portals with full metadata for matching
+  const portals = useMemo(() => {
     return cards
       .filter(c => c.is_enabled && c.url && !c.is_external)
-      .map(c => c.name);
+      .map(c => ({ name: c.name, url: c.url, icon: c.icon, color: c.color }));
   }, [cards]);
+
+  const portalNames = portals.map(p => p.name);
 
   // Fuzzy match: check if a folder name could correspond to a portal
   const matchesPortal = (folderName) => {
@@ -92,6 +94,18 @@ export default function FolderManagerPanel() {
     }
     return Object.entries(groups).filter(([, fs]) => fs.length > 1);
   }, [matched]);
+
+  // Build portal → folder mapping (all portals, even those with no matching folder)
+  const portalFolderMap = useMemo(() => {
+    const map = portals.map(p => {
+      const matchedFolders = matched.filter(m => m.matchedPortal === p.name);
+      return { portal: p.name, url: p.url, icon: p.icon, color: p.color, folders: matchedFolders };
+    });
+    return map;
+  }, [portals, matched]);
+
+  const portalsWithoutFolders = portalFolderMap.filter(p => p.folders.length === 0);
+  const portalsWithFolders = portalFolderMap.filter(p => p.folders.length > 0);
 
   const filteredFolders = useMemo(() => {
     if (!search) return folders;
@@ -204,6 +218,78 @@ export default function FolderManagerPanel() {
           ))}
         </div>
       )}
+
+      {/* Portal → Folder Mapping */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Link2 className="w-4 h-4 text-primary" />
+          Portal → Folder Mapping
+        </h3>
+
+        {/* Portals with connected folders */}
+        <div className="grid gap-1.5">
+          {portalsWithFolders.map(({ portal, url, folders }) => (
+            <div key={portal} className="flex items-center gap-3 p-2 rounded-lg border border-border bg-card">
+              <div className="flex items-center gap-2 w-56 flex-shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{portal}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{url}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+                {folders.map(f => (
+                  <div key={f.name} className="flex items-center gap-1.5">
+                    <Folder className={`w-3.5 h-3.5 flex-shrink-0 ${f.itemCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                    <span className="text-sm text-foreground">{f.name}</span>
+                    <Badge variant="outline" className="text-[10px]">{f.itemCount} item{f.itemCount !== 1 ? 's' : ''}</Badge>
+                    {folders.length > 1 && (
+                      <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-600 border-amber-200">duplicate</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Portals with no folder */}
+        {portalsWithoutFolders.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+              <Unlink className="w-3 h-3" />
+              Portals with no matching folder ({portalsWithoutFolders.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {portalsWithoutFolders.map(({ portal, url }) => (
+                <div key={portal} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-dashed border-border bg-muted/30">
+                  <span className="text-xs text-muted-foreground">{portal}</span>
+                  <span className="text-[10px] text-muted-foreground/60">{url}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Unmatched folders */}
+        {unmatched.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+              <Unlink className="w-3 h-3" />
+              Folders not linked to any portal ({unmatched.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {unmatched.map(f => (
+                <div key={f.name} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-dashed border-border bg-muted/30">
+                  <Folder className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{f.name}</span>
+                  <Badge variant="outline" className="text-[10px]">{f.itemCount} item{f.itemCount !== 1 ? 's' : ''}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Search */}
       <div className="relative w-full sm:w-72">
