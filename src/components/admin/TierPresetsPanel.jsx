@@ -48,7 +48,6 @@ export default function TierPresetsPanel() {
   const subTabs = [
     { id: 'matrix', label: 'Position Type Matrix', icon: LayoutGrid },
     { id: 'users', label: 'User Access Overview', icon: Users },
-    { id: 'folders', label: 'Folder Manager', icon: FolderTree },
   ];
 
   return (
@@ -146,7 +145,6 @@ export default function TierPresetsPanel() {
       {/* Sub-tab content */}
       {subTab === 'matrix' && <PortalAccessMatrix />}
       {subTab === 'users' && <UserPortalAccessPanel />}
-      {subTab === 'folders' && <FolderManagerPanel />}
     </div>
   );
 }

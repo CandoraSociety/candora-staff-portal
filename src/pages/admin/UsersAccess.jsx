@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid, FolderTree } from 'lucide-react';
 import TierPresetsPanel from '@/components/admin/TierPresetsPanel';
+import FolderManagerPanel from '@/components/admin/FolderManagerPanel';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -216,6 +217,7 @@ export default function UsersAccess() {
     { id: 'users', label: 'Users', icon: Users },
     { id: 'live', label: 'Live Data', icon: Activity },
     { id: 'presets', label: 'Access Presets', icon: LayoutGrid },
+    { id: 'folders', label: 'Folder Manager', icon: FolderTree },
   ];
 
   return (
@@ -257,6 +259,9 @@ export default function UsersAccess() {
       )}
       {activeTab === 'presets' && (
         <TierPresetsPanel />
+      )}
+      {activeTab === 'folders' && (
+        <FolderManagerPanel />
       )}
     </div>
   );
