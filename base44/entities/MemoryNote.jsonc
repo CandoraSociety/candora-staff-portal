@@ -1,0 +1,48 @@
+{
+  "name": "MemoryNote",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short title for the note"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full details of the note"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "decision",
+        "open_task",
+        "known_issue",
+        "preference",
+        "reminder"
+      ],
+      "default": "reminder",
+      "description": "Type of memory note"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this task/reminder has been addressed"
+    },
+    "related_area": {
+      "type": "string",
+      "description": "App area this note relates to (e.g. 'Users & Access', 'Folder Manager')"
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}
