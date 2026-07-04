@@ -27,10 +27,6 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'executive_director') {
-      return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
-    }
-
     const accessToken = await getAccessToken();
 
     // List all top-level children of the Documents library

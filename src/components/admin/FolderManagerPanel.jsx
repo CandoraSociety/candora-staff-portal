@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Folder, Trash2, ExternalLink, AlertTriangle, Loader2, Search, FileWarning, FolderTree } from 'lucide-react';
+import { Folder, Trash2, ExternalLink, AlertTriangle, Loader2, Search, FileWarning, FolderTree, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,11 +15,13 @@ export default function FolderManagerPanel() {
   const [deleting, setDeleting] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  const { data: folders = [], isLoading } = useQuery({
+  const { data: folders = [], isLoading, error } = useQuery({
     queryKey: ['spFoldersDetailed'],
     queryFn: async () => {
       const res = await base44.functions.invoke('spListFoldersDetailed', {});
-      return res.data?.folders || res.folders || [];
+      const data = res.data || res;
+      if (data?.error) throw new Error(data.error);
+      return data?.folders || [];
     },
   });
 
@@ -113,6 +115,19 @@ export default function FolderManagerPanel() {
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+        <AlertTriangle className="w-8 h-8 text-destructive" />
+        <p className="text-sm font-medium text-destructive">Failed to load folders</p>
+        <p className="text-xs text-muted-foreground max-w-md">{error.message}</p>
+        <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries({ queryKey: ['spFoldersDetailed'] })}>
+          <RefreshCw className="w-3.5 h-3.5" /> Retry
+        </Button>
+      </div>
+    );
   }
 
   return (
