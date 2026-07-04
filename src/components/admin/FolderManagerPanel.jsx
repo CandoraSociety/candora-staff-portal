@@ -39,34 +39,14 @@ export default function FolderManagerPanel() {
 
   const portalNames = portals.map(p => p.name);
 
-  // Fuzzy match: check if a folder name could correspond to a portal
-  const matchesPortal = (folderName) => {
-    const fn = folderName.toLowerCase();
-    return portalNames.some(pn => {
-      const pnLower = pn.toLowerCase();
-      // Exact match
-      if (fn === pnLower) return true;
-      // One contains the other (e.g., "Volunteer" matches "Volunteer Manager")
-      if (fn.includes(pnLower) || pnLower.includes(fn)) return true;
-      // Keyword overlap (e.g., "Archives_Candora_History" matches "Candora Archives")
-      const fnWords = fn.split(/[_\s]+/).filter(w => w.length > 3);
-      const pnWords = pnLower.split(/\s+/).filter(w => w.length > 3);
-      const overlap = fnWords.filter(w => pnWords.includes(w));
-      return overlap.length >= 1;
-    });
-  };
+  // The sync function creates folders using the portal name with invalid chars stripped
+  const INVALID_CHARS = /["#%*:<>?/\\{|}]/g;
+  const expectedFolderName = (portalName) => portalName.replace(INVALID_CHARS, '').trim();
 
+  // Exact match: folder name === portal name (after stripping invalid chars), case-insensitive
   const getMatchingPortal = (folderName) => {
     const fn = folderName.toLowerCase();
-    return portalNames.find(pn => {
-      const pnLower = pn.toLowerCase();
-      if (fn === pnLower) return true;
-      if (fn.includes(pnLower) || pnLower.includes(fn)) return true;
-      const fnWords = fn.split(/[_\s]+/).filter(w => w.length > 3);
-      const pnWords = pnLower.split(/\s+/).filter(w => w.length > 3);
-      const overlap = fnWords.filter(w => pnWords.includes(w));
-      return overlap.length >= 1;
-    });
+    return portals.find(p => expectedFolderName(p.name).toLowerCase() === fn);
   };
 
   // Group folders: matched to a portal, or unmatched
