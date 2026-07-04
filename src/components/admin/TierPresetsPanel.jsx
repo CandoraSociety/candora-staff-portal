@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { LayoutGrid, Users, FolderSync, Loader2, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { LayoutGrid, Users, FolderSync, FolderTree, Loader2, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import PortalAccessMatrix from '@/components/admin/PortalAccessMatrix';
 import UserPortalAccessPanel from '@/components/admin/UserPortalAccessPanel';
+import FolderManagerPanel from '@/components/admin/FolderManagerPanel';
 
 export default function TierPresetsPanel() {
   const { toast } = useToast();
@@ -47,6 +48,7 @@ export default function TierPresetsPanel() {
   const subTabs = [
     { id: 'matrix', label: 'Position Type Matrix', icon: LayoutGrid },
     { id: 'users', label: 'User Access Overview', icon: Users },
+    { id: 'folders', label: 'Folder Manager', icon: FolderTree },
   ];
 
   return (
@@ -144,6 +146,7 @@ export default function TierPresetsPanel() {
       {/* Sub-tab content */}
       {subTab === 'matrix' && <PortalAccessMatrix />}
       {subTab === 'users' && <UserPortalAccessPanel />}
+      {subTab === 'folders' && <FolderManagerPanel />}
     </div>
   );
 }
