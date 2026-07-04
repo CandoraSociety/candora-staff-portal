@@ -1,237 +1,149 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { DEFAULT_TIER_CONFIGS, DEFAULT_TIER_PORTAL_ACCESS, LOCKED_PORTAL_ACCESS, LOCKED_TIER_IDS } from '@/lib/tierPermissionPresets';
-import { Check, X, Info, Lock, Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { LayoutGrid, Users, FolderSync, Loader2, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
+import PortalAccessMatrix from '@/components/admin/PortalAccessMatrix';
+import UserPortalAccessPanel from '@/components/admin/UserPortalAccessPanel';
 
 export default function TierPresetsPanel() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [subTab, setSubTab] = useState('matrix');
+  const [syncing, setSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState(null);
 
-  const { data: cards = [], isLoading: cardsLoading } = useQuery({
-    queryKey: ['portalCards'],
-    queryFn: () => base44.entities.PortalCard.list(),
-  });
-
-  const { data: orgSettingsList = [] } = useQuery({
-    queryKey: ['orgSettings'],
-    queryFn: () => base44.entities.OrgSettings.list(),
-  });
-  const orgSettings = orgSettingsList[0];
-
-  const defaultTiers = orgSettings?.tier_configs?.length > 0 ? orgSettings.tier_configs : DEFAULT_TIER_CONFIGS;
-  const defaultAccess = orgSettings?.tier_portal_access || DEFAULT_TIER_PORTAL_ACCESS;
-
-  const [tiers, setTiers] = useState(defaultTiers);
-  const [accessMatrix, setAccessMatrix] = useState(defaultAccess);
-  const [newTierLabel, setNewTierLabel] = useState('');
-  const [editingTierId, setEditingTierId] = useState(null);
-  const [editingLabel, setEditingLabel] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  // Sync local state when OrgSettings loads/changes
-  useEffect(() => {
-    setTiers(defaultTiers);
-    setAccessMatrix(defaultAccess);
-  }, [JSON.stringify(defaultTiers), JSON.stringify(defaultAccess)]);
-
-  // Derive portal modules from PortalCard records (auto-includes new portals)
-  const portalModules = useMemo(() => {
-    const fromCards = cards
-      .filter(c => c.is_enabled && c.url && !c.is_external)
-      .map(c => ({
-        id: c.url.replace(/^\//, '').split('/')[0],
-        label: c.name,
-        route: c.url,
-      }))
-      .filter(m => m.id && m.id !== 'admin')
-      .filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
-
-    // Ensure locked portals always appear even without a PortalCard
-    for (const modId of Object.keys(LOCKED_PORTAL_ACCESS)) {
-      if (!fromCards.some(m => m.id === modId)) {
-        fromCards.push({ id: modId, label: 'Executive Director Portal', route: '/ed' });
-      }
-    }
-    return fromCards;
-  }, [cards]);
-
-  const toggleAccess = (moduleId, tierId) => {
-    if (LOCKED_PORTAL_ACCESS[moduleId]) return;
-    setAccessMatrix(prev => {
-      const current = prev[tierId] || [];
-      return {
-        ...prev,
-        [tierId]: current.includes(moduleId) ? current.filter(id => id !== moduleId) : [...current, moduleId],
-      };
-    });
-  };
-
-  const addTier = () => {
-    const label = newTierLabel.trim();
-    if (!label) return;
-    const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    if (tiers.some(t => t.id === id)) {
-      toast({ title: 'That position type already exists', variant: 'destructive' });
-      return;
-    }
-    setTiers([...tiers, { id, label }]);
-    setNewTierLabel('');
-  };
-
-  const removeTier = (tierId) => {
-    if (LOCKED_TIER_IDS.includes(tierId)) return;
-    setTiers(tiers.filter(t => t.id !== tierId));
-    setAccessMatrix(prev => { const u = { ...prev }; delete u[tierId]; return u; });
-  };
-
-  const saveEditTier = () => {
-    if (!editingLabel.trim()) { setEditingTierId(null); return; }
-    setTiers(tiers.map(t => t.id === editingTierId ? { ...t, label: editingLabel.trim() } : t));
-    setEditingTierId(null);
-    setEditingLabel('');
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
+  const handleSyncFolders = async () => {
+    setSyncing(true);
+    setSyncResults(null);
     try {
-      // Enforce locked portal access before saving
-      const finalAccess = { ...accessMatrix };
-      for (const [moduleId, tierId] of Object.entries(LOCKED_PORTAL_ACCESS)) {
-        for (const tid of Object.keys(finalAccess)) {
-          if (tid !== tierId) finalAccess[tid] = (finalAccess[tid] || []).filter(id => id !== moduleId);
-        }
-        if (!finalAccess[tierId]?.includes(moduleId)) {
-          finalAccess[tierId] = [...(finalAccess[tierId] || []), moduleId];
-        }
-      }
+      const res = await base44.functions.invoke('syncPortalFolders', {});
+      const data = res.data || res;
+      setSyncResults(data);
 
-      if (orgSettings?.id) {
-        await base44.entities.OrgSettings.update(orgSettings.id, { tier_configs: tiers, tier_portal_access: finalAccess });
+      if (data.errors?.length > 0) {
+        toast({
+          title: `Synced with ${data.errors.length} error(s)`,
+          description: `${data.created} created, ${data.existing} already existed`,
+          variant: 'destructive',
+        });
       } else {
-        await base44.entities.OrgSettings.create({ org_name: 'Candora', tier_configs: tiers, tier_portal_access: finalAccess });
+        toast({
+          title: 'SharePoint folders synced',
+          description: `${data.created} created, ${data.existing} already existed`,
+        });
       }
-      queryClient.invalidateQueries({ queryKey: ['orgSettings'] });
-      toast({ title: 'Access presets saved' });
     } catch (err) {
-      toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });
+      toast({
+        title: 'Failed to sync folders',
+        description: err.message,
+        variant: 'destructive',
+      });
     } finally {
-      setSaving(false);
+      setSyncing(false);
     }
   };
 
-  const hasChanges = JSON.stringify(tiers) !== JSON.stringify(defaultTiers) || JSON.stringify(accessMatrix) !== JSON.stringify(defaultAccess);
-
-  if (cardsLoading) {
-    return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
-  }
+  const subTabs = [
+    { id: 'matrix', label: 'Position Type Matrix', icon: LayoutGrid },
+    { id: 'users', label: 'User Access Overview', icon: Users },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800">
-        <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-        <p>These presets control which portals each position type can access. Changes take effect immediately for all employees. New portals appear here automatically.</p>
+      {/* Sub-tabs + Sync button */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex gap-1 border-b border-border -mb-px">
+          {subTabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSubTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  subTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <Button variant="outline" size="sm" onClick={handleSyncFolders} disabled={syncing}>
+          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FolderSync className="w-4 h-4" />}
+          {syncing ? 'Syncing...' : 'Sync SharePoint Folders'}
+        </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b border-border">
-            <tr>
-              <th className="p-3 text-left font-semibold text-foreground min-w-[200px]">Portal / Module</th>
-              {tiers.map(tier => (
-                <th key={tier.id} className="p-3 text-center font-semibold text-foreground whitespace-nowrap min-w-[130px]">
-                  <div className="flex items-center justify-center gap-1">
-                    {editingTierId === tier.id ? (
-                      <input
-                        autoFocus
-                        value={editingLabel}
-                        onChange={e => setEditingLabel(e.target.value)}
-                        onBlur={saveEditTier}
-                        onKeyDown={e => { if (e.key === 'Enter') saveEditTier(); if (e.key === 'Escape') setEditingTierId(null); }}
-                        className="text-xs px-1 py-0.5 rounded border bg-background w-24 text-center"
-                      />
-                    ) : (
-                      <span
-                        onDoubleClick={() => !LOCKED_TIER_IDS.includes(tier.id) && (setEditingTierId(tier.id), setEditingLabel(tier.label))}
-                        className={LOCKED_TIER_IDS.includes(tier.id) ? '' : 'cursor-pointer hover:text-primary'}
-                        title={LOCKED_TIER_IDS.includes(tier.id) ? 'Locked' : 'Double-click to rename'}
-                      >
-                        {tier.label}
-                      </span>
-                    )}
-                    {!LOCKED_TIER_IDS.includes(tier.id) && editingTierId !== tier.id && (
-                      <button onClick={() => removeTier(tier.id)} className="text-muted-foreground hover:text-destructive" title="Remove">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
-                    {LOCKED_TIER_IDS.includes(tier.id) && <Lock className="w-3 h-3 text-muted-foreground" />}
-                  </div>
-                </th>
+      {/* Sync results */}
+      {syncResults && (
+        <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              SharePoint Folder Sync Results
+            </h4>
+            <Button variant="ghost" size="sm" onClick={() => setSyncResults(null)}>
+              Clear
+            </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2">
+              <p className="text-lg font-bold text-emerald-700">{syncResults.created}</p>
+              <p className="text-xs text-emerald-600">Created</p>
+            </div>
+            <div className="rounded-lg bg-blue-50 border border-blue-200 p-2">
+              <p className="text-lg font-bold text-blue-700">{syncResults.existing}</p>
+              <p className="text-xs text-blue-600">Already Existed</p>
+            </div>
+            <div className="rounded-lg bg-amber-50 border border-amber-200 p-2">
+              <p className="text-lg font-bold text-amber-700">{syncResults.errors?.length || 0}</p>
+              <p className="text-xs text-amber-600">Errors</p>
+            </div>
+          </div>
+          {syncResults.errors?.length > 0 && (
+            <div className="space-y-1">
+              {syncResults.errors.map((err, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs text-destructive bg-destructive/5 rounded p-2">
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                  <span><strong>{err.portal}</strong> → {err.folder}: {err.error?.slice(0, 200)}</span>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {portalModules.map(mod => {
-              const isLocked = !!LOCKED_PORTAL_ACCESS[mod.id];
-              return (
-                <tr key={mod.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="p-3 font-medium text-foreground">
-                    <div className="flex items-center gap-1.5">
-                      {isLocked && <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
-                      <div>
-                        <div>{mod.label}</div>
-                        <div className="text-xs text-muted-foreground font-mono">{mod.route}</div>
-                      </div>
-                    </div>
-                  </td>
-                  {tiers.map(tier => {
-                    const isLockedAllowed = isLocked && LOCKED_PORTAL_ACCESS[mod.id] === tier.id;
-                    const allowed = isLockedAllowed || (accessMatrix[tier.id] || []).includes(mod.id);
-                    return (
-                      <td key={tier.id} className="p-3 text-center">
-                        <button
-                          onClick={() => !isLocked && toggleAccess(mod.id, tier.id)}
-                          disabled={isLocked}
-                          className={`inline-flex items-center justify-center w-6 h-6 rounded-full transition-all ${
-                            allowed ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'
-                          } ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-110'}`}
-                        >
-                          {allowed ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+            </div>
+          )}
+          {syncResults.results && (
+            <details className="text-xs">
+              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">View all {syncResults.results.length} portals</summary>
+              <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+                {syncResults.results.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2 py-0.5">
+                    <span className="text-foreground">{r.portal}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${
+                        r.status === 'created' ? 'text-emerald-600 border-emerald-200' :
+                        r.status === 'exists' ? 'text-blue-600 border-blue-200' :
+                        r.status === 'error' ? 'text-destructive border-destructive/20' :
+                        'text-muted-foreground'
+                      }`}
+                    >
+                      {r.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
 
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="New position type name (e.g. Coordinator)"
-          value={newTierLabel}
-          onChange={e => setNewTierLabel(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addTier()}
-          className="max-w-xs"
-        />
-        <Button variant="outline" size="sm" onClick={addTier} disabled={!newTierLabel.trim()}>
-          <Plus className="w-4 h-4" /> Add Position Type
-        </Button>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Double-click a position type name to rename it. The Executive Director Portal is locked to the Executive Director position type only.
-        </p>
-        <Button onClick={handleSave} disabled={saving || !hasChanges}>
-          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save Changes</>}
-        </Button>
-      </div>
+      {/* Sub-tab content */}
+      {subTab === 'matrix' && <PortalAccessMatrix />}
+      {subTab === 'users' && <UserPortalAccessPanel />}
     </div>
   );
 }
