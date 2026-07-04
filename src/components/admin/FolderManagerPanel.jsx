@@ -285,16 +285,17 @@ export default function FolderManagerPanel() {
         </h3>
         {filteredFolders.map(f => {
           const portal = getMatchingPortal(f.name);
-          const isDuplicate = portal && matched.filter(m => m.matchedPortal === portal).length > 1;
+          const portalName = portal?.name;
+          const isDuplicate = portal && matched.filter(m => m.matchedPortal === portalName).length > 1;
           return (
             <div key={f.name} className={`flex items-center gap-3 p-2.5 rounded-lg border bg-card transition-colors ${isDuplicate ? 'border-amber-200' : 'border-border'}`}>
               <Folder className={`w-4 h-4 flex-shrink-0 ${f.itemCount > 0 ? 'text-blue-500' : 'text-muted-foreground'}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-foreground truncate">{f.name}</p>
-                  {portal && (
+                  {portalName && (
                     <Badge variant="outline" className="text-[10px] flex-shrink-0">
-                      → {portal}
+                      → {portalName}
                     </Badge>
                   )}
                   {isDuplicate && (
