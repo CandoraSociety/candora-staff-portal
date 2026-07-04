@@ -91,7 +91,7 @@ export default function AppChangeRequestButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-gradient-to-r from-accent to-accent/80 text-white font-semibold text-sm hover:shadow-xl hover:scale-105 transition-all"
+        className="fixed bottom-20 right-4 z-[9998] flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-gradient-to-r from-accent to-accent/80 text-white font-semibold text-sm hover:shadow-xl hover:scale-105 transition-all"
       >
         <Lightbulb className="h-5 w-5" />
         App Adjustments
