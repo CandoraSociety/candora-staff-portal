@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -131,6 +131,11 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, completed = false }) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState("");
   const [showNotes, setShowNotes] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(task.notes || "");
+
+  useEffect(() => {
+    setNotesDraft(task.notes || "");
+  }, [task.notes]);
 
   const subtasks = task.subtasks || [];
   const completedSubs = subtasks.filter(s => s.done).length;
@@ -217,11 +222,16 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, completed = false }) {
           </div>
 
           {/* Notes */}
-          {showNotes || task.notes ? (
+          {showNotes || task.notes || notesDraft ? (
             <Textarea
               placeholder="Add notes..."
-              value={task.notes || ""}
-              onChange={e => onUpdate({ notes: e.target.value })}
+              value={notesDraft}
+              onChange={e => setNotesDraft(e.target.value)}
+              onBlur={() => {
+                if (notesDraft !== (task.notes || "")) {
+                  onUpdate({ notes: notesDraft });
+                }
+              }}
               className="text-xs min-h-[60px] resize-y"
             />
           ) : null}
