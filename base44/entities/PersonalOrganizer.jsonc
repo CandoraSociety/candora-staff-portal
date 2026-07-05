@@ -143,6 +143,36 @@
       },
       "description": "Priority catalogue with due dates and sub-tasks"
     },
+    "weekly_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "scheduled_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "time": {
+            "type": "string",
+            "description": "HH:MM or blank"
+          },
+          "done": {
+            "type": "boolean"
+          },
+          "task_id": {
+            "type": "string",
+            "description": "Optional link to a task id"
+          }
+        }
+      },
+      "description": "Weekly planner items \u2014 what needs to get done this week"
+    },
     "daily_plan": {
       "type": "object",
       "description": "The current AI-generated daily plan",

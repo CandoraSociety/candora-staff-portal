@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { Brain, CheckSquare, Target, Bell, FileText, Flag, ChevronDown, ChevronUp } from "lucide-react";
+import { Brain, CheckSquare, Target, Bell, FileText, Flag, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import TasksTab from "./TasksTab";
+import WeeklyPlannerTab from "./WeeklyPlannerTab";
 import FocusTab from "./FocusTab";
 import RemindersTab from "./RemindersTab";
 import NotesTab from "./NotesTab";
@@ -44,6 +45,7 @@ export default function OrganizerPanel({ user }) {
   const priorities = record?.priorities || [];
   const tasks = record?.tasks || [];
   const reminders = record?.reminders || [];
+  const weeklyPlan = record?.weekly_plan || [];
 
   const pendingTaskCount = tasks.filter(t => !t.done).length;
   const priorityCount = priorities.length;
@@ -97,7 +99,7 @@ export default function OrganizerPanel({ user }) {
         {!collapsed && (
           <div className="px-5 pb-5">
             <Tabs defaultValue="notes">
-              <TabsList className="w-full mb-4 grid grid-cols-5 h-9">
+              <TabsList className="w-full mb-4 grid grid-cols-6 h-9">
                 <TabsTrigger value="notes" className="text-xs gap-1">
                   <FileText className="w-3 h-3" /> Notes
                 </TabsTrigger>
@@ -106,6 +108,9 @@ export default function OrganizerPanel({ user }) {
                 </TabsTrigger>
                 <TabsTrigger value="tasks" className="text-xs gap-1">
                   <CheckSquare className="w-3 h-3" /> Tasks
+                </TabsTrigger>
+                <TabsTrigger value="week" className="text-xs gap-1">
+                  <CalendarDays className="w-3 h-3" /> Week
                 </TabsTrigger>
                 <TabsTrigger value="focus" className="text-xs gap-1">
                   <Target className="w-3 h-3" /> Focus
@@ -128,6 +133,9 @@ export default function OrganizerPanel({ user }) {
               </TabsContent>
               <TabsContent value="tasks">
                 <TasksTab tasks={tasks} onChange={(t) => save({ tasks: t })} priorities={priorities} onPrioritiesChange={(p) => save({ priorities: p })} />
+              </TabsContent>
+              <TabsContent value="week">
+                <WeeklyPlannerTab weeklyPlan={weeklyPlan} onChange={(wp) => save({ weekly_plan: wp })} tasks={tasks} />
               </TabsContent>
               <TabsContent value="focus">
                 <FocusTab
