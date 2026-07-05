@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarDays, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarDays, Check, Bell, MessageSquare } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns";
+import WeeklyBrainDump from "./WeeklyBrainDump";
+import MissedTasksSection from "./MissedTasksSection";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -23,7 +25,17 @@ function formatTime(time) {
   return `${display}:${m} ${ampm}`;
 }
 
-export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = [] }) {
+function isItemMissed(item) {
+  if (item.done || item.status === "on_hold" || item.status === "missed") return false;
+  if (!item.scheduled_date) return false;
+  try {
+    const dateStr = item.scheduled_date + (item.time ? `T${item.time}:00` : "T23:59:59");
+    const scheduled = new Date(dateStr);
+    return scheduled < new Date();
+  } catch { return false; }
+}
+
+export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = [], onNotesChange }) {
   const [currentWeek, setCurrentWeek] = useState(getWeekStart(new Date()));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState("");
@@ -39,6 +51,7 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
       items: weeklyPlan
         .filter(item => {
           if (!item.scheduled_date) return false;
+          if (item.status === "on_hold") return false;
           try {
             return isSameDay(parseISO(item.scheduled_date), addDays(currentWeek, i));
           } catch { return false; }
@@ -55,6 +68,15 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
     return -1;
   }, [currentWeek]);
 
+  // Detect missed items (date/time passed, not done, not on hold/missed yet)
+  const missedItems = useMemo(() => {
+    return weeklyPlan.filter(isItemMissed);
+  }, [weeklyPlan]);
+
+  const onHoldItems = useMemo(() => {
+    return weeklyPlan.filter(item => item.status === "on_hold" && !item.done);
+  }, [weeklyPlan]);
+
   const availableTasks = tasks.filter(t => !t.done);
 
   const addItem = () => {
@@ -70,16 +92,22 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
       scheduled_date: dateStr,
       time: selectedTime || "",
       done: false,
+      notes: "",
+      status: "scheduled",
+      reminder_sent: false,
       task_id: selectedTaskId || undefined,
     };
     onChange([...weeklyPlan, newItem]);
 
-    // Reset form
     setSelectedTaskId("");
     setCustomText("");
     setSelectedDay(0);
     setSelectedTime("");
     setDialogOpen(false);
+  };
+
+  const addItemsFromDump = (newItems) => {
+    onChange([...weeklyPlan, ...newItems]);
   };
 
   const toggleItem = (id) => {
@@ -90,6 +118,18 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
     onChange(weeklyPlan.filter(item => item.id !== id));
   };
 
+  const holdItem = (id) => {
+    onChange(weeklyPlan.map(item => item.id === id ? { ...item, status: "on_hold" } : item));
+  };
+
+  const rescheduleItem = (id, newDate, newTime) => {
+    onChange(weeklyPlan.map(item =>
+      item.id === id
+        ? { ...item, scheduled_date: newDate, time: newTime, status: "scheduled", reminder_sent: false }
+        : item
+    ));
+  };
+
   const goPrevWeek = () => setCurrentWeek(d => addDays(d, -7));
   const goNextWeek = () => setCurrentWeek(d => addDays(d, 7));
   const goThisWeek = () => setCurrentWeek(getWeekStart(new Date()));
@@ -97,9 +137,27 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
   const weekLabel = `${format(currentWeek, "MMM d")} – ${format(addDays(currentWeek, 6), "MMM d, yyyy")}`;
   const totalItems = weekDays.reduce((sum, d) => sum + d.items.length, 0);
   const doneItems = weekDays.reduce((sum, d) => sum + d.items.filter(i => i.done).length, 0);
+  const upcomingReminders = weeklyPlan.filter(i => !i.done && i.status !== "on_hold" && i.scheduled_date && !i.reminder_sent).length;
 
   return (
     <div className="space-y-4">
+      {/* Brain dump */}
+      <WeeklyBrainDump
+        weekStart={currentWeek}
+        onAddItems={addItemsFromDump}
+        onAddNote={onNotesChange}
+        existingTasks={tasks}
+      />
+
+      {/* Missed / On hold */}
+      <MissedTasksSection
+        missedItems={missedItems}
+        onHoldItems={onHoldItems}
+        onReschedule={rescheduleItem}
+        onHold={holdItem}
+        onDelete={deleteItem}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -115,6 +173,11 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
           </Button>
         </div>
         <div className="flex items-center gap-2">
+          {upcomingReminders > 0 && (
+            <Badge variant="outline" className="text-xs gap-0.5" title="Reminders will be sent for upcoming items">
+              <Bell className="w-2.5 h-2.5" />{upcomingReminders}
+            </Badge>
+          )}
           {totalItems > 0 && (
             <Badge variant="secondary" className="text-xs">
               {doneItems}/{totalItems} done
@@ -135,14 +198,12 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               idx === todayIndex ? "border-primary bg-primary/5" : "border-border bg-card"
             }`}
           >
-            {/* Day header */}
             <div className={`px-2 py-1.5 text-center border-b ${idx === todayIndex ? "border-primary/30 bg-primary/10" : "border-border bg-muted/30"}`}>
               <div className="text-xs font-semibold text-foreground">{day.short}</div>
               <div className={`text-xs ${idx === todayIndex ? "text-primary font-bold" : "text-muted-foreground"}`}>
                 {format(day.date, "MMM d")}
               </div>
             </div>
-            {/* Items */}
             <div className="flex-1 p-1 space-y-1 overflow-y-auto max-h-[200px]">
               {day.items.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
@@ -154,7 +215,7 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
                     key={item.id}
                     className={`group rounded-md px-1.5 py-1 text-xs border ${
                       item.done ? "bg-muted/40 border-transparent opacity-60" : "bg-background border-border"
-                    }`}
+                    } ${item.status === "missed" ? "border-amber-300 bg-amber-50/50" : ""}`}
                   >
                     <div className="flex items-start gap-1">
                       <input
@@ -172,6 +233,11 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
                         <span className={`text-xs leading-tight ${item.done ? "line-through" : ""}`}>
                           {item.text}
                         </span>
+                        {item.notes && (
+                          <span className="flex items-center gap-0.5 mt-0.5 text-[9px] text-muted-foreground">
+                            <MessageSquare className="w-2 h-2" />{item.notes}
+                          </span>
+                        )}
                       </div>
                       <button
                         onClick={() => deleteItem(item.id)}
@@ -188,11 +254,11 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
         ))}
       </div>
 
-      {totalItems === 0 && (
+      {totalItems === 0 && missedItems.length === 0 && onHoldItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-6 text-center">
           <CalendarDays className="w-8 h-8 text-muted-foreground/40 mb-2" />
           <p className="text-xs text-muted-foreground">Nothing planned for this week yet.</p>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">Click "Add to Week" to schedule items.</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">Use the brain dump above or click "Add to Week".</p>
         </div>
       )}
 
@@ -203,7 +269,6 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
             <DialogTitle className="text-base">Add to Weekly Plan</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Task selector */}
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Pick from existing tasks
@@ -224,7 +289,6 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               </Select>
             </div>
 
-            {/* Or custom text */}
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Or add a custom item
@@ -237,7 +301,6 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               />
             </div>
 
-            {/* Day selector */}
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Day</label>
               <div className="grid grid-cols-7 gap-1">
@@ -263,7 +326,6 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               </div>
             </div>
 
-            {/* Time selector */}
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Time (optional)

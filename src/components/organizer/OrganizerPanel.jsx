@@ -135,7 +135,12 @@ export default function OrganizerPanel({ user }) {
                 <TasksTab tasks={tasks} onChange={(t) => save({ tasks: t })} priorities={priorities} onPrioritiesChange={(p) => save({ priorities: p })} />
               </TabsContent>
               <TabsContent value="week">
-                <WeeklyPlannerTab weeklyPlan={weeklyPlan} onChange={(wp) => save({ weekly_plan: wp })} tasks={tasks} />
+                <WeeklyPlannerTab
+                  weeklyPlan={weeklyPlan}
+                  onChange={(wp) => save({ weekly_plan: wp })}
+                  tasks={tasks}
+                  onNotesChange={(n) => save({ notes: [...notes, n] })}
+                />
               </TabsContent>
               <TabsContent value="focus">
                 <FocusTab

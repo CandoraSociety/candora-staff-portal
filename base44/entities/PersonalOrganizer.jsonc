@@ -168,6 +168,23 @@
           "task_id": {
             "type": "string",
             "description": "Optional link to a task id"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Comments attached to this scheduled item"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "missed",
+              "on_hold"
+            ],
+            "description": "Item lifecycle status"
+          },
+          "reminder_sent": {
+            "type": "boolean",
+            "description": "Whether a reminder email was sent"
           }
         }
       },
