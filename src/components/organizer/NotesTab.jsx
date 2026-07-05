@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Sparkles, List, Grid, ChevronDown, ChevronUp, Eye, EyeOff, Check, Trash2, CheckSquare, CalendarDays, Zap } from "lucide-react";
+import { Plus, Sparkles, List, LayoutGrid, ChevronDown, ChevronUp, Eye, EyeOff, Check, Trash2, CheckSquare, CalendarDays, Zap } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ReactMarkdown from "react-markdown";
 import { format, addDays } from "date-fns";
@@ -184,7 +184,7 @@ Note: "${rawEntry}"`,
             onClick={() => setViewMode("card")}
             className="h-7 px-2"
           >
-            <Grid className="w-3 h-3" />
+            <LayoutGrid className="w-3 h-3" />
           </Button>
         </div>
       </div>
@@ -333,7 +333,7 @@ Note: "${rawEntry}"`,
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{note.raw_entry}</p>
                   </div>
-                  <div className="!flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleExpand(note.id)}>
                       {expandedNotes[note.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                     </Button>
