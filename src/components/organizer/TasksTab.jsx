@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Flag, ChevronRight, ChevronDown, StickyNote, ListChecks } from "lucide-react";
+import { Plus, Trash2, Flag, ChevronRight, ChevronDown, StickyNote, ListChecks, Check } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 
 const PRIORITY_LEVELS = [
   { value: "critical", label: "Critical", color: "bg-red-500", dot: "bg-red-500", text: "text-red-600" },
@@ -57,10 +58,8 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
     onChange(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
   };
 
-  const cyclePriority = (id, currentLevel) => {
-    const order = ["low", "medium", "high", "critical"];
-    const nextIdx = (order.indexOf(currentLevel || "medium") + 1) % order.length;
-    updateTask(id, { priority_level: order[nextIdx] });
+  const setPriority = (id, level) => {
+    updateTask(id, { priority_level: level });
   };
 
   const filterRank = { all: 99, critical: 0, high: 1, medium: 2 };
@@ -94,12 +93,9 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
             onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
             className="h-9"
           />
-          <PriorityDot
+          <PrioritySelector
             level={newTaskPriority}
-            onClick={() => setNewTaskPriority(prev => {
-              const order = ["low", "medium", "high", "critical"];
-              return order[(order.indexOf(prev) + 1) % order.length];
-            })}
+            onSelect={(level) => setNewTaskPriority(level)}
           />
           <Button onClick={handleAddTask} size="default">
             <Plus className="w-4 h-4" />
@@ -142,7 +138,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
-                  onCyclePriority={() => cyclePriority(task.id, task.priority_level)}
+                  onSetPriority={(level) => setPriority(task.id, level)}
                 />
               ))}
             </div>
@@ -184,7 +180,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
-                  onCyclePriority={() => cyclePriority(task.id, task.priority_level)}
+                  onSetPriority={(level) => setPriority(task.id, level)}
                   completed
                 />
               ))}
@@ -196,21 +192,38 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
   );
 }
 
-function PriorityDot({ level, onClick, size = "w-3.5 h-3.5" }) {
+function PrioritySelector({ level, onSelect, size = "w-3 h-3" }) {
   const lvl = getLevel(level);
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={`Priority: ${lvl.label} (click to change)`}
-      className="shrink-0 flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors"
-    >
-      <span className={`rounded-full ${size} ${lvl.dot}`} />
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title={`Priority: ${lvl.label} (click to change)`}
+          className="shrink-0 flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors"
+        >
+          <span className={`rounded-full ${size} ${lvl.dot}`} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuLabel>Set priority</DropdownMenuLabel>
+        {PRIORITY_LEVELS.map(l => (
+          <DropdownMenuItem
+            key={l.value}
+            onClick={() => onSelect(l.value)}
+            className="gap-2 text-xs"
+          >
+            <span className={`rounded-full w-3 h-3 ${l.dot}`} />
+            {l.label}
+            {l.value === level && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, onUpdate, onCyclePriority, completed = false }) {
+function TaskItem({ task, onToggle, onDelete, onUpdate, onSetPriority, completed = false }) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState("");
   const [showNotes, setShowNotes] = useState(false);
@@ -249,14 +262,10 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, onCyclePriority, complet
           </button>
         )}
         {!(subtasks.length > 0 || task.notes) && <div className="w-3.5 shrink-0" />}
-        <button
-          type="button"
-          onClick={onCyclePriority}
-          title={`Priority: ${lvl.label} (click to change)`}
-          className="shrink-0 flex items-center justify-center"
-        >
-          <span className={`rounded-full w-3 h-3 ${lvl.dot}`} />
-        </button>
+        <PrioritySelector
+          level={task.priority_level || "medium"}
+          onSelect={onSetPriority}
+        />
         <input
           type="checkbox"
           checked={task.done}
