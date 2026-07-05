@@ -76,7 +76,8 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
     return weeklyPlan.filter(item => item.status === "on_hold" && !item.done);
   }, [weeklyPlan]);
 
-  const availableTasks = tasks.filter(t => !t.done);
+  const scheduledTaskIds = new Set(weeklyPlan.filter(i => i.task_id).map(i => i.task_id));
+  const availableTasks = tasks.filter(t => !t.done && !scheduledTaskIds.has(t.id));
 
   const addItem = () => {
     const text = selectedTaskId
