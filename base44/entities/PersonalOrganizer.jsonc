@@ -22,6 +22,28 @@
           },
           "created_at": {
             "type": "string"
+          },
+          "subtasks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "description": "Subtasks for this task"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes attached to this task"
           }
         }
       },
