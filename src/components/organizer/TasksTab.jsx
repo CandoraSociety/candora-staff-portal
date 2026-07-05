@@ -200,12 +200,13 @@ function PrioritySelector({ level, onSelect, size = "w-3 h-3" }) {
         <button
           type="button"
           title={`Priority: ${lvl.label} (click to change)`}
+          onClick={(e) => e.stopPropagation()}
           className="shrink-0 flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors"
         >
           <span className={`rounded-full ${size} ${lvl.dot}`} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
+      <DropdownMenuContent align="start" className="z-[200]">
         <DropdownMenuLabel>Set priority</DropdownMenuLabel>
         {PRIORITY_LEVELS.map(l => (
           <DropdownMenuItem
