@@ -3,11 +3,10 @@ import { useOutletContext, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 import WelcomeWidget from '@/components/dashboard/WelcomeWidget';
 import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
-import AnnouncementsWidget from '@/components/dashboard/AnnouncementsWidget';
+import AnnouncementRibbon from '@/components/dashboard/AnnouncementRibbon';
 // LiveDataWidget moved to admin console
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
@@ -190,6 +189,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Announcement Ribbon */}
+      <AnnouncementRibbon announcements={userAnnouncements} />
+
       {/* Employee Info Card */}
       <EmployeeInfoCard user={user} />
 
@@ -266,15 +268,6 @@ export default function Dashboard() {
           )}
           <CollapsibleWidget title="Recent Activity" icon={Activity}>
             <RecentActivityWidget />
-          </CollapsibleWidget>
-        </div>
-        <div>
-          <CollapsibleWidget
-            title="Announcements"
-            icon={Megaphone}
-            headerExtra={userAnnouncements.length > 0 ? <Badge variant="secondary" className="text-xs ml-2">{userAnnouncements.length}</Badge> : null}
-          >
-            <AnnouncementsWidget announcements={userAnnouncements} />
           </CollapsibleWidget>
         </div>
       </div>
