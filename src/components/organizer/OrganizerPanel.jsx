@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Brain, CheckSquare, Target, Bell, FileText, Flag, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +15,18 @@ import ContextPopup from "./ContextPopup";
 import PriorityDeadlineNotifier from "./PriorityDeadlineNotifier";
 import DailyPlan from "./DailyPlan";
 
+const TABS = [
+  { id: "notes", label: "Notes", icon: FileText },
+  { id: "priorities", label: "Priorities", icon: Flag },
+  { id: "tasks", label: "Tasks", icon: CheckSquare },
+  { id: "week", label: "Week", icon: CalendarDays },
+  { id: "focus", label: "Focus", icon: Target },
+  { id: "reminders", label: "Reminders", icon: Bell },
+];
+
 export default function OrganizerPanel({ user }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState("notes");
   const queryClient = useQueryClient();
 
   const { data: records } = useQuery({
@@ -65,11 +74,17 @@ export default function OrganizerPanel({ user }) {
   const pendingTaskCount = tasks.filter(t => !t.done).length;
   const priorityCount = priorities.length;
 
+  const handleAddTasks = useCallback((newTasks) => {
+    save({ tasks: [...tasks, ...newTasks] });
+  }, [tasks, save]);
+
+  const handleAddWeeklyItems = useCallback((newItems) => {
+    save({ weekly_plan: [...weeklyPlan, ...newItems] });
+  }, [weeklyPlan, save]);
+
   return (
     <>
-      <div
-        className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md"
-      >
+      <div className="relative z-20 rounded-2xl border-2 border-violet-500/40 bg-card shadow-md">
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 cursor-pointer bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-colors"
@@ -111,64 +126,68 @@ export default function OrganizerPanel({ user }) {
         {/* Body */}
         {!collapsed && (
           <div className="px-5 pb-5">
-            <Tabs defaultValue="notes">
-              <TabsList className="w-full mb-4 flex h-9">
-                <TabsTrigger value="notes" className="text-xs gap-1 flex-1">
-                  <FileText className="w-3 h-3" /> Notes
-                </TabsTrigger>
-                <TabsTrigger value="priorities" className="text-xs gap-1 flex-1">
-                  <Flag className="w-3 h-3" /> Priorities
-                </TabsTrigger>
-                <TabsTrigger value="tasks" className="text-xs gap-1 flex-1">
-                  <CheckSquare className="w-3 h-3" /> Tasks
-                </TabsTrigger>
-                <TabsTrigger value="week" className="text-xs gap-1 flex-1">
-                  <CalendarDays className="w-3 h-3" /> Week
-                </TabsTrigger>
-                <TabsTrigger value="focus" className="text-xs gap-1 flex-1">
-                  <Target className="w-3 h-3" /> Focus
-                </TabsTrigger>
-                <TabsTrigger value="reminders" className="text-xs gap-1 flex-1">
-                  <Bell className="w-3 h-3" /> Reminders
-                </TabsTrigger>
-              </TabsList>
+            {/* Custom tab bar */}
+            <div className="flex gap-1 mb-4 bg-muted rounded-lg p-1 h-9">
+              {TABS.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1 text-xs font-medium rounded-md px-2 transition-all ${
+                      isActive
+                        ? "bg-background text-foreground shadow"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
 
-              <TabsContent value="notes">
-                <NotesTab notes={notes} onChange={(n) => save({ notes: n })} />
-              </TabsContent>
-              <TabsContent value="priorities">
-                <PrioritiesTab
-                  priorities={priorities}
-                  onChange={(p) => save({ priorities: p })}
-                  focusToday={record?.focus_today}
-                  onPlanReady={(plan) => save({ daily_plan: plan })}
-                />
-              </TabsContent>
-              <TabsContent value="tasks">
-                <TasksTab tasks={tasks} onChange={(t) => save({ tasks: t })} priorities={priorities} onPrioritiesChange={(p) => save({ priorities: p })} />
-              </TabsContent>
-              <TabsContent value="week">
-                <WeeklyPlannerTab
-                  weeklyPlan={weeklyPlan}
-                  onChange={(wp) => save({ weekly_plan: wp })}
-                  tasks={tasks}
-                  onNotesChange={(n) => save({ notes: [...notes, n] })}
-                />
-              </TabsContent>
-              <TabsContent value="focus">
-                <FocusTab
-                  focusToday={record?.focus_today}
-                  focusDate={record?.focus_date}
-                  onChange={(data) => save(data)}
-                  notes={notes}
-                  tasks={tasks}
-                  priorities={priorities}
-                />
-              </TabsContent>
-              <TabsContent value="reminders">
-                <RemindersTab reminders={reminders} onChange={(r) => save({ reminders: r })} />
-              </TabsContent>
-            </Tabs>
+            {activeTab === "notes" && (
+              <NotesTab
+                notes={notes}
+                onChange={(n) => save({ notes: n })}
+                onAddTasks={handleAddTasks}
+                onAddWeeklyItems={handleAddWeeklyItems}
+              />
+            )}
+            {activeTab === "priorities" && (
+              <PrioritiesTab
+                priorities={priorities}
+                onChange={(p) => save({ priorities: p })}
+                focusToday={record?.focus_today}
+                onPlanReady={(plan) => save({ daily_plan: plan })}
+              />
+            )}
+            {activeTab === "tasks" && (
+              <TasksTab tasks={tasks} onChange={(t) => save({ tasks: t })} priorities={priorities} onPrioritiesChange={(p) => save({ priorities: p })} />
+            )}
+            {activeTab === "week" && (
+              <WeeklyPlannerTab
+                weeklyPlan={weeklyPlan}
+                onChange={(wp) => save({ weekly_plan: wp })}
+                tasks={tasks}
+                onNotesChange={(n) => save({ notes: [...notes, n] })}
+              />
+            )}
+            {activeTab === "focus" && (
+              <FocusTab
+                focusToday={record?.focus_today}
+                focusDate={record?.focus_date}
+                onChange={(data) => save(data)}
+                notes={notes}
+                tasks={tasks}
+                priorities={priorities}
+              />
+            )}
+            {activeTab === "reminders" && (
+              <RemindersTab reminders={reminders} onChange={(r) => save({ reminders: r })} />
+            )}
           </div>
         )}
       </div>
