@@ -253,14 +253,18 @@ export default function Dashboard() {
       
       {/* Live data moved to Admin > Users & Access */}
 
+      {/* Full-width Personal Organizer */}
+      {isWidgetActive('organizer') && (
+        <CollapsibleWidget title="Personal Organizer" icon={Brain}>
+          <OrganizerWidget />
+        </CollapsibleWidget>
+      )}
+
+      {/* How To Knowledge Base — below organizer */}
+      {isWidgetActive('howto') && <HowToSearch user={user} />}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {isWidgetActive('howto') && <HowToSearch user={user} />}
-          {isWidgetActive('organizer') && (
-            <CollapsibleWidget title="Personal Organizer" icon={Brain}>
-              <OrganizerWidget />
-            </CollapsibleWidget>
-          )}
           {isWidgetActive('google_translate') && (
             <CollapsibleWidget title="Translate" icon={Languages}>
               <GoogleTranslateWidget />

@@ -34,7 +34,23 @@ export default function OrganizerPanel({ user }) {
       record?.id
         ? base44.entities.PersonalOrganizer.update(record.id, data)
         : base44.entities.PersonalOrganizer.create({ user_email: user.email, ...data }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["organizer", user?.email] }),
+    onMutate: async (newData) => {
+      await queryClient.cancelQueries({ queryKey: ["organizer", user?.email] });
+      const previousRecords = queryClient.getQueryData(["organizer", user?.email]);
+      if (record?.id) {
+        queryClient.setQueryData(["organizer", user?.email], (old) => {
+          if (!old) return old;
+          return old.map(r => r.id === record.id ? { ...r, ...newData } : r);
+        });
+      }
+      return { previousRecords };
+    },
+    onError: (err, newData, context) => {
+      queryClient.setQueryData(["organizer", user?.email], context.previousRecords);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["organizer", user?.email] });
+    },
   });
 
   const save = useCallback((patch) => {
@@ -55,35 +71,35 @@ export default function OrganizerPanel({ user }) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+        className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md overflow-hidden"
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors"
+          className="flex items-center justify-between px-5 py-4 cursor-pointer bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-colors"
           onClick={() => setCollapsed(v => !v)}
         >
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
-              <Brain className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+              <Brain className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-semibold text-foreground text-sm leading-tight">Organization for the Disorganized</h2>
-              <p className="text-xs text-muted-foreground">Your personal chaos management center</p>
+              <h2 className="font-semibold text-white text-sm leading-tight">Organization for the Disorganized</h2>
+              <p className="text-xs text-white/70">Your personal chaos management center</p>
             </div>
             <div className="flex gap-1.5 ml-2 shrink-0">
               {pendingTaskCount > 0 && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">
+                <Badge className="text-xs px-1.5 py-0 h-5 bg-white/20 text-white border-0 hover:bg-white/30">
                   <CheckSquare className="w-2.5 h-2.5 mr-0.5" />{pendingTaskCount}
                 </Badge>
               )}
               {priorityCount > 0 && (
-                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">
+                <Badge className="text-xs px-1.5 py-0 h-5 bg-white/20 text-white border-0 hover:bg-white/30">
                   <Flag className="w-2.5 h-2.5 mr-0.5" />{priorityCount}
                 </Badge>
               )}
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-white hover:bg-white/20 hover:text-white">
             {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </Button>
         </div>

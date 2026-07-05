@@ -272,7 +272,8 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
                 day.items.map(item => (
                   <div
                     key={item.id}
-                    className={`group rounded-md px-1.5 py-1 text-xs border ${
+                    onClick={() => toggleItem(item.id)}
+                    className={`group cursor-pointer rounded-md px-1.5 py-1 text-xs border transition-colors hover:border-primary/40 ${
                       item.done ? "bg-muted/40 border-transparent opacity-60" : "bg-background border-border"
                     } ${item.status === "missed" ? "border-amber-300 bg-amber-50/50" : ""}`}
                   >
@@ -280,8 +281,9 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
                       <input
                         type="checkbox"
                         checked={item.done}
-                        onChange={() => toggleItem(item.id)}
-                        className="rounded border-border mt-0.5 h-3 w-3 shrink-0"
+                        onChange={(e) => { e.stopPropagation(); toggleItem(item.id); }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded border-border mt-0.5 h-3 w-3 shrink-0 cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
                         {item.time && (
@@ -299,8 +301,8 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
                         )}
                       </div>
                       <button
-                        onClick={() => deleteItem(item.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                        onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 p-0.5"
                       >
                         <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
                       </button>

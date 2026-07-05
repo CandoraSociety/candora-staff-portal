@@ -221,8 +221,8 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleExpand(priority.id)}>
                             <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deletePriority(priority.id)}>
-                            <Trash2 className="w-3 h-3 text-muted-foreground" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); deletePriority(priority.id); }}>
+                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
                           </Button>
                         </div>
                       </div>
@@ -258,8 +258,8 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
                                     className="rounded border-border"
                                   />
                                   <span className={`text-xs ${task.done ? "line-through text-muted-foreground" : ""}`}>{task.text}</span>
-                                  <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto" onClick={() => deleteTask(priority.id, task.id)}>
-                                    <Trash2 className="w-2.5 h-2.5 text-muted-foreground" />
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto" onClick={(e) => { e.stopPropagation(); deleteTask(priority.id, task.id); }}>
+                                    <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
                                   </Button>
                                 </div>
                               ))}
