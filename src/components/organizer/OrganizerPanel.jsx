@@ -2,7 +2,6 @@ import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
 import { Brain, CheckSquare, Target, Bell, FileText, Flag, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,10 +67,8 @@ export default function OrganizerPanel({ user }) {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md overflow-hidden"
+      <div
+        className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md"
       >
         {/* Header */}
         <div
@@ -113,7 +110,7 @@ export default function OrganizerPanel({ user }) {
 
         {/* Body */}
         {!collapsed && (
-          <div className="px-5 pb-5 relative z-20">
+          <div className="px-5 pb-5">
             <Tabs defaultValue="notes">
               <TabsList className="w-full mb-4 flex h-9">
                 <TabsTrigger value="notes" className="text-xs gap-1 flex-1">
@@ -174,7 +171,7 @@ export default function OrganizerPanel({ user }) {
             </Tabs>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {record?.daily_plan && (
         <DailyPlan

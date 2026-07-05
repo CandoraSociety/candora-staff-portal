@@ -255,9 +255,7 @@ export default function Dashboard() {
 
       {/* Full-width Personal Organizer */}
       {isWidgetActive('organizer') && (
-        <CollapsibleWidget title="Personal Organizer" icon={Brain}>
-          <OrganizerWidget />
-        </CollapsibleWidget>
+        <OrganizerWidget />
       )}
 
       {/* How To Knowledge Base — below organizer */}
