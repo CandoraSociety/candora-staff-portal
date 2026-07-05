@@ -113,25 +113,25 @@ export default function OrganizerPanel({ user }) {
 
         {/* Body */}
         {!collapsed && (
-          <div className="px-5 pb-5">
+          <div className="px-5 pb-5 relative z-20">
             <Tabs defaultValue="notes">
-              <TabsList className="w-full mb-4 grid grid-cols-6 h-9">
-                <TabsTrigger value="notes" className="text-xs gap-1">
+              <TabsList className="w-full mb-4 flex h-9">
+                <TabsTrigger value="notes" className="text-xs gap-1 flex-1">
                   <FileText className="w-3 h-3" /> Notes
                 </TabsTrigger>
-                <TabsTrigger value="priorities" className="text-xs gap-1">
+                <TabsTrigger value="priorities" className="text-xs gap-1 flex-1">
                   <Flag className="w-3 h-3" /> Priorities
                 </TabsTrigger>
-                <TabsTrigger value="tasks" className="text-xs gap-1">
+                <TabsTrigger value="tasks" className="text-xs gap-1 flex-1">
                   <CheckSquare className="w-3 h-3" /> Tasks
                 </TabsTrigger>
-                <TabsTrigger value="week" className="text-xs gap-1">
+                <TabsTrigger value="week" className="text-xs gap-1 flex-1">
                   <CalendarDays className="w-3 h-3" /> Week
                 </TabsTrigger>
-                <TabsTrigger value="focus" className="text-xs gap-1">
+                <TabsTrigger value="focus" className="text-xs gap-1 flex-1">
                   <Target className="w-3 h-3" /> Focus
                 </TabsTrigger>
-                <TabsTrigger value="reminders" className="text-xs gap-1">
+                <TabsTrigger value="reminders" className="text-xs gap-1 flex-1">
                   <Bell className="w-3 h-3" /> Reminders
                 </TabsTrigger>
               </TabsList>
