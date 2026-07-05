@@ -159,12 +159,12 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goPrevWeek}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <div className="text-sm font-semibold min-w-[140px] text-center">{weekLabel}</div>
+          <div className="text-sm font-semibold min-w-[120px] text-center">{weekLabel}</div>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goNextWeek}>
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -172,7 +172,7 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
             Today
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {upcomingReminders > 0 && (
             <Badge variant="outline" className="text-xs gap-0.5" title="Reminders will be sent for upcoming items">
               <Bell className="w-2.5 h-2.5" />{upcomingReminders}
