@@ -64,6 +64,10 @@ export default function OrganizerPanel({ user }) {
     save({ weekly_plan: [...weeklyPlan, ...newItems] });
   }, [weeklyPlan, save]);
 
+  const handleAddPriorities = useCallback((newPriorities) => {
+    save({ priorities: [...priorities, ...newPriorities] });
+  }, [priorities, save]);
+
   const handleHeaderClick = useCallback((e) => {
     // Only toggle collapse if clicking the header itself, not buttons inside it
     if (e.target.closest('button')) return;
@@ -135,6 +139,7 @@ export default function OrganizerPanel({ user }) {
               onChange={(n) => save({ notes: n })}
               onAddTasks={handleAddTasks}
               onAddWeeklyItems={handleAddWeeklyItems}
+              onAddPriorities={handleAddPriorities}
             />
           )}
           {activeTab === "priorities" && (

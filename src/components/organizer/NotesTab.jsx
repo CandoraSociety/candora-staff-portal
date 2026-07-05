@@ -4,12 +4,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Sparkles, List, LayoutGrid, ChevronDown, ChevronUp, Eye, EyeOff, Check, Trash2, CheckSquare, CalendarDays, Zap } from "lucide-react";
+import { Plus, Sparkles, List, LayoutGrid, ChevronDown, ChevronUp, Eye, EyeOff, Check, Trash2, CheckSquare, CalendarDays, Zap, Flag } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ReactMarkdown from "react-markdown";
 import { format, addDays } from "date-fns";
 
-export default function NotesTab({ notes = [], onChange, onAddTasks, onAddWeeklyItems }) {
+export default function NotesTab({ notes = [], onChange, onAddTasks, onAddWeeklyItems, onAddPriorities }) {
   const [newNote, setNewNote] = useState("");
   const [isOrganizing, setIsOrganizing] = useState(false);
   const [viewMode, setViewMode] = useState("list");
@@ -51,10 +51,12 @@ export default function NotesTab({ notes = [], onChange, onAddTasks, onAddWeekly
 Today is ${todayStr}. The current week's dates are: ${dateListStr}.
 
 For each actionable item, determine:
-- type: "task" for general to-dos with no specific date, "scheduled" for items tied to a date/time
-- text: concise task description
+- type: "priority" for broader objectives, goals, or strategic initiatives that are not single to-dos but rather ongoing focus areas with potential sub-steps; "task" for general to-dos with no specific date; "scheduled" for items tied to a date/time
+- text: concise description
 - scheduled_date: YYYY-MM-DD (only for "scheduled" type — resolve relative days like "Tuesday", "tomorrow", "Thursday")
 - time: HH:MM format if a time is mentioned, otherwise empty string (only for "scheduled" type)
+- priority_level: "critical", "high", "medium", or "low" (only for "priority" type — how important/urgent this objective is)
+- due_date: YYYY-MM-DD if a deadline is mentioned (only for "priority" type, optional)
 - notes: any additional context for this item
 
 Return JSON with "subject" (short title), "formatted" (markdown content), and "actionable_items" (array).
@@ -70,10 +72,12 @@ Note: "${rawEntry}"`,
               items: {
                 type: "object",
                 properties: {
-                  type: { type: "string", enum: ["task", "scheduled"] },
+                  type: { type: "string", enum: ["task", "scheduled", "priority"] },
                   text: { type: "string" },
                   scheduled_date: { type: "string" },
                   time: { type: "string" },
+                  priority_level: { type: "string", enum: ["critical", "high", "medium", "low"] },
+                  due_date: { type: "string" },
                   notes: { type: "string" }
                 }
               }
@@ -155,8 +159,20 @@ Note: "${rawEntry}"`,
         reminder_sent: false,
       }));
 
+    const newPriorities = selected
+      .filter(i => i.type === "priority")
+      .map(item => ({
+        id: `prio_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        title: item.text,
+        priority_level: item.priority_level || "medium",
+        due_date: item.due_date || "",
+        tasks: [],
+        created_at: new Date().toISOString(),
+      }));
+
     if (newTasks.length > 0 && onAddTasks) onAddTasks(newTasks);
     if (newWeeklyItems.length > 0 && onAddWeeklyItems) onAddWeeklyItems(newWeeklyItems);
+    if (newPriorities.length > 0 && onAddPriorities) onAddPriorities(newPriorities);
 
     setPendingItems(null);
   };
@@ -244,9 +260,13 @@ Note: "${rawEntry}"`,
                         <Badge variant="secondary" className="text-xs gap-0.5">
                           <CheckSquare className="w-2.5 h-2.5" /> Task
                         </Badge>
-                      ) : (
+                      ) : item.type === "scheduled" ? (
                         <Badge variant="secondary" className="text-xs gap-0.5 bg-blue-100 text-blue-700">
                           <CalendarDays className="w-2.5 h-2.5" /> Scheduled
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs gap-0.5 bg-amber-100 text-amber-700">
+                          <Flag className="w-2.5 h-2.5" /> Priority
                         </Badge>
                       )}
                       <Input
@@ -269,6 +289,29 @@ Note: "${rawEntry}"`,
                           type="time"
                           value={item.time || ""}
                           onChange={(e) => updateItemField(item.id, "time", e.target.value)}
+                          className="h-7 text-xs w-auto"
+                          disabled={!item.selected}
+                        />
+                      </div>
+                    )}
+                    {item.type === "priority" && (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={item.priority_level || "medium"}
+                          onChange={(e) => updateItemField(item.id, "priority_level", e.target.value)}
+                          disabled={!item.selected}
+                          className="h-7 text-xs rounded-md border border-input bg-transparent px-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="critical">Critical</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                        </select>
+                        <Input
+                          type="date"
+                          value={item.due_date || ""}
+                          onChange={(e) => updateItemField(item.id, "due_date", e.target.value)}
+                          placeholder="Due date"
                           className="h-7 text-xs w-auto"
                           disabled={!item.selected}
                         />
