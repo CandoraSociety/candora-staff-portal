@@ -2,7 +2,6 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarDays, Check, Bell, MessageSquare } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns";
@@ -273,20 +272,26 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                 Pick from existing tasks
               </label>
-              <Select value={selectedTaskId} onValueChange={(v) => { setSelectedTaskId(v); if (v) setCustomText(""); }}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select a task (optional)..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTasks.length === 0 ? (
-                    <SelectItem value="__none" disabled>No pending tasks</SelectItem>
-                  ) : (
-                    availableTasks.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.text}</SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              {availableTasks.length === 0 ? (
+                <div className="text-xs text-muted-foreground italic py-2">No pending tasks — add one in the Tasks tab first.</div>
+              ) : (
+                <div className="max-h-32 overflow-y-auto rounded-md border border-border divide-y divide-border">
+                  {availableTasks.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => { setSelectedTaskId(t.id); setCustomText(""); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
+                        selectedTaskId === t.id
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-muted/50"
+                      }`}
+                    >
+                      {t.text}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
