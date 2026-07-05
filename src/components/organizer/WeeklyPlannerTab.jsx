@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Plus, Trash2, CalendarDays, Check, Bell, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Plus, Trash2, CalendarDays, Check, Bell, MessageSquare } from "lucide-react";
 import { format, startOfWeek, addDays, isSameDay, parseISO } from "date-fns";
 import WeeklyBrainDump from "./WeeklyBrainDump";
 import MissedTasksSection from "./MissedTasksSection";
@@ -37,7 +37,8 @@ function isItemMissed(item) {
 export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = [], onNotesChange }) {
   const [currentWeek, setCurrentWeek] = useState(getWeekStart(new Date()));
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState("");
+  const [checkedKeys, setCheckedKeys] = useState(new Set());
+  const [expandedTaskIds, setExpandedTaskIds] = useState(new Set());
   const [customText, setCustomText] = useState("");
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedTime, setSelectedTime] = useState("");
@@ -79,27 +80,85 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
   const scheduledTaskIds = new Set(weeklyPlan.filter(i => i.task_id).map(i => i.task_id));
   const availableTasks = tasks.filter(t => !t.done && !scheduledTaskIds.has(t.id));
 
-  const addItem = () => {
-    const text = selectedTaskId
-      ? tasks.find(t => t.id === selectedTaskId)?.text
-      : customText.trim();
-    if (!text) return;
+  const toggleTask = (task) => {
+    const keys = new Set(checkedKeys);
+    const subKeys = (task.subtasks || []).map(s => `${task.id}__sub__${s.id}`);
+    const allKeys = [task.id, ...subKeys];
+    const allChecked = allKeys.every(k => keys.has(k));
+    if (allChecked) {
+      allKeys.forEach(k => keys.delete(k));
+    } else {
+      allKeys.forEach(k => keys.add(k));
+    }
+    setCheckedKeys(keys);
+  };
 
+  const toggleSubtask = (taskId, subtask) => {
+    const key = `${taskId}__sub__${subtask.id}`;
+    const keys = new Set(checkedKeys);
+    if (keys.has(key)) keys.delete(key);
+    else keys.add(key);
+    setCheckedKeys(keys);
+  };
+
+  const toggleExpand = (taskId) => {
+    const ids = new Set(expandedTaskIds);
+    if (ids.has(taskId)) ids.delete(taskId);
+    else ids.add(taskId);
+    setExpandedTaskIds(ids);
+  };
+
+  const addItems = () => {
     const dateStr = format(addDays(currentWeek, selectedDay), "yyyy-MM-dd");
-    const newItem = {
-      id: `wp_${Date.now()}`,
-      text,
-      scheduled_date: dateStr,
-      time: selectedTime || "",
-      done: false,
-      notes: "",
-      status: "scheduled",
-      reminder_sent: false,
-      task_id: selectedTaskId || undefined,
-    };
-    onChange([...weeklyPlan, newItem]);
+    const newEntries = [];
+    let ts = Date.now();
 
-    setSelectedTaskId("");
+    checkedKeys.forEach(key => {
+      let text, taskId;
+      if (key.includes("__sub__")) {
+        const [parentId, , subId] = key.split("__sub__");
+        const parent = tasks.find(t => t.id === parentId);
+        const sub = parent?.subtasks?.find(s => s.id === subId);
+        if (!sub) return;
+        text = sub.text;
+        taskId = undefined;
+      } else {
+        const task = tasks.find(t => t.id === key);
+        if (!task) return;
+        text = task.text;
+        taskId = key;
+      }
+      newEntries.push({
+        id: `wp_${ts++}`,
+        text,
+        scheduled_date: dateStr,
+        time: selectedTime || "",
+        done: false,
+        notes: "",
+        status: "scheduled",
+        reminder_sent: false,
+        task_id: taskId || undefined,
+      });
+    });
+
+    if (customText.trim()) {
+      newEntries.push({
+        id: `wp_${ts++}`,
+        text: customText.trim(),
+        scheduled_date: dateStr,
+        time: selectedTime || "",
+        done: false,
+        notes: "",
+        status: "scheduled",
+        reminder_sent: false,
+      });
+    }
+
+    if (newEntries.length === 0) return;
+    onChange([...weeklyPlan, ...newEntries]);
+
+    setCheckedKeys(new Set());
+    setExpandedTaskIds(new Set());
     setCustomText("");
     setSelectedDay(0);
     setSelectedTime("");
@@ -276,21 +335,69 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               {availableTasks.length === 0 ? (
                 <div className="text-xs text-muted-foreground italic py-2">No pending tasks — add one in the Tasks tab first.</div>
               ) : (
-                <div className="max-h-32 overflow-y-auto rounded-md border border-border divide-y divide-border">
-                  {availableTasks.map(t => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => { setSelectedTaskId(t.id); setCustomText(""); }}
-                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                        selectedTaskId === t.id
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "hover:bg-muted/50"
-                      }`}
-                    >
-                      {t.text}
-                    </button>
-                  ))}
+                <div className="max-h-48 overflow-y-auto rounded-md border border-border divide-y divide-border">
+                  {availableTasks.map(t => {
+                    const hasSubs = t.subtasks && t.subtasks.length > 0;
+                    const isExpanded = expandedTaskIds.has(t.id);
+                    const subKeys = (t.subtasks || []).map(s => `${t.id}__sub__${s.id}`);
+                    const allKeys = [t.id, ...subKeys];
+                    const allChecked = allKeys.every(k => checkedKeys.has(k));
+                    const someChecked = allKeys.some(k => checkedKeys.has(k));
+                    return (
+                      <div key={t.id}>
+                        <div className="flex items-center gap-1.5 px-2 py-1.5">
+                          {hasSubs ? (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpand(t.id)}
+                              className="shrink-0 p-0.5 hover:bg-muted rounded"
+                            >
+                              {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            </button>
+                          ) : (
+                            <span className="w-4 shrink-0" />
+                          )}
+                          <input
+                            type="checkbox"
+                            checked={allChecked}
+                            ref={el => { if (el) el.indeterminate = !allChecked && someChecked; }}
+                            onChange={() => toggleTask(t)}
+                            className="rounded border-border h-3.5 w-3.5 shrink-0"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleTask(t)}
+                            className={`flex-1 text-left text-xs ${checkedKeys.has(t.id) ? "font-medium text-primary" : ""}`}
+                          >
+                            {t.text}
+                            {hasSubs && (
+                              <span className="text-[10px] text-muted-foreground ml-1">({t.subtasks.length} subtasks)</span>
+                            )}
+                          </button>
+                        </div>
+                        {hasSubs && isExpanded && (
+                          <div className="pl-8 pb-1 space-y-0.5">
+                            {t.subtasks.map(s => {
+                              const subKey = `${t.id}__sub__${s.id}`;
+                              return (
+                                <div key={s.id} className="flex items-center gap-1.5 px-2 py-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={checkedKeys.has(subKey)}
+                                    onChange={() => toggleSubtask(t.id, s)}
+                                    className="rounded border-border h-3.5 w-3.5 shrink-0"
+                                  />
+                                  <span className={`text-xs ${checkedKeys.has(subKey) ? "text-primary" : "text-muted-foreground"}`}>
+                                    {s.text}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -302,7 +409,7 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
               <Input
                 placeholder="Enter a task or activity..."
                 value={customText}
-                onChange={(e) => { setCustomText(e.target.value); if (e.target.value) setSelectedTaskId(""); }}
+                onChange={(e) => setCustomText(e.target.value)}
                 className="h-9"
               />
             </div>
@@ -346,8 +453,8 @@ export default function WeeklyPlannerTab({ weeklyPlan = [], onChange, tasks = []
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={addItem} disabled={!selectedTaskId && !customText.trim()}>
-              <Check className="w-3 h-3 mr-1" /> Schedule
+            <Button onClick={addItems} disabled={checkedKeys.size === 0 && !customText.trim()}>
+              <Check className="w-3 h-3 mr-1" /> Schedule{checkedKeys.size > 0 || customText.trim() ? ` (${checkedKeys.size + (customText.trim() ? 1 : 0)})` : ""}
             </Button>
           </DialogFooter>
         </DialogContent>
