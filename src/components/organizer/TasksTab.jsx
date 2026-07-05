@@ -5,8 +5,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Trash2, Flag, ChevronRight, ChevronDown, StickyNote, ListChecks } from "lucide-react";
 
+const PRIORITY_LEVELS = [
+  { value: "critical", label: "Critical", color: "bg-red-500", dot: "bg-red-500", text: "text-red-600" },
+  { value: "high", label: "High", color: "bg-orange-500", dot: "bg-orange-500", text: "text-orange-600" },
+  { value: "medium", label: "Medium", color: "bg-yellow-500", dot: "bg-yellow-500", text: "text-yellow-600" },
+  { value: "low", label: "Low", color: "bg-green-500", dot: "bg-green-500", text: "text-green-600" },
+];
+
+const FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "critical", label: "Critical only" },
+  { value: "high", label: "High & up" },
+  { value: "medium", label: "Medium & up" },
+];
+
+const levelOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+
+function getLevel(value) {
+  return PRIORITY_LEVELS.find(l => l.value === value) || PRIORITY_LEVELS.find(l => l.value === "medium");
+}
+
 export default function TasksTab({ tasks = [], onChange, priorities = [], onPrioritiesChange }) {
   const [newTask, setNewTask] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState("medium");
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   const handleAddTask = () => {
     if (!newTask.trim()) return;
@@ -16,6 +38,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
         id: `task_${Date.now()}`,
         text: newTask.trim(),
         done: false,
+        priority_level: newTaskPriority,
         created_at: new Date().toISOString(),
       },
     ]);
@@ -34,7 +57,25 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
     onChange(tasks.map(t => t.id === id ? { ...t, ...updates } : t));
   };
 
-  const pendingTasks = tasks.filter(t => !t.done);
+  const cyclePriority = (id, currentLevel) => {
+    const order = ["low", "medium", "high", "critical"];
+    const nextIdx = (order.indexOf(currentLevel || "medium") + 1) % order.length;
+    updateTask(id, { priority_level: order[nextIdx] });
+  };
+
+  const filterRank = { all: 99, critical: 0, high: 1, medium: 2 };
+  const filterMaxRank = filterRank[priorityFilter];
+
+  const pendingTasks = tasks
+    .filter(t => !t.done)
+    .filter(t => levelOrder[t.priority_level || "medium"] <= filterMaxRank)
+    .sort((a, b) => {
+      const la = levelOrder[a.priority_level || "medium"];
+      const lb = levelOrder[b.priority_level || "medium"];
+      if (la !== lb) return la - lb;
+      return 0;
+    });
+
   const completedTasks = tasks.filter(t => t.done);
 
   const priorityTasks = priorities.flatMap(p =>
@@ -53,10 +94,36 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
             onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
             className="h-9"
           />
+          <PriorityDot
+            level={newTaskPriority}
+            onClick={() => setNewTaskPriority(prev => {
+              const order = ["low", "medium", "high", "critical"];
+              return order[(order.indexOf(prev) + 1) % order.length];
+            })}
+          />
           <Button onClick={handleAddTask} size="default">
             <Plus className="w-4 h-4" />
           </Button>
         </div>
+      </div>
+
+      {/* Priority filter */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-xs text-muted-foreground mr-1">Show:</span>
+        {FILTER_OPTIONS.map(opt => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setPriorityFilter(opt.value)}
+            className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+              priorityFilter === opt.value
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {pendingTasks.length === 0 && completedTasks.length === 0 && priorityTasks.length === 0 ? (
@@ -75,6 +142,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
+                  onCyclePriority={() => cyclePriority(task.id, task.priority_level)}
                 />
               ))}
             </div>
@@ -116,6 +184,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
+                  onCyclePriority={() => cyclePriority(task.id, task.priority_level)}
                   completed
                 />
               ))}
@@ -127,7 +196,21 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, onUpdate, completed = false }) {
+function PriorityDot({ level, onClick, size = "w-3.5 h-3.5" }) {
+  const lvl = getLevel(level);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`Priority: ${lvl.label} (click to change)`}
+      className="shrink-0 flex items-center justify-center w-9 h-9 rounded-md hover:bg-muted transition-colors"
+    >
+      <span className={`rounded-full ${size} ${lvl.dot}`} />
+    </button>
+  );
+}
+
+function TaskItem({ task, onToggle, onDelete, onUpdate, onCyclePriority, completed = false }) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState("");
   const [showNotes, setShowNotes] = useState(false);
@@ -155,7 +238,7 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, completed = false }) {
     onUpdate({ subtasks: subtasks.filter(s => s.id !== subId) });
   };
 
-  const hasDetails = subtasks.length > 0 || task.notes;
+  const lvl = getLevel(task.priority_level);
 
   return (
     <div className="rounded-md hover:bg-muted/30 transition-colors">
@@ -166,6 +249,14 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, completed = false }) {
           </button>
         )}
         {!(subtasks.length > 0 || task.notes) && <div className="w-3.5 shrink-0" />}
+        <button
+          type="button"
+          onClick={onCyclePriority}
+          title={`Priority: ${lvl.label} (click to change)`}
+          className="shrink-0 flex items-center justify-center"
+        >
+          <span className={`rounded-full w-3 h-3 ${lvl.dot}`} />
+        </button>
         <input
           type="checkbox"
           checked={task.done}

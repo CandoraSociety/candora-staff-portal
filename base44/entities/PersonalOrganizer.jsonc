@@ -23,6 +23,17 @@
           "created_at": {
             "type": "string"
           },
+          "priority_level": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ],
+            "default": "medium",
+            "description": "Priority level for this task"
+          },
           "subtasks": {
             "type": "array",
             "items": {
