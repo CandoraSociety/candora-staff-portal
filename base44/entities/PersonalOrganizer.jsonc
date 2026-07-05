@@ -34,6 +34,10 @@
             "default": "medium",
             "description": "Priority level for this task"
           },
+          "linked_priority_id": {
+            "type": "string",
+            "description": "Optional link to a priority id \u2014 associates this task with a broader objective"
+          },
           "subtasks": {
             "type": "array",
             "items": {

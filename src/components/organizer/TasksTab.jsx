@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, Flag, ChevronRight, ChevronDown, StickyNote, ListChecks, Check } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { Plus, Trash2, Flag, ChevronRight, ChevronDown, StickyNote, ListChecks, Check, Link2, Unlink } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 const PRIORITY_LEVELS = [
   { value: "critical", label: "Critical", color: "bg-red-500", dot: "bg-red-500", text: "text-red-600" },
@@ -30,6 +30,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
   const [newTask, setNewTask] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [linkFilter, setLinkFilter] = useState("all");
 
   const handleAddTask = () => {
     if (!newTask.trim()) return;
@@ -68,6 +69,11 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
   const pendingTasks = tasks
     .filter(t => !t.done)
     .filter(t => levelOrder[t.priority_level || "medium"] <= filterMaxRank)
+    .filter(t => {
+      if (linkFilter === "all") return true;
+      if (linkFilter === "unlinked") return !t.linked_priority_id;
+      return t.linked_priority_id === linkFilter;
+    })
     .sort((a, b) => {
       const la = levelOrder[a.priority_level || "medium"];
       const lb = levelOrder[b.priority_level || "medium"];
@@ -75,7 +81,13 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
       return 0;
     });
 
-  const completedTasks = tasks.filter(t => t.done);
+  const completedTasks = tasks
+    .filter(t => t.done)
+    .filter(t => {
+      if (linkFilter === "all") return true;
+      if (linkFilter === "unlinked") return !t.linked_priority_id;
+      return t.linked_priority_id === linkFilter;
+    });
 
   const priorityTasks = priorities.flatMap(p =>
     (p.tasks || []).map(t => ({ ...t, priorityTitle: p.title, priorityId: p.id }))
@@ -122,6 +134,49 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
         ))}
       </div>
 
+      {/* Link filter — only show if priorities exist */}
+      {priorities.length > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs text-muted-foreground mr-1">Linked to:</span>
+          <button
+            type="button"
+            onClick={() => setLinkFilter("all")}
+            className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+              linkFilter === "all"
+                ? "bg-accent text-accent-foreground border-accent"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            onClick={() => setLinkFilter("unlinked")}
+            className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+              linkFilter === "unlinked"
+                ? "bg-accent text-accent-foreground border-accent"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+            }`}
+          >
+            Unlinked
+          </button>
+          {priorities.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setLinkFilter(p.id)}
+              className={`text-xs px-2 py-0.5 rounded-full border transition-colors max-w-[140px] truncate ${
+                linkFilter === p.id
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-transparent text-muted-foreground border-border hover:bg-muted"
+              }`}
+            >
+              {p.title}
+            </button>
+          ))}
+        </div>
+      )}
+
       {pendingTasks.length === 0 && completedTasks.length === 0 && priorityTasks.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground text-sm">
           No tasks yet. Add your first task above!
@@ -135,6 +190,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                 <TaskItem
                   key={task.id}
                   task={task}
+                  priorities={priorities}
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
@@ -147,7 +203,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
           {priorityTasks.length > 0 && (
             <div className="space-y-1">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                <Flag className="w-3 h-3" /> From Priorities
+                <Flag className="w-3 h-3" /> Priority Sub-Tasks
               </h4>
               {priorityTasks.map((task) => (
                 <div key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 text-sm">
@@ -177,6 +233,7 @@ export default function TasksTab({ tasks = [], onChange, priorities = [], onPrio
                 <TaskItem
                   key={task.id}
                   task={task}
+                  priorities={priorities}
                   onToggle={() => toggleTask(task.id)}
                   onDelete={() => deleteTask(task.id)}
                   onUpdate={(updates) => updateTask(task.id, updates)}
@@ -224,7 +281,58 @@ function PrioritySelector({ level, onSelect, size = "w-3 h-3" }) {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, onUpdate, onSetPriority, completed = false }) {
+function PriorityLink({ task, priorities = [], onLink }) {
+  const linked = priorities.find(p => p.id === task.linked_priority_id);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          title={linked ? `Linked to: ${linked.title}` : "Link to a priority"}
+          onClick={(e) => e.stopPropagation()}
+          className={`shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+            linked
+              ? "bg-primary/10 text-primary hover:bg-primary/20"
+              : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          {linked ? <Link2 className="w-3 h-3" /> : <Unlink className="w-3 h-3" />}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="z-[200]">
+        <DropdownMenuLabel>Link to priority</DropdownMenuLabel>
+        {priorities.length === 0 && (
+          <div className="px-2 py-1.5 text-xs text-muted-foreground">No priorities yet</div>
+        )}
+        {priorities.map(p => (
+          <DropdownMenuItem
+            key={p.id}
+            onClick={() => onLink(p.id)}
+            className="gap-2 text-xs"
+          >
+            <Flag className="w-3 h-3 text-muted-foreground" />
+            <span className="truncate max-w-[160px]">{p.title}</span>
+            {p.id === task.linked_priority_id && <Check className="w-3 h-3 ml-auto" />}
+          </DropdownMenuItem>
+        ))}
+        {task.linked_priority_id && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onLink(null)}
+              className="gap-2 text-xs text-muted-foreground"
+            >
+              <Unlink className="w-3 h-3" />
+              Unlink
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function TaskItem({ task, onToggle, onDelete, onUpdate, onSetPriority, priorities = [], completed = false }) {
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState("");
   const [showNotes, setShowNotes] = useState(false);
@@ -253,6 +361,7 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, onSetPriority, completed
   };
 
   const lvl = getLevel(task.priority_level);
+  const linkedPriority = priorities.find(p => p.id === task.linked_priority_id);
 
   return (
     <div className="rounded-md hover:bg-muted/30 transition-colors">
@@ -274,10 +383,21 @@ function TaskItem({ task, onToggle, onDelete, onUpdate, onSetPriority, completed
           className="rounded border-border shrink-0"
         />
         <span className={task.done || completed ? "line-through text-muted-foreground" : "text-sm"}>{task.text}</span>
+        {linkedPriority && (
+          <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1 shrink-0 max-w-[140px]">
+            <Flag className="w-2.5 h-2.5 shrink-0" />
+            <span className="truncate">{linkedPriority.title}</span>
+          </span>
+        )}
         {subtasks.length > 0 && (
           <span className="text-xs text-muted-foreground">{completedSubs}/{subtasks.length}</span>
         )}
         <div className="flex items-center gap-0.5 ml-auto">
+          <PriorityLink
+            task={task}
+            priorities={priorities}
+            onLink={(priorityId) => onUpdate({ linked_priority_id: priorityId || undefined })}
+          />
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowNotes(s => !s); setExpanded(true); }} title="Notes">
             <StickyNote className="w-3 h-3 text-muted-foreground" />
           </Button>
