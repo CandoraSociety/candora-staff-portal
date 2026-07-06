@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Plus, Pencil, Trash2, BookOpen, Clock, Search, FileText, Video, Presentation, File, HelpCircle, Layers, MousePointerClick
+  Plus, Pencil, Trash2, BookOpen, Clock, Search, FileText, Video, Presentation, File, HelpCircle, Layers, MousePointerClick, Sparkles, LayoutTemplate
 } from "lucide-react";
 import ModuleEditorDialog from "./ModuleEditorDialog";
+import ModuleAIGenerator from "./ModuleAIGenerator";
+import ModuleTemplatePicker from "./ModuleTemplatePicker";
 import {
   MODULE_CATEGORIES, MODULE_STATUSES,
   getModuleCategory, getContentType, getDifficulty, getModuleStatus,
@@ -22,6 +24,9 @@ export default function ModuleBuilderTab() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingModule, setEditingModule] = useState(null);
+  const [prefillData, setPrefillData] = useState(null);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
 
@@ -49,6 +54,25 @@ export default function ModuleBuilderTab() {
     qc.invalidateQueries({ queryKey: ["training-modules"] });
     setDialogOpen(false);
     setEditingModule(null);
+    setPrefillData(null);
+  };
+
+  const openBlank = () => {
+    setEditingModule(null);
+    setPrefillData(null);
+    setDialogOpen(true);
+  };
+
+  const handleAIGenerated = (data) => {
+    setEditingModule(null);
+    setPrefillData(data);
+    setDialogOpen(true);
+  };
+
+  const handleTemplateSelected = (template) => {
+    setEditingModule(null);
+    setPrefillData({ ...template, status: "draft", version: 1 });
+    setDialogOpen(true);
   };
 
   return (
@@ -57,12 +81,35 @@ export default function ModuleBuilderTab() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">Module Builder</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Create reusable training modules with rich content, slides, videos, and quizzes</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Create training modules with built-in slides, rich content, quizzes, and more</p>
         </div>
-        <Button onClick={() => { setEditingModule(null); setDialogOpen(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> New Module
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setTemplateOpen(true)}>
+            <LayoutTemplate className="w-4 h-4 mr-2" /> Template
+          </Button>
+          <Button variant="outline" onClick={() => setAiOpen(true)}>
+            <Sparkles className="w-4 h-4 mr-2" /> AI Generate
+          </Button>
+          <Button onClick={openBlank}>
+            <Plus className="w-4 h-4 mr-2" /> New Module
+          </Button>
+        </div>
       </div>
+
+      {/* Beginner help banner */}
+      {modules.length === 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <BookOpen className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">New to creating training modules?</p>
+                <p>Start with a <button onClick={() => setTemplateOpen(true)} className="text-primary underline font-medium">pre-built template</button> for common training types, or let <button onClick={() => setAiOpen(true)} className="text-primary underline font-medium">AI generate</button> a complete module from your topic. You can build slides, write content, add objectives, and create quizzes — all within the builder.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -112,12 +159,20 @@ export default function ModuleBuilderTab() {
             <BookOpen className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
             <p className="text-sm text-muted-foreground mb-1">{modules.length === 0 ? "No modules yet." : "No modules match your filters."}</p>
             <p className="text-xs text-muted-foreground mb-4">
-              {modules.length === 0 ? "Build your first training module with rich text, slides, videos, and quizzes." : "Try adjusting your search or filter."}
+              {modules.length === 0 ? "Build your first training module with slides, content, and quizzes." : "Try adjusting your search or filter."}
             </p>
             {modules.length === 0 && (
-              <Button onClick={() => { setEditingModule(null); setDialogOpen(true); }}>
-                <Plus className="w-4 h-4 mr-2" /> Create First Module
-              </Button>
+              <div className="flex items-center justify-center gap-2">
+                <Button variant="outline" onClick={() => setTemplateOpen(true)}>
+                  <LayoutTemplate className="w-4 h-4 mr-2" /> Use Template
+                </Button>
+                <Button variant="outline" onClick={() => setAiOpen(true)}>
+                  <Sparkles className="w-4 h-4 mr-2" /> AI Generate
+                </Button>
+                <Button onClick={openBlank}>
+                  <Plus className="w-4 h-4 mr-2" /> Create Blank
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -130,7 +185,7 @@ export default function ModuleBuilderTab() {
             const cType = getContentType(mod.content_type);
             const ContentIcon = CONTENT_ICONS[cType.value] || FileText;
             return (
-              <Card key={mod.id} className="cursor-pointer hover:shadow-md transition-shadow group" onClick={() => { setEditingModule(mod); setDialogOpen(true); }}>
+              <Card key={mod.id} className="cursor-pointer hover:shadow-md transition-shadow group" onClick={() => { setEditingModule(mod); setPrefillData(null); setDialogOpen(true); }}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <Badge variant="outline" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
@@ -150,6 +205,11 @@ export default function ModuleBuilderTab() {
                         <Clock className="w-3 h-3" /> {mod.duration_minutes}min
                       </span>
                     )}
+                    {mod.slides?.length > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <Presentation className="w-3 h-3" /> {mod.slides.length} slides
+                      </span>
+                    )}
                     {mod.file_attachments?.length > 0 && (
                       <span className="flex items-center gap-0.5">
                         <FileText className="w-3 h-3" /> {mod.file_attachments.length} file{mod.file_attachments.length !== 1 ? "s" : ""}
@@ -162,7 +222,7 @@ export default function ModuleBuilderTab() {
                     )}
                   </div>
                   <div className="flex justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditingModule(mod); setDialogOpen(true); }}>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditingModule(mod); setPrefillData(null); setDialogOpen(true); }}>
                       <Pencil className="w-3.5 h-3.5" />
                     </Button>
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(mod); }}>
@@ -179,9 +239,26 @@ export default function ModuleBuilderTab() {
       {dialogOpen && (
         <ModuleEditorDialog
           open={dialogOpen}
-          onClose={() => { setDialogOpen(false); setEditingModule(null); }}
+          onClose={() => { setDialogOpen(false); setEditingModule(null); setPrefillData(null); }}
           onSave={handleSave}
           editingModule={editingModule}
+          prefillData={prefillData}
+        />
+      )}
+
+      {aiOpen && (
+        <ModuleAIGenerator
+          open={aiOpen}
+          onClose={() => setAiOpen(false)}
+          onGenerated={handleAIGenerated}
+        />
+      )}
+
+      {templateOpen && (
+        <ModuleTemplatePicker
+          open={templateOpen}
+          onClose={() => setTemplateOpen(false)}
+          onSelect={handleTemplateSelected}
         />
       )}
     </div>

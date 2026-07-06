@@ -44,6 +44,60 @@
       "type": "string",
       "description": "Rich text HTML content of the module"
     },
+    "slides": {
+      "type": "array",
+      "description": "Built-in presentation slides created within the module builder",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "description": "Slide title"
+          },
+          "layout": {
+            "type": "string",
+            "enum": [
+              "title_bullets",
+              "title_content",
+              "title_only",
+              "section_divider",
+              "image_with_caption"
+            ],
+            "default": "title_bullets",
+            "description": "Slide layout type"
+          },
+          "bullets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Bullet points for title_bullets layout"
+          },
+          "content_html": {
+            "type": "string",
+            "description": "Rich text content for title_content layout"
+          },
+          "speaker_notes": {
+            "type": "string",
+            "description": "Notes for the presenter"
+          },
+          "background_image_url": {
+            "type": "string",
+            "description": "Optional background or featured image"
+          },
+          "image_caption": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      }
+    },
     "duration_minutes": {
       "type": "number",
       "default": 0,
