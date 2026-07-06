@@ -1,0 +1,99 @@
+{
+  "name": "TrainingProgram",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Program name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this program covers and who it's for"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "compliance",
+        "role_specific",
+        "professional_development",
+        "orientation",
+        "volunteer_training",
+        "safety",
+        "other"
+      ],
+      "default": "onboarding"
+    },
+    "structure_type": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "tracks"
+      ],
+      "default": "linear",
+      "description": "linear = ordered sequence of modules; tracks = multiple paths grouped by track name"
+    },
+    "module_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "module_id": {
+            "type": "string"
+          },
+          "module_title": {
+            "type": "string",
+            "description": "Denormalized for display"
+          },
+          "order": {
+            "type": "number",
+            "default": 0
+          },
+          "track_name": {
+            "type": "string",
+            "description": "For tracks structure_type \u2014 groups modules into named paths"
+          },
+          "is_required": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "description": "Ordered list of modules in this program"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "review",
+        "published",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "target_audience": {
+      "type": "string",
+      "description": "Who this program is designed for"
+    },
+    "estimated_duration_hours": {
+      "type": "number",
+      "default": 0
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

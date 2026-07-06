@@ -19,9 +19,36 @@ import {
   getPlanType, getPlanStatus, getPhase, getItemType, getItemStatus,
 } from "@/lib/trainingConstants";
 import { PHASE_GUIDANCE } from "@/lib/trainingTemplates";
+import ModuleBuilderTab from "@/components/ed/ModuleBuilderTab";
+import ProgramBuilderTab from "@/components/ed/ProgramBuilderTab";
+import { BookOpen, Package } from "lucide-react";
+
+function PlannerTabBar({ view, setView }) {
+  const tabs = [
+    { value: "plans", label: "Employee Plans", icon: GraduationCap },
+    { value: "modules", label: "Module Builder", icon: BookOpen },
+    { value: "programs", label: "Program Builder", icon: Package },
+  ];
+  return (
+    <div className="flex items-center gap-1 border-b pb-3 mb-2">
+      {tabs.map(({ value, label, icon: Icon }) => (
+        <button
+          key={value}
+          onClick={() => setView(value)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            view === value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <Icon className="w-4 h-4" /> {label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function EDTrainingPlanner() {
   const qc = useQueryClient();
+  const [view, setView] = useState("plans");
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -165,6 +192,24 @@ export default function EDTrainingPlanner() {
     }
   };
 
+  // ====== MODULE / PROGRAM BUILDER VIEWS ======
+  if (view === "modules") {
+    return (
+      <div className="p-6 max-w-6xl mx-auto space-y-4">
+        <PlannerTabBar view={view} setView={setView} />
+        <ModuleBuilderTab />
+      </div>
+    );
+  }
+  if (view === "programs") {
+    return (
+      <div className="p-6 max-w-6xl mx-auto space-y-4">
+        <PlannerTabBar view={view} setView={setView} />
+        <ProgramBuilderTab />
+      </div>
+    );
+  }
+
   // ====== DETAIL VIEW ======
   if (selectedPlan) {
     const progress = calcProgress(selectedPlan.id);
@@ -175,6 +220,7 @@ export default function EDTrainingPlanner() {
 
     return (
       <div className="p-6 max-w-5xl mx-auto space-y-6">
+        <PlannerTabBar view={view} setView={setView} />
         {/* Back button */}
         <Button variant="ghost" size="sm" onClick={() => setSelectedPlanId(null)} className="mb-2">
           <ChevronLeft className="w-4 h-4 mr-1" /> All Training Plans
@@ -366,6 +412,7 @@ export default function EDTrainingPlanner() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <PlannerTabBar view={view} setView={setView} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Training Planner</h1>

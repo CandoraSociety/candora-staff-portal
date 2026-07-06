@@ -1,0 +1,150 @@
+{
+  "name": "TrainingModule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Module title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short summary of what this module covers"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "compliance",
+        "role_specific",
+        "soft_skills",
+        "technical",
+        "safety",
+        "wellness",
+        "volunteer",
+        "other"
+      ],
+      "default": "onboarding",
+      "description": "Module category"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "rich_text",
+        "presentation",
+        "video",
+        "document",
+        "interactive",
+        "quiz",
+        "mixed"
+      ],
+      "default": "rich_text",
+      "description": "Primary content format"
+    },
+    "content_html": {
+      "type": "string",
+      "description": "Rich text HTML content of the module"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Estimated time to complete (minutes)"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "all_levels"
+      ],
+      "default": "beginner"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags"
+    },
+    "file_attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "file_type": {
+            "type": "string",
+            "description": "e.g. slides, video, document, image"
+          }
+        }
+      },
+      "description": "Attached slides, videos, documents, images"
+    },
+    "learning_objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the learner will be able to do after this module"
+    },
+    "quiz_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_index": {
+            "type": "number",
+            "description": "Index of correct option (0-based)"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Optional quiz questions for knowledge checks"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "review",
+        "published",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "thumbnail_url": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}
