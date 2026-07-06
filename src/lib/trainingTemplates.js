@@ -132,6 +132,38 @@ export const TRAINING_TEMPLATES = [
       { title: "End-of-week review & next-week goals", description: "Review the first week, share feedback, and set goals for the coming week.", phase: "first_week", day_number: 5, time_block: "Afternoon", duration_minutes: 45, item_type: "review", owner_name: "Supervisor", location: "Supervisor's office", sort_order: 7 },
     ],
   },
+
+  {
+    id: "group_training",
+    name: "Group / Cohort Training",
+    description: "Multi-session training plan for a group or cohort — covers preparation, delivery sessions, practice, and assessment over a training period.",
+    plan_types: ["training"],
+    icon: "Users",
+    color: "bg-teal-50 border-teal-200",
+    items: [
+      // Pre-Start
+      { title: "Confirm training group & roster", description: "Finalize the list of participants, confirm attendance, and collect any pre-training information (roles, experience levels, accessibility needs).", phase: "pre_start", day_number: 0, time_block: "", duration_minutes: 30, item_type: "task", owner_name: "Training Lead", location: "", sort_order: 1 },
+      { title: "Prepare training materials & space", description: "Print handouts, set up the room layout for group work, test AV equipment, and prepare any devices or supplies needed.", phase: "pre_start", day_number: 0, time_block: "", duration_minutes: 60, item_type: "setup", owner_name: "Training Lead / Office Admin", location: "Training room", sort_order: 2 },
+      { title: "Send pre-training communication", description: "Email participants with schedule, location, what to bring, pre-reading materials, and learning objectives.", phase: "pre_start", day_number: 0, time_block: "", duration_minutes: 20, item_type: "task", owner_name: "Training Lead", location: "", sort_order: 3 },
+
+      // First Day (Session 1)
+      { title: "Welcome & introductions", description: "Welcome the group, icebreaker activity, round-table introductions, and overview of training objectives and schedule.", phase: "first_day", day_number: 1, time_block: "9:00 AM", duration_minutes: 45, item_type: "introduction", owner_name: "Training Lead", location: "Training room", sort_order: 1 },
+      { title: "Session 1: Foundations", description: "Core concepts and foundational knowledge — the 'why' behind the training topic. Presentation with group discussion.", phase: "first_day", day_number: 1, time_block: "10:00 AM", duration_minutes: 90, item_type: "training", owner_name: "Training Lead / Subject Expert", location: "Training room", sort_order: 2 },
+      { title: "Group activity: scenario discussion", description: "Small-group breakouts to discuss real-world scenarios related to the training topic. Each group reports back.", phase: "first_day", day_number: 1, time_block: "1:00 PM", duration_minutes: 60, item_type: "task", owner_name: "Training Lead", location: "Training room", sort_order: 3 },
+      { title: "Day 1 wrap-up & Q&A", description: "Recap key takeaways, answer questions, and preview tomorrow's sessions.", phase: "first_day", day_number: 1, time_block: "3:30 PM", duration_minutes: 30, item_type: "review", owner_name: "Training Lead", location: "Training room", sort_order: 4 },
+
+      // First Week (Sessions 2–5)
+      { title: "Session 2: Skills deep dive", description: "Detailed instruction on the core skills or tools being trained. Mix of demo and guided practice.", phase: "first_week", day_number: 2, time_block: "9:00 AM", duration_minutes: 120, item_type: "training", owner_name: "Training Lead / Subject Expert", location: "Training room", sort_order: 1 },
+      { title: "Hands-on practice (guided)", description: "Participants practice the skills in pairs or small groups with trainer support. Trainer circulates to coach.", phase: "first_week", day_number: 2, time_block: "1:00 PM", duration_minutes: 120, item_type: "task", owner_name: "Training Lead", location: "Training room", sort_order: 2 },
+      { title: "Session 3: Advanced topics", description: "Build on Day 2 with more advanced applications, edge cases, and troubleshooting.", phase: "first_week", day_number: 3, time_block: "9:00 AM", duration_minutes: 120, item_type: "training", owner_name: "Training Lead / Subject Expert", location: "Training room", sort_order: 3 },
+      { title: "Group exercise: real application", description: "Teams apply what they've learned to a real or simulated workplace scenario. Present results to the group.", phase: "first_week", day_number: 3, time_block: "1:00 PM", duration_minutes: 120, item_type: "task", owner_name: "Training Lead", location: "Training room", sort_order: 4 },
+      { title: "Session 4: Integration & workflows", description: "Connect the training to day-to-day workflows — how to apply skills back on the job.", phase: "first_week", day_number: 4, time_block: "9:00 AM", duration_minutes: 90, item_type: "training", owner_name: "Training Lead", location: "Training room", sort_order: 5 },
+      { title: "Peer teaching session", description: "Each participant teaches a short segment to the group — reinforces learning and builds confidence.", phase: "first_week", day_number: 4, time_block: "1:00 PM", duration_minutes: 90, item_type: "task", owner_name: "Participants", location: "Training room", sort_order: 6 },
+      { title: "Final assessment", description: "Written or practical assessment to evaluate competency on the trained skills. Can be individual or group format.", phase: "first_week", day_number: 5, time_block: "9:00 AM", duration_minutes: 90, item_type: "assessment", owner_name: "Training Lead", location: "Training room", sort_order: 7 },
+      { title: "Group debrief & feedback", description: "Discuss assessment results, gather feedback on the training, and identify follow-up needs.", phase: "first_week", day_number: 5, time_block: "1:00 PM", duration_minutes: 60, item_type: "review", owner_name: "Training Lead", location: "Training room", sort_order: 8 },
+      { title: "Certificates & next steps", description: "Distribute certificates of completion, share follow-up resources, and outline ongoing support available.", phase: "first_week", day_number: 5, time_block: "2:30 PM", duration_minutes: 30, item_type: "review", owner_name: "Training Lead", location: "Training room", sort_order: 9 },
+    ],
+  },
 ];
 
 export function getTemplatesForPlanType(planType) {

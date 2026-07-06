@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeftRight, UserPlus, TrendingUp, Zap, Check, Layers } from "lucide-react";
+import { ArrowLeftRight, UserPlus, TrendingUp, Zap, Check, Layers, Users } from "lucide-react";
 import { TRAINING_TEMPLATES, getTemplatesForPlanType } from "@/lib/trainingTemplates";
 
 const ICON_MAP = {
@@ -10,6 +10,7 @@ const ICON_MAP = {
   UserPlus,
   TrendingUp,
   Zap,
+  Users,
 };
 
 export default function TemplatePicker({ open, onClose, plan, onApply }) {
