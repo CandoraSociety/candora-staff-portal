@@ -105,19 +105,31 @@ export const TRAINING_TEMPLATES = [
 
   {
     id: "minimal_first_day",
-    name: "Quick First-Day Plan",
-    description: "Lightweight plan covering just the essentials for a first day — use when full onboarding isn't needed.",
+    name: "Quick First Day & Week",
+    description: "Streamlined essentials for a first day and first week — lighter than full onboarding, but covers the key milestones.",
     plan_types: ["onboarding", "new_hire", "training", "lateral_move", "role_transition"],
     icon: "Zap",
     color: "bg-blue-50 border-blue-200",
     items: [
+      // Pre-Start
       { title: "Workspace setup & IT login", description: "Get desk, computer, email, and key systems up and running.", phase: "pre_start", day_number: 0, time_block: "", duration_minutes: 30, item_type: "setup", owner_name: "IT / Office Admin", location: "Desk", sort_order: 1 },
+
+      // First Day
       { title: "Welcome & office tour", description: "Greet the person, introduce to the team, and tour the office.", phase: "first_day", day_number: 1, time_block: "9:00 AM", duration_minutes: 30, item_type: "introduction", owner_name: "Supervisor or Buddy", location: "Main office", sort_order: 1 },
       { title: "Role expectations with supervisor", description: "Discuss role, priorities, communication style, and first-week goals.", phase: "first_day", day_number: 1, time_block: "10:00 AM", duration_minutes: 45, item_type: "meeting", owner_name: "Supervisor", location: "Supervisor's office", sort_order: 2 },
       { title: "Systems & tools overview", description: "Walk through key systems, shared folders, and reporting tools.", phase: "first_day", day_number: 1, time_block: "11:00 AM", duration_minutes: 45, item_type: "training", owner_name: "IT / Supervisor", location: "Desk", sort_order: 3 },
       { title: "Lunch with team or buddy", description: "Informal lunch to build relationships.", phase: "first_day", day_number: 1, time_block: "12:00 PM", duration_minutes: 60, item_type: "introduction", owner_name: "Buddy/Mentor", location: "", sort_order: 4 },
       { title: "Shadow a session or task", description: "Observe a current activity to understand day-to-day operations.", phase: "first_day", day_number: 1, time_block: "1:30 PM", duration_minutes: 90, item_type: "shadowing", owner_name: "Team member", location: "", sort_order: 5 },
       { title: "End-of-day check-in", description: "Quick review of the day, address questions, and preview tomorrow.", phase: "first_day", day_number: 1, time_block: "4:30 PM", duration_minutes: 15, item_type: "review", owner_name: "Supervisor", location: "", sort_order: 6 },
+
+      // First Week
+      { title: "Hands-on role training", description: "Begin learning the core tasks and responsibilities of the role with guided instruction.", phase: "first_week", day_number: 2, time_block: "Morning", duration_minutes: 120, item_type: "training", owner_name: "Supervisor or Program Lead", location: "", sort_order: 1 },
+      { title: "Shadow a full session or shift", description: "Observe a complete session or shift from start to finish to see the full workflow.", phase: "first_week", day_number: 2, time_block: "Afternoon", duration_minutes: 120, item_type: "shadowing", owner_name: "Team member", location: "", sort_order: 2 },
+      { title: "Key introductions across teams", description: "Meet the key people the role interacts with — other departments, program leads, and partners.", phase: "first_week", day_number: 3, time_block: "Morning", duration_minutes: 60, item_type: "introduction", owner_name: "Supervisor", location: "", sort_order: 3 },
+      { title: "Practice with guidance", description: "Try out the core tasks hands-on with a buddy or supervisor nearby for support.", phase: "first_week", day_number: 3, time_block: "Afternoon", duration_minutes: 120, item_type: "task", owner_name: "Supervisor or Buddy", location: "", sort_order: 4 },
+      { title: "Review policies & procedures", description: "Walk through key workplace policies, safety procedures, and role-specific protocols.", phase: "first_week", day_number: 4, time_block: "Morning", duration_minutes: 60, item_type: "training", owner_name: "HR / Supervisor", location: "Meeting room", sort_order: 5 },
+      { title: "Independent task with check-in", description: "Take on a small task independently, with a mid-point check-in to confirm direction.", phase: "first_week", day_number: 4, time_block: "Afternoon", duration_minutes: 120, item_type: "task", owner_name: "Self (with supervisor support)", location: "", sort_order: 6 },
+      { title: "End-of-week review & next-week goals", description: "Review the first week, share feedback, and set goals for the coming week.", phase: "first_week", day_number: 5, time_block: "Afternoon", duration_minutes: 45, item_type: "review", owner_name: "Supervisor", location: "Supervisor's office", sort_order: 7 },
     ],
   },
 ];
