@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
@@ -64,19 +64,26 @@ export function TabProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           if (!parsed.find(t => t.path === '/')) {
-            parsed.unshift({ path: '/', label: 'Dashboard' });
+            parsed.unshift({ path: '/', label: 'Dashboard', fullPath: '/' });
           }
-          return parsed;
+          // Ensure every tab has fullPath
+          return parsed.map(t => ({ ...t, fullPath: t.fullPath || t.path }));
         }
       }
     } catch {}
-    return [{ path: '/', label: 'Dashboard' }];
+    return [{ path: '/', label: 'Dashboard', fullPath: '/' }];
   });
 
   const [activeTab, setActiveTab] = useState(() => {
     const prefix = getPortalPrefix(location.pathname);
     return isTabRoute(location.pathname) ? prefix : '/';
   });
+
+  // Ref to track activeTab without re-triggering the location effect
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
 
   // Persist to localStorage
   useEffect(() => {
@@ -85,18 +92,34 @@ export function TabProvider({ children }) {
     } catch {}
   }, [tabs]);
 
-  // Watch location changes — auto-create/activate tabs
+  // Watch location changes — auto-create/activate tabs and track full path
   useEffect(() => {
     const prefix = getPortalPrefix(location.pathname);
-    if (!isTabRoute(location.pathname)) return;
+    const fullPath = location.pathname + (location.search || '');
 
-    setActiveTab(prefix);
-    setTabs(prev => {
-      if (prev.find(t => t.path === prefix)) return prev;
-      const registry = PORTAL_REGISTRY[prefix];
-      return [...prev, { path: prefix, label: registry?.label || prefix }];
-    });
-  }, [location.pathname]);
+    if (isTabRoute(location.pathname)) {
+      setActiveTab(prefix);
+      setTabs(prev => {
+        const existing = prev.find(t => t.path === prefix);
+        if (existing) {
+          // Update fullPath for the active tab
+          return prev.map(t =>
+            t.path === prefix ? { ...t, fullPath } : t
+          );
+        }
+        const registry = PORTAL_REGISTRY[prefix];
+        return [...prev, { path: prefix, label: registry?.label || prefix, fullPath }];
+      });
+    } else {
+      // Non-portal route (e.g. /admin): update the active tab's fullPath
+      // so clicking the tab returns to this page
+      setTabs(prev =>
+        prev.map(t =>
+          t.path === activeTabRef.current ? { ...t, fullPath } : t
+        )
+      );
+    }
+  }, [location.pathname, location.search]);
 
   const openTab = useCallback((path, metadata) => {
     const prefix = getPortalPrefix(path);
@@ -104,8 +127,12 @@ export function TabProvider({ children }) {
     const label = metadata?.label || registry?.label || prefix;
 
     setTabs(prev => {
-      if (prev.find(t => t.path === prefix)) return prev;
-      return [...prev, { path: prefix, label }];
+      const existing = prev.find(t => t.path === prefix);
+      if (existing) {
+        // Tab already open — navigate to its stored fullPath
+        return prev;
+      }
+      return [...prev, { path: prefix, label, fullPath: path }];
     });
     setActiveTab(prefix);
     navigate(path);
@@ -119,7 +146,7 @@ export function TabProvider({ children }) {
 
     const newTabs = tabs.filter(t => t.path !== tabPath);
     if (!newTabs.find(t => t.path === '/')) {
-      newTabs.unshift({ path: '/', label: 'Dashboard' });
+      newTabs.unshift({ path: '/', label: 'Dashboard', fullPath: '/' });
     }
 
     setTabs(newTabs);
@@ -127,7 +154,7 @@ export function TabProvider({ children }) {
     if (activeTab === tabPath) {
       const nextTab = newTabs[Math.min(idx, newTabs.length - 1)] || newTabs[0];
       setActiveTab(nextTab.path);
-      navigate(nextTab.path);
+      navigate(nextTab.fullPath || nextTab.path);
     }
   }, [tabs, activeTab, navigate]);
 

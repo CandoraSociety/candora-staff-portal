@@ -9,6 +9,11 @@ export default function GlobalTabBar() {
   const { tabs, activeTab, openTab, closeTab } = useTabs();
   const navigate = useNavigate();
 
+  const handleTabClick = (tab) => {
+    // Navigate to the tab's stored fullPath so we return to the exact page
+    navigate(tab.fullPath || tab.path);
+  };
+
   useLayoutEffect(() => {
     document.body.classList.add('has-tabbar');
     return () => document.body.classList.remove('has-tabbar');
@@ -26,7 +31,7 @@ export default function GlobalTabBar() {
           return (
             <div
               key={tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={() => handleTabClick(tab)}
               className={cn(
                 'group relative flex items-center gap-1.5 px-3 cursor-pointer border-r border-sidebar-border text-xs whitespace-nowrap transition-colors select-none',
                 isActive
