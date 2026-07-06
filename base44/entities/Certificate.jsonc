@@ -1,0 +1,56 @@
+{
+  "name": "Certificate",
+  "type": "object",
+  "properties": {
+    "certificate_number": {
+      "type": "string",
+      "description": "Unique certificate ID"
+    },
+    "enrollment_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "program_id": {
+      "type": "string"
+    },
+    "program_title": {
+      "type": "string"
+    },
+    "issued_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "issued",
+        "revoked",
+        "expired"
+      ],
+      "default": "issued"
+    },
+    "signature_name": {
+      "type": "string"
+    },
+    "signature_title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "program_id",
+    "issued_date"
+  ]
+}

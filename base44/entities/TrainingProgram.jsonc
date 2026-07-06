@@ -20,49 +20,10 @@
         "orientation",
         "volunteer_training",
         "safety",
+        "leadership",
         "other"
       ],
       "default": "onboarding"
-    },
-    "structure_type": {
-      "type": "string",
-      "enum": [
-        "linear",
-        "tracks"
-      ],
-      "default": "linear",
-      "description": "linear = ordered sequence of modules; tracks = multiple paths grouped by track name"
-    },
-    "module_entries": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "module_id": {
-            "type": "string"
-          },
-          "module_title": {
-            "type": "string",
-            "description": "Denormalized for display"
-          },
-          "order": {
-            "type": "number",
-            "default": 0
-          },
-          "track_name": {
-            "type": "string",
-            "description": "For tracks structure_type \u2014 groups modules into named paths"
-          },
-          "is_required": {
-            "type": "boolean",
-            "default": true
-          }
-        }
-      },
-      "description": "Ordered list of modules in this program"
     },
     "status": {
       "type": "string",
@@ -74,6 +35,10 @@
       ],
       "default": "draft"
     },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
     "target_audience": {
       "type": "string",
       "description": "Who this program is designed for"
@@ -82,9 +47,128 @@
       "type": "number",
       "default": 0
     },
-    "version": {
-      "type": "number",
-      "default": 1
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced",
+        "all_levels"
+      ],
+      "default": "beginner"
+    },
+    "navigation_mode": {
+      "type": "string",
+      "enum": [
+        "strict_linear",
+        "linear_review",
+        "flexible"
+      ],
+      "default": "linear_review",
+      "description": "How learners navigate: strict = must complete in order; review = can go back but not skip; flexible = free navigation"
+    },
+    "certificate_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "certificate_config": {
+      "type": "object",
+      "properties": {
+        "template_style": {
+          "type": "string"
+        },
+        "expiry_months": {
+          "type": "number",
+          "description": "0 = no expiry"
+        },
+        "signature_name": {
+          "type": "string"
+        },
+        "signature_title": {
+          "type": "string"
+        }
+      }
+    },
+    "learning_paths": {
+      "type": "array",
+      "description": "Branching paths within the program. Each path is a sequence of module entries with prerequisite rules.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number",
+            "default": 0
+          },
+          "role_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Roles assigned to this path"
+          },
+          "module_entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "module_id": {
+                  "type": "string"
+                },
+                "module_title": {
+                  "type": "string",
+                  "description": "Denormalized for display"
+                },
+                "module_type": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "optional",
+                    "elective",
+                    "role_specific"
+                  ],
+                  "default": "required"
+                },
+                "sort_order": {
+                  "type": "number",
+                  "default": 0
+                },
+                "prerequisite_entry_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Other module entry IDs that must be completed first"
+                },
+                "unlock_rule": {
+                  "type": "string",
+                  "enum": [
+                    "all_prerequisites",
+                    "any_n"
+                  ],
+                  "default": "all_prerequisites"
+                },
+                "unlock_count": {
+                  "type": "number",
+                  "default": 0,
+                  "description": "For any_n rule: how many prerequisites must be completed"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "thumbnail_url": {
       "type": "string"

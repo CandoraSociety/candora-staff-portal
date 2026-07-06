@@ -21,87 +21,10 @@
         "safety",
         "wellness",
         "volunteer",
+        "leadership",
         "other"
       ],
-      "default": "onboarding",
-      "description": "Module category"
-    },
-    "content_type": {
-      "type": "string",
-      "enum": [
-        "rich_text",
-        "presentation",
-        "video",
-        "document",
-        "interactive",
-        "quiz",
-        "mixed"
-      ],
-      "default": "rich_text",
-      "description": "Primary content format"
-    },
-    "content_html": {
-      "type": "string",
-      "description": "Rich text HTML content of the module"
-    },
-    "slides": {
-      "type": "array",
-      "description": "Built-in presentation slides created within the module builder",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string",
-            "description": "Slide title"
-          },
-          "layout": {
-            "type": "string",
-            "enum": [
-              "title_bullets",
-              "title_content",
-              "title_only",
-              "section_divider",
-              "image_with_caption"
-            ],
-            "default": "title_bullets",
-            "description": "Slide layout type"
-          },
-          "bullets": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Bullet points for title_bullets layout"
-          },
-          "content_html": {
-            "type": "string",
-            "description": "Rich text content for title_content layout"
-          },
-          "speaker_notes": {
-            "type": "string",
-            "description": "Notes for the presenter"
-          },
-          "background_image_url": {
-            "type": "string",
-            "description": "Optional background or featured image"
-          },
-          "image_caption": {
-            "type": "string"
-          },
-          "sort_order": {
-            "type": "number",
-            "default": 0
-          }
-        }
-      }
-    },
-    "duration_minutes": {
-      "type": "number",
-      "default": 0,
-      "description": "Estimated time to complete (minutes)"
+      "default": "onboarding"
     },
     "difficulty": {
       "type": "string",
@@ -113,69 +36,10 @@
       ],
       "default": "beginner"
     },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Searchable tags"
-    },
-    "file_attachments": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "file_type": {
-            "type": "string",
-            "description": "e.g. slides, video, document, image"
-          }
-        }
-      },
-      "description": "Attached slides, videos, documents, images"
-    },
-    "learning_objectives": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "What the learner will be able to do after this module"
-    },
-    "quiz_questions": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "question": {
-            "type": "string"
-          },
-          "options": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "correct_index": {
-            "type": "number",
-            "description": "Index of correct option (0-based)"
-          },
-          "explanation": {
-            "type": "string"
-          }
-        }
-      },
-      "description": "Optional quiz questions for knowledge checks"
+    "duration_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Estimated time to complete (minutes)"
     },
     "status": {
       "type": "string",
@@ -191,11 +55,95 @@
       "type": "number",
       "default": 1
     },
+    "version_notes": {
+      "type": "string",
+      "description": "Notes about what changed in this version"
+    },
+    "version_locked": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, changes to this module won't auto-propagate to programs using it"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Searchable tags"
+    },
     "thumbnail_url": {
       "type": "string"
     },
     "created_by_name": {
       "type": "string"
+    },
+    "learning_objectives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the learner will be able to do after this module"
+    },
+    "chapters": {
+      "type": "array",
+      "description": "Module structure: chapters contain sections, sections contain content blocks",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "number",
+            "default": 0
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "sort_order": {
+                  "type": "number",
+                  "default": 0
+                },
+                "content_blocks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "description": "Block type: rich_text, image, video, pdf, external_link, callout, checklist, knowledge_check, accordion, table"
+                      },
+                      "sort_order": {
+                        "type": "number",
+                        "default": 0
+                      },
+                      "data": {
+                        "type": "object",
+                        "additionalProperties": true,
+                        "description": "Type-specific content for this block"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "required": [

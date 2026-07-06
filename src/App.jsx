@@ -302,6 +302,13 @@ import CommunityParticipants from '@/pages/community/CommunityParticipants';
 import CommunitySessions from '@/pages/community/CommunitySessions';
 import CommunityEvaluations from '@/pages/community/CommunityEvaluations';
 
+// LMS (Learning Management System)
+import LMSLayout from '@/components/lms/LMSLayout';
+import LMSDashboard from '@/pages/lms/LMSDashboard';
+import ModuleLibrary from '@/pages/lms/ModuleLibrary';
+import ModuleAuthoring from '@/pages/lms/ModuleAuthoring';
+import LMSPrograms from '@/pages/lms/Programs';
+
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
@@ -621,6 +628,15 @@ const AuthenticatedApp = () => {
           <Route path="/winter-wonderland/components" element={<WinterWonderlandComponents />} />
           <Route path="/winter-wonderland/schedule" element={<WinterWonderlandSchedule />} />
           <Route path="/winter-wonderland/fundraiser" element={<WinterWonderlandFundraiser />} />
+        </Route>
+
+        {/* LMS (Learning Management System) - standalone layout */}
+        <Route element={<LMSLayout />}>
+          <Route path="/lms" element={<LMSDashboard />} />
+          <Route path="/lms/modules" element={<ModuleLibrary />} />
+          <Route path="/lms/modules/new" element={<ModuleAuthoring />} />
+          <Route path="/lms/modules/:moduleId/edit" element={<ModuleAuthoring />} />
+          <Route path="/lms/programs" element={<LMSPrograms />} />
         </Route>
 
         {/* Reception Portal - standalone layout */}

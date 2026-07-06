@@ -1,0 +1,85 @@
+{
+  "name": "LearnerProgress",
+  "type": "object",
+  "properties": {
+    "enrollment_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "program_id": {
+      "type": "string"
+    },
+    "module_id": {
+      "type": "string"
+    },
+    "module_title": {
+      "type": "string"
+    },
+    "chapter_id": {
+      "type": "string"
+    },
+    "section_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "in_progress",
+        "completed",
+        "locked"
+      ],
+      "default": "not_started"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0
+    },
+    "time_spent_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "quiz_scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "block_id": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "max_score": {
+            "type": "number"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "attempt_date": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "enrollment_id",
+    "user_id",
+    "module_id"
+  ]
+}

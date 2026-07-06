@@ -1,0 +1,75 @@
+{
+  "name": "LearnerEnrollment",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "program_id": {
+      "type": "string"
+    },
+    "program_title": {
+      "type": "string",
+      "description": "Denormalized"
+    },
+    "learning_path_id": {
+      "type": "string",
+      "description": "Which learning path within the program"
+    },
+    "learning_path_name": {
+      "type": "string"
+    },
+    "role_id": {
+      "type": "string",
+      "description": "Training role assigned to this learner"
+    },
+    "role_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "assigned",
+        "in_progress",
+        "completed",
+        "withdrawn",
+        "overdue"
+      ],
+      "default": "assigned"
+    },
+    "assigned_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "started_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "progress_percent": {
+      "type": "number",
+      "default": 0
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "program_id"
+  ]
+}

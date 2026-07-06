@@ -34,6 +34,7 @@ const PORTAL_REGISTRY = {
   '/digilit': { label: 'Digital Literacy', icon: Monitor },
   '/community': { label: 'Community Programs', icon: Heart },
   '/winter-wonderland': { label: 'Winter Wonderland', icon: Snowflake },
+  '/lms': { label: 'LMS', icon: GraduationCap },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };
