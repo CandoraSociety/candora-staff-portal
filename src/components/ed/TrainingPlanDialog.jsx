@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { PLAN_TYPES, PLAN_STATUSES } from "@/lib/trainingConstants";
+
+const selectClass = "flex h-9 w-full items-center rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 const EMPTY = {
   employee_name: "",
@@ -68,18 +69,18 @@ export default function TrainingPlanDialog({ open, onClose, onSave, editingPlan,
           {employees.length > 0 && !editingPlan && (
             <div>
               <Label className="text-xs text-muted-foreground">Quick-pick existing staff member (optional)</Label>
-              <Select onValueChange={handleEmployeeSelect}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select an employee to auto-fill..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.first_name} {emp.last_name} — {emp.position}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                className={`${selectClass} mt-1 text-muted-foreground`}
+                value=""
+                onChange={e => e.target.value && handleEmployeeSelect(e.target.value)}
+              >
+                <option value="" disabled>Select an employee to auto-fill...</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.first_name} {emp.last_name} — {emp.position}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
@@ -97,21 +98,23 @@ export default function TrainingPlanDialog({ open, onClose, onSave, editingPlan,
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-xs">Plan Type</Label>
-              <Select value={form.plan_type} onValueChange={v => set("plan_type", v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PLAN_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                className={`${selectClass} mt-1`}
+                value={form.plan_type}
+                onChange={e => set("plan_type", e.target.value)}
+              >
+                {PLAN_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
             </div>
             <div>
               <Label className="text-xs">Status</Label>
-              <Select value={form.status} onValueChange={v => set("status", v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PLAN_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                className={`${selectClass} mt-1`}
+                value={form.status}
+                onChange={e => set("status", e.target.value)}
+              >
+                {PLAN_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
             </div>
           </div>
 
