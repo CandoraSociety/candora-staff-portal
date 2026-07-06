@@ -225,7 +225,10 @@ export default function EDTrainingPlanner() {
             Activities ({planItems.length})
           </h2>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => setAiDialogOpen(true)} disabled={planItems.length > 0 && !confirm("This will add AI-generated items alongside existing ones. Continue?")}>
+            <Button size="sm" variant="outline" onClick={() => {
+              if (planItems.length > 0 && !confirm("This will add AI-generated items alongside existing ones. Continue?")) return;
+              setAiDialogOpen(true);
+            }}>
               <Sparkles className="w-4 h-4 mr-1 text-amber-500" /> Generate with AI
             </Button>
             <Button size="sm" onClick={() => { setEditingItem(null); setDefaultItemPhase("first_day"); setItemDialogOpen(true); }}>

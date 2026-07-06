@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 
 export default function AIPlanGenerator({ open, onClose, plan, onGenerated }) {
@@ -102,11 +103,15 @@ Return ONLY the JSON object, no markdown or explanation.`;
 
       const items = result?.items || result?.data?.items || [];
       if (items.length > 0) {
-        onGenerated(items);
+        await onGenerated(items);
+        toast.success(`Generated ${items.length} training activities`);
         onClose();
+      } else {
+        toast.error("AI didn't return any activities. Try adding more context.");
       }
     } catch (err) {
       console.error("AI generation failed:", err);
+      toast.error(err?.message || "AI generation failed. Please try again.");
     } finally {
       setLoading(false);
     }
