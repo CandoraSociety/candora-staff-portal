@@ -9,6 +9,7 @@ import { Flag, Plus, Trash2, List, Grid, Calendar, ChevronDown, Sparkles, Pencil
 import { format, differenceInDays } from "date-fns";
 import { motion } from "framer-motion";
 import PriorityCoach from "./PriorityCoach";
+import { daysUntilDueLocal } from "@/lib/dateUtils";
 
 const PRIORITY_LEVELS = [
   { value: "critical", label: "Critical", color: "bg-red-500" },
@@ -160,7 +161,7 @@ export default function PrioritiesTab({ priorities = [], onChange, focusToday, o
         <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-2"}>
           {sortedPriorities.map((priority) => {
             const level = PRIORITY_LEVELS.find(l => l.value === priority.priority_level);
-            const daysUntilDue = priority.due_date ? differenceInDays(new Date(priority.due_date), new Date()) : null;
+            const daysUntilDue = priority.due_date ? daysUntilDueLocal(priority.due_date) : null;
             const isExpanded = expandedPriorities[priority.id];
 
             return (

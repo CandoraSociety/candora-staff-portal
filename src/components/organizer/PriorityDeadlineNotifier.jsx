@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { differenceInDays } from "date-fns";
+import { daysUntilDueLocal } from "@/lib/dateUtils";
 
 export default function PriorityDeadlineNotifier({ priorities = [] }) {
   useEffect(() => {
@@ -9,7 +9,7 @@ export default function PriorityDeadlineNotifier({ priorities = [] }) {
       priorities.forEach(priority => {
         if (!priority.due_date) return;
 
-        const daysUntil = differenceInDays(new Date(priority.due_date), new Date());
+        const daysUntil = daysUntilDueLocal(priority.due_date);
         const thresholds = [0, 1, 3];
 
         if (thresholds.includes(daysUntil)) {
