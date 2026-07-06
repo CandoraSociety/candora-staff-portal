@@ -7,16 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Plus, Pencil, Trash2, Sparkles, ChevronLeft, Clock, MapPin, User,
-  Calendar, ArrowLeftRight, GraduationCap, CheckCircle2, Circle, Loader2, Users
+  Calendar, ArrowLeftRight, GraduationCap, CheckCircle2, Circle, Loader2, Users, Layers
 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import TrainingPlanDialog from "@/components/ed/TrainingPlanDialog";
 import TrainingItemDialog from "@/components/ed/TrainingItemDialog";
 import AIPlanGenerator from "@/components/ed/AIPlanGenerator";
+import TemplatePicker from "@/components/ed/TemplatePicker";
 import {
   PLAN_TYPES, PLAN_STATUSES, PHASES, ITEM_TYPES, ITEM_STATUSES,
   getPlanType, getPlanStatus, getPhase, getItemType, getItemStatus,
 } from "@/lib/trainingConstants";
+import { PHASE_GUIDANCE } from "@/lib/trainingTemplates";
 
 export default function EDTrainingPlanner() {
   const qc = useQueryClient();
@@ -27,6 +29,7 @@ export default function EDTrainingPlanner() {
   const [editingItem, setEditingItem] = useState(null);
   const [defaultItemPhase, setDefaultItemPhase] = useState("first_day");
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
 
   const { data: plans = [] } = useQuery({
     queryKey: ["training-plans"],
@@ -138,6 +141,30 @@ export default function EDTrainingPlanner() {
     }
   };
 
+  // ---- Template Apply ----
+  const handleTemplateApplied = async (items) => {
+    const toCreate = items.map((item, idx) => ({
+      plan_id: selectedPlanId,
+      title: item.title || "Untitled",
+      description: item.description || "",
+      phase: PHASES.some(p => p.value === item.phase) ? item.phase : "first_day",
+      day_number: item.day_number || 1,
+      time_block: item.time_block || "",
+      duration_minutes: item.duration_minutes || 30,
+      item_type: ITEM_TYPES.some(t => t.value === item.item_type) ? item.item_type : "task",
+      owner_name: item.owner_name || "",
+      owner_email: "",
+      location: item.location || "",
+      status: "not_started",
+      notes: "",
+      sort_order: item.sort_order || idx,
+    }));
+    if (toCreate.length > 0) {
+      await base44.entities.TrainingPlanItem.bulkCreate(toCreate);
+      qc.invalidateQueries({ queryKey: ["training-plan-items"] });
+    }
+  };
+
   // ====== DETAIL VIEW ======
   if (selectedPlan) {
     const progress = calcProgress(selectedPlan.id);
@@ -224,7 +251,10 @@ export default function EDTrainingPlanner() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Activities ({planItems.length})
           </h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={() => setTemplateDialogOpen(true)}>
+              <Layers className="w-4 h-4 mr-1 text-indigo-500" /> Use Template
+            </Button>
             <Button size="sm" variant="outline" onClick={() => {
               if (planItems.length > 0 && !confirm("This will add AI-generated items alongside existing ones. Continue?")) return;
               setAiDialogOpen(true);
@@ -242,10 +272,16 @@ export default function EDTrainingPlanner() {
           <Card>
             <CardContent className="p-12 text-center">
               <GraduationCap className="w-10 h-10 mx-auto text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground mb-4">No activities yet. Add them manually or generate a plan with AI.</p>
-              <Button onClick={() => setAiDialogOpen(true)}>
-                <Sparkles className="w-4 h-4 mr-2 text-amber-500" /> Generate First Day & Week Plan
-              </Button>
+              <p className="text-sm text-muted-foreground mb-1">No activities yet.</p>
+              <p className="text-xs text-muted-foreground mb-5">Start from a pre-built template, generate a plan with AI, or add activities manually.</p>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <Button onClick={() => setTemplateDialogOpen(true)}>
+                  <Layers className="w-4 h-4 mr-2 text-indigo-500" /> Start from Template
+                </Button>
+                <Button variant="outline" onClick={() => setAiDialogOpen(true)}>
+                  <Sparkles className="w-4 h-4 mr-2 text-amber-500" /> Generate with AI
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -255,9 +291,12 @@ export default function EDTrainingPlanner() {
               if (phaseItems.length === 0) return null;
               return (
                 <div key={phase.value}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <h3 className={`text-sm font-semibold px-2.5 py-1 rounded-md ${phase.color}`}>{phase.label}</h3>
-                    <span className="text-xs text-muted-foreground">{phaseItems.length} activit{phaseItems.length === 1 ? "y" : "ies"}</span>
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-sm font-semibold px-2.5 py-1 rounded-md ${phase.color}`}>{phase.label}</h3>
+                      <span className="text-xs text-muted-foreground">{phaseItems.length} activit{phaseItems.length === 1 ? "y" : "ies"}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground/70 mt-1 ml-1">{PHASE_GUIDANCE[phase.value]}</p>
                   </div>
                   <div className="space-y-2">
                     {phaseItems.map(item => (
@@ -295,6 +334,12 @@ export default function EDTrainingPlanner() {
           onClose={() => setAiDialogOpen(false)}
           plan={selectedPlan}
           onGenerated={handleAIGenerated}
+        />
+        <TemplatePicker
+          open={templateDialogOpen}
+          onClose={() => setTemplateDialogOpen(false)}
+          plan={selectedPlan}
+          onApply={handleTemplateApplied}
         />
         {planDialogOpen && (
           <TrainingPlanDialog
