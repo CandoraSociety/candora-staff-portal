@@ -1,12 +1,14 @@
+import { useState } from "react";
 import {
   FileText, Image as ImageIcon, Video, File, Link2, MessageSquare,
-  CheckSquare, HelpCircle, ChevronDown, ChevronUp, Table as TableIcon, Plus, Trash2, Presentation,
+  CheckSquare, HelpCircle, ChevronDown, ChevronUp, Table as TableIcon, Plus, Trash2, Presentation, Upload, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 import {
   CONTENT_BLOCK_TYPES, CALLOUT_VARIANTS, getBlockType,
 } from "@/lib/lmsConstants";
@@ -70,25 +72,7 @@ function BlockEditor({ type, data, onChange }) {
         </div>
       );
     case "image":
-      return (
-        <div className="space-y-2">
-          <div>
-            <Label className="text-xs mb-1 block">Image URL</Label>
-            <Input value={data.url || ""} onChange={e => onChange({ url: e.target.value })} placeholder="https://..." className="text-sm h-8" />
-          </div>
-          {data.url && <img src={data.url} alt={data.alt_text || ""} className="max-h-40 rounded-md border" />}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs mb-1 block">Caption (optional)</Label>
-              <Input value={data.caption || ""} onChange={e => onChange({ caption: e.target.value })} placeholder="Caption..." className="text-sm h-8" />
-            </div>
-            <div>
-              <Label className="text-xs mb-1 block">Alt Text (optional)</Label>
-              <Input value={data.alt_text || ""} onChange={e => onChange({ alt_text: e.target.value })} placeholder="Alt text..." className="text-sm h-8" />
-            </div>
-          </div>
-        </div>
-      );
+      return <ImageBlockEditor data={data} onChange={onChange} />;
     case "video":
       return (
         <div className="space-y-2">
@@ -301,4 +285,64 @@ function BlockEditor({ type, data, onChange }) {
     default:
       return <p className="text-xs text-muted-foreground italic">Unknown block type: {type}</p>;
   }
+}
+
+function ImageBlockEditor({ data, onChange }) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      onChange({ url: file_url });
+    } catch {
+      // let it bubble
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div className="space-y-2">
+      {data.url ? (
+        <div className="relative group">
+          <img src={data.url} alt={data.alt_text || ""} className="max-h-40 rounded-md border" />
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute top-1 right-1 opacity-90"
+            onClick={() => onChange({ url: "" })}
+          >
+            <Trash2 className="w-3 h-3 mr-1" /> Remove
+          </Button>
+        </div>
+      ) : (
+        <label className="flex flex-col items-center justify-center gap-1.5 border-2 border-dashed rounded-lg py-6 cursor-pointer hover:bg-muted/30 transition-colors">
+          {uploading ? (
+            <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+          ) : (
+            <Upload className="w-5 h-5 text-muted-foreground" />
+          )}
+          <span className="text-xs text-muted-foreground">{uploading ? "Uploading..." : "Click to upload an image"}</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => handleFile(e.target.files?.[0])}
+            disabled={uploading}
+          />
+        </label>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs mb-1 block">Caption (optional)</Label>
+          <Input value={data.caption || ""} onChange={e => onChange({ caption: e.target.value })} placeholder="Caption..." className="text-sm h-8" />
+        </div>
+        <div>
+          <Label className="text-xs mb-1 block">Alt Text (optional)</Label>
+          <Input value={data.alt_text || ""} onChange={e => onChange({ alt_text: e.target.value })} placeholder="Alt text..." className="text-sm h-8" />
+        </div>
+      </div>
+    </div>
+  );
 }
