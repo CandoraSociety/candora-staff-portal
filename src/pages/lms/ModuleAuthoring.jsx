@@ -10,12 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Save, Loader2,
-  BookOpen, Layers, Sparkles, Wand2,
+  BookOpen, Layers, Sparkles, Wand2, Eye,
   ChevronRight, GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import ContentBlockRenderer from "@/components/lms/ContentBlockRenderer";
 import ContentBlockPalette from "@/components/lms/ContentBlockPalette";
+import ModulePreview from "@/components/lms/ModulePreview";
 import {
   MODULE_CATEGORIES, DIFFICULTY_LEVELS, MODULE_STATUSES,
   getModuleStats,
@@ -44,6 +45,7 @@ export default function ModuleAuthoring() {
   const [expandedChapters, setExpandedChapters] = useState({});
   const [aiOpen, setAiOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -342,6 +344,10 @@ Return JSON with this structure:
 
   const stats = getModuleStats(module);
 
+  if (previewMode) {
+    return <ModulePreview module={module} onExit={() => setPreviewMode(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
@@ -359,6 +365,9 @@ Return JSON with this structure:
           {dirty && <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">Unsaved</Badge>}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setPreviewMode(true)}>
+            <Eye className="w-3.5 h-3.5 mr-1" /> Preview
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setAiOpen(!aiOpen)}>
             <Wand2 className="w-3.5 h-3.5 mr-1" /> AI Assist
           </Button>
