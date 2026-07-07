@@ -6,18 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Plus, Pencil, Trash2, BookOpen, Clock, Search, HelpCircle, Layers,
-  Package, ChevronRight,
+  Plus, BookOpen, Search, ChevronRight, ChevronDown, FolderOpen,
 } from "lucide-react";
 import {
-  MODULE_CATEGORIES, getModuleCategory, getDifficulty, getModuleStatus, getModuleStats,
+  MODULE_CATEGORIES, MODULE_STATUSES, DIFFICULTY_LEVELS,
+  getModuleCategory, getDifficulty, getModuleStatus,
 } from "@/lib/lmsConstants";
+import ModuleCard from "@/components/lms/ModuleCard";
 
 export default function ModuleLibrary() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [groupBy, setGroupBy] = useState("none");
+  const [collapsedGroups, setCollapsedGroups] = useState({});
   const { data: modules = [] } = useQuery({
     queryKey: ["lms-modules"],
     queryFn: () => base44.entities.TrainingModule.list("-updated_date"),
@@ -56,6 +59,45 @@ export default function ModuleLibrary() {
     const matchStatus = filterStatus === "all" || m.status === filterStatus;
     return matchSearch && matchCat && matchStatus;
   });
+
+  const GROUP_OPTIONS = [
+    { value: "none", label: "No grouping" },
+    { value: "category", label: "Category" },
+    { value: "status", label: "Status" },
+    { value: "difficulty", label: "Difficulty" },
+  ];
+
+  const groupLabelMap = {
+    category: MODULE_CATEGORIES,
+    status: MODULE_STATUSES,
+    difficulty: DIFFICULTY_LEVELS,
+  };
+
+  const grouped = useMemo(() => {
+    if (groupBy === "none") return null;
+    const groups = {};
+    filtered.forEach(m => {
+      const key = m[groupBy] || "uncategorized";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(m);
+    });
+    const labelSource = groupLabelMap[groupBy] || [];
+    const orderedKeys = labelSource.map(o => o.value).filter(k => groups[k]);
+    if (groups.uncategorized) orderedKeys.push("uncategorized");
+    return orderedKeys.map(key => {
+      const meta = labelSource.find(o => o.value === key);
+      return {
+        key,
+        label: meta?.label || (key === "uncategorized" ? "Uncategorized" : key),
+        color: meta?.color || "",
+        modules: groups[key],
+      };
+    });
+  }, [filtered, groupBy]);
+
+  const toggleGroup = (key) => {
+    setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const handleDelete = async (mod) => {
     const usageCount = usageMap[mod.id] || 0;
@@ -106,6 +148,9 @@ export default function ModuleLibrary() {
           <option value="published">Published</option>
           <option value="archived">Archived</option>
         </select>
+        <select value={groupBy} onChange={e => setGroupBy(e.target.value)} className="h-9 rounded-md border border-input bg-transparent text-sm px-3">
+          {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>Group by: {o.label}</option>)}
+        </select>
       </div>
 
       {/* Module grid */}
@@ -122,47 +167,35 @@ export default function ModuleLibrary() {
             )}
           </CardContent>
         </Card>
+      ) : grouped ? (
+        <div className="space-y-4">
+          {grouped.map(group => (
+            <div key={group.key}>
+              <button
+                onClick={() => toggleGroup(group.key)}
+                className="w-full flex items-center gap-2 mb-3 group-header"
+              >
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${collapsedGroups[group.key] ? "-rotate-90" : ""}`} />
+                <FolderOpen className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm">{group.label}</span>
+                <Badge variant="secondary" className="text-[10px]">{group.modules.length}</Badge>
+                <div className="flex-1 h-px bg-border ml-2" />
+              </button>
+              {!collapsedGroups[group.key] && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pl-6">
+                  {group.modules.map(mod => (
+                    <ModuleCard key={mod.id} mod={mod} usageCount={usageMap[mod.id] || 0} onDelete={handleDelete} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(mod => {
-            const cat = getModuleCategory(mod.category);
-            const status = getModuleStatus(mod.status);
-            const diff = getDifficulty(mod.difficulty);
-            const stats = getModuleStats(mod);
-            const usageCount = usageMap[mod.id] || 0;
-            return (
-              <Card key={mod.id} className="cursor-pointer hover:shadow-md transition-shadow group" >
-                <Link to={`/lms/modules/${mod.id}/edit`} className="block">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <Badge variant="outline" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
-                      <Badge variant="outline" className={`text-[10px] ${status.color}`}>{status.label}</Badge>
-                    </div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-2">{mod.title}</h3>
-                    {mod.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{mod.description}</p>}
-                    <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                      <span className={diff.color}>{diff.label}</span>
-                      {mod.duration_minutes > 0 && <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" /> {mod.duration_minutes}m</span>}
-                      {stats.chapters > 0 && <span className="flex items-center gap-0.5"><Layers className="w-3 h-3" /> {stats.chapters}ch</span>}
-                      {stats.blocks > 0 && <span>{stats.blocks} blocks</span>}
-                      {stats.quizBlocks > 0 && <span className="flex items-center gap-0.5"><HelpCircle className="w-3 h-3" /> {stats.quizBlocks}</span>}
-                    </div>
-                    {usageCount > 0 && (
-                      <div className="mt-2 pt-2 border-t">
-                        <Badge variant="secondary" className="text-[10px]">
-                          <Package className="w-2.5 h-2.5 mr-1" /> Used in {usageCount} program{usageCount !== 1 ? "s" : ""}
-                        </Badge>
-                      </div>
-                    )}
-                  </CardContent>
-                </Link>
-                <div className="flex justify-end gap-1 px-4 pb-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Link to={`/lms/modules/${mod.id}/edit`}><Button size="icon" variant="ghost" className="h-7 w-7"><Pencil className="w-3.5 h-3.5" /></Button></Link>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDelete(mod)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                </div>
-              </Card>
-            );
-          })}
+          {filtered.map(mod => (
+            <ModuleCard key={mod.id} mod={mod} usageCount={usageMap[mod.id] || 0} onDelete={handleDelete} />
+          ))}
         </div>
       )}
     </div>
