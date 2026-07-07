@@ -31,8 +31,8 @@ export default function ModulePreview({ module, onExit }) {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [furthestReached, setFurthestReached] = useState(0);
   const [expandedChapters, setExpandedChapters] = useState(() => {
-    // Expand the chapter containing the current section by default
     const chIdx = allSections[0]?.chIdx ?? 0;
     return { [chIdx]: true };
   });
@@ -45,13 +45,18 @@ export default function ModulePreview({ module, onExit }) {
   const hasNext = currentIdx < totalSections - 1;
   const hasPrev = currentIdx > 0;
 
-  // Furthest unlocked section: current in-progress + everything completed before it
-  const maxUnlocked = Math.max(currentIdx, ...completedSections);
+  // Furthest unlocked section: tracks the furthest section ever reached, so navigating
+  // back doesn't re-lock sections that were already in progress.
+  const maxUnlocked = Math.max(furthestReached, ...completedSections);
   const isUnlocked = (idx) => idx <= maxUnlocked;
 
   const markComplete = () => {
     setCompletedSections(prev => new Set([...prev, currentIdx]));
-    if (hasNext) setCurrentIdx(currentIdx + 1);
+    if (hasNext) {
+      const next = currentIdx + 1;
+      setCurrentIdx(next);
+      setFurthestReached(prev => Math.max(prev, next));
+    }
   };
 
   const goTo = (idx) => {
