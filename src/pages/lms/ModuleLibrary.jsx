@@ -62,6 +62,7 @@ export default function ModuleLibrary() {
 
   const GROUP_OPTIONS = [
     { value: "none", label: "No grouping" },
+    { value: "program", label: "Program" },
     { value: "category", label: "Category" },
     { value: "status", label: "Status" },
     { value: "difficulty", label: "Difficulty" },
@@ -76,6 +77,26 @@ export default function ModuleLibrary() {
   const grouped = useMemo(() => {
     if (groupBy === "none") return null;
     const groups = {};
+    if (groupBy === "program") {
+      filtered.forEach(m => {
+        const key = m.program_id || "no_program";
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(m);
+      });
+      const progOrder = programs
+        .map(p => p.id)
+        .filter(k => groups[k]);
+      if (groups.no_program) progOrder.push("no_program");
+      return progOrder.map(key => {
+        const prog = programs.find(p => p.id === key);
+        return {
+          key,
+          label: key === "no_program" ? "No Program" : (prog?.title || "Unknown Program"),
+          color: "",
+          modules: groups[key],
+        };
+      });
+    }
     filtered.forEach(m => {
       const key = m[groupBy] || "uncategorized";
       if (!groups[key]) groups[key] = [];
@@ -93,7 +114,7 @@ export default function ModuleLibrary() {
         modules: groups[key],
       };
     });
-  }, [filtered, groupBy]);
+  }, [filtered, groupBy, programs]);
 
   const toggleGroup = (key) => {
     setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));

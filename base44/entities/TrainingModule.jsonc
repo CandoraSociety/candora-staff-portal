@@ -77,6 +77,14 @@
     "created_by_name": {
       "type": "string"
     },
+    "program_id": {
+      "type": "string",
+      "description": "Optional reference to a TrainingProgram this module belongs to"
+    },
+    "program_title": {
+      "type": "string",
+      "description": "Denormalized program title for display"
+    },
     "learning_objectives": {
       "type": "array",
       "items": {

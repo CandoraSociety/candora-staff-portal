@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +29,14 @@ const emptyModule = {
   duration_minutes: 0, status: "draft", version: 1, version_notes: "",
   version_locked: false, tags: [], learning_objectives: [],
   chapters: [], thumbnail_url: "", created_by_name: "",
+  program_id: "", program_title: "",
 };
 
 export default function ModuleAuthoring() {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const isNew = moduleId === "new";
+  const isNew = !moduleId || moduleId === "new";
 
   const [module, setModule] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,11 @@ export default function ModuleAuthoring() {
   const [aiOpen, setAiOpen] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+
+  const { data: programs = [] } = useQuery({
+    queryKey: ["lms-programs"],
+    queryFn: () => base44.entities.TrainingProgram.list(),
+  });
 
   useEffect(() => {
     if (isNew) {
@@ -430,6 +436,22 @@ Return JSON with this structure:
                   {MODULE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Program (optional)</Label>
+              <select
+                value={module.program_id || ""}
+                onChange={e => {
+                  const prog = programs.find(p => p.id === e.target.value);
+                  update("program_id", e.target.value);
+                  update("program_title", prog?.title || "");
+                }}
+                className="w-full h-9 rounded-md border border-input bg-transparent text-sm px-2"
+              >
+                <option value="">— No specific program —</option>
+                {programs.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+              </select>
+              <p className="text-[11px] text-muted-foreground mt-1">Assign this module to a specific program for easier grouping in the library.</p>
             </div>
             <div>
               <Label className="text-xs mb-1 block">Tags</Label>
