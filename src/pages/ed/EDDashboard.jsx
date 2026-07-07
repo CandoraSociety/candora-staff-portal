@@ -10,7 +10,6 @@ import { format, isAfter, parseISO, addDays } from "date-fns";
 
 // Dashboard widgets — same components as main dashboard (shared data)
 import AnnouncementsWidget from "@/components/dashboard/AnnouncementsWidget";
-import OrganizerWidget from "@/components/dashboard/OrganizerWidget";
 import HowToSearch from "@/components/howto/HowToSearch";
 import GoogleTranslateWidget from "@/components/dashboard/GoogleTranslateWidget";
 import RecentActivityWidget from "@/components/dashboard/RecentActivityWidget";
@@ -141,13 +140,12 @@ export default function EDDashboard() {
       </div>
 
       {/* Optional widgets from main dashboard (shared data) */}
-      {(isOn("howto") || isOn("organizer") || isOn("google_translate") || isOn("announcements") || isOn("recent_activity")) && (
+      {(isOn("howto") || isOn("google_translate") || isOn("announcements") || isOn("recent_activity")) && (
         <div className="space-y-4">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dashboard Widgets</p>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {isOn("howto") && <HowToSearch user={user} />}
-              {isOn("organizer") && <OrganizerWidget />}
               {isOn("google_translate") && <GoogleTranslateWidget />}
               {isOn("recent_activity") && <RecentActivityWidget />}
             </div>
