@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronRight, Clock, BarChart2, Target, Lightbulb,
   FileText, Image as ImageIcon, Video, File, Link2, MessageSquare,
   CheckSquare, HelpCircle, Table as TableIcon, Presentation,
+  Lock, Menu, BookOpen,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -29,6 +30,12 @@ export default function ModulePreview({ module, onExit }) {
   const [checkedItems, setCheckedItems] = useState({});
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedChapters, setExpandedChapters] = useState(() => {
+    // Expand the chapter containing the current section by default
+    const chIdx = allSections[0]?.chIdx ?? 0;
+    return { [chIdx]: true };
+  });
 
   const totalSections = allSections.length;
   const completedCount = completedSections.size;
@@ -38,13 +45,24 @@ export default function ModulePreview({ module, onExit }) {
   const hasNext = currentIdx < totalSections - 1;
   const hasPrev = currentIdx > 0;
 
+  // Furthest unlocked section: current in-progress + everything completed before it
+  const maxUnlocked = Math.max(currentIdx, ...completedSections);
+  const isUnlocked = (idx) => idx <= maxUnlocked;
+
   const markComplete = () => {
     setCompletedSections(prev => new Set([...prev, currentIdx]));
     if (hasNext) setCurrentIdx(currentIdx + 1);
   };
 
   const goTo = (idx) => {
-    if (idx >= 0 && idx < totalSections) setCurrentIdx(idx);
+    if (idx >= 0 && idx < totalSections && isUnlocked(idx)) {
+      setCurrentIdx(idx);
+      setSidebarOpen(false);
+    }
+  };
+
+  const toggleChapter = (chIdx) => {
+    setExpandedChapters(prev => ({ ...prev, [chIdx]: !prev[chIdx] }));
   };
 
   const toggleAccordion = (id) => {
@@ -90,6 +108,9 @@ export default function ModulePreview({ module, onExit }) {
       {/* Preview top bar */}
       <div className="shrink-0 bg-background border-b px-4 py-2.5 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+            <Menu className="w-4 h-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={onExit}>
             <X className="w-4 h-4 mr-1" /> Exit Preview
           </Button>
@@ -107,99 +128,180 @@ export default function ModulePreview({ module, onExit }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto w-full max-w-3xl mx-auto px-4 py-6">
-        {/* Module header (only on first section) */}
-        {currentIdx === 0 && (
-          <div className="mb-6 pb-6 border-b">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar overlay (mobile) */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Left navigation sidebar */}
+        <aside className={`
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+          fixed lg:static inset-y-0 left-0 z-40 lg:z-auto
+          w-72 shrink-0 bg-background border-r overflow-y-auto
+          transition-transform duration-200
+        `}>
+          <div className="p-3 border-b sticky top-0 bg-background z-10">
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
-              <Badge variant="outline" className={`text-[10px] ${diff.color}`}>{diff.label}</Badge>
-              {module.duration_minutes > 0 && (
-                <Badge variant="outline" className="text-[10px] gap-1">
-                  <Clock className="w-3 h-3" /> {module.duration_minutes} min
-                </Badge>
-              )}
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold truncate">{module.title}</span>
+              <Button variant="ghost" size="icon" className="ml-auto h-6 w-6 lg:hidden" onClick={() => setSidebarOpen(false)}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
             </div>
-            <h1 className="text-2xl font-bold mb-1">{module.title}</h1>
-            {module.description && (
-              <p className="text-sm text-muted-foreground">{module.description}</p>
-            )}
-            {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
-              <div className="mt-4 p-3 rounded-lg bg-card border">
-                <p className="text-xs font-semibold flex items-center gap-1.5 mb-2">
-                  <Target className="w-3.5 h-3.5 text-primary" /> Learning Objectives
-                </p>
-                <ul className="space-y-1">
-                  {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 shrink-0" />
-                      <span>{obj}</span>
-                    </li>
-                  ))}
-                </ul>
+            <div className="flex items-center gap-2">
+              <Progress value={progressPercent} className="h-1.5 flex-1" />
+              <span className="text-[10px] font-medium text-muted-foreground shrink-0">{progressPercent}%</span>
+            </div>
+          </div>
+
+          <nav className="p-2 space-y-1">
+            {(module.chapters || []).map((chapter, chIdx) => {
+              const chapterSections = allSections
+                .map((s, i) => ({ ...s, globalIdx: i }))
+                .filter(s => s.chIdx === chIdx);
+              if (chapterSections.length === 0) return null;
+              const chapterCompleted = chapterSections.filter(s => completedSections.has(s.globalIdx)).length;
+              const isExpanded = expandedChapters[chIdx];
+              const hasCurrent = chapterSections.some(s => s.globalIdx === currentIdx);
+
+              return (
+                <div key={chapter.id || chIdx}>
+                  <button
+                    onClick={() => toggleChapter(chIdx)}
+                    className={`flex items-center gap-1.5 w-full text-left px-2 py-1.5 rounded-md text-xs font-semibold hover:bg-muted/50 transition-colors ${hasCurrent ? "text-primary" : "text-foreground"}`}
+                  >
+                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
+                    <span className="truncate flex-1">{chapter.title || `Chapter ${chIdx + 1}`}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{chapterCompleted}/{chapterSections.length}</span>
+                  </button>
+
+                  {isExpanded && (
+                    <ul className="ml-3 border-l pl-1.5 space-y-0.5 mt-0.5">
+                      {chapterSections.map(({ section, globalIdx, secIdx }) => {
+                        const completed = completedSections.has(globalIdx);
+                        const isCurrent = globalIdx === currentIdx;
+                        const unlocked = isUnlocked(globalIdx);
+
+                        return (
+                          <li key={section.id || globalIdx}>
+                            <button
+                              onClick={() => goTo(globalIdx)}
+                              disabled={!unlocked}
+                              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md text-xs transition-colors ${
+                                isCurrent ? "bg-primary/10 text-primary font-medium" :
+                                completed ? "text-green-700 hover:bg-green-50" :
+                                unlocked ? "text-foreground hover:bg-muted/50" :
+                                "text-muted-foreground/50 cursor-not-allowed"
+                              }`}
+                            >
+                              {completed ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                              ) : isCurrent ? (
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-primary bg-primary/20 shrink-0" />
+                              ) : unlocked ? (
+                                <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              ) : (
+                                <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+                              )}
+                              <span className="truncate">{section.title || `Section ${secIdx + 1}`}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Main content area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-4 py-6">
+            {/* Module header (only on first section) */}
+            {currentIdx === 0 && (
+              <div className="mb-6 pb-6 border-b">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
+                  <Badge variant="outline" className={`text-[10px] ${diff.color}`}>{diff.label}</Badge>
+                  {module.duration_minutes > 0 && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Clock className="w-3 h-3" /> {module.duration_minutes} min
+                    </Badge>
+                  )}
+                </div>
+                <h1 className="text-2xl font-bold mb-1">{module.title}</h1>
+                {module.description && (
+                  <p className="text-sm text-muted-foreground">{module.description}</p>
+                )}
+                {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
+                  <div className="mt-4 p-3 rounded-lg bg-card border">
+                    <p className="text-xs font-semibold flex items-center gap-1.5 mb-2">
+                      <Target className="w-3.5 h-3.5 text-primary" /> Learning Objectives
+                    </p>
+                    <ul className="space-y-1">
+                      {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 shrink-0" />
+                          <span>{obj}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+              <span className="font-medium">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
+              <ChevronRight className="w-3 h-3" />
+              <span>{current.section.title || `Section ${current.secIdx + 1}`}</span>
+            </div>
+
+            {/* Content blocks */}
+            <div className="space-y-5">
+              {(current.section.content_blocks || []).map(block => (
+                <PreviewBlock
+                  key={block.id}
+                  block={block}
+                  expandedAccordions={expandedAccordions}
+                  toggleAccordion={toggleAccordion}
+                  checkedItems={checkedItems}
+                  toggleCheckItem={toggleCheckItem}
+                  quizAnswers={quizAnswers}
+                  quizSubmitted={quizSubmitted}
+                  selectQuizAnswer={selectQuizAnswer}
+                  submitQuiz={submitQuiz}
+                />
+              ))}
+            </div>
+
+            {/* Navigation footer */}
+            <div className="mt-8 pt-6 border-t flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={() => goTo(currentIdx - 1)} disabled={!hasPrev || !isUnlocked(currentIdx - 1)}>
+                <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Previous
+              </Button>
+              {completedSections.has(currentIdx) ? (
+                <Button size="sm" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext}>
+                  {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              ) : (
+                <Button size="sm" onClick={markComplete}>
+                  {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              )}
+            </div>
+
+            {completedSections.has(currentIdx) && (
+              <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
+              </p>
+            )}
           </div>
-        )}
-
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-          <span className="font-medium">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
-          <ChevronRight className="w-3 h-3" />
-          <span>{current.section.title || `Section ${current.secIdx + 1}`}</span>
         </div>
-
-        {/* Content blocks */}
-        <div className="space-y-5">
-          {(current.section.content_blocks || []).map(block => (
-            <PreviewBlock
-              key={block.id}
-              block={block}
-              expandedAccordions={expandedAccordions}
-              toggleAccordion={toggleAccordion}
-              checkedItems={checkedItems}
-              toggleCheckItem={toggleCheckItem}
-              quizAnswers={quizAnswers}
-              quizSubmitted={quizSubmitted}
-              selectQuizAnswer={selectQuizAnswer}
-              submitQuiz={submitQuiz}
-            />
-          ))}
-        </div>
-
-        {/* Navigation footer */}
-        <div className="mt-8 pt-6 border-t flex items-center justify-between">
-          <Button variant="outline" size="sm" onClick={() => goTo(currentIdx - 1)} disabled={!hasPrev}>
-            <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Previous
-          </Button>
-          <div className="flex gap-1">
-            {allSections.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i === currentIdx ? "bg-primary" : completedSections.has(i) ? "bg-green-500" : "bg-muted-foreground/30"
-                }`}
-                title={`Section ${i + 1}`}
-              />
-            ))}
-          </div>
-          {completedSections.has(currentIdx) ? (
-            <Button size="sm" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext}>
-              {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
-            </Button>
-          ) : (
-            <Button size="sm" onClick={markComplete}>
-              {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
-            </Button>
-          )}
-        </div>
-
-        {completedSections.has(currentIdx) && (
-          <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
-          </p>
-        )}
       </div>
     </div>
   );
