@@ -46,6 +46,13 @@ export default function ModulePreview({ module, onExit }) {
   const hasNext = currentIdx < totalSections - 1;
   const hasPrev = currentIdx > 0;
 
+  // Check for unopened accordion items — users must expand all before completing
+  const hasUnopenedAccordions = current && (current.section.content_blocks || []).some(block => {
+    if (block.type !== "accordion") return false;
+    const items = block.data?.items || [];
+    return items.some(item => !expandedAccordions[`${block.id}-${item.id}`]);
+  });
+
   // Furthest unlocked section: tracks the furthest section ever reached, so navigating
   // back doesn't re-lock sections that were already in progress.
   const maxUnlocked = Math.max(furthestReached, ...completedSections);
@@ -326,13 +333,17 @@ export default function ModulePreview({ module, onExit }) {
                     {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={markComplete}>
+                  <Button size="sm" onClick={markComplete} disabled={hasUnopenedAccordions}>
                     {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 )}
               </div>
 
-              {completedSections.has(currentIdx) && (
+              {hasUnopenedAccordions ? (
+                <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
+                  <ChevronRight className="w-3.5 h-3.5" /> Open all expandable sections to continue
+                </p>
+              ) : completedSections.has(currentIdx) && (
                 <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
                 </p>
