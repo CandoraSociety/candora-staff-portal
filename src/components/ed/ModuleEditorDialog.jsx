@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Upload, Loader2, GripVertical, ChevronUp, ChevronDown, Link2, FileText, Video, Presentation, Info } from "lucide-react";
+import { Plus, Trash2, Upload, Loader2, GripVertical, ChevronUp, ChevronDown, Link2, FileText, Video, Presentation, Info, Eye } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import SlideBuilder from "./SlideBuilder";
+import ModulePreviewDialog from "./ModulePreviewDialog";
 import {
   MODULE_CATEGORIES, CONTENT_TYPES, DIFFICULTY_LEVELS, MODULE_STATUSES,
 } from "@/lib/trainingModuleConstants";
@@ -43,6 +44,7 @@ export default function ModuleEditorDialog({ open, onClose, onSave, editingModul
   const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [activeTab, setActiveTab] = useState("details");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (editingModule) {
@@ -384,6 +386,9 @@ export default function ModuleEditorDialog({ open, onClose, onSave, editingModul
               {form.slides?.length || 0} slide(s) · {form.file_attachments.length} file(s) · {form.quiz_questions.length} quiz Q(s) · {form.learning_objectives.length} objective(s)
             </div>
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setPreviewOpen(true)} disabled={!form.title.trim()}>
+                <Eye className="w-3.5 h-3.5 mr-1" /> Preview
+              </Button>
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving || !form.title.trim()}>
                 {saving && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
@@ -392,6 +397,8 @@ export default function ModuleEditorDialog({ open, onClose, onSave, editingModul
             </div>
           </div>
         </DialogFooter>
+
+        {previewOpen && <ModulePreviewDialog module={form} open={previewOpen} onClose={() => setPreviewOpen(false)} />}
       </DialogContent>
     </Dialog>
   );
