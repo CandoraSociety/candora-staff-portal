@@ -86,9 +86,9 @@ export default function ModulePreview({ module, onExit }) {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-full flex flex-col bg-muted/30">
       {/* Preview top bar */}
-      <div className="sticky top-0 z-20 bg-background border-b px-4 py-2.5 flex items-center justify-between">
+      <div className="shrink-0 bg-background border-b px-4 py-2.5 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onExit}>
             <X className="w-4 h-4 mr-1" /> Exit Preview
@@ -107,7 +107,7 @@ export default function ModulePreview({ module, onExit }) {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto w-full max-w-3xl mx-auto px-4 py-6">
         {/* Module header (only on first section) */}
         {currentIdx === 0 && (
           <div className="mb-6 pb-6 border-b">
