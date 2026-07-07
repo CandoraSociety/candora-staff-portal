@@ -30,6 +30,7 @@ export default function ModulePreview({ module, onExit }) {
   const [checkedItems, setCheckedItems] = useState({});
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizSubmitted, setQuizSubmitted] = useState({});
+  const [showIntro, setShowIntro] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [furthestReached, setFurthestReached] = useState(0);
   const [expandedChapters, setExpandedChapters] = useState(() => {
@@ -68,6 +69,17 @@ export default function ModulePreview({ module, onExit }) {
 
   const toggleChapter = (chIdx) => {
     setExpandedChapters(prev => ({ ...prev, [chIdx]: !prev[chIdx] }));
+  };
+
+  const beginTraining = () => {
+    setShowIntro(false);
+    setCurrentIdx(0);
+    setFurthestReached(0);
+  };
+
+  const goToOverview = () => {
+    setShowIntro(true);
+    setSidebarOpen(false);
   };
 
   const toggleAccordion = (id) => {
@@ -125,7 +137,7 @@ export default function ModulePreview({ module, onExit }) {
           <span className="text-sm font-medium text-muted-foreground hidden sm:inline">{module.title}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="hidden sm:inline">Section {currentIdx + 1} of {totalSections}</span>
+          {!showIntro && <span className="hidden sm:inline">Section {currentIdx + 1} of {totalSections}</span>}
           <div className="w-24 hidden md:block">
             <Progress value={progressPercent} className="h-1.5" />
           </div>
@@ -161,6 +173,15 @@ export default function ModulePreview({ module, onExit }) {
           </div>
 
           <nav className="p-2 space-y-1">
+            <button
+              onClick={goToOverview}
+              className={`flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-md text-xs font-semibold transition-colors ${showIntro ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"}`}
+            >
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span>Module Overview</span>
+            </button>
+            <div className="h-px bg-border my-1" />
+
             {(module.chapters || []).map((chapter, chIdx) => {
               const chapterSections = allSections
                 .map((s, i) => ({ ...s, globalIdx: i }))
@@ -224,88 +245,99 @@ export default function ModulePreview({ module, onExit }) {
 
         {/* Main content area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-4 py-6">
-            {/* Module header (only on first section) */}
-            {currentIdx === 0 && (
-              <div className="mb-6 pb-6 border-b">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
-                  <Badge variant="outline" className={`text-[10px] ${diff.color}`}>{diff.label}</Badge>
-                  {module.duration_minutes > 0 && (
-                    <Badge variant="outline" className="text-[10px] gap-1">
-                      <Clock className="w-3 h-3" /> {module.duration_minutes} min
-                    </Badge>
-                  )}
-                </div>
-                <h1 className="text-2xl font-bold mb-1">{module.title}</h1>
-                {module.description && (
-                  <p className="text-sm text-muted-foreground">{module.description}</p>
-                )}
-                {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
-                  <div className="mt-4 p-3 rounded-lg bg-card border">
-                    <p className="text-xs font-semibold flex items-center gap-1.5 mb-2">
-                      <Target className="w-3.5 h-3.5 text-primary" /> Learning Objectives
-                    </p>
-                    <ul className="space-y-1">
-                      {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                          <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 shrink-0" />
-                          <span>{obj}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+          {showIntro ? (
+            <div className="max-w-2xl mx-auto px-4 py-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge variant="secondary" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
+                <Badge variant="outline" className={`text-[10px] ${diff.color}`}>{diff.label}</Badge>
+                {module.duration_minutes > 0 && (
+                  <Badge variant="outline" className="text-[10px] gap-1">
+                    <Clock className="w-3 h-3" /> {module.duration_minutes} min
+                  </Badge>
                 )}
               </div>
-            )}
-
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-              <span className="font-medium">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
-              <ChevronRight className="w-3 h-3" />
-              <span>{current.section.title || `Section ${current.secIdx + 1}`}</span>
-            </div>
-
-            {/* Content blocks */}
-            <div className="space-y-5">
-              {(current.section.content_blocks || []).map(block => (
-                <PreviewBlock
-                  key={block.id}
-                  block={block}
-                  expandedAccordions={expandedAccordions}
-                  toggleAccordion={toggleAccordion}
-                  checkedItems={checkedItems}
-                  toggleCheckItem={toggleCheckItem}
-                  quizAnswers={quizAnswers}
-                  quizSubmitted={quizSubmitted}
-                  selectQuizAnswer={selectQuizAnswer}
-                  submitQuiz={submitQuiz}
-                />
-              ))}
-            </div>
-
-            {/* Navigation footer */}
-            <div className="mt-8 pt-6 border-t flex items-center justify-between">
-              <Button variant="outline" size="sm" onClick={() => goTo(currentIdx - 1)} disabled={!hasPrev || !isUnlocked(currentIdx - 1)}>
-                <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Previous
-              </Button>
-              {completedSections.has(currentIdx) ? (
-                <Button size="sm" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext}>
-                  {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
+              <h1 className="text-3xl font-bold mb-2">{module.title}</h1>
+              {module.description && (
+                <p className="text-sm text-muted-foreground leading-relaxed">{module.description}</p>
+              )}
+              {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
+                <div className="mt-6 p-4 rounded-lg bg-card border">
+                  <p className="text-sm font-semibold flex items-center gap-1.5 mb-3">
+                    <Target className="w-4 h-4 text-primary" /> Learning Objectives
+                  </p>
+                  <ul className="space-y-2">
+                    {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                        <span>{obj}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <Button size="lg" onClick={beginTraining} className="px-8">
+                  Begin Training <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
-              ) : (
-                <Button size="sm" onClick={markComplete}>
-                  {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
-                </Button>
+                <p className="text-xs text-muted-foreground">{totalSections} section{totalSections !== 1 ? "s" : ""} across {(module.chapters || []).length} chapter{(module.chapters || []).length !== 1 ? "s" : ""}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-3xl mx-auto px-4 py-6">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+                <span className="font-medium">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
+                <ChevronRight className="w-3 h-3" />
+                <span>{current.section.title || `Section ${current.secIdx + 1}`}</span>
+              </div>
+
+              {/* Content blocks */}
+              <div className="space-y-5">
+                {(current.section.content_blocks || []).map(block => (
+                  <PreviewBlock
+                    key={block.id}
+                    block={block}
+                    expandedAccordions={expandedAccordions}
+                    toggleAccordion={toggleAccordion}
+                    checkedItems={checkedItems}
+                    toggleCheckItem={toggleCheckItem}
+                    quizAnswers={quizAnswers}
+                    quizSubmitted={quizSubmitted}
+                    selectQuizAnswer={selectQuizAnswer}
+                    submitQuiz={submitQuiz}
+                  />
+                ))}
+              </div>
+
+              {/* Navigation footer */}
+              <div className="mt-8 pt-6 border-t flex items-center justify-between">
+                {currentIdx === 0 ? (
+                  <Button variant="outline" size="sm" onClick={goToOverview}>
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Overview
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => goTo(currentIdx - 1)} disabled={!isUnlocked(currentIdx - 1)}>
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Previous
+                  </Button>
+                )}
+                {completedSections.has(currentIdx) ? (
+                  <Button size="sm" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext}>
+                    {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={markComplete}>
+                    {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                )}
+              </div>
+
+              {completedSections.has(currentIdx) && (
+                <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
+                </p>
               )}
             </div>
-
-            {completedSections.has(currentIdx) && (
-              <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
-              </p>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
