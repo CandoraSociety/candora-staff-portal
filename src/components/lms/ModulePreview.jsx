@@ -186,7 +186,6 @@ export default function ModulePreview({ module, onExit }) {
               const chapterSections = allSections
                 .map((s, i) => ({ ...s, globalIdx: i }))
                 .filter(s => s.chIdx === chIdx);
-              if (chapterSections.length === 0) return null;
               const chapterCompleted = chapterSections.filter(s => completedSections.has(s.globalIdx)).length;
               const isExpanded = expandedChapters[chIdx];
               const hasCurrent = chapterSections.some(s => s.globalIdx === currentIdx);
@@ -204,7 +203,9 @@ export default function ModulePreview({ module, onExit }) {
 
                   {isExpanded && (
                     <ul className="ml-3 border-l pl-1.5 space-y-0.5 mt-0.5">
-                      {chapterSections.map(({ section, globalIdx, secIdx }) => {
+                      {chapterSections.length === 0 ? (
+                        <li className="px-2 py-1.5 text-xs text-muted-foreground/50 italic">No sections yet</li>
+                      ) : chapterSections.map(({ section, globalIdx, secIdx }) => {
                         const completed = completedSections.has(globalIdx);
                         const isCurrent = globalIdx === currentIdx;
                         const unlocked = isUnlocked(globalIdx);
