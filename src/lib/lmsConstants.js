@@ -1,6 +1,6 @@
 import {
   FileText, Image as ImageIcon, Video, File, Link2, MessageSquare,
-  CheckSquare, HelpCircle, ChevronDown, Table as TableIcon, Presentation,
+  CheckSquare, HelpCircle, ChevronDown, Table as TableIcon, Presentation, Sparkles,
 } from "lucide-react";
 
 export const MODULE_CATEGORIES = [
@@ -67,6 +67,7 @@ export const CONTENT_BLOCK_TYPES = [
   { value: "accordion", label: "Accordion", icon: ChevronDown, description: "Expandable/collapsible sections" },
   { value: "table", label: "Table", icon: TableIcon, description: "Structured data table" },
   { value: "slides", label: "PowerPoint Slides", icon: Presentation, description: "Build and embed a slide deck with multiple layouts and themes" },
+  { value: "dynamic", label: "Dynamic Reveal", icon: Sparkles, description: "Interactive elements (text, images, charts) that animate in one-by-one on click" },
 ];
 
 export const CALLOUT_VARIANTS = [
@@ -109,6 +110,7 @@ export function createDefaultBlockData(type) {
     case "accordion": return { items: [{ id: crypto.randomUUID(), title: "", content: "" }] };
     case "table": return { headers: ["", ""], rows: [["", ""]] };
     case "slides": return { theme: "light", slides: [{ id: crypto.randomUUID(), title: "", body: "", image_url: "", layout: "title_content", notes: "" }] };
+    case "dynamic": return { title: "", elements: [] };
     default: return {};
   }
 }

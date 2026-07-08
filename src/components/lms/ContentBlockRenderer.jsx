@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   FileText, Image as ImageIcon, Video, File, Link2, MessageSquare,
-  CheckSquare, HelpCircle, ChevronDown, ChevronUp, Table as TableIcon, Plus, Trash2, Presentation, Upload, Loader2,
+  CheckSquare, HelpCircle, ChevronDown, ChevronUp, Table as TableIcon, Plus, Trash2, Presentation, Upload, Loader2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   CONTENT_BLOCK_TYPES, CALLOUT_VARIANTS, getBlockType,
 } from "@/lib/lmsConstants";
 import SlideBlockEditor from "@/components/lms/SlideBlockEditor";
+import DynamicBlockEditor from "@/components/lms/DynamicBlockEditor";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -31,7 +32,7 @@ const quillModules = {
 const ICON_MAP = {
   rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
   external_link: Link2, callout: MessageSquare, checklist: CheckSquare,
-  knowledge_check: HelpCircle, accordion: ChevronDown, table: TableIcon, slides: Presentation,
+  knowledge_check: HelpCircle, accordion: ChevronDown, table: TableIcon, slides: Presentation, dynamic: Sparkles,
 };
 
 export default function ContentBlockRenderer({ block, onChange, onDelete, onMoveUp, onMoveDown, canMoveUp, canMoveDown }) {
@@ -282,6 +283,8 @@ function BlockEditor({ type, data, onChange }) {
       );
     case "slides":
       return <SlideBlockEditor data={data} onChange={onChange} />;
+    case "dynamic":
+      return <DynamicBlockEditor data={data} onChange={onChange} />;
     default:
       return <p className="text-xs text-muted-foreground italic">Unknown block type: {type}</p>;
   }

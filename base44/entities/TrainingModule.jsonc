@@ -133,7 +133,7 @@
                       },
                       "type": {
                         "type": "string",
-                        "description": "Block type: rich_text, image, video, pdf, external_link, callout, checklist, knowledge_check, accordion, table"
+                        "description": "Block type: rich_text, image, video, pdf, external_link, callout, checklist, knowledge_check, accordion, table, slides, dynamic"
                       },
                       "sort_order": {
                         "type": "number",

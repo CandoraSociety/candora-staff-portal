@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle2, Circle, X,
   ChevronDown, ChevronRight, Clock, BarChart2, Target, Lightbulb,
   FileText, Image as ImageIcon, Video, File, Link2, MessageSquare,
-  CheckSquare, HelpCircle, Table as TableIcon, Presentation,
+  CheckSquare, HelpCircle, Table as TableIcon, Presentation, Sparkles,
   Lock, Menu, BookOpen,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -14,6 +14,7 @@ import {
   MODULE_CATEGORIES, DIFFICULTY_LEVELS, MODULE_STATUSES,
   getModuleCategory, getDifficulty, getModuleStatus,
 } from "@/lib/lmsConstants";
+import DynamicBlockPreview from "@/components/lms/DynamicBlockPreview";
 
 export default function ModulePreview({ module, onExit }) {
   // Flatten all chapters/sections/blocks into a sequential flow
@@ -361,7 +362,7 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
   const BLOCK_ICONS = {
     rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
     external_link: Link2, callout: MessageSquare, checklist: CheckSquare,
-    knowledge_check: HelpCircle, accordion: ChevronDown, table: TableIcon, slides: Presentation,
+    knowledge_check: HelpCircle, accordion: ChevronDown, table: TableIcon, slides: Presentation, dynamic: Sparkles,
   };
   const Icon = BLOCK_ICONS[block.type] || FileText;
 
@@ -583,6 +584,9 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
 
     case "slides":
       return <SlidePreviewPlayer data={data} />;
+
+    case "dynamic":
+      return <DynamicBlockPreview data={data} />;
 
     default:
       return (
