@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ChevronRight, CheckCircle2, MousePointerClick } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -53,7 +52,10 @@ export default function DynamicBlockPreview({ data }) {
     <div className="space-y-3">
       {data.title && <p className="text-sm font-semibold text-muted-foreground">{data.title}</p>}
 
-      <div className="space-y-3 min-h-[120px]">
+      <div
+        onClick={revealNext}
+        className={`space-y-3 min-h-[120px] ${allRevealed ? "" : "cursor-pointer"}`}
+      >
         <AnimatePresence>
           {elements.slice(0, revealedCount).map((el, idx) => {
             const anim = ANIMATION_VARIANTS[el.animation] || ANIMATION_VARIANTS.fade_in;
@@ -69,20 +71,16 @@ export default function DynamicBlockPreview({ data }) {
             );
           })}
         </AnimatePresence>
-      </div>
 
-      {/* Reveal button */}
-      <div className="flex items-center justify-center">
-        {allRevealed ? (
-          <div className="flex items-center gap-1.5 text-xs text-green-600">
-            <CheckCircle2 className="w-4 h-4" /> All content revealed
-          </div>
-        ) : (
-          <Button size="sm" variant="outline" onClick={revealNext} className="border-dashed">
-            <MousePointerClick className="w-3.5 h-3.5 mr-1.5" />
-            {revealedCount === 0 ? "Click to start" : "Reveal next"}
-            <ChevronRight className="w-3.5 h-3.5 ml-1" />
-          </Button>
+        {!allRevealed && (
+          <p className="text-xs text-muted-foreground/40 text-center select-none">
+            click anywhere to continue
+          </p>
+        )}
+        {allRevealed && (
+          <p className="text-xs text-green-600/70 text-center flex items-center justify-center gap-1 select-none">
+            <CheckCircle2 className="w-3.5 h-3.5" /> All content revealed
+          </p>
         )}
       </div>
 
