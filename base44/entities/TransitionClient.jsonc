@@ -74,6 +74,10 @@
       "default": "service_not_started",
       "description": "Current service status for the client file"
     },
+    "service_status_note": {
+      "type": "string",
+      "description": "Optional note attached to the current service status"
+    },
     "priority": {
       "type": "string",
       "enum": [

@@ -65,6 +65,7 @@ const FIELD_GROUPS = [
         format: (v) => SERVICE_STATUS_LABELS[v] || v?.replace(/_/g, " ") || "—",
         badge: (v) => SERVICE_STATUS_BADGES[v],
       },
+      { key: "service_status_note", label: "Status Note" },
     ],
   },
   {

@@ -105,6 +105,7 @@ export default function TransitionClientsTab() {
   const [filterCounsellor, setFilterCounsellor] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
   const [filterFileStatus, setFilterFileStatus] = useState("open");
+  const [filterServiceStatus, setFilterServiceStatus] = useState("");
   const [activeProgram, setActiveProgram] = useState("WD");
   const [closeDialog, setCloseDialog] = useState({ open: false, client: null });
   const [closeForm, setCloseForm] = useState({ reason: "completed", reason_other: "", notes: "" });
@@ -219,6 +220,11 @@ export default function TransitionClientsTab() {
     toast({ title: "Service status updated" });
   }
 
+  async function handleServiceStatusNoteSave(client, note) {
+    await updateMutation.mutateAsync({ id: client.id, data: { service_status_note: note } });
+    toast({ title: "Status note saved" });
+  }
+
   async function handleQuickCheckin(client) {
     const nextDate = nextCheckinDate(client.checkin_frequency, new Date());
     await updateMutation.mutateAsync({
@@ -322,6 +328,7 @@ export default function TransitionClientsTab() {
     }
     if (filterCounsellor && c.previous_counsellor !== filterCounsellor) return false;
     if (filterPriority && c.priority !== filterPriority) return false;
+    if (filterServiceStatus && (c.service_status || "service_not_started") !== filterServiceStatus) return false;
     return true;
   }).sort((a, b) => {
     const da = a.next_checkin_date ? new Date(a.next_checkin_date) : new Date(9999, 0, 1);
@@ -427,6 +434,16 @@ export default function TransitionClientsTab() {
           <option value="open">Open files</option>
           <option value="closed">Closed files</option>
           <option value="all">All files</option>
+        </select>
+        <select
+          value={filterServiceStatus}
+          onChange={e => setFilterServiceStatus(e.target.value)}
+          className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+        >
+          <option value="">All service statuses</option>
+          {SERVICE_STATUSES.map(s => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
         </select>
         <div className="flex-1" />
         <input
@@ -548,6 +565,10 @@ export default function TransitionClientsTab() {
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium mb-1 block">Service Status Note</label>
+              <Input value={form.service_status_note || ""} onChange={e => setForm({ ...form, service_status_note: e.target.value })} className="h-8 text-sm" placeholder="Add a status note..." />
             </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Priority</label>
@@ -865,26 +886,44 @@ export default function TransitionClientsTab() {
                     </div>
                   )}
 
-                  {/* Service Status dropdown */}
-                  <div className={cn("bg-white border border-slate-200 border-l-4 rounded-md p-3 flex items-center gap-3", SERVICE_STATUS_MAP[c.service_status || "service_not_started"]?.row || "border-l-slate-300")}>
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide shrink-0">Service Status</span>
-                    {c.service_status && SERVICE_STATUS_MAP[c.service_status] && (
-                      <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium border shrink-0", SERVICE_STATUS_MAP[c.service_status].badge)}>
-                        {SERVICE_STATUS_MAP[c.service_status].label}
-                      </span>
-                    )}
-                    <div className="flex-1" />
-                    <select
-                      value={c.service_status || "service_not_started"}
-                      onChange={e => { e.stopPropagation(); handleServiceStatusChange(c, e.target.value); }}
-                      onClick={e => e.stopPropagation()}
-                      disabled={updateMutation.isPending}
-                      className="h-8 border border-input rounded-md px-2 text-xs bg-background max-w-[260px]"
-                    >
-                      {SERVICE_STATUSES.map(s => (
-                        <option key={s.value} value={s.value}>{s.label}</option>
-                      ))}
-                    </select>
+                  {/* Service Status dropdown + note */}
+                  <div className={cn("bg-white border border-slate-200 border-l-4 rounded-md p-3 space-y-2", SERVICE_STATUS_MAP[c.service_status || "service_not_started"]?.row || "border-l-slate-300")}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide shrink-0">Service Status</span>
+                      {c.service_status && SERVICE_STATUS_MAP[c.service_status] && (
+                        <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium border shrink-0", SERVICE_STATUS_MAP[c.service_status].badge)}>
+                          {SERVICE_STATUS_MAP[c.service_status].label}
+                        </span>
+                      )}
+                      <div className="flex-1" />
+                      <select
+                        value={c.service_status || "service_not_started"}
+                        onChange={e => { e.stopPropagation(); handleServiceStatusChange(c, e.target.value); }}
+                        onClick={e => e.stopPropagation()}
+                        disabled={updateMutation.isPending}
+                        className="h-8 border border-input rounded-md px-2 text-xs bg-background max-w-[260px]"
+                      >
+                        {SERVICE_STATUSES.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        defaultValue={c.service_status_note || ""}
+                        key={`${c.id}-note`}
+                        placeholder="Add a status note..."
+                        onClick={e => e.stopPropagation()}
+                        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }}
+                        onBlur={e => {
+                          e.stopPropagation();
+                          const val = e.target.value.trim();
+                          if (val !== (c.service_status_note || "")) handleServiceStatusNoteSave(c, val);
+                        }}
+                        className="flex-1 h-8 border border-input rounded-md px-2 text-xs bg-background"
+                      />
+                    </div>
                   </div>
 
                   {/* CRT Program Progress */}
