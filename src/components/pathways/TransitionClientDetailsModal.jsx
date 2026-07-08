@@ -1,10 +1,31 @@
 import { X } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const fmtDate = (d) => {
   if (!d) return "—";
   try { return format(new Date(d), "MMM d, yyyy"); } catch { return "—"; }
+};
+
+const SERVICE_STATUS_LABELS = {
+  service_not_started: "Service Has Not Started Yet",
+  action_plan_in_progress: "Action Plan in Progress",
+  in_internal_training: "In Internal Training",
+  in_paid_work_exposure: "In Paid Work Exposure",
+  "90day_followup_in_progress": "90 Day Follow-up — In Progress",
+  "90day_followup_compass": "90 Day Follow-up — Completed (Compass Entry Required)",
+  "90day_followup_close": "90 Day Follow-up — Completed (Close File)",
+};
+
+const SERVICE_STATUS_BADGES = {
+  service_not_started: "bg-slate-200 text-slate-700 border-slate-300",
+  action_plan_in_progress: "bg-blue-100 text-blue-700 border-blue-300",
+  in_internal_training: "bg-purple-100 text-purple-700 border-purple-300",
+  in_paid_work_exposure: "bg-amber-100 text-amber-700 border-amber-300",
+  "90day_followup_in_progress": "bg-orange-100 text-orange-700 border-orange-300",
+  "90day_followup_compass": "bg-yellow-100 text-yellow-800 border-yellow-300",
+  "90day_followup_close": "bg-emerald-100 text-emerald-700 border-emerald-300",
 };
 
 const FIELD_GROUPS = [
@@ -38,6 +59,12 @@ const FIELD_GROUPS = [
       { key: "new_counsellor", label: "New Counsellor" },
       { key: "transition_status", label: "Transition Status", format: (v) => v?.replace(/_/g, " ") },
       { key: "priority", label: "Priority" },
+      {
+        key: "service_status",
+        label: "Service Status",
+        format: (v) => SERVICE_STATUS_LABELS[v] || v?.replace(/_/g, " ") || "—",
+        badge: (v) => SERVICE_STATUS_BADGES[v],
+      },
     ],
   },
   {
@@ -129,7 +156,11 @@ export default function TransitionClientDetailsModal({ client, onClose }) {
                     return (
                       <div key={f.key}>
                         <span className="text-xs text-slate-400 block">{f.label}</span>
-                        <span className="text-sm text-slate-700 whitespace-pre-wrap">{String(display)}</span>
+                        {f.badge && val ? (
+                          <span className={cn("inline-block text-xs px-2 py-0.5 rounded font-medium border", f.badge(val))}>{String(display)}</span>
+                        ) : (
+                          <span className="text-sm text-slate-700 whitespace-pre-wrap">{String(display)}</span>
+                        )}
                       </div>
                     );
                   })}

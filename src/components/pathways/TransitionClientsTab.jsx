@@ -36,6 +36,18 @@ const MILESTONE_STATUS_COLORS = {
   missed: "bg-red-100 text-red-700 border-red-200",
 };
 
+const SERVICE_STATUSES = [
+  { value: "service_not_started", label: "Service Has Not Started Yet", badge: "bg-slate-200 text-slate-700 border-slate-300", row: "border-l-slate-300" },
+  { value: "action_plan_in_progress", label: "Action Plan in Progress", badge: "bg-blue-100 text-blue-700 border-blue-300", row: "border-l-blue-400" },
+  { value: "in_internal_training", label: "In Internal Training", badge: "bg-purple-100 text-purple-700 border-purple-300", row: "border-l-purple-400" },
+  { value: "in_paid_work_exposure", label: "In Paid Work Exposure", badge: "bg-amber-100 text-amber-700 border-amber-300", row: "border-l-amber-400" },
+  { value: "90day_followup_in_progress", label: "90 Day Follow-up — In Progress", badge: "bg-orange-100 text-orange-700 border-orange-300", row: "border-l-orange-400" },
+  { value: "90day_followup_compass", label: "90 Day Follow-up — Completed (Compass Entry Required)", badge: "bg-yellow-100 text-yellow-800 border-yellow-300", row: "border-l-yellow-400" },
+  { value: "90day_followup_close", label: "90 Day Follow-up — Completed (Close File)", badge: "bg-emerald-100 text-emerald-700 border-emerald-300", row: "border-l-emerald-400" },
+];
+
+const SERVICE_STATUS_MAP = Object.fromEntries(SERVICE_STATUSES.map(s => [s.value, s]));
+
 const fmtDate = (d) => {
   if (!d) return "—";
   try { return format(new Date(d), "MMM d, yyyy"); } catch { return "—"; }
@@ -68,7 +80,7 @@ function nextCheckinDate(frequency, fromDate) {
 const EMPTY_FORM = {
 first_name: "", last_name: "", phone: "", email: "",
 program: "WD", previous_counsellor: "Lola", previous_counsellor_other: "",
-  new_counsellor: "Olena", transition_status: "not_started", priority: "medium",
+  new_counsellor: "Olena", transition_status: "not_started", service_status: "service_not_started", priority: "medium",
   next_checkin_date: "", last_checkin_date: "", checkin_frequency: "weekly",
   checkin_notes: "", program_stage: "", notes: "",
   milestones: [],
@@ -200,6 +212,11 @@ export default function TransitionClientsTab() {
 
   function removeMilestone(idx) {
     setForm({ ...form, milestones: form.milestones.filter((_, i) => i !== idx) });
+  }
+
+  async function handleServiceStatusChange(client, newStatus) {
+    await updateMutation.mutateAsync({ id: client.id, data: { service_status: newStatus } });
+    toast({ title: "Service status updated" });
   }
 
   async function handleQuickCheckin(client) {
@@ -524,6 +541,14 @@ export default function TransitionClientsTab() {
                 <option value="completed">Completed</option>
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium mb-1 block">Service Status</label>
+              <select value={form.service_status || "service_not_started"} onChange={e => setForm({ ...form, service_status: e.target.value })} className="w-full h-8 border border-input rounded-md px-2 text-sm bg-background">
+                {SERVICE_STATUSES.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-xs font-medium mb-1 block">Priority</label>
               <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} className="w-full h-8 border border-input rounded-md px-2 text-sm bg-background">
@@ -747,6 +772,11 @@ export default function TransitionClientsTab() {
                     <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", STATUS_COLORS[c.transition_status] || STATUS_COLORS.not_started)}>
                       {c.transition_status?.replace(/_/g, " ")}
                     </span>
+                    {c.service_status && SERVICE_STATUS_MAP[c.service_status] && (
+                      <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium border", SERVICE_STATUS_MAP[c.service_status].badge)}>
+                        {SERVICE_STATUS_MAP[c.service_status].label}
+                      </span>
+                    )}
                     {c.file_status === "closed" && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-slate-700 text-white flex items-center gap-0.5">
                         <Archive className="w-2.5 h-2.5" /> Closed
@@ -834,6 +864,28 @@ export default function TransitionClientsTab() {
                       </div>
                     </div>
                   )}
+
+                  {/* Service Status dropdown */}
+                  <div className={cn("bg-white border border-slate-200 border-l-4 rounded-md p-3 flex items-center gap-3", SERVICE_STATUS_MAP[c.service_status || "service_not_started"]?.row || "border-l-slate-300")}>
+                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide shrink-0">Service Status</span>
+                    {c.service_status && SERVICE_STATUS_MAP[c.service_status] && (
+                      <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium border shrink-0", SERVICE_STATUS_MAP[c.service_status].badge)}>
+                        {SERVICE_STATUS_MAP[c.service_status].label}
+                      </span>
+                    )}
+                    <div className="flex-1" />
+                    <select
+                      value={c.service_status || "service_not_started"}
+                      onChange={e => { e.stopPropagation(); handleServiceStatusChange(c, e.target.value); }}
+                      onClick={e => e.stopPropagation()}
+                      disabled={updateMutation.isPending}
+                      className="h-8 border border-input rounded-md px-2 text-xs bg-background max-w-[260px]"
+                    >
+                      {SERVICE_STATUSES.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
 
                   {/* CRT Program Progress */}
                   {(c.service_outcome || c.placement_outcome || c.service_start_date || c.service_element) && (
