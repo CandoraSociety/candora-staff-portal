@@ -72,7 +72,8 @@
         "90day_followup_close",
         "utc_cancel_from_program",
         "not_progressing_cancel_from_program",
-        "unknown"
+        "unknown",
+        "consider_removal"
       ],
       "default": "service_not_started",
       "description": "Current service status for the client file"

@@ -19,6 +19,7 @@ const SERVICE_STATUS_LABELS = {
   utc_cancel_from_program: "UTC — Cancel from Program",
   not_progressing_cancel_from_program: "Not Progressing — Cancel from Program",
   unknown: "Unknown",
+  consider_removal: "Consider Removal",
 };
 
 const SERVICE_STATUS_BADGES = {
@@ -32,6 +33,7 @@ const SERVICE_STATUS_BADGES = {
   utc_cancel_from_program: "bg-red-100 text-red-700 border-red-300",
   not_progressing_cancel_from_program: "bg-rose-100 text-rose-700 border-rose-300",
   unknown: "bg-gray-100 text-gray-500 border-gray-300",
+  consider_removal: "bg-orange-100 text-orange-700 border-orange-300",
 };
 
 const FIELD_GROUPS = [
