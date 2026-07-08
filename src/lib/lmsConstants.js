@@ -95,6 +95,9 @@ export function getBlockType(value) {
 export function getCalloutVariant(value) {
   return CALLOUT_VARIANTS.find(v => v.value === value) || CALLOUT_VARIANTS[0];
 }
+export function getNavigationMode(value) {
+  return NAVIGATION_MODES.find(n => n.value === value) || NAVIGATION_MODES[1];
+}
 
 // Default data for each content block type
 export function createDefaultBlockData(type) {

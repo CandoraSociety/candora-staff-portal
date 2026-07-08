@@ -18,7 +18,7 @@ import ContentBlockRenderer from "@/components/lms/ContentBlockRenderer";
 import ContentBlockPalette from "@/components/lms/ContentBlockPalette";
 import ModulePreview from "@/components/lms/ModulePreview";
 import {
-  MODULE_CATEGORIES, DIFFICULTY_LEVELS, MODULE_STATUSES,
+  MODULE_CATEGORIES, DIFFICULTY_LEVELS, MODULE_STATUSES, NAVIGATION_MODES,
   getModuleStats,
   createEmptyChapter, createEmptySection, createEmptyBlock,
   updateChapter, updateSection, updateBlock, reorderArray,
@@ -27,7 +27,8 @@ import {
 const emptyModule = {
   title: "", description: "", category: "onboarding", difficulty: "beginner",
   duration_minutes: 0, status: "draft", version: 1, version_notes: "",
-  version_locked: false, tags: [], learning_objectives: [],
+  version_locked: false, navigation_mode: "linear_review",
+  tags: [], learning_objectives: [],
   chapters: [], thumbnail_url: "", created_by_name: "",
   program_id: "", program_title: "",
 };
@@ -436,6 +437,16 @@ Return JSON with this structure:
                   {MODULE_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">Navigation Mode</Label>
+              <select value={module.navigation_mode || "linear_review"} onChange={e => update("navigation_mode", e.target.value)} className="w-full h-9 rounded-md border border-input bg-transparent text-sm px-2">
+                {NAVIGATION_MODES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
+              </select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {NAVIGATION_MODES.find(n => n.value === (module.navigation_mode || "linear_review"))?.description}
+                {(module.navigation_mode || "linear_review") !== "flexible" && " Interactive blocks (accordions, dynamic reveals, quizzes, checklists) must be completed before advancing."}
+              </p>
             </div>
             <div>
               <Label className="text-xs mb-1 block">Program (optional)</Label>

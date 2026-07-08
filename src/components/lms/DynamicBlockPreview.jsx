@@ -28,16 +28,14 @@ function parseChartData(rawData) {
     });
 }
 
-export default function DynamicBlockPreview({ data }) {
+export default function DynamicBlockPreview({ data, revealedCount = 0, onRevealNext }) {
   const elements = data.elements || [];
-  const [revealedCount, setRevealedCount] = useState(0);
 
   const allRevealed = revealedCount >= elements.length;
-  const nextElement = elements[revealedCount];
 
   const revealNext = () => {
     if (allRevealed) return;
-    setRevealedCount(c => c + 1);
+    onRevealNext?.();
   };
 
   if (elements.length === 0) {

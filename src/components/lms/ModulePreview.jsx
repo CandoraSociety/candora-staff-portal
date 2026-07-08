@@ -34,6 +34,7 @@ export default function ModulePreview({ module, onExit }) {
   const [showIntro, setShowIntro] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [furthestReached, setFurthestReached] = useState(0);
+  const [dynamicRevealCounts, setDynamicRevealCounts] = useState({});
   const [expandedChapters, setExpandedChapters] = useState(() => {
     const chIdx = allSections[0]?.chIdx ?? 0;
     return { [chIdx]: true };
@@ -47,17 +48,36 @@ export default function ModulePreview({ module, onExit }) {
   const hasNext = currentIdx < totalSections - 1;
   const hasPrev = currentIdx > 0;
 
-  // Check for unopened accordion items — users must expand all before completing
-  const hasUnopenedAccordions = current && (current.section.content_blocks || []).some(block => {
-    if (block.type !== "accordion") return false;
-    const items = block.data?.items || [];
-    return items.some(item => !expandedAccordions[`${block.id}-${item.id}`]);
+  const isFlexible = (module.navigation_mode || "linear_review") === "flexible";
+
+  // Check for incomplete interactive blocks — learners must finish all before completing.
+  // In flexible mode, no gating is enforced.
+  const hasIncompleteBlocks = !isFlexible && current && (current.section.content_blocks || []).some(block => {
+    if (block.type === "accordion") {
+      const items = block.data?.items || [];
+      return items.some(item => !expandedAccordions[`${block.id}-${item.id}`]);
+    }
+    if (block.type === "dynamic") {
+      const elements = block.data?.elements || [];
+      if (elements.length === 0) return false;
+      return (dynamicRevealCounts[block.id] || 0) < elements.length;
+    }
+    if (block.type === "knowledge_check") {
+      return !quizSubmitted[block.id];
+    }
+    if (block.type === "checklist") {
+      const items = block.data?.items || [];
+      if (items.length === 0) return false;
+      return items.some(item => !checkedItems[`${block.id}-${item.id}`]);
+    }
+    return false;
   });
 
   // Furthest unlocked section: tracks the furthest section ever reached, so navigating
   // back doesn't re-lock sections that were already in progress.
-  const maxUnlocked = Math.max(furthestReached, ...completedSections);
-  const isUnlocked = (idx) => idx <= maxUnlocked;
+  // In flexible mode, all sections are unlocked.
+  const maxUnlocked = isFlexible ? totalSections - 1 : Math.max(furthestReached, ...completedSections);
+  const isUnlocked = (idx) => isFlexible || idx <= maxUnlocked;
 
   const markComplete = () => {
     setCompletedSections(prev => new Set([...prev, currentIdx]));
@@ -73,6 +93,10 @@ export default function ModulePreview({ module, onExit }) {
       setCurrentIdx(idx);
       setSidebarOpen(false);
     }
+  };
+
+  const revealDynamicNext = (blockId) => {
+    setDynamicRevealCounts(prev => ({ ...prev, [blockId]: (prev[blockId] || 0) + 1 }));
   };
 
   const toggleChapter = (chIdx) => {
@@ -314,6 +338,8 @@ export default function ModulePreview({ module, onExit }) {
                     quizSubmitted={quizSubmitted}
                     selectQuizAnswer={selectQuizAnswer}
                     submitQuiz={submitQuiz}
+                    dynamicRevealCount={dynamicRevealCounts[block.id] || 0}
+                    onDynamicRevealNext={() => revealDynamicNext(block.id)}
                   />
                 ))}
               </div>
@@ -334,15 +360,15 @@ export default function ModulePreview({ module, onExit }) {
                     {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={markComplete} disabled={hasUnopenedAccordions}>
+                  <Button size="sm" onClick={markComplete} disabled={hasIncompleteBlocks}>
                     {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 )}
               </div>
 
-              {hasUnopenedAccordions ? (
+              {hasIncompleteBlocks ? (
                 <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
-                  <ChevronRight className="w-3.5 h-3.5" /> Open all expandable sections to continue
+                  <ChevronRight className="w-3.5 h-3.5" /> Complete all interactive content to continue
                 </p>
               ) : completedSections.has(currentIdx) && (
                 <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
@@ -357,7 +383,7 @@ export default function ModulePreview({ module, onExit }) {
   );
 }
 
-function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems, toggleCheckItem, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz }) {
+function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems, toggleCheckItem, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz, dynamicRevealCount, onDynamicRevealNext }) {
   const data = block.data || {};
   const BLOCK_ICONS = {
     rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
@@ -586,7 +612,7 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
       return <SlidePreviewPlayer data={data} />;
 
     case "dynamic":
-      return <DynamicBlockPreview data={data} />;
+      return <DynamicBlockPreview data={data} revealedCount={dynamicRevealCount} onRevealNext={onDynamicRevealNext} />;
 
     default:
       return (

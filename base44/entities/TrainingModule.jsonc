@@ -64,6 +64,16 @@
       "default": false,
       "description": "If true, changes to this module won't auto-propagate to programs using it"
     },
+    "navigation_mode": {
+      "type": "string",
+      "enum": [
+        "strict_linear",
+        "linear_review",
+        "flexible"
+      ],
+      "default": "linear_review",
+      "description": "How learners navigate: strict = must complete everything in order; review = can go back but not skip; flexible = free navigation with no completion gates"
+    },
     "tags": {
       "type": "array",
       "items": {
