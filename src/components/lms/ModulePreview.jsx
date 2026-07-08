@@ -153,27 +153,27 @@ export default function ModulePreview({ module, onExit }) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/30">
-      {/* Preview top bar */}
-      <div className="shrink-0 bg-background border-b px-4 py-2.5 flex items-center justify-between z-20">
+    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+      {/* Preview top bar — Candora branded */}
+      <div className="shrink-0 bg-accent text-accent-foreground border-b border-accent/40 px-4 py-2.5 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+          <Button variant="ghost" size="sm" className="lg:hidden text-accent-foreground hover:bg-accent-foreground/10" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onExit}>
+          <Button variant="ghost" size="sm" className="text-accent-foreground hover:bg-accent-foreground/10" onClick={onExit}>
             <X className="w-4 h-4 mr-1" /> Exit Preview
           </Button>
-          <Badge variant="secondary" className="text-[10px]">
+          <Badge className="text-[10px] bg-primary text-primary-foreground border-0">
             <Lightbulb className="w-3 h-3 mr-1" /> Preview Mode
           </Badge>
-          <span className="text-sm font-medium text-muted-foreground hidden sm:inline">{module.title}</span>
+          <span className="text-sm font-display font-semibold text-accent-foreground/80 hidden sm:inline">{module.title}</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-accent-foreground/70">
           {!showIntro && <span className="hidden sm:inline">Section {currentIdx + 1} of {totalSections}</span>}
           <div className="w-24 hidden md:block">
-            <Progress value={progressPercent} className="h-1.5" />
+            <Progress value={progressPercent} className="h-1.5 bg-accent-foreground/20" />
           </div>
-          <span className="hidden md:inline">{progressPercent}%</span>
+          <span className="hidden md:inline font-medium">{progressPercent}%</span>
         </div>
       </div>
 
@@ -279,49 +279,68 @@ export default function ModulePreview({ module, onExit }) {
         {/* Main content area */}
         <div className="flex-1 overflow-y-auto">
           {showIntro ? (
-            <div className="max-w-2xl mx-auto px-4 py-8">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge variant="secondary" className={`text-[10px] ${cat.color}`}>{cat.label}</Badge>
-                <Badge variant="outline" className={`text-[10px] ${diff.color}`}>{diff.label}</Badge>
-                {module.duration_minutes > 0 && (
-                  <Badge variant="outline" className="text-[10px] gap-1">
-                    <Clock className="w-3 h-3" /> {module.duration_minutes} min
-                  </Badge>
-                )}
-              </div>
-              <h1 className="text-3xl font-bold mb-2">{module.title}</h1>
-              {module.description && (
-                <p className="text-sm text-muted-foreground leading-relaxed">{module.description}</p>
-              )}
-              {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
-                <div className="mt-6 p-4 rounded-lg bg-card border">
-                  <p className="text-sm font-semibold flex items-center gap-1.5 mb-3">
-                    <Target className="w-4 h-4 text-primary" /> Learning Objectives
-                  </p>
-                  <ul className="space-y-2">
-                    {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
-                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                        <span>{obj}</span>
-                      </li>
-                    ))}
-                  </ul>
+            <div className="h-full flex items-center justify-center px-6 py-10">
+              <div className="w-full max-w-3xl">
+                {/* Branded hero header */}
+                <div className="rounded-2xl overflow-hidden shadow-xl mb-6 bg-accent">
+                  <div className="px-8 py-6 bg-gradient-to-br from-accent to-accent/80 relative">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+                    <div className="flex items-center gap-2 mb-3 relative">
+                      <Badge className="text-[10px] bg-primary text-primary-foreground border-0">{cat.label}</Badge>
+                      <Badge className="text-[10px] bg-accent-foreground/15 text-accent-foreground border-0">{diff.label}</Badge>
+                      {module.duration_minutes > 0 && (
+                        <Badge className="text-[10px] bg-accent-foreground/15 text-accent-foreground border-0 gap-1">
+                          <Clock className="w-3 h-3" /> {module.duration_minutes} min
+                        </Badge>
+                      )}
+                    </div>
+                    <h1 className="text-4xl font-heading font-bold text-accent-foreground mb-2 relative">{module.title}</h1>
+                    {module.description && (
+                      <p className="text-sm text-accent-foreground/70 leading-relaxed max-w-2xl relative">{module.description}</p>
+                    )}
+                  </div>
                 </div>
-              )}
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <Button size="lg" onClick={beginTraining} className="px-8">
-                  Begin Training <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
-                <p className="text-xs text-muted-foreground">{totalSections} section{totalSections !== 1 ? "s" : ""} across {(module.chapters || []).length} chapter{(module.chapters || []).length !== 1 ? "s" : ""}</p>
+
+                {/* Learning objectives card */}
+                {(module.learning_objectives || []).filter(o => o.trim()).length > 0 && (
+                  <div className="p-6 rounded-2xl bg-white border border-amber-100 shadow-sm">
+                    <p className="text-sm font-display font-semibold flex items-center gap-2 mb-4 text-accent">
+                      <Target className="w-4 h-4 text-primary" /> Learning Objectives
+                    </p>
+                    <ul className="space-y-3">
+                      {module.learning_objectives.filter(o => o.trim()).map((obj, i) => (
+                        <li key={i} className="text-sm text-foreground flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
+                            <span className="text-[10px] font-bold text-primary">{i + 1}</span>
+                          </div>
+                          <span className="leading-relaxed">{obj}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="mt-8 flex flex-col items-center gap-3">
+                  <Button size="lg" onClick={beginTraining} className="px-10 py-6 text-base font-display font-semibold bg-primary hover:bg-primary/90 shadow-lg">
+                    Begin Training <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                  <p className="text-xs text-muted-foreground">{totalSections} section{totalSections !== 1 ? "s" : ""} across {(module.chapters || []).length} chapter{(module.chapters || []).length !== 1 ? "s" : ""}</p>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-6">
+            <div className="min-h-full flex flex-col">
+            <div className="flex-1 max-w-4xl mx-auto w-full px-6 py-6">
               {/* Breadcrumb */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-                <span className="font-medium">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
+                <span className="font-display font-semibold text-accent">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
                 <ChevronRight className="w-3 h-3" />
-                <span>{current.section.title || `Section ${current.secIdx + 1}`}</span>
+                <span className="font-medium">{current.section.title || `Section ${current.secIdx + 1}`}</span>
+              </div>
+
+              {/* Section title bar */}
+              <div className="mb-6 pb-4 border-b-2 border-primary/20">
+                <h2 className="text-2xl font-heading font-bold text-foreground">{current.section.title || `Section ${current.secIdx + 1}`}</h2>
               </div>
 
               {/* Content blocks */}
@@ -345,36 +364,39 @@ export default function ModulePreview({ module, onExit }) {
               </div>
 
               {/* Navigation footer */}
-              <div className="mt-8 pt-6 border-t flex items-center justify-between">
-                {currentIdx === 0 ? (
-                  <Button variant="outline" size="sm" onClick={goToOverview}>
-                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Overview
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => goTo(currentIdx - 1)} disabled={!isUnlocked(currentIdx - 1)}>
-                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Previous
-                  </Button>
-                )}
-                {completedSections.has(currentIdx) ? (
-                  <Button size="sm" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext}>
-                    {hasNext ? "Next" : "Complete"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={markComplete} disabled={hasIncompleteBlocks}>
-                    {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
-                  </Button>
+              <div className="mt-auto pt-8">
+                <div className="mt-6 pt-6 border-t-2 border-primary/20 flex items-center justify-between">
+                  {currentIdx === 0 ? (
+                    <Button variant="outline" size="default" onClick={goToOverview} className="border-accent/30 text-accent hover:bg-accent/5">
+                      <ArrowLeft className="w-4 h-4 mr-1.5" /> Overview
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="default" onClick={() => goTo(currentIdx - 1)} disabled={!isUnlocked(currentIdx - 1)} className="border-accent/30 text-accent hover:bg-accent/5">
+                      <ArrowLeft className="w-4 h-4 mr-1.5" /> Previous
+                    </Button>
+                  )}
+                  {completedSections.has(currentIdx) ? (
+                    <Button size="default" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext} className="bg-accent hover:bg-accent/90 text-accent-foreground font-display font-semibold">
+                      {hasNext ? "Next" : "Complete"} <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Button>
+                  ) : (
+                    <Button size="default" onClick={markComplete} disabled={hasIncompleteBlocks} className="bg-primary hover:bg-primary/90 text-primary-foreground font-display font-semibold">
+                      {hasNext ? "Complete & Continue" : "Mark Complete"} <CheckCircle2 className="w-4 h-4 ml-1.5" />
+                    </Button>
+                  )}
+                </div>
+
+                {hasIncompleteBlocks ? (
+                  <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
+                    <ChevronRight className="w-3.5 h-3.5" /> Complete all interactive content to continue
+                  </p>
+                ) : completedSections.has(currentIdx) && (
+                  <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
+                  </p>
                 )}
               </div>
-
-              {hasIncompleteBlocks ? (
-                <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
-                  <ChevronRight className="w-3.5 h-3.5" /> Complete all interactive content to continue
-                </p>
-              ) : completedSections.has(currentIdx) && (
-                <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
-                </p>
-              )}
+            </div>
             </div>
           )}
         </div>
