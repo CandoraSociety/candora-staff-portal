@@ -16,6 +16,8 @@ const SERVICE_STATUS_LABELS = {
   "90day_followup_in_progress": "90 Day Follow-up — In Progress",
   "90day_followup_compass": "90 Day Follow-up — Completed (Compass Entry Required)",
   "90day_followup_close": "90 Day Follow-up — Completed (Close File)",
+  utc_cancel_from_program: "UTC — Cancel from Program",
+  not_progressing_cancel_from_program: "Not Progressing — Cancel from Program",
 };
 
 const SERVICE_STATUS_BADGES = {
@@ -26,6 +28,8 @@ const SERVICE_STATUS_BADGES = {
   "90day_followup_in_progress": "bg-orange-100 text-orange-700 border-orange-300",
   "90day_followup_compass": "bg-yellow-100 text-yellow-800 border-yellow-300",
   "90day_followup_close": "bg-emerald-100 text-emerald-700 border-emerald-300",
+  utc_cancel_from_program: "bg-red-100 text-red-700 border-red-300",
+  not_progressing_cancel_from_program: "bg-rose-100 text-rose-700 border-rose-300",
 };
 
 const FIELD_GROUPS = [
