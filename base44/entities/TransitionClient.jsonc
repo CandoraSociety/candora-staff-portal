@@ -71,7 +71,8 @@
         "90day_followup_compass",
         "90day_followup_close",
         "utc_cancel_from_program",
-        "not_progressing_cancel_from_program"
+        "not_progressing_cancel_from_program",
+        "unknown"
       ],
       "default": "service_not_started",
       "description": "Current service status for the client file"

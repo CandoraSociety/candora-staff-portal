@@ -46,6 +46,7 @@ const SERVICE_STATUSES = [
   { value: "90day_followup_close", label: "90 Day Follow-up — Completed (Close File)", badge: "bg-emerald-100 text-emerald-700 border-emerald-300", row: "border-l-emerald-400" },
   { value: "utc_cancel_from_program", label: "UTC — Cancel from Program", badge: "bg-red-100 text-red-700 border-red-300", row: "border-l-red-400" },
   { value: "not_progressing_cancel_from_program", label: "Not Progressing — Cancel from Program", badge: "bg-rose-100 text-rose-700 border-rose-300", row: "border-l-rose-400" },
+  { value: "unknown", label: "Unknown", badge: "bg-gray-100 text-gray-500 border-gray-300", row: "border-l-gray-400" },
 ];
 
 const SERVICE_STATUS_MAP = Object.fromEntries(SERVICE_STATUSES.map(s => [s.value, s]));
