@@ -500,7 +500,11 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
       return (
         <div className={`rounded-lg border p-4 ${variants[variant] || variants.info}`}>
           {data.title && <p className="font-semibold text-sm mb-1 flex items-center gap-1.5">{icons[variant]} {data.title}</p>}
-          {data.content && <p className="text-sm">{data.content}</p>}
+          {data.content && (
+            <div className="ql-snow">
+              <div className="ql-editor px-0 py-0 text-sm" dangerouslySetInnerHTML={{ __html: data.content }} />
+            </div>
+          )}
         </div>
       );
 
@@ -572,7 +576,11 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
           {submitted ? (
             <div className={`mt-3 p-2.5 rounded-md text-xs ${isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
               <p className="font-medium mb-0.5">{isCorrect ? "✅ Correct!" : "❌ Not quite right."}</p>
-              {data.explanation && <p className="text-muted-foreground">{data.explanation}</p>}
+              {data.explanation && (
+                <div className="ql-snow">
+                  <div className="ql-editor px-0 py-0 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: data.explanation }} />
+                </div>
+              )}
             </div>
           ) : (
             <Button size="sm" className="mt-3" disabled={selected === undefined} onClick={() => submitQuiz(block.id)}>
@@ -601,8 +609,10 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
                   {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
                 {isOpen && item.content && (
-                  <div className="px-3 pb-3 text-sm text-muted-foreground border-t pt-2">
-                    <ReactMarkdown>{item.content}</ReactMarkdown>
+                  <div className="px-3 pb-3 border-t pt-2">
+                    <div className="ql-snow">
+                      <div className="ql-editor px-0 py-0 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: item.content }} />
+                    </div>
                   </div>
                 )}
               </div>

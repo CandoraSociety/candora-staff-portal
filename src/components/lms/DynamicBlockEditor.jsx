@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RichTextBlockEditor from "@/components/lms/RichTextBlockEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,12 +119,9 @@ function Badge({ variant, className, children }) {
 function ElementEditor({ element, onChange }) {
   if (element.type === "text") {
     return (
-      <Textarea
+      <RichTextBlockEditor
         value={element.content || ""}
-        onChange={e => onChange({ content: e.target.value })}
-        rows={3}
-        placeholder="Enter text content..."
-        className="text-sm"
+        onChange={html => onChange({ content: html })}
       />
     );
   }

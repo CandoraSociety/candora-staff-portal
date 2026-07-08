@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import "react-quill/dist/quill.snow.css";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -100,7 +101,9 @@ export default function DynamicBlockPreview({ data, revealedCount = 0, onRevealN
 function RenderedElement({ element }) {
   if (element.type === "text") {
     return (
-      <div className="text-sm leading-relaxed whitespace-pre-wrap">{element.content}</div>
+      <div className="ql-snow">
+        <div className="ql-editor px-0 py-0 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: element.content || "" }} />
+      </div>
     );
   }
 

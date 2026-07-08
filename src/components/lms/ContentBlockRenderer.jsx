@@ -120,7 +120,7 @@ function BlockEditor({ type, data, onChange }) {
           </div>
           <div className={`${variant.color} border rounded-md p-3`}>
             <Input value={data.title || ""} onChange={e => onChange({ title: e.target.value })} placeholder="Callout title..." className={`text-sm h-8 bg-white/50 border-transparent mb-1.5`} />
-            <Textarea value={data.content || ""} onChange={e => onChange({ content: e.target.value })} rows={2} placeholder="Callout content..." className={`text-sm bg-white/50 border-transparent`} />
+            <RichTextBlockEditor value={data.content || ""} onChange={html => onChange({ content: html })} />
           </div>
         </div>
       );
@@ -183,7 +183,7 @@ function BlockEditor({ type, data, onChange }) {
           </div>
           <div>
             <Label className="text-xs mb-1 block">Explanation (shown after answering)</Label>
-            <Textarea value={data.explanation || ""} onChange={e => onChange({ explanation: e.target.value })} rows={2} placeholder="Why is this the correct answer?" className="text-sm" />
+            <RichTextBlockEditor value={data.explanation || ""} onChange={html => onChange({ explanation: html })} />
           </div>
         </div>
       );
@@ -203,11 +203,11 @@ function BlockEditor({ type, data, onChange }) {
                   onChange({ items });
                 }}><Trash2 className="w-3.5 h-3.5" /></Button>
               </div>
-              <Textarea value={item.content} onChange={e => {
+              <RichTextBlockEditor value={item.content || ""} onChange={html => {
                 const items = [...(data.items || [])];
-                items[idx] = { ...items[idx], content: e.target.value };
+                items[idx] = { ...items[idx], content: html };
                 onChange({ items });
-              }} rows={2} placeholder="Section content (shown when expanded)..." className="text-sm" />
+              }} />
             </div>
           ))}
           <Button size="sm" variant="ghost" onClick={() => onChange({ items: [...(data.items || []), { id: crypto.randomUUID(), title: "", content: "" }] })}>
