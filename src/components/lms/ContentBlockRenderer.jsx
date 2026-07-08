@@ -14,20 +14,7 @@ import {
 } from "@/lib/lmsConstants";
 import SlideBlockEditor from "@/components/lms/SlideBlockEditor";
 import DynamicBlockEditor from "@/components/lms/DynamicBlockEditor";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
-
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    ["bold", "italic", "underline", "strike"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["link", "image"],
-    [{ align: [] }],
-    [{ color: [] }, { background: [] }],
-    ["clean"],
-  ],
-};
+import RichTextBlockEditor from "@/components/lms/RichTextBlockEditor";
 
 const ICON_MAP = {
   rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
@@ -67,11 +54,7 @@ export default function ContentBlockRenderer({ block, onChange, onDelete, onMove
 function BlockEditor({ type, data, onChange }) {
   switch (type) {
     case "rich_text":
-      return (
-        <div className="border rounded-md overflow-hidden">
-          <ReactQuill theme="snow" value={data.html || ""} onChange={html => onChange({ html })} modules={quillModules} style={{ minHeight: "120px" }} />
-        </div>
-      );
+      return <RichTextBlockEditor value={data.html || ""} onChange={html => onChange({ html })} />;
     case "image":
       return <ImageBlockEditor data={data} onChange={onChange} />;
     case "video":

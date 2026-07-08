@@ -265,3 +265,39 @@ body.has-tabbar aside.fixed.top-0.h-screen {
   0% { transform: translateX(0); }
   100% { transform: translateX(-100%); }
 }
+
+/* ===== Quill Rich Text: custom fonts (editor + preview) ===== */
+.ql-font-playfair, .ql-editor .ql-font-playfair { font-family: 'Playfair Display', serif; }
+.ql-font-dmsans, .ql-editor .ql-font-dmsans { font-family: 'DM Sans', sans-serif; }
+.ql-font-nunito, .ql-editor .ql-font-nunito { font-family: 'Nunito', sans-serif; }
+.ql-font-inter, .ql-editor .ql-font-inter { font-family: 'Inter', sans-serif; }
+
+/* ===== Quill: custom size ===== */
+.ql-size-xlarge, .ql-editor .ql-size-xlarge { font-size: 1.5rem; line-height: 1.4; }
+
+/* ===== Sunflower bullet list (editor + preview) ===== */
+.ql-editor ul.ql-list-sunflower > li::before,
+ul.ql-list-sunflower > li::before {
+  content: '\1F33B\00a0\00a0' !important;
+}
+.ql-editor ul.ql-list-sunflower > li,
+ul.ql-list-sunflower > li {
+  list-style: none !important;
+}
+
+/* ===== Quill toolbar: custom button icons ===== */
+.ql-snow .ql-toolbar button.ql-sunflower-list::before {
+  content: '\1F33B';
+  font-size: 14px;
+}
+.ql-snow .ql-toolbar button.ql-arrow-right::before { content: '\2192'; font-size: 14px; font-weight: bold; }
+.ql-snow .ql-toolbar button.ql-arrow-left::before { content: '\2190'; font-size: 14px; font-weight: bold; }
+.ql-snow .ql-toolbar button.ql-arrow-up::before { content: '\2191'; font-size: 14px; font-weight: bold; }
+.ql-snow .ql-toolbar button.ql-arrow-down::before { content: '\2193'; font-size: 14px; font-weight: bold; }
+.ql-snow .ql-toolbar button.ql-arrow-double::before { content: '\21D2'; font-size: 14px; font-weight: bold; }
+.ql-snow.ql-toolbar button.ql-sunflower-list { width: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.ql-snow.ql-toolbar button.ql-arrow-right,
+.ql-snow.ql-toolbar button.ql-arrow-left,
+.ql-snow.ql-toolbar button.ql-arrow-up,
+.ql-snow.ql-toolbar button.ql-arrow-down,
+.ql-snow.ql-toolbar button.ql-arrow-double { width: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }

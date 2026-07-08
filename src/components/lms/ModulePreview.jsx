@@ -10,6 +10,7 @@ import {
   Lock, Menu, BookOpen,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import "react-quill/dist/quill.snow.css";
 import {
   MODULE_CATEGORIES, DIFFICULTY_LEVELS, MODULE_STATUSES,
   getModuleCategory, getDifficulty, getModuleStatus,
@@ -417,8 +418,8 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
   switch (block.type) {
     case "rich_text":
       return (
-        <div className="prose prose-sm max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: data.html || "" }} />
+        <div className="ql-snow">
+          <div className="ql-editor px-0 max-w-none" dangerouslySetInnerHTML={{ __html: data.html || "" }} />
         </div>
       );
 
