@@ -537,9 +537,9 @@ Return JSON with this structure:
               blocks: (chapter.sections || []).reduce((sum, sec) => sum + (sec.content_blocks || []).length, 0)
             };
             return (
-              <Card key={chapter.id} className="overflow-hidden">
+              <Card key={chapter.id} className="overflow-hidden border-l-4 border-l-indigo-400">
                 {/* Chapter header */}
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/30 border-b">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-indigo-50/60 border-b">
                   <button onClick={() => setExpandedChapters(prev => ({ ...prev, [chKey]: !prev[chKey] }))} className="p-0.5 hover:bg-muted rounded">
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
@@ -566,9 +566,9 @@ Return JSON with this structure:
                       <p className="text-xs text-muted-foreground/60 italic text-center py-2">No sections yet. Add a section to start adding content blocks.</p>
                     )}
                     {(chapter.sections || []).map((section, secIdx) => (
-                      <div key={section.id} className="border rounded-lg overflow-hidden">
+                      <div key={section.id} className="border rounded-lg overflow-hidden border-l-4 border-l-emerald-400">
                         {/* Section header */}
-                        <div className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-b">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50/60 border-b">
                           <GripVertical className="w-3.5 h-3.5 text-muted-foreground/30" />
                           <span className="text-[10px] font-bold text-muted-foreground shrink-0">{chIdx + 1}.{secIdx + 1}</span>
                           <input

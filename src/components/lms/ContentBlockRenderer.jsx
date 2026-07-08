@@ -42,9 +42,9 @@ export default function ContentBlockRenderer({ block, onChange, onDelete, onMove
   const updateData = (data) => onChange({ ...block, data: { ...block.data, ...data } });
 
   return (
-    <div className="border rounded-lg bg-card overflow-hidden">
+    <div className="border rounded-lg bg-card overflow-hidden border-l-4 border-l-amber-400">
       {/* Block header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/30">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b bg-amber-50/50">
         <div className="flex items-center gap-1.5">
           <BlockIcon className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs font-medium">{blockType.label}</span>
