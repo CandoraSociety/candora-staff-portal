@@ -251,8 +251,13 @@ export default function OrgTreeLayout({
     }
   }, [fitToScreen, svgW, svgH]);
 
+  const PRESET_ZOOM_OUTS = [
+    { label: "1.5×", zoom: 1 / 1.5 },
+    { label: "2×", zoom: 1 / 2 },
+    { label: "3×", zoom: 1 / 3 },
+  ];
   const zoomIn = () => setZoom(z => Math.min(2, Math.round((z + 0.1) * 10) / 10));
-  const zoomOut = () => setZoom(z => Math.max(0.3, Math.round((z - 0.1) * 10) / 10));
+  const zoomOut = () => setZoom(z => Math.max(0.2, Math.round((z - 0.1) * 10) / 10));
 
   const findReparentTarget = useCallback((draggedId, mouseX, mouseY) => {
     const dragged = positions.find(p => p.id === draggedId);
@@ -496,6 +501,17 @@ export default function OrgTreeLayout({
             <RotateCcw className="w-3 h-3" />
           </button>
         )}
+        <div className="w-px h-5 bg-border mx-0.5" />
+        {PRESET_ZOOM_OUTS.map(p => (
+          <button
+            key={p.label}
+            onClick={() => setZoom(Math.round(p.zoom * 100) / 100)}
+            className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${Math.abs(zoom - p.zoom) < 0.01 ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground"}`}
+            title={`Zoom out ${p.label}`}
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
 
       {/* Scrollable container — sized to the scaled content */}
