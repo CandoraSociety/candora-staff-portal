@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDraggableButton } from '@/hooks/useDraggableButton';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,6 +49,7 @@ export default function AppChangeRequestButton() {
   const [requestText, setRequestText] = useState('');
   const [category, setCategory] = useState('change_request');
   const queryClient = useQueryClient();
+  const { pos, onPointerDown, wasDragged, isDragging } = useDraggableButton('app-adjustments-btn-pos', { bottom: 80, right: 16 });
 
   const userEmail = user?.email?.toLowerCase();
   const isAllowed = userEmail && ALLOWED_EMAILS.includes(userEmail);
@@ -90,8 +92,10 @@ export default function AppChangeRequestButton() {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-[9998] flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-gradient-to-r from-accent to-accent/80 text-white font-semibold text-sm hover:shadow-xl hover:scale-105 transition-all"
+        onPointerDown={onPointerDown}
+        onClick={() => { if (wasDragged()) return; setOpen(true); }}
+        className="fixed z-[9998] flex items-center gap-2 px-4 py-3 rounded-full shadow-lg bg-gradient-to-r from-accent to-accent/80 text-white font-semibold text-sm hover:shadow-xl hover:scale-105 transition-all select-none"
+        style={{ bottom: pos.bottom, right: pos.right, cursor: isDragging ? 'grabbing' : 'grab' }}
       >
         <Lightbulb className="h-5 w-5" />
         App Adjustments

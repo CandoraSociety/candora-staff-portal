@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDraggableButton } from "@/hooks/useDraggableButton";
 import { useAuth } from "@/lib/AuthContext";
 import { Sparkles, X } from "lucide-react";
 import EAAssistantWidget from "./EAAssistantWidget";
@@ -22,6 +23,7 @@ function isAuthorized(user) {
 export default function EAFloatingWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const { pos, onPointerDown, wasDragged, isDragging } = useDraggableButton('ea-chat-btn-pos', { bottom: 144, right: 16 });
 
   if (!isAuthorized(user)) return null;
 
@@ -30,8 +32,8 @@ export default function EAFloatingWidget() {
       {/* Floating chat window */}
       {open && (
         <div
-          className="fixed bottom-52 right-4 z-[9999] w-[420px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl"
-          style={{ maxHeight: "calc(100vh - 120px)" }}
+          className="fixed z-[9999] w-[420px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl"
+          style={{ maxHeight: "calc(100vh - 120px)", bottom: pos.bottom + 64, right: pos.right }}
         >
           <div className="relative">
             <button
@@ -49,9 +51,13 @@ export default function EAFloatingWidget() {
 
       {/* Floating action button */}
       <button
-        onClick={() => setOpen(o => !o)}
-        className="fixed bottom-36 right-4 z-[9999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        onPointerDown={onPointerDown}
+        onClick={() => { if (wasDragged()) return; setOpen(o => !o); }}
+        className="fixed z-[9999] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 select-none"
         style={{
+          bottom: pos.bottom,
+          right: pos.right,
+          cursor: isDragging ? 'grabbing' : 'grab',
           background: open
             ? "hsl(230,70%,15%)"
             : "linear-gradient(135deg, hsl(45,92%,53%), hsl(35,95%,60%))",
