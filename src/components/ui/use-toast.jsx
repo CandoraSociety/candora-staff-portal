@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 const TOAST_LIMIT = 20;
 const TOAST_REMOVE_DELAY = 300;
+const TOAST_AUTO_DISMISS_DELAY = 5000;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -122,6 +123,8 @@ function toast({ ...props }) {
   const dismiss = () =>
     dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
 
+  const autoDismiss = setTimeout(() => dismiss(), props.duration ?? TOAST_AUTO_DISMISS_DELAY);
+
   dispatch({
     type: actionTypes.ADD_TOAST,
     toast: {
@@ -129,7 +132,10 @@ function toast({ ...props }) {
       id,
       open: true,
       onOpenChange: (open) => {
-        if (!open) dismiss();
+        if (!open) {
+          clearTimeout(autoDismiss);
+          dismiss();
+        }
       },
     },
   });
