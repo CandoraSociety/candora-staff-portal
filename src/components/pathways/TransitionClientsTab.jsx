@@ -48,6 +48,7 @@ const SERVICE_STATUSES = [
   { value: "not_progressing_cancel_from_program", label: "Not Progressing — Cancel from Program", badge: "bg-rose-100 text-rose-700 border-rose-300", row: "border-l-rose-400" },
   { value: "unknown", label: "Unknown", badge: "bg-gray-100 text-gray-500 border-gray-300", row: "border-l-gray-400" },
   { value: "consider_removal", label: "Consider Removal", badge: "bg-orange-100 text-orange-700 border-orange-300", row: "border-l-orange-400" },
+  { value: "cancelled", label: "Cancelled", badge: "bg-red-200 text-red-800 border-red-400", row: "border-l-red-500" },
 ];
 
 const SERVICE_STATUS_MAP = Object.fromEntries(SERVICE_STATUSES.map(s => [s.value, s]));

@@ -20,6 +20,7 @@ const SERVICE_STATUS_LABELS = {
   not_progressing_cancel_from_program: "Not Progressing — Cancel from Program",
   unknown: "Unknown",
   consider_removal: "Consider Removal",
+  cancelled: "Cancelled",
 };
 
 const SERVICE_STATUS_BADGES = {
@@ -34,6 +35,7 @@ const SERVICE_STATUS_BADGES = {
   not_progressing_cancel_from_program: "bg-rose-100 text-rose-700 border-rose-300",
   unknown: "bg-gray-100 text-gray-500 border-gray-300",
   consider_removal: "bg-orange-100 text-orange-700 border-orange-300",
+  cancelled: "bg-red-200 text-red-800 border-red-400",
 };
 
 const FIELD_GROUPS = [
