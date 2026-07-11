@@ -42,27 +42,25 @@ function AppNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  // Fetch file-level access permissions for the current user
-  const { data: filePermissions = [] } = useQuery({
-    queryKey: ['file-permissions', user?.email],
+  // Fetch file-level access permissions via the server-side access gate
+  // This also populates accessible SharePoint folders for the user
+  const { data: accessData } = useQuery({
+    queryKey: ['accessible-files', user?.email],
     enabled: !!user?.email,
-    queryFn: () => base44.entities.AccessPermission.filter({
-      target_type: 'file_access',
-      scope_type: 'individual',
-      scope_value: user.email,
-      permission: 'allow',
-      is_active: true,
-    }),
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getAccessibleFiles', {});
+      return res.data;
+    },
   });
 
-  const grantedFileLevels = filePermissions.map(p => p.target_id);
+  const grantedFileLevels = accessData?.granted_file_levels || [];
 
   const handleLogout = async () => {
     await base44.auth.logout();
     window.location.href = '/';
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = accessData?.user?.is_admin ?? (user?.role === 'admin');
 
   const visibleItems = BASE_NAV_ITEMS.filter(item => {
     if (!item.accessLevel) return true; // always visible

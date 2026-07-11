@@ -10,7 +10,6 @@ import FileListItem from "@/components/files/FileListItem";
 import FileFilters from "@/components/files/FileFilters";
 import SearchBar from "@/components/files/SearchBar";
 import FileSortingDialog from "@/components/files/FileSortingDialog";
-import { canAccessFile } from "@/lib/fileHelpers";
 import { useAuth } from "@/lib/AuthContext";
 import { FilePermissionsContext } from "@/components/filemanager/FileManagerLayout";
 import { useContext } from "react";
@@ -29,11 +28,12 @@ export default function FileBrowser() {
   const queryClient = useQueryClient();
   const { grantedFileLevels = [], isAdmin = false } = useContext(FilePermissionsContext);
 
+  // Server-side access gate: only receives files the user is authorized to see
   const { data: files = [], isLoading, refetch } = useQuery({
-    queryKey: ["files", filters, search, grantedFileLevels],
+    queryKey: ["accessible-files", user?.email],
     queryFn: async () => {
-      const allFiles = await base44.entities.File.list("-created_date", 1000);
-      return allFiles.filter((f) => canAccessFile(f, user, grantedFileLevels));
+      const res = await base44.functions.invoke('getAccessibleFiles', {});
+      return res.data?.files || [];
     },
     enabled: !!user,
   });
