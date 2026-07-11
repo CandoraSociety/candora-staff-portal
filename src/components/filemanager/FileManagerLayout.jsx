@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils';
 import { 
   Menu, X, ChevronLeft, Home, FolderOpen, User, 
   Search, Upload, PackagePlus, FolderHeart, 
-  LayoutDashboard, StickyNote, Pencil, LogOut, CloudUpload, Folder 
+  LayoutDashboard, StickyNote, Pencil, LogOut, CloudUpload, Folder,
+  ChevronDown 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -34,6 +35,7 @@ function AppNav() {
   const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me() });
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [allFilesExpanded, setAllFilesExpanded] = useState(true);
 
   // Fetch file-level access permissions via the server-side access gate
   const { data: accessData } = useQuery({
@@ -79,6 +81,60 @@ function AppNav() {
     // Other tool pages — match path only
     return !location.search || location.search === '';
   }
+
+  const subItemActive = portalTabs.some(item => isItemActive(item));
+  const allFilesActive = (location.pathname === '/filemanager/files' && !currentAccess && !currentPortal) || subItemActive;
+
+  const renderAllFilesSection = (forceExpanded = false) => {
+    const showLabels = forceExpanded || !collapsed;
+    return (
+      <div className="space-y-0.5">
+        <div className="flex items-center gap-1">
+          <Link
+            to="/filemanager/files"
+            onClick={() => setMenuOpen(false)}
+            className={cn(
+              "flex-1 flex items-center gap-3 px-3 py-2 text-sm rounded-md font-medium transition-colors",
+              allFilesActive
+                ? "bg-primary text-primary-foreground"
+                : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            )}
+          >
+            <FolderOpen className="h-4 w-4 shrink-0" />
+            {showLabels && <span className="truncate">All Files</span>}
+          </Link>
+          {showLabels && (
+            <button
+              onClick={() => setAllFilesExpanded(!allFilesExpanded)}
+              className="h-8 w-6 flex items-center justify-center text-sidebar-foreground/50 hover:text-sidebar-foreground shrink-0 rounded-md hover:bg-sidebar-accent"
+            >
+              <ChevronDown className={cn("h-4 w-4 transition-transform", allFilesExpanded && "rotate-180")} />
+            </button>
+          )}
+        </div>
+        {allFilesExpanded && showLabels && portalTabs.length > 0 && (
+          <div className="ml-4 space-y-0.5 border-l border-sidebar-border pl-2">
+            {portalTabs.map(item => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMenuOpen(false)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-1.5 text-xs rounded-md font-medium transition-colors",
+                  isItemActive(item)
+                    ? "bg-primary/15 text-primary"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                )}
+              >
+                <item.icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const NavButton = ({ item }) => {
     const isActive = isItemActive(item);
@@ -153,17 +209,9 @@ function AppNav() {
           {/* Dashboard */}
           <NavButton item={{ path: '/filemanager', label: 'Dashboard', icon: Home }} />
 
-          <SectionLabel>Browse Files</SectionLabel>
-          <NavButton item={{ path: '/filemanager/files', label: 'All Files', icon: FolderOpen }} />
-          <NavButton item={{ path: '/filemanager/files?access=personal', label: 'My Files', icon: User, accessFilter: 'personal' }} />
+          {renderAllFilesSection()}
 
-          {/* Portal-specific file tabs */}
-          {portalTabs.length > 0 && (
-            <>
-              <SectionLabel>Portal Files</SectionLabel>
-              {portalTabs.map(item => <NavButton key={item.path} item={item} />)}
-            </>
-          )}
+          <NavButton item={{ path: '/filemanager/files?access=personal', label: 'My Files', icon: User, accessFilter: 'personal' }} />
 
           <SectionLabel>Tools</SectionLabel>
           {TOOL_ITEMS.map(item => <NavButton key={item.path} item={item} />)}
@@ -223,15 +271,9 @@ function AppNav() {
               <span>Upload Files</span>
             </Link>
             <NavButton item={{ path: '/filemanager', label: 'Dashboard', icon: Home }} />
-            <SectionLabel>Browse Files</SectionLabel>
-            <NavButton item={{ path: '/filemanager/files', label: 'All Files', icon: FolderOpen }} />
+            {renderAllFilesSection(true)}
+
             <NavButton item={{ path: '/filemanager/files?access=personal', label: 'My Files', icon: User, accessFilter: 'personal' }} />
-            {portalTabs.length > 0 && (
-              <>
-                <SectionLabel>Portal Files</SectionLabel>
-                {portalTabs.map(item => <NavButton key={item.path} item={item} />)}
-              </>
-            )}
             <SectionLabel>Tools</SectionLabel>
             {TOOL_ITEMS.map(item => <NavButton key={item.path} item={item} />)}
           </nav>
