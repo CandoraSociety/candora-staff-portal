@@ -13,7 +13,7 @@ const ROLE_HIERARCHY = {
   extended: 1,
 };
 
-export function useAccessControl(user, permissions = [], orgTier = null, tierPortalAccess = {}) {
+export function useAccessControl(user, permissions = [], orgTier = null, tierPortalAccess = {}, ownerEmail = null) {
   const helpers = useMemo(() => {
     const userRole = user?.role || 'frontline_staff';
     const userId = user?.id;
@@ -22,8 +22,15 @@ export function useAccessControl(user, permissions = [], orgTier = null, tierPor
 
     const isAdmin = ADMIN_ROLES.includes(userRole);
     const isSuperAdmin = userRole === 'super_admin' || userRole === 'admin';
+    const isOwner = !!userEmail && !!ownerEmail && userEmail.toLowerCase() === ownerEmail.toLowerCase();
 
     function canAccessModule(moduleId) {
+      // Locked portals — ONLY the designated tier or the site owner can access.
+      // No admin override, no individual override can grant or revoke this.
+      if (LOCKED_PORTAL_ACCESS[moduleId]) {
+        return orgTier === LOCKED_PORTAL_ACCESS[moduleId] || isOwner;
+      }
+
       if (isAdmin) return true;
 
       // 1. Individual override (allow or deny)
@@ -36,10 +43,7 @@ export function useAccessControl(user, permissions = [], orgTier = null, tierPor
       );
       if (individual) return individual.permission === 'allow';
 
-      // 2. Locked portal (e.g. ED portal always allowed for executive_director tier)
-      if (LOCKED_PORTAL_ACCESS[moduleId] === orgTier) return true;
-
-      // 3. Tier-based access from OrgSettings
+      // 2. Tier-based access from OrgSettings
       if (orgTier && tierPortalAccess?.[orgTier]?.includes(moduleId)) return true;
 
       return false;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { PORTAL_MODULES, DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
+import { PORTAL_MODULES, DEFAULT_TIER_CONFIGS, LOCKED_PORTAL_ACCESS } from '@/lib/tierPermissionPresets';
 import { Search, Shield, KeyRound, Eye, EyeOff, DollarSign, Loader2, Save, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -341,6 +341,7 @@ export default function AccessBrokerPanel() {
                     const hasIndividualAllow = empModulePerms.allows.includes(mod.id);
                     const hasIndividualDeny = empModulePerms.denies.includes(mod.id);
                     const isChecked = hasIndividualAllow || (hasTierAccess && !hasIndividualDeny);
+                    const isLocked = !!LOCKED_PORTAL_ACCESS[mod.id];
 
                     return (
                       <div
@@ -354,19 +355,22 @@ export default function AccessBrokerPanel() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {hasTierAccess && !hasIndividualAllow && !hasIndividualDeny && (
+                          {isLocked && (
+                            <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-200 bg-amber-50">Locked</Badge>
+                          )}
+                          {!isLocked && hasTierAccess && !hasIndividualAllow && !hasIndividualDeny && (
                             <Badge variant="outline" className="text-[9px] text-blue-600 border-blue-200 bg-blue-50">Via Tier</Badge>
                           )}
-                          {hasIndividualAllow && (
+                          {!isLocked && hasIndividualAllow && (
                             <Badge variant="outline" className="text-[9px] text-violet-600 border-violet-200 bg-violet-50">Override</Badge>
                           )}
-                          {hasIndividualDeny && (
+                          {!isLocked && hasIndividualDeny && (
                             <Badge variant="outline" className="text-[9px] text-destructive border-destructive/20 bg-destructive/5">Denied</Badge>
                           )}
                           <Switch
                             checked={isChecked}
                             onCheckedChange={(checked) => handleModuleToggle(mod.id, checked)}
-                            disabled={saving === `module-${mod.id}`}
+                            disabled={isLocked || saving === `module-${mod.id}`}
                           />
                         </div>
                       </div>
@@ -384,7 +388,7 @@ export default function AccessBrokerPanel() {
                   <h3 className="text-sm font-semibold">File Access Levels</h3>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Grant access to restricted file categories in the File Manager beyond the default universal level.
+                  Grants access to restricted file categories in the File Manager AND corresponding SharePoint vault folders. Re-run "Secure Vault Folders" after changes to sync SharePoint permissions.
                 </p>
                 <div className="space-y-1.5">
                   {FILE_ACCESS_LEVELS.map(level => {

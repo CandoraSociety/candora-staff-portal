@@ -21,20 +21,18 @@ async function getAccessToken() {
   return tokenData.access_token;
 }
 
-// Folder access rules — determines which SharePoint root folders a user can see
-// Uses _VAULT_ prefixed names (post-rename). Old names kept for backward compat during migration.
-const VAULT_FOLDER_ACCESS: Record<string, string[]> = {
-  '_VAULT_Board': ['admin'],
-  '_VAULT_ED': ['admin'],
-  '_VAULT_Finance': ['admin'],
-  '_VAULT_HR': ['admin'],
-  '_VAULT_Corporate': ['admin'],
-  // Legacy names (pre-rename) — still recognized so access doesn't break during migration
-  'Board of Directors': ['admin'],
-  'Executive Director Portal': ['admin'],
-  'Financial': ['admin'],
-  'Human Resources': ['admin'],
-  'Corporate': ['admin'],
+// Vault folders that are NEVER manageable — ONLY Executive Director or site owner
+const ED_ONLY_VAULTS = new Set(['_VAULT_ED', 'Executive Director Portal']);
+// Board vault — only admin or site owner (not manageable via AccessPermission)
+const BOARD_VAULTS = new Set(['_VAULT_Board', 'Board of Directors']);
+// Maps vault folder names to the file_access levels that grant access (managed from Access Broker)
+const VAULT_LEVEL_MAP: Record<string, string[]> = {
+  '_VAULT_Finance': ['finance'],
+  '_VAULT_Corporate': ['corporate'],
+  '_VAULT_HR': ['corporate'],
+  'Financial': ['finance'],
+  'Corporate': ['corporate'],
+  'Human Resources': ['corporate'],
 };
 
 // Folder → module mapping. If a folder is tied to a portal module,
@@ -197,19 +195,35 @@ Deno.serve(async (req) => {
           return isAdmin || accessibleModules.has('archives');
         }
 
-        // 3. Vault folders — only authorized roles
-        if (VAULT_FOLDER_ACCESS[name]) {
-          return VAULT_FOLDER_ACCESS[name].includes(user.role) || isAdmin || isOwner;
+        // 3. ED-only vaults — ONLY Executive Director or site owner, NO exceptions
+        if (ED_ONLY_VAULTS.has(name)) {
+          return orgTier === 'executive_director' || isOwner;
         }
 
-        // 4. Module-linked folders — must have module access
+        // 4. Board vault — only admin or site owner (not manageable via AccessPermission)
+        if (BOARD_VAULTS.has(name)) {
+          return isAdmin || isOwner;
+        }
+
+        // 5. Finance/Corporate/HR vaults — hardcoded roles + file_access grants from Access Broker
+        const requiredLevels = VAULT_LEVEL_MAP[name];
+        if (requiredLevels) {
+          // Executive Director always has access (hardcoded)
+          if (orgTier === 'executive_director' || isAdmin || isOwner) return true;
+          // Finance Director always has access to Finance vault (hardcoded)
+          if ((name === '_VAULT_Finance' || name === 'Financial') &&
+              orgTier === 'director' && employee?.department === 'Finance') return true;
+          // Or granted via file_access permission from Access Broker
+          return requiredLevels.some(level => grantedFileLevels.includes(level));
+        }
+
+        // 6. Module-linked folders — must have module access
         const moduleId = FOLDER_TO_MODULE[name];
         if (moduleId) {
           return accessibleModules.has(moduleId) || isAdmin;
         }
 
-        // 5. General/shared folders (e.g. "All staff", "Office Documents", "presentations")
-        //    Visible to all authenticated users
+        // 7. General/shared folders — visible to all authenticated users
         return true;
       }).map(folder => ({
         id: folder.id,

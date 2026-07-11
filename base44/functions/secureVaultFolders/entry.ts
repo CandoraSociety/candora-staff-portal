@@ -21,31 +21,27 @@ async function getAccessToken() {
   return tokenData.access_token;
 }
 
-// Sensitive folder mapping: folder name → list of authorized email recipients
-// "inheritance": false means we break inheritance and ONLY these people get access
-// Uses _VAULT_ prefixed names (post-rename). Old names kept for backward compat.
-const VAULT_FOLDERS: Record<string, { recipients: string[]; vaultType: string }> = {
-  // ED-only
-  '_VAULT_ED': { recipients: [], vaultType: 'ed_only' },
+// Vault folder definitions — vaultType controls which access level maps to it
+// Recipients are now built dynamically from AccessPermission + hardcoded roles
+const VAULT_FOLDER_TYPES: Record<string, string> = {
+  '_VAULT_ED': 'ed_only',
+  '_VAULT_Finance': 'finance',
+  '_VAULT_HR': 'hr',
+  '_VAULT_Corporate': 'corporate',
+  '_VAULT_Board': 'board',
+  // Legacy names
+  'Executive Director Portal': 'ed_only',
+  'Financial': 'finance',
+  'Human Resources': 'hr',
+  'Corporate': 'corporate',
+  'Board of Directors': 'board',
+};
 
-  // Finance — ED + Finance Director (not yet set up, so ED only for now)
-  '_VAULT_Finance': { recipients: [], vaultType: 'finance' },
-
-  // HR — ED + Carla (HR admin)
-  '_VAULT_HR': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
-
-  // Corporate — ED + Directors
-  '_VAULT_Corporate': { recipients: [], vaultType: 'corporate' },
-
-  // Board — ED only for now (board members access via separate flow)
-  '_VAULT_Board': { recipients: [], vaultType: 'board' },
-
-  // Legacy names (pre-rename) — still recognized so securing works during migration
-  'Executive Director Portal': { recipients: [], vaultType: 'ed_only' },
-  'Financial': { recipients: [], vaultType: 'finance' },
-  'Human Resources': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
-  'Corporate': { recipients: [], vaultType: 'corporate' },
-  'Board of Directors': { recipients: [], vaultType: 'board' },
+// Maps vaultType to the file_access level that grants access (from Access Broker)
+const VAULT_TYPE_TO_FILE_LEVEL: Record<string, string> = {
+  finance: 'finance',
+  hr: 'corporate',
+  corporate: 'corporate',
 };
 
 Deno.serve(async (req) => {
@@ -76,24 +72,66 @@ Deno.serve(async (req) => {
     const listData = await listRes.json();
     const folders = (listData.value || []).filter(item => item.folder);
 
+    // Fetch all file_access permissions from AccessPermission entity
+    const fileAccessPerms = await base44.asServiceRole.entities.AccessPermission.filter({
+      target_type: 'file_access',
+      permission: 'allow',
+      is_active: true,
+    });
+
+    // Group file_access permission emails by level
+    const fileLevelEmails: Record<string, Set<string>> = {};
+    for (const perm of fileAccessPerms) {
+      const level = perm.target_id;
+      const email = perm.scope_value?.toLowerCase();
+      if (!level || !email) continue;
+      if (!fileLevelEmails[level]) fileLevelEmails[level] = new Set();
+      fileLevelEmails[level].add(email);
+    }
+
+    // Find Executive Director employee (always included in all vaults)
+    const edEmployees = await base44.asServiceRole.entities.Employee.filter({ org_tier: 'executive_director' });
+    const edEmail = edEmployees.find(e => e.email)?.email?.toLowerCase();
+
+    // Find Finance Director employee (always included in Finance vault — hardcoded)
+    const directorEmployees = await base44.asServiceRole.entities.Employee.filter({ org_tier: 'director' });
+    const financeDirectorEmail = directorEmployees.find(e => e.department === 'Finance')?.email?.toLowerCase();
+
     const results = [];
 
     for (const folder of folders) {
-      const vaultConfig = VAULT_FOLDERS[folder.name];
-      if (!vaultConfig) {
+      const vaultType = VAULT_FOLDER_TYPES[folder.name];
+      if (!vaultType) {
         results.push({ name: folder.name, action: 'skipped', reason: 'not a vault folder' });
         continue;
       }
 
-      // Build recipient list: always include app owner, plus any additional recipients
-      const recipients = [{ email: ownerEmail }];
-      for (const email of vaultConfig.recipients) {
-        if (email !== ownerEmail) {
-          recipients.push({ email });
+      // Build recipient list based on vault type
+      const recipientEmails = new Set<string>();
+      recipientEmails.add(ownerEmail.toLowerCase());
+
+      if (vaultType === 'ed_only' || vaultType === 'board') {
+        // ED-only and Board vaults: ONLY site owner + Executive Director, nobody else
+        if (edEmail) recipientEmails.add(edEmail);
+      } else {
+        // Finance/HR/Corporate vaults: site owner + ED + hardcoded Finance Director (finance only) + AccessPermission grants
+        if (edEmail) recipientEmails.add(edEmail);
+
+        if (vaultType === 'finance' && financeDirectorEmail) {
+          recipientEmails.add(financeDirectorEmail);
+        }
+
+        // Add anyone granted the corresponding file_access level via Access Broker
+        const fileLevel = VAULT_TYPE_TO_FILE_LEVEL[vaultType];
+        if (fileLevel && fileLevelEmails[fileLevel]) {
+          for (const email of fileLevelEmails[fileLevel]) {
+            recipientEmails.add(email);
+          }
         }
       }
 
-      // Break inheritance (retainInheritedPermissions: false) and grant ONLY the recipients
+      const recipients = [...recipientEmails].map(email => ({ email }));
+
       const inviteRes = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${folder.id}/invite`, {
         method: 'POST',
         headers: {
@@ -113,7 +151,7 @@ Deno.serve(async (req) => {
         results.push({
           name: folder.name,
           action: 'SECURED',
-          vaultType: vaultConfig.vaultType,
+          vaultType: vaultType,
           granted_to: recipients.map(r => r.email),
           inheritance_broken: true
         });
@@ -122,7 +160,7 @@ Deno.serve(async (req) => {
         results.push({
           name: folder.name,
           action: 'ERROR',
-          vaultType: vaultConfig.vaultType,
+          vaultType: vaultType,
           error: errText.substring(0, 300)
         });
       }

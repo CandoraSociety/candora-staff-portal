@@ -47,7 +47,7 @@ export default function AppLayout() {
     }
   }, [user?.id, employeeRecord]);
 
-  const access = useAccessControl(user, permissions, employeeRecord?.org_tier, tierPortalAccess);
+  const access = useAccessControl(user, permissions, employeeRecord?.org_tier, tierPortalAccess, orgSettingsList[0]?.owner_email);
 
   const {
     loading: onboardingLoading,
