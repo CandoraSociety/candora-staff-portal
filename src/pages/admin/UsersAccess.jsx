@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid, FolderTree } from 'lucide-react';
+import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid, FolderTree, KeyRound } from 'lucide-react';
 import TierPresetsPanel from '@/components/admin/TierPresetsPanel';
 import FolderManagerPanel from '@/components/admin/FolderManagerPanel';
+import AccessBrokerPanel from '@/components/admin/AccessBrokerPanel';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -193,7 +194,7 @@ function LiveDataPanel({ users, departments }) {
 
 export default function UsersAccess() {
   const { access } = useOutletContext();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('broker');
   const [search, setSearch] = useState('');
 
   const { data: users = [] } = useQuery({
@@ -214,6 +215,7 @@ export default function UsersAccess() {
     : users.filter(u => u.role !== 'executive_director');
 
   const tabs = [
+    { id: 'broker', label: 'Access Broker', icon: KeyRound },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'live', label: 'Live Data', icon: Activity },
     { id: 'presets', label: 'Access Presets', icon: LayoutGrid },
@@ -251,6 +253,9 @@ export default function UsersAccess() {
         })}
       </div>
 
+      {activeTab === 'broker' && (
+        <AccessBrokerPanel />
+      )}
       {activeTab === 'users' && (
         <UserListPanel users={visibleUsers} departments={departments} search={search} setSearch={setSearch} />
       )}
