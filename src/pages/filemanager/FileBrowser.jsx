@@ -33,7 +33,8 @@ export default function FileBrowser() {
     queryKey: ["accessible-files", user?.email],
     queryFn: async () => {
       const res = await base44.functions.invoke('getAccessibleFiles', {});
-      return res.data?.files || [];
+      const filesData = res.data?.files;
+      return Array.isArray(filesData) ? filesData : [];
     },
     enabled: !!user,
   });
