@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
 
 const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
@@ -14,6 +15,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     position: '', department: '', org_tier: '', status: 'active', hire_date: '',
+    can_access_billing: false,
   });
 
   const { data: orgSettingsList = [] } = useQuery({
@@ -39,6 +41,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         org_tier: employee.org_tier || '',
         status: employee.status || 'active',
         hire_date: employee.hire_date || '',
+        can_access_billing: employee.can_access_billing || false,
       });
     }
   }, [employee]);
@@ -96,6 +99,16 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>{statuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
         </Select>
+      </div>
+      <div className="flex items-center justify-between rounded-lg border p-3">
+        <div>
+          <Label className="text-sm font-medium">Pathways Billing Access</Label>
+          <p className="text-xs text-muted-foreground mt-0.5">Grant access to the Pathways billing tab</p>
+        </div>
+        <Switch
+          checked={data.can_access_billing}
+          onCheckedChange={(checked) => setData({ ...data, can_access_billing: checked })}
+        />
       </div>
       <Button type="submit" disabled={isLoading} className="w-full">
         {isLoading ? 'Saving...' : (submitLabel || (employee ? 'Save Changes' : 'Save Employee'))}
