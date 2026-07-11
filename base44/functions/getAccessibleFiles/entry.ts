@@ -41,7 +41,9 @@ const VAULT_FOLDER_ACCESS: Record<string, string[]> = {
 // the user must have access to that module to see the folder.
 // Uses _DEPT_ / _PROGRAM_ prefixed names (post-rename). Old names kept for backward compat.
 const FOLDER_TO_MODULE: Record<string, string> = {
+  '_DEPT_HR': 'nexushr',
   '_DEPT_NexusHR': 'nexushr',
+  '_DEPT_LMS': 'lms',
   '_DEPT_Pathways': 'pathways',
   '_DEPT_Grants': 'grants',
   '_DEPT_VolunteerMgr': 'volunteermgr',
