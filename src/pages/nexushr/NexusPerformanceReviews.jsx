@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -14,20 +14,22 @@ import ReviewForm from '@/components/reviews/ReviewForm';
 import { format } from 'date-fns';
 
 export default function NexusPerformanceReviews() {
-  const { isManager, user } = useAccessLevel();
+  const { canAccessHR, user, isAdmin, directReports, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [viewing, setViewing] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: reviews = [] } = useQuery({ queryKey: ['reviews'], queryFn: () => base44.entities.PerformanceReview.list('-created_date', 100) });
-  const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 200) });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.PerformanceReview.create(data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['reviews'] }); setShowForm(false); },
   });
 
-  if (!isManager) return <AccessDenied />;
+  if (!canAccessHR) return <AccessDenied />;
+
+  const visibleReviews = isAdmin ? reviews : reviews.filter(r => r.reviewer_email === user?.email);
+  const formEmployees = isAdmin ? employees : directReports;
 
   return (
     <div className="space-y-6">
@@ -36,7 +38,7 @@ export default function NexusPerformanceReviews() {
         actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />New Review</Button>}
       />
 
-      {reviews.length === 0 ? (
+      {visibleReviews.length === 0 ? (
         <EmptyState icon={ClipboardList} title="No reviews yet" description="Start by creating a performance review." />
       ) : (
         <Card>
@@ -53,7 +55,7 @@ export default function NexusPerformanceReviews() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {reviews.map(rev => (
+                {visibleReviews.map(rev => (
                   <tr key={rev.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setViewing(rev)}>
                     <td className="p-4 font-medium">{rev.employee_name}</td>
                     <td className="p-4">{rev.review_period}</td>
@@ -71,7 +73,7 @@ export default function NexusPerformanceReviews() {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent><DialogHeader><DialogTitle>New Performance Review</DialogTitle></DialogHeader>
-          <ReviewForm employees={employees} user={user} onSubmit={createMutation.mutate} isLoading={createMutation.isPending} />
+          <ReviewForm employees={formEmployees} user={user} onSubmit={createMutation.mutate} isLoading={createMutation.isPending} />
         </DialogContent>
       </Dialog>
 

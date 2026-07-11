@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,7 +15,7 @@ import ResolutionForm from '@/components/incidents/ResolutionForm';
 import { format } from 'date-fns';
 
 export default function NexusIncidents() {
-  const { isManager, user } = useAccessLevel();
+  const { canAccessHR, user, isAdmin, directReports, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [viewing, setViewing] = useState(null);
   const [showResolution, setShowResolution] = useState(false);
@@ -23,7 +23,6 @@ export default function NexusIncidents() {
 
   const { data: incidents = [] } = useQuery({ queryKey: ['incidents'], queryFn: () => base44.entities.IncidentReport.list('-created_date', 200) });
   const { data: resolutions = [] } = useQuery({ queryKey: ['resolutions'], queryFn: () => base44.entities.IncidentResolution.list('-created_date', 200) });
-  const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 200) });
   const { data: supervisors = [] } = useQuery({
     queryKey: ['supervisors'],
     queryFn: async () => { const users = await base44.entities.User.list(); return users.filter(u => u.role === 'admin' || u.role === 'manager'); },
@@ -38,13 +37,10 @@ export default function NexusIncidents() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['resolutions'] }); setShowResolution(false); setViewing(null); },
   });
 
-  if (!isManager) return <AccessDenied />;
+  if (!canAccessHR) return <AccessDenied />;
 
-  const filteredIncidents = incidents.filter(inc => {
-    if (user?.role === 'admin' || user?.role === 'hr_admin') return true;
-    if (user?.role === 'manager') return inc.employee_ids?.some(empId => employees.find(e => e.id === empId)?.manager_email === user?.email);
-    return false;
-  });
+  const visibleIncidents = isAdmin ? incidents : incidents.filter(inc => inc.reporter_email === user?.email);
+  const incidentFormEmployees = isAdmin ? employees : directReports;
 
   const getRelatedResolutions = (incidentId) => resolutions.filter(r => r.incident_id === incidentId);
 
@@ -55,7 +51,7 @@ export default function NexusIncidents() {
         actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />New Report</Button>}
       />
 
-      {filteredIncidents.length === 0 ? (
+      {visibleIncidents.length === 0 ? (
         <EmptyState icon={AlertTriangle} title="No incidents" description="No incident reports on file." />
       ) : (
         <Card>
@@ -72,7 +68,7 @@ export default function NexusIncidents() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filteredIncidents.map(inc => {
+                {visibleIncidents.map(inc => {
                   const related = getRelatedResolutions(inc.id);
                   return (
                     <tr key={inc.id} className="hover:bg-muted/30">
@@ -100,7 +96,7 @@ export default function NexusIncidents() {
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-2xl"><DialogHeader><DialogTitle>File Incident Report</DialogTitle></DialogHeader>
-          <IncidentFormNew employees={employees} supervisors={supervisors} user={user} onSubmit={createMutation.mutate} isLoading={createMutation.isPending} />
+          <IncidentFormNew employees={incidentFormEmployees} supervisors={supervisors} user={user} onSubmit={createMutation.mutate} isLoading={createMutation.isPending} />
         </DialogContent>
       </Dialog>
 

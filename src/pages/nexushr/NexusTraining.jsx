@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,23 +18,25 @@ import { format } from 'date-fns';
 const trainingTypes = ['certification', 'course', 'workshop', 'orientation', 'safety', 'compliance', 'professional_development', 'other'];
 
 export default function NexusTraining() {
-  const { isManager } = useAccessLevel();
+  const { canAccessHR, user, isAdmin, directReports, directReportIds, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employee_id: '', employee_name: '', training_name: '', training_type: '', provider: '', completion_date: '', status: 'completed' });
   const queryClient = useQueryClient();
 
   const { data: trainings = [] } = useQuery({ queryKey: ['trainings'], queryFn: () => base44.entities.Training.list('-created_date', 200) });
-  const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 200) });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Training.create(data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trainings'] }); setShowForm(false); },
   });
 
-  if (!isManager) return <AccessDenied />;
+  if (!canAccessHR) return <AccessDenied />;
+
+  const visibleTrainings = isAdmin ? trainings : trainings.filter(t => directReportIds.includes(t.employee_id));
+  const formEmployees = isAdmin ? employees : directReports;
 
   const handleEmployeeChange = (id) => {
-    const emp = employees.find(e => e.id === id);
+    const emp = formEmployees.find(e => e.id === id);
     setForm({ ...form, employee_id: id, employee_name: emp ? `${emp.first_name} ${emp.last_name}` : '' });
   };
 
@@ -47,7 +49,7 @@ export default function NexusTraining() {
         actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Record</Button>}
       />
 
-      {trainings.length === 0 ? (
+      {visibleTrainings.length === 0 ? (
         <EmptyState icon={GraduationCap} title="No training records" description="Track employee training and certifications." />
       ) : (
         <Card>
@@ -63,7 +65,7 @@ export default function NexusTraining() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {trainings.map(t => (
+                {visibleTrainings.map(t => (
                   <tr key={t.id} className="hover:bg-muted/30">
                     <td className="p-4 font-medium">{t.employee_name}</td>
                     <td className="p-4">{t.training_name}</td>
@@ -85,7 +87,7 @@ export default function NexusTraining() {
               <Label>Employee *</Label>
               <Select value={form.employee_id} onValueChange={handleEmployeeChange}>
                 <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-                <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{formEmployees.map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">

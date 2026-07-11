@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Clock, Calendar, TrendingUp, PieChart } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
+import AccessDenied from '@/components/shared/AccessDenied';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
 import moment from 'moment';
@@ -18,13 +20,13 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip }
 const COLORS = ['#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#a8dadc', '#457b9d'];
 
 export default function NexusTimeLogs() {
+  const { canAccessHR, user, isAdmin, directReports, directReportIds, employees } = useSupervisorAccess();
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employee_id: '', employee_name: '', department: '', date: '', hours: '', notes: '' });
   const queryClient = useQueryClient();
 
   const { data: timeLogs = [] } = useQuery({ queryKey: ['employee-timelogs'], queryFn: () => base44.entities.EmployeeTimeLog.list('-date', 500) });
-  const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 500) });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.EmployeeTimeLog.create(data),
@@ -35,8 +37,34 @@ export default function NexusTimeLogs() {
     },
   });
 
+  const visibleTimeLogs = isAdmin ? timeLogs : timeLogs.filter(log => directReportIds.includes(log.employee_id));
+
+  const stats = useMemo(() => {
+    const now = moment();
+    const calendarYearStart = moment().startOf('year');
+    const fiscalYearStart = moment().month(3).date(1).startOf('day');
+    if (now.isBefore(fiscalYearStart)) fiscalYearStart.subtract(1, 'year');
+
+    const allTime = visibleTimeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
+    const calendarYTD = visibleTimeLogs.filter(log => moment(log.date || log.sign_in_time).isSameOrAfter(calendarYearStart)).reduce((sum, log) => sum + (log.total_hours || 0), 0);
+    const fiscalYTD = visibleTimeLogs.filter(log => moment(log.date || log.sign_in_time).isSameOrAfter(fiscalYearStart)).reduce((sum, log) => sum + (log.total_hours || 0), 0);
+
+    const byDepartment = {};
+    visibleTimeLogs.forEach(log => {
+      const dept = log.department || 'Unassigned';
+      byDepartment[dept] = (byDepartment[dept] || 0) + (log.total_hours || 0);
+    });
+    const pieData = Object.entries(byDepartment).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+    return { allTime, calendarYTD, fiscalYTD, pieData };
+  }, [visibleTimeLogs]);
+
+  if (!canAccessHR) return <AccessDenied />;
+
+  const formEmployees = isAdmin ? employees : directReports;
+
   const handleEmployeeChange = (id) => {
-    const emp = employees.find(e => e.id === id);
+    const emp = formEmployees.find(e => e.id === id);
     setForm({ ...form, employee_id: id, employee_name: emp ? `${emp.first_name} ${emp.last_name}` : '', department: emp?.department || '' });
   };
 
@@ -52,30 +80,10 @@ export default function NexusTimeLogs() {
     });
   };
 
-  const filtered = timeLogs.filter(log =>
+  const filtered = visibleTimeLogs.filter(log =>
     log.employee_name?.toLowerCase().includes(search.toLowerCase()) ||
     log.department?.toLowerCase().includes(search.toLowerCase())
   );
-
-  const stats = useMemo(() => {
-    const now = moment();
-    const calendarYearStart = moment().startOf('year');
-    const fiscalYearStart = moment().month(3).date(1).startOf('day');
-    if (now.isBefore(fiscalYearStart)) fiscalYearStart.subtract(1, 'year');
-
-    const allTime = timeLogs.reduce((sum, log) => sum + (log.total_hours || 0), 0);
-    const calendarYTD = timeLogs.filter(log => moment(log.date || log.sign_in_time).isSameOrAfter(calendarYearStart)).reduce((sum, log) => sum + (log.total_hours || 0), 0);
-    const fiscalYTD = timeLogs.filter(log => moment(log.date || log.sign_in_time).isSameOrAfter(fiscalYearStart)).reduce((sum, log) => sum + (log.total_hours || 0), 0);
-
-    const byDepartment = {};
-    timeLogs.forEach(log => {
-      const dept = log.department || 'Unassigned';
-      byDepartment[dept] = (byDepartment[dept] || 0) + (log.total_hours || 0);
-    });
-    const pieData = Object.entries(byDepartment).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-
-    return { allTime, calendarYTD, fiscalYTD, pieData };
-  }, [timeLogs]);
 
   return (
     <div className="space-y-6">
@@ -194,7 +202,7 @@ export default function NexusTimeLogs() {
               <Label>Employee *</Label>
               <Select value={form.employee_id} onValueChange={handleEmployeeChange}>
                 <SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
-                <SelectContent>{employees.map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{formEmployees.map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
