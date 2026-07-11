@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, FolderOpen, Tag, ChevronDown, ChevronRight, MoreVertical, Pencil, Trash2, Group } from 'lucide-react';
+import { Plus, Search, FolderOpen, Tag, ChevronDown, ChevronRight, MoreVertical, Pencil, Trash2, Group, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import {
 import { format } from 'date-fns';
 import GroupManagerModal from '@/components/projects/GroupManagerModal';
 import AssignGroupModal from '@/components/projects/AssignGroupModal';
+import { useItemVisibility } from '@/lib/useItemVisibility';
 
 const STATUS_COLORS = {
   draft: 'bg-secondary text-secondary-foreground',
@@ -37,18 +38,21 @@ export default function GrantsProjects() {
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showGroupManager, setShowGroupManager] = useState(false);
   const [assignGroupTarget, setAssignGroupTarget] = useState(null);
+  const { isAdmin, filterVisible } = useItemVisibility();
 
   const { data: projects = [] } = useQuery({ queryKey: ['projects'], queryFn: () => base44.entities.Project.list('-updated_date', 200) });
   const { data: groups = [] } = useQuery({ queryKey: ['projectGroups'], queryFn: () => base44.entities.ProjectGroup.list('name') });
 
+  const visibleProjects = filterVisible(projects);
+
   const allTags = useMemo(() => {
     const tags = new Set();
-    projects.forEach(p => (p.tags || []).forEach(t => tags.add(t)));
+    visibleProjects.forEach(p => (p.tags || []).forEach(t => tags.add(t)));
     return [...tags].sort();
-  }, [projects]);
+  }, [visibleProjects]);
 
   const filtered = useMemo(() => {
-    let list = projects;
+    let list = visibleProjects;
     if (statusTab !== 'all') list = list.filter(p => p.status === statusTab);
     if (search) list = list.filter(p => p.title?.toLowerCase().includes(search.toLowerCase()) || p.funding_source_name?.toLowerCase().includes(search.toLowerCase()));
     if (selectedTag) list = list.filter(p => (p.tags || []).includes(selectedTag));
@@ -83,7 +87,10 @@ export default function GrantsProjects() {
       <Link to={`/grants/projects/${project.id}`} className="flex-1 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{project.title}</p>
+            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors flex items-center gap-1.5">
+              {project.is_hidden && isAdmin && <EyeOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+              {project.title}
+            </p>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <span className="text-xs text-muted-foreground">{project.funding_source_name || 'No funder'}</span>
               {project.submission_deadline && (
@@ -100,9 +107,14 @@ export default function GrantsProjects() {
         {project.amount_requested && (
           <span className="text-xs text-muted-foreground hidden sm:inline">${project.amount_requested.toLocaleString()}</span>
         )}
-        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[project.status] || 'bg-gray-100 text-gray-700'}`}>
-          {project.status?.replace('_', ' ')}
-        </span>
+        <div className="flex gap-1">
+          {project.is_hidden && isAdmin && (
+            <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">Hidden</span>
+          )}
+          <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[project.status] || 'bg-gray-100 text-gray-700'}`}>
+            {project.status?.replace('_', ' ')}
+          </span>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">

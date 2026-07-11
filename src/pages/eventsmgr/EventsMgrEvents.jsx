@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Calendar, Plus, Search, Filter } from "lucide-react";
+import { Calendar, Plus, Search, Filter, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useItemVisibility } from "@/lib/useItemVisibility";
 
 const statusColors = {
   planning: "bg-warning/10 text-warning",
@@ -19,13 +20,16 @@ const statusColors = {
 export default function EventsMgrEvents() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { isAdmin, filterVisible } = useItemVisibility();
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: () => base44.entities.Event.list("-start_date"),
   });
 
-  const filteredEvents = events?.filter((event) => {
+  const visibleEvents = filterVisible(events);
+
+  const filteredEvents = visibleEvents?.filter((event) => {
     const matchesSearch = event.name.toLowerCase().includes(search.toLowerCase()) ||
       event.description?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || event.status === statusFilter;
@@ -102,10 +106,18 @@ export default function EventsMgrEvents() {
                 )}
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-lg">{event.name}</CardTitle>
-                    <Badge className={statusColors[event.status] || "bg-muted text-muted-foreground"}>
-                      {event.status.replace("_", " ")}
-                    </Badge>
+                    <CardTitle className="text-lg flex items-center gap-1.5">
+                      {event.is_hidden && isAdmin && <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {event.name}
+                    </CardTitle>
+                    <div className="flex gap-1">
+                      {event.is_hidden && isAdmin && (
+                        <Badge variant="outline" className="text-xs text-muted-foreground">Hidden</Badge>
+                      )}
+                      <Badge className={statusColors[event.status] || "bg-muted text-muted-foreground"}>
+                        {event.status.replace("_", " ")}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">

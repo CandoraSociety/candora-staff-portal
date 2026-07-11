@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Target, Plus, Search } from "lucide-react";
+import { Target, Plus, Search, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useItemVisibility } from "@/lib/useItemVisibility";
 
 const statusColors = {
   planning: "bg-warning/10 text-warning",
@@ -26,13 +27,16 @@ const categoryIcons = {
 export default function EventsMgrPrograms() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const { isAdmin, filterVisible } = useItemVisibility();
 
   const { data: programs, isLoading } = useQuery({
     queryKey: ["programs"],
     queryFn: () => base44.entities.Program.list(),
   });
 
-  const filteredPrograms = programs?.filter((program) => {
+  const visiblePrograms = filterVisible(programs);
+
+  const filteredPrograms = visiblePrograms?.filter((program) => {
     const matchesSearch = program.name.toLowerCase().includes(search.toLowerCase()) ||
       program.description?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || program.status === statusFilter;
@@ -98,14 +102,20 @@ export default function EventsMgrPrograms() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="text-2xl mb-2">
+                      <div className="text-2xl mb-2 flex items-center gap-1.5">
                         {categoryIcons[program.category] || "📋"}
+                        {program.is_hidden && isAdmin && <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
                       </div>
                       <CardTitle className="text-lg">{program.name}</CardTitle>
                     </div>
-                    <Badge className={statusColors[program.status] || "bg-muted text-muted-foreground"}>
-                      {program.status}
-                    </Badge>
+                    <div className="flex gap-1">
+                      {program.is_hidden && isAdmin && (
+                        <Badge variant="outline" className="text-xs text-muted-foreground">Hidden</Badge>
+                      )}
+                      <Badge className={statusColors[program.status] || "bg-muted text-muted-foreground"}>
+                        {program.status}
+                      </Badge>
+                    </div>
                   </div>
                   <CardDescription className="line-clamp-2">
                     {program.description || "No description"}

@@ -294,6 +294,11 @@
         "type": "string"
       }
     },
+    "is_hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, this item is hidden from non-admin users even if they have portal access"
+    },
     "is_public": {
       "type": "boolean",
       "default": false

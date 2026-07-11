@@ -13,6 +13,8 @@ import ReportsTab from '@/components/project/ReportsTab';
 import QuickReferenceTab from '@/components/project/QuickReferenceTab';
 import AIAssistant from '@/components/project/AIAssistant';
 import ProjectProgress from '@/components/project/ProjectProgress';
+import VisibilityToggle from '@/components/shared/VisibilityToggle';
+import { useItemVisibility } from '@/lib/useItemVisibility';
 
 const STATUS_COLORS = {
   draft: 'bg-secondary text-secondary-foreground',
@@ -32,6 +34,7 @@ export default function GrantsProjectDetail() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [savingTitle, setSavingTitle] = useState(false);
+  const { isAdmin } = useItemVisibility();
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', id],
@@ -97,6 +100,7 @@ export default function GrantsProjectDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <VisibilityToggle item={project} entityType="Project" onUpdate={refetchProject} isAdmin={isAdmin} />
           <select
             value={project.status}
             onChange={e => handleStatusChange(e.target.value)}

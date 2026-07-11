@@ -75,6 +75,11 @@
       "items": {
         "type": "string"
       }
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, this item is hidden from non-admin users even if they have portal access"
     }
   },
   "required": [
