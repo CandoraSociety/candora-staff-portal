@@ -40,15 +40,16 @@ export default function FileBrowser() {
   const { grantedFileLevels = [], isAdmin = false } = useContext(FilePermissionsContext);
 
   // Server-side access gate: only receives files the user is authorized to see
-  const { data: files = [], isLoading, refetch } = useQuery({
+  const { data: rawFiles, isLoading, refetch } = useQuery({
     queryKey: ["accessible-files", user?.email],
     queryFn: async () => {
       const res = await base44.functions.invoke('getAccessibleFiles', {});
-      const filesData = res.data?.files;
+      const filesData = res.data?.files ?? res.files ?? [];
       return Array.isArray(filesData) ? filesData : [];
     },
     enabled: !!user,
   });
+  const files = Array.isArray(rawFiles) ? rawFiles : [];
 
   const deleteFileMutation = useMutation({
     mutationFn: (id) => base44.entities.File.delete(id),
