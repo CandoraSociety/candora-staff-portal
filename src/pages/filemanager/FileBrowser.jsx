@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
@@ -12,6 +12,7 @@ import SearchBar from "@/components/files/SearchBar";
 import FileSortingDialog from "@/components/files/FileSortingDialog";
 import { useAuth } from "@/lib/AuthContext";
 import { FilePermissionsContext } from "@/components/filemanager/FileManagerLayout";
+import { PORTAL_MODULES } from "@/lib/tierPermissionPresets";
 import { useContext } from "react";
 
 export default function FileBrowser() {
@@ -19,9 +20,19 @@ export default function FileBrowser() {
   const { user } = useAuth();
   const urlParams = new URLSearchParams(window.location.search);
   const initialAccess = urlParams.get("access") || "all";
+  const portalFilter = urlParams.get("portal") || null;
   const [viewMode, setViewMode] = useState("grid");
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({ fileType: "all", category: "all", access: initialAccess, sort: "-created_date" });
+  const [filters, setFilters] = useState({ fileType: "all", category: portalFilter || "all", access: initialAccess, sort: "-created_date" });
+
+  // Sync filters when URL params change (e.g., clicking a different portal tab)
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      category: portalFilter || "all",
+      access: initialAccess,
+    }));
+  }, [portalFilter, initialAccess]);
   const [showSorting, setShowSorting] = useState(false);
   const [filesToSort, setFilesToSort] = useState([]);
 
@@ -61,6 +72,12 @@ export default function FileBrowser() {
     corporate: "Corporate Files",
   };
 
+  // Find portal label for heading
+  const portalLabel = portalFilter
+    ? PORTAL_MODULES.find(m => m.id === portalFilter)?.label || portalFilter
+    : null;
+  const heading = portalLabel ? `${portalLabel} Files` : (accessLabels[filters.access] || "All Files");
+
   const filteredFiles = useMemo(() => {
     let result = [...files];
     if (search) {
@@ -92,7 +109,7 @@ export default function FileBrowser() {
     <div className="p-6 max-w-[1600px] mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">{accessLabels[filters.access] || "All Files"}</h1>
+          <h1 className="text-2xl font-bold">{heading}</h1>
           <p className="text-sm text-muted-foreground mt-1">{filteredFiles.length} files{unsortedFiles.length > 0 && ` · ${unsortedFiles.length} need sorting`}</p>
         </div>
         <div className="flex items-center gap-2">

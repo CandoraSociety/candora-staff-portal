@@ -2,40 +2,33 @@ import React, { useState, createContext, useContext } from 'react';
 import FloatingNoteButton from '@/components/notes/FloatingNoteButton';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useOrgSettings } from '@/lib/useOrgSettings';
+import { PORTAL_MODULES } from '@/lib/tierPermissionPresets';
 import { cn } from '@/lib/utils';
 import { 
-  Menu, X, ChevronLeft, Home, FolderOpen, Globe, User, Shield, 
-  DollarSign, Building2, Search, Upload, PackagePlus, FolderHeart, 
-  LayoutDashboard, StickyNote, CheckSquare, Pencil, LogOut 
+  Menu, X, ChevronLeft, Home, FolderOpen, User, 
+  Search, Upload, PackagePlus, FolderHeart, 
+  LayoutDashboard, StickyNote, Pencil, LogOut, CloudUpload, Folder 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Context so FileBrowser and other pages can read granted file access levels
 export const FilePermissionsContext = createContext({ grantedFileLevels: [] });
 
-// Base nav items — file access items are added dynamically based on permissions
-const BASE_NAV_ITEMS = [
-  { path: "/filemanager",                      label: "Dashboard",     icon: Home,          accessLevel: null },
-  { path: "/filemanager/files",                label: "All Files",     icon: FolderOpen,    accessLevel: null },
-  { path: "/filemanager/files?access=personal",  label: "My Files (Private)", icon: User,    accessLevel: "personal" }, // user's private SharePoint folder
-
-  { path: "/filemanager/files?access=finance",   label: "Finance Files",  icon: DollarSign, accessLevel: "finance" },
-  { path: "/filemanager/files?access=corporate", label: "Corporate Files", icon: Building2, accessLevel: "corporate" },
-  { path: "/filemanager/search",               label: "Search",        icon: Search,        accessLevel: null },
-  { path: "/filemanager/upload",               label: "Upload",        icon: Upload,        accessLevel: null },
-  { path: "/filemanager/bulk",                 label: "Bulk Import",   icon: PackagePlus,   accessLevel: null },
-  { path: "/filemanager/collections",          label: "Collections",   icon: FolderHeart,   accessLevel: null },
-  { path: "/filemanager/workspace",            label: "My Workspace",  icon: LayoutDashboard, accessLevel: null },
-  { path: "/filemanager/notes",                label: "Notes",         icon: StickyNote,    accessLevel: null },
-  { path: "/filemanager/editor",               label: "File Editor",   icon: Pencil,        accessLevel: null },
+// Tools section — always visible
+const TOOL_ITEMS = [
+  { path: "/filemanager/search",      label: "Search",        icon: Search },
+  { path: "/filemanager/bulk",       label: "Bulk Import",   icon: PackagePlus },
+  { path: "/filemanager/collections",label: "Collections",   icon: FolderHeart },
+  { path: "/filemanager/workspace",  label: "My Workspace",  icon: LayoutDashboard },
+  { path: "/filemanager/notes",      label: "Notes",         icon: StickyNote },
+  { path: "/filemanager/editor",     label: "File Editor",   icon: Pencil },
 ];
 
 function AppNav() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { logoUrl } = useOrgSettings();
   const { data: user } = useQuery({ queryKey: ['user'], queryFn: () => base44.auth.me() });
@@ -43,7 +36,6 @@ function AppNav() {
   const [collapsed, setCollapsed] = useState(false);
 
   // Fetch file-level access permissions via the server-side access gate
-  // This also populates accessible SharePoint folders for the user
   const { data: accessData } = useQuery({
     queryKey: ['accessible-files', user?.email],
     enabled: !!user?.email,
@@ -54,33 +46,47 @@ function AppNav() {
   });
 
   const grantedFileLevels = accessData?.granted_file_levels || [];
+  const accessibleModules = accessData?.granted_modules || [];
+  const isAdmin = accessData?.user?.is_admin ?? (user?.role === 'admin');
+
+  // Build portal file tabs dynamically from the user's accessible modules
+  const portalTabs = PORTAL_MODULES
+    .filter(mod => mod.id !== 'filemanager' && (isAdmin || accessibleModules.includes(mod.id)))
+    .map(mod => ({
+      path: `/filemanager/files?portal=${mod.id}`,
+      label: `${mod.label} Files`,
+      icon: Folder,
+      portalId: mod.id,
+    }));
 
   const handleLogout = async () => {
     await base44.auth.logout();
     window.location.href = '/';
   };
 
-  const isAdmin = accessData?.user?.is_admin ?? (user?.role === 'admin');
+  // --- Active state detection ---
+  const urlParams = new URLSearchParams(location.search);
+  const currentAccess = urlParams.get('access');
+  const currentPortal = urlParams.get('portal');
 
-  const visibleItems = BASE_NAV_ITEMS.filter(item => {
-    if (!item.accessLevel) return true; // always visible
-    if (item.accessLevel === 'personal') return true; // everyone sees My Files (content is filtered server-side)
-    // Restricted access levels: admin or explicitly granted
-    return isAdmin || grantedFileLevels.includes(item.accessLevel);
-  });
+  function isItemActive(item) {
+    const itemPath = item.path.split('?')[0];
+    if (location.pathname !== itemPath) return false;
+    if (item.portalId) return currentPortal === item.portalId;
+    if (item.accessFilter) return currentAccess === item.accessFilter;
+    // "All Files" — on /filemanager/files with no query params
+    if (item.label === 'All Files') return !currentAccess && !currentPortal;
+    // Other tool pages — match path only
+    return !location.search || location.search === '';
+  }
 
   const NavButton = ({ item }) => {
-    const itemPath = item.path.split('?')[0];
-    const itemQuery = item.path.includes('?') ? item.path.split('?')[1] : null;
-    const isActive = item.search 
-      ? location.pathname === itemPath && location.search.includes('access=')
-      : location.pathname === itemPath && (itemQuery ? location.search === `?${itemQuery}` : true);
-    
+    const isActive = isItemActive(item);
     const Icon = item.icon;
-    
     return (
       <Link
         to={item.path}
+        onClick={() => setMenuOpen(false)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md font-medium transition-colors",
           isActive
@@ -89,14 +95,18 @@ function AppNav() {
         )}
       >
         <Icon className="h-4 w-4 shrink-0" />
-        {!collapsed && <span>{item.label}</span>}
+        {!collapsed && <span className="truncate">{item.label}</span>}
       </Link>
     );
   };
 
+  // Nav section label (hidden when collapsed)
+  const SectionLabel = ({ children }) => (
+    !collapsed && <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">{children}</p>
+  );
+
   return (
     <>
-      {/* Mobile overlay */}
       {menuOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMenuOpen(false)} />
       )}
@@ -107,7 +117,6 @@ function AppNav() {
         collapsed ? "w-[70px]" : "w-64",
         "hidden lg:block"
       )}>
-        {/* Logo */}
         <div className="h-14 flex items-center gap-3 px-4 border-b border-sidebar-border">
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <img src={logoUrl} alt="Candora" className="h-8 w-8 object-contain rounded-full" />
@@ -125,11 +134,39 @@ function AppNav() {
           </Button>
         </div>
 
-        {/* Navigation */}
         <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
-          {visibleItems.map((item) => (
-            <NavButton key={item.path} item={item} />
-          ))}
+          {/* Upload — primary action */}
+          <Link
+            to="/filemanager/upload"
+            onClick={() => setMenuOpen(false)}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md font-bold transition-colors mb-2",
+              location.pathname === '/filemanager/upload'
+                ? "bg-primary text-primary-foreground"
+                : "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/25"
+            )}
+          >
+            <CloudUpload className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Upload Files</span>}
+          </Link>
+
+          {/* Dashboard */}
+          <NavButton item={{ path: '/filemanager', label: 'Dashboard', icon: Home }} />
+
+          <SectionLabel>Browse Files</SectionLabel>
+          <NavButton item={{ path: '/filemanager/files', label: 'All Files', icon: FolderOpen }} />
+          <NavButton item={{ path: '/filemanager/files?access=personal', label: 'My Files', icon: User, accessFilter: 'personal' }} />
+
+          {/* Portal-specific file tabs */}
+          {portalTabs.length > 0 && (
+            <>
+              <SectionLabel>Portal Files</SectionLabel>
+              {portalTabs.map(item => <NavButton key={item.path} item={item} />)}
+            </>
+          )}
+
+          <SectionLabel>Tools</SectionLabel>
+          {TOOL_ITEMS.map(item => <NavButton key={item.path} item={item} />)}
         </nav>
 
         {/* User Profile */}
@@ -161,7 +198,7 @@ function AppNav() {
 
       {/* Mobile Sidebar */}
       {menuOpen && (
-        <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar lg:hidden z-50">
+        <aside className="fixed top-0 left-0 h-full w-64 bg-sidebar lg:hidden z-50 overflow-y-auto">
           <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
             <Link to="/" className="flex items-center gap-2">
               <img src={logoUrl} alt="Candora" className="h-8 w-8 object-contain rounded-full" />
@@ -172,12 +209,34 @@ function AppNav() {
             </Button>
           </div>
           <nav className="p-3 space-y-1">
-            {visibleItems.map((item) => (
-              <NavButton key={item.path} item={item} />
-            ))}
+            <Link
+              to="/filemanager/upload"
+              onClick={() => setMenuOpen(false)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md font-bold transition-colors mb-2",
+                location.pathname === '/filemanager/upload'
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/25"
+              )}
+            >
+              <CloudUpload className="h-4 w-4 shrink-0" />
+              <span>Upload Files</span>
+            </Link>
+            <NavButton item={{ path: '/filemanager', label: 'Dashboard', icon: Home }} />
+            <SectionLabel>Browse Files</SectionLabel>
+            <NavButton item={{ path: '/filemanager/files', label: 'All Files', icon: FolderOpen }} />
+            <NavButton item={{ path: '/filemanager/files?access=personal', label: 'My Files', icon: User, accessFilter: 'personal' }} />
+            {portalTabs.length > 0 && (
+              <>
+                <SectionLabel>Portal Files</SectionLabel>
+                {portalTabs.map(item => <NavButton key={item.path} item={item} />)}
+              </>
+            )}
+            <SectionLabel>Tools</SectionLabel>
+            {TOOL_ITEMS.map(item => <NavButton key={item.path} item={item} />)}
           </nav>
           {user && (
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border">
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border bg-sidebar">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-sidebar-foreground">{user.full_name || user.email}</p>
@@ -197,14 +256,9 @@ function AppNav() {
         "transition-all duration-300",
         collapsed ? "lg:ml-[70px]" : "lg:ml-64"
       )}>
-        {/* Mobile Header */}
         <header className="lg:hidden h-14 flex items-center justify-between px-4 border-b bg-background">
           <Link to="/" className="flex items-center gap-2">
-            <img
-              src="https://media.base44.com/images/public/6a0025bc2848937e9e70bca5/6df7c66b7_Candoracirclelogo_noanniversary.png"
-              alt="Candora"
-              className="h-8 w-8 object-contain rounded-full"
-            />
+            <img src={logoUrl} alt="Candora" className="h-8 w-8 object-contain rounded-full" />
             <span className="font-display font-bold text-primary text-sm">CANDORA</span>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setMenuOpen(true)}>
@@ -212,9 +266,8 @@ function AppNav() {
           </Button>
         </header>
 
-        {/* Page Content */}
         <main className="p-6 max-w-7xl mx-auto">
-          <FilePermissionsContext.Provider value={{ grantedFileLevels, isAdmin }}>
+          <FilePermissionsContext.Provider value={{ grantedFileLevels, isAdmin, accessibleModules }}>
             <Outlet />
           </FilePermissionsContext.Provider>
         </main>
