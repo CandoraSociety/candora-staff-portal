@@ -22,20 +22,45 @@ async function getAccessToken() {
 }
 
 // Folder access rules — determines which SharePoint root folders a user can see
-const VAULT_FOLDER_ACCESS = {
+// Uses _VAULT_ prefixed names (post-rename). Old names kept for backward compat during migration.
+const VAULT_FOLDER_ACCESS: Record<string, string[]> = {
+  '_VAULT_Board': ['admin'],
+  '_VAULT_ED': ['admin'],
+  '_VAULT_Finance': ['admin'],
+  '_VAULT_HR': ['admin'],
+  '_VAULT_Corporate': ['admin'],
+  // Legacy names (pre-rename) — still recognized so access doesn't break during migration
   'Board of Directors': ['admin'],
-  'Candora Board': ['admin'],
-  'Corporate': ['admin'],
-  'Executive Director': ['admin'],
   'Executive Director Portal': ['admin'],
   'Financial': ['admin'],
   'Human Resources': ['admin'],
-  'HR Management': ['admin'],
+  'Corporate': ['admin'],
 };
 
 // Folder → module mapping. If a folder is tied to a portal module,
 // the user must have access to that module to see the folder.
-const FOLDER_TO_MODULE = {
+// Uses _DEPT_ / _PROGRAM_ prefixed names (post-rename). Old names kept for backward compat.
+const FOLDER_TO_MODULE: Record<string, string> = {
+  '_DEPT_NexusHR': 'nexushr',
+  '_DEPT_Pathways': 'pathways',
+  '_DEPT_Grants': 'grants',
+  '_DEPT_VolunteerMgr': 'volunteermgr',
+  '_DEPT_EventsMgr': 'eventsmgr',
+  '_DEPT_Marketing': 'marketing',
+  '_DEPT_Reporting': 'reporting',
+  '_DEPT_Food': 'food',
+  '_VAULT_ED': 'ed',
+  '_DEPT_Community': 'community',
+  '_DEPT_DigiLit': 'digilit',
+  '_DEPT_ELL': 'ell',
+  '_DEPT_EmpowerU': 'empoweru',
+  '_DEPT_RC': 'rc',
+  '_PROGRAM_WinterWonderland': 'winter-wonderland',
+  '_DEPT_Childminding': 'childminding',
+  '_DEPT_Reception': 'reception',
+  '_DEPT_PHAC': 'phac',
+  '_DEPT_FRN': 'frn',
+  // Legacy names (pre-rename)
   'NexusHR': 'nexushr',
   'Pathways CM': 'pathways',
   'Grants and Reports': 'grants',

@@ -23,24 +23,29 @@ async function getAccessToken() {
 
 // Sensitive folder mapping: folder name → list of authorized email recipients
 // "inheritance": false means we break inheritance and ONLY these people get access
-const VAULT_FOLDERS = {
-  // ED-only folders
-  'Executive Director': { recipients: [], vaultType: 'ed_only' },
-  'Executive Director Portal': { recipients: [], vaultType: 'ed_only' },
+// Uses _VAULT_ prefixed names (post-rename). Old names kept for backward compat.
+const VAULT_FOLDERS: Record<string, { recipients: string[]; vaultType: string }> = {
+  // ED-only
+  '_VAULT_ED': { recipients: [], vaultType: 'ed_only' },
 
   // Finance — ED + Finance Director (not yet set up, so ED only for now)
-  'Financial': { recipients: [], vaultType: 'finance' },
+  '_VAULT_Finance': { recipients: [], vaultType: 'finance' },
 
   // HR — ED + Carla (HR admin)
-  'HR Management': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
-  'Human Resources': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
+  '_VAULT_HR': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
 
-  // Corporate — ED + Directors (we'll add directors once their emails are confirmed)
-  'Corporate': { recipients: [], vaultType: 'corporate' },
+  // Corporate — ED + Directors
+  '_VAULT_Corporate': { recipients: [], vaultType: 'corporate' },
 
   // Board — ED only for now (board members access via separate flow)
+  '_VAULT_Board': { recipients: [], vaultType: 'board' },
+
+  // Legacy names (pre-rename) — still recognized so securing works during migration
+  'Executive Director Portal': { recipients: [], vaultType: 'ed_only' },
+  'Financial': { recipients: [], vaultType: 'finance' },
+  'Human Resources': { recipients: ['carla.bosse@candorasociety.com'], vaultType: 'hr' },
+  'Corporate': { recipients: [], vaultType: 'corporate' },
   'Board of Directors': { recipients: [], vaultType: 'board' },
-  'Candora Board': { recipients: [], vaultType: 'board' },
 };
 
 Deno.serve(async (req) => {
