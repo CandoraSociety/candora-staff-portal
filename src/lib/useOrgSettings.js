@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 const FALLBACK_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 
 export function useOrgSettings() {
-  const { data: list = [] } = useQuery({
+  const { data: list = [], isLoading } = useQuery({
     queryKey: ['orgSettings'],
     queryFn: () => base44.entities.OrgSettings.list(),
     staleTime: 1000 * 60 * 5,
@@ -21,5 +21,8 @@ export function useOrgSettings() {
     secondaryColor: s.secondary_color || '#0f1f6b',
     accentColor: s.accent_color || '#2b2de8',
     welcomeMessage: s.welcome_message || 'Welcome to the Candora Staff Portal',
+    tierPortalAccess: s.tier_portal_access || {},
+    ownerEmail: s.owner_email || null,
+    isLoading,
   };
 }

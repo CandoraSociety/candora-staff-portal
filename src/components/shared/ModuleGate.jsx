@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAccessControl } from '@/lib/useAccessControl';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 import { ShieldOff } from 'lucide-react';
 
 /**
@@ -12,6 +14,7 @@ export default function ModuleGate({ moduleId, children }) {
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState(null); // null = loading
   const navigate = useNavigate();
+  const { tierPortalAccess, ownerEmail, isLoading: orgSettingsLoading } = useOrgSettings();
 
   useEffect(() => {
     Promise.all([
@@ -25,10 +28,18 @@ export default function ModuleGate({ moduleId, children }) {
     });
   }, []);
 
-  const access = useAccessControl(user, permissions || []);
+  // Fetch employee record for org_tier (determines tier-based portal access)
+  const { data: employees = [], isLoading: employeeLoading } = useQuery({
+    queryKey: ['module-gate-employee', user?.email],
+    enabled: !!user?.email,
+    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
+  });
+  const orgTier = employees[0]?.org_tier || null;
 
-  // Still loading
-  if (permissions === null) return null;
+  const access = useAccessControl(user, permissions || [], orgTier, tierPortalAccess, ownerEmail);
+
+  // Still loading — wait for permissions, org settings, and employee record
+  if (permissions === null || orgSettingsLoading || (user?.email && employeeLoading)) return null;
 
   // Admin always passes
   if (access.isAdmin) return children;
