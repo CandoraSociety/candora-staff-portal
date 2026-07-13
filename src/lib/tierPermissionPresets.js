@@ -16,9 +16,9 @@ export const DEFAULT_TIER_CONFIGS = [
 
 // Default module access per tier (module IDs each tier can access)
 export const DEFAULT_TIER_PORTAL_ACCESS = {
-  executive_director:   ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food','ed'],
-  director:             ['nexushr','grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food'],
-  manager:              ['nexushr','volunteermgr','eventsmgr','reporting','filemanager','food'],
+  executive_director:   ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food','ed'],
+  director:             ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food'],
+  manager:              ['volunteermgr','eventsmgr','reporting','filemanager','food'],
   supervisor_team_lead: ['volunteermgr','eventsmgr','filemanager'],
   frontline:            ['filemanager'],
   assistant:            ['filemanager'],
