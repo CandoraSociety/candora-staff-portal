@@ -88,8 +88,8 @@ Deno.serve(async (req) => {
 
     const isAdmin = user.role === 'admin';
 
-    // Fetch user's file access permissions
-    const filePerms = await base44.entities.AccessPermission.filter({
+    // Fetch user's file access permissions (service role — permissions are admin-created)
+    const filePerms = await base44.asServiceRole.entities.AccessPermission.filter({
       target_type: 'file_access',
       scope_type: 'individual',
       scope_value: user.email,
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     const grantedFileLevels = filePerms.map(p => p.target_id);
 
     // Fetch user's module/portal access permissions
-    const modulePerms = await base44.entities.AccessPermission.filter({
+    const modulePerms = await base44.asServiceRole.entities.AccessPermission.filter({
       target_type: 'module',
       scope_type: 'individual',
       scope_value: user.email,

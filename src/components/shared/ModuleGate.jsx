@@ -19,7 +19,7 @@ export default function ModuleGate({ moduleId, children }) {
   useEffect(() => {
     Promise.all([
       base44.auth.me(),
-      base44.entities.AccessPermission.list(),
+      base44.functions.invoke('getMyPermissions', {}).then(res => res.data?.permissions || []),
     ]).then(([u, perms]) => {
       setUser(u);
       setPermissions(perms);
