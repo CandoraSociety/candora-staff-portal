@@ -16,6 +16,8 @@ import {
   getModuleCategory, getDifficulty, getModuleStatus,
 } from "@/lib/lmsConstants";
 import DynamicBlockPreview from "@/components/lms/DynamicBlockPreview";
+import KnowledgeCheckPreview from "@/components/lms/KnowledgeCheckPreview";
+import { normalizeKnowledgeCheckData } from "@/lib/lmsConstants";
 
 export default function ModulePreview({ module, onExit }) {
   // Flatten all chapters/sections/blocks into a sequential flow
@@ -64,7 +66,11 @@ export default function ModulePreview({ module, onExit }) {
       return (dynamicRevealCounts[block.id] || 0) < elements.length;
     }
     if (block.type === "knowledge_check") {
-      return !quizSubmitted[block.id];
+      const kcData = normalizeKnowledgeCheckData(block.data);
+      const questions = kcData.questions || [];
+      if (questions.length === 0) return false;
+      const submitted = quizSubmitted[block.id] || {};
+      return questions.some((_, qIdx) => !submitted[qIdx]);
     }
     if (block.type === "checklist") {
       const items = block.data?.items || [];
@@ -126,13 +132,14 @@ export default function ModulePreview({ module, onExit }) {
     }));
   };
 
-  const submitQuiz = (blockId) => {
-    setQuizSubmitted(prev => ({ ...prev, [blockId]: true }));
+  const submitQuiz = (blockId, qIdx) => {
+    setQuizSubmitted(prev => ({ ...prev, [blockId]: { ...(prev[blockId] || {}), [qIdx]: true } }));
   };
 
-  const selectQuizAnswer = (blockId, optIdx) => {
-    if (quizSubmitted[blockId]) return;
-    setQuizAnswers(prev => ({ ...prev, [blockId]: optIdx }));
+  const selectQuizAnswer = (blockId, qIdx, optIdx) => {
+    const blockSubmitted = quizSubmitted[blockId] || {};
+    if (blockSubmitted[qIdx]) return;
+    setQuizAnswers(prev => ({ ...prev, [blockId]: { ...(prev[blockId] || {}), [qIdx]: optIdx } }));
   };
 
   const cat = getModuleCategory(module.category);
@@ -536,58 +543,14 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
       );
 
     case "knowledge_check":
-      const selected = quizAnswers[block.id];
-      const submitted = quizSubmitted[block.id];
-      const correctIdx = data.correct_index || 0;
-      const isCorrect = selected === correctIdx;
       return (
-        <div className="p-4 rounded-lg border bg-card">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5 mb-2">
-            <HelpCircle className="w-3.5 h-3.5" /> Knowledge Check
-          </p>
-          <p className="text-sm font-medium mb-3">{data.question || "Question"}</p>
-          <div className="space-y-1.5">
-            {(data.options || []).map((opt, idx) => {
-              const isSelected = selected === idx;
-              const showCorrect = submitted && idx === correctIdx;
-              const showWrong = submitted && isSelected && idx !== correctIdx;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => selectQuizAnswer(block.id, idx)}
-                  disabled={submitted}
-                  className={`flex items-center gap-2 w-full text-left p-2.5 rounded-md border text-sm transition-colors ${
-                    showCorrect ? "border-green-500 bg-green-50 text-green-800" :
-                    showWrong ? "border-red-500 bg-red-50 text-red-800" :
-                    isSelected ? "border-primary bg-primary/5" :
-                    "border-input hover:bg-muted/30"
-                  } ${submitted ? "cursor-default" : "cursor-pointer"}`}
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 shrink-0 ${
-                    showCorrect ? "border-green-500 bg-green-500" :
-                    showWrong ? "border-red-500 bg-red-500" :
-                    isSelected ? "border-primary bg-primary" : "border-muted-foreground"
-                  }`} />
-                  <span>{opt || `Option ${idx + 1}`}</span>
-                </button>
-              );
-            })}
-          </div>
-          {submitted ? (
-            <div className={`mt-3 p-2.5 rounded-md text-xs ${isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
-              <p className="font-medium mb-0.5">{isCorrect ? "✅ Correct!" : "❌ Not quite right."}</p>
-              {data.explanation && (
-                <div className="ql-snow">
-                  <div className="ql-editor px-0 py-0 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: data.explanation }} />
-                </div>
-              )}
-            </div>
-          ) : (
-            <Button size="sm" className="mt-3" disabled={selected === undefined} onClick={() => submitQuiz(block.id)}>
-              Submit Answer
-            </Button>
-          )}
-        </div>
+        <KnowledgeCheckPreview
+          block={block}
+          quizAnswers={quizAnswers}
+          quizSubmitted={quizSubmitted}
+          selectQuizAnswer={selectQuizAnswer}
+          submitQuiz={submitQuiz}
+        />
       );
 
     case "accordion":

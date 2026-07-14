@@ -109,13 +109,28 @@ export function createDefaultBlockData(type) {
     case "external_link": return { url: "", label: "", description: "" };
     case "callout": return { variant: "info", title: "", content: "" };
     case "checklist": return { items: [{ id: crypto.randomUUID(), text: "", checked: false }] };
-    case "knowledge_check": return { question: "", options: ["", ""], correct_index: 0, explanation: "" };
+    case "knowledge_check": return { questions: [{ id: crypto.randomUUID(), question: "", options: ["", ""], correct_index: 0, explanation: "" }] };
     case "accordion": return { items: [{ id: crypto.randomUUID(), title: "", content: "" }] };
     case "table": return { headers: ["", ""], rows: [["", ""]] };
     case "slides": return { theme: "light", slides: [{ id: crypto.randomUUID(), title: "", body: "", image_url: "", layout: "title_content", notes: "" }] };
     case "dynamic": return { title: "", elements: [] };
     default: return {};
   }
+}
+
+export function normalizeKnowledgeCheckData(data) {
+  if (!data) return { questions: [{ id: crypto.randomUUID(), question: "", options: ["", ""], correct_index: 0, explanation: "" }] };
+  if (data.questions) return data;
+  // Migrate old single-question format
+  return {
+    questions: [{
+      id: crypto.randomUUID(),
+      question: data.question || "",
+      options: data.options || ["", ""],
+      correct_index: data.correct_index || 0,
+      explanation: data.explanation || "",
+    }]
+  };
 }
 
 export function createEmptyBlock(type, sortOrder = 0) {
@@ -196,7 +211,12 @@ export function getModuleStats(module) {
     (ch.sections || []).forEach(sec => {
       blocks += (sec.content_blocks || []).length;
       (sec.content_blocks || []).forEach(blk => {
-        if (blk.type === "knowledge_check" || blk.type === "quiz") quizBlocks++;
+        if (blk.type === "knowledge_check") {
+          const kcData = blk.data?.questions ? blk.data : normalizeKnowledgeCheckData(blk.data);
+          quizBlocks += (kcData.questions || []).length;
+        } else if (blk.type === "quiz") {
+          quizBlocks++;
+        }
       });
     });
   });

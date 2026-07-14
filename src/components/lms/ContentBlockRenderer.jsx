@@ -15,6 +15,7 @@ import {
 import SlideBlockEditor from "@/components/lms/SlideBlockEditor";
 import DynamicBlockEditor from "@/components/lms/DynamicBlockEditor";
 import RichTextBlockEditor from "@/components/lms/RichTextBlockEditor";
+import KnowledgeCheckEditor from "@/components/lms/KnowledgeCheckEditor";
 
 const ICON_MAP = {
   rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
@@ -151,42 +152,7 @@ function BlockEditor({ type, data, onChange }) {
         </div>
       );
     case "knowledge_check":
-      return (
-        <div className="space-y-2">
-          <div>
-            <Label className="text-xs mb-1 block">Question</Label>
-            <Input value={data.question || ""} onChange={e => onChange({ question: e.target.value })} placeholder="e.g. What is the correct procedure for..." className="text-sm h-8" />
-          </div>
-          {(data.options || []).map((opt, oIdx) => (
-            <div key={oIdx} className="flex items-center gap-2">
-              <button onClick={() => onChange({ correct_index: oIdx })}
-                className={`w-4 h-4 rounded-full border-2 shrink-0 ${data.correct_index === oIdx ? "border-green-500 bg-green-500" : "border-slate-300"}`}
-                title="Mark as correct" />
-              <Input value={opt} onChange={e => {
-                const options = [...(data.options || [])];
-                options[oIdx] = e.target.value;
-                onChange({ options });
-              }} placeholder={`Option ${oIdx + 1}`} className="text-sm h-8 flex-1" />
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive shrink-0" disabled={(data.options || []).length <= 2}
-                onClick={() => {
-                  const options = (data.options || []).filter((_, i) => i !== oIdx);
-                  const newCorrect = oIdx < data.correct_index ? data.correct_index - 1 : (oIdx === data.correct_index ? 0 : data.correct_index);
-                  onChange({ options, correct_index: newCorrect });
-                }}><Trash2 className="w-3.5 h-3.5" /></Button>
-            </div>
-          ))}
-          <div className="flex items-center justify-between">
-            <Button size="sm" variant="ghost" onClick={() => onChange({ options: [...(data.options || []), ""] })}>
-              <Plus className="w-3 h-3 mr-1" /> Add Option
-            </Button>
-            <span className="text-[10px] text-muted-foreground">Click circle to mark correct answer</span>
-          </div>
-          <div>
-            <Label className="text-xs mb-1 block">Explanation (shown after answering)</Label>
-            <RichTextBlockEditor value={data.explanation || ""} onChange={html => onChange({ explanation: html })} />
-          </div>
-        </div>
-      );
+      return <KnowledgeCheckEditor data={data} onChange={onChange} />;
     case "accordion":
       return (
         <div className="space-y-2">
