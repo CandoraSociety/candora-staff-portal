@@ -30,12 +30,28 @@ export default function ContentBlockRenderer({ block, onChange, onDelete, onMove
   const updateData = (data) => onChange({ ...block, data: { ...block.data, ...data } });
 
   return (
+    <>
+      {block.page_break_before && (
+        <div className="flex items-center gap-2 py-1">
+          <div className="flex-1 border-t-2 border-dashed border-blue-300" />
+          <span className="text-[10px] font-medium text-blue-500">Page Break</span>
+          <div className="flex-1 border-t-2 border-dashed border-blue-300" />
+        </div>
+      )}
     <div className="border rounded-lg bg-card overflow-hidden border-l-4 border-l-amber-400">
       {/* Block header */}
       <div className="flex items-center justify-between px-3 py-1.5 border-b bg-amber-50/50">
         <div className="flex items-center gap-1.5">
           <BlockIcon className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs font-medium">{blockType.label}</span>
+          <button
+            onClick={() => block.type !== "knowledge_check" && onChange({ ...block, page_break_before: !block.page_break_before })}
+            disabled={block.type === "knowledge_check"}
+            className={`text-[10px] px-1.5 py-0.5 rounded ${block.page_break_before ? "bg-blue-100 text-blue-700 font-medium" : "text-muted-foreground/50 hover:bg-muted"}`}
+            title={block.type === "knowledge_check" ? "Knowledge checks always start on a new page" : "Toggle page break"}
+          >
+            {block.page_break_before ? "New Page" : "Add Page Break"}
+          </button>
         </div>
         <div className="flex items-center gap-0.5">
           <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onMoveUp} disabled={!canMoveUp}><ChevronUp className="w-3.5 h-3.5" /></Button>
@@ -49,6 +65,7 @@ export default function ContentBlockRenderer({ block, onChange, onDelete, onMove
         <BlockEditor type={block.type} data={block.data || {}} onChange={updateData} />
       </div>
     </div>
+    </>
   );
 }
 

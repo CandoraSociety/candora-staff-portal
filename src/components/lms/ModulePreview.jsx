@@ -17,7 +17,7 @@ import {
 } from "@/lib/lmsConstants";
 import DynamicBlockPreview from "@/components/lms/DynamicBlockPreview";
 import KnowledgeCheckPreview from "@/components/lms/KnowledgeCheckPreview";
-import { normalizeKnowledgeCheckData } from "@/lib/lmsConstants";
+import { normalizeKnowledgeCheckData, getSectionPages } from "@/lib/lmsConstants";
 
 export default function ModulePreview({ module, onExit }) {
   // Flatten all chapters/sections/blocks into a sequential flow
@@ -37,6 +37,7 @@ export default function ModulePreview({ module, onExit }) {
   const [showIntro, setShowIntro] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [furthestReached, setFurthestReached] = useState(0);
+  const [currentPageInSection, setCurrentPageInSection] = useState(0);
   const [dynamicRevealCounts, setDynamicRevealCounts] = useState({});
   const [expandedChapters, setExpandedChapters] = useState(() => {
     const chIdx = allSections[0]?.chIdx ?? 0;
@@ -55,7 +56,7 @@ export default function ModulePreview({ module, onExit }) {
 
   // Check for incomplete interactive blocks — learners must finish all before completing.
   // In flexible mode, no gating is enforced.
-  const hasIncompleteBlocks = !isFlexible && current && (current.section.content_blocks || []).some(block => {
+  const checkBlockIncomplete = (block) => {
     if (block.type === "accordion") {
       const items = block.data?.items || [];
       return items.some(item => !expandedAccordions[`${block.id}-${item.id}`]);
@@ -78,7 +79,16 @@ export default function ModulePreview({ module, onExit }) {
       return items.some(item => !checkedItems[`${block.id}-${item.id}`]);
     }
     return false;
-  });
+  };
+
+  const sectionBlocks = current?.section?.content_blocks || [];
+  const sectionPages = getSectionPages(sectionBlocks);
+  const safePageIdx = Math.min(currentPageInSection, Math.max(0, sectionPages.length - 1));
+  const currentPageBlocks = sectionPages[safePageIdx] || [];
+  const isLastPage = safePageIdx >= sectionPages.length - 1;
+
+  const hasIncompleteOnPage = !isFlexible && currentPageBlocks.some(checkBlockIncomplete);
+  const hasIncompleteBlocks = !isFlexible && sectionBlocks.some(checkBlockIncomplete);
 
   // Furthest unlocked section: tracks the furthest section ever reached, so navigating
   // back doesn't re-lock sections that were already in progress.
@@ -91,6 +101,7 @@ export default function ModulePreview({ module, onExit }) {
     if (hasNext) {
       const next = currentIdx + 1;
       setCurrentIdx(next);
+      setCurrentPageInSection(0);
       setFurthestReached(prev => Math.max(prev, next));
     }
   };
@@ -98,6 +109,7 @@ export default function ModulePreview({ module, onExit }) {
   const goTo = (idx) => {
     if (idx >= 0 && idx < totalSections && isUnlocked(idx)) {
       setCurrentIdx(idx);
+      setCurrentPageInSection(0);
       setSidebarOpen(false);
     }
   };
@@ -113,6 +125,7 @@ export default function ModulePreview({ module, onExit }) {
   const beginTraining = () => {
     setShowIntro(false);
     setCurrentIdx(0);
+    setCurrentPageInSection(0);
     setFurthestReached(0);
   };
 
@@ -351,9 +364,19 @@ export default function ModulePreview({ module, onExit }) {
                 <h2 className="text-2xl font-heading font-bold text-foreground">{current.section.title || `Section ${current.secIdx + 1}`}</h2>
               </div>
 
-              {/* Content blocks */}
+              {/* Page indicator */}
+              {sectionPages.length > 1 && (
+                <div className="flex items-center justify-center gap-1.5 mb-4">
+                  {sectionPages.map((_, pIdx) => (
+                    <div key={pIdx} className={`h-1.5 rounded-full transition-all ${pIdx === safePageIdx ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"}`} />
+                  ))}
+                  <span className="text-xs font-medium text-muted-foreground ml-1">Page {safePageIdx + 1} of {sectionPages.length}</span>
+                </div>
+              )}
+
+              {/* Content blocks (current page only) */}
               <div className="space-y-5">
-                {(current.section.content_blocks || []).map(block => (
+                {currentPageBlocks.map(block => (
                   <PreviewBlock
                     key={block.id}
                     block={block}
@@ -374,7 +397,11 @@ export default function ModulePreview({ module, onExit }) {
               {/* Navigation footer */}
               <div className="mt-auto pt-8">
                 <div className="mt-6 pt-6 border-t-2 border-primary/20 flex items-center justify-between">
-                  {currentIdx === 0 ? (
+                  {safePageIdx > 0 ? (
+                    <Button variant="outline" size="default" onClick={() => setCurrentPageInSection(safePageIdx - 1)} className="border-accent/30 text-accent hover:bg-accent/5">
+                      <ArrowLeft className="w-4 h-4 mr-1.5" /> Previous Page
+                    </Button>
+                  ) : currentIdx === 0 ? (
                     <Button variant="outline" size="default" onClick={goToOverview} className="border-accent/30 text-accent hover:bg-accent/5">
                       <ArrowLeft className="w-4 h-4 mr-1.5" /> Overview
                     </Button>
@@ -383,7 +410,11 @@ export default function ModulePreview({ module, onExit }) {
                       <ArrowLeft className="w-4 h-4 mr-1.5" /> Previous
                     </Button>
                   )}
-                  {completedSections.has(currentIdx) ? (
+                  {!isLastPage ? (
+                    <Button size="default" onClick={() => setCurrentPageInSection(safePageIdx + 1)} disabled={hasIncompleteOnPage} className="bg-primary hover:bg-primary/90 text-primary-foreground font-display font-semibold">
+                      Next Page <ArrowRight className="w-4 h-4 ml-1.5" />
+                    </Button>
+                  ) : completedSections.has(currentIdx) ? (
                     <Button size="default" onClick={() => hasNext && goTo(currentIdx + 1)} disabled={!hasNext} className="bg-accent hover:bg-accent/90 text-accent-foreground font-display font-semibold">
                       {hasNext ? "Next" : "Complete"} <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Button>
@@ -394,11 +425,15 @@ export default function ModulePreview({ module, onExit }) {
                   )}
                 </div>
 
-                {hasIncompleteBlocks ? (
+                {!isLastPage && hasIncompleteOnPage ? (
+                  <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
+                    <ChevronRight className="w-3.5 h-3.5" /> Complete all interactive content on this page to continue
+                  </p>
+                ) : isLastPage && hasIncompleteBlocks ? (
                   <p className="text-center text-xs text-amber-600 mt-3 flex items-center justify-center gap-1">
                     <ChevronRight className="w-3.5 h-3.5" /> Complete all interactive content to continue
                   </p>
-                ) : completedSections.has(currentIdx) && (
+                ) : isLastPage && completedSections.has(currentIdx) && (
                   <p className="text-center text-xs text-green-600 mt-3 flex items-center justify-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Section completed
                   </p>

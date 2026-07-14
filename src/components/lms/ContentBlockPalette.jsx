@@ -5,9 +5,12 @@ import { Plus, X } from "lucide-react";
 
 export default function ContentBlockPalette({ onAdd }) {
   const [open, setOpen] = useState(false);
+  const [newPage, setNewPage] = useState(false);
 
   const handleSelect = (type) => {
-    onAdd(createEmptyBlock(type));
+    const block = createEmptyBlock(type);
+    if (newPage) block.page_break_before = true;
+    onAdd(block);
     setOpen(false);
   };
 
@@ -19,6 +22,10 @@ export default function ContentBlockPalette({ onAdd }) {
 
       {open && (
         <div className="mt-2 w-full bg-popover border rounded-lg shadow-sm p-2 grid grid-cols-2 gap-1.5">
+          <label className="col-span-2 flex items-center gap-2 text-xs cursor-pointer p-1 rounded hover:bg-muted/50">
+            <input type="checkbox" checked={newPage} onChange={e => setNewPage(e.target.checked)} className="w-3.5 h-3.5 rounded" />
+            <span className="text-muted-foreground">Start on a new page</span>
+          </label>
           {CONTENT_BLOCK_TYPES.map(bt => {
             const Icon = bt.icon;
             return (

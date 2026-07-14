@@ -138,8 +138,24 @@ export function createEmptyBlock(type, sortOrder = 0) {
     id: crypto.randomUUID(),
     type,
     sort_order: sortOrder,
+    page_break_before: type === "knowledge_check",
     data: createDefaultBlockData(type),
   };
+}
+
+export function getSectionPages(blocks) {
+  if (!blocks || blocks.length === 0) return [[]];
+  const pages = [];
+  let currentPage = [];
+  for (const block of blocks) {
+    if (block.page_break_before && currentPage.length > 0) {
+      pages.push(currentPage);
+      currentPage = [];
+    }
+    currentPage.push(block);
+  }
+  if (currentPage.length > 0) pages.push(currentPage);
+  return pages.length > 0 ? pages : [[]];
 }
 
 export function createEmptySection(sortOrder = 0) {
