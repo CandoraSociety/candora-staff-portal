@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useAccessLevel } from '@/lib/useAuth';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -31,16 +30,9 @@ const allNavItems = [
 
 function NexusSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
-  const { isHRAdmin, isManager } = useAccessLevel();
   const { logoUrl } = useOrgSettings();
   const [user, setUser] = React.useState(null);
   React.useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
-
-  const filteredItems = allNavItems.filter(item => {
-    if (item.access === 'hr_admin') return isHRAdmin;
-    if (item.access === 'manager') return isManager;
-    return true;
-  });
 
   return (
     <aside className={cn(
@@ -84,7 +76,7 @@ function NexusSidebar({ collapsed, setCollapsed }) {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-        {filteredItems.map(item => {
+        {allNavItems.map(item => {
           const Icon = item.icon;
           const active = location.pathname === item.path;
           return (

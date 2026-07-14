@@ -9,12 +9,11 @@ import { Plus, ClipboardList } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import ReviewForm from '@/components/reviews/ReviewForm';
 import { format } from 'date-fns';
 
 export default function NexusPerformanceReviews() {
-  const { canAccessHR, user, isAdmin, directReports, employees } = useSupervisorAccess();
+  const { user, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [viewing, setViewing] = useState(null);
   const queryClient = useQueryClient();
@@ -26,10 +25,8 @@ export default function NexusPerformanceReviews() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['reviews'] }); setShowForm(false); },
   });
 
-  if (!canAccessHR) return <AccessDenied />;
-
-  const visibleReviews = isAdmin ? reviews : reviews.filter(r => r.reviewer_email === user?.email);
-  const formEmployees = isAdmin ? employees : directReports;
+  const visibleReviews = reviews;
+  const formEmployees = employees;
 
   return (
     <div className="space-y-6">

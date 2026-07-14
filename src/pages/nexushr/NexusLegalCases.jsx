@@ -1,20 +1,15 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Scale, Plus } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 
 export default function NexusLegalCases() {
-  const { isHRAdmin } = useAccessLevel();
   const { data: cases = [] } = useQuery({ queryKey: ['legal-cases'], queryFn: () => base44.entities.LegalCase.list('-created_date', 200) });
-
-  if (!isHRAdmin) return <AccessDenied />;
 
   return (
     <div className="space-y-6">

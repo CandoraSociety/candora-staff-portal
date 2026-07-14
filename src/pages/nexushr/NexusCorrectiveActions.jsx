@@ -9,12 +9,11 @@ import { Shield, Plus } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import CorrectiveActionForm from '@/components/nexushr/CorrectiveActionForm';
 import { format } from 'date-fns';
 
 export default function NexusCorrectiveActions() {
-  const { canAccessHR, user, isAdmin, directReports, employees } = useSupervisorAccess();
+  const { user, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const queryClient = useQueryClient();
 
@@ -25,10 +24,8 @@ export default function NexusCorrectiveActions() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['corrective-actions'] }); setShowForm(false); },
   });
 
-  if (!canAccessHR) return <AccessDenied />;
-
-  const visibleActions = isAdmin ? actions : actions.filter(a => a.issued_by_email === user?.email);
-  const formEmployees = isAdmin ? employees : directReports;
+  const visibleActions = actions;
+  const formEmployees = employees;
 
   return (
     <div className="space-y-6">

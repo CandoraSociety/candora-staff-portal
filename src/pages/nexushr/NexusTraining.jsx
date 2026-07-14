@@ -12,13 +12,12 @@ import { Plus, GraduationCap } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import { format } from 'date-fns';
 
 const trainingTypes = ['certification', 'course', 'workshop', 'orientation', 'safety', 'compliance', 'professional_development', 'other'];
 
 export default function NexusTraining() {
-  const { canAccessHR, user, isAdmin, directReports, directReportIds, employees } = useSupervisorAccess();
+  const { user, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employee_id: '', employee_name: '', training_name: '', training_type: '', provider: '', completion_date: '', status: 'completed' });
   const queryClient = useQueryClient();
@@ -30,10 +29,8 @@ export default function NexusTraining() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['trainings'] }); setShowForm(false); },
   });
 
-  if (!canAccessHR) return <AccessDenied />;
-
-  const visibleTrainings = isAdmin ? trainings : trainings.filter(t => directReportIds.includes(t.employee_id));
-  const formEmployees = isAdmin ? employees : directReports;
+  const visibleTrainings = trainings;
+  const formEmployees = employees;
 
   const handleEmployeeChange = (id) => {
     const emp = formEmployees.find(e => e.id === id);

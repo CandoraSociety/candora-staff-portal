@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { TrendingUp, Plus, Users, Target, Layers } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import CareerPlanForm from '@/components/career/CareerPlanForm';
 import SuccessionMatrix from '@/components/career/SuccessionMatrix';
 
@@ -23,7 +21,6 @@ const readinessColors = {
 };
 
 export default function NexusCareerPlans() {
-  const { isHRAdmin } = useAccessLevel();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -39,8 +36,6 @@ export default function NexusCareerPlans() {
     mutationFn: ({ id, data }) => base44.entities.CareerPlan.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['career-plans'] }); setSelected(null); },
   });
-
-  if (!isHRAdmin) return <AccessDenied />;
 
   const active = plans.filter(p => p.status === 'active');
   const readyNow = plans.filter(p => p.readiness === 'ready_now');

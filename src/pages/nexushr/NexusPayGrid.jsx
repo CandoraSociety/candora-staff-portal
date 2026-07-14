@@ -1,14 +1,9 @@
 import React from 'react';
-import { useAccessLevel } from '@/lib/useAuth';
 import PageHeader from '@/components/shared/PageHeader';
-import AccessDenied from '@/components/shared/AccessDenied';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign } from 'lucide-react';
 
 export default function NexusPayGrid() {
-  const { isHRAdmin } = useAccessLevel();
-  if (!isHRAdmin) return <AccessDenied />;
-
   return (
     <div className="space-y-6">
       <PageHeader title="Pay Grid" />

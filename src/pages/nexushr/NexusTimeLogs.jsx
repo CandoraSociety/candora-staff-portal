@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Clock, Calendar, TrendingUp, PieChart } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { format } from 'date-fns';
 import moment from 'moment';
@@ -20,7 +19,7 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip }
 const COLORS = ['#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#264653', '#8ab17d', '#a8dadc', '#457b9d'];
 
 export default function NexusTimeLogs() {
-  const { canAccessHR, user, isAdmin, directReports, directReportIds, employees } = useSupervisorAccess();
+  const { user, employees } = useSupervisorAccess();
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ employee_id: '', employee_name: '', department: '', date: '', hours: '', notes: '' });
@@ -37,7 +36,7 @@ export default function NexusTimeLogs() {
     },
   });
 
-  const visibleTimeLogs = isAdmin ? timeLogs : timeLogs.filter(log => directReportIds.includes(log.employee_id));
+  const visibleTimeLogs = timeLogs;
 
   const stats = useMemo(() => {
     const now = moment();
@@ -59,9 +58,7 @@ export default function NexusTimeLogs() {
     return { allTime, calendarYTD, fiscalYTD, pieData };
   }, [visibleTimeLogs]);
 
-  if (!canAccessHR) return <AccessDenied />;
-
-  const formEmployees = isAdmin ? employees : directReports;
+  const formEmployees = employees;
 
   const handleEmployeeChange = (id) => {
     const emp = formEmployees.find(e => e.id === id);

@@ -9,13 +9,12 @@ import { Plus, AlertTriangle, Eye, CheckCircle } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import IncidentFormNew from '@/components/incidents/IncidentFormNew';
 import ResolutionForm from '@/components/incidents/ResolutionForm';
 import { format } from 'date-fns';
 
 export default function NexusIncidents() {
-  const { canAccessHR, user, isAdmin, directReports, employees } = useSupervisorAccess();
+  const { user, employees } = useSupervisorAccess();
   const [showForm, setShowForm] = useState(false);
   const [viewing, setViewing] = useState(null);
   const [showResolution, setShowResolution] = useState(false);
@@ -37,10 +36,8 @@ export default function NexusIncidents() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['resolutions'] }); setShowResolution(false); setViewing(null); },
   });
 
-  if (!canAccessHR) return <AccessDenied />;
-
-  const visibleIncidents = isAdmin ? incidents : incidents.filter(inc => inc.reporter_email === user?.email);
-  const incidentFormEmployees = isAdmin ? employees : directReports;
+  const visibleIncidents = incidents;
+  const incidentFormEmployees = employees;
 
   const getRelatedResolutions = (incidentId) => resolutions.filter(r => r.incident_id === incidentId);
 

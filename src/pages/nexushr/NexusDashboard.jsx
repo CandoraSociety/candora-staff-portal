@@ -1,13 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, AlertTriangle, ClipboardList, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StatusBadge from '@/components/shared/StatusBadge';
 import PageHeader from '@/components/shared/PageHeader';
-import AccessDenied from '@/components/shared/AccessDenied';
 import { format } from 'date-fns';
 
 function StatCard({ title, value, icon: Icon, color, to }) {
@@ -27,13 +25,9 @@ function StatCard({ title, value, icon: Icon, color, to }) {
 }
 
 export default function NexusDashboard() {
-  const { isHRAdmin, isManager } = useAccessLevel();
-
   const { data: employees = [] } = useQuery({ queryKey: ['employees'], queryFn: () => base44.entities.Employee.list('-created_date', 100) });
   const { data: reviews = [] } = useQuery({ queryKey: ['reviews'], queryFn: () => base44.entities.PerformanceReview.list('-created_date', 10) });
   const { data: incidents = [] } = useQuery({ queryKey: ['incidents'], queryFn: () => base44.entities.IncidentReport.list('-created_date', 10) });
-
-  if (!isManager) return <AccessDenied />;
 
   const activeEmployees = employees.filter(e => e.status === 'active').length;
   const openIncidents = incidents.filter(i => i.status === 'open' || i.status === 'under_investigation').length;
@@ -47,7 +41,7 @@ export default function NexusDashboard() {
         <StatCard title="Active Employees" value={activeEmployees} icon={Users} color="bg-primary/10 text-primary" to="/nexushr/employees" />
         <StatCard title="Open Incidents" value={openIncidents} icon={AlertTriangle} color="bg-destructive/10 text-destructive" to="/nexushr/incidents" />
         <StatCard title="Pending Reviews" value={pendingReviews} icon={ClipboardList} color="bg-accent/10 text-accent-foreground" to="/nexushr/reviews" />
-        {isHRAdmin && <StatCard title="Total Employees" value={employees.length} icon={GraduationCap} color="bg-secondary text-secondary-foreground" to="/nexushr/employees" />}
+        <StatCard title="Total Employees" value={employees.length} icon={GraduationCap} color="bg-secondary text-secondary-foreground" to="/nexushr/employees" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

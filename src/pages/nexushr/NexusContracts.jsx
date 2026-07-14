@@ -1,21 +1,16 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Plus, ExternalLink } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import StatusBadge from '@/components/shared/StatusBadge';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import { format } from 'date-fns';
 
 export default function NexusContracts() {
-  const { isHRAdmin } = useAccessLevel();
   const { data: contracts = [] } = useQuery({ queryKey: ['contracts'], queryFn: () => base44.entities.Contract.list('-created_date', 200) });
-
-  if (!isHRAdmin) return <AccessDenied />;
 
   return (
     <div className="space-y-6">

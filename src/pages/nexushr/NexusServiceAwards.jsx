@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Award, RefreshCw, Trophy, Clock, CheckCircle } from 'lucide-react';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 import { format, addYears, isBefore, addDays } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -21,7 +19,7 @@ const milestoneColor = (years) => {
   return 'bg-slate-100 text-slate-700 border-slate-200';
 };
 
-function AwardCard({ award, onUpdate, isHRAdmin }) {
+function AwardCard({ award, onUpdate }) {
   return (
     <Card>
       <CardContent className="p-4">
@@ -33,7 +31,7 @@ function AwardCard({ award, onUpdate, isHRAdmin }) {
           <Badge className={`${milestoneColor(award.years_of_service)} border text-sm font-bold`}>🏆 {award.years_of_service}yr</Badge>
         </div>
         <p className="text-xs text-muted-foreground mt-2">Anniversary: {award.award_date ? format(new Date(award.award_date), 'MMM d, yyyy') : '—'}</p>
-        {isHRAdmin && award.status === 'upcoming' && (
+        {award.status === 'upcoming' && (
           <div className="flex gap-2 mt-3">
             <Button size="sm" variant="outline" className="flex-1" onClick={() => onUpdate.mutate({ id: award.id, data: { status: 'acknowledged' } })}>Acknowledge</Button>
             <Button size="sm" className="flex-1" onClick={() => onUpdate.mutate({ id: award.id, data: { status: 'presented' } })}>Presented</Button>
@@ -45,7 +43,6 @@ function AwardCard({ award, onUpdate, isHRAdmin }) {
 }
 
 export default function NexusServiceAwards() {
-  const { isHRAdmin, isManager } = useAccessLevel();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -60,8 +57,6 @@ export default function NexusServiceAwards() {
     mutationFn: (data) => base44.entities.ServiceAward.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['service-awards'] }),
   });
-
-  if (!isManager) return <AccessDenied />;
 
   const today = new Date();
   const upcomingMilestones = [];
@@ -127,7 +122,7 @@ export default function NexusServiceAwards() {
             <div>
               <h2 className="text-base font-semibold mb-3">Upcoming Milestones</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {upcoming.map(award => <AwardCard key={award.id} award={award} onUpdate={updateAward} isHRAdmin={isHRAdmin} />)}
+                {upcoming.map(award => <AwardCard key={award.id} award={award} onUpdate={updateAward}  />)}
               </div>
             </div>
           )}
@@ -135,7 +130,7 @@ export default function NexusServiceAwards() {
             <div>
               <h2 className="text-base font-semibold mb-3">Acknowledged / Presented</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {acknowledged.map(award => <AwardCard key={award.id} award={award} onUpdate={updateAward} isHRAdmin={isHRAdmin} />)}
+                {acknowledged.map(award => <AwardCard key={award.id} award={award} onUpdate={updateAward}  />)}
               </div>
             </div>
           )}

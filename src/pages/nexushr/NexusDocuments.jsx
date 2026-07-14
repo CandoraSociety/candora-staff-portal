@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useAccessLevel } from '@/lib/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +11,10 @@ import { BookOpen, Plus, ExternalLink, Search, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import PageHeader from '@/components/shared/PageHeader';
 import EmptyState from '@/components/shared/EmptyState';
-import AccessDenied from '@/components/shared/AccessDenied';
 
 const categories = ['job_description', 'policy', 'procedure', 'handbook', 'template', 'form', 'pay_grid', 'org_chart', 'other'];
 
 export default function NexusDocuments() {
-  const { isHRAdmin, isManager } = useAccessLevel();
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -31,12 +28,9 @@ export default function NexusDocuments() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['nexus-documents'] }); setShowForm(false); setForm({ title: '', category: '', department: 'All', description: '', file_url: '', access_level: 'managers_only' }); },
   });
 
-  if (!isManager) return <AccessDenied />;
-
   const filtered = documents.filter(d => {
-    const canAccess = isHRAdmin || d.access_level !== 'hr_admin_only';
     const matchSearch = `${d.title} ${d.description}`.toLowerCase().includes(search.toLowerCase());
-    return canAccess && matchSearch;
+    return matchSearch;
   });
 
   const handleFileUpload = async (e) => {
@@ -54,7 +48,7 @@ export default function NexusDocuments() {
     <div className="space-y-6">
       <PageHeader
         title="Documents"
-        actions={isHRAdmin && <Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Upload Document</Button>}
+        actions={<Button onClick={() => setShowForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Upload Document</Button>}
       />
 
       <div className="relative">
