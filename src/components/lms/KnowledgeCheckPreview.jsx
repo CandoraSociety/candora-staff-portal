@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, ChevronRight, CheckCircle2 } from "lucide-react";
+import { HelpCircle, ChevronRight, CheckCircle2, RotateCcw, Eye } from "lucide-react";
 import { normalizeKnowledgeCheckData } from "@/lib/lmsConstants";
 
-export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz }) {
+export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz, resetQuiz }) {
   const data = normalizeKnowledgeCheckData(block.data || {});
   const questions = data.questions || [];
   const [currentQ, setCurrentQ] = useState(0);
+  const [revealedQs, setRevealedQs] = useState({});
 
   if (questions.length === 0) return null;
 
@@ -20,6 +21,7 @@ export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitte
   const isSubmitted = submitted[currentQ];
   const correctIdx = q.correct_index || 0;
   const isCorrect = selected === correctIdx;
+  const isRevealed = isCorrect || revealedQs[currentQ];
 
   return (
     <div className="p-4 rounded-lg border bg-card">
@@ -60,7 +62,7 @@ export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitte
       <div className="space-y-1.5">
         {(q.options || []).map((opt, idx) => {
           const isSelected = selected === idx;
-          const showCorrect = isSubmitted && idx === correctIdx;
+          const showCorrect = isSubmitted && isRevealed && idx === correctIdx;
           const showWrong = isSubmitted && isSelected && idx !== correctIdx;
           return (
             <button
@@ -87,15 +89,38 @@ export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitte
 
       {isSubmitted ? (
         <div className="mt-3 space-y-2">
-          <div className={`p-2.5 rounded-md text-xs ${isCorrect ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
-            <p className="font-medium mb-0.5">{isCorrect ? "✅ Correct!" : "❌ Not quite right."}</p>
-            {q.explanation && (
-              <div className="ql-snow">
-                <div className="ql-editor px-0 py-0 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+          {isCorrect ? (
+            <div className="p-2.5 rounded-md text-xs bg-green-50 text-green-800">
+              <p className="font-medium mb-0.5">✅ Correct!</p>
+              {q.explanation && (
+                <div className="ql-snow">
+                  <div className="ql-editor px-0 py-0 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                </div>
+              )}
+            </div>
+          ) : isRevealed ? (
+            <div className="p-2.5 rounded-md text-xs bg-red-50 text-red-800">
+              <p className="font-medium mb-0.5">❌ Not quite right.</p>
+              {q.explanation && (
+                <div className="ql-snow">
+                  <div className="ql-editor px-0 py-0 text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-2.5 rounded-md text-xs bg-red-50 text-red-800">
+              <p className="font-medium mb-0.5">❌ Not quite right. Give it another try!</p>
+              <div className="flex gap-2 mt-2">
+                <Button size="sm" variant="outline" onClick={() => resetQuiz(block.id, currentQ)}>
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Try Again
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setRevealedQs(prev => ({ ...prev, [currentQ]: true }))}>
+                  <Eye className="w-3.5 h-3.5 mr-1" /> Show Answer
+                </Button>
               </div>
-            )}
-          </div>
-          {currentQ < questions.length - 1 ? (
+            </div>
+          )}
+          {isRevealed && (currentQ < questions.length - 1 ? (
             <Button size="sm" onClick={() => setCurrentQ(currentQ + 1)}>
               Next Question <ChevronRight className="w-3.5 h-3.5 ml-1" />
             </Button>
@@ -110,7 +135,7 @@ export default function KnowledgeCheckPreview({ block, quizAnswers, quizSubmitte
             </div>
           ) : (
             <p className="text-xs text-amber-600">Some questions haven't been answered yet. Tap a dot above to jump to them.</p>
-          )}
+          ))}
         </div>
       ) : (
         <Button size="sm" className="mt-3" disabled={selected === undefined} onClick={() => submitQuiz(block.id, currentQ)}>

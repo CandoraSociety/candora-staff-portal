@@ -149,6 +149,19 @@ export default function ModulePreview({ module, onExit }) {
     setQuizSubmitted(prev => ({ ...prev, [blockId]: { ...(prev[blockId] || {}), [qIdx]: true } }));
   };
 
+  const resetQuiz = (blockId, qIdx) => {
+    setQuizSubmitted(prev => {
+      const blockSubs = { ...(prev[blockId] || {}) };
+      delete blockSubs[qIdx];
+      return { ...prev, [blockId]: blockSubs };
+    });
+    setQuizAnswers(prev => {
+      const blockAnswers = { ...(prev[blockId] || {}) };
+      delete blockAnswers[qIdx];
+      return { ...prev, [blockId]: blockAnswers };
+    });
+  };
+
   const selectQuizAnswer = (blockId, qIdx, optIdx) => {
     const blockSubmitted = quizSubmitted[blockId] || {};
     if (blockSubmitted[qIdx]) return;
@@ -388,6 +401,7 @@ export default function ModulePreview({ module, onExit }) {
                     quizSubmitted={quizSubmitted}
                     selectQuizAnswer={selectQuizAnswer}
                     submitQuiz={submitQuiz}
+                    resetQuiz={resetQuiz}
                     dynamicRevealCount={dynamicRevealCounts[block.id] || 0}
                     onDynamicRevealNext={() => revealDynamicNext(block.id)}
                   />
@@ -448,7 +462,7 @@ export default function ModulePreview({ module, onExit }) {
   );
 }
 
-function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems, toggleCheckItem, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz, dynamicRevealCount, onDynamicRevealNext }) {
+function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems, toggleCheckItem, quizAnswers, quizSubmitted, selectQuizAnswer, submitQuiz, resetQuiz, dynamicRevealCount, onDynamicRevealNext }) {
   const data = block.data || {};
   const BLOCK_ICONS = {
     rich_text: FileText, image: ImageIcon, video: Video, pdf: File,
@@ -585,6 +599,7 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
           quizSubmitted={quizSubmitted}
           selectQuizAnswer={selectQuizAnswer}
           submitQuiz={submitQuiz}
+          resetQuiz={resetQuiz}
         />
       );
 
