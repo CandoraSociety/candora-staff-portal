@@ -45,10 +45,9 @@ export default function ContentBlockRenderer({ block, onChange, onDelete, onMove
           <BlockIcon className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs font-medium">{blockType.label}</span>
           <button
-            onClick={() => block.type !== "knowledge_check" && onChange({ ...block, page_break_before: !block.page_break_before })}
-            disabled={block.type === "knowledge_check"}
+            onClick={() => onChange({ ...block, page_break_before: !block.page_break_before })}
             className={`text-[10px] px-1.5 py-0.5 rounded ${block.page_break_before ? "bg-blue-100 text-blue-700 font-medium" : "text-muted-foreground/50 hover:bg-muted"}`}
-            title={block.type === "knowledge_check" ? "Knowledge checks always start on a new page" : "Toggle page break"}
+            title="Toggle page break"
           >
             {block.page_break_before ? "New Page" : "Add Page Break"}
           </button>
