@@ -17,15 +17,24 @@ export default function ModuleGate({ moduleId, children }) {
   const { tierPortalAccess, ownerEmail, isLoading: orgSettingsLoading } = useOrgSettings();
 
   useEffect(() => {
-    Promise.all([
-      base44.auth.me(),
-      base44.functions.invoke('getMyPermissions', {}).then(res => res.data?.permissions || []),
-    ]).then(([u, perms]) => {
-      setUser(u);
-      setPermissions(perms);
-    }).catch(() => {
-      setPermissions([]);
-    });
+    let mounted = true;
+
+    // Fetch user separately so a permissions failure doesn't lose the user
+    base44.auth.me().then(u => {
+      if (mounted) setUser(u);
+    }).catch(() => {});
+
+    // Fetch permissions separately
+    base44.functions.invoke('getMyPermissions', {})
+      .then(res => {
+        if (mounted) setPermissions(res.data?.permissions || []);
+      })
+      .catch((err) => {
+        console.error('ModuleGate: getMyPermissions failed:', err?.message || err);
+        if (mounted) setPermissions([]);
+      });
+
+    return () => { mounted = false; };
   }, []);
 
   // Fetch employee record for org_tier (determines tier-based portal access)

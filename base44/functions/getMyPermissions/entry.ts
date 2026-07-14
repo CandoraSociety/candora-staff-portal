@@ -7,14 +7,25 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Use service role so permissions created by admins are visible to the user they apply to.
-    const permissions = await base44.asServiceRole.entities.AccessPermission.filter({
-      scope_type: 'individual',
-      scope_value: user.email,
-      is_active: true,
-    });
+    if (!base44.asServiceRole) {
+      console.error('getMyPermissions: asServiceRole is not available on the client');
+      return Response.json({ permissions: [] });
+    }
+
+    let permissions = [];
+    try {
+      permissions = await base44.asServiceRole.entities.AccessPermission.filter({
+        scope_type: 'individual',
+        scope_value: user.email,
+        is_active: true,
+      });
+    } catch (innerError) {
+      console.error('getMyPermissions: service role query failed for', user.email, '-', innerError.message);
+    }
 
     return Response.json({ permissions });
   } catch (error) {
+    console.error('getMyPermissions error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
