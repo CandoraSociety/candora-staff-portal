@@ -49,7 +49,7 @@ export default function DynamicBlockPreview({ data, revealedCount = 0, onRevealN
 
   return (
     <div className="space-y-3">
-      {data.title && <p className="text-sm font-semibold text-muted-foreground">{data.title}</p>}
+      {data.title && <div className="ql-snow text-sm font-semibold text-muted-foreground"><div className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: data.title }} /></div>}
 
       <div
         onClick={revealNext}
@@ -140,7 +140,7 @@ function ChartElement({ element }) {
 
   return (
     <div className="w-full h-64">
-      {element.chart_title && <p className="text-xs font-medium text-center mb-1">{element.chart_title}</p>}
+      {element.chart_title && <div className="ql-snow text-xs font-medium text-center mb-1"><div className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: element.chart_title }} /></div>}
       <ResponsiveContainer width="100%" height="100%">
         {chartType === "bar" ? (
           <BarChart data={chartData}>

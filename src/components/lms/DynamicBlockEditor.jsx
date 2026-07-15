@@ -1,5 +1,6 @@
 import { useState } from "react";
 import RichTextBlockEditor from "@/components/lms/RichTextBlockEditor";
+import RichTitleInput from "@/components/lms/RichTitleInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,11 +54,10 @@ export default function DynamicBlockEditor({ data, onChange }) {
     <div className="space-y-3">
       <div>
         <Label className="text-xs mb-1 block">Block Title (optional)</Label>
-        <Input
+        <RichTitleInput
           value={data.title || ""}
-          onChange={e => onChange({ title: e.target.value })}
+          onChange={html => onChange({ title: html })}
           placeholder="e.g. Interactive Walkthrough"
-          className="text-sm h-8"
         />
       </div>
 
@@ -192,11 +192,10 @@ function ChartElementEditor({ element, onChange }) {
           </button>
         ))}
       </div>
-      <Input
+      <RichTitleInput
         value={element.chart_title || ""}
-        onChange={e => onChange({ chart_title: e.target.value })}
+        onChange={html => onChange({ chart_title: html })}
         placeholder="Chart title (optional)"
-        className="text-sm h-8"
       />
       <div>
         <Label className="text-[10px] mb-0.5 block">Data (one per line: Label, Value)</Label>

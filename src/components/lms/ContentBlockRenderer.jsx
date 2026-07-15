@@ -15,6 +15,7 @@ import {
 import SlideBlockEditor from "@/components/lms/SlideBlockEditor";
 import DynamicBlockEditor from "@/components/lms/DynamicBlockEditor";
 import RichTextBlockEditor from "@/components/lms/RichTextBlockEditor";
+import RichTitleInput, { stripHtml } from "@/components/lms/RichTitleInput";
 import KnowledgeCheckEditor from "@/components/lms/KnowledgeCheckEditor";
 
 const ICON_MAP = {
@@ -83,11 +84,11 @@ function BlockEditor({ type, data, onChange }) {
           </div>
           <div>
             <Label className="text-xs mb-1 block">Title (optional)</Label>
-            <Input value={data.title || ""} onChange={e => onChange({ title: e.target.value })} placeholder="Video title..." className="text-sm h-8" />
+            <RichTitleInput value={data.title || ""} onChange={html => onChange({ title: html })} placeholder="Video title..." />
           </div>
           {data.url && data.url.includes("youtube") && (
             <div className="aspect-video rounded-md overflow-hidden border">
-              <iframe src={data.url.replace("watch?v=", "embed/")} className="w-full h-full" title={data.title || "Video"} allowFullScreen />
+              <iframe src={data.url.replace("watch?v=", "embed/")} className="w-full h-full" title={stripHtml(data.title) || "Video"} allowFullScreen />
             </div>
           )}
         </div>
@@ -101,9 +102,9 @@ function BlockEditor({ type, data, onChange }) {
           </div>
           <div>
             <Label className="text-xs mb-1 block">Title (optional)</Label>
-            <Input value={data.title || ""} onChange={e => onChange({ title: e.target.value })} placeholder="Document title..." className="text-sm h-8" />
+            <RichTitleInput value={data.title || ""} onChange={html => onChange({ title: html })} placeholder="Document title..." />
           </div>
-          {data.url && <iframe src={data.url} className="w-full h-48 rounded-md border" title={data.title || "PDF"} />}
+          {data.url && <iframe src={data.url} className="w-full h-48 rounded-md border" title={stripHtml(data.title) || "PDF"} />}
         </div>
       );
     case "external_link":
@@ -136,7 +137,7 @@ function BlockEditor({ type, data, onChange }) {
             ))}
           </div>
           <div className={`${variant.color} border rounded-md p-3`}>
-            <Input value={data.title || ""} onChange={e => onChange({ title: e.target.value })} placeholder="Callout title..." className={`text-sm h-8 bg-white/50 border-transparent mb-1.5`} />
+            <RichTitleInput value={data.title || ""} onChange={html => onChange({ title: html })} placeholder="Callout title..." className="mb-1.5" />
             <RichTextBlockEditor value={data.content || ""} onChange={html => onChange({ content: html })} />
           </div>
         </div>
@@ -175,11 +176,11 @@ function BlockEditor({ type, data, onChange }) {
           {(data.items || []).map((item, idx) => (
             <div key={item.id} className="border rounded-md p-2 space-y-1.5 bg-muted/20">
               <div className="flex items-center gap-2">
-                <Input value={item.title} onChange={e => {
+                <RichTitleInput value={item.title || ""} onChange={html => {
                   const items = [...(data.items || [])];
-                  items[idx] = { ...items[idx], title: e.target.value };
+                  items[idx] = { ...items[idx], title: html };
                   onChange({ items });
-                }} placeholder="Section title..." className="text-sm h-8 font-medium" />
+                }} placeholder="Section title..." />
                 <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive shrink-0" onClick={() => {
                   const items = (data.items || []).filter((_, i) => i !== idx);
                   onChange({ items });

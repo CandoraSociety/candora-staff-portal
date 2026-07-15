@@ -16,6 +16,7 @@ import {
   getModuleCategory, getDifficulty, getModuleStatus,
 } from "@/lib/lmsConstants";
 import DynamicBlockPreview from "@/components/lms/DynamicBlockPreview";
+import { stripHtml } from "@/components/lms/RichTitleInput";
 import KnowledgeCheckPreview from "@/components/lms/KnowledgeCheckPreview";
 import { normalizeKnowledgeCheckData, getSectionPages } from "@/lib/lmsConstants";
 
@@ -496,15 +497,15 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
     case "video":
       return (
         <div className="space-y-2">
-          {data.title && <p className="text-sm font-medium">{data.title}</p>}
+          {data.title && <div className="ql-snow text-sm font-medium"><div className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: data.title }} /></div>}
           {data.url ? (
             data.url.includes("youtube") ? (
               <div className="aspect-video rounded-lg overflow-hidden border">
-                <iframe src={data.url.replace("watch?v=", "embed/")} className="w-full h-full" title={data.title || "Video"} allowFullScreen />
+                <iframe src={data.url.replace("watch?v=", "embed/")} className="w-full h-full" title={stripHtml(data.title) || "Video"} allowFullScreen />
               </div>
             ) : data.url.includes("vimeo") ? (
               <div className="aspect-video rounded-lg overflow-hidden border">
-                <iframe src={data.url.replace("vimeo.com/", "player.vimeo.com/video/")} className="w-full h-full" title={data.title || "Video"} allowFullScreen />
+                <iframe src={data.url.replace("vimeo.com/", "player.vimeo.com/video/")} className="w-full h-full" title={stripHtml(data.title) || "Video"} allowFullScreen />
               </div>
             ) : (
               <video src={data.url} controls className="w-full rounded-lg border" />
@@ -520,9 +521,9 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
     case "pdf":
       return (
         <div className="space-y-2">
-          {data.title && <p className="text-sm font-medium flex items-center gap-1.5"><File className="w-3.5 h-3.5" /> {data.title}</p>}
+          {data.title && <div className="ql-snow text-sm font-medium flex items-center gap-1.5"><File className="w-3.5 h-3.5 shrink-0" /><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: data.title }} /></div>}
           {data.url ? (
-            <iframe src={data.url} className="w-full h-96 rounded-lg border" title={data.title || "PDF"} />
+            <iframe src={data.url} className="w-full h-96 rounded-lg border" title={stripHtml(data.title) || "PDF"} />
           ) : (
             <div className="rounded-lg border border-dashed p-8 text-center text-xs text-muted-foreground">
               <File className="w-6 h-6 mx-auto mb-1 opacity-40" /> No PDF set
@@ -555,7 +556,7 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
       const variant = data.variant || "info";
       return (
         <div className={`rounded-lg border p-4 ${variants[variant] || variants.info}`}>
-          {data.title && <p className="font-semibold text-sm mb-1 flex items-center gap-1.5">{icons[variant]} {data.title}</p>}
+          {data.title && <div className="ql-snow font-semibold text-sm mb-1 flex items-center gap-1.5"><span>{icons[variant]}</span><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: data.title }} /></div>}
           {data.content && (
             <div className="ql-snow">
               <div className="ql-editor px-0 py-0 text-sm" dangerouslySetInnerHTML={{ __html: data.content }} />
@@ -618,7 +619,7 @@ function PreviewBlock({ block, expandedAccordions, toggleAccordion, checkedItems
                   onClick={() => toggleAccordion(`${block.id}-${item.id}`)}
                   className="flex items-center justify-between w-full p-3 text-left hover:bg-muted/30 transition-colors"
                 >
-                  <span className="text-sm font-medium">{item.title || "Untitled section"}</span>
+                  <span className="ql-snow text-sm font-medium"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: item.title || "Untitled section" }} /></span>
                   {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
                 {isOpen && item.content && (
@@ -692,7 +693,7 @@ function SlidePreviewPlayer({ data }) {
         <div className={`w-full h-full ${theme.bg} ${theme.text} flex flex-col p-4`}>
           {slide.title && (
             <>
-              <h3 className="text-sm font-bold mb-2">{slide.title}</h3>
+              <h3 className="ql-snow text-sm font-bold mb-2"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: slide.title }} /></h3>
               <div className={`h-0.5 ${theme.accent} rounded-full mb-3 w-16`} />
             </>
           )}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Copy, LayoutTemplate,
 } from "lucide-react";
+import RichTitleInput from "@/components/lms/RichTitleInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,7 +152,7 @@ export default function SlideBlockEditor({ data, onChange }) {
 
         <div>
           <Label className="text-xs mb-1 block">Slide Title</Label>
-          <Input value={currentSlide.title || ""} onChange={e => updateSlide(currentIdx, { title: e.target.value })} placeholder="Slide title..." className="text-sm h-8" />
+          <RichTitleInput value={currentSlide.title || ""} onChange={html => updateSlide(currentIdx, { title: html })} placeholder="Slide title..." />
         </div>
 
         {currentSlide.layout !== "title_only" && currentSlide.layout !== "full_image" && (
