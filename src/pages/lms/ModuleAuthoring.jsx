@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ContentBlockRenderer from "@/components/lms/ContentBlockRenderer";
+import RichTitleInput from "@/components/lms/RichTitleInput";
 import ContentBlockPalette from "@/components/lms/ContentBlockPalette";
 import ModulePreview from "@/components/lms/ModulePreview";
 import {
@@ -544,13 +545,14 @@ Return JSON with this structure:
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
                   <span className="text-xs font-bold text-muted-foreground shrink-0">Ch {chIdx + 1}</span>
-                  <input
-                    type="text"
-                    value={chapter.title}
-                    onChange={e => updateChapterTitle(chapter.id, e.target.value)}
-                    placeholder="Chapter title..."
-                    className="flex-1 text-sm font-medium bg-transparent border-none outline-none focus:ring-0 px-0"
-                  />
+                  <div className="flex-1 min-w-0">
+                    <RichTitleInput
+                      value={chapter.title}
+                      onChange={(val) => updateChapterTitle(chapter.id, val)}
+                      placeholder="Chapter title..."
+                      className="text-sm font-medium"
+                    />
+                  </div>
                   <span className="text-[10px] text-muted-foreground hidden sm:inline">{chStats.sections} sec · {chStats.blocks} blocks</span>
                   <div className="flex items-center gap-0.5">
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => moveChapter(chIdx, -1)} disabled={chIdx === 0}><ChevronUp className="w-3.5 h-3.5" /></Button>
@@ -571,13 +573,14 @@ Return JSON with this structure:
                         <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50/60 border-b">
                           <GripVertical className="w-3.5 h-3.5 text-muted-foreground/30" />
                           <span className="text-[10px] font-bold text-muted-foreground shrink-0">{chIdx + 1}.{secIdx + 1}</span>
-                          <input
-                            type="text"
-                            value={section.title}
-                            onChange={e => updateSectionTitle(chapter.id, section.id, e.target.value)}
-                            placeholder="Section title..."
-                            className="flex-1 text-sm bg-transparent border-none outline-none focus:ring-0 px-0"
-                          />
+                          <div className="flex-1 min-w-0">
+                            <RichTitleInput
+                              value={section.title}
+                              onChange={(val) => updateSectionTitle(chapter.id, section.id, val)}
+                              placeholder="Section title..."
+                              className="text-sm"
+                            />
+                          </div>
                           <div className="flex items-center gap-0.5">
                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => moveSection(chapter.id, secIdx, -1)} disabled={secIdx === 0}><ChevronUp className="w-3 h-3" /></Button>
                             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => moveSection(chapter.id, secIdx, 1)} disabled={secIdx === (chapter.sections || []).length - 1}><ChevronDown className="w-3 h-3" /></Button>

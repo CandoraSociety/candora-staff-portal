@@ -264,7 +264,7 @@ export default function ModulePreview({ module, onExit }) {
                     className={`flex items-center gap-1.5 w-full text-left px-2 py-1.5 rounded-md text-xs font-semibold hover:bg-muted/50 transition-colors ${hasCurrent ? "text-primary" : "text-foreground"}`}
                   >
                     {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
-                    <span className="truncate flex-1">{chapter.title || `Chapter ${chIdx + 1}`}</span>
+                    <span className="ql-snow truncate flex-1"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: chapter.title || `Chapter ${chIdx + 1}` }} /></span>
                     <span className="text-[10px] text-muted-foreground shrink-0">{chapterCompleted}/{chapterSections.length}</span>
                   </button>
 
@@ -298,7 +298,7 @@ export default function ModulePreview({ module, onExit }) {
                               ) : (
                                 <Lock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
                               )}
-                              <span className="truncate">{section.title || `Section ${secIdx + 1}`}</span>
+                              <span className="ql-snow truncate"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: section.title || `Section ${secIdx + 1}` }} /></span>
                             </button>
                           </li>
                         );
@@ -368,14 +368,14 @@ export default function ModulePreview({ module, onExit }) {
             <div className="flex-1 max-w-4xl mx-auto w-full px-6 py-6">
               {/* Breadcrumb */}
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
-                <span className="font-display font-semibold text-accent">{current.chapter.title || `Chapter ${current.chIdx + 1}`}</span>
+                <span className="ql-snow font-display font-semibold text-accent"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: current.chapter.title || `Chapter ${current.chIdx + 1}` }} /></span>
                 <ChevronRight className="w-3 h-3" />
-                <span className="font-medium">{current.section.title || `Section ${current.secIdx + 1}`}</span>
+                <span className="ql-snow font-medium"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: current.section.title || `Section ${current.secIdx + 1}` }} /></span>
               </div>
 
               {/* Section title bar */}
               <div className="mb-6 pb-4 border-b-2 border-primary/20">
-                <h2 className="text-2xl font-heading font-bold text-foreground">{current.section.title || `Section ${current.secIdx + 1}`}</h2>
+                <h2 className="ql-snow text-2xl font-heading font-bold text-foreground"><span className="ql-editor px-0 py-0" dangerouslySetInnerHTML={{ __html: current.section.title || `Section ${current.secIdx + 1}` }} /></h2>
               </div>
 
               {/* Page indicator */}
