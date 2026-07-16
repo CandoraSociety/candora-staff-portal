@@ -62,9 +62,14 @@ export default function PathwaysWorkerDashboard() {
   const [activeTab, setActiveTab] = useState("clients");
   const [transfers, setTransfers] = useState([]);
 
-  const loadCompassTasks = async (workerEmail) => {
+  const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
-    setCompassTasks(allTasks.filter(t => t.assigned_worker === workerEmail));
+    const email = (workerEmail || "").toLowerCase();
+    const name = (workerName || "").toLowerCase();
+    setCompassTasks(allTasks.filter(t =>
+      (t.assigned_worker && t.assigned_worker.toLowerCase() === email) ||
+      (t.assigned_worker_name && t.assigned_worker_name.toLowerCase() === name)
+    ));
   };
 
   useEffect(() => {
@@ -72,20 +77,25 @@ export default function PathwaysWorkerDashboard() {
       const me = await base44.auth.me();
       setUser(me);
       const allClients = await base44.entities.Client.list("-created_date", 1000);
-      const isDawnInit = me.email === "Dawn.williston@candorasociety.com";
+      const myEmail = (me.email || "").toLowerCase();
+      const myName = (me.full_name || "").toLowerCase();
+      const isDawnInit = myEmail === "dawn.williston@candorasociety.com";
+      const matchesMe = (c) =>
+        (c.assigned_worker && c.assigned_worker.toLowerCase() === myEmail) ||
+        (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName);
       const myClients = isDawnInit
-        ? allClients.filter(c => c.barriers_addressed || c.assigned_worker === me.email)
-        : allClients.filter(c => c.assigned_worker === me.email);
+        ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
+        : allClients.filter(matchesMe);
       setClients(myClients);
-      await loadCompassTasks(me.email);
-      const pendingTransfers = await base44.entities.ClientTransfer.filter({ to_worker: me.email, status: "pending" });
-      setTransfers(pendingTransfers);
+      await loadCompassTasks(me.email, me.full_name);
+      const pendingTransfers = await base44.entities.ClientTransfer.filter({ status: "pending" });
+      setTransfers(pendingTransfers.filter(t => (t.to_worker || "").toLowerCase() === myEmail));
       setLoading(false);
     };
     init();
   }, []);
 
-  const isDawn = user?.email === "Dawn.williston@candorasociety.com";
+  const isDawn = (user?.email || "").toLowerCase() === "dawn.williston@candorasociety.com";
   const displayed = applyFiltersAndSort(clients, search, filters, sortKey);
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
 
@@ -185,10 +195,15 @@ export default function PathwaysWorkerDashboard() {
                         setTransfers(prev => prev.filter(x => x.id !== t.id));
                         // Refresh client list
                         const allClients = await base44.entities.Client.list("-created_date", 1000);
-                        const isDawnInit = user?.email === "Dawn.williston@candorasociety.com";
+                        const myEmail = (user?.email || "").toLowerCase();
+                        const myName = (user?.full_name || "").toLowerCase();
+                        const isDawnInit = myEmail === "dawn.williston@candorasociety.com";
+                        const matchesMe = (c) =>
+                          (c.assigned_worker && c.assigned_worker.toLowerCase() === myEmail) ||
+                          (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName);
                         const myClients = isDawnInit
-                          ? allClients.filter(c => c.barriers_addressed || c.assigned_worker === user.email)
-                          : allClients.filter(c => c.assigned_worker === user.email);
+                          ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
+                          : allClients.filter(matchesMe);
                         setClients(myClients);
                       }}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white transition-colors hover:opacity-90"
