@@ -9,15 +9,25 @@
     "description": {
       "type": "string"
     },
+    "schedule_type": {
+      "type": "string",
+      "enum": [
+        "ongoing",
+        "specific_week",
+        "template"
+      ],
+      "default": "ongoing",
+      "description": "ongoing = same every week (no dates); specific_week = tied to a particular week; template = reusable starting point"
+    },
     "is_template": {
       "type": "boolean",
       "default": false,
-      "description": "If true, this is a reusable template rather than a specific week"
+      "description": "Legacy flag \u2014 superseded by schedule_type. Kept for backward compatibility."
     },
     "week_start_date": {
       "type": "string",
       "format": "date",
-      "description": "Monday of the week this schedule applies to (blank for templates)"
+      "description": "Monday of the week this schedule applies to (only for specific_week type)"
     },
     "time_blocks": {
       "type": "array",

@@ -21,7 +21,7 @@ export default function EDScheduleMaker() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [weekStartDate, setWeekStartDate] = useState("");
-  const [isTemplate, setIsTemplate] = useState(false);
+  const [scheduleType, setScheduleType] = useState("ongoing");
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -42,7 +42,7 @@ export default function EDScheduleMaker() {
     setName(sched.name || "");
     setDescription(sched.description || "");
     setWeekStartDate(sched.week_start_date || "");
-    setIsTemplate(sched.is_template || false);
+    setScheduleType(sched.schedule_type || (sched.is_template ? "template" : sched.week_start_date ? "specific_week" : "ongoing"));
     setBlocks(sched.time_blocks || []);
     setDirty(false);
   };
@@ -52,7 +52,7 @@ export default function EDScheduleMaker() {
     setName("New Weekly Schedule");
     setDescription("");
     setWeekStartDate("");
-    setIsTemplate(false);
+    setScheduleType("ongoing");
     setBlocks([]);
     setDirty(true);
   };
@@ -71,8 +71,9 @@ export default function EDScheduleMaker() {
       const payload = {
         name,
         description,
-        week_start_date: weekStartDate || null,
-        is_template: isTemplate,
+        schedule_type: scheduleType,
+        week_start_date: scheduleType === "specific_week" ? (weekStartDate || null) : null,
+        is_template: scheduleType === "template",
         time_blocks: blocks,
         created_by_name: user?.full_name || "",
       };
@@ -115,8 +116,9 @@ export default function EDScheduleMaker() {
       const created = await base44.entities.WeeklySchedule.create({
         name: `${name} (Copy)`,
         description,
-        week_start_date: null,
-        is_template: isTemplate,
+        schedule_type: scheduleType,
+        week_start_date: scheduleType === "specific_week" ? (weekStartDate || null) : null,
+        is_template: scheduleType === "template",
         time_blocks: blocks,
         created_by_name: user?.full_name || "",
       });
@@ -163,9 +165,11 @@ export default function EDScheduleMaker() {
             className="h-9 rounded-md border border-input bg-transparent text-sm px-2 max-w-xs"
           >
             <option value="">— New / unsaved —</option>
-            {schedules.map(s => (
-              <option key={s.id} value={s.id}>{s.name}{s.is_template ? " (template)" : s.week_start_date ? ` — ${s.week_start_date}` : ""}</option>
-            ))}
+            {schedules.map(s => {
+              const type = s.schedule_type || (s.is_template ? "template" : s.week_start_date ? "specific_week" : "ongoing");
+              const tag = type === "template" ? " (template)" : type === "specific_week" ? ` — ${s.week_start_date}` : " (ongoing)";
+              return <option key={s.id} value={s.id}>{s.name}{tag}</option>;
+            })}
           </select>
           {dirty && <span className="text-[10px] text-amber-600 font-medium">Unsaved</span>}
         </div>
@@ -194,15 +198,29 @@ export default function EDScheduleMaker() {
                 <Input value={name} onChange={e => { setName(e.target.value); markDirty(); }} placeholder="e.g. Default Week" className="text-sm" />
               </div>
               <div>
-                <Label className="text-xs mb-1 block">Week Starting (Monday)</Label>
-                <Input type="date" value={weekStartDate} onChange={e => { setWeekStartDate(e.target.value); markDirty(); }} className="text-sm" />
+                <Label className="text-xs mb-1 block">Schedule Type</Label>
+                <select value={scheduleType} onChange={e => { setScheduleType(e.target.value); markDirty(); }} className="w-full h-9 rounded-md border border-input bg-transparent text-sm px-2">
+                  <option value="ongoing">Ongoing (every week)</option>
+                  <option value="specific_week">Specific week</option>
+                  <option value="template">Template</option>
+                </select>
               </div>
-              <div className="flex items-end gap-4">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={isTemplate} onChange={e => { setIsTemplate(e.target.checked); markDirty(); }} className="rounded" />
-                  Save as reusable template
-                </label>
-              </div>
+              {scheduleType === "specific_week" && (
+                <div>
+                  <Label className="text-xs mb-1 block">Week Starting (Monday)</Label>
+                  <Input type="date" value={weekStartDate} onChange={e => { setWeekStartDate(e.target.value); markDirty(); }} className="text-sm" />
+                </div>
+              )}
+              {scheduleType === "ongoing" && (
+                <div className="flex items-end">
+                  <p className="text-xs text-muted-foreground italic">No dates — this schedule repeats every week.</p>
+                </div>
+              )}
+              {scheduleType === "template" && (
+                <div className="flex items-end">
+                  <p className="text-xs text-muted-foreground italic">Saved as a reusable starting point to copy from.</p>
+                </div>
+              )}
             </div>
             <div>
               <Label className="text-xs mb-1 block">Description (optional)</Label>
