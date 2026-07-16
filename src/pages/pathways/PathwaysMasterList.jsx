@@ -314,15 +314,13 @@ export default function PathwaysMasterList() {
                         <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <span>{c.assigned_worker_name || "—"}</span>
-                            {c.assigned_worker && (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setReassignClient(c); }}
-                                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-blue-100 transition-all"
-                                title="Reassign to a different career counsellor"
-                              >
-                                <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-                              </button>
-                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setReassignClient(c); }}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-blue-100 transition-all"
+                              title="Edit assigned career counsellor"
+                            >
+                              <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                            </button>
                           </div>
                         </td>
 
@@ -364,19 +362,19 @@ export default function PathwaysMasterList() {
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold" style={{ color: "hsl(231,64%,20%)" }}>Reassign Client?</h3>
+                <h3 className="text-lg font-bold" style={{ color: "hsl(231,64%,20%)" }}>Edit Career Counsellor</h3>
                 <p className="text-sm text-slate-600 mt-1">
-                  You are about to reassign <span className="font-semibold text-slate-800">{reassignClient.first_name} {reassignClient.last_name}</span>
-                  {" "}from <span className="font-semibold text-slate-800">{reassignClient.assigned_worker_name || "Unassigned"}</span> to a different career counsellor.
-                </p>
-                <p className="text-sm text-slate-500 mt-2">
-                  The new counsellor will be notified and must <strong>accept</strong> the transfer before the client appears in their list.
+                  Change the assigned counsellor for <span className="font-semibold text-slate-800">{reassignClient.first_name} {reassignClient.last_name}</span>
+                  {reassignClient.assigned_worker_name
+                    ? <> from <span className="font-semibold text-slate-800">{reassignClient.assigned_worker_name}</span>.</>
+                    : <> (currently unassigned).</>
+                  }
                 </p>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">New Career Counsellor</label>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">Career Counsellor</label>
               <select
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={reassignClient._newWorker || ""}
@@ -407,22 +405,18 @@ export default function PathwaysMasterList() {
                   setReassigning(true);
                   const [toEmail, toName] = reassignClient._newWorker.split("|");
                   try {
-                    await base44.entities.ClientTransfer.create({
-                      client_id: reassignClient.id,
-                      client_name: `${reassignClient.first_name} ${reassignClient.last_name}`,
-                      from_worker: reassignClient.assigned_worker || "",
-                      from_worker_name: reassignClient.assigned_worker_name || "",
-                      to_worker: toEmail,
-                      to_worker_name: toName,
-                      status: "pending",
+                    const updated = await base44.entities.Client.update(reassignClient.id, {
+                      assigned_worker: toEmail,
+                      assigned_worker_name: toName,
                     });
+                    setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
                   } catch {}
                   setReassigning(false);
                   setReassignClient(null);
                 }}
                 disabled={!reassignClient._newWorker || reassigning}
               >
-                {reassigning ? "Sending..." : "Confirm Reassign"}
+                {reassigning ? "Saving..." : "Save"}
               </button>
             </div>
           </div>
