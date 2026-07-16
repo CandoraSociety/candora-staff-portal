@@ -1,0 +1,80 @@
+{
+  "name": "WeeklySchedule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Schedule name (e.g. 'Default Week', 'Summer Schedule')"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_template": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this is a reusable template rather than a specific week"
+    },
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Monday of the week this schedule applies to (blank for templates)"
+    },
+    "time_blocks": {
+      "type": "array",
+      "description": "Time blocks placed on the weekly grid",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "day_of_week": {
+            "type": "number",
+            "description": "0=Monday \u2026 6=Sunday"
+          },
+          "start_hour": {
+            "type": "number",
+            "description": "Start time in decimal hours (e.g. 9.5 = 9:30 AM)"
+          },
+          "end_hour": {
+            "type": "number",
+            "description": "End time in decimal hours"
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "meeting",
+              "deep_work",
+              "review",
+              "admin",
+              "break",
+              "external",
+              "personal",
+              "other"
+            ],
+            "default": "other"
+          },
+          "location": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex color override for the block"
+          }
+        }
+      }
+    },
+    "created_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
