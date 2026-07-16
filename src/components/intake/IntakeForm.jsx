@@ -77,6 +77,14 @@ const validate = (data) => {
 const EMPTY_EMPLOYMENT = () => ({ company: '', industry: '', job_title: '', job_title_other: '', employment_type: '', start_date: '', end_date: '', responsibilities: '' });
 const EMPTY_EDUCATION = () => ({ institution: '', education_type: '', field_of_study: '', start_date: '', end_date: '', description: '' });
 
+const Field = ({ label, error, children }) => (
+  <div>
+    <Label className="text-sm font-medium text-slate-700 mb-1 block">{label}</Label>
+    {children}
+    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+  </div>
+);
+
 export default function IntakeForm({ client, onSave, onCancel }) {
   const [form, setForm] = useState({
     first_name: client?.first_name || '',
@@ -146,14 +154,6 @@ export default function IntakeForm({ client, onSave, onCancel }) {
   const appendCareerPreset = (preset) => {
     set('career_objectives', form.career_objectives ? `${form.career_objectives}\n${preset}` : preset);
   };
-
-  const Field = ({ label, error, children }) => (
-    <div>
-      <Label className="text-sm font-medium text-slate-700 mb-1 block">{label}</Label>
-      {children}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-    </div>
-  );
 
   const updateEmp = (idx, patch) => setEmploymentEntries(prev => prev.map((p, i) => i === idx ? { ...p, ...patch } : p));
   const updateEdu = (idx, patch) => setEducationEntries(prev => prev.map((p, i) => i === idx ? { ...p, ...patch } : p));
