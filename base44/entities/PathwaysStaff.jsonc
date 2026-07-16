@@ -1,0 +1,35 @@
+{
+  "name": "PathwaysStaff",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name of the staff member"
+    },
+    "email": {
+      "type": "string",
+      "description": "Work email \u2014 used to match against logged-in users"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "career_counsellor",
+        "service_navigator",
+        "admin",
+        "manager"
+      ],
+      "default": "career_counsellor",
+      "description": "Pathways portal role"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this staff member is currently active in the Pathways portal"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "role"
+  ]
+}

@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, UserCheck, AlertTriangle } from "lucide-react";
+import { LogOut, UserCheck, AlertTriangle, Users } from "lucide-react";
 import { format } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
 import TransitionClientsTab from "@/components/pathways/TransitionClientsTab";
 import TransitionClientDetailsModal from "@/components/pathways/TransitionClientDetailsModal";
+import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -68,8 +69,10 @@ export default function PathwaysMasterList() {
   const [workers, setWorkers] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
   const [reassignClient, setReassignClient] = useState(null);
-  const [users, setUsers] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [reassigning, setReassigning] = useState(false);
+  const [canManageStaff, setCanManageStaff] = useState(false);
+  const [showStaffManager, setShowStaffManager] = useState(false);
   const [transitionCount, setTransitionCount] = useState(0);
   const [closedTransitionClients, setClosedTransitionClients] = useState([]);
   const [detailsClient, setDetailsClient] = useState(null);
@@ -77,14 +80,19 @@ export default function PathwaysMasterList() {
   useEffect(() => {
     Promise.all([
       base44.entities.Client.list("-intake_date", 1000),
-      base44.entities.User.list(),
+      base44.entities.PathwaysStaff.filter({ is_active: true }),
       base44.entities.TransitionClient.list().catch(() => []),
-    ]).then(([data, userList, transitionClients]) => {
+    ]).then(async ([data, staffList, transitionClients]) => {
       setClients(data);
       const names = [...new Set(data.map(c => c.assigned_worker_name).filter(Boolean))].sort();
       setWorkers(names);
-      setUsers(userList);
+      setStaff(staffList);
       setTransitionCount(transitionClients.length);
+      try {
+        const me = await base44.auth.me();
+        const myEmp = await base44.entities.Employee.filter({ email: me.email }).catch(() => []);
+        setCanManageStaff(me.role === "admin" || ["manager", "director", "executive_director"].includes(myEmp[0]?.org_tier));
+      } catch {}
       // Normalize closed transition clients to be compatible with the closed files table
       const closedTrans = transitionClients
         .filter(tc => tc.file_status === "closed")
@@ -141,6 +149,16 @@ export default function PathwaysMasterList() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {canManageStaff && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-white/30 text-white hover:bg-white/10"
+              onClick={() => setShowStaffManager(true)}
+            >
+              <Users className="w-4 h-4 mr-1" /> Manage Staff
+            </Button>
+          )}
           <Button
             size="sm"
             onClick={() => navigate("/pathways/reports")}
@@ -381,9 +399,9 @@ export default function PathwaysMasterList() {
                 onChange={e => setReassignClient({ ...reassignClient, _newWorker: e.target.value })}
               >
                 <option value="">Select a counsellor...</option>
-                {users.filter(u => u.email !== reassignClient.assigned_worker).sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")).map(u => (
-                  <option key={u.id} value={u.email + "|" + (u.full_name || u.email)}>
-                    {u.full_name || u.email}
+                {staff.filter(s => s.email !== reassignClient.assigned_worker).sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(s => (
+                  <option key={s.id} value={s.email + "|" + (s.name || s.email)}>
+                    {s.name || s.email}
                   </option>
                 ))}
               </select>
@@ -425,6 +443,16 @@ export default function PathwaysMasterList() {
 
       {detailsClient && (
         <TransitionClientDetailsModal client={detailsClient} onClose={() => setDetailsClient(null)} />
+      )}
+
+      {showStaffManager && (
+        <PathwaysStaffManager
+          onClose={() => setShowStaffManager(false)}
+          onUpdated={async () => {
+            const updated = await base44.entities.PathwaysStaff.filter({ is_active: true });
+            setStaff(updated);
+          }}
+        />
       )}
     </div>
   );

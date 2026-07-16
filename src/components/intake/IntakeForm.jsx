@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,14 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Upload, X, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-const WORKERS = [
-  { email: 'graham@candorasociety.com', full_name: 'Graham Currie' },
-  { email: 'jamie@candorasociety.com', full_name: 'Jamie Morin' },
-  { email: 'maria@candorasociety.com', full_name: 'Maria Alba' },
-  { email: 'john@candorasociety.com', full_name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', full_name: 'Dawn' },
-  { email: 'olena@candorasociety.com', full_name: 'Olena' },
-];
+const STAFF_ROLE_LABELS = {
+  career_counsellor: 'Career Counsellor',
+  service_navigator: 'Service Navigator',
+  admin: 'Admin',
+  manager: 'Manager',
+};
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 
@@ -118,13 +116,18 @@ export default function IntakeForm({ client, onSave, onCancel }) {
   const [educationEntries, setEducationEntries] = useState([]);
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [staff, setStaff] = useState([]);
+
+  useEffect(() => {
+    base44.entities.PathwaysStaff.filter({ is_active: true }).then(setStaff).catch(() => {});
+  }, []);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
   const handleWorkerSelect = (email) => {
-    const w = WORKERS.find(w => w.email === email);
+    const s = staff.find(s => s.email === email);
     set('assigned_worker', email);
-    set('assigned_worker_name', w?.full_name || '');
+    set('assigned_worker_name', s?.name || '');
   };
 
   const handleSubmit = (e) => {
@@ -255,9 +258,9 @@ export default function IntakeForm({ client, onSave, onCancel }) {
             <Select value={form.assigned_worker} onValueChange={handleWorkerSelect}>
               <SelectTrigger><SelectValue placeholder="Select worker" /></SelectTrigger>
               <SelectContent>
-                {WORKERS.map(w => (
-                  <SelectItem key={w.email} value={w.email}>
-                    {w.full_name} ({w.email})
+                {staff.map(s => (
+                  <SelectItem key={s.email} value={s.email}>
+                    {s.name} ({STAFF_ROLE_LABELS[s.role] || s.role})
                   </SelectItem>
                 ))}
               </SelectContent>
