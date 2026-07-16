@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { DAYS, START_HOUR, END_HOUR, HOUR_HEIGHT, CATEGORIES, categoryColor, formatHour, snapToInterval, createEmptyBlock } from "@/lib/scheduleConstants";
 import ScheduleBlockDialog from "@/components/ed/ScheduleBlockDialog";
-import { Plus } from "lucide-react";
+import { Plus, Layers } from "lucide-react";
 
 const totalHours = END_HOUR - START_HOUR;
 const gridHeight = totalHours * HOUR_HEIGHT;
@@ -145,6 +145,11 @@ export default function ScheduleGrid({ blocks, onBlocksChange }) {
                     <div className="font-semibold truncate" style={{ color: color }}>{block.title || "Untitled"}</div>
                     <div className="text-muted-foreground truncate">{formatHour(block.start_hour)}–{formatHour(block.end_hour)}</div>
                     {block.location && <div className="truncate text-muted-foreground/70">{block.location}</div>}
+                    {block.alternates && block.alternates.length > 0 && (
+                      <div className="flex items-center gap-0.5 mt-0.5 text-[9px] text-muted-foreground">
+                        <Layers className="w-2.5 h-2.5" /> {block.alternates.length} alternate{block.alternates.length > 1 ? "s" : ""}
+                      </div>
+                    )}
                     {/* Resize handle */}
                     <div
                       className="absolute bottom-0 left-0 right-0 h-1.5 cursor-ns-resize opacity-0 group-hover:opacity-60"

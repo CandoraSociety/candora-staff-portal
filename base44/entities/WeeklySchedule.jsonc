@@ -76,6 +76,41 @@
           "color": {
             "type": "string",
             "description": "Hex color override for the block"
+          },
+          "alternates": {
+            "type": "array",
+            "description": "Alternate activities for this same time slot (backup options, plan B, etc.)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "meeting",
+                    "deep_work",
+                    "review",
+                    "admin",
+                    "break",
+                    "external",
+                    "personal",
+                    "other"
+                  ],
+                  "default": "other"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
