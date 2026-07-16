@@ -1,5 +1,25 @@
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, Printer } from 'lucide-react';
+import { CheckCircle2, Circle, Printer, Calendar } from 'lucide-react';
+
+const ACTION_PLAN_LABELS = {
+  job_search_workshop: 'Job Search Workshop',
+  resume_writing_workshop: 'Resume Writing Workshop',
+  interview_skills_workshop: 'Interview Skills Workshop',
+  workplace_readiness_workshop: 'Workplace Readiness Workshop',
+  financial_literacy_workshop: 'Financial Literacy Workshop',
+  digital_literacy_workshop: 'Digital Literacy Workshop',
+  empoweru: 'EmpowerU',
+  ell_classes: 'ELL Classes',
+  skills_assessment: 'Skills Assessment',
+  internal_placement: 'Internal Placement',
+  exposure_course: 'Exposure Course',
+  paid_external_placement: 'Paid External Placement',
+  employment_supports: 'Employment Supports',
+  job_applications: 'Job Applications',
+  networking: 'Networking',
+  barrier_support: 'Barrier Support',
+  other: 'Other',
+};
 
 const STAGES = [
   { key: 'intake',            label: 'Intake',                  desc: 'Initial client intake and registration' },
@@ -50,6 +70,13 @@ export default function ClientRoadmap({ client }) {
   const stages = STAGES.map(s => ({ ...s, status: getStageStatus(s.key, client) }));
   const completedCount = stages.filter(s => s.status === 'done').length;
 
+  const sdpItems = (client?.sdp_items || []).map(key => ({
+    key,
+    label: ACTION_PLAN_LABELS[key] || key,
+    date: client?.sdp_item_details?.[key]?.date || '',
+  }));
+  const sdpDated = sdpItems.filter(i => i.date).sort((a, b) => a.date.localeCompare(b.date));
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -83,6 +110,27 @@ export default function ClientRoadmap({ client }) {
               </div>
             );
           })}
+
+          {/* Action plan items with dates */}
+          {sdpDated.length > 0 && (
+            <>
+              <div className="flex items-center gap-2 pl-0 pt-2 pb-1">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">Action Plan Milestones</span>
+              </div>
+              {sdpDated.map(item => (
+                <div key={item.key} className="flex items-start gap-3 pl-0 relative">
+                  <div className="w-7 h-7 rounded-full border-2 bg-primary/10 border-primary flex items-center justify-center shrink-0 z-10">
+                    <Calendar className="w-3 h-3 text-primary" />
+                  </div>
+                  <div className="flex-1 pb-3">
+                    <div className="text-sm font-medium text-slate-700">{item.label}</div>
+                    <div className="text-xs text-muted-foreground">{item.date}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>

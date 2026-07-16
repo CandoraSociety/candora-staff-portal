@@ -188,8 +188,21 @@ export default function EmploymentActionPlan({ client, onSave, onComplete }) {
         {isDEA ? (
           <div className="text-sm text-muted-foreground">{deaActivities.filter(a => a.type).length} DEA activities logged</div>
         ) : (
-          <div className="flex flex-wrap gap-1">
-            {items.map(k => <span key={k} className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs">{ALL_ITEMS.find(i => i.key === k)?.label || k}</span>)}
+          <div className="space-y-1">
+            <div className="flex flex-wrap gap-1">
+              {items.map(k => <span key={k} className="px-2 py-0.5 rounded bg-primary/10 text-primary text-xs">{ALL_ITEMS.find(i => i.key === k)?.label || k}</span>)}
+            </div>
+            {items.some(k => itemDetails[k]?.date) && (
+              <div className="text-xs text-muted-foreground space-y-0.5 pt-1">
+                {items.filter(k => itemDetails[k]?.date).map(k => (
+                  <div key={k} className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    <span>{ALL_ITEMS.find(i => i.key === k)?.label || k}</span>
+                    <span className="text-slate-400">— {itemDetails[k].date}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <Button className="w-full" onClick={() => onComplete?.()}>
@@ -274,6 +287,17 @@ export default function EmploymentActionPlan({ client, onSave, onComplete }) {
                         />
                         <span className="text-sm">{item.label}</span>
                       </label>
+                      {selectedItems.includes(item.key) && (
+                        <div className="ml-6 mt-1 flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap">Date:</Label>
+                          <Input
+                            type="date"
+                            value={itemDetails[item.key]?.date || ''}
+                            onChange={e => setItemDetails(prev => ({ ...prev, [item.key]: { ...prev[item.key], date: e.target.value } }))}
+                            className="h-7 text-xs w-auto"
+                          />
+                        </div>
+                      )}
                       {item.key === 'other' && selectedItems.includes('other') && (
                         <Input value={otherDesc} onChange={e => setOtherDesc(e.target.value)} className="mt-2 text-sm" placeholder="Describe other activity..." />
                       )}
