@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { appParams } from '@/lib/app-params';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,14 +109,22 @@ export default function PathwaysPublicIntake() {
     try {
       const cleanedEdu = education.filter(e => e.institution || e.education_type || e.field_of_study);
       const cleanedEmp = employment.filter(e => e.company || e.job_title);
-      await base44.functions.invoke('publicPathwaysIntake', {
-        ...form,
-        education_history: cleanedEdu.length ? JSON.stringify(cleanedEdu) : null,
-        employment_history: cleanedEmp.length ? JSON.stringify(cleanedEmp) : null,
-        office_english_proficiency: officeUse.english_proficiency,
-        office_translator_assistance: officeUse.translator_assistance,
-        office_comments: officeUse.comments?.trim() || null,
+      const response = await fetch(`/api/apps/${appParams.appId}/functions/publicPathwaysIntake`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          education_history: cleanedEdu.length ? JSON.stringify(cleanedEdu) : null,
+          employment_history: cleanedEmp.length ? JSON.stringify(cleanedEmp) : null,
+          office_english_proficiency: officeUse.english_proficiency,
+          office_translator_assistance: officeUse.translator_assistance,
+          office_comments: officeUse.comments?.trim() || null,
+        }),
       });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Submission failed (${response.status})`);
+      }
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -458,7 +467,7 @@ export default function PathwaysPublicIntake() {
             <div>
               <Label className="mb-1 block text-sm">Access Code</Label>
               <Input
-                type="text"
+                type="password"
                 inputMode="numeric"
                 maxLength={4}
                 value={accessCode}
