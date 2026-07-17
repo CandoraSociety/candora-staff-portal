@@ -13,6 +13,7 @@ import { TabProvider } from '@/lib/tabContext';
 // Public portal pages
 import VolunteerPortal from '@/pages/portal/VolunteerPortal';
 import StaffPortal from '@/pages/portal/StaffPortal';
+import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 
 // Auth pages
 import Login from '@/pages/Login';
@@ -353,6 +354,7 @@ const AuthenticatedApp = () => {
       {/* Public portal routes — no auth required */}
       <Route path="/volunteer-portal" element={<VolunteerPortal />} />
       <Route path="/staff-portal" element={<StaffPortal />} />
+      <Route path="/pathways-intake" element={<PathwaysPublicIntake />} />
 
       {/* Catering Portal — fully public, no auth */}
       <Route element={<PublicLayout />}>

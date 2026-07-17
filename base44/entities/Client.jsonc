@@ -465,6 +465,19 @@
         "type": "string"
       }
     },
+    "education_history": {
+      "type": "string",
+      "description": "JSON string of education history entries"
+    },
+    "self_registered": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this client self-registered through the public portal"
+    },
+    "barrier_description": {
+      "type": "string",
+      "description": "Self-described circumstances that may affect employment (from public intake)"
+    },
     "intake_notes": {
       "type": "string"
     },

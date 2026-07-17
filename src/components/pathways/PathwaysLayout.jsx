@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
-import { Menu, X, ChevronLeft } from 'lucide-react';
+import { Menu, X, ChevronLeft, ExternalLink } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: "Intake",            path: "/pathways/intake" },
@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { label: "Supervisor Portal", path: "/pathways/supervisor" },
   { label: "Resources",         path: "/pathways/resources" },
   { label: "Compass",           path: "/pathways/compass" },
+  { label: "Public Portal",     path: "/pathways-intake", external: true },
 ];
 
 function AppNav() {
@@ -38,6 +39,19 @@ function AppNav() {
   if (location.pathname.startsWith("/pathways/client/")) return null;
 
   const NavButton = ({ item }) => {
+    if (item.external) {
+      return (
+        <a
+          href={item.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-1.5 text-sm rounded-md font-medium transition-colors text-white/80 hover:text-white hover:bg-white/10 flex items-center gap-1"
+        >
+          {item.label}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      );
+    }
     const active = location.pathname === item.path;
     return (
       <button

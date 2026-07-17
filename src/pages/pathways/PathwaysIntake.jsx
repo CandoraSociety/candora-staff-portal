@@ -172,6 +172,11 @@ export default function PathwaysIntake() {
                           <Link to={`/pathways/client/${c.id}`} className="text-blue-700 hover:underline">
                             {c.first_name} {c.last_name}
                           </Link>
+                          {c.self_registered && (
+                            <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                              Self-Registered
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
                         <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
