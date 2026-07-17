@@ -17,6 +17,14 @@ Deno.serve(async (req) => {
 
     const today = new Date().toISOString().split('T')[0];
 
+    let intakeNotes = data.additional_notes?.trim() || '';
+    if (data.office_english_proficiency || data.office_translator_assistance || data.office_comments?.trim()) {
+      intakeNotes += (intakeNotes ? '\n\n' : '') + '--- For Office Use Only ---\n';
+      intakeNotes += `English Proficiency: ${data.office_english_proficiency ? 'Yes' : 'No'}\n`;
+      intakeNotes += `Required translator/significant assistance: ${data.office_translator_assistance ? 'Yes' : 'No'}`;
+      if (data.office_comments?.trim()) intakeNotes += `\nComments: ${data.office_comments.trim()}`;
+    }
+
     const client = await base44.asServiceRole.entities.Client.create({
       first_name: data.first_name?.trim(),
       last_name: data.last_name?.trim(),
@@ -35,7 +43,7 @@ Deno.serve(async (req) => {
       employment_history: data.employment_history || null,
       education_history: data.education_history || null,
       barrier_description: data.barrier_description?.trim() || null,
-      intake_notes: data.additional_notes?.trim() || null,
+      intake_notes: intakeNotes || null,
       status: 'new',
       referral_source: 'self',
       self_registered: true,

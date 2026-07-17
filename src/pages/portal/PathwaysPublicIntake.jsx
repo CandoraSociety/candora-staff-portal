@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 
@@ -68,6 +69,18 @@ export default function PathwaysPublicIntake() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+  const [consents, setConsents] = useState({
+    eligibility: false,
+    accurate: false,
+    comply: false,
+    counsellor_discretion: false,
+  });
+  const [officeUse, setOfficeUse] = useState({
+    english_proficiency: false,
+    translator_assistance: false,
+    comments: '',
+  });
+  const [accessCode, setAccessCode] = useState('');
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
   const updateEdu = (idx, patch) => setEducation(prev => prev.map((e, i) => i === idx ? { ...e, ...patch } : e));
@@ -80,6 +93,16 @@ export default function PathwaysPublicIntake() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+    if (!Object.values(consents).every(Boolean)) {
+      setError('Please review and check all acknowledgement boxes before submitting.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (accessCode !== '5011') {
+      setError('Please enter the correct 4-digit access code provided by the Job Lab attendant.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -89,6 +112,9 @@ export default function PathwaysPublicIntake() {
         ...form,
         education_history: cleanedEdu.length ? JSON.stringify(cleanedEdu) : null,
         employment_history: cleanedEmp.length ? JSON.stringify(cleanedEmp) : null,
+        office_english_proficiency: officeUse.english_proficiency,
+        office_translator_assistance: officeUse.translator_assistance,
+        office_comments: officeUse.comments?.trim() || null,
       });
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -365,9 +391,89 @@ export default function PathwaysPublicIntake() {
             </div>
           </SectionCard>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={submitting} size="lg" style={{ background: 'hsl(231,64%,20%)' }}>
-              {submitting ? 'Submitting...' : 'Submit Registration'}
+          {/* Acknowledgements */}
+          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Acknowledgements</h2>
+            <div className="space-y-4">
+              {[
+                { key: 'eligibility', text: 'I understand that following submission of this form I will be assessed for eligibility for participation in the program. Submission of this form does not guarantee acceptance into the Pathways program.' },
+                { key: 'accurate', text: 'I acknowledge that everything in this form is accurate and true to the best of my knowledge.' },
+                { key: 'comply', text: 'I understand that if accepted into the Pathways program, I must comply with the expectations of the program and my personal Action Plan, which will be reviewed with a Candora Career Counsellor and mutually agreed upon if accepted into the program. Failure to comply may result in removal from the Pathways Program.' },
+                { key: 'counsellor_discretion', text: 'I understand that, if accepted into the program, the Career Counsellor will evaluate progress and program suitability. It is at the Career Counsellor\u2019s discretion at any time to determine if continuation in the program is appropriate. A Career Counsellor may determine that the Pathways program is not (or is no longer) a suitable option for a variety of reasons, including changes in life circumstances for the participant, participant challenges that make employability unfeasible, etc. This is not an exhaustive list. In the case that the Career Counsellor discontinues the program, they will attempt to work with participants to make referrals to appropriate program and service options.' },
+              ].map(item => (
+                <div key={item.key} className="flex items-start gap-3">
+                  <Checkbox
+                    checked={consents[item.key]}
+                    onCheckedChange={v => setConsents(prev => ({ ...prev, [item.key]: v }))}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-slate-600">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Ribbon */}
+          <div className="rounded-lg px-6 py-4 text-center" style={{ background: 'hsl(45,92%,53%)' }}>
+            <p className="font-semibold text-slate-800">
+              Form Complete. Please advise the Job Lab attendant to review and complete your submission.
+            </p>
+          </div>
+
+          {/* For Office Use Only */}
+          <section className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 p-6">
+            <h2 className="text-lg font-semibold text-slate-700 mb-1">For Office Use Only</h2>
+            <p className="text-xs text-slate-400 mb-4">To be completed by Job Lab attendant.</p>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={officeUse.english_proficiency}
+                  onCheckedChange={v => setOfficeUse(prev => ({ ...prev, english_proficiency: v }))}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-slate-600">English Proficiency</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={officeUse.translator_assistance}
+                  onCheckedChange={v => setOfficeUse(prev => ({ ...prev, translator_assistance: v }))}
+                  className="mt-0.5"
+                />
+                <span className="text-sm text-slate-600">Required a translator or other significant assistance to complete form</span>
+              </div>
+              <div>
+                <Label className="mb-1 block text-sm">Comments</Label>
+                <Textarea
+                  value={officeUse.comments}
+                  onChange={e => setOfficeUse(prev => ({ ...prev, comments: e.target.value }))}
+                  rows={3}
+                  placeholder="Office comments (optional)"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Access Code + Submit */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-end">
+            <div>
+              <Label className="mb-1 block text-sm">Access Code</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={accessCode}
+                onChange={e => setAccessCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="4-digit code"
+                className="w-32"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={submitting || !Object.values(consents).every(Boolean) || accessCode !== '5011'}
+              size="lg"
+              style={{ background: 'hsl(231,64%,20%)', color: 'hsl(45,92%,53%)' }}
+            >
+              {submitting ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
         </form>
