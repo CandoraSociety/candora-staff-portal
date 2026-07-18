@@ -185,7 +185,7 @@ export default function IntakeForm({ client, onSave, onCancel }) {
           <Field label="Date of Birth">
             <Input type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
           </Field>
-          <Field label="Sex">
+          <Field label="Gender">
             <Select value={form.sex} onValueChange={v => set('sex', v)}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>

@@ -178,7 +178,7 @@ export default function ClientProfileOverview({ client, onSave }) {
               <div><Label>Last Name</Label><Input value={form.last_name || ''} onChange={e => set('last_name', e.target.value)} /></div>
               <div><Label>Date of Birth</Label><Input type="date" value={form.date_of_birth || ''} onChange={e => set('date_of_birth', e.target.value)} /></div>
               <div>
-                <Label>Sex</Label>
+                <Label>Gender</Label>
                 <Select value={form.gender || ''} onValueChange={v => set('gender', v)}>
                   <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
                   <SelectContent>{GENDER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
@@ -216,7 +216,7 @@ export default function ClientProfileOverview({ client, onSave }) {
               <Field label="First Name" value={client.first_name} />
               <Field label="Last Name" value={client.last_name} />
               <Field label="Date of Birth" value={client.date_of_birth} />
-              <Field label="Sex" value={GENDER_OPTIONS.find(o => o.value === client.gender)?.label || client.sex} />
+              <Field label="Gender" value={GENDER_OPTIONS.find(o => o.value === client.gender)?.label || client.sex} />
               <Field label="Phone" value={client.phone} />
               <Field label="Email" value={client.email} />
               <Field label="Compass HSID#" value={client.compass_hsid} />
