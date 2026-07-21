@@ -13,6 +13,7 @@ import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientFinancials from '@/components/client/ClientFinancials';
 import ClientEmployment from '@/components/client/ClientEmployment';
 import ClientPlacements from '@/components/client/ClientPlacements';
+import ClientAssessments from '@/components/client/ClientAssessments';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
 import ClientStatusHistory from '@/components/client/ClientStatusHistory';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
@@ -288,6 +289,7 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="placements">Placements</TabsTrigger>
+            <TabsTrigger value="assessments">BIT / ERA</TabsTrigger>
             <TabsTrigger value="stream_switches" className="relative">
               Stream Switches
               {client.program_stream_switches?.length > 0 && (
@@ -325,6 +327,10 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="placements">
             <ClientPlacements client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="assessments">
+            <ClientAssessments client={client} onSave={handleSave} />
           </TabsContent>
 
           <TabsContent value="stream_switches">
