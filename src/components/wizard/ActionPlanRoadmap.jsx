@@ -149,6 +149,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
     parseDate(i.statusData?.timeline_end),
     parseDate(i.statusData?.started_date),
     parseDate(i.statusData?.completed_date),
+    parseDate(i.detail?.timeline_end),
   ]).filter(Boolean);
 
   const latestItem = allItemDates.length > 0 ? allItemDates.reduce((a, b) => b > a ? b : a) : null;
@@ -529,10 +530,12 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
             {eachDayOfInterval({ start: startOfMonth(new Date()), end: endOfMonth(new Date()) }).map(day => {
               const isToday = isSameDay(day, new Date());
               const dayItems = items.filter(item => {
-                const s = parseDate(item.statusData?.timeline_start || item.detail?.timeline_start || item.statusData?.started_date);
-                const e = parseDate(item.statusData?.timeline_end || item.detail?.timeline_end || item.statusData?.completed_date);
+                const s = parseDate(item.statusData?.started_date);
+                const e = parseDate(item.statusData?.completed_date);
+                const deadline = parseDate(item.detail?.timeline_end);
                 if (s && e) return isWithinInterval(day, { start: s, end: e });
                 if (s) return isSameDay(day, s);
+                if (deadline) return isSameDay(day, deadline);
                 return false;
               });
               const bitDays = bitReviewDates.filter(dr => isSameDay(day, parseDate(dr)));
@@ -588,11 +591,16 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
   const isOpen = openItem === item.key;
   const trackBg = item.isBarrier ? '#fffbeb' : '#f8fafc';
 
-  const startD = parseDate(item.statusData?.timeline_start || item.detail?.timeline_start || item.statusData?.started_date);
-  const endD   = parseDate(item.statusData?.timeline_end   || item.detail?.timeline_end   || item.statusData?.completed_date);
+  // Actual progress dates (from statusData — set via RoadmapItemPanel)
+  const startD = parseDate(item.statusData?.started_date || item.statusData?.timeline_start);
+  const endD   = parseDate(item.statusData?.completed_date || item.statusData?.timeline_end);
+  // Deadline date (from detail — set via Action Plan form)
+  const deadline  = parseDate(item.detail?.timeline_end);
+  const deadlineP = deadline ? (pct(deadline) ?? 0) : null;
+
   const startP = startD ? (pct(startD) ?? 0) : 0;
-  const endP   = endD   ? (pct(endD) ?? Math.min(startP + 10, 100)) : Math.min(startP + 10, 100);
-  const barW   = Math.max(endP - startP, 4);
+  const endP   = endD   ? (pct(endD) ?? 0) : (startD ? Math.min(startP + 10, 100) : 0);
+  const barW   = startD ? Math.max(endP - startP, 4) : 0;
 
   const isCancelled  = item.status === 'cancelled';
   const isStarted    = item.status === 'started';
@@ -619,25 +627,42 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
           style={{ backgroundColor: trackBg, outline: `2px solid ${cfg.ring}` }}
           onClick={() => setOpenItem(isOpen ? null : item.key)}
         >
-          {/* Bar fill */}
-          <div
-            className="absolute top-0.5 bottom-0.5 rounded"
-            style={{
-              left: `${startP}%`,
-              width: `${barW}%`,
-              backgroundColor: item.color,
-              opacity: isCancelled ? 0.5 : 0.85,
-              ...(isStarted ? {
-                background: `linear-gradient(90deg, ${item.color}cc 0%, ${item.color}ff 50%, ${item.color}cc 100%)`,
-                backgroundSize: '200% 100%',
-                animation: 'typeShimmer 2s linear infinite',
-              } : {}),
-              ...(isCompleted ? { animation: 'completedPulse 2s ease-in-out infinite' } : {}),
-            }}
-          >
-            {isCompleted && <CheckCheck className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
-            {isCancelled  && <X         className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
-          </div>
+          {/* Deadline marker — dashed line at anticipated completion date */}
+          {deadlineP !== null && (
+            <div
+              className="absolute top-0 bottom-0 pointer-events-none z-10"
+              style={{ left: `${deadlineP}%`, borderLeft: `2px dashed ${item.color}`, opacity: 0.6 }}
+            >
+              <span
+                className="absolute -top-0.5 -translate-x-1/2 text-[9px] leading-none"
+                style={{ color: item.color }}
+                title={`Deadline: ${fmtDate(deadline)}`}
+              >
+                ⚑
+              </span>
+            </div>
+          )}
+          {/* Bar fill — only shows when item has actually been started */}
+          {startD && (
+            <div
+              className="absolute top-0.5 bottom-0.5 rounded"
+              style={{
+                left: `${startP}%`,
+                width: `${barW}%`,
+                backgroundColor: item.color,
+                opacity: isCancelled ? 0.5 : 0.85,
+                ...(isStarted ? {
+                  background: `linear-gradient(90deg, ${item.color}cc 0%, ${item.color}ff 50%, ${item.color}cc 100%)`,
+                  backgroundSize: '200% 100%',
+                  animation: 'typeShimmer 2s linear infinite',
+                } : {}),
+                ...(isCompleted ? { animation: 'completedPulse 2s ease-in-out infinite' } : {}),
+              }}
+            >
+              {isCompleted && <CheckCheck className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
+              {isCancelled  && <X         className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
+            </div>
+          )}
         </div>
       </div>
       {isOpen && (
