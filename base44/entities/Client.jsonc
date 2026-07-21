@@ -478,6 +478,121 @@
       "type": "string",
       "description": "Self-described circumstances that may affect employment (from public intake)"
     },
+    "income_source": {
+      "type": "string",
+      "enum": [
+        "income_support",
+        "employment_insurance",
+        "aish_adap",
+        "employment",
+        "other"
+      ],
+      "description": "Primary source of income"
+    },
+    "income_source_other": {
+      "type": "string",
+      "description": "If income source is 'other', specify"
+    },
+    "legally_entitled_to_work": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client is legally entitled to work in Canada"
+    },
+    "drivers_license_status": {
+      "type": "string",
+      "enum": [
+        "yes_no_vehicle",
+        "yes_with_vehicle",
+        "no"
+      ],
+      "description": "Driver's license and vehicle access status"
+    },
+    "has_alternate_id": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client has an alternate form of ID (if no driver's license)"
+    },
+    "has_phone_access": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client has access to a phone"
+    },
+    "has_internet_access": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client has access to the internet"
+    },
+    "available_immediately": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client is available to start work immediately"
+    },
+    "current_programming": {
+      "type": "string",
+      "description": "Other programming the client is currently participating in (employment, ELL, etc.)"
+    },
+    "previous_employment_program": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client has previously been in an employment program"
+    },
+    "has_criminal_record": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "prefer_not_to_say"
+      ],
+      "description": "Whether the client has a criminal record"
+    },
+    "highest_education": {
+      "type": "string",
+      "enum": [
+        "no_formal_education",
+        "some_elementary",
+        "elementary_completed",
+        "some_high_school",
+        "high_school_diploma",
+        "ged",
+        "some_college",
+        "college_diploma",
+        "college_certificate",
+        "bachelors_degree",
+        "masters_degree",
+        "doctorate",
+        "trade_certificate",
+        "apprenticeship",
+        "professional_certification",
+        "other"
+      ],
+      "description": "Highest level of education completed"
+    },
+    "has_sin": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether the client has a Social Insurance Number"
+    },
     "intake_notes": {
       "type": "string"
     },

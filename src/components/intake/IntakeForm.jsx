@@ -54,6 +54,50 @@ const EDUCATION_TYPES = [
   'ESL / LINC Training', 'Workshop', 'Short Course', 'On-the-Job Training',
 ];
 
+const INCOME_SOURCE_OPTIONS = [
+  { value: 'income_support', label: 'Income Support' },
+  { value: 'employment_insurance', label: 'Employment Insurance' },
+  { value: 'aish_adap', label: 'AISH / ADAP' },
+  { value: 'employment', label: 'Employment' },
+  { value: 'other', label: 'Other' },
+];
+
+const YES_NO_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+];
+
+const DRIVERS_LICENSE_OPTIONS = [
+  { value: 'yes_no_vehicle', label: 'Yes, but no access to a vehicle' },
+  { value: 'yes_with_vehicle', label: 'Yes, with access to a vehicle' },
+  { value: 'no', label: 'No' },
+];
+
+const HIGHEST_EDUCATION_OPTIONS = [
+  { value: 'no_formal_education', label: 'No formal education' },
+  { value: 'some_elementary', label: 'Some elementary school' },
+  { value: 'elementary_completed', label: 'Elementary school completed' },
+  { value: 'some_high_school', label: 'Some high school' },
+  { value: 'high_school_diploma', label: 'High school diploma' },
+  { value: 'ged', label: 'GED' },
+  { value: 'some_college', label: 'Some college / university' },
+  { value: 'college_diploma', label: 'College diploma' },
+  { value: 'college_certificate', label: 'College certificate' },
+  { value: 'bachelors_degree', label: "Bachelor's degree" },
+  { value: 'masters_degree', label: "Master's degree" },
+  { value: 'doctorate', label: 'Doctorate' },
+  { value: 'trade_certificate', label: 'Trade certificate' },
+  { value: 'apprenticeship', label: 'Apprenticeship' },
+  { value: 'professional_certification', label: 'Professional certification' },
+  { value: 'other', label: 'Other' },
+];
+
+const CRIMINAL_RECORD_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+];
+
 const validate = (data) => {
   const errs = {};
   if (!data.first_name?.trim()) errs.first_name = 'First name is required.';
@@ -108,6 +152,19 @@ export default function IntakeForm({ client, onSave, onCancel }) {
     career_objectives: client?.career_objectives || '',
     intake_notes: client?.intake_notes || '',
     resume_urls: client?.resume_urls || [],
+    income_source: client?.income_source || '',
+    income_source_other: client?.income_source_other || '',
+    legally_entitled_to_work: client?.legally_entitled_to_work || '',
+    drivers_license_status: client?.drivers_license_status || '',
+    has_alternate_id: client?.has_alternate_id || '',
+    has_phone_access: client?.has_phone_access || '',
+    has_internet_access: client?.has_internet_access || '',
+    available_immediately: client?.available_immediately || '',
+    current_programming: client?.current_programming || '',
+    previous_employment_program: client?.previous_employment_program || '',
+    has_criminal_record: client?.has_criminal_record || '',
+    highest_education: client?.highest_education || '',
+    has_sin: client?.has_sin || '',
   });
 
   const [employmentEntries, setEmploymentEntries] = useState(() => {
@@ -329,6 +386,97 @@ export default function IntakeForm({ client, onSave, onCancel }) {
               </SelectContent>
             </Select>
           </Field>
+          <Field label="Driver's License">
+            <Select value={form.drivers_license_status} onValueChange={v => set('drivers_license_status', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {DRIVERS_LICENSE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          {form.drivers_license_status === 'no' && (
+            <Field label="Alternate Form of ID?">
+              <Select value={form.has_alternate_id} onValueChange={v => set('has_alternate_id', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
+          <Field label="Phone Access">
+            <Select value={form.has_phone_access} onValueChange={v => set('has_phone_access', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Internet Access">
+            <Select value={form.has_internet_access} onValueChange={v => set('has_internet_access', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Legally Entitled to Work in Canada">
+            <Select value={form.legally_entitled_to_work} onValueChange={v => set('legally_entitled_to_work', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Available to Start Immediately">
+            <Select value={form.available_immediately} onValueChange={v => set('available_immediately', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Income Source">
+            <Select value={form.income_source} onValueChange={v => set('income_source', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {INCOME_SOURCE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          {form.income_source === 'other' && (
+            <Field label="Income Source (Other)">
+              <Input value={form.income_source_other} onChange={e => set('income_source_other', e.target.value)} placeholder="Please specify" />
+            </Field>
+          )}
+          <Field label="Previously in Employment Program?">
+            <Select value={form.previous_employment_program} onValueChange={v => set('previous_employment_program', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Has a Criminal Record?">
+            <Select value={form.has_criminal_record} onValueChange={v => set('has_criminal_record', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {CRIMINAL_RECORD_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Has a Social Insurance Number?">
+            <Select value={form.has_sin} onValueChange={v => set('has_sin', v)}>
+              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </Field>
+          <div className="md:col-span-2">
+            <Label className="text-sm font-medium text-slate-700 mb-1 block">Current Programming / Other Participation</Label>
+            <Textarea rows={2} value={form.current_programming} onChange={e => set('current_programming', e.target.value)} placeholder="Other programming the client is currently participating in (employment, ELL, etc.)" />
+          </div>
 
           {/* Career Objectives */}
           <div className="md:col-span-2">
@@ -421,6 +569,15 @@ export default function IntakeForm({ client, onSave, onCancel }) {
           {/* Education & Training */}
           <div className="md:col-span-2 space-y-3">
             <Label className="text-sm font-medium text-slate-700 block">Education &amp; Training</Label>
+            <div className="mb-2">
+              <Label className="text-xs text-slate-600 mb-1 block">Highest Level of Education Completed</Label>
+              <Select value={form.highest_education} onValueChange={v => set('highest_education', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {HIGHEST_EDUCATION_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {educationEntries.map((entry, idx) => (
               <div key={idx} className="border border-slate-200 rounded-lg p-3 bg-slate-50">
                 <div className="flex items-center justify-between mb-2">

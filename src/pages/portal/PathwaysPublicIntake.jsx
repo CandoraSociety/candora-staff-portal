@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import { PlusCircle, Trash2, CheckCircle2, Upload, FileText } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
@@ -46,6 +46,50 @@ const EDUCATION_TYPES = [
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Seasonal', 'Self-employed'];
 
+const INCOME_SOURCE_OPTIONS = [
+  { value: 'income_support', label: 'Income Support' },
+  { value: 'employment_insurance', label: 'Employment Insurance' },
+  { value: 'aish_adap', label: 'AISH / ADAP' },
+  { value: 'employment', label: 'Employment' },
+  { value: 'other', label: 'Other' },
+];
+
+const YES_NO_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+];
+
+const DRIVERS_LICENSE_OPTIONS = [
+  { value: 'yes_no_vehicle', label: 'Yes, but no access to a vehicle' },
+  { value: 'yes_with_vehicle', label: 'Yes, with access to a vehicle' },
+  { value: 'no', label: 'No' },
+];
+
+const HIGHEST_EDUCATION_OPTIONS = [
+  { value: 'no_formal_education', label: 'No formal education' },
+  { value: 'some_elementary', label: 'Some elementary school' },
+  { value: 'elementary_completed', label: 'Elementary school completed' },
+  { value: 'some_high_school', label: 'Some high school' },
+  { value: 'high_school_diploma', label: 'High school diploma' },
+  { value: 'ged', label: 'GED' },
+  { value: 'some_college', label: 'Some college / university' },
+  { value: 'college_diploma', label: 'College diploma' },
+  { value: 'college_certificate', label: 'College certificate' },
+  { value: 'bachelors_degree', label: "Bachelor's degree" },
+  { value: 'masters_degree', label: "Master's degree" },
+  { value: 'doctorate', label: 'Doctorate' },
+  { value: 'trade_certificate', label: 'Trade certificate' },
+  { value: 'apprenticeship', label: 'Apprenticeship' },
+  { value: 'professional_certification', label: 'Professional certification' },
+  { value: 'other', label: 'Other' },
+];
+
+const CRIMINAL_RECORD_OPTIONS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+];
+
 const EMPTY_EDU = () => ({ institution: '', education_type: '', field_of_study: '', start_date: '', end_date: '' });
 const EMPTY_EMP = () => ({ company: '', job_title: '', employment_type: '', start_date: '', end_date: '', responsibilities: '' });
 
@@ -64,6 +108,12 @@ export default function PathwaysPublicIntake() {
     residency_status: '', clb_level: '', employment_status: '',
     career_objectives: '', barrier_description: '', additional_notes: '',
     website: '',
+    income_source: '', income_source_other: '',
+    legally_entitled_to_work: '', drivers_license_status: '',
+    has_alternate_id: '', has_phone_access: '', has_internet_access: '',
+    available_immediately: '', current_programming: '',
+    previous_employment_program: '', has_criminal_record: '',
+    highest_education: '', has_sin: '',
   });
   const [education, setEducation] = useState([EMPTY_EDU()]);
   const [employment, setEmployment] = useState([EMPTY_EMP()]);
@@ -82,10 +132,29 @@ export default function PathwaysPublicIntake() {
     comments: '',
   });
   const [accessCode, setAccessCode] = useState('');
+  const [resumeUrls, setResumeUrls] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
   const updateEdu = (idx, patch) => setEducation(prev => prev.map((e, i) => i === idx ? { ...e, ...patch } : e));
   const updateEmp = (idx, patch) => setEmployment(prev => prev.map((e, i) => i === idx ? { ...e, ...patch } : e));
+
+  const handleResumeUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        setResumeUrls(prev => [...prev, file_url]);
+      }
+    } catch (err) {
+      setError('Failed to upload resume. You can skip this step and bring a copy to your appointment.');
+    }
+    setUploading(false);
+  };
+
+  const removeResume = (idx) => setResumeUrls(prev => prev.filter((_, i) => i !== idx));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,6 +183,7 @@ export default function PathwaysPublicIntake() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          resume_urls: resumeUrls.length ? resumeUrls : null,
           education_history: cleanedEdu.length ? JSON.stringify(cleanedEdu) : null,
           employment_history: cleanedEmp.length ? JSON.stringify(cleanedEmp) : null,
           office_english_proficiency: officeUse.english_proficiency,
@@ -272,6 +342,15 @@ export default function PathwaysPublicIntake() {
 
           {/* Education History */}
           <SectionCard title="Education History" subtitle="List your education, starting with the most recent.">
+            <div className="mb-4">
+              <Label className="mb-1 block">Highest Level of Education Completed</Label>
+              <Select value={form.highest_education} onValueChange={v => set('highest_education', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {HIGHEST_EDUCATION_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {education.map((edu, idx) => (
               <div key={idx} className="rounded-lg border border-slate-200 p-4 mb-3 relative">
                 {education.length > 1 && (
@@ -315,6 +394,15 @@ export default function PathwaysPublicIntake() {
 
           {/* Employment History */}
           <SectionCard title="Employment History" subtitle="List your work experience, starting with the most recent.">
+            <div className="mb-4">
+              <Label className="mb-1 block">Current Employment Status</Label>
+              <Select value={form.employment_status} onValueChange={v => set('employment_status', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {EMPLOYMENT_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {employment.map((emp, idx) => (
               <div key={idx} className="rounded-lg border border-slate-200 p-4 mb-3 relative">
                 {employment.length > 1 && (
@@ -362,18 +450,152 @@ export default function PathwaysPublicIntake() {
             </Button>
           </SectionCard>
 
-          {/* Current Situation */}
-          <SectionCard title="Current Situation">
+          {/* Employment Eligibility & Income */}
+          <SectionCard title="Employment Eligibility & Income">
             <div className="space-y-4">
               <div>
-                <Label className="mb-1 block">Current Employment Status</Label>
-                <Select value={form.employment_status} onValueChange={v => set('employment_status', v)}>
+                <Label className="mb-1 block">Are you legally entitled to work in Canada?</Label>
+                <Select value={form.legally_entitled_to_work} onValueChange={v => set('legally_entitled_to_work', v)}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
-                    {EMPLOYMENT_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label className="mb-1 block">Are you available to start work immediately?</Label>
+                <Select value={form.available_immediately} onValueChange={v => set('available_immediately', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1 block">What is your primary source of income?</Label>
+                <Select value={form.income_source} onValueChange={v => set('income_source', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {INCOME_SOURCE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {form.income_source === 'other' && (
+                  <Input className="mt-2" placeholder="Please specify" value={form.income_source_other} onChange={e => set('income_source_other', e.target.value)} />
+                )}
+              </div>
+              <div>
+                <Label className="mb-1 block">Have you previously been in an employment program?</Label>
+                <Select value={form.previous_employment_program} onValueChange={v => set('previous_employment_program', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1 block">Are you currently participating in any other programming? (employment, ELL, etc.)</Label>
+                <Textarea value={form.current_programming} onChange={e => set('current_programming', e.target.value)} rows={2} placeholder="Optional — e.g. ELL classes, employment programs, workshops, etc." />
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Transportation & Access */}
+          <SectionCard title="Transportation & Access">
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-1 block">Do you have a valid driver's license?</Label>
+                <Select value={form.drivers_license_status} onValueChange={v => set('drivers_license_status', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {DRIVERS_LICENSE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.drivers_license_status === 'no' && (
+                <div>
+                  <Label className="mb-1 block">Do you have another form of government-issued ID?</Label>
+                  <Select value={form.has_alternate_id} onValueChange={v => set('has_alternate_id', v)}>
+                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div>
+                <Label className="mb-1 block">Do you have access to a phone?</Label>
+                <Select value={form.has_phone_access} onValueChange={v => set('has_phone_access', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1 block">Do you have access to the internet?</Label>
+                <Select value={form.has_internet_access} onValueChange={v => set('has_internet_access', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Background Information */}
+          <SectionCard title="Background Information">
+            <div className="space-y-4">
+              <div>
+                <Label className="mb-1 block">Do you have a criminal record?</Label>
+                <Select value={form.has_criminal_record} onValueChange={v => set('has_criminal_record', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {CRIMINAL_RECORD_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1 block">Do you have a Social Insurance Number (SIN)?</Label>
+                <Select value={form.has_sin} onValueChange={v => set('has_sin', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* Resume Upload */}
+          <SectionCard title="Resume & Documents" subtitle="Upload your resume or any supporting documents (optional).">
+            <div className="space-y-3">
+              <div className="border border-dashed border-slate-300 rounded-lg p-4 bg-slate-50">
+                <label className="flex flex-col items-center gap-2 cursor-pointer">
+                  <Upload className="w-6 h-6 text-slate-400" />
+                  <span className="text-sm text-slate-500">
+                    {uploading ? 'Uploading...' : 'Click to upload resume (PDF, image, or Word document)'}
+                  </span>
+                  <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden" onChange={handleResumeUpload} />
+                </label>
+              </div>
+              {resumeUrls.map((url, i) => (
+                <div key={i} className="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2">
+                  <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                  <a href={url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline truncate flex-1">
+                    Document {i + 1}
+                  </a>
+                  <button type="button" onClick={() => removeResume(i)} className="text-slate-400 hover:text-red-500">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Career Goals */}
+          <SectionCard title="Career Goals & Objectives">
+            <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">Career Goals & Objectives</Label>
                 <Textarea value={form.career_objectives} onChange={e => set('career_objectives', e.target.value)} rows={3} placeholder="What kind of work are you looking for? What are your career goals?" />
