@@ -225,6 +225,11 @@
   -moz-column-count: 4 !important;
 }
 
+/* ===== Microsoft Ribbon — docked right, pad content away ===== */
+body.has-ms-ribbon {
+  padding-right: 52px;
+}
+
 /* ===== Global Tab Bar ===== */
 body.has-tabbar .sticky.top-0:not(.global-tabbar),
 body.has-tabbar .fixed.top-0:not(.global-tabbar) {
