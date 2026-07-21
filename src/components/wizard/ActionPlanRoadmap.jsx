@@ -176,6 +176,25 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
     { key: 'followup90',    date: followup90Date || followup90Calc, label: '90d', color: '#a855f7' },
   ].filter(m => m.date);
 
+  // Stagger milestone labels vertically to prevent overlap
+  const staggeredMilestones = (() => {
+    const sorted = milestones.map(m => ({
+      ...m,
+      p: m.forcePct !== undefined ? m.forcePct : (pct(m.date) ?? 0),
+    })).sort((a, b) => a.p - b.p);
+    let prevP = -100;
+    let prevRow = -1;
+    return sorted.map(m => {
+      let row = 0;
+      if (Math.abs(m.p - prevP) < 14) {
+        row = prevRow === 0 ? 1 : 0;
+      }
+      prevP = m.p;
+      prevRow = row;
+      return { ...m, row };
+    });
+  })();
+
   // ── Month axis ─────────────────────────────────────────────────────────────
   const months = [];
   const cur = startOfMonth(leftAnchor);
@@ -328,20 +347,17 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
               </div>
 
               {/* Milestone label row */}
-              <div className="relative ml-40 h-6 mb-1">
-                {milestones.map(m => {
-                  const p = m.forcePct !== undefined ? m.forcePct : (pct(m.date) ?? 0);
-                  return (
-                    <span
-                      key={m.key}
-                      className="absolute text-[10px] font-semibold -translate-x-1/2 cursor-default select-none"
-                      style={{ left: `${p}%`, color: m.color }}
-                      title={fmtDate(m.date)}
-                    >
-                      ▼ {m.label}
-                    </span>
-                  );
-                })}
+              <div className="relative ml-40 h-10 mb-1">
+                {staggeredMilestones.map(m => (
+                  <span
+                    key={m.key}
+                    className="absolute text-[10px] font-semibold -translate-x-1/2 cursor-default select-none whitespace-nowrap"
+                    style={{ left: `${m.p}%`, color: m.color, top: m.row === 0 ? 0 : 15 }}
+                    title={fmtDate(m.date)}
+                  >
+                    ▼ {m.label}
+                  </span>
+                ))}
               </div>
 
               {/* Chart area */}
