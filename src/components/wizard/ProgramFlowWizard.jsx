@@ -88,7 +88,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       case 'internal_placement':
         return <InternalPlacementStep client={client} onSave={onSave} onComplete={goNext} />;
       case 'exposures':
-        return <ExposuresSupportsStep client={client} onSave={onSave} />;
+        return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={client?.service_type === 'direct_to_employment'} />;
       case 'employment_search':
         return <EmploymentSearchPanel client={client} onSave={onSave} onClientUpdate={onClientUpdate} />;
       case 'followup_90day':

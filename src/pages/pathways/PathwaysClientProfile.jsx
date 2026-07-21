@@ -19,6 +19,7 @@ import CloseFileDialog from '@/components/client/CloseFileDialog';
 import StatusChangeDialog from '@/components/client/StatusChangeDialog';
 import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
 import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
+import ProgramDeterminationDialog from '@/components/wizard/ProgramDeterminationDialog';
 
 const STREAM_LABELS = {
   direct_to_employment: 'DEA',
@@ -48,6 +49,7 @@ export default function PathwaysClientProfile() {
   const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
   const [statusHistoryKey, setStatusHistoryKey] = useState(0);
   const [showDEAClosing, setShowDEAClosing] = useState(false);
+  const [showProgramDetermination, setShowProgramDetermination] = useState(false);
 
   useEffect(() => {
     base44.entities.Client.list().then(clients => {
@@ -55,6 +57,11 @@ export default function PathwaysClientProfile() {
       setClient(found || null);
       setLoading(false);
       
+      // Show program determination prompt if client is assigned but has no service_type
+      if (found && !found.service_type && found.assigned_worker && !found.file_closed) {
+        setShowProgramDetermination(true);
+      }
+
       // Check if DEA closing dialog should show
       if (found?.service_type === 'direct_to_employment' && !found?.file_closed && !found?.dea_closing_dismissed) {
         const endDate = found.completion_date
@@ -105,6 +112,12 @@ export default function PathwaysClientProfile() {
     } catch (error) {
       toast.error('Failed to reopen file');
     }
+  };
+
+  const handleProgramDetermination = async (serviceType) => {
+    await base44.entities.Client.update(id, { service_type: serviceType });
+    setClient(prev => ({ ...prev, service_type: serviceType }));
+    toast.success(serviceType === 'pathways' ? 'Set to WD (Workforce Development)' : 'Set to DEA (Direct Employment Attachment)');
   };
 
   const handleDEAContinue = async () => {
@@ -344,6 +357,13 @@ export default function PathwaysClientProfile() {
         onContinue={handleDEAContinue}
         onSwitchToPathways={handleDEASwitchToPathways}
         onDismiss={() => setShowDEAClosing(false)}
+      />
+
+      <ProgramDeterminationDialog
+        open={showProgramDetermination}
+        onOpenChange={setShowProgramDetermination}
+        client={client}
+        onSelect={handleProgramDetermination}
       />
     </div>
   );

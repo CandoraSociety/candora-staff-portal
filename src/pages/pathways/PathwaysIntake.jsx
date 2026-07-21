@@ -58,7 +58,7 @@ export default function PathwaysIntake() {
       const [me, clientList, staff] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.Client.list('-created_date', 1000),
-        base44.entities.PathwaysStaff.filter({ role: 'career_counsellor', is_active: true }, 'name'),
+        base44.entities.PathwaysStaff.filter({ is_active: true }, 'name'),
       ]);
       setUser(me);
       setClients(clientList);
@@ -359,7 +359,7 @@ export default function PathwaysIntake() {
               Assign <span className="font-semibold text-slate-700">{assignClient?.first_name} {assignClient?.last_name}</span> to a career counsellor. The client will appear on their dashboard and the master list.
             </p>
             <Select value={selectedWorker} onValueChange={setSelectedWorker}>
-              <SelectTrigger><SelectValue placeholder="Select career counsellor..." /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select staff member..." /></SelectTrigger>
               <SelectContent>
                 {staffList.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -367,7 +367,7 @@ export default function PathwaysIntake() {
               </SelectContent>
             </Select>
             {staffList.length === 0 && (
-              <p className="text-sm text-amber-600">No career counsellors found. Add staff in the Master List.</p>
+              <p className="text-sm text-amber-600">No staff found. Add staff in the Master List.</p>
             )}
           </div>
           <DialogFooter>

@@ -23,7 +23,7 @@ const COMPLETION_COLORS = {
   did_not_complete:'bg-red-100 text-red-800',
 };
 
-function RecordForm({ client, existing, onDone, onCancel }) {
+function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
   const [rec, setRec] = useState(existing || {
     record_type: 'exposure_course',
     course_type: '',
@@ -90,7 +90,9 @@ function RecordForm({ client, existing, onDone, onCancel }) {
             <Select value={rec.record_type} onValueChange={v => update('record_type', v)}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(RECORD_TYPE_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                {Object.entries(RECORD_TYPE_LABELS)
+                  .filter(([v]) => !(isDEA && v === 'paid_external_placement'))
+                  .map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -175,7 +177,7 @@ function RecordForm({ client, existing, onDone, onCancel }) {
   );
 }
 
-export default function ExposuresSupportsStep({ client, onSave }) {
+export default function ExposuresSupportsStep({ client, onSave, isDEA }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -223,7 +225,7 @@ export default function ExposuresSupportsStep({ client, onSave }) {
       </div>
 
       {showForm && !editingRecord && (
-        <RecordForm client={client} onDone={handleDone} onCancel={() => setShowForm(false)} />
+        <RecordForm client={client} isDEA={isDEA} onDone={handleDone} onCancel={() => setShowForm(false)} />
       )}
 
       {loading ? (
@@ -238,7 +240,7 @@ export default function ExposuresSupportsStep({ client, onSave }) {
         <div className="space-y-2">
           {records.map(rec => (
             editingRecord?.id === rec.id
-              ? <RecordForm key={rec.id} client={client} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
+              ? <RecordForm key={rec.id} client={client} isDEA={isDEA} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
               : (
                 <Card key={rec.id}>
                   <CardContent className="p-3">
