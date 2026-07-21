@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { label: "Public Portal",     path: "/pathways-intake", external: true },
 ];
 
-function AppNav() {
+function AppNav({ isSupervisorOnly = false }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { logoUrl } = useOrgSettings();
@@ -37,6 +37,10 @@ function AppNav() {
 
   // Hide nav on client profile pages
   if (location.pathname.startsWith("/pathways/client/")) return null;
+
+  const visibleNavItems = isSupervisorOnly
+    ? NAV_ITEMS.filter(item => item.path === '/pathways/supervisor')
+    : NAV_ITEMS;
 
   const NavButton = ({ item }) => {
     if (item.external) {
@@ -93,7 +97,7 @@ function AppNav() {
 
         {/* Desktop Nav Items */}
         <div className="hidden md:flex items-center gap-0.5 flex-1 mx-4">
-          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+          {visibleNavItems.map((item) => <NavButton key={item.path} item={item} />)}
         </div>
 
         {/* User Name */}
@@ -120,7 +124,7 @@ function AppNav() {
             <ChevronLeft className="w-3.5 h-3.5" /> {user ? `${user.full_name?.split(' ')[0]}'s Home` : 'Home'}
           </Link>
           <div className="border-t border-white/10 my-1" />
-          {NAV_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+          {visibleNavItems.map((item) => <NavButton key={item.path} item={item} />)}
           {user && (
             <p className="text-xs text-white/40 mt-2 pt-2 border-t border-white/10">
               {user.full_name || user.email}
@@ -136,15 +140,25 @@ import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
 import ModuleGate from "@/components/shared/ModuleGate";
 
 export default function PathwaysLayout() {
+  const location = useLocation();
+
   return (
-    <ModuleGate moduleId="pathways">
-      <div className="min-h-screen bg-slate-50">
-        <AppNav />
-        <main className="w-full">
-          <Outlet />
-        </main>
-        <EAFloatingWidget />
-      </div>
+    <ModuleGate moduleId="pathways" allowAnyOf={['pathways_supervisor']}>
+      {({ isSupervisorOnly }) => {
+        // Supervisor-only users can only access the Internal Supervisor Portal
+        if (isSupervisorOnly && location.pathname !== '/pathways/supervisor') {
+          return <Navigate to="/pathways/supervisor" replace />;
+        }
+        return (
+          <div className="min-h-screen bg-slate-50">
+            <AppNav isSupervisorOnly={isSupervisorOnly} />
+            <main className="w-full">
+              <Outlet />
+            </main>
+            {!isSupervisorOnly && <EAFloatingWidget />}
+          </div>
+        );
+      }}
     </ModuleGate>
   );
 }

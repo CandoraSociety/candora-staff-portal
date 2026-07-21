@@ -37,6 +37,7 @@ export const LOCKED_TIER_IDS = ['executive_director'];
 export const PORTAL_MODULES = [
   { id: 'nexushr',          label: 'NexusHR',                        route: '/nexushr' },
   { id: 'pathways',         label: 'Pathways Case Mgmt',              route: '/pathways' },
+  { id: 'pathways_supervisor', label: 'Pathways — Supervisor Only',   route: '/pathways/supervisor' },
   { id: 'grants',           label: 'Grants & Proposals',              route: '/grants' },
   { id: 'volunteermgr',     label: 'Volunteer Manager',              route: '/volunteermgr' },
   { id: 'eventsmgr',        label: 'Events / Programs / Projects',   route: '/eventsmgr' },

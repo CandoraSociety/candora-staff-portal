@@ -10,7 +10,7 @@ import { ShieldOff } from 'lucide-react';
  * Wraps a portal layout — if the user doesn't have access to the given moduleId,
  * shows a denial screen and redirects back to the dashboard after 3s.
  */
-export default function ModuleGate({ moduleId, children }) {
+export default function ModuleGate({ moduleId, allowAnyOf = [], children }) {
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState(null); // null = loading
   const navigate = useNavigate();
@@ -51,14 +51,21 @@ export default function ModuleGate({ moduleId, children }) {
   if (permissions === null || orgSettingsLoading || (user?.email && employeeLoading)) return null;
 
   // Admin always passes
-  if (access.isAdmin) return children;
+  if (access.isAdmin) {
+    return typeof children === 'function' ? children({ isSupervisorOnly: false }) : children;
+  }
 
-  // Check module access
-  if (!access.canAccessModule(moduleId)) {
+  // Check module access — main module OR any alternate (e.g. pathways_supervisor)
+  const hasMainAccess = access.canAccessModule(moduleId);
+  const hasAlternateAccess = allowAnyOf.some(id => access.canAccessModule(id));
+
+  if (!hasMainAccess && !hasAlternateAccess) {
     return <AccessDeniedScreen onGoHome={() => navigate('/')} />;
   }
 
-  return children;
+  // If user only has alternate access (not main), they're in a restricted mode
+  const isSupervisorOnly = !hasMainAccess && hasAlternateAccess;
+  return typeof children === 'function' ? children({ isSupervisorOnly }) : children;
 }
 
 function AccessDeniedScreen({ onGoHome }) {
