@@ -31,6 +31,11 @@ export default function PathwaysInternalTraining() {
     queryKey: ['pathways-clients-all'],
     queryFn: () => base44.entities.Client.list(),
   });
+
+  const { data: staff = [] } = useQuery({
+    queryKey: ['pathways-staff-active'],
+    queryFn: () => base44.entities.PathwaysStaff.filter({ is_active: true }, 'name'),
+  });
   
   const createTrainingMutation = useMutation({
     mutationFn: async (data) => await base44.entities.InternalTraining.create(data),
@@ -68,8 +73,8 @@ export default function PathwaysInternalTraining() {
               <Label>Assigned Worker</Label>
               <select id="tworker" className="w-full border rounded-md p-2">
                 <option value="">Select worker</option>
-                {['priscilla@candorasociety.com', 'lola@candorasociety.com', 'john@candorasociety.com', 'Dawn.williston@candorasociety.com', 'olena@candorasociety.com'].map(w => (
-                  <option key={w} value={w}>{w}</option>
+                {staff.map(s => (
+                  <option key={s.id} value={s.email}>{s.name}</option>
                 ))}
               </select>
             </div>

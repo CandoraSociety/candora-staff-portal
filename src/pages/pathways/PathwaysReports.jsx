@@ -16,6 +16,7 @@ import { format, startOfMonth, endOfMonth, subMonths, startOfYear, differenceInM
 import ReportSummary from "@/components/reports/ReportSummary";
 import StaffMonthlyReports from "@/components/reports/StaffMonthlyReports";
 import DataReportsSidebar from "@/components/reports/DataReportsSidebar";
+import QuickviewStats from "@/components/pathways/QuickviewStats";
 import { DEMOGRAPHIC_FILTERS, getDateRange, REPORT_SECTIONS } from "@/components/reports/DataReportsSidebar";
 
 const SERVICE_STREAMS = {
@@ -297,6 +298,7 @@ export default function PathwaysReports() {
           <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
           <TabsTrigger value="data">Data Reports</TabsTrigger>
           <TabsTrigger value="staff">Staff Monthly Reports</TabsTrigger>
+          <TabsTrigger value="quickview">Quickview Program Stats</TabsTrigger>
         </TabsList>
 
         {/* TAB 1: OUTCOMES */}
@@ -625,6 +627,11 @@ export default function PathwaysReports() {
         {/* TAB 3: STAFF MONTHLY REPORTS */}
         <TabsContent value="staff">
           <StaffMonthlyReports />
+        </TabsContent>
+
+        {/* TAB 4: QUICKVIEW PROGRAM STATS */}
+        <TabsContent value="quickview">
+          <QuickviewStats />
         </TabsContent>
       </Tabs>
     </div>

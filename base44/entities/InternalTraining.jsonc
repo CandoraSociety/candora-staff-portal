@@ -24,6 +24,14 @@
     "assigned_worker_name": {
       "type": "string"
     },
+    "supervisor_email": {
+      "type": "string",
+      "description": "Email of the internal training supervisor overseeing this placement"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Name of the internal training supervisor overseeing this placement"
+    },
     "referral_date": {
       "type": "string",
       "format": "date"
