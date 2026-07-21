@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X, Pencil, CheckCircle2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { format } from 'date-fns';
 
 const SUPPORT_TYPES = [
   'PPE (Personal Protective Equipment)',
@@ -47,7 +48,8 @@ function SupportForm({ client, existing, onDone, onCancel }) {
     description: '',
     amount: '',
     tax: '',
-    date: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    billing_month: format(new Date(), 'yyyy-MM'),
     vendor: '',
     reimbursed: false,
     reimbursement_date: '',
@@ -57,7 +59,13 @@ function SupportForm({ client, existing, onDone, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [receiptUrls, setReceiptUrls] = useState(existing?.receipt_urls || []);
 
-  const update = (f, v) => setRec(p => ({ ...p, [f]: v }));
+  const update = (f, v) => setRec(p => {
+    const next = { ...p, [f]: v };
+    if (f === 'date') {
+      try { next.billing_month = format(new Date(v), 'yyyy-MM'); } catch {}
+    }
+    return next;
+  });
   const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
 
   const handleUpload = async (files) => {
@@ -83,6 +91,7 @@ function SupportForm({ client, existing, onDone, onCancel }) {
         tax: parseFloat(rec.tax) || 0,
         total,
         date: rec.date,
+        billing_month: rec.billing_month || (rec.date ? format(new Date(rec.date), 'yyyy-MM') : format(new Date(), 'yyyy-MM')),
         vendor: rec.vendor,
         reimbursed: rec.reimbursed,
         reimbursement_date: rec.reimbursed ? rec.reimbursement_date : '',
@@ -125,6 +134,17 @@ function SupportForm({ client, existing, onDone, onCancel }) {
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Billing Month</Label>
+            <Input type="month" value={rec.billing_month} onChange={e => update('billing_month', e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Vendor</Label>
+            <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
+          </div>
+        </div>
+
         {rec.support_type === 'Other' && (
           <div>
             <Label className="text-xs">Specify Other</Label>
@@ -152,21 +172,15 @@ function SupportForm({ client, existing, onDone, onCancel }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 items-end">
-          <div>
-            <Label className="text-xs">Vendor</Label>
-            <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
-          </div>
-          <div className="flex items-center gap-2 pt-5">
-            <input
-              type="checkbox"
-              id="reimbursed"
-              checked={rec.reimbursed}
-              onChange={e => update('reimbursed', e.target.checked)}
-              className="accent-primary w-4 h-4"
-            />
-            <Label htmlFor="reimbursed" className="text-xs cursor-pointer">Reimbursed</Label>
-          </div>
+        <div className="flex items-center gap-2 pt-1">
+          <input
+            type="checkbox"
+            id="reimbursed"
+            checked={rec.reimbursed}
+            onChange={e => update('reimbursed', e.target.checked)}
+            className="accent-primary w-4 h-4"
+          />
+          <Label htmlFor="reimbursed" className="text-xs cursor-pointer">Reimbursed</Label>
         </div>
 
         {rec.reimbursed && (

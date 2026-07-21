@@ -7,10 +7,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, Calendar } from 'lucide-react';
+import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
+
+function deriveBillingMonth(dateStr) {
+  if (!dateStr) return format(new Date(), 'yyyy-MM');
+  try { return format(new Date(dateStr), 'yyyy-MM'); } catch { return format(new Date(), 'yyyy-MM'); }
+}
 
 const STATUS_LABELS = {
   pending: 'Pending',
@@ -58,11 +63,41 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         assigned_worker: client.assigned_worker,
         assigned_worker_name: client.assigned_worker_name,
       };
+      let placementId;
       if (existing) {
         await base44.entities.WorkExposurePlacement.update(existing.id, data);
+        placementId = existing.id;
       } else {
-        await base44.entities.WorkExposurePlacement.create(data);
+        const created = await base44.entities.WorkExposurePlacement.create(data);
+        placementId = created.id;
       }
+
+      // Sync linked FinancialRecord for payables tracking
+      const linkedRecords = await base44.entities.FinancialRecord.filter({
+        client_id: client.id,
+        linked_placement_id: placementId,
+      });
+      const frData = {
+        record_type: 'paid_external_placement',
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        assigned_worker: client.assigned_worker,
+        vendor: rec.business_name,
+        description: rec.position_type ? `Work Exposure: ${rec.position_type}` : 'Work Exposure Placement',
+        date: rec.start_date || '',
+        billing_month: deriveBillingMonth(rec.start_date),
+        completion_status: rec.status === 'completed' ? 'completed' : rec.status === 'in_progress' ? 'in_progress' : 'not_started',
+        linked_placement_id: placementId,
+        notes: rec.notes || '',
+      };
+      if (linkedRecords.length > 0) {
+        // Update existing linked record (preserve amount/tax/total/receipts)
+        await base44.entities.FinancialRecord.update(linkedRecords[0].id, frData);
+      } else {
+        // Create new linked record with zero amount
+        await base44.entities.FinancialRecord.create({ ...frData, amount: 0, tax: 0, total: 0 });
+      }
+
       toast.success(existing ? 'Placement updated' : 'Work exposure placement added');
       onDone();
     } catch { toast.error('Failed to save'); }
@@ -196,6 +231,16 @@ export default function WorkExposurePlacementTab({ client, onSave }) {
     if (!confirm(`Delete placement at ${placement.business_name}?`)) return;
     try {
       await base44.entities.WorkExposurePlacement.delete(placement.id);
+      // Also delete the linked FinancialRecord (if amount is still 0)
+      const linked = await base44.entities.FinancialRecord.filter({
+        client_id: client.id,
+        linked_placement_id: placement.id,
+      });
+      for (const fr of linked) {
+        if ((fr.total || 0) === 0) {
+          await base44.entities.FinancialRecord.delete(fr.id);
+        }
+      }
       toast.success('Placement deleted');
       fetchPlacements();
     } catch { toast.error('Failed to delete'); }

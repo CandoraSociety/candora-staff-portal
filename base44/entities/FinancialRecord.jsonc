@@ -94,7 +94,17 @@
       "type": "string"
     },
     "billing_month": {
-      "type": "string"
+      "type": "string",
+      "description": "YYYY-MM format \u2014 the month this payable will be declared on the invoice"
+    },
+    "linked_placement_id": {
+      "type": "string",
+      "description": "If this record was auto-created from a WorkExposurePlacement, the placement ID"
+    },
+    "invoiced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this payable has already been included in a submitted invoice"
     }
   },
   "required": [

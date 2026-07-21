@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { format } from 'date-fns';
 
 const RECORD_TYPE_LABELS = {
   exposure_course:         'Exposure Course',
@@ -30,7 +31,8 @@ function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
     description: '',
     amount: '',
     tax: '',
-    date: '',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    billing_month: format(new Date(), 'yyyy-MM'),
     vendor: '',
     registration_status: 'not_registered',
     completion_status: 'not_started',
@@ -40,7 +42,13 @@ function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [receiptUrls, setReceiptUrls] = useState(existing?.receipt_urls || []);
 
-  const update = (f, v) => setRec(p => ({ ...p, [f]: v }));
+  const update = (f, v) => setRec(p => {
+    const next = { ...p, [f]: v };
+    if (f === 'date') {
+      try { next.billing_month = format(new Date(v), 'yyyy-MM'); } catch {}
+    }
+    return next;
+  });
   const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
 
   const handleUpload = async (files) => {
@@ -62,6 +70,7 @@ function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
         amount: parseFloat(rec.amount) || 0,
         tax: parseFloat(rec.tax) || 0,
         total,
+        billing_month: rec.billing_month || (rec.date ? format(new Date(rec.date), 'yyyy-MM') : format(new Date(), 'yyyy-MM')),
         receipt_urls: receiptUrls,
         client_id: client.id,
         client_name: `${client.first_name} ${client.last_name}`,
@@ -101,6 +110,17 @@ function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
             <Input type="date" value={rec.date} onChange={e => update('date', e.target.value)} className="mt-1" />
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Billing Month</Label>
+            <Input type="month" value={rec.billing_month} onChange={e => update('billing_month', e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Vendor</Label>
+            <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
+          </div>
+        </div>
         <div>
           <Label className="text-xs">Description</Label>
           <Input value={rec.description} onChange={e => update('description', e.target.value)} className="mt-1" />
@@ -118,10 +138,6 @@ function RecordForm({ client, isDEA, existing, onDone, onCancel }) {
             <Label className="text-xs">Total ($)</Label>
             <Input value={total.toFixed(2)} disabled className="mt-1" />
           </div>
-        </div>
-        <div>
-          <Label className="text-xs">Vendor</Label>
-          <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

@@ -12,6 +12,7 @@ import InvoicePackages from '@/components/billing/InvoicePackages';
 import CRT from '@/components/billing/CRT';
 import Invoices from '@/components/billing/Invoices';
 import SupportingDocuments from '@/components/billing/SupportingDocuments';
+import PayablesTab from '@/components/billing/PayablesTab';
 
 export default function PathwaysBilling() {
   const queryClient = useQueryClient();
@@ -88,8 +89,9 @@ export default function PathwaysBilling() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="packages">Invoice Packages</TabsTrigger>
+          <TabsTrigger value="payables">Payables</TabsTrigger>
           <TabsTrigger value="crt">CRT</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="supporting-docs">Supporting Documents</TabsTrigger>
@@ -102,6 +104,13 @@ export default function PathwaysBilling() {
             invoices={invoices}
             onCreatePackage={handleCreatePackage}
             isLoading={packagesLoading}
+          />
+        </TabsContent>
+
+        <TabsContent value="payables" className="space-y-4">
+          <PayablesTab
+            financialRecords={financialRecords}
+            clients={clients}
           />
         </TabsContent>
 
