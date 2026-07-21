@@ -82,7 +82,9 @@ export default function PathwaysWorkerDashboard() {
       const isDawnInit = myEmail === "dawn.williston@candorasociety.com";
       const matchesMe = (c) =>
         (c.assigned_worker && c.assigned_worker.toLowerCase() === myEmail) ||
-        (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName);
+        (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName) ||
+        (c.assigned_service_navigator && c.assigned_service_navigator.toLowerCase() === myEmail) ||
+        (c.assigned_service_navigator_name && c.assigned_service_navigator_name.toLowerCase() === myName);
       const myClients = isDawnInit
         ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
         : allClients.filter(matchesMe);

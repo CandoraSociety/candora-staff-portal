@@ -143,10 +143,19 @@
     },
     "assigned_worker": {
       "type": "string",
-      "description": "Email of assigned worker"
+      "description": "Email of assigned career counsellor"
     },
     "assigned_worker_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of assigned career counsellor"
+    },
+    "assigned_service_navigator": {
+      "type": "string",
+      "description": "Email of assigned service navigator for barrier removal"
+    },
+    "assigned_service_navigator_name": {
+      "type": "string",
+      "description": "Name of assigned service navigator for barrier removal"
     },
     "status": {
       "type": "string",

@@ -9,6 +9,7 @@ import IntakeForm from '@/components/intake/IntakeForm';
 import BarrierIdentificationTool from '@/components/wizard/BarrierIdentificationTool';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function PathwaysAssessment() {
   const { id } = useParams();
@@ -17,13 +18,24 @@ export default function PathwaysAssessment() {
   const [loading, setLoading] = useState(true);
   const [assessmentNotes, setAssessmentNotes] = useState('');
   const [completing, setCompleting] = useState(false);
+  const [navigatorStaff, setNavigatorStaff] = useState([]);
+  const [needsBarrierRemoval, setNeedsBarrierRemoval] = useState('');
+  const [selectedNavigator, setSelectedNavigator] = useState('');
 
   useEffect(() => {
-    base44.entities.Client.get(id).then(c => {
+    const load = async () => {
+      const [c, staff] = await Promise.all([
+        base44.entities.Client.get(id),
+        base44.entities.PathwaysStaff.filter({ role: 'service_navigator', is_active: true }, 'name'),
+      ]);
       setClient(c);
       setAssessmentNotes(c.intake_notes || '');
+      setNavigatorStaff(staff);
+      setNeedsBarrierRemoval(c.assigned_service_navigator ? 'yes' : '');
+      setSelectedNavigator(staff.find(s => s.email === c.assigned_service_navigator)?.id || '');
       setLoading(false);
-    }).catch(() => setLoading(false));
+    };
+    load().catch(() => setLoading(false));
   }, [id]);
 
   const handleSave = async (updates) => {
@@ -38,11 +50,21 @@ export default function PathwaysAssessment() {
   };
 
   const handleCompleteAssessment = async () => {
+    if (needsBarrierRemoval === 'yes' && !selectedNavigator) {
+      toast.error('Please select a service navigator for barrier removal');
+      return;
+    }
     setCompleting(true);
     try {
+      const navigator = needsBarrierRemoval === 'yes'
+        ? navigatorStaff.find(s => s.id === selectedNavigator)
+        : null;
       await base44.entities.Client.update(id, {
         status: 'pending',
         intake_notes: assessmentNotes,
+        service_navigation_supports: needsBarrierRemoval === 'yes',
+        assigned_service_navigator: navigator?.email || null,
+        assigned_service_navigator_name: navigator?.name || null,
       });
       toast.success('Assessment completed — client is ready for assignment');
       navigate('/pathways/intake');
@@ -138,6 +160,38 @@ export default function PathwaysAssessment() {
                 <Button variant="outline" size="sm" className="mt-2" onClick={handleSaveNotes}>
                   Save Notes
                 </Button>
+              </div>
+
+              {/* Barrier Removal Determination */}
+              <div className="border-t border-slate-200 pt-4 space-y-3">
+                <div>
+                  <Label className="mb-1 block text-sm font-medium text-slate-700">
+                    Does this client need barriers addressed by a service navigator?
+                  </Label>
+                  <Select value={needsBarrierRemoval} onValueChange={v => { setNeedsBarrierRemoval(v); if (v !== 'yes') setSelectedNavigator(''); }}>
+                    <SelectTrigger className="w-full max-w-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="yes">Yes — assign to a service navigator</SelectItem>
+                      <SelectItem value="no">No — barriers do not require service navigator support</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {needsBarrierRemoval === 'yes' && (
+                  <div>
+                    <Label className="mb-1 block text-sm font-medium text-slate-700">Assign to Service Navigator</Label>
+                    <Select value={selectedNavigator} onValueChange={setSelectedNavigator}>
+                      <SelectTrigger><SelectValue placeholder="Select service navigator..." /></SelectTrigger>
+                      <SelectContent>
+                        {navigatorStaff.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {navigatorStaff.length === 0 && (
+                      <p className="text-sm text-amber-600 mt-1">No service navigators found. Add staff with role "Service Navigator" in the Master List.</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {assessmentDone ? (
