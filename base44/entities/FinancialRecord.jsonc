@@ -19,6 +19,10 @@
         "employment_supports"
       ]
     },
+    "support_type": {
+      "type": "string",
+      "description": "Type of employment support (e.g. PPE, Bus Pass, Work Clothes)"
+    },
     "course_type": {
       "type": "string"
     },
@@ -61,6 +65,15 @@
         "completed",
         "did_not_complete"
       ]
+    },
+    "reimbursed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this expense has been reimbursed"
+    },
+    "reimbursement_date": {
+      "type": "string",
+      "format": "date"
     },
     "receipt_urls": {
       "type": "array",

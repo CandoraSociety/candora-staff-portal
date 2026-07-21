@@ -1,0 +1,61 @@
+{
+  "name": "WorkExposurePlacement",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client ID"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Name of the business/employer"
+    },
+    "location": {
+      "type": "string",
+      "description": "Business address or location"
+    },
+    "position_type": {
+      "type": "string",
+      "description": "Type of position (e.g. Warehouse, Retail, Office)"
+    },
+    "expected_hours_per_week": {
+      "type": "number",
+      "description": "Expected hours per week"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "anticipated_completion_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Email of assigned career counsellor"
+    },
+    "assigned_worker_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "business_name"
+  ]
+}

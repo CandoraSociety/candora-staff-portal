@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus } from 'lucide-react';
+import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSearchPanel from './EmploymentSearchPanel';
+import EmploymentSupportsStep from './EmploymentSupportsStep';
+import WorkExposurePlacementTab from './WorkExposurePlacementTab';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
 import EDAStep from './EDAStep';
@@ -61,6 +63,9 @@ function getEDASubItems(client) {
     subItems.push({ key: 'exposures', label: 'Exposures & Supports', component: 'exposures' });
   }
 
+  // Work Exposure Placement — always shown as a highlighted sub-tab
+  subItems.push({ key: 'work_exposure_placement', label: 'Work Exposure Placement', component: 'work_exposure_placement', highlight: true });
+
   return subItems;
 }
 
@@ -68,6 +73,8 @@ function getStepStatus(key, client) {
   switch (key) {
     case 'employment_action_plan':
       return client?.action_plan_submitted ? 'done' : 'active';
+    case 'employment_supports':
+      return client?.employment_supports ? 'done' : 'active';
     case 'employment_search':
       return ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status) ? 'done' : 'active';
     case 'roadmap':
@@ -97,6 +104,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
 
   const steps = [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
+    { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(isComplete ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
@@ -126,6 +134,8 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
         case 'exposures':
           return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />;
+        case 'work_exposure_placement':
+          return <WorkExposurePlacementTab client={client} onSave={onSave} />;
         default:
           return null;
       }
@@ -134,6 +144,8 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     switch (key) {
       case 'employment_action_plan':
         return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} onClientUpdate={onClientUpdate} />;
+      case 'employment_supports':
+        return <EmploymentSupportsStep client={client} onSave={onSave} onComplete={goNext} />;
       case 'employment_search':
         return <EmploymentSearchPanel client={client} onSave={onSave} onClientUpdate={onClientUpdate} />;
       case 'followup_90day':
@@ -169,7 +181,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           {steps.map((step, idx) => {
             const status = getStepStatus(step.key, client);
             const isActive = activeStep === step.key || (step.key === 'employment_action_plan' && activeStep?.startsWith('eda:'));
-            const isLocked = !hasActionPlan && step.key !== 'employment_action_plan';
+            const isLocked = !hasActionPlan && step.key !== 'employment_action_plan' && step.key !== 'employment_supports';
             const isFollowup = step.key === 'followup_90day';
             const StepIcon = step.icon;
             const isActionPlan = step.key === 'employment_action_plan';
@@ -232,12 +244,15 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                         <button
                           key={sub.key}
                           onClick={() => setActiveStep(`eda:${sub.key}`)}
-                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5 ${
                             subActive
                               ? 'bg-primary/10 text-primary font-medium'
-                              : 'text-slate-600 hover:bg-slate-100'
+                              : sub.highlight
+                                ? 'bg-indigo-50 text-indigo-700 font-medium border border-indigo-200 hover:bg-indigo-100'
+                                : 'text-slate-600 hover:bg-slate-100'
                           }`}
                         >
+                          {sub.highlight && <Briefcase className="w-3 h-3 shrink-0" />}
                           {sub.label}
                         </button>
                       );
@@ -266,7 +281,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         </button>
         {mobileOpen && (
           <div className="border rounded-lg mt-1 bg-white shadow divide-y">
-            {steps.filter(s => hasActionPlan || s.key === 'employment_action_plan').map((step) => {
+            {steps.filter(s => hasActionPlan || s.key === 'employment_action_plan' || s.key === 'employment_supports').map((step) => {
               const status = getStepStatus(step.key, client);
               const subItems = step.key === 'employment_action_plan' ? edaSubItems : [];
               return (
@@ -281,10 +296,15 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                   {subItems.length > 0 && subItems.map(sub => (
                     <button
                       key={sub.key}
-                      className="w-full text-left px-8 py-1.5 text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-1"
+                      className={`w-full text-left px-8 py-1.5 text-xs hover:bg-slate-50 flex items-center gap-1 ${
+                        sub.highlight ? 'text-indigo-700 font-medium bg-indigo-50/50' : 'text-slate-600'
+                      }`}
                       onClick={() => { setActiveStep(`eda:${sub.key}`); setMobileOpen(false); }}
                     >
-                      <span className="w-1 h-1 rounded-full bg-slate-400" /> {sub.label}
+                      {sub.highlight
+                        ? <Briefcase className="w-3 h-3" />
+                        : <span className="w-1 h-1 rounded-full bg-slate-400" />}
+                      {sub.label}
                     </button>
                   ))}
                 </div>
