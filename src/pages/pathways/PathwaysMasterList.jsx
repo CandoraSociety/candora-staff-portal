@@ -9,6 +9,7 @@ import { clientRowColor } from "@/lib/clientRowColor";
 import TransitionClientsTab from "@/components/pathways/TransitionClientsTab";
 import TransitionClientDetailsModal from "@/components/pathways/TransitionClientDetailsModal";
 import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
+import PlacementListTab from "@/components/pathways/PlacementListTab";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -68,6 +69,7 @@ export default function PathwaysMasterList() {
   const [loading, setLoading] = useState(true);
   const [workers, setWorkers] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
+  const [placementSubTab, setPlacementSubTab] = useState("all");
   const [reassignClient, setReassignClient] = useState(null);
   const [staff, setStaff] = useState([]);
   const [reassigning, setReassigning] = useState(false);
@@ -127,6 +129,14 @@ export default function PathwaysMasterList() {
   const sourceList = activeTab === "active" ? activeClients : closedClients;
   const displayed = applyFiltersAndSort(sourceList, search, filters, sortKey);
 
+  const internalTrainingClients = activeClients.filter(c => c.internal_placement && c.internal_placement !== "none");
+  const workExposureClients = activeClients.filter(c => c.exposure_course || c.paid_external_placement);
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    setPlacementSubTab("all");
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -181,7 +191,7 @@ export default function PathwaysMasterList() {
       {/* Tab bar */}
       <div className="bg-white border-b border-slate-200 px-6 flex gap-1 pt-1">
         <button
-          onClick={() => setActiveTab("active")}
+          onClick={() => switchTab("active")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "active"
               ? "font-semibold"
@@ -199,7 +209,7 @@ export default function PathwaysMasterList() {
         </button>
 
         <button
-          onClick={() => setActiveTab("closed")}
+          onClick={() => switchTab("closed")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "closed"
               ? "border-red-500 text-red-700"
@@ -213,7 +223,7 @@ export default function PathwaysMasterList() {
         </button>
 
         <button
-          onClick={() => setActiveTab("transition")}
+          onClick={() => switchTab("transition")}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
             activeTab === "transition"
               ? "font-semibold"
@@ -235,8 +245,38 @@ export default function PathwaysMasterList() {
       <div className="px-6 py-4">
         {activeTab === "transition" ? (
           <TransitionClientsTab />
+        ) : activeTab === "active" && placementSubTab !== "all" ? (
+          <PlacementListTab clients={activeClients} type={placementSubTab} />
         ) : (
           <>
+            {activeTab === "active" && (
+              <div className="flex gap-1 mb-4 border-b border-slate-200">
+                {[
+                  { id: "all", label: "All Active", count: activeClients.length },
+                  { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
+                  { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
+                ].map(sub => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setPlacementSubTab(sub.id)}
+                    className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
+                      placementSubTab === sub.id
+                        ? "font-semibold"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                    style={placementSubTab === sub.id ? { color: "hsl(231,64%,20%)", borderColor: "#2b2de8" } : {}}
+                  >
+                    {sub.label}
+                    <span
+                      className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
+                    >
+                      {sub.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             <ClientListControls
               search={search} onSearch={setSearch}
               filters={filters} onFilters={setFilters}
