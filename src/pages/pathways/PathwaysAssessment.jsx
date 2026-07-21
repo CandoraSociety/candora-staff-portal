@@ -139,14 +139,18 @@ export default function PathwaysAssessment() {
           </TabsContent>
 
           <TabsContent value="assessment" className="space-y-6">
-            <BarrierIdentificationTool client={client} onSave={handleSave} />
+            <BarrierIdentificationTool 
+              client={client} 
+              onSave={handleSave} 
+              onComplete={() => document.getElementById('era-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            />
 
-            {/* Eligibility Determination */}
-            <div className="bg-white rounded-lg border border-slate-200 p-6 space-y-4">
+            {/* ERA — Employment Readiness Assessment */}
+            <div id="era-section" className="bg-white rounded-lg border border-slate-200 p-6 space-y-4 scroll-mt-20">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Eligibility Determination</h2>
+                <h2 className="text-lg font-bold text-slate-800">ERA — Employment Readiness Assessment</h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  After completing the Barrier Identification Tool, record your assessment notes and eligibility determination below.
+                  Now that the BIT is complete, record your employment readiness assessment notes and eligibility determination below.
                 </p>
               </div>
               <div>
