@@ -1,41 +1,133 @@
 import { useState } from 'react';
 import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck } from 'lucide-react';
-import BarrierIdentificationTool from './BarrierIdentificationTool';
-import BarrierActionPlan from './BarrierActionPlan';
 import EmploymentActionPlan from './EmploymentActionPlan';
 import InternalPlacementStep from './InternalPlacementStep';
 import ExposuresSupportsStep from './ExposuresSupportsStep';
+import EDAStep from './EDAStep';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSearchPanel from './EmploymentSearchPanel';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
 
-const BASE_STEPS = [
-  { key: 'bit',                    label: 'Barrier Identification',      short: 'BIT',              icon: null },
-  { key: 'barrier_action_plan',    label: 'Barrier Resolution Plan',     short: 'Barrier Resolution', icon: null },
-  { key: 'employment_action_plan', label: 'Employment Action Plan',      short: 'Emp. Action Plan', icon: null },
-  { key: 'internal_placement',     label: 'Placement',                   short: 'Placement',        icon: null, pathwaysOnly: true },
-  { key: 'exposures',              label: 'Exposure Courses & Supports', short: 'Supports',         icon: null },
-  { key: 'employment_search',      label: 'Employment Search',           short: 'Employment',       icon: Briefcase },
-  { key: 'roadmap',                label: 'Program Progress',            short: 'Program Progress', icon: Map },
-];
+const ITEM_LABELS = {
+  job_search_workshop: 'Job Search Workshop',
+  resume_writing_workshop: 'Resume Writing Workshop',
+  interview_skills_workshop: 'Interview Skills Workshop',
+  workplace_readiness_workshop: 'Workplace Readiness Workshop',
+  financial_literacy_workshop: 'Financial Literacy Workshop',
+  digital_literacy_workshop: 'Digital Literacy Workshop',
+  empoweru: 'EmpowerU',
+  ell_classes: 'ELL Classes',
+  skills_assessment: 'Skills Assessment',
+  internal_placement: 'Internal Placement',
+  exposure_course: 'Exposure Course',
+  paid_external_placement: 'Paid External Placement',
+  employment_supports: 'Employment Supports',
+  job_applications: 'Job Applications',
+  networking: 'Networking',
+  barrier_support: 'Barrier Support',
+  other: 'Other',
+};
+
+const EXPOSURE_KEYS = ['exposure_course', 'paid_external_placement', 'employment_supports'];
 
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
 
+function truncate(label, max = 22) {
+  return label.length > max ? label.substring(0, max - 1) + '…' : label;
+}
+
+/**
+ * Dynamically generates EDA (Employment Development Activity) steps from the
+ * submitted action plan items. Only shown after the action plan is created.
+ *
+ * - DEA: each dea_activities entry becomes a generic EDA step.
+ * - Pathways: each sdp_item becomes a step, with specialized routing for
+ *   internal_placement (→ InternalPlacementStep) and exposure/support items
+ *   (→ ExposuresSupportsStep, grouped into one step).
+ */
+function getEDASteps(client) {
+  if (!client?.action_plan_submitted) return [];
+
+  const isDEA = client?.service_type === 'direct_to_employment';
+
+  if (isDEA) {
+    return (client?.dea_activities || [])
+      .filter(a => a.type)
+      .map(a => ({
+        key: `eda_dea_${a.id}`,
+        label: a.type,
+        short: truncate(a.type),
+        icon: null,
+        edaType: 'dea',
+        edaKey: a.id,
+      }));
+  }
+
+  // Pathways
+  const steps = [];
+  const items = client?.sdp_items || [];
+  const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
+
+  for (const key of items) {
+    if (EXPOSURE_KEYS.includes(key)) continue; // handled as a grouped step below
+
+    if (key === 'internal_placement') {
+      steps.push({
+        key: 'eda_internal_placement',
+        label: 'Internal Placement',
+        short: 'Placement',
+        icon: null,
+        edaType: 'specialized',
+        edaComponent: 'internal_placement',
+      });
+    } else if (key === 'other') {
+      const label = client?.sdp_other_desc || 'Other';
+      steps.push({
+        key: 'eda_other',
+        label,
+        short: truncate(label),
+        icon: null,
+        edaType: 'generic',
+        edaKey: key,
+      });
+    } else {
+      const label = ITEM_LABELS[key] || key;
+      steps.push({
+        key: `eda_${key}`,
+        label,
+        short: truncate(label),
+        icon: null,
+        edaType: 'generic',
+        edaKey: key,
+      });
+    }
+  }
+
+  if (hasExposure) {
+    steps.push({
+      key: 'eda_exposures',
+      label: 'Exposures & Supports',
+      short: 'Exposures',
+      icon: null,
+      edaType: 'specialized',
+      edaComponent: 'exposures',
+    });
+  }
+
+  return steps;
+}
+
 function getStepStatus(key, client) {
   switch (key) {
-    case 'bit':
-      return client?.bit_completed ? 'done' : 'active';
-    case 'barrier_action_plan':
-      if (!client?.barriers_addressed) return 'skipped';
-      return client?.barrier_action_plan_completed ? 'done' : (client?.bit_completed ? 'active' : 'pending');
     case 'employment_action_plan':
-      return client?.action_plan_submitted ? 'done' : (client?.bit_completed ? 'active' : 'pending');
-    case 'internal_placement':
+      return client?.action_plan_submitted ? 'done' : 'active';
+    case 'eda_internal_placement':
       return client?.placement_request_sent ? 'done' : 'active';
-    case 'exposures':
-      return (client?.exposure_course || client?.paid_external_placement || client?.employment_supports || client?.external_employer) ? 'done' : 'active';
+    case 'eda_exposures':
+      return (client?.exposure_course || client?.paid_external_placement || client?.employment_supports || client?.external_employer)
+        ? 'done' : 'active';
     case 'employment_search':
       return ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status) ? 'done' : 'active';
     case 'roadmap':
@@ -46,6 +138,17 @@ function getStepStatus(key, client) {
     case 'followup_90day':
       return client?.followup_90day_status ? 'done' : 'active';
     default:
+      // DEA EDA steps
+      if (key.startsWith('eda_dea_')) {
+        const actId = key.replace('eda_dea_', '');
+        const act = client?.dea_activities?.find(a => a.id === actId);
+        return act?.completed_date ? 'done' : 'active';
+      }
+      // Pathways generic EDA steps
+      if (key.startsWith('eda_')) {
+        const edaKey = key.replace('eda_', '');
+        return client?.sdp_item_details?.[edaKey]?.date ? 'done' : 'active';
+      }
       return 'pending';
   }
 }
@@ -54,7 +157,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const [activeStep, setActiveStep] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isPathways = client?.service_type === 'pathways';
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
 
@@ -62,15 +164,14 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     return <CasualNotesPanel client={client} onSave={onSave} />;
   }
 
+  const edaSteps = getEDASteps(client);
   const steps = [
-    ...BASE_STEPS.filter(s => !s.pathwaysOnly || isPathways),
-    // Insert 90-day step above roadmap/progress when program is complete
+    { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
+    ...edaSteps,
+    { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(isComplete ? [FOLLOWUP_STEP] : []),
-  ].sort((a, b) => {
-    // Keep insertion order: everything up to roadmap, then followup_90day just before roadmap
-    const ORDER = [...BASE_STEPS.map(s => s.key).filter(k => k !== 'roadmap'), 'followup_90day', 'roadmap'];
-    return ORDER.indexOf(a.key) - ORDER.indexOf(b.key);
-  });
+    { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
+  ];
 
   const renderStepContent = (key) => {
     const goNext = () => {
@@ -79,15 +180,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       else setActiveStep(null);
     };
     switch (key) {
-      case 'bit':
-        return <BarrierIdentificationTool client={client} onSave={onSave} onComplete={goNext} />;
-      case 'barrier_action_plan':
-        return <BarrierActionPlan client={client} onSave={onSave} onComplete={goNext} />;
       case 'employment_action_plan':
         return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} />;
-      case 'internal_placement':
+      case 'eda_internal_placement':
         return <InternalPlacementStep client={client} onSave={onSave} onComplete={goNext} />;
-      case 'exposures':
+      case 'eda_exposures':
         return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={client?.service_type === 'direct_to_employment'} />;
       case 'employment_search':
         return <EmploymentSearchPanel client={client} onSave={onSave} onClientUpdate={onClientUpdate} />;
@@ -104,6 +201,15 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           />
         );
       default:
+        if (key.startsWith('eda_')) {
+          const step = steps.find(s => s.key === key);
+          if (step?.edaType === 'generic') {
+            return <EDAStep client={client} edaKey={step.edaKey} edaLabel={step.label} onSave={onSave} onComplete={goNext} />;
+          }
+          if (step?.edaType === 'dea') {
+            return <EDAStep client={client} edaKey={`dea_${step.edaKey}`} edaLabel={step.label} onSave={onSave} onComplete={goNext} />;
+          }
+        }
         return null;
     }
   };
@@ -125,9 +231,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
             const isSkipped = status === 'skipped';
             const StepIcon = step.icon;
 
-            // Special: followup_90day gets a distinct look
             const isFollowup = step.key === 'followup_90day';
-            const isRoadmap = step.key === 'roadmap';
 
             const circleBase = 'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0';
             const circleClass = isActive
