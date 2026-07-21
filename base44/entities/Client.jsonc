@@ -114,8 +114,7 @@
       "type": "string",
       "enum": [
         "yes",
-        "no_has_license",
-        "no_no_license"
+        "no"
       ]
     },
     "referral_source": {
@@ -513,11 +512,10 @@
     "drivers_license_status": {
       "type": "string",
       "enum": [
-        "yes_no_vehicle",
-        "yes_with_vehicle",
+        "yes",
         "no"
       ],
-      "description": "Driver's license and vehicle access status"
+      "description": "Whether the client has a driver's license"
     },
     "has_alternate_id": {
       "type": "string",

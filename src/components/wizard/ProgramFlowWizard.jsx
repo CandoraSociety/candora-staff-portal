@@ -1,133 +1,19 @@
 import { useState } from 'react';
-import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck } from 'lucide-react';
+import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
-import InternalPlacementStep from './InternalPlacementStep';
-import ExposuresSupportsStep from './ExposuresSupportsStep';
-import EDAStep from './EDAStep';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSearchPanel from './EmploymentSearchPanel';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
 
-const ITEM_LABELS = {
-  job_search_workshop: 'Job Search Workshop',
-  resume_writing_workshop: 'Resume Writing Workshop',
-  interview_skills_workshop: 'Interview Skills Workshop',
-  workplace_readiness_workshop: 'Workplace Readiness Workshop',
-  financial_literacy_workshop: 'Financial Literacy Workshop',
-  digital_literacy_workshop: 'Digital Literacy Workshop',
-  empoweru: 'EmpowerU',
-  ell_classes: 'ELL Classes',
-  skills_assessment: 'Skills Assessment',
-  internal_placement: 'Internal Placement',
-  exposure_course: 'Exposure Course',
-  paid_external_placement: 'Paid External Placement',
-  employment_supports: 'Employment Supports',
-  job_applications: 'Job Applications',
-  networking: 'Networking',
-  barrier_support: 'Barrier Support',
-  other: 'Other',
-};
-
-const EXPOSURE_KEYS = ['exposure_course', 'paid_external_placement', 'employment_supports'];
-
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
-
-function truncate(label, max = 22) {
-  return label.length > max ? label.substring(0, max - 1) + '…' : label;
-}
-
-/**
- * Dynamically generates EDA (Employment Development Activity) steps from the
- * submitted action plan items. Only shown after the action plan is created.
- *
- * - DEA: each dea_activities entry becomes a generic EDA step.
- * - Pathways: each sdp_item becomes a step, with specialized routing for
- *   internal_placement (→ InternalPlacementStep) and exposure/support items
- *   (→ ExposuresSupportsStep, grouped into one step).
- */
-function getEDASteps(client) {
-  if (!client?.action_plan_submitted) return [];
-
-  const isDEA = client?.service_type === 'direct_to_employment';
-
-  if (isDEA) {
-    return (client?.dea_activities || [])
-      .filter(a => a.type)
-      .map(a => ({
-        key: `eda_dea_${a.id}`,
-        label: a.type,
-        short: truncate(a.type),
-        icon: null,
-        edaType: 'dea',
-        edaKey: a.id,
-      }));
-  }
-
-  // Pathways
-  const steps = [];
-  const items = client?.sdp_items || [];
-  const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
-
-  for (const key of items) {
-    if (EXPOSURE_KEYS.includes(key)) continue; // handled as a grouped step below
-
-    if (key === 'internal_placement') {
-      steps.push({
-        key: 'eda_internal_placement',
-        label: 'Internal Placement',
-        short: 'Placement',
-        icon: null,
-        edaType: 'specialized',
-        edaComponent: 'internal_placement',
-      });
-    } else if (key === 'other') {
-      const label = client?.sdp_other_desc || 'Other';
-      steps.push({
-        key: 'eda_other',
-        label,
-        short: truncate(label),
-        icon: null,
-        edaType: 'generic',
-        edaKey: key,
-      });
-    } else {
-      const label = ITEM_LABELS[key] || key;
-      steps.push({
-        key: `eda_${key}`,
-        label,
-        short: truncate(label),
-        icon: null,
-        edaType: 'generic',
-        edaKey: key,
-      });
-    }
-  }
-
-  if (hasExposure) {
-    steps.push({
-      key: 'eda_exposures',
-      label: 'Exposures & Supports',
-      short: 'Exposures',
-      icon: null,
-      edaType: 'specialized',
-      edaComponent: 'exposures',
-    });
-  }
-
-  return steps;
-}
 
 function getStepStatus(key, client) {
   switch (key) {
     case 'employment_action_plan':
       return client?.action_plan_submitted ? 'done' : 'active';
-    case 'eda_internal_placement':
-      return client?.placement_request_sent ? 'done' : 'active';
-    case 'eda_exposures':
-      return (client?.exposure_course || client?.paid_external_placement || client?.employment_supports || client?.external_employer)
-        ? 'done' : 'active';
     case 'employment_search':
       return ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status) ? 'done' : 'active';
     case 'roadmap':
@@ -138,36 +24,24 @@ function getStepStatus(key, client) {
     case 'followup_90day':
       return client?.followup_90day_status ? 'done' : 'active';
     default:
-      // DEA EDA steps
-      if (key.startsWith('eda_dea_')) {
-        const actId = key.replace('eda_dea_', '');
-        const act = client?.dea_activities?.find(a => a.id === actId);
-        return act?.completed_date ? 'done' : 'active';
-      }
-      // Pathways generic EDA steps
-      if (key.startsWith('eda_')) {
-        const edaKey = key.replace('eda_', '');
-        return client?.sdp_item_details?.[edaKey]?.date ? 'done' : 'active';
-      }
       return 'pending';
   }
 }
 
 export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate }) {
-  const [activeStep, setActiveStep] = useState(null);
+  const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'employment_action_plan' : null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
+  const hasActionPlan = !!client?.action_plan_submitted;
 
   if (isCasual) {
     return <CasualNotesPanel client={client} onSave={onSave} />;
   }
 
-  const edaSteps = getEDASteps(client);
   const steps = [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
-    ...edaSteps,
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(isComplete ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
@@ -181,11 +55,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     };
     switch (key) {
       case 'employment_action_plan':
-        return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} />;
-      case 'eda_internal_placement':
-        return <InternalPlacementStep client={client} onSave={onSave} onComplete={goNext} />;
-      case 'eda_exposures':
-        return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={client?.service_type === 'direct_to_employment'} />;
+        return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} onClientUpdate={onClientUpdate} />;
       case 'employment_search':
         return <EmploymentSearchPanel client={client} onSave={onSave} onClientUpdate={onClientUpdate} />;
       case 'followup_90day':
@@ -201,15 +71,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           />
         );
       default:
-        if (key.startsWith('eda_')) {
-          const step = steps.find(s => s.key === key);
-          if (step?.edaType === 'generic') {
-            return <EDAStep client={client} edaKey={step.edaKey} edaLabel={step.label} onSave={onSave} onComplete={goNext} />;
-          }
-          if (step?.edaType === 'dea') {
-            return <EDAStep client={client} edaKey={`dea_${step.edaKey}`} edaLabel={step.label} onSave={onSave} onComplete={goNext} />;
-          }
-        }
         return null;
     }
   };
@@ -228,30 +89,27 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           {steps.map((step, idx) => {
             const status = getStepStatus(step.key, client);
             const isActive = activeStep === step.key;
-            const isSkipped = status === 'skipped';
-            const StepIcon = step.icon;
-
+            const isLocked = !hasActionPlan && step.key !== 'employment_action_plan';
             const isFollowup = step.key === 'followup_90day';
+            const StepIcon = step.icon;
 
             const circleBase = 'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0';
             const circleClass = isActive
               ? `${circleBase} border-primary bg-primary/5`
               : status === 'done'
                 ? `${circleBase} border-green-500 bg-green-50`
-                : status === 'pending'
-                  ? `${circleBase} border-slate-300 bg-slate-50`
-                  : `${circleBase} border-slate-300 bg-slate-50`;
+                : `${circleBase} border-slate-300 bg-slate-50`;
 
             return (
               <button
                 key={step.key}
-                onClick={() => !isSkipped && setActiveStep(step.key)}
-                disabled={isSkipped}
+                onClick={() => !isLocked && setActiveStep(step.key)}
+                disabled={isLocked}
                 className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
                   ${isActive
                     ? 'bg-primary text-primary-foreground shadow-sm'
-                    : isSkipped
-                      ? 'text-slate-400 cursor-default'
+                    : isLocked
+                      ? 'text-slate-300 cursor-not-allowed'
                       : isFollowup
                         ? 'hover:bg-cyan-50 text-cyan-800 border border-cyan-200 bg-cyan-50/50'
                         : 'hover:bg-slate-100 text-slate-700'
@@ -275,7 +133,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
             );
           })}
 
-          {/* Program Status Controls — always visible at bottom of sidebar */}
+          {/* Program Status Controls */}
           <div className="pt-4 border-t border-slate-200 mt-2">
             <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
           </div>
@@ -293,7 +151,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         </button>
         {mobileOpen && (
           <div className="border rounded-lg mt-1 bg-white shadow divide-y">
-            {steps.map((step) => {
+            {steps.filter(s => hasActionPlan || s.key === 'employment_action_plan').map((step) => {
               const status = getStepStatus(step.key, client);
               return (
                 <button
@@ -308,7 +166,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
             })}
           </div>
         )}
-        {/* Mobile program status */}
         <div className="mt-3 p-3 border rounded-lg bg-white">
           <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
         </div>
@@ -317,8 +174,12 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {!activeStep ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">Select a step from the sidebar to get started.</p>
+          <div className="text-center py-16">
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-sm text-slate-500 mb-4">No action plan has been created yet.</p>
+            <Button onClick={() => setActiveStep('employment_action_plan')}>
+              <Plus className="w-4 h-4 mr-1" /> Create Action Plan
+            </Button>
           </div>
         ) : (
           renderStepContent(activeStep)

@@ -68,8 +68,7 @@ const YES_NO_OPTIONS = [
 ];
 
 const DRIVERS_LICENSE_OPTIONS = [
-  { value: 'yes_no_vehicle', label: 'Yes, but no access to a vehicle' },
-  { value: 'yes_with_vehicle', label: 'Yes, with access to a vehicle' },
+  { value: 'yes', label: 'Yes' },
   { value: 'no', label: 'No' },
 ];
 
@@ -300,17 +299,6 @@ export default function IntakeForm({ client, onSave, onCancel }) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Service Element (Stream)">
-            <Select value={form.service_type} onValueChange={v => set('service_type', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="direct_to_employment">Direct to Employment (DEA)</SelectItem>
-                <SelectItem value="pathways">Pathways</SelectItem>
-                <SelectItem value="casual">Casual</SelectItem>
-                <SelectItem value="internal_referral">Internal Referral</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
           <Field label="Assign to Worker">
             <Select value={form.assigned_worker} onValueChange={handleWorkerSelect}>
               <SelectTrigger><SelectValue placeholder="Select worker" /></SelectTrigger>
@@ -380,9 +368,7 @@ export default function IntakeForm({ client, onSave, onCancel }) {
             <Select value={form.has_vehicle} onValueChange={v => set('has_vehicle', v)}>
               <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no_has_license">No (has driver's license)</SelectItem>
-                <SelectItem value="no_no_license">No (no driver's license)</SelectItem>
+                {YES_NO_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </Field>

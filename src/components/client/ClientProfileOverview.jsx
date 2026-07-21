@@ -35,9 +35,8 @@ const CLB_LEVELS = ['clb_1','clb_2','clb_3','clb_4','clb_5','clb_6','clb_7','clb
 const clbLabel = (v) => v === 'native_english_french' ? 'Native English/French' : v.replace('clb_', 'CLB ');
 
 const VEHICLE_OPTIONS = [
-  { value: 'yes',            label: 'Yes' },
-  { value: 'no_has_license', label: 'No (has licence)' },
-  { value: 'no_no_license',  label: 'No (no licence)' },
+  { value: 'yes', label: 'Yes' },
+  { value: 'no',  label: 'No' },
 ];
 
 const GENDER_OPTIONS = [
@@ -237,13 +236,6 @@ export default function ClientProfileOverview({ client, onSave }) {
           {editMode ? (
             <>
               <div>
-                <Label>Service Element</Label>
-                <Select value={form.service_type || ''} onValueChange={v => set('service_type', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>{SERVICE_TYPES.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div>
                 <Label>Program Status</Label>
                 <Select value={form.program_status || ''} onValueChange={v => set('program_status', v)}>
                   <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
@@ -285,7 +277,6 @@ export default function ClientProfileOverview({ client, onSave }) {
             </>
           ) : (
             <>
-              <Field label="Service Element" value={SERVICE_TYPES.find(o => o.value === client.service_type)?.label} />
               <Field label="Program Status" value={PROGRAM_STATUSES.find(o => o.value === client.program_status)?.label} />
               <Field label="Assigned Worker" value={client.assigned_worker_name || client.assigned_worker} />
               <Field label="Employment Status" value={client.employment_status} />
