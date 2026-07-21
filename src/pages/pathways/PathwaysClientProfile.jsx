@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, History, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { addDays, differenceInDays } from 'date-fns';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
@@ -14,9 +14,8 @@ import ClientEmployment from '@/components/client/ClientEmployment';
 import ClientPlacements from '@/components/client/ClientPlacements';
 import ClientAssessments from '@/components/client/ClientAssessments';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
-import ClientStatusHistory from '@/components/client/ClientStatusHistory';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
-import StatusChangeDialog from '@/components/client/StatusChangeDialog';
+import { logStatusChange } from '@/lib/logStatusChange';
 import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
 import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
 import ProgramDeterminationDialog from '@/components/wizard/ProgramDeterminationDialog';
@@ -46,8 +45,6 @@ export default function PathwaysClientProfile() {
   const [loading, setLoading] = useState(true);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [closingSaving, setClosingSaving] = useState(false);
-  const [showStatusChangeDialog, setShowStatusChangeDialog] = useState(false);
-  const [statusHistoryKey, setStatusHistoryKey] = useState(0);
   const [showDEAClosing, setShowDEAClosing] = useState(false);
   const [showProgramDetermination, setShowProgramDetermination] = useState(false);
 
@@ -95,6 +92,12 @@ export default function PathwaysClientProfile() {
         instructions: `Reason: ${closeData.closed_reason}`,
         status: 'pending'
       });
+      await logStatusChange({
+        client,
+        change_type: 'file_closed',
+        to_value: closeData.closed_reason,
+        notes: closeData.closed_notes || null,
+      });
       setClient({ ...client, ...closeData });
       toast.success('File closed');
     } catch (error) {
@@ -107,6 +110,11 @@ export default function PathwaysClientProfile() {
   const handleReopenFile = async () => {
     try {
       await base44.entities.Client.update(id, { file_closed: false, status: 'active' });
+      await logStatusChange({
+        client,
+        change_type: 'file_opened',
+        to_value: 'reopened',
+      });
       setClient({ ...client, file_closed: false, status: 'active' });
       toast.success('File reopened');
     } catch (error) {
@@ -260,10 +268,6 @@ export default function PathwaysClientProfile() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowStatusChangeDialog(true)}>
-            <History className="w-4 h-4 mr-2" />
-            Log Status Change
-          </Button>
           {client.file_closed ? (
             <Button variant="outline" size="sm" onClick={handleReopenFile}>
               <RotateCcw className="w-4 h-4 mr-2" />
@@ -296,7 +300,6 @@ export default function PathwaysClientProfile() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="status_history">Status History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="program_flow">
@@ -331,9 +334,6 @@ export default function PathwaysClientProfile() {
             <ClientStreamSwitches client={client} onSave={handleSave} />
           </TabsContent>
 
-          <TabsContent value="status_history">
-            <ClientStatusHistory key={statusHistoryKey} clientId={client.id} />
-          </TabsContent>
         </Tabs>
       </div>
 
@@ -343,13 +343,6 @@ export default function PathwaysClientProfile() {
         onOpenChange={setShowCloseDialog}
         onConfirm={handleCloseFile}
         client={client}
-      />
-
-      <StatusChangeDialog
-        open={showStatusChangeDialog}
-        onOpenChange={setShowStatusChangeDialog}
-        client={client}
-        onSaved={() => setStatusHistoryKey(prev => prev + 1)}
       />
 
       <DEAClosingDialog

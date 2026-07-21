@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask } from '@/lib/compassTasks';
+import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { differenceInDays, addDays, format } from 'date-fns';
 
@@ -46,6 +47,13 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const updates = { service_start_date: startDate, program_status: 'in_progress', roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
       await createCompassTask({ client_id: client.id, task_type: 'program_started', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program started: ${client.first_name} ${client.last_name}`, instructions: `Client program has been started. Service start date: ${startDate}. Update in Compass.` });
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: ps || 'not_started',
+        to_value: 'in_progress',
+        notes: `Service start date: ${startDate}`,
+      });
       onClientUpdate?.(updated);
       setShowDateInput(false);
       toast.success('Program started');
@@ -62,6 +70,14 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const updates = { program_status: 'complete', completion_date: today, followup_90day_date: f90, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
       await createCompassTask({ client_id: client.id, task_type: 'program_completed', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program completed: ${client.first_name} ${client.last_name}`, instructions: `Client has completed the program. Completion date: ${today}. 90-day follow-up due: ${f90}. Update in Compass.` });
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: ps,
+        to_value: 'complete',
+        notes: `Completion date: ${today}. 90-day follow-up due: ${f90}.`,
+        billing_relevant: true,
+      });
       onClientUpdate?.(updated);
       toast.success('Program marked as completed');
     } finally { setSaving(false); }
@@ -76,6 +92,12 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const updates = { program_status: newPs, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
       await createCompassTask({ client_id: client.id, task_type: 'program_cancelled', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program ${newPs}: ${client.first_name} ${client.last_name}`, instructions: `Client program has been marked as ${newPs}. Update in Compass.` });
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: ps,
+        to_value: newPs,
+      });
       onClientUpdate?.(updated);
       toast.success(`Program marked as ${newPs}`);
     } finally { setSaving(false); }
@@ -89,6 +111,13 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const notes = await addProgressNote(client, me, 'reverted', 'Status Reverted', `Reverted from ${ps} to in_progress`);
       const updates = { program_status: 'in_progress', completion_date: null, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: ps,
+        to_value: 'in_progress',
+        notes: `Reverted from ${ps}`,
+      });
       onClientUpdate?.(updated);
       toast.success('Program status reverted to In Progress');
     } finally { setSaving(false); }

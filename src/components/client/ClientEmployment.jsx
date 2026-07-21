@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { logStatusChange } from '@/lib/logStatusChange';
 
 const EMPLOYMENT_STATUS_OPTIONS = [
   { value: 'E-RF', label: 'Employed - Regular Full-time' },
@@ -58,6 +59,35 @@ export default function ClientEmployment({ client, onSave }) {
           client_name: `${client.first_name} ${client.last_name}`,
           change_type: 'employment_update',
           changes: Object.keys(changes).join(', '),
+        });
+      }
+
+      // Auto-log billing-relevant status changes
+      if (changes.employment_status) {
+        await logStatusChange({
+          client,
+          change_type: 'employment_outcome',
+          from_value: client?.employment_status,
+          to_value: changes.employment_status,
+          billing_relevant: true,
+        });
+      }
+      if (changes.post_completion_employment_status) {
+        await logStatusChange({
+          client,
+          change_type: 'post_completion_status',
+          from_value: client?.post_completion_employment_status,
+          to_value: changes.post_completion_employment_status,
+          billing_relevant: true,
+        });
+      }
+      if (changes.followup_90day_status) {
+        await logStatusChange({
+          client,
+          change_type: 'followup_90day',
+          from_value: client?.followup_90day_status,
+          to_value: changes.followup_90day_status,
+          billing_relevant: true,
         });
       }
 
