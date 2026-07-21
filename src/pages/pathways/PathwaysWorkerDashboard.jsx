@@ -7,6 +7,7 @@ import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
 import CompassTaskList from "@/components/compass/CompassTaskList";
+import PlacementListTab from "@/components/pathways/PlacementListTab";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -61,6 +62,7 @@ export default function PathwaysWorkerDashboard() {
   const [sortKey, setSortKey] = useState("intake_date_desc");
   const [activeTab, setActiveTab] = useState("clients");
   const [transfers, setTransfers] = useState([]);
+  const [placementSubTab, setPlacementSubTab] = useState("all");
 
   const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
@@ -392,6 +394,38 @@ export default function PathwaysWorkerDashboard() {
                 </div>
               )}
 
+              {/* Placement sub-tabs */}
+              <div className="flex gap-1 mb-4 border-b border-slate-200">
+                {[
+                  { id: "all", label: "All Clients", count: clients.length },
+                  { id: "internal_training", label: "Internal Training", count: clients.filter(c => c.internal_placement && c.internal_placement !== "none").length },
+                  { id: "work_exposure", label: "Work Exposure", count: clients.filter(c => c.exposure_course || c.paid_external_placement).length },
+                ].map(sub => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setPlacementSubTab(sub.id)}
+                    className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
+                      placementSubTab === sub.id
+                        ? "font-semibold"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                    style={placementSubTab === sub.id ? { color: "hsl(231,64%,20%)", borderColor: "#2b2de8" } : {}}
+                  >
+                    {sub.label}
+                    <span
+                      className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
+                    >
+                      {sub.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {placementSubTab !== "all" ? (
+                <PlacementListTab clients={clients} type={placementSubTab} />
+              ) : (
+              <>
               {/* Client count */}
               <div className="flex items-center gap-2 text-slate-600 mb-2">
                 <Users className="w-4 h-4" />
@@ -524,6 +558,8 @@ export default function PathwaysWorkerDashboard() {
                   </table>
                 </div>
               </div>
+              </>
+              )}
             </>
           )
         )}
