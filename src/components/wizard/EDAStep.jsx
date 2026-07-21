@@ -23,6 +23,7 @@ export default function EDAStep({ client, edaKey, edaLabel, onSave, onComplete }
 
   const [date, setDate] = useState(pathwaysDetails.date || deaActivity?.completed_date || '');
   const [notes, setNotes] = useState(pathwaysDetails.notes || deaActivity?.notes || '');
+  const [anticipatedEnd, setAnticipatedEnd] = useState(pathwaysDetails.timeline_end || deaActivity?.anticipated_end_date || '');
   const [saving, setSaving] = useState(false);
   const isDone = !!date;
 
@@ -31,13 +32,13 @@ export default function EDAStep({ client, edaKey, edaLabel, onSave, onComplete }
     try {
       if (isDEA) {
         const updatedActivities = (client?.dea_activities || []).map(a =>
-          a.id === deaActivityId ? { ...a, completed_date: date, notes } : a
+          a.id === deaActivityId ? { ...a, completed_date: date, notes, anticipated_end_date: anticipatedEnd } : a
         );
         await onSave({ dea_activities: updatedActivities });
       } else {
         const updatedDetails = {
           ...(client?.sdp_item_details || {}),
-          [edaKey]: { ...pathwaysDetails, date, notes },
+          [edaKey]: { ...pathwaysDetails, date, notes, timeline_end: anticipatedEnd },
         };
         await onSave({ sdp_item_details: updatedDetails });
       }
@@ -66,6 +67,10 @@ export default function EDAStep({ client, edaKey, edaLabel, onSave, onComplete }
 
       <Card>
         <CardContent className="space-y-4 pt-6">
+          <div>
+            <Label className="text-xs font-semibold">Anticipated Completion Date</Label>
+            <Input type="date" value={anticipatedEnd} onChange={e => setAnticipatedEnd(e.target.value)} className="mt-1 max-w-[200px]" />
+          </div>
           <div>
             <Label className="text-xs font-semibold">Completion Date</Label>
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="mt-1 max-w-[200px]" />

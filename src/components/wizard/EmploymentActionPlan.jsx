@@ -229,21 +229,34 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           </CardHeader>
           <CardContent className="space-y-3">
             {deaActivities.map((act, idx) => (
-              <div key={act.id} className="flex items-start gap-2">
-                <span className="text-xs text-muted-foreground mt-2 w-16 shrink-0">EDA {idx + 1}</span>
-                <Select value={act.type} onValueChange={v => updateDea(act.id, 'type', v)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Activity Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEA_ACTIVITY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input value={act.notes} onChange={e => updateDea(act.id, 'notes', e.target.value)} placeholder="Notes..." className="flex-1 text-sm" />
-                {deaActivities.length > 3 && (
-                  <button type="button" onClick={() => removeDea(act.id)} className="text-muted-foreground hover:text-destructive mt-2">
-                    <X className="w-4 h-4" />
-                  </button>
+              <div key={act.id} className="space-y-1">
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-muted-foreground mt-2 w-16 shrink-0">EDA {idx + 1}</span>
+                  <Select value={act.type} onValueChange={v => updateDea(act.id, 'type', v)}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Activity Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEA_ACTIVITY_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Input value={act.notes} onChange={e => updateDea(act.id, 'notes', e.target.value)} placeholder="Notes..." className="flex-1 text-sm" />
+                  {deaActivities.length > 3 && (
+                    <button type="button" onClick={() => removeDea(act.id)} className="text-muted-foreground hover:text-destructive mt-2">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                {act.type && (
+                  <div className="flex items-center gap-2 ml-18 pl-[72px]">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
+                    <Input
+                      type="date"
+                      value={act.anticipated_end_date || ''}
+                      onChange={e => updateDea(act.id, 'anticipated_end_date', e.target.value)}
+                      className="h-7 text-xs w-auto"
+                    />
+                  </div>
                 )}
               </div>
             ))}

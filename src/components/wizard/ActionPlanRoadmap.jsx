@@ -101,6 +101,27 @@ function buildItems(client) {
     }
   }
 
+  // Add DEA (Employment Development Activity) items
+  (client?.dea_activities || []).forEach(activity => {
+    if (!activity.type) return;
+    items.push({
+      key: `dea_${activity.id}`,
+      label: activity.type,
+      color: '#a855f7',
+      isBarrier: false,
+      isDEA: true,
+      detail: {
+        timeline_end: activity.anticipated_end_date,
+        notes: activity.notes,
+      },
+      status: roadmapStatus[`dea_${activity.id}`]?.status || (activity.completed_date ? 'completed' : 'planned'),
+      statusData: {
+        ...(roadmapStatus[`dea_${activity.id}`] || {}),
+        completed_date: activity.completed_date,
+      },
+    });
+  });
+
   return items;
 }
 
@@ -156,7 +177,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const maxDateRaw = [projectedEnd, latestItem, followup90Date, followup90Calc].filter(Boolean).reduce((a, b) => b > a ? b : a, projectedEnd);
   const maxDate    = new Date(maxDateRaw.getTime() + 28 * 86400000);
 
-  const minMs = leftAnchor.getTime();
+  const minMs = leftAnchor.getTime() - 14 * 86400000; // 14 days padding before intake/start
   const maxMs = maxDate.getTime();
   const rangeMs = maxMs - minMs;
 
