@@ -7,8 +7,62 @@ import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSearchPanel from './EmploymentSearchPanel';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
+import EDAStep from './EDAStep';
+import InternalPlacementStep from './InternalPlacementStep';
+import ExposuresSupportsStep from './ExposuresSupportsStep';
 
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
+
+const ITEM_LABELS = {
+  job_search_workshop: 'Job Search Workshop',
+  resume_writing_workshop: 'Resume Writing Workshop',
+  interview_skills_workshop: 'Interview Skills Workshop',
+  workplace_readiness_workshop: 'Workplace Readiness Workshop',
+  financial_literacy_workshop: 'Financial Literacy Workshop',
+  skills_assessment: 'Skills Assessment',
+  internal_placement: 'Internal Placement',
+  exposure_course: 'Exposure Course',
+  paid_external_placement: 'Paid External Placement',
+  employment_supports: 'Employment Supports',
+  job_applications: 'Job Applications',
+  networking: 'Networking',
+  barrier_support: 'Barrier Support',
+  other: 'Other',
+};
+
+const EXPOSURE_KEYS = ['exposure_course', 'paid_external_placement', 'employment_supports'];
+
+function getEDASubItems(client) {
+  if (!client?.action_plan_submitted) return [];
+
+  const isDEA = client?.service_type === 'direct_to_employment';
+
+  if (isDEA) {
+    return (client.dea_activities || [])
+      .filter(a => a.type)
+      .map(a => ({ key: `dea_${a.id}`, label: a.type, component: 'eda' }));
+  }
+
+  const items = client.sdp_items || [];
+  const subItems = [];
+  const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
+
+  for (const key of items) {
+    if (EXPOSURE_KEYS.includes(key)) continue;
+    if (key === 'internal_placement') {
+      subItems.push({ key: 'internal_placement', label: 'Internal Placement', component: 'internal_placement' });
+    } else {
+      const label = key === 'other' ? (client.sdp_other_desc || 'Other') : (ITEM_LABELS[key] || key);
+      subItems.push({ key, label, component: 'eda' });
+    }
+  }
+
+  if (hasExposure) {
+    subItems.push({ key: 'exposures', label: 'Exposures & Supports', component: 'exposures' });
+  }
+
+  return subItems;
+}
 
 function getStepStatus(key, client) {
   switch (key) {
@@ -31,6 +85,7 @@ function getStepStatus(key, client) {
 export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate }) {
   const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'employment_action_plan' : null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
 
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
@@ -47,12 +102,35 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
 
+  const edaSubItems = getEDASubItems(client);
+
   const renderStepContent = (key) => {
     const goNext = () => {
       const idx = steps.findIndex(s => s.key === key);
       if (idx < steps.length - 1) setActiveStep(steps[idx + 1].key);
       else setActiveStep(null);
     };
+
+    // Handle EDA sub-items
+    if (key?.startsWith('eda:')) {
+      const edaKey = key.substring(4);
+      const subItem = edaSubItems.find(s => s.key === edaKey);
+      if (!subItem) return null;
+
+      const goBack = () => setActiveStep('employment_action_plan');
+
+      switch (subItem.component) {
+        case 'eda':
+          return <EDAStep client={client} edaKey={edaKey} edaLabel={subItem.label} onSave={onSave} onComplete={goBack} />;
+        case 'internal_placement':
+          return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
+        case 'exposures':
+          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />;
+        default:
+          return null;
+      }
+    }
+
     switch (key) {
       case 'employment_action_plan':
         return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} onClientUpdate={onClientUpdate} />;
@@ -75,7 +153,9 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     }
   };
 
-  const currentStepLabel = steps.find(s => s.key === activeStep)?.label || 'Select a step';
+  const currentStepLabel = steps.find(s => s.key === activeStep)?.label
+    || edaSubItems.find(s => `eda:${s.key}` === activeStep)?.label
+    || 'Select a step';
 
   return (
     <div className="flex gap-6">
@@ -88,10 +168,12 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
 
           {steps.map((step, idx) => {
             const status = getStepStatus(step.key, client);
-            const isActive = activeStep === step.key;
+            const isActive = activeStep === step.key || (step.key === 'employment_action_plan' && activeStep?.startsWith('eda:'));
             const isLocked = !hasActionPlan && step.key !== 'employment_action_plan';
             const isFollowup = step.key === 'followup_90day';
             const StepIcon = step.icon;
+            const isActionPlan = step.key === 'employment_action_plan';
+            const showSubItems = isActionPlan && hasActionPlan && edaSubItems.length > 0;
 
             const circleBase = 'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0';
             const circleClass = isActive
@@ -101,35 +183,68 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                 : `${circleBase} border-slate-300 bg-slate-50`;
 
             return (
-              <button
-                key={step.key}
-                onClick={() => !isLocked && setActiveStep(step.key)}
-                disabled={isLocked}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
-                  ${isActive
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : isLocked
-                      ? 'text-slate-300 cursor-not-allowed'
-                      : isFollowup
-                        ? 'hover:bg-cyan-50 text-cyan-800 border border-cyan-200 bg-cyan-50/50'
-                        : 'hover:bg-slate-100 text-slate-700'
-                  }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={circleClass}>
-                    {StepIcon
-                      ? <StepIcon className="w-3 h-3" />
-                      : status === 'done'
-                        ? <CheckCircle2 className="w-3 h-3 text-green-500" />
-                        : <span className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-slate-400'}`}>{idx + 1}</span>
-                    }
-                  </span>
-                  <span className="truncate text-xs">{step.short}</span>
-                </div>
-                {status === 'done' && !isActive && (
-                  <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+              <div key={step.key}>
+                <button
+                  onClick={() => !isLocked && setActiveStep(step.key)}
+                  disabled={isLocked}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
+                    ${isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : isLocked
+                        ? 'text-slate-300 cursor-not-allowed'
+                        : isFollowup
+                          ? 'hover:bg-cyan-50 text-cyan-800 border border-cyan-200 bg-cyan-50/50'
+                          : 'hover:bg-slate-100 text-slate-700'
+                    }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={circleClass}>
+                      {StepIcon
+                        ? <StepIcon className="w-3 h-3" />
+                        : status === 'done'
+                          ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                          : <span className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-slate-400'}`}>{idx + 1}</span>
+                      }
+                    </span>
+                    <span className="truncate text-xs">{step.short}</span>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {showSubItems && (
+                      <span
+                        onClick={(e) => { e.stopPropagation(); setActionPlanExpanded(p => !p); }}
+                        className="p-0.5 hover:bg-black/10 rounded"
+                      >
+                        <ChevronDown className={`w-3 h-3 transition-transform ${actionPlanExpanded ? 'rotate-180' : ''}`} />
+                      </span>
+                    )}
+                    {status === 'done' && !isActive && (
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    )}
+                  </div>
+                </button>
+
+                {/* EDA sub-items — collapsible under Action Plan */}
+                {showSubItems && actionPlanExpanded && (
+                  <div className="ml-6 mt-1 mb-2 space-y-0.5 border-l-2 border-slate-200 pl-2">
+                    {edaSubItems.map(sub => {
+                      const subActive = activeStep === `eda:${sub.key}`;
+                      return (
+                        <button
+                          key={sub.key}
+                          onClick={() => setActiveStep(`eda:${sub.key}`)}
+                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                            subActive
+                              ? 'bg-primary/10 text-primary font-medium'
+                              : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          {sub.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
 
@@ -153,15 +268,26 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           <div className="border rounded-lg mt-1 bg-white shadow divide-y">
             {steps.filter(s => hasActionPlan || s.key === 'employment_action_plan').map((step) => {
               const status = getStepStatus(step.key, client);
+              const subItems = step.key === 'employment_action_plan' ? edaSubItems : [];
               return (
-                <button
-                  key={step.key}
-                  className="w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-50"
-                  onClick={() => { setActiveStep(step.key); setMobileOpen(false); }}
-                >
-                  {step.label}
-                  {status === 'done' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                </button>
+                <div key={step.key} className="divide-y">
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-50"
+                    onClick={() => { setActiveStep(step.key); setMobileOpen(false); }}
+                  >
+                    {step.label}
+                    {status === 'done' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                  </button>
+                  {subItems.length > 0 && subItems.map(sub => (
+                    <button
+                      key={sub.key}
+                      className="w-full text-left px-8 py-1.5 text-xs text-slate-600 hover:bg-slate-50 flex items-center gap-1"
+                      onClick={() => { setActiveStep(`eda:${sub.key}`); setMobileOpen(false); }}
+                    >
+                      <span className="w-1 h-1 rounded-full bg-slate-400" /> {sub.label}
+                    </button>
+                  ))}
+                </div>
               );
             })}
           </div>

@@ -5,15 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle2, Copy, ChevronRight, Plus, X, ChevronDown } from 'lucide-react';
+import { CheckCircle2, Copy, ChevronRight, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskActionPlan } from '@/lib/compassTasks';
-import InternalPlacementStep from './InternalPlacementStep';
-import ExposuresSupportsStep from './ExposuresSupportsStep';
-import EDAStep from './EDAStep';
 
 // ─── Action Plan Options ────────────────────────────────────────────────────
 
@@ -23,9 +19,6 @@ const ALL_ITEMS = [
   { key: 'interview_skills_workshop',   label: 'Interview Skills Workshop',      category: 'Workshops' },
   { key: 'workplace_readiness_workshop',label: 'Workplace Readiness Workshop',   category: 'Workshops' },
   { key: 'financial_literacy_workshop', label: 'Financial Literacy Workshop',    category: 'Workshops' },
-  { key: 'digital_literacy_workshop',   label: 'Digital Literacy Workshop',      category: 'Workshops' },
-  { key: 'empoweru',                    label: 'EmpowerU',                       category: 'Programs' },
-  { key: 'ell_classes',                 label: 'ELL Classes',                    category: 'Programs' },
   { key: 'skills_assessment',           label: 'Skills Assessment',              category: 'Programs' },
   { key: 'internal_placement',          label: 'Internal Placement',             category: 'Placement/Training', pathwaysOnly: true },
   { key: 'exposure_course',             label: 'Exposure Course',                category: 'Placement/Training' },
@@ -43,9 +36,6 @@ const DEA_ACTIVITY_TYPES = [
   'Interview Skills Workshop',
   'Workplace Readiness Workshop',
   'Financial Literacy Workshop',
-  'Digital Literacy Workshop',
-  'EmpowerU',
-  'ELL Classes',
   'Skills Assessment',
   'Exposure Course',
   'Employment Supports',
@@ -56,51 +46,6 @@ const DEA_ACTIVITY_TYPES = [
 ];
 
 const CATEGORIES = ['Workshops', 'Programs', 'Placement/Training', 'Job Search', 'Supports', 'Other'];
-
-const ITEM_LABELS = {
-  job_search_workshop: 'Job Search Workshop',
-  resume_writing_workshop: 'Resume Writing Workshop',
-  interview_skills_workshop: 'Interview Skills Workshop',
-  workplace_readiness_workshop: 'Workplace Readiness Workshop',
-  financial_literacy_workshop: 'Financial Literacy Workshop',
-  digital_literacy_workshop: 'Digital Literacy Workshop',
-  empoweru: 'EmpowerU',
-  ell_classes: 'ELL Classes',
-  skills_assessment: 'Skills Assessment',
-  internal_placement: 'Internal Placement',
-  exposure_course: 'Exposure Course',
-  paid_external_placement: 'Paid External Placement',
-  employment_supports: 'Employment Supports',
-  job_applications: 'Job Applications',
-  networking: 'Networking',
-  barrier_support: 'Barrier Support',
-  other: 'Other',
-};
-
-const EXPOSURE_KEYS = ['exposure_course', 'paid_external_placement', 'employment_supports'];
-
-// ─── Collapsible EDA Section ────────────────────────────────────────────────
-
-function CollapsibleSection({ title, defaultOpen, children }) {
-  const [open, setOpen] = useState(defaultOpen || false);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <Card className="overflow-hidden">
-        <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
-            <span className="font-medium text-sm text-slate-700">{title}</span>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
-          </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="border-t border-slate-100 p-4">
-            {children}
-          </div>
-        </CollapsibleContent>
-      </Card>
-    </Collapsible>
-  );
-}
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
@@ -246,54 +191,6 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
     setPendingAndComplete(false);
   };
 
-  // ─── EDA Collapsible Sections ──────────────────────────────────────────────
-
-  const renderEDASections = () => {
-    if (!isSubmitted) return null;
-
-    if (isDEA) {
-      return (client?.dea_activities || []).filter(a => a.type).map(a => (
-        <CollapsibleSection key={a.id} title={a.type}>
-          <EDAStep client={client} edaKey={`dea_${a.id}`} edaLabel={a.type} onSave={onSave} onComplete={() => {}} />
-        </CollapsibleSection>
-      ));
-    }
-
-    // Pathways
-    const sections = [];
-    const items = client?.sdp_items || [];
-    const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
-
-    for (const key of items) {
-      if (EXPOSURE_KEYS.includes(key)) continue;
-
-      if (key === 'internal_placement') {
-        sections.push(
-          <CollapsibleSection key={key} title="Internal Placement">
-            <InternalPlacementStep client={client} onSave={onSave} onComplete={() => {}} />
-          </CollapsibleSection>
-        );
-      } else {
-        const label = key === 'other' ? (client?.sdp_other_desc || 'Other') : (ITEM_LABELS[key] || key);
-        sections.push(
-          <CollapsibleSection key={key} title={label}>
-            <EDAStep client={client} edaKey={key} edaLabel={label} onSave={onSave} onComplete={() => {}} />
-          </CollapsibleSection>
-        );
-      }
-    }
-
-    if (hasExposure) {
-      sections.push(
-        <CollapsibleSection key="exposures" title="Exposures & Supports">
-          <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />
-        </CollapsibleSection>
-      );
-    }
-
-    return sections;
-  };
-
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -302,7 +199,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle2 className="w-5 h-5" />
-            <span className="font-semibold">Employment Action Plan {isSubmitted ? 'Created' : ''}</span>
+            <span className="font-semibold">Employment Action Plan Created</span>
             {itemsChanged && <span className="text-xs text-amber-600 ml-2">(unsaved changes)</span>}
           </div>
         </div>
@@ -444,25 +341,13 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
         )}
       </div>
 
-      {/* ─── EDA Collapsible Sections ────────────────────────────────────────── */}
-      {isSubmitted && (() => {
-        const edaSections = renderEDASections();
-        return edaSections && edaSections.length > 0 ? (
-          <div className="space-y-3 pt-4 border-t border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-700">Employment Development Activities (EDAs)</h3>
-            <p className="text-xs text-slate-500">Track progress for each activity in the action plan. Click to expand.</p>
-            {edaSections}
-          </div>
-        ) : null;
-      })()}
-
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Action Plan Changes</AlertDialogTitle>
             <AlertDialogDescription>
-              You've changed the selected action items. This will update the EDA sections below —
+              You've changed the selected action items. This will update the EDA tracking sub-tabs in the sidebar —
               tracking data for removed items may be lost. Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
