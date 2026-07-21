@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { addDays, differenceInDays } from 'date-fns';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
-import ClientFinancials from '@/components/client/ClientFinancials';
 import ClientEmployment from '@/components/client/ClientEmployment';
 import ClientPlacements from '@/components/client/ClientPlacements';
 import ClientAssessments from '@/components/client/ClientAssessments';
@@ -287,7 +286,6 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="overview">Client Overview</TabsTrigger>
             <TabsTrigger value="employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
-            <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="placements">Placements</TabsTrigger>
             <TabsTrigger value="assessments">BIT / ERA</TabsTrigger>
             <TabsTrigger value="stream_switches" className="relative">
@@ -315,10 +313,6 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="referrals">
             <ClientReferrals client={client} onSave={handleSave} />
-          </TabsContent>
-
-          <TabsContent value="financials">
-            <ClientFinancials client={client} />
           </TabsContent>
 
           <TabsContent value="employment">
