@@ -191,7 +191,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
   // ── Items missing dates ────────────────────────────────────────────────────
   const missingDates = items.filter(i => {
-    const hasDates = i.detail?.timeline_start || i.statusData?.timeline_start || i.statusData?.started_date;
+    const hasDates = i.detail?.timeline_start || i.detail?.timeline_end || i.statusData?.timeline_start || i.statusData?.started_date;
     return !hasDates && i.status !== 'cancelled';
   });
 

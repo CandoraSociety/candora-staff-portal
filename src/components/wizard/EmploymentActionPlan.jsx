@@ -279,11 +279,11 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                       </label>
                       {selectedItems.includes(item.key) && (
                         <div className="ml-6 mt-1 flex items-center gap-2">
-                          <Label className="text-xs text-muted-foreground whitespace-nowrap">Date:</Label>
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
                           <Input
                             type="date"
-                            value={itemDetails[item.key]?.date || ''}
-                            onChange={e => setItemDetails(prev => ({ ...prev, [item.key]: { ...prev[item.key], date: e.target.value } }))}
+                            value={itemDetails[item.key]?.timeline_end || ''}
+                            onChange={e => setItemDetails(prev => ({ ...prev, [item.key]: { ...prev[item.key], timeline_end: e.target.value } }))}
                             className="h-7 text-xs w-auto"
                           />
                         </div>
