@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, LogOut } from 'lucide-react';
+import { PlusCircle, LogOut, ClipboardCheck, UserCheck, XCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
 import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
 import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
 import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const EMPTY_FILTERS = {
   service_type: '', program_status: '', employment_status: '',
@@ -35,6 +40,7 @@ export default function PathwaysIntake() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [clients, setClients] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
@@ -43,25 +49,36 @@ export default function PathwaysIntake() {
   const [sortKey, setSortKey] = useState('intake_date_desc');
   const [pendingData, setPendingData] = useState(null);
   const [duplicates, setDuplicates] = useState([]);
+  const [assignClientId, setAssignClientId] = useState(null);
+  const [selectedWorker, setSelectedWorker] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const [me, clientList] = await Promise.all([
+      const [me, clientList, staff] = await Promise.all([
         base44.auth.me().catch(() => null),
         base44.entities.Client.list('-created_date', 1000),
+        base44.entities.PathwaysStaff.filter({ role: 'career_counsellor', is_active: true }, 'name'),
       ]);
       setUser(me);
       setClients(clientList);
+      setStaffList(staff);
       setLoading(false);
     };
     load();
   }, []);
 
-  const unassignedClients = clients.filter(c => !c.assigned_worker);
+  // Unassigned = no assigned_worker AND not closed
+  const unassignedClients = clients.filter(c => !c.assigned_worker && !c.file_closed && c.status !== 'closed');
+
+  // Split by assessment status
+  const assessmentPending = unassignedClients.filter(c => c.status !== 'pending');
+  const assessmentComplete = unassignedClients.filter(c => c.status === 'pending');
 
   const workerNames = [...new Set(clients.map(c => c.assigned_worker_name).filter(Boolean))];
 
-  const displayed = applyFiltersAndSort(unassignedClients, search, filters, sortKey);
+  const displayedPending = applyFiltersAndSort(assessmentPending, search, filters, sortKey);
+  const displayedComplete = applyFiltersAndSort(assessmentComplete, search, filters, sortKey);
 
   const findDuplicates = (data) => {
     return clients.filter(c => {
@@ -101,6 +118,45 @@ export default function PathwaysIntake() {
     setDuplicates([]);
   };
 
+  const handleAssign = async () => {
+    const worker = staffList.find(s => s.id === selectedWorker);
+    if (!worker) return;
+    setAssigning(true);
+    try {
+      await base44.entities.Client.update(assignClientId, {
+        assigned_worker: worker.email,
+        assigned_worker_name: worker.name,
+        status: 'active',
+      });
+      setClients(prev => prev.map(c => c.id === assignClientId
+        ? { ...c, assigned_worker: worker.email, assigned_worker_name: worker.name, status: 'active' }
+        : c));
+      toast.success(`Assigned to ${worker.name}`);
+      setAssignClientId(null);
+      setSelectedWorker('');
+    } catch (err) {
+      toast.error('Failed to assign client');
+    }
+    setAssigning(false);
+  };
+
+  const handleReject = async (clientId) => {
+    const c = clients.find(x => x.id === clientId);
+    if (!confirm(`Reject ${c?.first_name} ${c?.last_name} from the program?`)) return;
+    try {
+      await base44.entities.Client.update(clientId, {
+        service_type: 'not_eligible',
+        status: 'closed',
+      });
+      setClients(prev => prev.map(c => c.id === clientId
+        ? { ...c, service_type: 'not_eligible', status: 'closed' }
+        : c));
+      toast.success('Client removed from program');
+    } catch (err) {
+      toast.error('Failed to update client');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -109,14 +165,16 @@ export default function PathwaysIntake() {
     );
   }
 
+  const assignClient = clients.find(c => c.id === assignClientId);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Page Header */}
       <header className="bg-white border-b border-slate-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">Intake — Unassigned Clients</h1>
+          <h1 className="text-xl font-bold text-slate-800">Intake</h1>
           <p className="text-sm text-slate-500">
-            {unassignedClients.length} awaiting assignment · Welcome, {user?.full_name}
+            {assessmentPending.length} awaiting assessment · {assessmentComplete.length} awaiting assignment · Welcome, {user?.full_name}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -149,74 +207,132 @@ export default function PathwaysIntake() {
               workers={workerNames}
             />
 
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Name</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Service</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Switches</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Program Status</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Career Counsellor</th>
-                      <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
-                      <th className="px-3 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {displayed.map(c => (
-                      <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-3 py-2.5 font-medium">
-                          <Link to={`/pathways/client/${c.id}`} className="text-blue-700 hover:underline">
-                            {c.first_name} {c.last_name}
-                          </Link>
-                          {c.self_registered && (
-                            <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
-                              Self-Registered
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
-                        <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
-                        <td className="px-3 py-2.5 text-slate-600">{SERVICE_LABELS[c.service_type] || '—'}</td>
-                        <td className="px-3 py-2.5">
-                          {c.program_stream_switches?.length > 0 ? (
-                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                              {c.program_stream_switches.length}×
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          {c.program_status ? (
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || 'bg-slate-100 text-slate-600'}`}>
-                              {c.program_status.replace('_', ' ')}
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-600">{c.assigned_worker_name || '—'}</td>
-                        <td className="px-3 py-2.5 text-slate-500">
-                          {c.intake_date ? format(new Date(c.intake_date), 'MMM d, yyyy') : '—'}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <Link to={`/pathways/client/${c.id}`}>
-                            <Button variant="outline" size="sm">Open</Button>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                    {displayed.length === 0 && (
+            {/* Section 1: Awaiting Assessment */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-bold text-slate-800">New Intake — Awaiting Assessment</h2>
+                <span className="text-sm text-slate-400">({assessmentPending.length})</span>
+              </div>
+              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <td colSpan={9} className="text-center py-10 text-slate-400">
-                          {unassignedClients.length === 0
-                            ? 'All clients have been assigned to a career counsellor.'
-                            : 'No clients match your filters.'}
-                        </td>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Name</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Self-Reg</th>
+                        <th className="px-3 py-3" />
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {displayedPending.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-blue-700">
+                            {c.first_name} {c.last_name}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
+                          <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
+                          <td className="px-3 py-2.5 text-slate-500">
+                            {c.intake_date ? format(new Date(c.intake_date), 'MMM d, yyyy') : '—'}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {c.self_registered ? (
+                              <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                                Yes
+                              </span>
+                            ) : '—'}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <Link to={`/pathways/assessment/${c.id}`}>
+                              <Button variant="outline" size="sm" className="gap-1">
+                                <ClipboardCheck className="w-3.5 h-3.5" />
+                                Assess
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                      {displayedPending.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="text-center py-10 text-slate-400">
+                            No clients awaiting assessment.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Assessment Complete — Awaiting Assignment */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <UserCheck className="w-5 h-5 text-green-600" />
+                <h2 className="text-lg font-bold text-slate-800">Assessment Complete — Awaiting Assignment</h2>
+                <span className="text-sm text-slate-400">({assessmentComplete.length})</span>
+              </div>
+              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Name</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
+                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
+                        <th className="px-3 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {displayedComplete.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-slate-800">
+                            {c.first_name} {c.last_name}
+                          </td>
+                          <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
+                          <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
+                          <td className="px-3 py-2.5 text-slate-500">
+                            {c.intake_date ? format(new Date(c.intake_date), 'MMM d, yyyy') : '—'}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="flex items-center gap-1.5">
+                              <Link to={`/pathways/assessment/${c.id}`}>
+                                <Button variant="ghost" size="sm">Review</Button>
+                              </Link>
+                              <Button
+                                size="sm"
+                                className="gap-1"
+                                onClick={() => { setAssignClientId(c.id); setSelectedWorker(''); }}
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                Assign
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleReject(c.id)}
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {displayedComplete.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="text-center py-10 text-slate-400">
+                            No clients awaiting assignment.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </>
@@ -231,6 +347,37 @@ export default function PathwaysIntake() {
           onCancel={() => { setDuplicates([]); setPendingData(null); }}
         />
       )}
+
+      {/* Assignment dialog */}
+      <Dialog open={!!assignClientId} onOpenChange={(open) => { if (!open) { setAssignClientId(null); setSelectedWorker(''); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign to Career Counsellor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-slate-500">
+              Assign <span className="font-semibold text-slate-700">{assignClient?.first_name} {assignClient?.last_name}</span> to a career counsellor. The client will appear on their dashboard and the master list.
+            </p>
+            <Select value={selectedWorker} onValueChange={setSelectedWorker}>
+              <SelectTrigger><SelectValue placeholder="Select career counsellor..." /></SelectTrigger>
+              <SelectContent>
+                {staffList.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {staffList.length === 0 && (
+              <p className="text-sm text-amber-600">No career counsellors found. Add staff in the Master List.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAssignClientId(null); setSelectedWorker(''); }}>Cancel</Button>
+            <Button onClick={handleAssign} disabled={!selectedWorker || assigning}>
+              {assigning ? 'Assigning...' : 'Assign Client'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

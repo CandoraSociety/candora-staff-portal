@@ -93,6 +93,7 @@ import PathwaysCompass from '@/pages/pathways/PathwaysCompass';
 import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
 import PathwaysEmployers from '@/pages/pathways/PathwaysEmployers';
 import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining';
+import PathwaysAssessment from '@/pages/pathways/PathwaysAssessment';
 
 // Candora File Manager
 import FileManagerLayout from '@/components/filemanager/FileManagerLayout';
@@ -688,6 +689,7 @@ const AuthenticatedApp = () => {
           <Route path="/pathways/childminding" element={<PathwaysChildminding />} />
           <Route path="/pathways/employers" element={<PathwaysEmployers />} />
           <Route path="/pathways/training" element={<PathwaysInternalTraining />} />
+          <Route path="/pathways/assessment/:id" element={<PathwaysAssessment />} />
         </Route>
         </Route>
       </Route>
