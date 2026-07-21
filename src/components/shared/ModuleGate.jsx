@@ -10,21 +10,20 @@ import { ShieldOff } from 'lucide-react';
  * Wraps a portal layout — if the user doesn't have access to the given moduleId,
  * shows a denial screen and redirects back to the dashboard after 3s.
  */
-export default function ModuleGate({ moduleId, allowAnyOf = [], children }) {
+export default function ModuleGate({ moduleId, asyncAccessCheck, children }) {
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState(null); // null = loading
+  const [asyncResult, setAsyncResult] = useState(null); // null = pending, true/false = resolved
   const navigate = useNavigate();
   const { tierPortalAccess, ownerEmail, isLoading: orgSettingsLoading } = useOrgSettings();
 
   useEffect(() => {
     let mounted = true;
 
-    // Fetch user separately so a permissions failure doesn't lose the user
     base44.auth.me().then(u => {
       if (mounted) setUser(u);
     }).catch(() => {});
 
-    // Fetch permissions separately
     base44.functions.invoke('getMyPermissions', {})
       .then(res => {
         if (mounted) setPermissions(res.data?.permissions || []);
@@ -37,7 +36,6 @@ export default function ModuleGate({ moduleId, allowAnyOf = [], children }) {
     return () => { mounted = false; };
   }, []);
 
-  // Fetch employee record for org_tier (determines tier-based portal access)
   const { data: employees = [], isLoading: employeeLoading } = useQuery({
     queryKey: ['module-gate-employee', user?.email],
     enabled: !!user?.email,
@@ -47,25 +45,35 @@ export default function ModuleGate({ moduleId, allowAnyOf = [], children }) {
 
   const access = useAccessControl(user, permissions || [], orgTier, tierPortalAccess, ownerEmail);
 
-  // Still loading — wait for permissions, org settings, and employee record
-  if (permissions === null || orgSettingsLoading || (user?.email && employeeLoading)) return null;
+  const isLoading = permissions === null || orgSettingsLoading || (user?.email && employeeLoading);
+  const hasMainAccess = !isLoading && (access.isAdmin || access.canAccessModule(moduleId));
+  const needsAsyncCheck = !isLoading && !hasMainAccess && !!asyncAccessCheck && !!user?.email;
 
-  // Admin always passes
-  if (access.isAdmin) {
+  // Run async access check when user lacks direct module access
+  useEffect(() => {
+    if (needsAsyncCheck && asyncResult === null) {
+      let mounted = true;
+      asyncAccessCheck(user)
+        .then(result => { if (mounted) setAsyncResult(result); })
+        .catch(() => { if (mounted) setAsyncResult(false); });
+      return () => { mounted = false; };
+    }
+  }, [needsAsyncCheck, asyncResult, user, asyncAccessCheck]);
+
+  if (isLoading) return null;
+
+  if (access.isAdmin || hasMainAccess) {
     return typeof children === 'function' ? children({ isSupervisorOnly: false }) : children;
   }
 
-  // Check module access — main module OR any alternate (e.g. pathways_supervisor)
-  const hasMainAccess = access.canAccessModule(moduleId);
-  const hasAlternateAccess = allowAnyOf.some(id => access.canAccessModule(id));
+  // Waiting for async check to resolve
+  if (needsAsyncCheck && asyncResult === null) return null;
 
-  if (!hasMainAccess && !hasAlternateAccess) {
-    return <AccessDeniedScreen onGoHome={() => navigate('/')} />;
+  if (asyncResult === true) {
+    return typeof children === 'function' ? children({ isSupervisorOnly: true }) : children;
   }
 
-  // If user only has alternate access (not main), they're in a restricted mode
-  const isSupervisorOnly = !hasMainAccess && hasAlternateAccess;
-  return typeof children === 'function' ? children({ isSupervisorOnly }) : children;
+  return <AccessDeniedScreen onGoHome={() => navigate('/')} />;
 }
 
 function AccessDeniedScreen({ onGoHome }) {

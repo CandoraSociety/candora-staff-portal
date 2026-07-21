@@ -139,11 +139,17 @@ function AppNav({ isSupervisorOnly = false }) {
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
 import ModuleGate from "@/components/shared/ModuleGate";
 
+async function checkSupervisorAccess(user) {
+  if (!user?.email) return false;
+  const trainings = await base44.entities.InternalTraining.filter({ supervisor_email: user.email });
+  return trainings.length > 0;
+}
+
 export default function PathwaysLayout() {
   const location = useLocation();
 
   return (
-    <ModuleGate moduleId="pathways" allowAnyOf={['pathways_supervisor']}>
+    <ModuleGate moduleId="pathways" asyncAccessCheck={checkSupervisorAccess}>
       {({ isSupervisorOnly }) => {
         // Supervisor-only users can only access the Internal Supervisor Portal
         if (isSupervisorOnly && location.pathname !== '/pathways/supervisor') {
