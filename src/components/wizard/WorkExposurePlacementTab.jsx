@@ -39,6 +39,8 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
     location: '',
     position_type: '',
     expected_hours_per_week: '',
+    hours_worked: '',
+    hourly_rate: 15,
     start_date: '',
     anticipated_completion_date: '',
     status: 'pending',
@@ -58,6 +60,8 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
       const data = {
         ...rec,
         expected_hours_per_week: parseFloat(rec.expected_hours_per_week) || 0,
+        hours_worked: parseFloat(rec.hours_worked) || 0,
+        hourly_rate: parseFloat(rec.hourly_rate) || 15,
         client_id: client.id,
         client_name: `${client.first_name} ${client.last_name}`,
         assigned_worker: client.assigned_worker,
@@ -77,6 +81,9 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         client_id: client.id,
         linked_placement_id: placementId,
       });
+      const hoursWorked = parseFloat(rec.hours_worked) || 0;
+      const hourlyRate = parseFloat(rec.hourly_rate) || 15;
+      const calculatedAmount = hoursWorked * hourlyRate;
       const frData = {
         record_type: 'paid_external_placement',
         client_id: client.id,
@@ -85,17 +92,21 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         vendor: rec.business_name,
         description: rec.position_type ? `Work Exposure: ${rec.position_type}` : 'Work Exposure Placement',
         date: rec.start_date || '',
+        work_end_date: rec.anticipated_completion_date || '',
         billing_month: deriveBillingMonth(rec.start_date),
         completion_status: rec.status === 'completed' ? 'completed' : rec.status === 'in_progress' ? 'in_progress' : 'not_started',
         linked_placement_id: placementId,
+        hours_worked: hoursWorked,
+        hourly_rate: hourlyRate,
+        amount: calculatedAmount,
+        tax: 0,
+        total: calculatedAmount,
         notes: rec.notes || '',
       };
       if (linkedRecords.length > 0) {
-        // Update existing linked record (preserve amount/tax/total/receipts)
         await base44.entities.FinancialRecord.update(linkedRecords[0].id, frData);
       } else {
-        // Create new linked record with zero amount
-        await base44.entities.FinancialRecord.create({ ...frData, amount: 0, tax: 0, total: 0 });
+        await base44.entities.FinancialRecord.create(frData);
       }
 
       toast.success(existing ? 'Placement updated' : 'Work exposure placement added');
@@ -131,12 +142,28 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Start Date</Label>
+              <Label className="text-xs">Work Start Date</Label>
               <Input type="date" value={rec.start_date} onChange={e => update('start_date', e.target.value)} className="mt-1" />
             </div>
             <div>
-              <Label className="text-xs">Anticipated Completion Date</Label>
+              <Label className="text-xs">Work End Date</Label>
               <Input type="date" value={rec.anticipated_completion_date} onChange={e => update('anticipated_completion_date', e.target.value)} className="mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs">Hours Worked</Label>
+              <Input type="number" step="0.5" min="0" value={rec.hours_worked} onChange={e => update('hours_worked', e.target.value)} className="mt-1" placeholder="e.g. 120" />
+            </div>
+            <div>
+              <Label className="text-xs">Hourly Rate ($)</Label>
+              <Input type="number" step="0.25" min="0" value={rec.hourly_rate} onChange={e => update('hourly_rate', e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Calculated Total</Label>
+              <div className="mt-1 h-9 flex items-center px-3 rounded-md bg-slate-100 text-sm font-semibold text-slate-700">
+                ${((parseFloat(rec.hours_worked) || 0) * (parseFloat(rec.hourly_rate) || 0)).toFixed(2)}
+              </div>
             </div>
           </div>
           <div>
@@ -182,12 +209,22 @@ function PlacementCard({ placement, onEdit, onDelete }) {
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{placement.expected_hours_per_week} hrs/week</span>
               )}
               {placement.start_date && (
-                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />Start: {fmtDate(placement.start_date)}</span>
-              )}
-              {placement.anticipated_completion_date && (
-                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />End: {fmtDate(placement.anticipated_completion_date)}</span>
+                <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(placement.start_date)}{placement.anticipated_completion_date ? ` – ${fmtDate(placement.anticipated_completion_date)}` : ''}</span>
               )}
             </div>
+            {(placement.hours_worked > 0 || placement.hourly_rate > 0) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs ml-6">
+                {placement.hours_worked > 0 && (
+                  <span className="flex items-center gap-1 text-slate-600"><Clock className="w-3 h-3" />{placement.hours_worked} hrs worked</span>
+                )}
+                {placement.hourly_rate > 0 && (
+                  <span className="flex items-center gap-1 text-slate-600"><DollarSign className="w-3 h-3" />{placement.hourly_rate}/hr</span>
+                )}
+                {placement.hours_worked > 0 && placement.hourly_rate > 0 && (
+                  <span className="flex items-center gap-1 font-semibold text-slate-700"><DollarSign className="w-3 h-3" />{((placement.hours_worked || 0) * (placement.hourly_rate || 0)).toFixed(2)} total</span>
+                )}
+              </div>
+            )}
             {placement.notes && <div className="text-xs text-slate-500 ml-6 mt-1">{placement.notes}</div>}
           </div>
           <div className="flex gap-1 shrink-0">

@@ -26,6 +26,15 @@
       "type": "number",
       "description": "Expected hours per week"
     },
+    "hours_worked": {
+      "type": "number",
+      "description": "Total hours worked during the placement"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "default": 15,
+      "description": "Rate per hour (default $15/hr)"
+    },
     "start_date": {
       "type": "string",
       "format": "date"

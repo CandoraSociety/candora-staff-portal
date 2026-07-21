@@ -41,6 +41,19 @@
     "total": {
       "type": "number"
     },
+    "hours_worked": {
+      "type": "number",
+      "description": "Total hours worked (for paid external placements)"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Rate per hour (for paid external placements)"
+    },
+    "work_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date of work performed (for paid external placements)"
+    },
     "date": {
       "type": "string",
       "format": "date"

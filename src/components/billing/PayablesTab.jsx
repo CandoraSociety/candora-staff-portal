@@ -580,10 +580,22 @@ export default function PayablesTab({ financialRecords, clients }) {
                               <td className="px-3 py-2.5">
                                 <div className="text-slate-700 truncate max-w-[200px]">{rec.description || rec.support_type || '—'}</div>
                                 {rec.vendor && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{rec.vendor}</div>}
+                                {rec.record_type === 'paid_external_placement' && (rec.hours_worked > 0 || rec.hourly_rate > 0) && (
+                                  <div className="text-xs text-slate-500 mt-0.5">
+                                    {rec.hours_worked > 0 && <span>{rec.hours_worked} hrs</span>}
+                                    {rec.hours_worked > 0 && rec.hourly_rate > 0 && <span> × </span>}
+                                    {rec.hourly_rate > 0 && <span>${rec.hourly_rate}/hr</span>}
+                                  </div>
+                                )}
                               </td>
                               <td className="px-3 py-2.5 text-right text-slate-600 whitespace-nowrap">${(rec.amount || 0).toFixed(2)}</td>
                               <td className="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">${(rec.total || 0).toFixed(2)}</td>
-                              <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—'}</td>
+                              <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                                {rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—'}
+                                {rec.record_type === 'paid_external_placement' && rec.work_end_date && (
+                                  <div className="text-xs text-slate-400">to {format(new Date(rec.work_end_date), 'MMM d, yy')}</div>
+                                )}
+                              </td>
                               <td className="px-3 py-2.5 text-center">
                                 {rec.receipt_urls?.length > 0 ? (
                                   <Badge variant="outline" className="text-xs flex gap-1 items-center w-fit mx-auto">
