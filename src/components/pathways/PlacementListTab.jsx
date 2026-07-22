@@ -73,6 +73,7 @@ function ClientRow({ client, type, onClick }) {
           <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{client.employer_name || "—"}</td>
           <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{client.job_title || "—"}</td>
           <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(client.job_start_date)}</td>
+          <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(client.placement_end_date)}</td>
         </>
       )}
       <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{client.assigned_worker_name || "—"}</td>
@@ -93,6 +94,7 @@ function PlacementRow({ placement, onClick }) {
       <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{placement.business_name || "—"}</td>
       <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{placement.position_type || "—"}</td>
       <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(placement.start_date)}</td>
+      <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(placement.anticipated_completion_date)}</td>
       <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{placement.assigned_worker_name || "—"}</td>
     </tr>
   );
@@ -170,7 +172,7 @@ export default function PlacementListTab({ clients, type }) {
                       <>
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Placement Type</th>
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Start Date</th>
-                        <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">End Date</th>
+                        <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Anticipated End Date</th>
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Supervisor</th>
                       </>
                     ) : (
@@ -179,6 +181,7 @@ export default function PlacementListTab({ clients, type }) {
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Business</th>
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Position</th>
                         <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Start Date</th>
+                        <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Anticipated End Date</th>
                       </>
                     )}
                     <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Career Counsellor</th>
