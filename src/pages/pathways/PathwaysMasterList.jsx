@@ -358,9 +358,13 @@ export default function PathwaysMasterList() {
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
                               {programStatusLabel(c)}
                             </span>
-                          ) : (
+                          ) : c.bit_completed ? (
                             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                              Assessments / Action Plan Incomplete
+                              Action Plan Incomplete
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                              Assessments Incomplete
                             </span>
                           )}
                         </td>
