@@ -245,8 +245,6 @@ export default function PathwaysMasterList() {
       <div className="px-6 py-4">
         {activeTab === "transition" ? (
           <TransitionClientsTab />
-        ) : activeTab === "active" && placementSubTab !== "all" ? (
-          <PlacementListTab clients={activeClients} type={placementSubTab} />
         ) : (
           <>
             {activeTab === "active" && (
@@ -277,6 +275,10 @@ export default function PathwaysMasterList() {
                 ))}
               </div>
             )}
+            {activeTab === "active" && placementSubTab !== "all" ? (
+              <PlacementListTab clients={activeClients} type={placementSubTab} />
+            ) : (
+              <>
             <ClientListControls
               search={search} onSearch={setSearch}
               filters={filters} onFilters={setFilters}
@@ -407,6 +409,8 @@ export default function PathwaysMasterList() {
                 </table>
               </div>
             </div>
+              </>
+            )}
           </>
         )}
       </div>
