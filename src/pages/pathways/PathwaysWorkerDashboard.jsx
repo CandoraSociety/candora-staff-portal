@@ -63,6 +63,7 @@ export default function PathwaysWorkerDashboard() {
   const [activeTab, setActiveTab] = useState("clients");
   const [transfers, setTransfers] = useState([]);
   const [placementSubTab, setPlacementSubTab] = useState("all");
+  const [exposurePlacements, setExposurePlacements] = useState([]);
 
   const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
@@ -91,6 +92,9 @@ export default function PathwaysWorkerDashboard() {
         ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
         : allClients.filter(matchesMe);
       setClients(myClients);
+      const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
+      const myClientIds = new Set(myClients.map(c => c.id));
+      setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
       await loadCompassTasks(me.email, me.full_name);
       const pendingTransfers = await base44.entities.ClientTransfer.filter({ status: "pending" });
       setTransfers(pendingTransfers.filter(t => (t.to_worker || "").toLowerCase() === myEmail));
@@ -399,7 +403,7 @@ export default function PathwaysWorkerDashboard() {
                 {[
                   { id: "all", label: "All Clients", count: clients.length },
                   { id: "internal_training", label: "Internal Training", count: clients.filter(c => c.internal_placement && c.internal_placement !== "none").length },
-                  { id: "work_exposure", label: "Work Exposure", count: clients.filter(c => c.exposure_course || c.paid_external_placement).length },
+                  { id: "work_exposure", label: "Work Exposure", count: clients.filter(c => c.exposure_course || c.paid_external_placement).length + exposurePlacements.length },
                 ].map(sub => (
                   <button
                     key={sub.id}
