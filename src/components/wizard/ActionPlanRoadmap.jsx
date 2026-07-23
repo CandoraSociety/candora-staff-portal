@@ -8,6 +8,7 @@ import BITReviewCheckinPanel from './BITReviewCheckinPanel';
 import RoadmapProgressNotes from './RoadmapProgressNotes';
 import ProgramStatusPanel from './ProgramStatusPanel';
 import { base44 } from '@/api/base44Client';
+import { createCompassTask, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
 
 // ─── Item labels ──────────────────────────────────────────────────────────────
 const ITEM_LABELS = {
@@ -240,6 +241,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const handleSaveItem = async (key, saveData) => {
     setSaving(true);
     try {
+      const oldStatus = client?.roadmap_item_status?.[key]?.status || 'planned';
       const currentStatus = { ...(client?.roadmap_item_status || {}) };
       currentStatus[key] = {
         ...currentStatus[key],
@@ -290,6 +292,36 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
       onClientUpdate?.(updated);
       setOpenItem(null);
+
+      // Create Compass tasks based on status change
+      const itemLabel = items.find(i => i.key === key)?.label || key;
+      const taskBase = {
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
+      };
+
+      if (n) {
+        // Barrier resolved → mark as complete in Compass with notes
+        if (oldStatus !== 'completed' && saveData.status === 'completed') {
+          await createCompassTask({ ...taskBase, ...taskBarrierResolved(updated, itemLabel, saveData.notes) });
+        }
+      } else {
+        // EDA started → enter in Compass comments
+        if (oldStatus !== 'started' && saveData.status === 'started') {
+          await createCompassTask({ ...taskBase, ...taskEdaStarted(updated, itemLabel, { start_date: saveData.startedDate }) });
+        }
+        // EDA completed → mark action item as complete in Compass
+        if (oldStatus !== 'completed' && saveData.status === 'completed') {
+          await createCompassTask({ ...taskBase, ...taskEdaCompleted(updated, itemLabel, { completion_date: saveData.completedDate }) });
+        }
+        // EDA cancelled → update in Compass
+        if (oldStatus !== 'cancelled' && saveData.status === 'cancelled') {
+          await createCompassTask({ ...taskBase, ...taskEdaCancelled(updated, itemLabel, saveData.notes) });
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
