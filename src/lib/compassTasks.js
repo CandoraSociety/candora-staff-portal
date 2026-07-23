@@ -81,7 +81,7 @@ Client Details:
 • Name: ${name}
 • Date of Birth: ${fmtDate(client.date_of_birth)}
 • Residency Status: ${client.residency_status || 'N/A'}
-• Service Element: ${client.service_type || 'N/A'}
+• Program Pathway: ${client.service_type || 'N/A'}
 • Intake Date: ${fmtDate(client.intake_date)}`,
   };
 }

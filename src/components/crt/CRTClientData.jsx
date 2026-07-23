@@ -17,7 +17,7 @@ const RESIDENCY_LABELS = {
 
 const SERVICE_LABELS = {
   direct_to_employment: 'DEA',
-  pathways: 'Pathways',
+  pathways: 'WD',
   casual: 'Casual',
   external_referral: 'Ext. Referral',
   internal_referral: 'Int. Referral',

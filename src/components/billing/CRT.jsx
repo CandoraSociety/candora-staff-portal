@@ -45,7 +45,7 @@ const PROGRAM_STATUSES = [
 const SERVICE_TYPES = [
   { value: '', label: 'All' },
   { value: 'direct_to_employment', label: 'DEA' },
-  { value: 'pathways', label: 'Pathways' },
+  { value: 'pathways', label: 'WD' },
   { value: 'casual', label: 'Casual' },
   { value: 'external_referral', label: 'Ext. Referral' },
   { value: 'internal_referral', label: 'Int. Referral' },

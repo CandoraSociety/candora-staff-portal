@@ -45,7 +45,7 @@ const GENDER_OPTIONS = [
 
 const SERVICE_TYPES = [
   { value: 'direct_to_employment', label: 'Direct to Employment (DEA)' },
-  { value: 'pathways',             label: 'Pathways' },
+  { value: 'pathways',             label: 'Workforce Development (WD)' },
   { value: 'casual',               label: 'Casual' },
   { value: 'internal_referral',    label: 'Internal Referral' },
 ];

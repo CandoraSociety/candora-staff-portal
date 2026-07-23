@@ -35,7 +35,7 @@ const DATE_PRESETS = [
 
 const SERVICE_TYPE_OPTIONS = [
   { value: "direct_to_employment", label: "DEA" },
-  { value: "pathways", label: "Pathways" },
+  { value: "pathways", label: "WD" },
   { value: "casual", label: "Casual" },
   { value: "internal_referral", label: "Internal Referral" },
 ];

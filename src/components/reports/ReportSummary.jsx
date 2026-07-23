@@ -18,7 +18,7 @@ const PIE_COLORS = [
 
 const SERVICE_LABELS = {
   direct_to_employment: "DEA (Direct to Employment)",
-  pathways: "Pathways",
+  pathways: "WD",
   casual: "Casual",
   internal_referral: "Internal Referral",
   external_referral: "External Referral",
@@ -39,7 +39,7 @@ const EMP_STATUS_LABELS = {
 
 const SERVICE_TYPE_OPTIONS = [
   { value: "direct_to_employment", label: "DEA" },
-  { value: "pathways", label: "Pathways" },
+  { value: "pathways", label: "WD" },
   { value: "casual", label: "Casual" },
   { value: "external_referral", label: "External Referral" },
   { value: "internal_referral", label: "Internal Referral" },

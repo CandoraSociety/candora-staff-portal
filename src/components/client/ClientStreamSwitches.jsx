@@ -12,7 +12,7 @@ import { createCompassTask, taskStreamSwitch } from '@/lib/compassTasks';
 
 const STREAMS = [
   { value: 'direct_to_employment', label: 'Direct to Employment (DEA)' },
-  { value: 'pathways',             label: 'Pathways' },
+  { value: 'pathways',             label: 'Workforce Development (WD)' },
   { value: 'casual',               label: 'Casual' },
   { value: 'external_referral',    label: 'External Referral' },
   { value: 'internal_referral',    label: 'Internal Referral' },

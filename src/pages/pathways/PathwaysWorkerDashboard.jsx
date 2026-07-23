@@ -17,7 +17,7 @@ const EMPTY_FILTERS = {
 
 const SERVICE_LABELS = {
   direct_to_employment: "DEA",
-  pathways: "Pathways",
+  pathways: "WD",
   casual: "Casual",
   external_referral: "Ext. Referral",
   internal_referral: "Int. Referral",
@@ -451,7 +451,7 @@ export default function PathwaysWorkerDashboard() {
                       <tr>
                         <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
                         <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
-                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Service</th>
+                        <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Pathway</th>
                         <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Switches</th>
                         <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
                         <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">CLB</th>

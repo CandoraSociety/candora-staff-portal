@@ -388,7 +388,7 @@ export default function TransitionClientsTab() {
               : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
           )}
         >
-          Pathways (WD)
+          Workforce Development (WD)
         </button>
         <button
           onClick={() => setActiveProgram("CEIS")}
@@ -532,7 +532,7 @@ export default function TransitionClientsTab() {
             <div>
               <label className="text-xs font-medium mb-1 block">Program</label>
               <select value={form.program} onChange={e => setForm({ ...form, program: e.target.value })} className="w-full h-8 border border-input rounded-md px-2 text-sm bg-background">
-                <option value="WD">Pathways (WD)</option>
+                <option value="WD">Workforce Development (WD)</option>
                 <option value="CEIS">DEA (CEIS)</option>
               </select>
             </div>

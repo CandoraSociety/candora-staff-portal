@@ -6,6 +6,15 @@ import { Users, CheckCircle, TrendingUp, Briefcase, DollarSign } from 'lucide-re
 import { STAFF_ROLE_LABELS } from '@/components/pathways/PathwaysStaffManager';
 import moment from 'moment';
 
+const SERVICE_LABELS = {
+  direct_to_employment: 'DEA',
+  pathways: 'WD',
+  casual: 'Casual',
+  external_referral: 'Ext. Referral',
+  internal_referral: 'Int. Referral',
+  not_eligible: 'Not Eligible',
+};
+
 export default function QuickviewStats() {
   const { data: clients = [] } = useQuery({
     queryKey: ['pathways-clients-all'],
@@ -106,7 +115,7 @@ export default function QuickviewStats() {
               const pct = Math.round((count / clients.length) * 100) || 0;
               return (
                 <div key={type} className="flex items-center gap-3">
-                  <div className="w-32 text-sm capitalize">{type.replace(/_/g, ' ')}</div>
+                  <div className="w-32 text-sm">{SERVICE_LABELS[type] || type.replace(/_/g, ' ')}</div>
                   <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-[#1a237e]" style={{ width: `${pct}%` }} />
                   </div>

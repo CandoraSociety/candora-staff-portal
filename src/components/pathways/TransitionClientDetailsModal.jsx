@@ -52,7 +52,7 @@ const FIELD_GROUPS = [
   {
     label: "Program",
     fields: [
-      { key: "program", label: "Program", format: (v) => v === "CEIS" ? "DEA (CEIS)" : "Pathways (WD)" },
+      { key: "program", label: "Program", format: (v) => v === "CEIS" ? "DEA (CEIS)" : "Workforce Development (WD)" },
       { key: "program_stage", label: "Program Stage" },
       { key: "service_element", label: "Service Element" },
       { key: "service_start_date", label: "Service Start", format: fmtDate },
