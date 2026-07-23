@@ -22,7 +22,7 @@ import ProgramDeterminationDialog from '@/components/wizard/ProgramDetermination
 
 const STREAM_LABELS = {
   direct_to_employment: 'DEA',
-  pathways: 'Pathways',
+  pathways: 'WD',
   casual: 'Casual',
   external_referral: 'External Referral',
   internal_referral: 'Internal Referral',
@@ -54,8 +54,13 @@ export default function PathwaysClientProfile() {
       setClient(found || null);
       setLoading(false);
       
-      // Show program determination prompt if client is assigned but has no service_type
+      // If assigned but assessment not complete, redirect to continue assessment
       if (found && !found.service_type && found.assigned_worker && !found.file_closed) {
+        const assessmentDone = found.status === 'pending' || found.status === 'active';
+        if (!assessmentDone) {
+          navigate(`/pathways/assessment/${found.id}`);
+          return;
+        }
         setShowProgramDetermination(true);
       }
 
@@ -307,6 +312,7 @@ export default function PathwaysClientProfile() {
               client={client}
               onSave={handleSave}
               onClientUpdate={(updates) => setClient(prev => ({ ...prev, ...updates }))}
+              onRequireProgramPath={() => setShowProgramDetermination(true)}
             />
           </TabsContent>
 

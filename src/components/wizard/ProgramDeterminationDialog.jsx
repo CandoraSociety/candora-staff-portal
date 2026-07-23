@@ -85,11 +85,6 @@ export default function ProgramDeterminationDialog({ open, onOpenChange, client,
           </button>
         </div>
 
-        <div className="flex justify-end pt-2">
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-            Decide later
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );

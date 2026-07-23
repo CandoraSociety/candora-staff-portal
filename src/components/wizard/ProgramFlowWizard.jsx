@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign } from 'lucide-react';
+import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
 import CasualNotesPanel from './CasualNotesPanel';
@@ -89,7 +89,7 @@ function getStepStatus(key, client) {
   }
 }
 
-export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate }) {
+export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate, onRequireProgramPath }) {
   const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'employment_action_plan' : null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
@@ -97,6 +97,23 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
   const hasActionPlan = !!client?.action_plan_submitted;
+
+  if (!client?.service_type) {
+    return (
+      <div className="text-center py-16">
+        <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+        <h3 className="text-lg font-bold text-slate-800 mb-2">Program Pathway Required</h3>
+        <p className="text-sm text-slate-500 mb-4 max-w-md mx-auto">
+          A program pathway must be selected before you can create an action plan.
+        </p>
+        {onRequireProgramPath && (
+          <Button onClick={onRequireProgramPath}>
+            Select Program Pathway
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   if (isCasual) {
     return <CasualNotesPanel client={client} onSave={onSave} />;
