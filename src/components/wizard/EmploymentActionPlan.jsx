@@ -6,10 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle2, Copy, ChevronRight, Plus, X } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, taskActionPlan } from '@/lib/compassTasks';
+import { createCompassTask, taskActionPlanCreated } from '@/lib/compassTasks';
 
 // ─── Action Plan Options ────────────────────────────────────────────────────
 
@@ -55,9 +55,6 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   const isSubmitted = !!client?.action_plan_submitted;
 
   const [saving, setSaving] = useState(false);
-  const [compassDismissed, setCompassDismissed] = useState(!!client?.action_plan_compass_entered);
-  const [compassEntered, setCompassEntered] = useState(!!client?.action_plan_compass_entered);
-  const [copiedCompass, setCopiedCompass] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAndComplete, setPendingAndComplete] = useState(false);
 
@@ -110,43 +107,6 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
     return d.toLocaleDateString('en-CA');
   }, [client?.service_start_date]);
 
-  const generateCompassText = () => {
-    const name = `${client.first_name} ${client.last_name}`;
-    if (isDEA) {
-      const acts = deaActivities.filter(a => a.type).map((a, i) => `  EDA ${i + 1}: ${a.type}${a.notes ? ` — ${a.notes}` : ''}`).join('\n');
-      const barrierLines = [1, 2, 3].map(n => client[`barrier_${n}`] ? `  • ${client[`barrier_${n}`]}` : null).filter(Boolean).join('\n');
-      const sdpNotesLine = sdpNotes ? `\nAdditional Notes:\n  ${sdpNotes}` : '';
-      return `DEA Employment Action Plan — ${name}\nTimeline: ${client?.service_start_date || 'TBD'} to ${deaEndDate}\n\nEmployment Development Activities:\n${acts || '  (none)'}${barrierLines ? `\n\nBarriers:\n${barrierLines}` : ''}${sdpNotesLine}`;
-    }
-    const itemLines = selectedItems.map(k => {
-      const item = ALL_ITEMS.find(i => i.key === k);
-      return `  • ${item?.label || k}`;
-    }).join('\n');
-    const barrierLines = [1, 2, 3].map(n => {
-      if (!client[`barrier_${n}`]) return null;
-      const tl = client[`barrier_${n}_timeline_start`] ? ` (${client[`barrier_${n}_timeline_start`]} – ${client[`barrier_${n}_timeline_end`] || 'TBD'})` : '';
-      return `  • ${client[`barrier_${n}`]}${tl}`;
-    }).filter(Boolean).join('\n');
-    const expLine = selectedItems.includes('exposure_course') ? '\nExposure Course: Yes' : '';
-    const placeLine = selectedItems.includes('internal_placement') ? `\nInternal Placement: ${client?.internal_placement || 'TBD'}${client?.placement_start_date ? ` — ${client.placement_start_date}` : ''}` : '';
-    const otherLine = selectedItems.includes('other') && otherDesc ? `\nOther: ${otherDesc}` : '';
-    const notesLine = sdpNotes ? `\nAdditional Notes:\n  ${sdpNotes}` : '';
-    return `Employment Action Plan — ${name}\n\nSelected Activities:\n${itemLines || '  (none)'}${expLine}${placeLine}${otherLine}${barrierLines ? `\n\nBarriers:\n${barrierLines}` : ''}${notesLine}`;
-  };
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(generateCompassText());
-    setCopiedCompass(true);
-    setTimeout(() => setCopiedCompass(false), 2000);
-  };
-
-  const handleMarkEntered = async () => {
-    await onSave({ action_plan_compass_entered: true });
-    setCompassEntered(true);
-    setCompassDismissed(true);
-    toast.success('Marked as entered in Compass');
-  };
-
   const handleSave = async (andComplete = false) => {
     setSaving(true);
     try {
@@ -157,10 +117,11 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
       const updatedClient = await onSave(updates);
 
       if (!isSubmitted) {
-        const task = taskActionPlan(updatedClient || { ...client, ...updates });
+        const task = taskActionPlanCreated(updatedClient || { ...client, ...updates });
         await createCompassTask({
           client_id: client.id,
-          task_type: 'action_plan',
+          client_name: `${client.first_name} ${client.last_name}`,
+          compass_hsid: client.compass_hsid || '',
           assigned_worker: client.assigned_worker,
           assigned_worker_name: client.assigned_worker_name,
           ...task,
@@ -320,28 +281,6 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           <Textarea value={sdpNotes} onChange={e => setSdpNotes(e.target.value)} rows={3} placeholder="Add notes about the action plan..." className="text-sm" />
         </CardContent>
       </Card>
-
-      {/* Compass text */}
-      {!compassDismissed ? (
-        <Card className="border-amber-300 bg-amber-50">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm text-amber-800">Compass Entry Text</CardTitle>
-            <Button size="sm" variant="outline" onClick={handleCopy} className="h-7 text-xs">
-              <Copy className="w-3 h-3 mr-1" /> {copiedCompass ? 'Copied!' : 'Copy'}
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <pre className="text-xs whitespace-pre-wrap bg-white rounded border p-3">{generateCompassText()}</pre>
-            <Button variant="outline" size="sm" onClick={handleMarkEntered} className="text-green-700 border-green-300">
-              <CheckCircle2 className="w-3 h-3 mr-1" /> Mark as Entered in Compass
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="flex items-center gap-2 text-green-600 text-sm">
-          <CheckCircle2 className="w-4 h-4" /> Marked as entered in Compass
-        </div>
-      )}
 
       <div className="flex gap-3">
         <Button onClick={() => handleSaveClick(false)} disabled={saving}>

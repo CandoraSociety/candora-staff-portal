@@ -10,6 +10,7 @@ import BarrierIdentificationTool from '@/components/wizard/BarrierIdentification
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { createCompassTask, taskBitEraCompleted } from '@/lib/compassTasks';
 
 export default function PathwaysAssessment() {
   const { id } = useParams();
@@ -59,12 +60,22 @@ export default function PathwaysAssessment() {
       const navigator = needsBarrierRemoval === 'yes'
         ? navigatorStaff.find(s => s.id === selectedNavigator)
         : null;
-      await base44.entities.Client.update(id, {
+      const updatedClient = await base44.entities.Client.update(id, {
         status: 'pending',
         intake_notes: assessmentNotes,
         service_navigation_supports: needsBarrierRemoval === 'yes',
         assigned_service_navigator: navigator?.email || null,
         assigned_service_navigator_name: navigator?.name || null,
+      });
+      // Create Compass task for BIT & ERA completion
+      const task = taskBitEraCompleted(updatedClient);
+      await createCompassTask({
+        client_id: id,
+        client_name: `${updatedClient.first_name} ${updatedClient.last_name}`,
+        compass_hsid: updatedClient.compass_hsid || '',
+        assigned_worker: updatedClient.assigned_worker || '',
+        assigned_worker_name: updatedClient.assigned_worker_name || '',
+        ...task,
       });
       toast.success('Assessment completed — client is ready for assignment');
       navigate('/pathways/intake');

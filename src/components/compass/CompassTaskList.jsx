@@ -8,44 +8,39 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
 const TASK_TYPE_COLORS = {
-  new_client:                  "bg-blue-100 text-blue-700",
-  service_type_change:         "bg-purple-100 text-purple-700",
-  stream_switch:               "bg-purple-100 text-purple-700",
-  program_status_change:       "bg-amber-100 text-amber-700",
-  employment_outcome:          "bg-green-100 text-green-700",
-  post_completion_employment:  "bg-teal-100 text-teal-700",
-  followup_90day:              "bg-cyan-100 text-cyan-700",
-  file_closed:                 "bg-red-100 text-red-700",
-  service_navigation:          "bg-indigo-100 text-indigo-700",
-  barriers_identified:         "bg-orange-100 text-orange-700",
-  action_plan:                 "bg-orange-100 text-orange-700",
+  new_client:              "bg-blue-100 text-blue-700",
+  bit_era_completed:       "bg-orange-100 text-orange-700",
+  action_plan_created:     "bg-orange-100 text-orange-700",
+  eda_started:             "bg-amber-100 text-amber-700",
+  eda_completed:           "bg-green-100 text-green-700",
+  eda_cancelled:           "bg-red-100 text-red-700",
+  employment_outcome:      "bg-green-100 text-green-700",
+  barrier_resolved:        "bg-teal-100 text-teal-700",
+  eda_program_completed:   "bg-purple-100 text-purple-700",
+  followup_90day:          "bg-cyan-100 text-cyan-700",
+  stream_switch:           "bg-purple-100 text-purple-700",
 };
 
 const TASK_TYPE_LABELS = {
-  new_client:                 "New Client",
-  service_type_change:        "Service Change",
-  stream_switch:              "Stream Switch",
-  program_status_change:      "Status Change",
-  employment_outcome:         "Employment",
-  post_completion_employment: "Post-Completion",
-  followup_90day:             "90-Day Follow-Up",
-  file_closed:                "File Closed",
-  service_navigation:         "Service Navigation",
-  barriers_identified:        "Barriers",
-  action_plan:                "Action Plan",
+  new_client:              "New Client",
+  bit_era_completed:       "BIT & ERA",
+  action_plan_created:     "Action Plan",
+  eda_started:             "EDA Started",
+  eda_completed:           "EDA Completed",
+  eda_cancelled:           "EDA Cancelled",
+  employment_outcome:      "Employment",
+  barrier_resolved:        "Barrier Resolved",
+  eda_program_completed:   "Program Complete",
+  followup_90day:          "90-Day Follow-Up",
+  stream_switch:           "Stream Switch",
 };
-
-const AP_GROUP_TYPES = ["barriers_identified", "action_plan"];
 
 function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, onMarkComplete, onMarkUncomplete }) {
   const navigate = useNavigate();
-  const isAPGroup = AP_GROUP_TYPES.includes(task.task_type);
 
   return (
     <Card className={`border ${
-      task.status === "completed" ? "border-slate-200 opacity-70"
-      : isAPGroup ? "border-orange-300 shadow-sm"
-      : "border-slate-300 shadow-sm"
+      task.status === "completed" ? "border-slate-200 opacity-70" : "border-slate-300 shadow-sm"
     }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
@@ -161,9 +156,6 @@ export default function CompassTaskList({ tasks: initialTasks, currentUser, onRe
   const completed = tasks.filter(t => t.status === "completed");
   const shown     = tab === "pending" ? pending : completed;
 
-  const apGroupTasks = shown.filter(t => AP_GROUP_TYPES.includes(t.task_type));
-  const otherTasks   = shown.filter(t => !AP_GROUP_TYPES.includes(t.task_type));
-
   const reload = async () => {
     const all = await base44.entities.CompassTask.list("-created_date", 500);
     const filtered = all.filter(t => t.assigned_worker === currentUser?.email);
@@ -229,27 +221,7 @@ export default function CompassTaskList({ tasks: initialTasks, currentUser, onRe
         </div>
       ) : (
         <div className="space-y-3">
-          {apGroupTasks.length > 0 && (
-            <div className="border border-orange-200 rounded-xl bg-orange-50/40 p-3 space-y-2">
-              <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide px-1">
-                Action Plan &amp; Barriers
-              </p>
-              {apGroupTasks.map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  expanded={!!expanded[task.id]}
-                  onToggle={toggleExpand}
-                  completing={!!completing[task.id]}
-                  notes={notes[task.id] || ""}
-                  onNotesChange={(id, val) => setNotes(prev => ({ ...prev, [id]: val }))}
-                  onMarkComplete={markComplete}
-                  onMarkUncomplete={markUncomplete}
-                />
-              ))}
-            </div>
-          )}
-          {otherTasks.map(task => (
+          {shown.map(task => (
             <TaskCard
               key={task.id}
               task={task}

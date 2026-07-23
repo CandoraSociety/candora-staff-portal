@@ -6,6 +6,11 @@ const fmtDate = (d) => {
   try { return format(new Date(d), 'MMM d, yyyy'); } catch { return d; }
 };
 
+const hsidLine = (client) =>
+  `• Client HSID#: ${client?.compass_hsid || 'Not yet recorded — check client profile'}`;
+
+// ─── Core: create + dedup ────────────────────────────────────────────────────
+
 export async function createCompassTask({
   client_id,
   client_name,
@@ -16,11 +21,15 @@ export async function createCompassTask({
   assigned_worker,
   assigned_worker_name,
 }) {
-  // Deduplication: delete existing pending tasks with same client_id + task_type
+  // Dedup: delete existing pending tasks with same client_id + task_type + title
   try {
-    const existing = await base44.entities.CompassTask.filter({ client_id, task_type, status: 'pending' });
+    const existing = await base44.entities.CompassTask.filter({
+      client_id, task_type, status: 'pending',
+    });
     for (const t of existing) {
-      await base44.entities.CompassTask.delete(t.id);
+      if (t.title === title) {
+        await base44.entities.CompassTask.delete(t.id);
+      }
     }
   } catch (_) {}
 
@@ -32,15 +41,19 @@ export async function createCompassTask({
     triggered_by_name = me?.full_name || me?.email || null;
   } catch (_) {}
 
+  // If no assigned worker, default to the person who triggered the task
+  const worker = assigned_worker || triggered_by || '';
+  const workerName = assigned_worker_name || triggered_by_name || '';
+
   return base44.entities.CompassTask.create({
     client_id,
-    client_name,
+    client_name: client_name || '',
     compass_hsid: compass_hsid || '',
     task_type,
     title,
     instructions,
-    assigned_worker: assigned_worker || '',
-    assigned_worker_name: assigned_worker_name || '',
+    assigned_worker: worker,
+    assigned_worker_name: workerName,
     triggered_by,
     triggered_by_name,
     status: 'pending',
@@ -48,119 +61,204 @@ export async function createCompassTask({
 }
 
 // ─── Task Factory Functions ──────────────────────────────────────────────────
+// Each returns { task_type, title, instructions }
 
+// 1. New client file — check for existing Compass file or create one, then record HSID
 export function taskNewClient(client) {
   const name = `${client.first_name} ${client.last_name}`;
   return {
     task_type: 'new_client',
-    title: `New client intake: ${name}`,
-    instructions: `A new client file has been created in the system. Action: Create a new client file in Compass.\n\nClient Details:\n• Name: ${name}\n• Date of Birth: ${fmtDate(client.date_of_birth)}\n• Residency Status: ${client.residency_status || 'N/A'}\n• Service Element: ${client.service_type || 'N/A'}\n• Intake Date: ${fmtDate(client.intake_date)}\n\nAfter creating the file in Compass, record the HSID# back in this app on the client's profile.`,
+    title: `New client file: ${name}`,
+    instructions: `A new client file has been created in Pathways CM.
+
+Step 1 — Check for an existing file in Compass:
+Search for this client in Compass using their name and date of birth. If an existing file is found, proceed to Step 2. If no file exists, create a new client file in Compass.
+
+Step 2 — Record the HSID#:
+Once the Compass file is found or created, copy the HSID# and enter it on the client's profile in Pathways CM (Client Profile → Compass HSID# field).
+
+Client Details:
+• Name: ${name}
+• Date of Birth: ${fmtDate(client.date_of_birth)}
+• Residency Status: ${client.residency_status || 'N/A'}
+• Service Element: ${client.service_type || 'N/A'}
+• Intake Date: ${fmtDate(client.intake_date)}`,
   };
 }
 
-export function taskStreamSwitch(client, fromStream, toStream, reason) {
+// 2. BIT and ERA completed — enter barrier info and ERA in Compass
+export function taskBitEraCompleted(client) {
   const name = `${client.first_name} ${client.last_name}`;
+  const barriers = [client.barrier_1, client.barrier_2, client.barrier_3]
+    .filter(Boolean)
+    .map(b => `  • ${b}`)
+    .join('\n') || '  • None identified';
   return {
-    task_type: 'stream_switch',
-    title: `Program stream switched: ${name}`,
-    instructions: `The client's program stream has been switched. Action: Update the program stream in Compass.\n\n• From: ${fromStream}\n• To: ${toStream}\n• Reason: ${reason || 'N/A'}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
+    task_type: 'bit_era_completed',
+    title: `BIT & ERA completed: ${name}`,
+    instructions: `The Barrier Identification Tool (BIT) and Employment Readiness Assessment (ERA) have been completed for this client. Enter the following into Compass:
+
+1. Barrier Information — Enter the identified barriers:
+${barriers}
+
+2. ERA Results — Enter the Employment Readiness Assessment results and notes.
+
+${hsidLine(client)}`,
   };
 }
 
-export function taskServiceTypeChange(client, newType) {
-  const name = `${client.first_name} ${client.last_name}`;
-  return {
-    task_type: 'service_type_change',
-    title: `Service element updated: ${name}`,
-    instructions: `The client's service element has been updated. Action: Update the service element in Compass.\n\n• New Service Element: ${newType}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskStatusChange(client, newStatus) {
-  const name = `${client.first_name} ${client.last_name}`;
-  let extraInstructions = '';
-  if (newStatus === 'complete') {
-    extraInstructions = `\n• Record the completion date: ${fmtDate(client.completion_date)}`;
-  } else if (newStatus === 'incomplete' || newStatus === 'cancelled') {
-    extraInstructions = `\n• Record the termination reason and date in Compass.`;
-  }
-  return {
-    task_type: 'program_status_change',
-    title: `Program status changed: ${name}`,
-    instructions: `The client's program status has been updated. Action: Update the program status in Compass.\n\n• New Status: ${newStatus}${extraInstructions}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskEmploymentOutcome(client, employmentStatus) {
-  const name = `${client.first_name} ${client.last_name}`;
-  const isEmployed = ['E-RF', 'E-UF', 'E-PT'].includes(employmentStatus);
-  const employerDetails = isEmployed
-    ? `\n• Employer: ${client.employer_name || 'N/A'}\n• Job Title: ${client.job_title || 'N/A'}\n• Start Date: ${fmtDate(client.job_start_date)}`
-    : '';
-  return {
-    task_type: 'employment_outcome',
-    title: `Employment outcome recorded: ${name}`,
-    instructions: `An employment outcome has been recorded for this client. Action: Enter the employment outcome in Compass.\n\n• Employment Status: ${employmentStatus}${employerDetails}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskPostCompletionEmployment(client, status) {
-  const name = `${client.first_name} ${client.last_name}`;
-  return {
-    task_type: 'post_completion_employment',
-    title: `Post-completion employment updated: ${name}`,
-    instructions: `A post-completion employment status has been recorded. Action: Enter the post-completion employment outcome in Compass.\n\n• Status: ${status}\n• Post-Completion Date: ${fmtDate(client.post_completion_employment_date)}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function task90DayFollowup(client, status) {
-  const name = `${client.first_name} ${client.last_name}`;
-  return {
-    task_type: 'followup_90day',
-    title: `90-day follow-up recorded: ${name}`,
-    instructions: `A 90-day follow-up outcome has been recorded. Action: Enter the 90-day follow-up outcome in Compass.\n\n• Follow-Up Status: ${status}\n• Follow-Up Date: ${fmtDate(client.followup_90day_date)}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskFileClosed(client) {
-  const name = `${client.first_name} ${client.last_name}`;
-  return {
-    task_type: 'file_closed',
-    title: `File closed: ${name}`,
-    instructions: `The client file has been closed. Action: Close the client file in Compass.\n\n• Closed Reason: ${client.closed_reason || 'N/A'}\n• Date Closed: ${fmtDate(client.closed_date)}\n• Notes: ${client.closed_notes || 'N/A'}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskServiceNavigation(client) {
-  const name = `${client.first_name} ${client.last_name}`;
-  return {
-    task_type: 'service_navigation',
-    title: `Service navigation supports: ${name}`,
-    instructions: `Service navigation supports have been provided to this client. Action: Record the service navigation activity in Compass.\n\n• Service Navigation Date: ${fmtDate(client.service_navigation_date)}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
-  };
-}
-
-export function taskActionPlan(client) {
+// 3. Action Plan created — create the action plan in Compass
+export function taskActionPlanCreated(client) {
   const name = `${client.first_name} ${client.last_name}`;
   const items = Array.isArray(client.sdp_items) && client.sdp_items.length > 0
     ? client.sdp_items.map(i => `  • ${i}`).join('\n')
     : '  • N/A';
   return {
-    task_type: 'action_plan',
-    title: `Employment Action Plan submitted: ${name}`,
-    instructions: `An Employment Action Plan (EAP) has been completed for this client. Action: Enter the EAP into the Compass service plan.\n\nAction Plan Items (SDP):\n${items}\n\nCareer Objectives: ${client.career_objectives || 'N/A'}\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
+    task_type: 'action_plan_created',
+    title: `Action Plan created: ${name}`,
+    instructions: `An Employment Action Plan has been created for this client. Create the action plan in Compass.
+
+Action Plan Items:
+${items}
+
+Career Objectives: ${client.career_objectives || 'N/A'}
+
+${hsidLine(client)}`,
   };
 }
 
-export function taskBarriersIdentified(client) {
+// 4a. EDA started — enter in Compass comments (for longer-term items like internal training, work exposure)
+export function taskEdaStarted(client, edaLabel, details = {}) {
   const name = `${client.first_name} ${client.last_name}`;
-  const barriers = [client.barrier_1, client.barrier_2, client.barrier_3]
-    .filter(Boolean)
-    .map(b => `  • ${b}`)
-    .join('\n') || '  • N/A';
+  const detailLines = Object.entries(details)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `• ${k}: ${v}`)
+    .join('\n');
   return {
-    task_type: 'barriers_identified',
-    title: `Barriers identified: ${name}`,
-    instructions: `Barriers have been identified for this client. Action: Enter the barriers into the Compass client profile.\n\nIdentified Barriers:\n${barriers}\n\n• Client HSID#: ${client.compass_hsid || 'Not recorded — check client profile'}`,
+    task_type: 'eda_started',
+    title: `EDA started: ${edaLabel} — ${name}`,
+    instructions: `An Employment Development Activity (EDA) has been started for this client. Enter this in the Compass comments.
+
+• EDA: ${edaLabel}
+• Start Date: ${fmtDate(details.start_date)}${detailLines ? `\n${detailLines}` : ''}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 4b. EDA completed — mark action item as complete in Compass
+export function taskEdaCompleted(client, edaLabel, details = {}) {
+  const name = `${client.first_name} ${client.last_name}`;
+  const detailLines = Object.entries(details)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `• ${k}: ${v}`)
+    .join('\n');
+  return {
+    task_type: 'eda_completed',
+    title: `EDA completed: ${edaLabel} — ${name}`,
+    instructions: `An Employment Development Activity (EDA) has been completed. Mark this action item as complete in Compass.
+
+• EDA: ${edaLabel}
+• Completion Date: ${fmtDate(details.completion_date)}${detailLines ? `\n${detailLines}` : ''}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 4c. EDA cancelled — update in Compass
+export function taskEdaCancelled(client, edaLabel, reason = '') {
+  const name = `${client.first_name} ${client.last_name}`;
+  return {
+    task_type: 'eda_cancelled',
+    title: `EDA cancelled: ${edaLabel} — ${name}`,
+    instructions: `An Employment Development Activity (EDA) has been cancelled. Update this action item in Compass.
+
+• EDA: ${edaLabel}
+• Reason: ${reason || 'N/A'}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 5. Employment outcome — enter job details in Compass comments
+export function taskEmploymentOutcome(client) {
+  const name = `${client.first_name} ${client.last_name}`;
+  return {
+    task_type: 'employment_outcome',
+    title: `Client employed: ${name}`,
+    instructions: `This client has obtained employment. Enter the job details in the Compass comments.
+
+• Employment Status: ${client.employment_status || 'N/A'}
+• Employer: ${client.employer_name || 'N/A'}
+• Job Title: ${client.job_title || 'N/A'}
+• Start Date: ${fmtDate(client.job_start_date)}
+• Wage: ${client.job_wage ? `$${client.job_wage}/hr` : 'N/A'}
+• Hours: ${client.job_hours || 'N/A'}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 6. Barrier resolved — mark as complete in Compass with notes
+export function taskBarrierResolved(client, barrierLabel, notes = '') {
+  const name = `${client.first_name} ${client.last_name}`;
+  return {
+    task_type: 'barrier_resolved',
+    title: `Barrier resolved: ${barrierLabel} — ${name}`,
+    instructions: `A barrier has been resolved for this client. Mark it as complete in Compass.
+
+• Barrier: ${barrierLabel}
+• Resolution Notes: ${notes || 'N/A'}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 7. WD/DEA EDA activities completed — enter completion in Compass
+export function taskEdaProgramCompleted(client) {
+  const name = `${client.first_name} ${client.last_name}`;
+  const program = client.service_type === 'direct_to_employment' ? 'DEA' : 'WD';
+  return {
+    task_type: 'eda_program_completed',
+    title: `${program} EDA activities completed: ${name}`,
+    instructions: `The client has completed all ${program} EDA activities. Enter this completion in Compass.
+
+• Program: ${program}
+• Completion Date: ${fmtDate(client.completion_date)}
+
+${hsidLine(client)}`,
+  };
+}
+
+// 8. 90-day follow-up — record up to 5 contact attempts in Compass
+export function task90DayFollowup(client) {
+  const name = `${client.first_name} ${client.last_name}`;
+  return {
+    task_type: 'followup_90day',
+    title: `90-day follow-up: ${name}`,
+    instructions: `Record the 90-day follow-up in Compass. Make up to 5 attempts to reach the client, logging each attempt.
+
+• Follow-Up Status: ${client.followup_90day_status || 'N/A'}
+• Follow-Up Date: ${fmtDate(client.followup_90day_date)}
+
+If contact is made, record the client's current employment status. If unable to reach after 5 attempts, record as "Unable to Contact".
+
+${hsidLine(client)}`,
+  };
+}
+
+// 9. Stream switch — entered in Compass
+export function taskStreamSwitch(client, fromStream, toStream, reason) {
+  const name = `${client.first_name} ${client.last_name}`;
+  return {
+    task_type: 'stream_switch',
+    title: `Program stream switched: ${name}`,
+    instructions: `The client's program stream has been switched. Enter this change in Compass.
+
+• From: ${fromStream}
+• To: ${toStream}
+• Reason: ${reason || 'N/A'}
+
+${hsidLine(client)}`,
   };
 }

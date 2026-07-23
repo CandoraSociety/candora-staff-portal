@@ -64,7 +64,10 @@ export default function EmploymentSearchPanel({ client, onSave, onClientUpdate }
       if (newlyEmployed) {
         await createCompassTask({
           client_id: client.id,
-          task_type: 'employment_outcome',
+          client_name: `${client.first_name} ${client.last_name}`,
+          compass_hsid: client.compass_hsid || '',
+          assigned_worker: client.assigned_worker,
+          assigned_worker_name: client.assigned_worker_name,
           ...taskEmploymentOutcome({ ...client, ...updates }),
         });
         const me = await base44.auth.me().catch(() => null);

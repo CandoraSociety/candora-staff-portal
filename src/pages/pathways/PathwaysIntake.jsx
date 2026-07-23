@@ -110,7 +110,12 @@ export default function PathwaysIntake() {
       const created = await base44.entities.Client.create(withDate);
       setClients(prev => [created, ...prev]);
       const t = taskNewClient(created);
-      await createCompassTask({ client_id: created.id, ...t });
+      await createCompassTask({
+        client_id: created.id,
+        client_name: `${created.first_name} ${created.last_name}`,
+        compass_hsid: created.compass_hsid || '',
+        ...t,
+      });
     }
     setShowForm(false);
     setEditingClient(null);

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Save, ChevronRight, Pencil, CheckCircle2, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { createCompassTask, taskBarriersIdentified } from "@/lib/compassTasks";
+
 import { exportBitPdf } from "@/lib/exportBitPdf";
 import { toast } from "sonner";
 
@@ -236,17 +236,6 @@ export default function BarrierIdentificationTool({ client, onSave, onComplete }
     try {
       const { data, confirmedBarriers } = buildSaveData();
       const updatedClient = await onSave(data);
-
-      if (confirmedBarriers.length > 0 && !client?.barriers_addressed) {
-        const task = taskBarriersIdentified(updatedClient || { ...client, ...data });
-        await createCompassTask({
-          client_id: client.id,
-          task_type: "barriers_identified",
-          assigned_worker: client.assigned_worker,
-          assigned_worker_name: client.assigned_worker_name,
-          ...task,
-        });
-      }
 
       base44.functions.invoke("sendAlertEmail", {
         alert_type: "barriers",

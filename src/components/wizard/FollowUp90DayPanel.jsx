@@ -60,7 +60,10 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
       // Compass task
       await createCompassTask({
         client_id: client.id,
-        task_type: 'followup_90day',
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
         ...task90DayFollowup({ ...client, ...updates }),
       });
 

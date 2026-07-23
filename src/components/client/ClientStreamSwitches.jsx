@@ -91,7 +91,10 @@ export default function ClientStreamSwitches({ client, onSave }) {
         : reasonLabel(form.reason);
       await createCompassTask({
         client_id: client.id,
-        task_type: 'stream_switch',
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
         ...taskStreamSwitch(client, streamLabel(form.from_stream), streamLabel(form.to_stream), reasonText),
       });
 

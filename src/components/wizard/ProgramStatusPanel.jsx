@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask } from '@/lib/compassTasks';
+import { createCompassTask, taskEdaProgramCompleted } from '@/lib/compassTasks';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { differenceInDays, addDays, format } from 'date-fns';
@@ -46,7 +46,6 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const notes = await addProgressNote(client, me, 'started', 'Program Started', `Service start date: ${startDate}`);
       const updates = { service_start_date: startDate, program_status: 'in_progress', roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
-      await createCompassTask({ client_id: client.id, task_type: 'program_started', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program started: ${client.first_name} ${client.last_name}`, instructions: `Client program has been started. Service start date: ${startDate}. Update in Compass.` });
       await logStatusChange({
         client,
         change_type: 'program_status_change',
@@ -69,7 +68,15 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const notes = await addProgressNote(client, me, 'completed', 'Program Completed', `Completion date: ${today}`);
       const updates = { program_status: 'complete', completion_date: today, followup_90day_date: f90, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
-      await createCompassTask({ client_id: client.id, task_type: 'program_completed', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program completed: ${client.first_name} ${client.last_name}`, instructions: `Client has completed the program. Completion date: ${today}. 90-day follow-up due: ${f90}. Update in Compass.` });
+      const task = taskEdaProgramCompleted({ ...client, ...updates });
+      await createCompassTask({
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
+        ...task,
+      });
       await logStatusChange({
         client,
         change_type: 'program_status_change',
@@ -91,7 +98,6 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const notes = await addProgressNote(client, me, 'cancelled', incomplete ? 'Program Incomplete' : 'Program Cancelled', '');
       const updates = { program_status: newPs, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
-      await createCompassTask({ client_id: client.id, task_type: 'program_cancelled', assigned_worker: client.assigned_worker, assigned_worker_name: client.assigned_worker_name, client_name: `${client.first_name} ${client.last_name}`, compass_hsid: client.compass_hsid, title: `Program ${newPs}: ${client.first_name} ${client.last_name}`, instructions: `Client program has been marked as ${newPs}. Update in Compass.` });
       await logStatusChange({
         client,
         change_type: 'program_status_change',

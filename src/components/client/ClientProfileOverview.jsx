@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Pencil, Save, X, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react';
-import { createCompassTask, taskServiceTypeChange, taskStatusChange } from '@/lib/compassTasks';
 import { toast } from 'sonner';
 
 const WORKERS = [
@@ -108,21 +107,6 @@ export default function ClientProfileOverview({ client, onSave }) {
     setSaving(true);
     try {
       await onSave(form);
-      const clientBase = { ...client, ...form };
-      if (form.service_type !== client.service_type) {
-        await createCompassTask({
-          client_id: client.id,
-          task_type: 'service_type_change',
-          ...taskServiceTypeChange(clientBase, client.service_type, form.service_type),
-        });
-      }
-      if (form.program_status !== client.program_status) {
-        await createCompassTask({
-          client_id: client.id,
-          task_type: 'status_change',
-          ...taskStatusChange(clientBase, client.program_status, form.program_status),
-        });
-      }
       setEditMode(false);
       toast.success('Client information updated');
     } catch (err) {
