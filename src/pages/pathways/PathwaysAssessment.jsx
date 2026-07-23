@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, CheckCircle2, ClipboardCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
@@ -22,6 +22,7 @@ export default function PathwaysAssessment() {
   const [navigatorStaff, setNavigatorStaff] = useState([]);
   const [needsBarrierRemoval, setNeedsBarrierRemoval] = useState('');
   const [selectedNavigator, setSelectedNavigator] = useState('');
+  const [step, setStep] = useState('landing');
 
   useEffect(() => {
     const load = async () => {
@@ -67,7 +68,6 @@ export default function PathwaysAssessment() {
         assigned_service_navigator: navigator?.email || null,
         assigned_service_navigator_name: navigator?.name || null,
       });
-      // Create Compass task for BIT & ERA completion
       const task = taskBitEraCompleted(updatedClient);
       await createCompassTask({
         client_id: id,
@@ -89,6 +89,7 @@ export default function PathwaysAssessment() {
   if (!client) return <div className="p-8 text-center text-slate-500">Client not found</div>;
 
   const assessmentDone = client.status === 'pending' || client.status === 'active';
+  const assessmentInProgress = !assessmentDone && (client.bit_completed || client.barrier_1 || client.barrier_2 || client.barrier_3);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -125,6 +126,11 @@ export default function PathwaysAssessment() {
                   Assessment Complete
                 </span>
               )}
+              {assessmentInProgress && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold border border-blue-200">
+                  Assessment In Progress
+                </span>
+              )}
             </div>
             <p className="text-sm" style={{ color: 'hsl(231,55%,40%)' }}>
               {client.compass_hsid ? `HSID: ${client.compass_hsid}` : 'Service Navigator Assessment'}
@@ -133,104 +139,155 @@ export default function PathwaysAssessment() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="p-6">
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-6">
-            <TabsTrigger value="overview">Client Overview</TabsTrigger>
-            <TabsTrigger value="assessment">BIT / ERA Assessment</TabsTrigger>
-          </TabsList>
+      {/* ─── LANDING STEP ─────────────────────────────────────────── */}
+      {step === 'landing' && (
+        <div className="p-6 max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-8 text-center space-y-4">
+              {assessmentDone ? (
+                <>
+                  <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
+                  <h2 className="text-xl font-bold text-slate-800">Assessment Complete</h2>
+                  <p className="text-sm text-slate-500">
+                    This client has completed their assessment and is ready for assignment on the intake page.
+                  </p>
+                  <div className="flex gap-3 justify-center pt-2">
+                    <Button variant="outline" onClick={() => setStep('overview')}>View Client Overview</Button>
+                    <Button variant="outline" onClick={() => setStep('assessment')}>View Assessment</Button>
+                  </div>
+                </>
+              ) : assessmentInProgress ? (
+                <>
+                  <ClipboardCheck className="w-12 h-12 text-blue-500 mx-auto" />
+                  <h2 className="text-xl font-bold text-slate-800">Assessment In Progress</h2>
+                  <p className="text-sm text-slate-500">
+                    This client's assessment has been started but not yet completed. You can continue from where you left off.
+                  </p>
+                  <div className="flex gap-3 justify-center pt-2">
+                    <Button variant="outline" onClick={() => setStep('overview')}>Review Client Overview</Button>
+                    <Button size="lg" onClick={() => setStep('assessment')} className="gap-2">
+                      <ClipboardCheck className="w-4 h-4" /> Continue Assessment
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ClipboardCheck className="w-12 h-12 text-slate-400 mx-auto" />
+                  <h2 className="text-xl font-bold text-slate-800">Awaiting Assessment</h2>
+                  <p className="text-sm text-slate-500">
+                    Verify the client's information and begin the BIT/ERA assessment process.
+                  </p>
+                  <Button size="lg" onClick={() => setStep('overview')} className="gap-2">
+                    <ClipboardCheck className="w-4 h-4" /> Verify Client Information & Begin Assessment
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-          <TabsContent value="overview">
-            <IntakeForm
-              client={client}
-              onSave={async (data) => { await handleSave(data); toast.success('Client overview saved'); return true; }}
-              onCancel={() => navigate('/pathways/intake')}
-            />
-          </TabsContent>
+      {/* ─── OVERVIEW STEP ────────────────────────────────────────── */}
+      {step === 'overview' && (
+        <div className="p-6">
+          <IntakeForm
+            client={client}
+            onSave={async (data) => { await handleSave(data); toast.success('Client overview saved'); return true; }}
+            onCancel={() => setStep('landing')}
+            onSaveAndContinue={() => { setStep('assessment'); }}
+          />
+        </div>
+      )}
 
-          <TabsContent value="assessment" className="space-y-6">
-            <BarrierIdentificationTool 
-              client={client} 
-              onSave={handleSave} 
-              onComplete={() => document.getElementById('era-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            />
+      {/* ─── ASSESSMENT STEP ──────────────────────────────────────── */}
+      {step === 'assessment' && (
+        <div className="p-6 space-y-6">
+          <div>
+            <Button variant="ghost" size="sm" onClick={() => setStep('overview')}>
+              <ArrowLeft className="w-4 h-4 mr-1" /> Back to Client Overview
+            </Button>
+          </div>
 
-            {/* ERA — Employment Readiness Assessment */}
-            <div id="era-section" className="bg-white rounded-lg border border-slate-200 p-6 space-y-4 scroll-mt-20">
+          <BarrierIdentificationTool
+            client={client}
+            onSave={handleSave}
+            onComplete={() => document.getElementById('era-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          />
+
+          {/* ERA — Employment Readiness Assessment */}
+          <div id="era-section" className="bg-white rounded-lg border border-slate-200 p-6 space-y-4 scroll-mt-20">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">ERA — Employment Readiness Assessment</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Now that the BIT is complete, record your employment readiness assessment notes and eligibility determination below.
+              </p>
+            </div>
+            <div>
+              <Label className="mb-1 block text-sm font-medium text-slate-700">Assessment Notes &amp; Determination</Label>
+              <Textarea
+                rows={5}
+                value={assessmentNotes}
+                onChange={e => setAssessmentNotes(e.target.value)}
+                placeholder="Record assessment findings, eligibility determination, language proficiency observations, and any recommendations..."
+              />
+              <Button variant="outline" size="sm" className="mt-2" onClick={handleSaveNotes}>
+                Save Notes
+              </Button>
+            </div>
+
+            {/* Barrier Removal Determination */}
+            <div className="border-t border-slate-200 pt-4 space-y-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">ERA — Employment Readiness Assessment</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Now that the BIT is complete, record your employment readiness assessment notes and eligibility determination below.
-                </p>
+                <Label className="mb-1 block text-sm font-medium text-slate-700">
+                  Does this client need barriers addressed by a service navigator?
+                </Label>
+                <Select value={needsBarrierRemoval} onValueChange={v => { setNeedsBarrierRemoval(v); if (v !== 'yes') setSelectedNavigator(''); }}>
+                  <SelectTrigger className="w-full max-w-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes — assign to a service navigator</SelectItem>
+                    <SelectItem value="no">No — barriers do not require service navigator support</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <Label className="mb-1 block text-sm font-medium text-slate-700">Assessment Notes &amp; Determination</Label>
-                <Textarea
-                  rows={5}
-                  value={assessmentNotes}
-                  onChange={e => setAssessmentNotes(e.target.value)}
-                  placeholder="Record assessment findings, eligibility determination, language proficiency observations, and any recommendations..."
-                />
-                <Button variant="outline" size="sm" className="mt-2" onClick={handleSaveNotes}>
-                  Save Notes
-                </Button>
-              </div>
-
-              {/* Barrier Removal Determination */}
-              <div className="border-t border-slate-200 pt-4 space-y-3">
+              {needsBarrierRemoval === 'yes' && (
                 <div>
-                  <Label className="mb-1 block text-sm font-medium text-slate-700">
-                    Does this client need barriers addressed by a service navigator?
-                  </Label>
-                  <Select value={needsBarrierRemoval} onValueChange={v => { setNeedsBarrierRemoval(v); if (v !== 'yes') setSelectedNavigator(''); }}>
-                    <SelectTrigger className="w-full max-w-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <Label className="mb-1 block text-sm font-medium text-slate-700">Assign to Service Navigator</Label>
+                  <Select value={selectedNavigator} onValueChange={setSelectedNavigator}>
+                    <SelectTrigger><SelectValue placeholder="Select service navigator..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="yes">Yes — assign to a service navigator</SelectItem>
-                      <SelectItem value="no">No — barriers do not require service navigator support</SelectItem>
+                      {navigatorStaff.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                </div>
-                {needsBarrierRemoval === 'yes' && (
-                  <div>
-                    <Label className="mb-1 block text-sm font-medium text-slate-700">Assign to Service Navigator</Label>
-                    <Select value={selectedNavigator} onValueChange={setSelectedNavigator}>
-                      <SelectTrigger><SelectValue placeholder="Select service navigator..." /></SelectTrigger>
-                      <SelectContent>
-                        {navigatorStaff.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {navigatorStaff.length === 0 && (
-                      <p className="text-sm text-amber-600 mt-1">No service navigators found. Add staff with role "Service Navigator" in the Master List.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {assessmentDone ? (
-                <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-lg px-4 py-3">
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="font-medium">
-                    Assessment completed. This client is ready for assignment on the intake page.
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <Button onClick={handleCompleteAssessment} disabled={completing} className="gap-2">
-                    <ClipboardCheck className="w-4 h-4" />
-                    {completing ? 'Completing...' : 'Complete Assessment'}
-                  </Button>
-                  <span className="text-sm text-slate-400">
-                    This will move the client to the "Assessment Complete" section for assignment.
-                  </span>
+                  {navigatorStaff.length === 0 && (
+                    <p className="text-sm text-amber-600 mt-1">No service navigators found. Add staff with role "Service Navigator" in the Master List.</p>
+                  )}
                 </div>
               )}
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+
+            {assessmentDone ? (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 rounded-lg px-4 py-3">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-medium">
+                  Assessment completed. This client is ready for assignment on the intake page.
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Button onClick={handleCompleteAssessment} disabled={completing} className="gap-2">
+                  <ClipboardCheck className="w-4 h-4" />
+                  {completing ? 'Completing...' : 'Complete Assessment'}
+                </Button>
+                <span className="text-sm text-slate-400">
+                  This will move the client to the "Assessment Complete" section for assignment.
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

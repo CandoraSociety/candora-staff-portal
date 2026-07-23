@@ -126,7 +126,7 @@ const Field = ({ label, error, children }) => (
   </div>
 );
 
-export default function IntakeForm({ client, onSave, onCancel }) {
+export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue }) {
   const [form, setForm] = useState({
     first_name: client?.first_name || '',
     last_name: client?.last_name || '',
@@ -186,13 +186,19 @@ export default function IntakeForm({ client, onSave, onCancel }) {
     set('assigned_worker_name', s?.name || '');
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const submitForm = async (continueAfter = false) => {
     const errs = validate(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setErrors({});
     const empHistoryStr = JSON.stringify(employmentEntries);
-    onSave({ ...form, employment_history: empHistoryStr });
+    const data = { ...form, employment_history: empHistoryStr };
+    await onSave(data);
+    if (continueAfter && onSaveAndContinue) onSaveAndContinue(data);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitForm(false);
   };
 
   const handleFileUpload = async (e) => {
@@ -648,6 +654,11 @@ export default function IntakeForm({ client, onSave, onCancel }) {
         <Button type="submit" className="gap-2">
           <Save className="w-4 h-4" /> {client ? 'Save Changes' : 'Save Client'}
         </Button>
+        {onSaveAndContinue && (
+          <Button type="button" onClick={() => submitForm(true)} className="gap-2">
+            <Save className="w-4 h-4" /> Save Changes & Begin Assessment
+          </Button>
+        )}
       </div>
     </form>
   );
