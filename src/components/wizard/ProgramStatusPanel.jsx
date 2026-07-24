@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban } from 'lucide-react';
+import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban, Briefcase } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskEdaProgramCompleted } from '@/lib/compassTasks';
+import DEAProgramCompletionDialog from './DEAProgramCompletionDialog';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { differenceInDays, addDays, format } from 'date-fns';
@@ -12,10 +13,14 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   const [showDateInput, setShowDateInput] = useState(false);
   const [startDate, setStartDate] = useState(client?.service_start_date || new Date().toISOString().split('T')[0]);
   const [saving, setSaving] = useState(false);
+  const [showDEACompletion, setShowDEACompletion] = useState(false);
 
   const ps = client?.program_status;
   const followup90Date = client?.followup_90day_date;
   const hasFollowup = !!client?.followup_90day_status;
+  const isDEA = client?.service_type === 'direct_to_employment';
+  const isWD = client?.service_type === 'pathways';
+  const isEmployed = ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status);
 
   const daysUntilFollowup = followup90Date
     ? differenceInDays(new Date(followup90Date + 'T12:00:00'), new Date())
@@ -64,7 +69,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
     try {
       let me = null; try { me = await base44.auth.me(); } catch (_) {}
       const today = new Date().toISOString().split('T')[0];
-      const f90 = format(addDays(new Date(today + 'T12:00:00'), 90), 'yyyy-MM-dd');
+      const f90 = client?.followup_90day_date || format(addDays(new Date(today + 'T12:00:00'), 90), 'yyyy-MM-dd');
       const notes = await addProgressNote(client, me, 'completed', 'Program Completed', `Completion date: ${today}`);
       const updates = { program_status: 'complete', completion_date: today, followup_90day_date: f90, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
@@ -106,6 +111,53 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       });
       onClientUpdate?.(updated);
       toast.success(`Program marked as ${newPs}`);
+    } finally { setSaving(false); }
+  };
+
+  // DEA: Switch to WD pathway
+  const handleSwitchToWD = async () => {
+    setSaving(true);
+    try {
+      let me = null; try { me = await base44.auth.me(); } catch (_) {}
+      const switchRecord = {
+        from_stream: 'direct_to_employment',
+        to_stream: 'pathways',
+        reason: 'user_requested',
+        date: new Date().toISOString().split('T')[0],
+        notes: 'Switched from DEA to WD via completion dialog',
+      };
+      const notes = await addProgressNote(client, me, 'stream_switch', 'Switched to WD', 'Switched from DEA to WD');
+      const updates = {
+        service_type: 'pathways',
+        dea_closing_dismissed: true,
+        program_stream_switches: [...(client.program_stream_switches || []), switchRecord],
+        roadmap_progress_notes: notes,
+      };
+      const updated = await base44.entities.Client.update(client.id, updates);
+      await logStatusChange({
+        client,
+        change_type: 'stream_switch',
+        from_value: 'direct_to_employment',
+        to_value: 'pathways',
+        notes: 'Switched from DEA to WD',
+        billing_relevant: false,
+      });
+      await createCompassTask({
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker || '',
+        assigned_worker_name: client.assigned_worker_name || '',
+        task_type: 'stream_switch',
+        title: `Stream Switch — ${client.first_name} ${client.last_name}`,
+        instructions: 'Client switched from DEA to WD pathway via completion dialog',
+        status: 'pending',
+      });
+      onClientUpdate?.(updated);
+      setShowDEACompletion(false);
+      toast.success('Switched to WD pathway');
+    } catch (err) {
+      toast.error('Failed to switch');
     } finally { setSaving(false); }
   };
 
@@ -202,8 +254,28 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   }
 
   // Default: not started / in progress
+  const wdPhase = isWD && (!ps || ps === 'in_progress')
+    ? isEmployed ? '90-Day Follow-Up Phase' : 'Job Search Phase'
+    : null;
+  const wdWeeksElapsed = isWD && client?.service_start_date
+    ? Math.floor(differenceInDays(new Date(), new Date(client.service_start_date + 'T12:00:00')) / 7)
+    : 0;
+
   return (
     <div className="flex flex-col gap-1.5">
+      {wdPhase && (
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded text-[10px] font-semibold text-indigo-700">
+          <Briefcase className="w-3 h-3 shrink-0" />
+          {wdPhase}
+        </div>
+      )}
+      {isWD && wdWeeksElapsed >= 48 && (
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 border border-red-300 rounded text-[10px] font-semibold text-red-700">
+          <Bell className="w-3 h-3 shrink-0 animate-bounce" />
+          {wdWeeksElapsed}/52 weeks — max duration approaching
+        </div>
+      )}
+
       {/* Start / Update Start Date */}
       {(!ps || ps === 'in_progress') && (
         <>
@@ -226,11 +298,27 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
         </>
       )}
 
-      {/* Complete */}
+      {/* Complete — DEA: Completion Decision; WD: requires 90-day follow-up first */}
       {(!ps || ps === 'in_progress') && (
-        <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-700 hover:bg-green-50 w-full" onClick={handleComplete} disabled={saving}>
-          <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Complete
-        </Button>
+        isDEA ? (
+          <Button size="sm" variant="outline" className="h-7 text-xs border-blue-500 text-blue-700 hover:bg-blue-50 w-full" onClick={() => setShowDEACompletion(true)} disabled={saving}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Completion Decision
+          </Button>
+        ) : isWD ? (
+          hasFollowup ? (
+            <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-700 hover:bg-green-50 w-full" onClick={handleComplete} disabled={saving}>
+              <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Complete
+            </Button>
+          ) : (
+            <div className="text-[10px] text-slate-400 text-center px-1 py-1">
+              {isEmployed ? '90-Day Follow-Up in progress' : '90-Day Follow-Up required to complete'}
+            </div>
+          )
+        ) : (
+          <Button size="sm" variant="outline" className="h-7 text-xs border-green-500 text-green-700 hover:bg-green-50 w-full" onClick={handleComplete} disabled={saving}>
+            <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Complete
+          </Button>
+        )
       )}
 
       {/* Cancel */}
@@ -239,6 +327,15 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
           <X className="w-3 h-3 mr-1" /> Mark Cancelled
         </Button>
       )}
+
+      {/* DEA Completion Dialog */}
+      <DEAProgramCompletionDialog
+        open={showDEACompletion}
+        onOpenChange={setShowDEACompletion}
+        onComplete={async () => { setShowDEACompletion(false); await handleComplete(); }}
+        onSwitchToWD={handleSwitchToWD}
+        onTerminate={async () => { setShowDEACompletion(false); await handleCancel(false); }}
+      />
     </div>
   );
 }

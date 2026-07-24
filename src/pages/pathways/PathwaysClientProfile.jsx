@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { addDays, differenceInDays } from 'date-fns';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientEmployment from '@/components/client/ClientEmployment';
@@ -16,7 +15,6 @@ import ClientAssessments from '@/components/client/ClientAssessments';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
 import { logStatusChange } from '@/lib/logStatusChange';
-import DEAClosingDialog from '@/components/wizard/DEAClosingDialog';
 import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
 import ProgramDeterminationDialog from '@/components/wizard/ProgramDeterminationDialog';
 
@@ -45,7 +43,6 @@ export default function PathwaysClientProfile() {
   const [loading, setLoading] = useState(true);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [closingSaving, setClosingSaving] = useState(false);
-  const [showDEAClosing, setShowDEAClosing] = useState(false);
   const [showProgramDetermination, setShowProgramDetermination] = useState(false);
 
   useEffect(() => {
@@ -64,18 +61,6 @@ export default function PathwaysClientProfile() {
         setShowProgramDetermination(true);
       }
 
-      // Check if DEA closing dialog should show
-      if (found?.service_type === 'direct_to_employment' && !found?.file_closed && !found?.dea_closing_dismissed) {
-        const endDate = found.completion_date
-          ? new Date(found.completion_date)
-          : found.service_start_date
-            ? addDays(new Date(found.service_start_date), 14)
-            : null;
-        if (endDate) {
-          const days = differenceInDays(endDate, new Date());
-          if (days <= 3) setShowDEAClosing(true);
-        }
-      }
     });
   }, [id]);
 
@@ -131,62 +116,6 @@ export default function PathwaysClientProfile() {
     await base44.entities.Client.update(id, { service_type: serviceType });
     setClient(prev => ({ ...prev, service_type: serviceType }));
     toast.success(serviceType === 'pathways' ? 'Set to WD (Workforce Development)' : 'Set to DEA (Direct Employment Attachment)');
-  };
-
-  const handleDEAContinue = async () => {
-    try {
-      await base44.entities.Client.update(id, { dea_closing_dismissed: true });
-      setShowDEAClosing(false);
-    } catch (error) {
-      toast.error('Failed to update');
-    }
-  };
-
-  const handleDEASwitchToPathways = async () => {
-    try {
-      const user = await base44.auth.me();
-      const switchRecord = {
-        from_stream: 'direct_to_employment',
-        to_stream: 'pathways',
-        reason: 'user_requested',
-        date: new Date().toISOString().split('T')[0],
-        notes: 'Switched from DEA to Pathways via closing dialog'
-      };
-      
-      await base44.entities.Client.update(id, {
-        service_type: 'pathways',
-        dea_closing_dismissed: true,
-        program_stream_switches: [...(client.program_stream_switches || []), switchRecord]
-      });
-      
-      await base44.entities.StatusChange.create({
-        client_id: id,
-        client_name: `${client.first_name} ${client.last_name}`,
-        change_type: 'stream_switch',
-        change_date: new Date().toISOString().split('T')[0],
-        from_value: 'direct_to_employment',
-        to_value: 'pathways',
-        notes: 'Switched from DEA to Pathways',
-        logged_by: user.email,
-        logged_by_name: user.full_name || user.email,
-        billing_relevant: false
-      });
-      
-      await base44.entities.CompassTask.create({
-        client_id: id,
-        client_name: `${client.first_name} ${client.last_name}`,
-        task_type: 'stream_switch',
-        title: `Stream Switch - ${client.first_name} ${client.last_name}`,
-        instructions: 'Client switched from DEA to Pathways',
-        status: 'pending'
-      });
-      
-      setClient({ ...client, service_type: 'pathways', dea_closing_dismissed: true });
-      setShowDEAClosing(false);
-      toast.success('Switched to Pathways');
-    } catch (error) {
-      toast.error('Failed to switch streams');
-    }
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
@@ -349,13 +278,6 @@ export default function PathwaysClientProfile() {
         onOpenChange={setShowCloseDialog}
         onConfirm={handleCloseFile}
         client={client}
-      />
-
-      <DEAClosingDialog
-        open={showDEAClosing}
-        onContinue={handleDEAContinue}
-        onSwitchToPathways={handleDEASwitchToPathways}
-        onDismiss={() => setShowDEAClosing(false)}
       />
 
       <ProgramDeterminationDialog

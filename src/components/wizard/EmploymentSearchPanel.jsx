@@ -9,6 +9,7 @@ import { Briefcase, CheckCircle2, Save, TrendingUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskEmploymentOutcome } from '@/lib/compassTasks';
 import { toast } from 'sonner';
+import { addDays, format } from 'date-fns';
 
 const EMPLOYMENT_CODES = [
   { value: 'E-RF',  label: 'E-RF — Employed, Regular Full-time' },
@@ -54,6 +55,10 @@ export default function EmploymentSearchPanel({ client, onSave, onClientUpdate }
       if (newlyEmployed && form.job_start_date) {
         updates.employment_start_date = form.job_start_date;
         updates.external_employer = true;
+        // WD: 90-day follow-up begins when employment is found
+        if (client?.service_type === 'pathways') {
+          updates.followup_90day_date = format(addDays(new Date(form.job_start_date + 'T12:00:00'), 90), 'yyyy-MM-dd');
+        }
       }
 
       const updated = await base44.entities.Client.update(client.id, updates);

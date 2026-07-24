@@ -111,7 +111,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
           90-Day Follow-Up
         </h3>
         <p className="text-sm text-slate-500 mt-1">
-          Record the client's employment status 90 days after program completion. This is a billing milestone.
+          Record the client's employment status 90 days after {client?.service_type === 'direct_to_employment' ? 'program completion' : 'finding employment'}. This is a billing milestone.
         </p>
       </div>
 

@@ -51,7 +51,7 @@ export default function ProgramDeterminationDialog({ open, onOpenChange, client,
               </div>
             </div>
             <ul className="space-y-1.5 text-xs text-slate-600">
-              <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" />Up to 16 weeks of EDA activities</li>
+              <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" />2–16 weeks of EDA activities</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" />Employment search period following EDA</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" />90-day follow-up after employment found</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-purple-500 shrink-0 mt-0.5" />All must be completed within 52 weeks</li>
@@ -76,7 +76,7 @@ export default function ProgramDeterminationDialog({ open, onOpenChange, client,
               </div>
             </div>
             <ul className="space-y-1.5 text-xs text-slate-600">
-              <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />EDA activities completed within 1–2 weeks</li>
+              <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />1–2 week program (at least 3 EDAs)</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />90-day follow-up commences immediately after</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />No internal training available</li>
               <li className="flex gap-1.5"><CheckCircle2 className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />No paid work exposure available</li>

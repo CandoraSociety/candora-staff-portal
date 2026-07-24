@@ -119,11 +119,22 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     return <CasualNotesPanel client={client} onSave={onSave} />;
   }
 
-  const steps = [
+  const isDEA = client?.service_type === 'direct_to_employment';
+  const isEmployed = ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status);
+  const hasFollowup = !!client?.followup_90day_status || !!client?.followup_90day_date;
+
+  // DEA: Action Plan → Supports → (complete) 90-Day Follow-Up → Progress
+  // WD:  Action Plan → Supports → Employment Search → (employed) 90-Day Follow-Up → Progress
+  const steps = isDEA ? [
+    { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
+    { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
+    ...(isComplete ? [FOLLOWUP_STEP] : []),
+    { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
+  ] : [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
-    ...(isComplete ? [FOLLOWUP_STEP] : []),
+    ...((isEmployed || hasFollowup || isComplete) ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
 
