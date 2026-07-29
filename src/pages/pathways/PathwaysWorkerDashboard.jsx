@@ -11,8 +11,7 @@ import PlacementListTab from "@/components/pathways/PlacementListTab";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
-  clb_level: "", assigned_worker: "", age_min: "", age_max: "",
-  duration_min: "", duration_max: "",
+  clb_level: "", age_min: "", age_max: "",
 };
 
 const SERVICE_LABELS = {
@@ -442,6 +441,7 @@ export default function PathwaysWorkerDashboard() {
                 search={search} onSearch={setSearch}
                 filters={filters} onFilters={setFilters}
                 sortKey={sortKey} onSort={setSortKey}
+                variant="worker"
               />
 
               <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">

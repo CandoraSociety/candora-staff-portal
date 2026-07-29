@@ -38,7 +38,8 @@ function FilterSelect({ label, value, onChange, options }) {
   );
 }
 
-export default function ClientListControls({ search, onSearch, filters, onFilters, sortKey, onSort, workers = [] }) {
+export default function ClientListControls({ search, onSearch, filters, onFilters, sortKey, onSort, workers = [], variant = 'default' }) {
+  const isWorker = variant === 'worker';
   const [open, setOpen] = useState(false);
 
   const activeFilterCount = Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
@@ -108,14 +109,20 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
             label="Service Stream"
             value={filters.service_type}
             onChange={v => onFilters({ ...filters, service_type: v })}
-            options={[
-              { value: 'direct_to_employment', label: 'DEA' },
-              { value: 'pathways', label: 'WD' },
-              { value: 'casual', label: 'Casual' },
-              { value: 'external_referral', label: 'Ext. Referral' },
-              { value: 'internal_referral', label: 'Int. Referral' },
-              { value: 'not_eligible', label: 'Not Eligible' },
-            ]}
+            options={(isWorker
+              ? [
+                  { value: 'direct_to_employment', label: 'DEA' },
+                  { value: 'pathways', label: 'WD' },
+                ]
+              : [
+                  { value: 'direct_to_employment', label: 'DEA' },
+                  { value: 'pathways', label: 'WD' },
+                  { value: 'casual', label: 'Casual' },
+                  { value: 'external_referral', label: 'Ext. Referral' },
+                  { value: 'internal_referral', label: 'Int. Referral' },
+                  { value: 'not_eligible', label: 'Not Eligible' },
+                ]
+            )}
           />
           <FilterSelect
             label="Program Status"
@@ -148,26 +155,30 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
             onChange={v => onFilters({ ...filters, clb_level: v })}
             options={Array.from({ length: 12 }, (_, i) => ({ value: `clb_${i + 1}`, label: `CLB ${i + 1}` })).concat([{ value: 'native_english_french', label: 'Native English/French' }])}
           />
-          <FilterSelect
-            label="Career Counsellor"
-            value={filters.assigned_worker}
-            onChange={v => onFilters({ ...filters, assigned_worker: v })}
-            options={workers.map(w => ({ value: w, label: w }))}
-          />
-          <FilterSelect
-            label="Referral Source"
-            value={filters.referral_source}
-            onChange={v => onFilters({ ...filters, referral_source: v })}
-            options={[
-              { value: 'self', label: 'Self' },
-              { value: 'family_friend', label: 'Family/Friend' },
-              { value: 'school', label: 'School' },
-              { value: 'employer', label: 'Employer' },
-              { value: 'external_agency', label: 'External Agency' },
-              { value: 'alberta_works', label: 'Alberta Works' },
-              { value: 'other', label: 'Other' },
-            ]}
-          />
+          {!isWorker && (
+            <FilterSelect
+              label="Career Counsellor"
+              value={filters.assigned_worker}
+              onChange={v => onFilters({ ...filters, assigned_worker: v })}
+              options={workers.map(w => ({ value: w, label: w }))}
+            />
+          )}
+          {!isWorker && (
+            <FilterSelect
+              label="Referral Source"
+              value={filters.referral_source}
+              onChange={v => onFilters({ ...filters, referral_source: v })}
+              options={[
+                { value: 'self', label: 'Self' },
+                { value: 'family_friend', label: 'Family/Friend' },
+                { value: 'school', label: 'School' },
+                { value: 'employer', label: 'Employer' },
+                { value: 'external_agency', label: 'External Agency' },
+                { value: 'alberta_works', label: 'Alberta Works' },
+                { value: 'other', label: 'Other' },
+              ]}
+            />
+          )}
           <FilterSelect
             label="Residency Status"
             value={filters.residency_status}
@@ -207,16 +218,20 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
             <Input className="h-8 text-xs" type="number" placeholder="e.g. 65" value={filters.age_max}
               onChange={e => onFilters({ ...filters, age_max: e.target.value })} />
           </div>
-          <div>
-            <Label className="text-xs font-medium text-slate-600 mb-1 block">Min Months in Program</Label>
-            <Input className="h-8 text-xs" type="number" placeholder="e.g. 1" value={filters.duration_min}
-              onChange={e => onFilters({ ...filters, duration_min: e.target.value })} />
-          </div>
-          <div>
-            <Label className="text-xs font-medium text-slate-600 mb-1 block">Max Months in Program</Label>
-            <Input className="h-8 text-xs" type="number" placeholder="e.g. 12" value={filters.duration_max}
-              onChange={e => onFilters({ ...filters, duration_max: e.target.value })} />
-          </div>
+          {!isWorker && (
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1 block">Min Months in Program</Label>
+              <Input className="h-8 text-xs" type="number" placeholder="e.g. 1" value={filters.duration_min}
+                onChange={e => onFilters({ ...filters, duration_min: e.target.value })} />
+            </div>
+          )}
+          {!isWorker && (
+            <div>
+              <Label className="text-xs font-medium text-slate-600 mb-1 block">Max Months in Program</Label>
+              <Input className="h-8 text-xs" type="number" placeholder="e.g. 12" value={filters.duration_max}
+                onChange={e => onFilters({ ...filters, duration_max: e.target.value })} />
+            </div>
+          )}
         </div>
       )}
     </div>
