@@ -236,6 +236,10 @@
     "bit_completed": {
       "type": "boolean"
     },
+    "era_compass_completed": {
+      "type": "boolean",
+      "description": "Whether the ERA has been completed in Compass"
+    },
     "bit_review_dates": {
       "type": "array",
       "items": {

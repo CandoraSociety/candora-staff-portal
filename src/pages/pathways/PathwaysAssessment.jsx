@@ -22,6 +22,7 @@ export default function PathwaysAssessment() {
   const [navigatorStaff, setNavigatorStaff] = useState([]);
   const [needsBarrierRemoval, setNeedsBarrierRemoval] = useState('');
   const [selectedNavigator, setSelectedNavigator] = useState('');
+  const [eraCompassCompleted, setEraCompassCompleted] = useState(false);
   const [step, setStep] = useState('landing');
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function PathwaysAssessment() {
       setNavigatorStaff(staff);
       setNeedsBarrierRemoval(c.assigned_service_navigator ? 'yes' : '');
       setSelectedNavigator(staff.find(s => s.email === c.assigned_service_navigator)?.id || '');
+      setEraCompassCompleted(!!c.era_compass_completed);
       setLoading(false);
     };
     load().catch(() => setLoading(false));
@@ -219,8 +221,32 @@ export default function PathwaysAssessment() {
             <div>
               <h2 className="text-lg font-bold text-slate-800">ERA — Employment Readiness Assessment</h2>
               <p className="text-sm text-slate-500 mt-1">
-                Now that the BIT is complete, record your employment readiness assessment notes and eligibility determination below.
+                Now that the BIT is complete, finish the ERA in Compass.
               </p>
+            </div>
+
+            {/* ERA Completed in Compass confirmation */}
+            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+              <input
+                id="era-compass-check"
+                type="checkbox"
+                checked={eraCompassCompleted}
+                onChange={async (e) => {
+                  const checked = e.target.checked;
+                  setEraCompassCompleted(checked);
+                  try {
+                    await base44.entities.Client.update(id, { era_compass_completed: checked });
+                    toast.success(checked ? 'ERA marked complete in Compass' : 'ERA completion cleared');
+                  } catch {
+                    toast.error('Failed to update ERA status');
+                    setEraCompassCompleted(!checked);
+                  }
+                }}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <Label htmlFor="era-compass-check" className="text-sm font-medium text-slate-700 cursor-pointer m-0">
+                ERA Completed in Compass
+              </Label>
             </div>
             <div>
               <Label className="mb-1 block text-sm font-medium text-slate-700">Assessment Notes &amp; Determination</Label>
