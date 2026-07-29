@@ -19,6 +19,29 @@ const SORT_OPTIONS = [
   { value: 'assigned_worker_name_desc', label: 'Career Counsellor (Z → A)' },
 ];
 
+function MonthRangeInput({ label, fromValue, toValue, onFrom, onTo }) {
+  return (
+    <div>
+      <Label className="text-xs font-medium text-slate-600 mb-1 block">{label}</Label>
+      <div className="flex items-center gap-1">
+        <input
+          type="month"
+          className="h-8 text-xs rounded-md border border-slate-300 px-2 flex-1 min-w-0"
+          value={fromValue || ''}
+          onChange={e => onFrom(e.target.value)}
+        />
+        <span className="text-slate-400 text-xs">–</span>
+        <input
+          type="month"
+          className="h-8 text-xs rounded-md border border-slate-300 px-2 flex-1 min-w-0"
+          value={toValue || ''}
+          onChange={e => onTo(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <div>
@@ -49,6 +72,7 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
       service_type: '', program_status: '', employment_status: '',
       clb_level: '', assigned_worker: '', age_min: '', age_max: '',
       duration_min: '', duration_max: '', referral_source: '', residency_status: '', followup_90day_status: '',
+      intake_month_from: '', intake_month_to: '', start_month_from: '', start_month_to: '', completion_month_from: '', completion_month_to: '',
     });
   };
 
@@ -232,6 +256,29 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
                 onChange={e => onFilters({ ...filters, duration_max: e.target.value })} />
             </div>
           )}
+        <div className="border-t border-slate-200 pt-3 mt-1 col-span-full">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Date Ranges (by month)</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <MonthRangeInput
+              label="Intake Month"
+              fromValue={filters.intake_month_from} toValue={filters.intake_month_to}
+              onFrom={v => onFilters({ ...filters, intake_month_from: v })}
+              onTo={v => onFilters({ ...filters, intake_month_to: v })}
+            />
+            <MonthRangeInput
+              label="Program Start Month"
+              fromValue={filters.start_month_from} toValue={filters.start_month_to}
+              onFrom={v => onFilters({ ...filters, start_month_from: v })}
+              onTo={v => onFilters({ ...filters, start_month_to: v })}
+            />
+            <MonthRangeInput
+              label="Completion Month"
+              fromValue={filters.completion_month_from} toValue={filters.completion_month_to}
+              onFrom={v => onFilters({ ...filters, completion_month_from: v })}
+              onTo={v => onFilters({ ...filters, completion_month_to: v })}
+            />
+          </div>
+        </div>
         </div>
       )}
     </div>
@@ -286,6 +333,31 @@ export function applyFiltersAndSort(clients, search, filters, sortKey) {
       if (filters.duration_max && months > parseInt(filters.duration_max)) return false;
       return true;
     });
+  }
+
+  // Month-range filters (by YYYY-MM)
+  const inMonthRange = (dateStr, fromMonth, toMonth) => {
+    if (!fromMonth && !toMonth) return true;
+    if (!dateStr) return false;
+    const d = parseISO(dateStr);
+    if (fromMonth) {
+      const [fy, fm] = fromMonth.split('-').map(Number);
+      if (d < new Date(fy, fm - 1, 1)) return false;
+    }
+    if (toMonth) {
+      const [ty, tm] = toMonth.split('-').map(Number);
+      if (d > new Date(ty, tm, 0, 23, 59, 59, 999)) return false;
+    }
+    return true;
+  };
+  if (filters.intake_month_from || filters.intake_month_to) {
+    result = result.filter(c => inMonthRange(c.intake_date, filters.intake_month_from, filters.intake_month_to));
+  }
+  if (filters.start_month_from || filters.start_month_to) {
+    result = result.filter(c => inMonthRange(c.service_start_date, filters.start_month_from, filters.start_month_to));
+  }
+  if (filters.completion_month_from || filters.completion_month_to) {
+    result = result.filter(c => inMonthRange(c.completion_date, filters.completion_month_from, filters.completion_month_to));
   }
 
   // Sort

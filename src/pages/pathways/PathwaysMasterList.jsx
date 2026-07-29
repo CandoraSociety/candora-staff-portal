@@ -11,6 +11,8 @@ import TransitionClientDetailsModal from "@/components/pathways/TransitionClient
 import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
+import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
+import { Switch } from "@/components/ui/switch";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
@@ -20,6 +22,8 @@ const EMPTY_FILTERS = {
   clb_level: "", assigned_worker: "", age_min: "", age_max: "",
   duration_min: "", duration_max: "", referral_source: "", residency_status: "",
   followup_90day_status: "",
+  intake_month_from: "", intake_month_to: "", start_month_from: "", start_month_to: "",
+  completion_month_from: "", completion_month_to: "",
 };
 
 const SERVICE_LABELS = {
@@ -83,6 +87,7 @@ export default function PathwaysMasterList() {
   const [closedTransitionClients, setClosedTransitionClients] = useState([]);
   const [detailsClient, setDetailsClient] = useState(null);
   const [switchClient, setSwitchClient] = useState(null);
+  const [viewAll, setViewAll] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -272,34 +277,61 @@ export default function PathwaysMasterList() {
         ) : (
           <>
             {activeTab === "active" && (
-              <div className="flex gap-1 mb-4 border-b border-slate-200">
-                {[
-                  { id: "all", label: "All Active", count: activeClients.length },
-                  { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
-                  { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
-                ].map(sub => (
-                  <button
-                    key={sub.id}
-                    onClick={() => setPlacementSubTab(sub.id)}
-                    className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
-                      placementSubTab === sub.id
-                        ? "font-semibold"
-                        : "border-transparent text-slate-500 hover:text-slate-700"
-                    }`}
-                    style={placementSubTab === sub.id ? { color: "hsl(231,64%,20%)", borderColor: "#2b2de8" } : {}}
-                  >
-                    {sub.label}
-                    <span
-                      className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
-                      style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
-                    >
-                      {sub.count}
-                    </span>
-                  </button>
-                ))}
+              <div className="flex items-center justify-between gap-2 mb-4 border-b border-slate-200">
+                {!viewAll ? (
+                  <div className="flex gap-1">
+                    {[
+                      { id: "all", label: "All Active", count: activeClients.length },
+                      { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
+                      { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
+                    ].map(sub => (
+                      <button
+                        key={sub.id}
+                        onClick={() => setPlacementSubTab(sub.id)}
+                        className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
+                          placementSubTab === sub.id
+                            ? "font-semibold"
+                            : "border-transparent text-slate-500 hover:text-slate-700"
+                        }`}
+                        style={placementSubTab === sub.id ? { color: "hsl(231,64%,20%)", borderColor: "#2b2de8" } : {}}
+                      >
+                        {sub.label}
+                        <span
+                          className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
+                          style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
+                        >
+                          {sub.count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm font-semibold py-1.5" style={{ color: "hsl(231,64%,20%)" }}>
+                    View All — {displayed.length} client{displayed.length === 1 ? "" : "s"}
+                  </div>
+                )}
+                <label className="flex items-center gap-2 cursor-pointer text-sm select-none text-slate-600">
+                  View All
+                  <Switch checked={viewAll} onCheckedChange={setViewAll} />
+                </label>
               </div>
             )}
-            {activeTab === "active" && placementSubTab !== "all" ? (
+            {activeTab === "active" && viewAll ? (
+              <>
+                <ClientListControls
+                  search={search} onSearch={setSearch}
+                  filters={filters} onFilters={setFilters}
+                  sortKey={sortKey} onSort={setSortKey}
+                  workers={workers}
+                />
+                <MasterListFlatTable
+                  rows={displayed}
+                  onRowClick={(c) => navigate(`/pathways/client/${c.id}`)}
+                  onSwitchClient={setSwitchClient}
+                  onReassign={setReassignClient}
+                />
+              </>
+            ) : activeTab === "active" && placementSubTab !== "all" ? (
               <PlacementSections
                 clients={displayed}
                 type={placementSubTab === "internal_training" ? "internal" : "work_exposure"}
