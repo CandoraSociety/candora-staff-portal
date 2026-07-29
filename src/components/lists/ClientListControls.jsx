@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Search, SlidersHorizontal, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { differenceInMonths, differenceInYears, parseISO } from 'date-fns';
+import MultiSelectFilter from './MultiSelectFilter';
 
 const SORT_OPTIONS = [
   { value: 'last_name_asc', label: 'Name (A → Z)' },
@@ -44,20 +45,7 @@ function MonthRangeInput({ label, fromValue, toValue, onFrom, onTo }) {
 
 function FilterSelect({ label, value, onChange, options }) {
   return (
-    <div>
-      <Label className="text-xs font-medium text-slate-600 mb-1 block">{label}</Label>
-      <Select value={value || '__any__'} onValueChange={v => onChange(v === '__any__' ? '' : v)}>
-        <SelectTrigger className="h-8 text-xs">
-          <SelectValue placeholder="Any" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__any__">Any</SelectItem>
-          {options.map(o => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <MultiSelectFilter label={label} value={value || []} onChange={onChange} options={options} />
   );
 }
 
@@ -65,13 +53,15 @@ export default function ClientListControls({ search, onSearch, filters, onFilter
   const isWorker = variant === 'worker';
   const [open, setOpen] = useState(false);
 
-  const activeFilterCount = Object.values(filters).filter(v => v !== '' && v !== null && v !== undefined).length;
+  const activeFilterCount = Object.values(filters).filter(v =>
+    Array.isArray(v) ? v.length > 0 : (v !== '' && v !== null && v !== undefined)
+  ).length;
 
   const clearAll = () => {
     onFilters({
-      service_type: '', program_status: '', employment_status: '',
-      clb_level: '', assigned_worker: '', age_min: '', age_max: '',
-      duration_min: '', duration_max: '', referral_source: '', residency_status: '', followup_90day_status: '',
+      service_type: [], program_status: [], employment_status: [],
+      clb_level: [], assigned_worker: [], age_min: '', age_max: '',
+      duration_min: '', duration_max: '', referral_source: [], residency_status: [], followup_90day_status: [],
       intake_month_from: '', intake_month_to: '', start_month_from: '', start_month_to: '', completion_month_from: '', completion_month_to: '',
     });
   };
@@ -300,15 +290,19 @@ export function applyFiltersAndSort(clients, search, filters, sortKey) {
     );
   }
 
-  // Exact filters
+  // Exact filters (multi-select: match if client's value is in selected array)
   const exactFields = ['service_type', 'program_status', 'employment_status', 'clb_level', 'followup_90day_status', 'referral_source', 'residency_status'];
   for (const f of exactFields) {
-    if (filters[f]) result = result.filter(c => c[f] === filters[f]);
+    if (filters[f] && filters[f].length) result = result.filter(c => filters[f].includes(c[f]));
   }
 
-  // Partial match for assigned_worker
-  if (filters.assigned_worker) {
-    result = result.filter(c => (c.assigned_worker_name || '').toLowerCase().includes(filters.assigned_worker.toLowerCase()));
+  // Partial match for assigned_worker (multi-select: match any selected worker name substring)
+  if (filters.assigned_worker && filters.assigned_worker.length) {
+    const lowered = filters.assigned_worker.map(w => w.toLowerCase());
+    result = result.filter(c => {
+      const wn = (c.assigned_worker_name || '').toLowerCase();
+      return lowered.some(w => wn.includes(w));
+    });
   }
 
   // Age range

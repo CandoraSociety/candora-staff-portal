@@ -14,8 +14,8 @@ import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 
 const EMPTY_FILTERS = {
-  service_type: "", program_status: "", employment_status: "",
-  clb_level: "", age_min: "", age_max: "",
+  service_type: [], program_status: [], employment_status: [],
+  clb_level: [], age_min: "", age_max: "",
 };
 
 const SERVICE_LABELS = {

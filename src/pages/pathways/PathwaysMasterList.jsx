@@ -18,10 +18,10 @@ import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 
 const EMPTY_FILTERS = {
-  service_type: "", program_status: "", employment_status: "",
-  clb_level: "", assigned_worker: "", age_min: "", age_max: "",
-  duration_min: "", duration_max: "", referral_source: "", residency_status: "",
-  followup_90day_status: "",
+  service_type: [], program_status: [], employment_status: [],
+  clb_level: [], assigned_worker: [], age_min: "", age_max: "",
+  duration_min: "", duration_max: "", referral_source: [], residency_status: [],
+  followup_90day_status: [],
   intake_month_from: "", intake_month_to: "", start_month_from: "", start_month_to: "",
   completion_month_from: "", completion_month_to: "",
 };
