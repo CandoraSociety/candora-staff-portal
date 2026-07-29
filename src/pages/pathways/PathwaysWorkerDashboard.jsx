@@ -149,15 +149,15 @@ export default function PathwaysWorkerDashboard() {
             <tr>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
+              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Intake Date</th>
+              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Start</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
-              {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 1</th>}
-              {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 2</th>}
-              {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 3</th>}
+              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Completion</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Status</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Start Date</th>
+              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">90-Day Date</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">90-Day Status</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Svc Nav</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Intake Date</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -183,6 +183,8 @@ export default function PathwaysWorkerDashboard() {
                   )}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
+                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
+                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.service_start_date)}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
                   {c.program_status ? (
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
@@ -198,60 +200,19 @@ export default function PathwaysWorkerDashboard() {
                     </span>
                   )}
                 </td>
-                {isDawn && (
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    {c.barrier_1 ? (
-                      <span>
-                        <span className="text-slate-700">{c.barrier_1}</span>
-                        {c.barrier_1_status && (
-                          <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_1_status] || ""}`}>
-                            ({c.barrier_1_status})
-                          </span>
-                        )}
-                      </span>
-                    ) : "—"}
-                  </td>
-                )}
-                {isDawn && (
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    {c.barrier_2 ? (
-                      <span>
-                        <span className="text-slate-700">{c.barrier_2}</span>
-                        {c.barrier_2_status && (
-                          <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_2_status] || ""}`}>
-                            ({c.barrier_2_status})
-                          </span>
-                        )}
-                      </span>
-                    ) : "—"}
-                  </td>
-                )}
-                {isDawn && (
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    {c.barrier_3 ? (
-                      <span>
-                        <span className="text-slate-700">{c.barrier_3}</span>
-                        {c.barrier_3_status && (
-                          <span className={`ml-1 text-xs ${BARRIER_STATUS_COLORS[c.barrier_3_status] || ""}`}>
-                            ({c.barrier_3_status})
-                          </span>
-                        )}
-                      </span>
-                    ) : "—"}
-                  </td>
-                )}
+                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date)}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">
                   {c.post_completion_employment_status || "—"}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.post_completion_employment_date)}</td>
+                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.followup_90day_date)}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">{c.followup_90day_status || "—"}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.service_navigation_supports ? "Yes" : "—"}</td>
-                <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={isDawn ? 12 : 9} className="text-center py-6 text-slate-400 text-sm">
+                <td colSpan={11} className="text-center py-6 text-slate-400 text-sm">
                   No clients in this section.
                 </td>
               </tr>
