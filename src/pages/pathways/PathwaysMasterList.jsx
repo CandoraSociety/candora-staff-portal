@@ -133,7 +133,12 @@ export default function PathwaysMasterList() {
   const assignedClients = clients.filter(c => c.assigned_worker);
   const activeClients = assignedClients.filter(c => !c.file_closed);
   const closedClients = [...assignedClients.filter(c => c.file_closed), ...closedTransitionClients];
-  const sourceList = activeTab === "active" ? activeClients : closedClients;
+  // Include unassigned casual + rejected clients so they surface in their own sections
+  const extraActiveClients = clients.filter(c =>
+    !c.assigned_worker && !c.file_closed &&
+    (c.service_type === 'casual' || c.service_type === 'not_eligible')
+  );
+  const sourceList = activeTab === "active" ? [...activeClients, ...extraActiveClients] : closedClients;
   const displayed = applyFiltersAndSort(sourceList, search, filters, sortKey);
 
   const internalTrainingClients = activeClients.filter(c => c.internal_placement && c.internal_placement !== "none");

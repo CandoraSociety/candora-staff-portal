@@ -4,6 +4,8 @@ import { DEA_SUBSECTIONS, WD_SUBSECTIONS, groupClientsBySubSection } from '@/lib
 export default function CollapsibleClientSections({ clients, renderTable }) {
   const deaClients = clients.filter(c => c.service_type === 'direct_to_employment');
   const wdClients = clients.filter(c => c.service_type === 'pathways');
+  const casualClients = clients.filter(c => c.service_type === 'casual');
+  const rejectedClients = clients.filter(c => c.service_type === 'not_eligible');
   const deaGroups = groupClientsBySubSection(deaClients, 'dea');
   const wdGroups = groupClientsBySubSection(wdClients, 'wd');
 
@@ -28,6 +30,18 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
           ))}
         </div>
       </CollapsibleSection>
+
+      {casualClients.length > 0 && (
+        <CollapsibleSection title="Casual Clients" count={casualClients.length} accentColor="#6b7280" variant="main" defaultOpen>
+          {renderTable(casualClients, 'casual', 'all')}
+        </CollapsibleSection>
+      )}
+
+      {rejectedClients.length > 0 && (
+        <CollapsibleSection title="Rejected" count={rejectedClients.length} accentColor="#b91c1c" variant="main" defaultOpen>
+          {renderTable(rejectedClients, 'rejected', 'all')}
+        </CollapsibleSection>
+      )}
     </div>
   );
 }

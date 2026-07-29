@@ -9,10 +9,7 @@ import IntakeForm from '@/components/intake/IntakeForm';
 import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
 import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
 import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import DeterminationAssignmentDialog from '@/components/pathways/DeterminationAssignmentDialog';
 
 const EMPTY_FILTERS = {
   service_type: '', program_status: '', employment_status: '',
@@ -50,8 +47,6 @@ export default function PathwaysIntake() {
   const [pendingData, setPendingData] = useState(null);
   const [duplicates, setDuplicates] = useState([]);
   const [assignClientId, setAssignClientId] = useState(null);
-  const [selectedWorker, setSelectedWorker] = useState('');
-  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -123,26 +118,29 @@ export default function PathwaysIntake() {
     setDuplicates([]);
   };
 
-  const handleAssign = async () => {
-    const worker = staffList.find(s => s.id === selectedWorker);
-    if (!worker) return;
-    setAssigning(true);
-    try {
-      await base44.entities.Client.update(assignClientId, {
-        assigned_worker: worker.email,
-        assigned_worker_name: worker.name,
-        status: 'active',
-      });
-      setClients(prev => prev.map(c => c.id === assignClientId
-        ? { ...c, assigned_worker: worker.email, assigned_worker_name: worker.name, status: 'active' }
-        : c));
-      toast.success(`Assigned to ${worker.name}`);
-      setAssignClientId(null);
-      setSelectedWorker('');
-    } catch (err) {
-      toast.error('Failed to assign client');
+  const handleDeterminationAssign = async ({ service_type, worker }) => {
+    const updates = { service_type };
+    let successMsg = '';
+    if (worker) {
+      updates.assigned_worker = worker.email;
+      updates.assigned_worker_name = worker.name;
+      updates.status = 'active';
+      successMsg = `Assigned to ${worker.name}`;
+    } else if (service_type === 'casual') {
+      updates.status = 'active';
+      successMsg = 'Client marked as Casual';
+    } else if (service_type === 'not_eligible') {
+      updates.status = 'closed';
+      successMsg = 'Client rejected';
     }
-    setAssigning(false);
+    try {
+      await base44.entities.Client.update(assignClientId, updates);
+      setClients(prev => prev.map(c => c.id === assignClientId ? { ...c, ...updates } : c));
+      toast.success(successMsg);
+      setAssignClientId(null);
+    } catch (err) {
+      toast.error('Failed to update client');
+    }
   };
 
   const handleReject = async (clientId) => {
@@ -311,10 +309,10 @@ export default function PathwaysIntake() {
                               <Button
                                 size="sm"
                                 className="gap-1"
-                                onClick={() => { setAssignClientId(c.id); setSelectedWorker(''); }}
+                                onClick={() => setAssignClientId(c.id)}
                               >
                                 <UserCheck className="w-3.5 h-3.5" />
-                                Assign
+                                Determination/Assignment
                               </Button>
                               <Button
                                 variant="ghost"
@@ -353,36 +351,13 @@ export default function PathwaysIntake() {
         />
       )}
 
-      {/* Assignment dialog */}
-      <Dialog open={!!assignClientId} onOpenChange={(open) => { if (!open) { setAssignClientId(null); setSelectedWorker(''); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign to Career Counsellor</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-slate-500">
-              Assign <span className="font-semibold text-slate-700">{assignClient?.first_name} {assignClient?.last_name}</span> to a career counsellor. The client will appear on their dashboard and the master list.
-            </p>
-            <Select value={selectedWorker} onValueChange={setSelectedWorker}>
-              <SelectTrigger><SelectValue placeholder="Select staff member..." /></SelectTrigger>
-              <SelectContent>
-                {staffList.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {staffList.length === 0 && (
-              <p className="text-sm text-amber-600">No staff found. Add staff in the Master List.</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setAssignClientId(null); setSelectedWorker(''); }}>Cancel</Button>
-            <Button onClick={handleAssign} disabled={!selectedWorker || assigning}>
-              {assigning ? 'Assigning...' : 'Assign Client'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Determination / Assignment dialog */}
+      <DeterminationAssignmentDialog
+        client={assignClient}
+        staffList={staffList}
+        onClose={() => setAssignClientId(null)}
+        onConfirm={handleDeterminationAssign}
+      />
     </div>
   );
 }
