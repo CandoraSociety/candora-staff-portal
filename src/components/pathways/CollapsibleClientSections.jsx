@@ -9,20 +9,20 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
 
   return (
     <div className="space-y-3">
-      <CollapsibleSection title="DEA" count={deaClients.length} accentColor="#3b82f6" variant="main" defaultOpen={deaClients.length > 0}>
+      <CollapsibleSection title="DEA" count={deaClients.length} accentColor="#232964" variant="main" defaultOpen={deaClients.length > 0}>
         <div className="space-y-2">
           {DEA_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={deaGroups[sub.key]?.length || 0} accentColor="#3b82f6">
+            <CollapsibleSection key={sub.key} title={sub.label} count={deaGroups[sub.key]?.length || 0} accentColor="#232964">
               {renderTable(deaGroups[sub.key] || [])}
             </CollapsibleSection>
           ))}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="WD" count={wdClients.length} accentColor="#8b5cf6" variant="main" defaultOpen={wdClients.length > 0}>
+      <CollapsibleSection title="WD" count={wdClients.length} accentColor="#92760c" variant="main" defaultOpen={wdClients.length > 0}>
         <div className="space-y-2">
           {WD_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={wdGroups[sub.key]?.length || 0} accentColor="#8b5cf6">
+            <CollapsibleSection key={sub.key} title={sub.label} count={wdGroups[sub.key]?.length || 0} accentColor="#92760c">
               {renderTable(wdGroups[sub.key] || [])}
             </CollapsibleSection>
           ))}
