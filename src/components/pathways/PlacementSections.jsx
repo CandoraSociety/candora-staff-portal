@@ -232,21 +232,21 @@ export default function PlacementSections({ clients }) {
 
   return (
     <div className="space-y-3">
-      <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#34a06b" variant="main" defaultOpen={internalEntries.length > 0}>
+      <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#5b7fb8" variant="main" defaultOpen={internalEntries.length > 0}>
         <div className="space-y-2">
           {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#34a06b">
-              {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled', "#34a06b")}
+            <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#5b7fb8">
+              {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled', "#5b7fb8")}
             </CollapsibleSection>
           ))}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#e8862d" variant="main" defaultOpen={exposureEntries.length > 0}>
+      <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#d4a017" variant="main" defaultOpen={exposureEntries.length > 0}>
         <div className="space-y-2">
           {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#e8862d">
-              {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled', "#e8862d")}
+            <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#d4a017">
+              {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled', "#d4a017")}
             </CollapsibleSection>
           ))}
         </div>
