@@ -31,17 +31,17 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
         </div>
       </CollapsibleSection>
 
-      {casualClients.length > 0 && (
-        <CollapsibleSection title="Casual Clients" count={casualClients.length} accentColor="#6b7280" variant="main" defaultOpen>
-          {renderTable(casualClients, 'casual', 'all')}
-        </CollapsibleSection>
-      )}
+      <CollapsibleSection title="Casual Clients" count={casualClients.length} accentColor="#6b7280" variant="main" defaultOpen={casualClients.length > 0}>
+        {casualClients.length > 0
+          ? renderTable(casualClients, 'casual', 'all')
+          : <p className="text-sm text-slate-400 italic px-4 py-3">No casual clients.</p>}
+      </CollapsibleSection>
 
-      {rejectedClients.length > 0 && (
-        <CollapsibleSection title="Rejected" count={rejectedClients.length} accentColor="#b91c1c" variant="main" defaultOpen>
-          {renderTable(rejectedClients, 'rejected', 'all')}
-        </CollapsibleSection>
-      )}
+      <CollapsibleSection title="Rejected" count={rejectedClients.length} accentColor="#b91c1c" variant="main" defaultOpen={rejectedClients.length > 0}>
+        {rejectedClients.length > 0
+          ? renderTable(rejectedClients, 'rejected', 'all')
+          : <p className="text-sm text-slate-400 italic px-4 py-3">No rejected clients.</p>}
+      </CollapsibleSection>
     </div>
   );
 }
