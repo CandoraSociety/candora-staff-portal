@@ -1,17 +1,17 @@
 export const DEA_SUBSECTIONS = [
-  { key: 'incomplete_cancelled', label: 'Incomplete/Cancelled' },
-  { key: 'completed', label: 'Completed' },
-  { key: 'followup_period', label: 'Follow-up Period' },
   { key: 'program_started', label: 'In Progress' },
+  { key: 'followup_period', label: 'Follow-up Period' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'incomplete_cancelled', label: 'Incomplete/Cancelled' },
   { key: 'not_started', label: 'Not Started' },
 ];
 
 export const WD_SUBSECTIONS = [
-  { key: 'incomplete_cancelled', label: 'Incomplete/Cancelled' },
-  { key: 'completed', label: 'Completed' },
-  { key: 'followup_period', label: 'Follow-up Period' },
-  { key: 'work_search', label: 'Work Search Phase' },
   { key: 'program_started', label: 'In Progress' },
+  { key: 'work_search', label: 'Work Search Phase' },
+  { key: 'followup_period', label: 'Follow-up Period' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'incomplete_cancelled', label: 'Incomplete/Cancelled' },
   { key: 'not_started', label: 'Not Started' },
 ];
 
