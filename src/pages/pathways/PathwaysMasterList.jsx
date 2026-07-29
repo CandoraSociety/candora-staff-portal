@@ -11,6 +11,7 @@ import TransitionClientDetailsModal from "@/components/pathways/TransitionClient
 import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
 import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
+import PlacementSections from "@/components/pathways/PlacementSections";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -412,6 +413,10 @@ export default function PathwaysMasterList() {
             />
 
             <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
+
+            <div className="my-6 border-t-2 border-dashed border-slate-300" />
+
+            <PlacementSections clients={displayed} />
               </>
             )}
           </>

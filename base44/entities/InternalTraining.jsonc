@@ -190,6 +190,10 @@
     },
     "referral_notes": {
       "type": "string"
+    },
+    "cancellation_reason": {
+      "type": "string",
+      "description": "Reason for withdrawal or cancellation"
     }
   },
   "required": [
