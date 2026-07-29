@@ -1,27 +1,43 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-export default function CollapsibleSection({ title, count = 0, defaultOpen = false, accentColor, children }) {
+export default function CollapsibleSection({ title, count = 0, defaultOpen = false, accentColor, variant = 'sub', children }) {
   const [open, setOpen] = useState(defaultOpen);
+
+  const isMain = variant === 'main';
+
+  const headerStyle = isMain
+    ? { background: accentColor || 'hsl(231,64%,20%)' }
+    : { background: accentColor ? `${accentColor}1a` : 'hsl(231,64%,20%,0.06)' };
+
+  const titleColor = isMain
+    ? '#fff'
+    : accentColor || 'hsl(231,64%,20%)';
+
+  const countBg = isMain
+    ? 'rgba(255,255,255,0.2)'
+    : accentColor ? `${accentColor}22` : 'rgba(43,45,232,0.12)';
+  const countColor = isMain ? '#fff' : (accentColor || '#2b2de8');
+
   return (
-    <div>
+    <div className="rounded-lg overflow-hidden border border-slate-200">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-slate-50"
-        style={accentColor ? { borderLeft: `3px solid ${accentColor}` } : {}}
+        className="w-full flex items-center gap-2 px-4 py-2.5 transition-colors hover:brightness-95"
+        style={headerStyle}
       >
         {open
-          ? <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-          : <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />}
-        <span className="font-semibold text-sm" style={{ color: accentColor || 'hsl(231,64%,20%)' }}>{title}</span>
+          ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: titleColor }} />
+          : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: titleColor }} />}
+        <span className={`font-semibold ${isMain ? 'text-base' : 'text-sm'}`} style={{ color: titleColor }}>{title}</span>
         <span
           className="text-xs px-2 py-0.5 rounded-full font-medium"
-          style={{ background: accentColor ? `${accentColor}22` : 'rgba(43,45,232,0.12)', color: accentColor || '#2b2de8' }}
+          style={{ background: countBg, color: countColor }}
         >
           {count}
         </span>
       </button>
-      {open && <div className="mt-1">{children}</div>}
+      {open && <div className="p-3 bg-white">{children}</div>}
     </div>
   );
 }
