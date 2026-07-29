@@ -2,7 +2,7 @@ export default function PlacementSeparator({ label = "Placements" }) {
   return (
     <div className="flex items-center gap-3 my-6 select-none">
       <div className="flex-1 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-slate-400 rounded-full" />
-      <div className="relative px-5 py-1.5">
+      <div className="relative px-12 py-1.5 min-w-[200px] text-center">
         <div
           className="absolute inset-0 rounded-md"
           style={{
