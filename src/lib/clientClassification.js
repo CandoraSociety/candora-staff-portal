@@ -1,5 +1,5 @@
 export const DEA_SUBSECTIONS = [
-  { key: 'program_started', label: 'In Progress' },
+  { key: 'program_started', label: 'Active (EDA)' },
   { key: 'followup_period', label: 'Follow-up Period' },
   { key: 'completed', label: 'Completed' },
   { key: 'incomplete_cancelled', label: 'Incomplete/Cancelled' },
@@ -7,7 +7,7 @@ export const DEA_SUBSECTIONS = [
 ];
 
 export const WD_SUBSECTIONS = [
-  { key: 'program_started', label: 'In Progress' },
+  { key: 'program_started', label: 'Active (EDA)' },
   { key: 'work_search', label: 'Work Search Phase' },
   { key: 'followup_period', label: 'Follow-up Period' },
   { key: 'completed', label: 'Completed' },
