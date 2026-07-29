@@ -2,8 +2,9 @@ export default function PlacementSeparator({ label = "Placements" }) {
   return (
     <div className="my-6 select-none">
       <div className="relative px-36 py-1 text-center w-full">
+        <div className="absolute inset-0 border border-black" />
         <div
-          className="absolute inset-0 rounded-md border border-black"
+          className="absolute inset-[2px]"
           style={{
             background: "linear-gradient(135deg, hsl(231,64%,28%) 0%, hsl(231,64%,22%) 50%, hsl(44,80%,40%) 100%)",
           }}
