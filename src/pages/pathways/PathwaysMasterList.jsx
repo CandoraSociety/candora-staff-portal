@@ -313,7 +313,7 @@ export default function PathwaysMasterList() {
               workers={workers}
             />
 
-            <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
+            <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} alwaysShowExtras />
               </>
             )}
           </>

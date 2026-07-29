@@ -1,7 +1,7 @@
 import CollapsibleSection from './CollapsibleSection';
 import { DEA_SUBSECTIONS, WD_SUBSECTIONS, groupClientsBySubSection } from '@/lib/clientClassification';
 
-export default function CollapsibleClientSections({ clients, renderTable }) {
+export default function CollapsibleClientSections({ clients, renderTable, alwaysShowExtras = false }) {
   const deaClients = clients.filter(c => c.service_type === 'direct_to_employment');
   const wdClients = clients.filter(c => c.service_type === 'pathways');
   const casualClients = clients.filter(c => c.service_type === 'casual');
@@ -31,17 +31,21 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Casual Clients" count={casualClients.length} accentColor="#6b7280" variant="main" defaultOpen={casualClients.length > 0}>
-        {casualClients.length > 0
-          ? renderTable(casualClients, 'casual', 'all')
-          : <p className="text-sm text-slate-400 italic px-4 py-3">No casual clients.</p>}
-      </CollapsibleSection>
+      {(alwaysShowExtras || casualClients.length > 0) && (
+        <CollapsibleSection title="Casual Clients" count={casualClients.length} accentColor="#6b7280" variant="main" defaultOpen={casualClients.length > 0}>
+          {casualClients.length > 0
+            ? renderTable(casualClients, 'casual', 'all')
+            : <p className="text-sm text-slate-400 italic px-4 py-3">No casual clients.</p>}
+        </CollapsibleSection>
+      )}
 
-      <CollapsibleSection title="Rejected" count={rejectedClients.length} accentColor="#b91c1c" variant="main" defaultOpen={rejectedClients.length > 0}>
-        {rejectedClients.length > 0
-          ? renderTable(rejectedClients, 'rejected', 'all')
-          : <p className="text-sm text-slate-400 italic px-4 py-3">No rejected clients.</p>}
-      </CollapsibleSection>
+      {(alwaysShowExtras || rejectedClients.length > 0) && (
+        <CollapsibleSection title="Rejected" count={rejectedClients.length} accentColor="#b91c1c" variant="main" defaultOpen={rejectedClients.length > 0}>
+          {rejectedClients.length > 0
+            ? renderTable(rejectedClients, 'rejected', 'all')
+            : <p className="text-sm text-slate-400 italic px-4 py-3">No rejected clients.</p>}
+        </CollapsibleSection>
+      )}
     </div>
   );
 }
