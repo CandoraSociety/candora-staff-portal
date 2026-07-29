@@ -1,7 +1,7 @@
 export default function PlacementSeparator({ label = "Placements" }) {
   return (
     <div className="my-6 select-none">
-      <div className="relative px-36 py-[2px] text-center w-full">
+      <div className="relative px-36 py-px text-center w-full">
         <div className="absolute inset-0 border border-black" />
         <div
           className="absolute inset-[2px]"
