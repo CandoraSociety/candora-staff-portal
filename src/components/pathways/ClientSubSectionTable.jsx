@@ -30,6 +30,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
   }
+  if (program === 'dea' && subSection === 'completed') {
+    return [...base, 'completion_date', 'followup_90day_date', 'employment_outcome'];
+  }
   return base;
 }
 
@@ -51,6 +54,7 @@ const COLUMN_LABELS = {
   completion_date: 'Program Completion Date',
   followup_90day_date: '90-Day Follow-up Date',
   employment_status: 'Current Employment Status',
+  employment_outcome: 'Employment Outcome',
 };
 
 export default function ClientSubSectionTable({
@@ -121,6 +125,8 @@ export default function ClientSubSectionTable({
       }
       case 'employment_status':
         return <td key="employment_status" className="px-3 py-2.5 whitespace-nowrap">{c.employment_status ? (EMPLOYMENT_STATUS_LABELS[c.employment_status] || c.employment_status) : "—"}</td>;
+      case 'employment_outcome':
+        return <td key="employment_outcome" className="px-3 py-2.5 whitespace-nowrap">{c.followup_90day_status ? (EMPLOYMENT_STATUS_LABELS[c.followup_90day_status] || c.followup_90day_status) : "—"}</td>;
       default:
         return <td key={colKey}>—</td>;
     }
