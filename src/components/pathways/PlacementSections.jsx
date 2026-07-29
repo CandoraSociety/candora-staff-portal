@@ -170,11 +170,11 @@ export default function PlacementSections({ clients }) {
     }
   };
 
-  const renderPlacementTable = (rows, isIncomplete) => (
+  const renderPlacementTable = (rows, isIncomplete, headerColor = "#2d5a87") => (
     <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b border-slate-200" style={{ background: "hsl(231,64%,20%)" }}>
+          <thead className="border-b border-slate-200" style={{ background: headerColor }}>
             <tr>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
@@ -232,21 +232,21 @@ export default function PlacementSections({ clients }) {
 
   return (
     <div className="space-y-3">
-      <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#232964" variant="main" defaultOpen={internalEntries.length > 0}>
+      <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#2d5a87" variant="main" defaultOpen={internalEntries.length > 0}>
         <div className="space-y-2">
           {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#232964">
-              {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled')}
+            <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#2d5a87">
+              {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled', "#2d5a87")}
             </CollapsibleSection>
           ))}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#92760c" variant="main" defaultOpen={exposureEntries.length > 0}>
+      <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#a8551c" variant="main" defaultOpen={exposureEntries.length > 0}>
         <div className="space-y-2">
           {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#92760c">
-              {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled')}
+            <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#a8551c">
+              {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled', "#a8551c")}
             </CollapsibleSection>
           ))}
         </div>

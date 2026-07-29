@@ -10,6 +10,7 @@ import CompassTaskList from "@/components/compass/CompassTaskList";
 import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
+import PlacementSeparator from "@/components/pathways/PlacementSeparator";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -573,7 +574,7 @@ export default function PathwaysWorkerDashboard() {
 
               <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
 
-              <div className="my-6 border-t-2 border-dashed border-slate-300" />
+              <PlacementSeparator label="Placements" />
 
               <PlacementSections clients={displayed} />
               </>
