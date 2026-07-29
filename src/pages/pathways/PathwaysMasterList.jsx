@@ -9,10 +9,8 @@ import { clientRowColor } from "@/lib/clientRowColor";
 import TransitionClientsTab from "@/components/pathways/TransitionClientsTab";
 import TransitionClientDetailsModal from "@/components/pathways/TransitionClientDetailsModal";
 import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
-import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
-import PlacementSeparator from "@/components/pathways/PlacementSeparator";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
@@ -302,7 +300,10 @@ export default function PathwaysMasterList() {
               </div>
             )}
             {activeTab === "active" && placementSubTab !== "all" ? (
-              <PlacementListTab clients={activeClients} type={placementSubTab} />
+              <PlacementSections
+                clients={displayed}
+                type={placementSubTab === "internal_training" ? "internal" : "work_exposure"}
+              />
             ) : (
               <>
             <ClientListControls
@@ -313,10 +314,6 @@ export default function PathwaysMasterList() {
             />
 
             <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
-
-            <PlacementSeparator label="Placements" />
-
-            <PlacementSections clients={displayed} />
               </>
             )}
           </>
