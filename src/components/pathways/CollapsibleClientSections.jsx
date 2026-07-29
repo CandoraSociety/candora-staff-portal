@@ -13,7 +13,7 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
         <div className="space-y-2">
           {DEA_SUBSECTIONS.map(sub => (
             <CollapsibleSection key={sub.key} title={sub.label} count={deaGroups[sub.key]?.length || 0} accentColor="#232964">
-              {renderTable(deaGroups[sub.key] || [])}
+              {renderTable(deaGroups[sub.key] || [], 'dea', sub.key)}
             </CollapsibleSection>
           ))}
         </div>
@@ -23,7 +23,7 @@ export default function CollapsibleClientSections({ clients, renderTable }) {
         <div className="space-y-2">
           {WD_SUBSECTIONS.map(sub => (
             <CollapsibleSection key={sub.key} title={sub.label} count={wdGroups[sub.key]?.length || 0} accentColor="#92760c">
-              {renderTable(wdGroups[sub.key] || [])}
+              {renderTable(wdGroups[sub.key] || [], 'wd', sub.key)}
             </CollapsibleSection>
           ))}
         </div>

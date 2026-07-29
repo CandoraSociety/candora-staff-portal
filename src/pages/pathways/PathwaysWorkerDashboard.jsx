@@ -13,6 +13,7 @@ import PlacementSections from "@/components/pathways/PlacementSections";
 import PlacementSeparator from "@/components/pathways/PlacementSeparator";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
+import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -141,86 +142,14 @@ export default function PathwaysWorkerDashboard() {
     return dateA.localeCompare(dateB);
   });
 
-  const renderClientTable = (rows) => (
-    <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b border-slate-200" style={{ background: "hsl(231,64%,20%)" }}>
-            <tr>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Intake Date</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Start</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Completion</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Status</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Start Date</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">90-Day Date</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">90-Day Status</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Svc Nav</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {rows.map(c => (
-              <tr
-                key={c.id}
-                onClick={() => navigate(`/pathways/client/${c.id}`)}
-                className={`transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
-              >
-                <td className="px-3 py-2.5 font-medium whitespace-nowrap relative">
-                  <SwitchDogEar switches={c.program_stream_switches} />
-                  <span className="font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
-                    {c.first_name} {c.last_name}
-                  </span>
-                  {c.service_type === "direct_to_employment" && !c.file_closed && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSwitchClient(c); }}
-                      className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 font-medium transition-colors"
-                      title="Switch to WD"
-                    >
-                      ⇄ WD
-                    </button>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.service_start_date)}</td>
-                <td className="px-3 py-2.5 whitespace-nowrap">
-                  {c.program_status ? (
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
-                      {programStatusLabel(c)}
-                    </span>
-                  ) : c.bit_completed ? (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                      Action Plan Incomplete
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                      Assessments Incomplete
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date)}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">
-                  {c.post_completion_employment_status || "—"}
-                </td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.post_completion_employment_date)}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.followup_90day_date)}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap font-mono text-xs">{c.followup_90day_status || "—"}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.service_navigation_supports ? "Yes" : "—"}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={11} className="text-center py-6 text-slate-400 text-sm">
-                  No clients in this section.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  const renderClientTable = (rows, program, subSection) => (
+    <ClientSubSectionTable
+      rows={rows}
+      program={program}
+      subSection={subSection}
+      onRowClick={(c) => navigate(`/pathways/client/${c.id}`)}
+      onSwitchClient={setSwitchClient}
+    />
   );
 
   if (loading) {
