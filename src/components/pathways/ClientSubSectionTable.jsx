@@ -27,8 +27,21 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'dea' && subSection === 'program_started') {
     return [...base, 'completion_date'];
   }
+  if (program === 'dea' && subSection === 'followup_period') {
+    return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
+  }
   return base;
 }
+
+const EMPLOYMENT_STATUS_LABELS = {
+  'E-RF': 'Employed (RF)',
+  'E-UF': 'Employed (UF)',
+  'E-PT': 'Employed (PT)',
+  'UE': 'Unemployed',
+  'UE-LFW': 'Unemployed (LFW)',
+  'UE-S': 'Unemployed (S)',
+  'NA': 'N/A',
+};
 
 const COLUMN_LABELS = {
   name: 'Name',
@@ -36,6 +49,8 @@ const COLUMN_LABELS = {
   intake_date: 'Intake Date',
   program_start: 'Program Start',
   completion_date: 'Program Completion Date',
+  followup_90day_date: '90-Day Follow-up Date',
+  employment_status: 'Current Employment Status',
 };
 
 export default function ClientSubSectionTable({
@@ -92,6 +107,20 @@ export default function ClientSubSectionTable({
             <span className="block text-[10px] italic">(anticipated completion date)</span>
           </td>
         );
+      case 'followup_90day_date': {
+        if (c.followup_90day_date) {
+          return <td key="followup_90day_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.followup_90day_date)}</td>;
+        }
+        const anticipatedFollowup = c.completion_date ? addDays(new Date(c.completion_date), 90) : null;
+        return (
+          <td key="followup_90day_date" className="px-3 py-2.5 whitespace-nowrap text-slate-400">
+            {anticipatedFollowup ? format(anticipatedFollowup, "MMM d, yy") : "—"}
+            <span className="block text-[10px] italic">(anticipated follow-up)</span>
+          </td>
+        );
+      }
+      case 'employment_status':
+        return <td key="employment_status" className="px-3 py-2.5 whitespace-nowrap">{c.employment_status ? (EMPLOYMENT_STATUS_LABELS[c.employment_status] || c.employment_status) : "—"}</td>;
       default:
         return <td key={colKey}>—</td>;
     }
