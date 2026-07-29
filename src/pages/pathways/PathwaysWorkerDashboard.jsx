@@ -108,7 +108,8 @@ export default function PathwaysWorkerDashboard() {
   }, []);
 
   const isDawn = (user?.email || "").toLowerCase() === "dawn.williston@candorasociety.com";
-  const displayed = applyFiltersAndSort(clients, search, filters, sortKey);
+  const deaWdTotal = clients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length;
+  const displayed = applyFiltersAndSort(clients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
 
   // DEA Closing Alert
@@ -446,7 +447,7 @@ export default function PathwaysWorkerDashboard() {
               <div className="flex items-center gap-2 text-slate-600 mb-2">
                 <Users className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {displayed.length} of {clients.length} client{clients.length !== 1 ? "s" : ""}
+                  {displayed.length} of {deaWdTotal} client{deaWdTotal !== 1 ? "s" : ""}
                 </span>
               </div>
 
