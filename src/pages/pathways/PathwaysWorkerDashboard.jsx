@@ -415,7 +415,7 @@ export default function PathwaysWorkerDashboard() {
               {/* Placement sub-tabs */}
               <div className="flex gap-1 mb-4 border-b border-slate-200">
                 {[
-                  { id: "all", label: "All Clients", count: clients.length },
+                  { id: "all", label: "All Clients", count: clients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length },
                   { id: "internal_training", label: "Internal Training", count: clients.filter(c => c.internal_placement && c.internal_placement !== "none").length },
                   { id: "work_exposure", label: "Work Exposure", count: clients.filter(c => c.exposure_course || c.paid_external_placement).length + exposurePlacements.length },
                 ].map(sub => (
