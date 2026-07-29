@@ -11,6 +11,8 @@ import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import PlacementSeparator from "@/components/pathways/PlacementSeparator";
+import SwitchDogEar from "@/components/pathways/SwitchDogEar";
+import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -66,6 +68,7 @@ export default function PathwaysWorkerDashboard() {
   const [transfers, setTransfers] = useState([]);
   const [placementSubTab, setPlacementSubTab] = useState("all");
   const [exposurePlacements, setExposurePlacements] = useState([]);
+  const [switchClient, setSwitchClient] = useState(null);
 
   const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
@@ -146,10 +149,7 @@ export default function PathwaysWorkerDashboard() {
             <tr>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Pathway</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Switches</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">CLB</th>
               {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 1</th>}
               {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 2</th>}
               {isDawn && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Barrier 3</th>}
@@ -167,20 +167,22 @@ export default function PathwaysWorkerDashboard() {
                 onClick={() => navigate(`/pathways/client/${c.id}`)}
                 className={`transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
               >
-                <td className="px-3 py-2.5 font-medium whitespace-nowrap">
+                <td className="px-3 py-2.5 font-medium whitespace-nowrap relative">
+                  <SwitchDogEar switches={c.program_stream_switches} />
                   <span className="font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
                     {c.first_name} {c.last_name}
                   </span>
+                  {c.service_type === "direct_to_employment" && !c.file_closed && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSwitchClient(c); }}
+                      className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 font-medium transition-colors"
+                      title="Switch to WD"
+                    >
+                      ⇄ WD
+                    </button>
+                  )}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{SERVICE_LABELS[c.service_type] || "—"}</td>
-                <td className="px-3 py-2.5 whitespace-nowrap">
-                  {c.program_stream_switches?.length > 0 ? (
-                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
-                      {c.program_stream_switches.length}×
-                    </span>
-                  ) : "—"}
-                </td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
                   {c.program_status ? (
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
@@ -195,9 +197,6 @@ export default function PathwaysWorkerDashboard() {
                       Assessments Incomplete
                     </span>
                   )}
-                </td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
-                  {c.clb_level?.replace("clb_", "CLB ").replace("native_english_french", "Native") || "—"}
                 </td>
                 {isDawn && (
                   <td className="px-3 py-2.5 whitespace-nowrap">
@@ -252,7 +251,7 @@ export default function PathwaysWorkerDashboard() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={isDawn ? 15 : 12} className="text-center py-6 text-slate-400 text-sm">
+                <td colSpan={isDawn ? 12 : 9} className="text-center py-6 text-slate-400 text-sm">
                   No clients in this section.
                 </td>
               </tr>
@@ -583,6 +582,14 @@ export default function PathwaysWorkerDashboard() {
           )
         )}
       </main>
+
+      {switchClient && (
+        <SwitchToWDDialog
+          client={switchClient}
+          onClose={() => setSwitchClient(null)}
+          onSwitched={(updated) => setClients(prev => prev.map(c => c.id === updated.id ? updated : c))}
+        />
+      )}
     </div>
   );
 }

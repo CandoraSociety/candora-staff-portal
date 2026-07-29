@@ -13,6 +13,8 @@ import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import PlacementSeparator from "@/components/pathways/PlacementSeparator";
+import SwitchDogEar from "@/components/pathways/SwitchDogEar";
+import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 
 const EMPTY_FILTERS = {
   service_type: "", program_status: "", employment_status: "",
@@ -81,6 +83,7 @@ export default function PathwaysMasterList() {
   const [transitionCount, setTransitionCount] = useState(0);
   const [closedTransitionClients, setClosedTransitionClients] = useState([]);
   const [detailsClient, setDetailsClient] = useState(null);
+  const [switchClient, setSwitchClient] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -149,9 +152,7 @@ export default function PathwaysMasterList() {
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Name</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">HSID#</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Intake Date</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Pathway</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Start</th>
-              <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Switches</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Program Status</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Completion</th>
               <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Employment Status</th>
@@ -175,35 +176,27 @@ export default function PathwaysMasterList() {
                 onClick={() => c._isTransition ? setDetailsClient(c) : navigate(`/pathways/client/${c.id}`)}
                 className={`group transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
               >
-                <td className="px-3 py-2.5 whitespace-nowrap font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
+                <td className="px-3 py-2.5 whitespace-nowrap font-semibold relative" style={{ color: "hsl(231,64%,28%)" }}>
+                  <SwitchDogEar switches={c.program_stream_switches} />
                   {c.first_name} {c.last_name}
                   {c._isTransition && (
                     <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: "rgba(43,45,232,0.15)", color: "#2b2de8" }}>
                       Transition
                     </span>
                   )}
+                  {c.service_type === "direct_to_employment" && !c.file_closed && !c._isTransition && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSwitchClient(c); }}
+                      className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 font-medium transition-colors"
+                      title="Switch to WD"
+                    >
+                      ⇄ WD
+                    </button>
+                  )}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{c.compass_hsid || "—"}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.intake_date)}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{SERVICE_LABELS[c.service_type] || "—"}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.service_start_date)}</td>
-                <td className="px-3 py-2.5 whitespace-nowrap">
-                  {c.program_stream_switches?.length > 0 ? (
-                    <div className="flex flex-col gap-0.5">
-                      {c.program_stream_switches.map((sw, i) => (
-                        <div key={i} className="flex items-center gap-1">
-                          <span className="text-xs bg-red-100 text-red-700 border border-red-200 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">
-                            {SERVICE_LABELS[sw.from_stream] || sw.from_stream || "?"}
-                          </span>
-                          <span className="text-slate-400 text-xs">→</span>
-                          <span className="text-xs bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.5 rounded font-semibold whitespace-nowrap">
-                            {SERVICE_LABELS[sw.to_stream] || sw.to_stream || "?"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : "—"}
-                </td>
                 <td className="px-3 py-2.5 whitespace-nowrap">
                   {c.program_status ? (
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${PROGRAM_STATUS_COLORS[c.program_status] || "bg-slate-100 text-slate-600"}`}>
@@ -253,7 +246,7 @@ export default function PathwaysMasterList() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={16} className="text-center py-6 text-slate-400 text-sm">
+                <td colSpan={14} className="text-center py-6 text-slate-400 text-sm">
                   No clients in this section.
                 </td>
               </tr>
@@ -505,6 +498,14 @@ export default function PathwaysMasterList() {
             const updated = await base44.entities.PathwaysStaff.filter({ is_active: true });
             setStaff(updated);
           }}
+        />
+      )}
+
+      {switchClient && (
+        <SwitchToWDDialog
+          client={switchClient}
+          onClose={() => setSwitchClient(null)}
+          onSwitched={(updated) => setClients(prev => prev.map(c => c.id === updated.id ? updated : c))}
         />
       )}
     </div>
