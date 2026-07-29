@@ -52,22 +52,27 @@ function classifyClientExposure(c) {
   return 'not_started';
 }
 
-export default function PlacementSections({ clients }) {
+export default function PlacementSections({ clients, type = 'both' }) {
   const navigate = useNavigate();
   const [internalTrainings, setInternalTrainings] = useState([]);
   const [workExposures, setWorkExposures] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.InternalTraining.list("-created_date", 500).catch(() => []),
-      base44.entities.WorkExposurePlacement.list("-created_date", 500).catch(() => []),
-    ]).then(([itData, weData]) => {
+    const fetches = [
+      (type === 'internal' || type === 'both')
+        ? base44.entities.InternalTraining.list("-created_date", 500).catch(() => [])
+        : Promise.resolve([]),
+      (type === 'work_exposure' || type === 'both')
+        ? base44.entities.WorkExposurePlacement.list("-created_date", 500).catch(() => [])
+        : Promise.resolve([]),
+    ];
+    Promise.all(fetches).then(([itData, weData]) => {
       setInternalTrainings(itData);
       setWorkExposures(weData);
       setLoading(false);
     });
-  }, []);
+  }, [type]);
 
   const clientMap = new Map(clients.map(c => [c.id, c]));
   const clientIds = new Set(clients.map(c => c.id));
@@ -232,25 +237,29 @@ export default function PlacementSections({ clients }) {
 
   return (
     <div className="space-y-3">
-      <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#5b7fb8" variant="main" defaultOpen={internalEntries.length > 0}>
-        <div className="space-y-2">
-          {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#5b7fb8">
-              {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled', "#5b7fb8")}
-            </CollapsibleSection>
-          ))}
-        </div>
-      </CollapsibleSection>
+      {(type === 'internal' || type === 'both') && (
+        <CollapsibleSection title="Internal Placements" count={internalEntries.length} accentColor="#5b7fb8" variant="main" defaultOpen={internalEntries.length > 0}>
+          <div className="space-y-2">
+            {PLACEMENT_SUBSECTIONS.map(sub => (
+              <CollapsibleSection key={sub.key} title={sub.label} count={groupInternal[sub.key]?.length || 0} accentColor="#5b7fb8">
+                {renderPlacementTable(groupInternal[sub.key] || [], sub.key === 'incomplete_cancelled', "#5b7fb8")}
+              </CollapsibleSection>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
 
-      <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#d4a017" variant="main" defaultOpen={exposureEntries.length > 0}>
-        <div className="space-y-2">
-          {PLACEMENT_SUBSECTIONS.map(sub => (
-            <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#d4a017">
-              {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled', "#d4a017")}
-            </CollapsibleSection>
-          ))}
-        </div>
-      </CollapsibleSection>
+      {(type === 'work_exposure' || type === 'both') && (
+        <CollapsibleSection title="Work Exposure Placements" count={exposureEntries.length} accentColor="#d4a017" variant="main" defaultOpen={exposureEntries.length > 0}>
+          <div className="space-y-2">
+            {PLACEMENT_SUBSECTIONS.map(sub => (
+              <CollapsibleSection key={sub.key} title={sub.label} count={groupExposure[sub.key]?.length || 0} accentColor="#d4a017">
+                {renderPlacementTable(groupExposure[sub.key] || [], sub.key === 'incomplete_cancelled', "#d4a017")}
+              </CollapsibleSection>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
     </div>
   );
 }

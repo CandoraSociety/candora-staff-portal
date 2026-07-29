@@ -7,10 +7,8 @@ import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
 import CompassTaskList from "@/components/compass/CompassTaskList";
-import PlacementListTab from "@/components/pathways/PlacementListTab";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
-import PlacementSeparator from "@/components/pathways/PlacementSeparator";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
@@ -442,9 +440,7 @@ export default function PathwaysWorkerDashboard() {
                 ))}
               </div>
 
-              {placementSubTab !== "all" ? (
-                <PlacementListTab clients={clients} type={placementSubTab} />
-              ) : (
+              {placementSubTab === "all" ? (
               <>
               {/* Client count */}
               <div className="flex items-center gap-2 text-slate-600 mb-2">
@@ -462,11 +458,9 @@ export default function PathwaysWorkerDashboard() {
               />
 
               <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
-
-              <PlacementSeparator label="Placements" />
-
-              <PlacementSections clients={displayed} />
               </>
+              ) : (
+                <PlacementSections clients={displayed} type={placementSubTab === "internal_training" ? "internal" : "work_exposure"} />
               )}
             </>
           )
