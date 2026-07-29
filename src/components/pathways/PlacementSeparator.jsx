@@ -6,7 +6,7 @@ export default function PlacementSeparator({ label = "Placements" }) {
         <div
           className="absolute inset-[2px]"
           style={{
-            background: "linear-gradient(135deg, hsl(231,64%,28%) 0%, hsl(231,64%,22%) 50%, hsl(44,80%,40%) 100%)",
+            background: "#3a3a3a",
           }}
         />
         <span className="relative text-white text-xs font-display font-bold uppercase tracking-[0.2em]">
