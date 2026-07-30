@@ -27,6 +27,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'dea' && subSection === 'program_started') {
     return [...base, 'completion_date'];
   }
+  if (program === 'wd' && subSection === 'program_started') {
+    return [...base, 'completion_date'];
+  }
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
   }
@@ -104,7 +107,8 @@ export default function ClientSubSectionTable({
         if (c.completion_date) {
           return <td key="completion_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date)}</td>;
         }
-        const anticipatedDate = c.service_start_date ? addDays(new Date(c.service_start_date), 14) : null;
+        const anticipatedWeeks = program === 'wd' ? 16 : 2;
+        const anticipatedDate = c.service_start_date ? addDays(new Date(c.service_start_date), anticipatedWeeks * 7) : null;
         return (
           <td key="completion_date" className="px-3 py-2.5 whitespace-nowrap text-slate-400">
             {anticipatedDate ? format(anticipatedDate, "MMM d, yy") : "—"}
