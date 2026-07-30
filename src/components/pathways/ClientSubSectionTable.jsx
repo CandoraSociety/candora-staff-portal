@@ -45,6 +45,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'dea' && subSection === 'completed') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_outcome'];
   }
+  if (subSection === 'incomplete_cancelled') {
+    return [...base, 'reason', 'end_date'];
+  }
   return base;
 }
 
@@ -69,6 +72,8 @@ const COLUMN_LABELS = {
   employment_outcome: 'Employment Outcome',
   employment_date: 'Employment Date',
   employment_followup_90day: '90 Day Follow-up',
+  reason: 'Reason',
+  end_date: 'Date',
 };
 
 function getColLabel(col, subSection) {
@@ -189,6 +194,12 @@ export default function ClientSubSectionTable({
         return <td key="employment_status" className="px-3 py-2.5 whitespace-nowrap">{c.employment_status ? (EMPLOYMENT_STATUS_LABELS[c.employment_status] || c.employment_status) : "—"}</td>;
       case 'employment_outcome':
         return <td key="employment_outcome" className="px-3 py-2.5 whitespace-nowrap">{c.followup_90day_status ? (EMPLOYMENT_STATUS_LABELS[c.followup_90day_status] || c.followup_90day_status) : "—"}</td>;
+      case 'reason': {
+        const label = c.program_status === 'cancelled' ? 'Cancelled' : c.program_status === 'incomplete' ? 'Incomplete' : '—';
+        return <td key="reason" className="px-3 py-2.5 whitespace-nowrap">{label}</td>;
+      }
+      case 'end_date':
+        return <td key="end_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date || c.closed_date)}</td>;
       default:
         return <td key={colKey}>—</td>;
     }
