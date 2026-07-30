@@ -123,8 +123,11 @@ export default function ClientSubSectionTable({
         if (c.completion_date) {
           return <td key="completion_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date)}</td>;
         }
-        // WD work_search/followup_period/completed: show actual EDA completion date only (no projection)
-        if (program === 'wd' && ['work_search', 'followup_period', 'completed'].includes(subSection)) {
+        // WD work_search/followup_period/completed + DEA followup_period: show actual EDA completion date only (no projection)
+        if (
+          (program === 'wd' && ['work_search', 'followup_period', 'completed'].includes(subSection)) ||
+          (program === 'dea' && subSection === 'followup_period')
+        ) {
           return <td key="completion_date" className="px-3 py-2.5 text-slate-400 whitespace-nowrap">—</td>;
         }
         const anticipatedWeeks = program === 'wd' ? 16 : 2;
@@ -136,6 +139,15 @@ export default function ClientSubSectionTable({
           </td>
         );
       case 'followup_90day_date': {
+        // DEA follow-up period: exactly 90 days after the actual EDA completion date
+        if (program === 'dea' && subSection === 'followup_period') {
+          const followup = c.completion_date ? addDays(new Date(c.completion_date), 90) : null;
+          return (
+            <td key="followup_90day_date" className="px-3 py-2.5 whitespace-nowrap text-slate-600">
+              {followup ? format(followup, "MMM d, yy") : "—"}
+            </td>
+          );
+        }
         if (c.followup_90day_date) {
           return <td key="followup_90day_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.followup_90day_date)}</td>;
         }
