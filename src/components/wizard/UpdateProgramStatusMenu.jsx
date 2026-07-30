@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck, Ban } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
@@ -40,6 +40,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showEmploymentConfirm, setShowEmploymentConfirm] = useState(false);
   const [showOutcomeConfirm, setShowOutcomeConfirm] = useState(false);
   const [outcomeStatus, setOutcomeStatus] = useState('E-RF');
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [completionDate, setCompletionDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -56,6 +57,9 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const inFollowup = (isDEA || isWD) && section === 'followup_period' && !client?.followup_90day_status;
 
   const nextSectionLabel = isWD ? 'Work Search Phase' : isDEA ? 'Follow-up Period' : 'next section';
+
+  // Mark Cancelled is available whenever the program is not already complete/cancelled/incomplete
+  const canCancel = !['complete', 'cancelled', 'incomplete'].includes(client?.program_status);
 
   const addProgressNote = async (me, note) => {
     const notes = [...(client?.roadmap_progress_notes || [])];
@@ -224,6 +228,43 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
     }
   };
 
+  const handleCancel = async () => {
+    setSaving(true);
+    try {
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+      const notes = [...(client?.roadmap_progress_notes || [])];
+      notes.unshift({
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        event_type: 'cancelled',
+        item_label: 'Program Cancelled',
+        item_key: 'cancelled',
+        note: '',
+        logged_by: me?.email || '',
+        logged_by_name: me?.full_name || '',
+        compass_entered: false,
+      });
+      const updated = await base44.entities.Client.update(client.id, {
+        program_status: 'cancelled',
+        roadmap_progress_notes: notes,
+      });
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: client?.program_status || 'not_started',
+        to_value: 'cancelled',
+      });
+      onClientUpdate?.(updated);
+      setShowCancelConfirm(false);
+      toast.success('Program marked as cancelled');
+    } catch (e) {
+      toast.error('Failed to cancel program');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-end">
       <DropdownMenu>
@@ -265,7 +306,19 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               Enter 90-Day Follow-up Outcome
             </DropdownMenuItem>
           )}
-          {!inActiveEda && !inWorkSearch && !inFollowup && (
+          {canCancel && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => setShowCancelConfirm(true)}
+                className="text-sm cursor-pointer text-red-600 focus:text-red-700"
+              >
+                <Ban className="w-4 h-4 mr-2 text-red-600" />
+                Mark Cancelled
+              </DropdownMenuItem>
+            </>
+          )}
+          {!inActiveEda && !inWorkSearch && !inFollowup && !canCancel && (
             <div className="px-2 py-3 text-xs text-slate-400">
               {isDEA || isWD
                 ? 'No status updates available at this stage.'
@@ -430,6 +483,35 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               disabled={saving || !outcomeStatus}
             >
               {saving ? 'Saving...' : 'Confirm Outcome'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark Cancelled confirmation */}
+      <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark Program as Cancelled</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the program for{' '}
+              <span className="font-semibold text-slate-800">
+                {client?.first_name} {client?.last_name}
+              </span>{' '}
+              as cancelled. This can be reverted later from the status panel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancel();
+              }}
+              disabled={saving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {saving ? 'Saving...' : 'Yes, Mark Cancelled'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

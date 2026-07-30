@@ -8,6 +8,7 @@ import BITReviewCheckinPanel from './BITReviewCheckinPanel';
 import RoadmapProgressNotes from './RoadmapProgressNotes';
 import ProgramStatusPanel from './ProgramStatusPanel';
 import UpdateProgramStatusMenu from './UpdateProgramStatusMenu';
+import ServiceStartDateEditor from './ServiceStartDateEditor';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
 
@@ -379,6 +380,16 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
           </TabsList>
         </Tabs>
         <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
+      </div>
+
+      {/* Editable program start date — visible in all views */}
+      <div className="flex items-center gap-2 text-xs">
+        <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
+        <span className="text-slate-500">Program Start:</span>
+        <ServiceStartDateEditor client={client} onClientUpdate={onClientUpdate} />
+        {client?.service_start_date && (
+          <span className="text-slate-400 text-[10px]">(click to edit — adjusts anticipated dates)</span>
+        )}
       </div>
 
       {/* ── TIMELINE VIEW ─────────────────────────────────────────────────── */}

@@ -276,28 +276,6 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
         </div>
       )}
 
-      {/* Start / Update Start Date */}
-      {(!ps || ps === 'in_progress') && (
-        <>
-          {showDateInput ? (
-            <div className="flex flex-col gap-1">
-              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-7 text-xs" />
-              <div className="flex gap-1">
-                <Button size="sm" className="flex-1 h-7 text-xs" style={{ backgroundColor: '#eab308', color: '#fff' }} onClick={handleStartProgram} disabled={saving}>
-                  {!client?.service_start_date ? 'Start' : 'Update'}
-                </Button>
-                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowDateInput(false)}>✕</Button>
-              </div>
-            </div>
-          ) : (
-            <Button size="sm" className="h-7 text-xs w-full" style={{ backgroundColor: '#eab308', color: '#fff' }} onClick={() => setShowDateInput(true)} disabled={saving}>
-              <Play className="w-3 h-3 mr-1" />
-              {!client?.service_start_date ? 'Start Program' : 'Update Start Date'}
-            </Button>
-          )}
-        </>
-      )}
-
       {/* Complete — DEA: Completion Decision; WD: requires 90-day follow-up first */}
       {(!ps || ps === 'in_progress') && (
         isDEA ? (
@@ -319,13 +297,6 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
             <CheckCircle2 className="w-3 h-3 mr-1" /> Mark Complete
           </Button>
         )
-      )}
-
-      {/* Cancel */}
-      {ps !== 'cancelled' && ps !== 'incomplete' && ps !== 'complete' && (
-        <Button size="sm" variant="outline" className="h-7 text-xs border-red-400 text-red-600 hover:bg-red-50 w-full" onClick={() => handleCancel(false)} disabled={saving}>
-          <X className="w-3 h-3 mr-1" /> Mark Cancelled
-        </Button>
       )}
 
       {/* DEA Completion Dialog */}
