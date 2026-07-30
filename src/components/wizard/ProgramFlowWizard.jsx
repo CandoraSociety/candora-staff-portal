@@ -7,6 +7,7 @@ import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSearchPanel from './EmploymentSearchPanel';
 import EmploymentSupportsStep from './EmploymentSupportsStep';
 import WorkExposurePlacementTab from './WorkExposurePlacementTab';
+import InternalPlacementsTab from './InternalPlacementsTab';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
 import EDAStep from './EDAStep';
@@ -62,6 +63,9 @@ function getEDASubItems(client) {
   if (hasExposure) {
     subItems.push({ key: 'exposures', label: 'Exposures & Supports', component: 'exposures' });
   }
+
+  // Internal Placements — always shown as a highlighted sub-tab
+  subItems.push({ key: 'internal_placements', label: 'Internal Placements', component: 'internal_placements', highlight: true });
 
   // Work Exposure Placement — always shown as a highlighted sub-tab
   subItems.push({ key: 'work_exposure_placement', label: 'Work Exposure Placement', component: 'work_exposure_placement', highlight: true });
@@ -162,6 +166,8 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
         case 'exposures':
           return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />;
+        case 'internal_placements':
+          return <InternalPlacementsTab client={client} />;
         case 'work_exposure_placement':
           return <WorkExposurePlacementTab client={client} onSave={onSave} />;
         default:
