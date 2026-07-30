@@ -33,6 +33,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'wd' && subSection === 'work_search') {
     return [...base, 'completion_date', 'employment_date'];
   }
+  if (program === 'wd' && subSection === 'followup_period') {
+    return [...base, 'completion_date', 'employment_date', 'employment_followup_90day'];
+  }
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
   }
@@ -62,6 +65,7 @@ const COLUMN_LABELS = {
   employment_status: 'Current Employment Status',
   employment_outcome: 'Employment Outcome',
   employment_date: 'Employment Date',
+  employment_followup_90day: '90 Day Follow-up',
 };
 
 function getColLabel(col, subSection) {
@@ -140,12 +144,25 @@ export default function ClientSubSectionTable({
         if (c.employment_start_date) {
           return <td key="employment_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.employment_start_date)}</td>;
         }
+        // In follow-up period, show actual employment date only (no projected deadline)
+        if (subSection === 'followup_period') {
+          return <td key="employment_date" className="px-3 py-2.5 text-slate-400 whitespace-nowrap">—</td>;
+        }
         // 52 weeks from program start, minus 90 days = deadline by which client must be employed
         const employmentDeadline = c.service_start_date ? addDays(new Date(c.service_start_date), 52 * 7 - 90) : null;
         return (
           <td key="employment_date" className="px-3 py-2.5 whitespace-nowrap text-slate-400">
             {employmentDeadline ? format(employmentDeadline, "MMM d, yy") : "—"}
             <span className="block text-[10px] italic">(must be employed by)</span>
+          </td>
+        );
+      }
+      case 'employment_followup_90day': {
+        // Exactly 90 days from the client's actual employment start date
+        const followup = c.employment_start_date ? addDays(new Date(c.employment_start_date), 90) : null;
+        return (
+          <td key="employment_followup_90day" className="px-3 py-2.5 whitespace-nowrap text-slate-600">
+            {followup ? format(followup, "MMM d, yy") : "—"}
           </td>
         );
       }
