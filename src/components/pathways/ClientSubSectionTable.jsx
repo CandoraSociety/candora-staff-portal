@@ -48,6 +48,9 @@ function getSubSectionColumns(program, subSection) {
   if (subSection === 'incomplete_cancelled') {
     return [...base, 'reason', 'end_date'];
   }
+  if (program === 'casual') {
+    return ['name', 'hsid', 'intake_date'];
+  }
   return base;
 }
 
