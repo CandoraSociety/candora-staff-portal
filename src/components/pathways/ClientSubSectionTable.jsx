@@ -60,6 +60,11 @@ const COLUMN_LABELS = {
   employment_outcome: 'Employment Outcome',
 };
 
+function getColLabel(col, subSection) {
+  if (col === 'completion_date' && subSection === 'program_started') return 'EDA Completion Date';
+  return COLUMN_LABELS[col];
+}
+
 export default function ClientSubSectionTable({
   rows,
   program,
@@ -143,7 +148,7 @@ export default function ClientSubSectionTable({
           <thead className="border-b border-slate-200" style={{ background: "hsl(231,64%,20%)" }}>
             <tr>
               {columns.map(col => (
-                <th key={col} className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">{COLUMN_LABELS[col]}</th>
+                <th key={col} className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">{getColLabel(col, subSection)}</th>
               ))}
               {showCounsellor && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Career Counsellor</th>}
               {showClosedColumns && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Close Reason</th>}
