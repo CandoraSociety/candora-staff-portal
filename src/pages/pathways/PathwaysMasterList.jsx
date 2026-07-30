@@ -135,6 +135,8 @@ export default function PathwaysMasterList() {
 
   const assignedClients = clients.filter(c => c.assigned_worker);
   const activeClients = assignedClients.filter(c => !c.file_closed);
+  // Count only DEA + WD active clients for the "All Active" tab badge
+  const activeDeaWdCount = activeClients.filter(c => c.service_type === 'direct_to_employment' || c.service_type === 'pathways').length;
   const closedClients = [...assignedClients.filter(c => c.file_closed), ...closedTransitionClients];
   // Include unassigned casual + rejected clients so they surface in their own sections
   const extraActiveClients = clients.filter(c =>
@@ -281,7 +283,7 @@ export default function PathwaysMasterList() {
                 {!viewAll ? (
                   <div className="flex gap-1">
                     {[
-                      { id: "all", label: "All Active", count: activeClients.length },
+                      { id: "all", label: "All Active", count: activeDeaWdCount },
                       { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
                       { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
                     ].map(sub => (
