@@ -67,6 +67,10 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   const [itemDetails, setItemDetails] = useState(client?.sdp_item_details || {});
   const [otherDesc, setOtherDesc] = useState(client?.sdp_other_desc || '');
   const [sdpNotes, setSdpNotes] = useState(client?.sdp_notes || '');
+  // Program start date — defaults to today on first action plan creation, editable thereafter
+  const [programStartDate, setProgramStartDate] = useState(
+    client?.service_start_date || new Date().toISOString().split('T')[0]
+  );
 
   // DEA state
   const [deaActivities, setDeaActivities] = useState(
@@ -101,18 +105,18 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
     setDeaActivities(prev => prev.filter(a => a.id !== id));
 
   const deaEndDate = useMemo(() => {
-    if (!client?.service_start_date) return 'TBD';
-    const d = new Date(client.service_start_date);
+    if (!programStartDate) return 'TBD';
+    const d = new Date(programStartDate);
     d.setDate(d.getDate() + 14);
     return d.toLocaleDateString('en-CA');
-  }, [client?.service_start_date]);
+  }, [programStartDate]);
 
   const handleSave = async (andComplete = false) => {
     setSaving(true);
     try {
       const updates = isDEA
-        ? { dea_activities: deaActivities, sdp_notes: sdpNotes, action_plan_submitted: true }
-        : { sdp_items: selectedItems, sdp_item_details: itemDetails, sdp_other_desc: otherDesc, sdp_notes: sdpNotes, action_plan_submitted: true };
+        ? { dea_activities: deaActivities, sdp_notes: sdpNotes, action_plan_submitted: true, service_start_date: programStartDate }
+        : { sdp_items: selectedItems, sdp_item_details: itemDetails, sdp_other_desc: otherDesc, sdp_notes: sdpNotes, action_plan_submitted: true, service_start_date: programStartDate };
 
       const updatedClient = await onSave(updates);
 
@@ -178,6 +182,16 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           <div><span className="font-medium">Career Objectives:</span> {client?.career_objectives || 'N/A'}</div>
           {client?.employment_history && <div className="col-span-2"><span className="font-medium">Employment History:</span> {client.employment_history}</div>}
           {client?.intake_notes && <div className="col-span-2"><span className="font-medium">Intake Notes:</span> {client.intake_notes}</div>}
+          <div className="col-span-2 flex items-center gap-2 pt-2 border-t border-blue-200">
+            <Label className="text-xs font-medium whitespace-nowrap">Program Start Date</Label>
+            <Input
+              type="date"
+              value={programStartDate}
+              onChange={e => setProgramStartDate(e.target.value)}
+              className="h-7 text-xs w-auto"
+            />
+            <span className="text-[10px] text-blue-700/70">Auto-set to today when the action plan is created — editable anytime.</span>
+          </div>
         </CardContent>
       </Card>
 
@@ -186,7 +200,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Employment Development Activities (EDA)</CardTitle>
-            <div className="text-xs text-muted-foreground">Timeline: {client?.service_start_date || 'TBD'} → {deaEndDate} (14-day program)</div>
+            <div className="text-xs text-muted-foreground">Timeline: {programStartDate || 'TBD'} → {deaEndDate} (14-day program)</div>
           </CardHeader>
           <CardContent className="space-y-3">
             {deaActivities.map((act, idx) => (
