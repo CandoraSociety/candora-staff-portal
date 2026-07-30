@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, ChevronDown, ListChecks } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ListChecks, Briefcase } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
@@ -28,7 +28,11 @@ import { toast } from 'sonner';
 
 export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showEmploymentConfirm, setShowEmploymentConfirm] = useState(false);
   const [completionDate, setCompletionDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
+  const [employmentDate, setEmploymentDate] = useState(
     new Date().toISOString().split('T')[0]
   );
   const [saving, setSaving] = useState(false);
@@ -37,6 +41,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const isWD = client?.service_type === 'pathways';
   const section = classifyClient(client);
   const inActiveEda = section === 'program_started' && (isDEA || isWD) && !!client?.service_start_date;
+  const inWorkSearch = isWD && section === 'work_search' && !client?.employment_start_date;
 
   const nextSectionLabel = isWD ? 'Work Search Phase' : isDEA ? 'Follow-up Period' : 'next section';
 
@@ -108,6 +113,58 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
     }
   };
 
+  const handleFoundEmployment = async () => {
+    if (!employmentDate) {
+      toast.error('Please enter an employment date');
+      return;
+    }
+    setSaving(true);
+    try {
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+
+      const followupDate = format(
+        addDays(new Date(employmentDate + 'T12:00:00'), 90),
+        'yyyy-MM-dd'
+      );
+
+      const notes = [...(client?.roadmap_progress_notes || [])];
+      notes.unshift({
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        event_type: 'employment_found',
+        item_label: 'Found Employment',
+        item_key: 'employment_found',
+        note: `Employment found on ${employmentDate}. 90-day follow-up due ${followupDate}.`,
+        logged_by: me?.email || '',
+        logged_by_name: me?.full_name || '',
+        compass_entered: false,
+      });
+
+      const updated = await base44.entities.Client.update(client.id, {
+        employment_start_date: employmentDate,
+        followup_90day_date: followupDate,
+        roadmap_progress_notes: notes,
+      });
+
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: 'work_search',
+        to_value: 'followup_period',
+        notes: `Employment found on ${employmentDate}. 90-day follow-up due ${followupDate}.`,
+      });
+
+      onClientUpdate?.(updated);
+      setShowEmploymentConfirm(false);
+      toast.success('Employment recorded — moved to Follow-up Period. 90-day follow-up date set.');
+    } catch (e) {
+      toast.error('Failed to update status');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-end">
       <DropdownMenu>
@@ -122,7 +179,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           <DropdownMenuLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             Status Actions
           </DropdownMenuLabel>
-          {inActiveEda ? (
+          {inActiveEda && (
             <DropdownMenuItem
               onSelect={() => setShowConfirm(true)}
               className="text-sm cursor-pointer"
@@ -130,7 +187,17 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
               Mark EDAs as Complete
             </DropdownMenuItem>
-          ) : (
+          )}
+          {inWorkSearch && (
+            <DropdownMenuItem
+              onSelect={() => setShowEmploymentConfirm(true)}
+              className="text-sm cursor-pointer"
+            >
+              <Briefcase className="w-4 h-4 mr-2 text-green-600" />
+              Found Employment
+            </DropdownMenuItem>
+          )}
+          {!inActiveEda && !inWorkSearch && (
             <div className="px-2 py-3 text-xs text-slate-400">
               {isDEA || isWD
                 ? 'No status updates available at this stage.'
@@ -192,6 +259,53 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               disabled={saving || !completionDate}
             >
               {saving ? 'Saving...' : 'Confirm & Mark Complete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Found Employment confirmation dialog */}
+      <AlertDialog open={showEmploymentConfirm} onOpenChange={setShowEmploymentConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Found Employment</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  This will record employment for{' '}
+                  <span className="font-semibold text-slate-800">
+                    {client?.first_name} {client?.last_name}
+                  </span>{' '}
+                  and move them from <span className="font-medium">Work Search</span> into the{' '}
+                  <span className="font-medium">Follow-up Period</span>.
+                </p>
+                <p>
+                  The 90-day follow-up date will be set to exactly 90 days after the employment date.
+                </p>
+                <div className="pt-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Employment Date
+                  </label>
+                  <Input
+                    type="date"
+                    value={employmentDate}
+                    onChange={(e) => setEmploymentDate(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleFoundEmployment();
+              }}
+              disabled={saving || !employmentDate}
+            >
+              {saving ? 'Saving...' : 'Confirm & Record Employment'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
