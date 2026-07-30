@@ -1,5 +1,5 @@
 import { format, addDays } from 'date-fns';
-import { UserCheck } from 'lucide-react';
+import { UserCheck, CheckCircle2 } from 'lucide-react';
 import SwitchDogEar from './SwitchDogEar';
 import { clientRowColor } from '@/lib/clientRowColor';
 
@@ -54,12 +54,16 @@ function getSubSectionColumns(program, subSection) {
   return base;
 }
 
+const EMPLOYED_OUTCOMES = ['E-RF', 'E-URF', 'E-PT'];
+
 const EMPLOYMENT_STATUS_LABELS = {
   'E-RF': 'Employed (RF)',
   'E-UF': 'Employed (UF)',
+  'E-URF': 'Employed (URF)',
   'E-PT': 'Employed (PT)',
   'UE': 'Unemployed',
   'UE-LFW': 'Unemployed (LFW)',
+  'UE-NLFW': 'Unemployed (NLFW)',
   'UE-S': 'Unemployed (S)',
   'NA': 'N/A',
 };
@@ -105,6 +109,9 @@ export default function ClientSubSectionTable({
           <td key="name" className="px-3 py-2.5 whitespace-nowrap font-semibold relative" style={{ color: "hsl(231,64%,28%)" }}>
             <SwitchDogEar switches={c.program_stream_switches} />
             {c.first_name} {c.last_name}
+            {EMPLOYED_OUTCOMES.includes(c.followup_90day_status) && (
+              <CheckCircle2 className="inline-block w-4 h-4 ml-1.5 text-green-600 align-text-bottom" />
+            )}
             {showTransitionBadge && c._isTransition && (
               <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: "rgba(43,45,232,0.15)", color: "#2b2de8" }}>
                 Transition

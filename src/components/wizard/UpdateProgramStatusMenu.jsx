@@ -19,16 +19,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, ChevronDown, ListChecks, Briefcase } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 
+const OUTCOME_OPTIONS = [
+  { value: 'E-RF', label: 'E-RF', desc: 'Employed (Restriction-Free)' },
+  { value: 'E-URF', label: 'E-URF', desc: 'Employed (Unrestricted Full-time)' },
+  { value: 'E-PT', label: 'E-PT', desc: 'Employed (Part-Time)' },
+  { value: 'UE-LFW', label: 'UE-LFW', desc: 'Unemployed (Legally Fit to Work)' },
+  { value: 'UE-NLFW', label: 'UE-NLFW', desc: 'Unemployed (Not Legally Fit to Work)' },
+  { value: 'UTC', label: 'UTC', desc: 'Unable to Contact' },
+];
+
 export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showEmploymentConfirm, setShowEmploymentConfirm] = useState(false);
+  const [showOutcomeConfirm, setShowOutcomeConfirm] = useState(false);
+  const [outcomeStatus, setOutcomeStatus] = useState('E-RF');
   const [completionDate, setCompletionDate] = useState(
     new Date().toISOString().split('T')[0]
   );
@@ -42,6 +53,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const section = classifyClient(client);
   const inActiveEda = section === 'program_started' && (isDEA || isWD) && !!client?.service_start_date;
   const inWorkSearch = isWD && section === 'work_search' && !client?.employment_start_date;
+  const inFollowup = (isDEA || isWD) && section === 'followup_period' && !client?.followup_90day_status;
 
   const nextSectionLabel = isWD ? 'Work Search Phase' : isDEA ? 'Follow-up Period' : 'next section';
 
@@ -165,6 +177,53 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
     }
   };
 
+  const handleEnterOutcome = async () => {
+    if (!outcomeStatus) {
+      toast.error('Please select an outcome status');
+      return;
+    }
+    setSaving(true);
+    try {
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+
+      const option = OUTCOME_OPTIONS.find((o) => o.value === outcomeStatus);
+      const notes = [...(client?.roadmap_progress_notes || [])];
+      notes.unshift({
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        event_type: 'followup_outcome',
+        item_label: '90-Day Follow-up Outcome',
+        item_key: 'followup_outcome',
+        note: `90-day follow-up outcome recorded: ${outcomeStatus} (${option?.desc || ''}).`,
+        logged_by: me?.email || '',
+        logged_by_name: me?.full_name || '',
+        compass_entered: false,
+      });
+
+      const updated = await base44.entities.Client.update(client.id, {
+        followup_90day_status: outcomeStatus,
+        roadmap_progress_notes: notes,
+      });
+
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: 'followup_period',
+        to_value: 'completed',
+        notes: `90-day follow-up outcome: ${outcomeStatus}.`,
+      });
+
+      onClientUpdate?.(updated);
+      setShowOutcomeConfirm(false);
+      toast.success('Outcome recorded — moved to Completed.');
+    } catch (e) {
+      toast.error('Failed to update status');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-end">
       <DropdownMenu>
@@ -197,7 +256,16 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               Found Employment
             </DropdownMenuItem>
           )}
-          {!inActiveEda && !inWorkSearch && (
+          {inFollowup && (
+            <DropdownMenuItem
+              onSelect={() => setShowOutcomeConfirm(true)}
+              className="text-sm cursor-pointer"
+            >
+              <ClipboardCheck className="w-4 h-4 mr-2 text-blue-600" />
+              Enter 90-Day Follow-up Outcome
+            </DropdownMenuItem>
+          )}
+          {!inActiveEda && !inWorkSearch && !inFollowup && (
             <div className="px-2 py-3 text-xs text-slate-400">
               {isDEA || isWD
                 ? 'No status updates available at this stage.'
@@ -306,6 +374,62 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               disabled={saving || !employmentDate}
             >
               {saving ? 'Saving...' : 'Confirm & Record Employment'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 90-Day Follow-up Outcome dialog */}
+      <AlertDialog open={showOutcomeConfirm} onOpenChange={setShowOutcomeConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enter 90-Day Follow-up Outcome</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Record the 90-day follow-up outcome for{' '}
+                  <span className="font-semibold text-slate-800">
+                    {client?.first_name} {client?.last_name}
+                  </span>
+                  . The client will move into the <span className="font-medium">Completed</span> section.
+                </p>
+                <div className="pt-1 grid grid-cols-1 gap-1.5">
+                  {OUTCOME_OPTIONS.map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex items-start gap-2 rounded-md border px-3 py-2 cursor-pointer transition-colors ${
+                        outcomeStatus === opt.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="outcome-status"
+                        checked={outcomeStatus === opt.value}
+                        onChange={() => setOutcomeStatus(opt.value)}
+                        className="mt-0.5"
+                      />
+                      <div>
+                        <div className="text-sm font-semibold text-slate-800">{opt.label}</div>
+                        <div className="text-xs text-slate-500">{opt.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleEnterOutcome();
+              }}
+              disabled={saving || !outcomeStatus}
+            >
+              {saving ? 'Saving...' : 'Confirm Outcome'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

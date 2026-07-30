@@ -214,9 +214,11 @@
       "enum": [
         "E-RF",
         "E-UF",
+        "E-URF",
         "E-PT",
         "UE",
         "UE-LFW",
+        "UE-NLFW",
         "UE-S",
         "NA",
         "no_contact",
