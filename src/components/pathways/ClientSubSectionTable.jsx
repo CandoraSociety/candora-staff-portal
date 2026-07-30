@@ -37,7 +37,7 @@ function getSubSectionColumns(program, subSection) {
     return [...base, 'completion_date', 'employment_date', 'employment_followup_90day'];
   }
   if (program === 'wd' && subSection === 'completed') {
-    return [...base, 'completion_date', 'employment_date'];
+    return [...base, 'completion_date', 'employment_date', 'employment_followup_90day', 'employment_outcome'];
   }
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
@@ -77,7 +77,7 @@ const COLUMN_LABELS = {
 };
 
 function getColLabel(col, subSection) {
-  if (col === 'completion_date' && subSection !== 'completed') return 'EDA Completion Date';
+  if (col === 'completion_date') return 'EDA Completion Date';
   return COLUMN_LABELS[col];
 }
 
