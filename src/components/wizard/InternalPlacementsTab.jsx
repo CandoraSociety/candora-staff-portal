@@ -16,8 +16,10 @@ const PLACEMENT_TYPE_LABELS = {
   cleaning_arc: 'Cleaning ARC',
   food_services_onsite: 'Food Services (Onsite)',
   food_services_offsite: 'Food Services (Offsite)',
-  reception: 'Reception',
+  reception: 'Reception/Admin',
   childcare: 'Childcare',
+  program_support: 'Program Support',
+  security: 'Security',
 };
 
 const STATUS_LABELS = {

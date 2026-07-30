@@ -15,7 +15,9 @@
         "food_services_onsite",
         "food_services_offsite",
         "reception",
-        "childcare"
+        "childcare",
+        "program_support",
+        "security"
       ]
     },
     "assigned_worker": {
