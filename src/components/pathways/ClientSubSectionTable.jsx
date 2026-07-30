@@ -65,7 +65,7 @@ const COLUMN_LABELS = {
 };
 
 function getColLabel(col, subSection) {
-  if (col === 'completion_date' && (subSection === 'program_started' || subSection === 'work_search')) return 'EDA Completion Date';
+  if (col === 'completion_date' && subSection !== 'completed') return 'EDA Completion Date';
   return COLUMN_LABELS[col];
 }
 
