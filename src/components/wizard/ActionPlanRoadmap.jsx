@@ -7,6 +7,7 @@ import RoadmapItemPanel from './RoadmapItemPanel';
 import BITReviewCheckinPanel from './BITReviewCheckinPanel';
 import RoadmapProgressNotes from './RoadmapProgressNotes';
 import ProgramStatusPanel from './ProgramStatusPanel';
+import UpdateProgramStatusMenu from './UpdateProgramStatusMenu';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
 
@@ -639,6 +640,9 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
           </div>
         </div>
       )}
+
+      {/* Update Program/Activities Status menu */}
+      <UpdateProgramStatusMenu client={client} onClientUpdate={onClientUpdate} />
 
       {/* Progress notes */}
       <RoadmapProgressNotes
