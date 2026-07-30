@@ -159,7 +159,7 @@ export default function PathwaysMasterList() {
       subSection={subSection}
       onRowClick={(c) => c._isTransition ? setDetailsClient(c) : navigate(`/pathways/client/${c.id}`)}
       onSwitchClient={setSwitchClient}
-      showCounsellor={program !== 'casual'}
+      showCounsellor={program !== 'casual' && program !== 'rejected'}
       onReassign={setReassignClient}
       showClosedColumns={activeTab === "closed"}
       showTransitionBadge
