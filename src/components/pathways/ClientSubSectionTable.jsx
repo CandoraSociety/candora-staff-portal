@@ -36,6 +36,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'wd' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'employment_date', 'employment_followup_90day'];
   }
+  if (program === 'wd' && subSection === 'completed') {
+    return [...base, 'completion_date', 'employment_date'];
+  }
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
   }
@@ -120,6 +123,10 @@ export default function ClientSubSectionTable({
         if (c.completion_date) {
           return <td key="completion_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.completion_date)}</td>;
         }
+        // WD work_search/followup_period/completed: show actual EDA completion date only (no projection)
+        if (program === 'wd' && ['work_search', 'followup_period', 'completed'].includes(subSection)) {
+          return <td key="completion_date" className="px-3 py-2.5 text-slate-400 whitespace-nowrap">—</td>;
+        }
         const anticipatedWeeks = program === 'wd' ? 16 : 2;
         const anticipatedDate = c.service_start_date ? addDays(new Date(c.service_start_date), anticipatedWeeks * 7) : null;
         return (
@@ -144,8 +151,8 @@ export default function ClientSubSectionTable({
         if (c.employment_start_date) {
           return <td key="employment_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.employment_start_date)}</td>;
         }
-        // In follow-up period, show actual employment date only (no projected deadline)
-        if (subSection === 'followup_period') {
+        // In follow-up period and completed, show actual employment date only (no projected deadline)
+        if (subSection === 'followup_period' || subSection === 'completed') {
           return <td key="employment_date" className="px-3 py-2.5 text-slate-400 whitespace-nowrap">—</td>;
         }
         // 52 weeks from program start, minus 90 days = deadline by which client must be employed
