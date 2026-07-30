@@ -30,6 +30,9 @@ function getSubSectionColumns(program, subSection) {
   if (program === 'wd' && subSection === 'program_started') {
     return [...base, 'completion_date'];
   }
+  if (program === 'wd' && subSection === 'work_search') {
+    return [...base, 'completion_date', 'employment_date'];
+  }
   if (program === 'dea' && subSection === 'followup_period') {
     return [...base, 'completion_date', 'followup_90day_date', 'employment_status'];
   }
@@ -58,10 +61,11 @@ const COLUMN_LABELS = {
   followup_90day_date: '90-Day Follow-up Date',
   employment_status: 'Current Employment Status',
   employment_outcome: 'Employment Outcome',
+  employment_date: 'Employment Date',
 };
 
 function getColLabel(col, subSection) {
-  if (col === 'completion_date' && subSection === 'program_started') return 'EDA Completion Date';
+  if (col === 'completion_date' && (subSection === 'program_started' || subSection === 'work_search')) return 'EDA Completion Date';
   return COLUMN_LABELS[col];
 }
 
@@ -129,6 +133,19 @@ export default function ClientSubSectionTable({
           <td key="followup_90day_date" className="px-3 py-2.5 whitespace-nowrap text-slate-400">
             {anticipatedFollowup ? format(anticipatedFollowup, "MMM d, yy") : "—"}
             <span className="block text-[10px] italic">(anticipated follow-up)</span>
+          </td>
+        );
+      }
+      case 'employment_date': {
+        if (c.employment_start_date) {
+          return <td key="employment_date" className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(c.employment_start_date)}</td>;
+        }
+        // 52 weeks from program start, minus 90 days = deadline by which client must be employed
+        const employmentDeadline = c.service_start_date ? addDays(new Date(c.service_start_date), 52 * 7 - 90) : null;
+        return (
+          <td key="employment_date" className="px-3 py-2.5 whitespace-nowrap text-slate-400">
+            {employmentDeadline ? format(employmentDeadline, "MMM d, yy") : "—"}
+            <span className="block text-[10px] italic">(must be employed by)</span>
           </td>
         );
       }
