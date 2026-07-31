@@ -675,6 +675,11 @@
     },
     "closed_notes": {
       "type": "string"
+    },
+    "flow_unlocked": {
+      "type": "boolean",
+      "default": false,
+      "description": "One-time flag for CRT-imported clients \u2014 unlocks all program flow steps without requiring prior steps to be completed"
     }
   },
   "required": [

@@ -101,6 +101,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
   const hasActionPlan = !!client?.action_plan_submitted;
+  const flowUnlocked = !!client?.flow_unlocked;
 
   if (!client?.service_type) {
     return (
@@ -126,19 +127,20 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const isDEA = client?.service_type === 'direct_to_employment';
   const isEmployed = ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status);
   const hasFollowup = !!client?.followup_90day_status || !!client?.followup_90day_date;
+  const showFollowup = flowUnlocked || isComplete || (isDEA ? false : (isEmployed || hasFollowup));
 
   // DEA: Action Plan → Supports → (complete) 90-Day Follow-Up → Progress
   // WD:  Action Plan → Supports → Employment Search → (employed) 90-Day Follow-Up → Progress
   const steps = isDEA ? [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
-    ...(isComplete ? [FOLLOWUP_STEP] : []),
+    ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ] : [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
-    ...((isEmployed || hasFollowup || isComplete) ? [FOLLOWUP_STEP] : []),
+    ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
 
@@ -215,7 +217,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           {steps.map((step, idx) => {
             const status = getStepStatus(step.key, client);
             const isActive = activeStep === step.key || (step.key === 'employment_action_plan' && activeStep?.startsWith('eda:'));
-            const isLocked = !hasActionPlan && step.key !== 'employment_action_plan' && step.key !== 'employment_supports';
+            const isLocked = !flowUnlocked && !hasActionPlan && step.key !== 'employment_action_plan' && step.key !== 'employment_supports';
             const isFollowup = step.key === 'followup_90day';
             const StepIcon = step.icon;
             const isActionPlan = step.key === 'employment_action_plan';
@@ -315,7 +317,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         </button>
         {mobileOpen && (
           <div className="border rounded-lg mt-1 bg-white shadow divide-y">
-            {steps.filter(s => hasActionPlan || s.key === 'employment_action_plan' || s.key === 'employment_supports').map((step) => {
+            {steps.filter(s => flowUnlocked || hasActionPlan || s.key === 'employment_action_plan' || s.key === 'employment_supports').map((step) => {
               const status = getStepStatus(step.key, client);
               const subItems = step.key === 'employment_action_plan' ? edaSubItems : [];
               return (
