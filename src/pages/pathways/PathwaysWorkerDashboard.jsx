@@ -116,6 +116,8 @@ export default function PathwaysWorkerDashboard() {
   const deaClosingClients = clients.filter(c => {
     if (c.service_type !== "direct_to_employment") return false;
     if (c.file_closed) return false;
+    // Only warn for active DEA programs — completed/cancelled/incomplete clients are already done
+    if (c.program_status === "complete" || c.program_status === "cancelled" || c.program_status === "incomplete") return false;
     const endDate = c.completion_date
       ? new Date(c.completion_date)
       : c.service_start_date
