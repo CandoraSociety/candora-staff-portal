@@ -130,6 +130,8 @@ export default function PathwaysWorkerDashboard() {
   // 90-Day Follow-Up Alert
   const upcomingFollowups = clients.filter(c => {
     if (c.followup_90day_status) return false;
+    // 90-day follow-up only applies to completed clients — cancelled/incomplete didn't finish the program
+    if (c.program_status === "cancelled" || c.program_status === "incomplete") return false;
     const followupDate = c.followup_90day_date
       ? new Date(c.followup_90day_date)
       : c.completion_date
