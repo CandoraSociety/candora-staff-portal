@@ -142,8 +142,8 @@ export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
 export const SUBMISSION_RANGE_CELLS = [
   { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
   { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
-  // Outcomes Report B9/B10 (merged B9:C9 / B10:C10). The sheet is marked "protected"
-  // but is writable right after a roll-forward copy; try a direct write first and
-  // only fall back to unprotect/protect if the direct write is blocked.
-  { sheet: 'Outcomes Report', startCell: 'B9:C9', endCell: 'B10:C10', protected: true },
+  // Outcomes Report B9/B10 are the top-left anchors of merged ranges (B9:C9 /
+  // B10:C10). The sheet has protection on but B9/B10 are unlocked, so writing the
+  // anchor cell only avoids touching the locked C9/C10 and succeeds.
+  { sheet: 'Outcomes Report', startCell: 'B9', endCell: 'B10', protected: true },
 ];
