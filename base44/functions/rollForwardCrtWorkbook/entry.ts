@@ -101,7 +101,7 @@ export default async function(req: Request): Promise<Response> {
     // Extend this list with any other sheets the workbook uses for range-based highlighting.
     const SUBMISSION_RANGE_CELLS = [
       { sheet: CLIENT_DATA_SHEET, startCell: 'B9', endCell: 'E9' },
-      { sheet: 'Invoice Tracker', startCell: 'A8', endCell: 'A9' },
+      { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
       { sheet: 'Outcomes Report', startCell: 'B9', endCell: 'B10' },
     ];
 
