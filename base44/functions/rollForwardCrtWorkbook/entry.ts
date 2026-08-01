@@ -103,19 +103,20 @@ export default async function(req: Request): Promise<Response> {
     const endDateSerial = excelSerial(lastDay.toISOString());
 
     // Sheets + cells that hold the submission start/end date range.
-    // Extend this list with any other sheets the workbook uses for range-based highlighting.
     const SUBMISSION_RANGE_CELLS = [
-      { sheet: CLIENT_DATA_SHEET, startCell: 'B9', endCell: 'E9' },
+      { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
       { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
       { sheet: 'Outcomes Report', startCell: 'B9', endCell: 'B10' },
     ];
 
+    // Write the serial number and force a mm/dd/yy date format so the cells display
+    // as real dates regardless of the copied cell's existing number format.
     const patchCell = async (sheet, cell, value) => {
       const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('${sheet}')/range(address='${cell}')`;
       const res = await fetch(url, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[value]] })
+        body: JSON.stringify({ values: [[value]], numberFormat: [['mm/dd/yy']] })
       });
       if (!res.ok) {
         throw new Error(`${sheet}!${cell}: ${res.status} ${await res.text()}`);

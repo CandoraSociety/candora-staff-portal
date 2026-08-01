@@ -49,10 +49,10 @@ export default async function(req: Request): Promise<Response> {
       if (rangeRes.ok) {
         const rangeData = await rangeRes.json();
         const values = rangeData.values || [];
-        // Submission range is in row 9: B9 = start, E9 = end
-        if (values[8]) {
-          submissionRange.start = values[8][1] || '';
-          submissionRange.end = values[8][4] || '';
+        // Submission range is in row 8: B8 = start, E8 = end
+        if (values[7]) {
+          submissionRange.start = values[7][1] || '';
+          submissionRange.end = values[7][4] || '';
         }
         // Count rows from row 15 that have a name in column A
         for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
