@@ -184,32 +184,13 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcome = 'Incomplete';
   }
 
-  // Placement Outcome (map portal values to CRT-accepted values)
+  // Placement Outcome — portal values are now CRT-accepted values directly
   const placementOK = gate(client.post_completion_employment_date);
-  let placementOutcome = '';
-  if (placementOK && client.post_completion_employment_status) {
-    const raw = client.post_completion_employment_status;
-    if (CRT_PLACEMENT_VALUES.includes(raw)) {
-      placementOutcome = raw;
-    } else if (raw === 'UE') placementOutcome = 'UE-LFW';
-    else if (raw === 'UE-S') placementOutcome = 'UE-NLF';
-    else if (raw === 'E-PT') placementOutcome = 'E-RF'; // Part-time → related field default
-  }
+  const placementOutcome = (placementOK && client.post_completion_employment_status) || '';
 
-  // 90 Day Outcome
+  // 90 Day Outcome — portal values are now CRT-accepted values directly
   const day90OK = gate(client.followup_90day_date);
-  let day90Outcome = '';
-  if (day90OK && client.followup_90day_status) {
-    const raw = client.followup_90day_status;
-    if (CRT_DAY_OUTCOME_VALUES.includes(raw)) {
-      day90Outcome = raw;
-    } else if (raw === 'UE') day90Outcome = 'UE-LFW';
-    else if (raw === 'UE-S') day90Outcome = 'UE-NLF';
-    else if (raw === 'UE-NLFW') day90Outcome = 'UE-NLF';
-    else if (raw === 'no_contact') day90Outcome = 'UTC';
-    else if (raw === 'E-PT') day90Outcome = 'E-RF';
-    else if (raw === 'E-URF') day90Outcome = 'E-UF';
-  }
+  const day90Outcome = (day90OK && client.followup_90day_status) || '';
 
   // 90 Day Outcome Date — DEA: anticipated (EDA completion + 90 days), shown
   // from the month of the Service Outcome date onward (not gated by the future
@@ -231,10 +212,6 @@ export function mapClientToCrtRow(client, monthEnd) {
     if (hours.includes('full') || hours.includes('ft')) employedFtPt = 'FT';
     else if (hours.includes('part') || hours.includes('pt')) employedFtPt = 'PT';
   }
-  if (!employedFtPt && client.post_completion_employment_status === 'E-PT') {
-    employedFtPt = 'PT';
-  }
-
   return [
     fullName,                                          // A: Client Legal Name
     client.compass_hsid || '',                         // B: COMPASS HSID #

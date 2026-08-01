@@ -197,13 +197,13 @@
       "enum": [
         "E-RF",
         "E-UF",
-        "E-PT",
-        "UE",
+        "SE",
         "UE-LFW",
-        "UE-S",
-        "NA",
-        "no_contact",
-        "UTC"
+        "UE-NLF",
+        "FTT",
+        "AoP",
+        "P",
+        "C"
       ]
     },
     "post_completion_employment_date": {
@@ -219,15 +219,14 @@
       "enum": [
         "E-RF",
         "E-UF",
-        "E-URF",
-        "E-PT",
-        "UE",
+        "SE",
         "UE-LFW",
-        "UE-NLFW",
-        "UE-S",
-        "NA",
-        "no_contact",
-        "UTC"
+        "UE-NLF",
+        "FTT",
+        "AoP",
+        "UTC",
+        "P",
+        "C"
       ]
     },
     "service_navigation_supports": {

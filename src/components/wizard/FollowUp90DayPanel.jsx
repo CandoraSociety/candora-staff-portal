@@ -10,18 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { createCompassTask, task90DayFollowup } from '@/lib/compassTasks';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
-
-const EMPLOYMENT_CODES = [
-  { value: 'E-RF',       label: 'E-RF — Employed, Regular Full-time' },
-  { value: 'E-UF',       label: 'E-UF — Employed, Unrelated Field' },
-  { value: 'E-PT',       label: 'E-PT — Employed, Part-time' },
-  { value: 'UE',         label: 'UE — Unemployed' },
-  { value: 'UE-LFW',     label: 'UE-LFW — Unemployed, Looking for Work' },
-  { value: 'UE-S',       label: 'UE-S — Unemployed, Student' },
-  { value: 'NA',         label: 'NA — Not Applicable' },
-  { value: 'no_contact', label: 'No Contact' },
-  { value: 'UTC',        label: 'UTC — Unable to Contact' },
-];
+import { PLACEMENT_OUTCOME_OPTIONS, FOLLOWUP_90DAY_OPTIONS, outcomeLabel } from '@/lib/crtCodes';
 
 export default function FollowUp90DayPanel({ client, onClientUpdate }) {
   const [form, setForm] = useState({
@@ -131,7 +120,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
           }
           <span>
             {isDone
-              ? `Completed — status: ${EMPLOYMENT_CODES.find(c => c.value === client.followup_90day_status)?.label || client.followup_90day_status}`
+              ? `Completed — status: ${outcomeLabel(client.followup_90day_status)}`
               : isOverdue
                 ? `Overdue by ${Math.abs(daysUntil)} days — due ${client.followup_90day_date}`
                 : isUrgent
@@ -157,7 +146,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
                 <Select value={form.followup_90day_status} onValueChange={v => set('followup_90day_status', v)}>
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
                   <SelectContent>
-                    {EMPLOYMENT_CODES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    {FOLLOWUP_90DAY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.value} — {c.desc}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -173,7 +162,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
                 <Select value={form.post_completion_employment_status} onValueChange={v => set('post_completion_employment_status', v)}>
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
                   <SelectContent>
-                    {EMPLOYMENT_CODES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    {PLACEMENT_OUTCOME_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.value} — {c.desc}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

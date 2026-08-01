@@ -25,15 +25,7 @@ import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
-
-const OUTCOME_OPTIONS = [
-  { value: 'E-RF', label: 'E-RF', desc: 'Employed (Restriction-Free)' },
-  { value: 'E-URF', label: 'E-URF', desc: 'Employed (Unrestricted Full-time)' },
-  { value: 'E-PT', label: 'E-PT', desc: 'Employed (Part-Time)' },
-  { value: 'UE-LFW', label: 'UE-LFW', desc: 'Unemployed (Legally Fit to Work)' },
-  { value: 'UE-NLFW', label: 'UE-NLFW', desc: 'Unemployed (Not Legally Fit to Work)' },
-  { value: 'UTC', label: 'UTC', desc: 'Unable to Contact' },
-];
+import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS } from '@/lib/crtCodes';
 
 export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -465,7 +457,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                         className="mt-0.5"
                       />
                       <div>
-                        <div className="text-sm font-semibold text-slate-800">{opt.label}</div>
+                        <div className="text-sm font-semibold text-slate-800">{opt.value}</div>
                         <div className="text-xs text-slate-500">{opt.desc}</div>
                       </div>
                     </label>

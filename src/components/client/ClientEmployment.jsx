@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { logStatusChange } from '@/lib/logStatusChange';
+import { PLACEMENT_OUTCOME_OPTIONS, FOLLOWUP_90DAY_OPTIONS, outcomeLabel } from '@/lib/crtCodes';
 
 const EMPLOYMENT_STATUS_OPTIONS = [
   { value: 'E-RF', label: 'Employed - Regular Full-time' },
@@ -30,9 +31,9 @@ export default function ClientEmployment({ client, onSave }) {
     job_start_date: client?.job_start_date || '',
     job_wage: client?.job_wage || '',
     job_hours: client?.job_hours || '',
-    post_completion_employment_status: client?.post_completion_employment_status || 'NA',
-    post_completion_employment_date: client?.post_completion_employment_date || '',
-    followup_90day_status: client?.followup_90day_status || 'NA',
+    post_completion_employment_status: client?.post_completion_employment_status || '',
+    post_completion_employment_date:   client?.post_completion_employment_date || '',
+    followup_90day_status: client?.followup_90day_status || '',
     followup_90day_date: client?.followup_90day_date || '',
   });
 
@@ -143,7 +144,7 @@ export default function ClientEmployment({ client, onSave }) {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status:</span>
-                <span>{EMPLOYMENT_STATUS_OPTIONS.find(s => s.value === data.post_completion_employment_status)?.label || data.post_completion_employment_status}</span>
+                <span>{outcomeLabel(data.post_completion_employment_status)}</span>
               </div>
               {data.post_completion_employment_date && (
                 <div className="flex justify-between">
@@ -161,7 +162,7 @@ export default function ClientEmployment({ client, onSave }) {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Status:</span>
-                <span>{EMPLOYMENT_STATUS_OPTIONS.find(s => s.value === data.followup_90day_status)?.label || data.followup_90day_status}</span>
+                <span>{outcomeLabel(data.followup_90day_status)}</span>
               </div>
               {data.followup_90day_date && (
                 <div className="flex justify-between">
@@ -277,8 +278,8 @@ export default function ClientEmployment({ client, onSave }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {EMPLOYMENT_STATUS_OPTIONS.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    {PLACEMENT_OUTCOME_OPTIONS.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.value} — {opt.desc}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -307,10 +308,9 @@ export default function ClientEmployment({ client, onSave }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {EMPLOYMENT_STATUS_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              {FOLLOWUP_90DAY_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.value} — {opt.desc}</SelectItem>
               ))}
-              <SelectItem value="UTC">UTC — Unable to Contact</SelectItem>
             </SelectContent>
             </Select>
             </div>
