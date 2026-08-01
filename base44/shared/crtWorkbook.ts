@@ -26,6 +26,19 @@ function sortCrtFilesDesc(files) {
     return (db.year * 12 + db.month) - (da.year * 12 + da.month);
   });
 }
+// Parse a CRT_<Month>_<Year>.xlsx filename → the last day of that month (UTC Date),
+// or null if the name doesn't parse. Used for month-bound sync so each monthly
+// CRT only includes information dated through that month.
+export function crtMonthEnd(fileName) {
+  const m = String(fileName).match(/CRT_(\w+)_(\d{4})/i);
+  if (!m) return null;
+  const monthName = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
+  const monthIdx = CRT_MONTHS.indexOf(monthName);
+  if (monthIdx < 0) return null;
+  const year = parseInt(m[2], 10);
+  return new Date(Date.UTC(year, monthIdx + 1, 0)); // day 0 of next month = last day of this month
+}
+
 export const CLIENT_DATA_START_ROW = 15; // 1-based Excel row where client data begins
 export const NUM_COLUMNS = 25; // A through Y
 
@@ -117,7 +130,17 @@ export function formatDateForCrt(dateStr) {
 }
 
 // Map a Client entity to a CRT Client Data row (25 columns A–Y)
-export function mapClientToCrtRow(client) {
+export function mapClientToCrtRow(client, monthEnd) {
+  // monthEnd (Date|null): when set, date fields dated after monthEnd are blanked
+  // (along with their companion status fields) so a monthly CRT only contains
+  // information through that month — a point-in-time snapshot.
+  const gate = (dateStr) => {
+    if (!monthEnd || !dateStr) return true;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return true;
+    return d.getTime() <= monthEnd.getTime();
+  };
+
   const fullName = `${(client.last_name || '').trim()}, ${(client.first_name || '').trim()}`.trim();
 
   // CEIS (DEA) — Y/N
@@ -137,11 +160,13 @@ export function mapClientToCrtRow(client) {
     'incomplete': 'Incomplete',
     'cancelled': 'Cancelled',
   };
-  const serviceOutcome = serviceOutcomeMap[client.program_status] || '';
+  const completionOK = gate(client.completion_date);
+  const serviceOutcome = completionOK ? (serviceOutcomeMap[client.program_status] || '') : '';
 
   // Placement Outcome (map portal values to CRT-accepted values)
+  const placementOK = gate(client.post_completion_employment_date);
   let placementOutcome = '';
-  if (client.post_completion_employment_status) {
+  if (placementOK && client.post_completion_employment_status) {
     const raw = client.post_completion_employment_status;
     if (CRT_PLACEMENT_VALUES.includes(raw)) {
       placementOutcome = raw;
@@ -151,8 +176,9 @@ export function mapClientToCrtRow(client) {
   }
 
   // 90 Day Outcome
+  const day90OK = gate(client.followup_90day_date);
   let day90Outcome = '';
-  if (client.followup_90day_status) {
+  if (day90OK && client.followup_90day_status) {
     const raw = client.followup_90day_status;
     if (CRT_DAY_OUTCOME_VALUES.includes(raw)) {
       day90Outcome = raw;
@@ -187,17 +213,17 @@ export function mapClientToCrtRow(client) {
     ceis,                                              // C: CEIS (DEA)
     '',                                                // D: DEA Start Date
     serviceElement,                                    // E: Service Element
-    formatDateForCrt(client.service_start_date),       // F: Service Start Date
+    gate(client.service_start_date) ? formatDateForCrt(client.service_start_date) : '',       // F: Service Start Date
     serviceOutcome,                                    // G: Service Outcome
-    formatDateForCrt(client.completion_date),           // H: Service Outcome Date
+    completionOK ? formatDateForCrt(client.completion_date) : '',           // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome
-    formatDateForCrt(client.post_completion_employment_date), // J: Placement Outcome Date
+    placementOK ? formatDateForCrt(client.post_completion_employment_date) : '', // J: Placement Outcome Date
     '',                                                // K: 30 Day Outcome
     '',                                                // L: 30 Day Outcome Date
     '',                                                // M: 60 Day Outcome
     '',                                                // N: 60 Day Outcome Date
     day90Outcome,                                      // O: 90 Day Outcome
-    formatDateForCrt(client.followup_90day_date),     // P: 90 Day Outcome Date
+    day90OK ? formatDateForCrt(client.followup_90day_date) : '',     // P: 90 Day Outcome Date
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     client.intake_notes || '',                         // S: Comments
@@ -206,6 +232,6 @@ export function mapClientToCrtRow(client) {
     'No',                                              // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
     serviceNav,                                        // X: Service Navigation Support Y/N
-    formatDateForCrt(client.service_navigation_date), // Y: Service Nav Billing Month
+    gate(client.service_navigation_date) ? formatDateForCrt(client.service_navigation_date) : '', // Y: Service Nav Billing Month
   ];
 }

@@ -13,7 +13,7 @@ import moment from 'moment';
 
 export default function CRT() {
   const [syncing, setSyncing] = useState(false);
-  const [rollingForward, setRollingForward] = useState(false);
+  const [creatingMonth, setCreatingMonth] = useState(false);
   const [repairing, setRepairing] = useState(false);
   // Which file is shown in the live preview. null = the active workbook.
   // This is a VIEW-ONLY toggle — it never changes which workbook is active
@@ -62,30 +62,26 @@ export default function CRT() {
     }
   };
 
-  const handleRollForward = async () => {
-    if (!confirm('Roll forward to next month? This copies the current workbook (with all client data) to a new monthly file and updates the submission range.')) {
-      return;
-    }
-    setRollingForward(true);
+  const handleCreateMonth = async () => {
+    setCreatingMonth(true);
     try {
-      const res = await base44.functions.invoke('rollForwardCrtWorkbook', {});
+      const res = await base44.functions.invoke('ensureCurrentMonthCrt', {});
       const data = res.data;
       if (data.status === 'success') {
         toast.success(data.message);
         refetch();
       } else if (data.status === 'already_exists') {
         toast.info(data.message);
-        refetch();
       } else if (data.status === 'copy_pending') {
         toast.info(data.message);
         setTimeout(() => refetch(), 10000);
       } else {
-        toast.error(data.error || 'Roll forward failed');
+        toast.error(data.error || "Could not create this month's workbook");
       }
     } catch (err) {
-      toast.error('Roll forward failed: ' + (err.message || 'Unknown error'));
+      toast.error('Create failed: ' + (err.message || 'Unknown error'));
     } finally {
-      setRollingForward(false);
+      setCreatingMonth(false);
     }
   };
 
@@ -162,9 +158,9 @@ export default function CRT() {
                 {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                 {syncing ? 'Syncing...' : 'Re-sync from Portal'}
               </Button>
-              <Button onClick={handleRollForward} disabled={rollingForward} variant="outline" size="sm">
-                {rollingForward ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarPlus className="h-4 w-4 mr-2" />}
-                {rollingForward ? 'Rolling...' : 'Roll Forward to Next Month'}
+              <Button onClick={handleCreateMonth} disabled={creatingMonth} variant="outline" size="sm">
+                {creatingMonth ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarPlus className="h-4 w-4 mr-2" />}
+                {creatingMonth ? 'Creating...' : 'Create This Month Now'}
               </Button>
               <Button onClick={handleRepair} disabled={repairing} variant="outline" size="sm">
                 {repairing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wrench className="h-4 w-4 mr-2" />}
