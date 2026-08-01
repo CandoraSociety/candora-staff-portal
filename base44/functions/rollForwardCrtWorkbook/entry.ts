@@ -88,14 +88,19 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // 4. Update the submission range to the new month.
-    //    Values are written as ISO date strings so Excel stores them as real dates
-    //    (required for the conditional highlighting that compares client dates to this range).
+    //    Excel stores dates as serial numbers (days since 1899-12-30). Writing ISO
+    //    strings makes Excel store them as TEXT, which breaks the conditional
+    //    highlighting that compares client dates to this range — so we write serials
+    //    and the cells keep their existing date number format from the copied template.
     const firstDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1);
     const lastDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
-    const startDateISO = firstDay.toISOString();
-    const endDateISO = lastDay.toISOString();
     const startDateStr = formatDateForCrt(firstDay.toISOString());
     const endDateStr = formatDateForCrt(lastDay.toISOString());
+    const excelSerial = (isoStr) => Math.round(
+      (new Date(isoStr).getTime() - Date.UTC(1899, 11, 30)) / 86400000
+    );
+    const startDateSerial = excelSerial(firstDay.toISOString());
+    const endDateSerial = excelSerial(lastDay.toISOString());
 
     // Sheets + cells that hold the submission start/end date range.
     // Extend this list with any other sheets the workbook uses for range-based highlighting.
@@ -133,8 +138,8 @@ export default async function(req: Request): Promise<Response> {
     const rangeErrors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        await patchWithRetry(r.sheet, r.startCell, startDateISO);
-        await patchWithRetry(r.sheet, r.endCell, endDateISO);
+        await patchWithRetry(r.sheet, r.startCell, startDateSerial);
+        await patchWithRetry(r.sheet, r.endCell, endDateSerial);
       } catch (e) {
         rangeErrors.push(e.message);
       }
