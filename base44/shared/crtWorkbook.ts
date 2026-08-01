@@ -162,15 +162,24 @@ export function mapClientToCrtRow(client, monthEnd) {
   };
   const serviceElement = serviceElementMap[client.service_type] || '';
 
-  // Service Outcome
-  const serviceOutcomeMap = {
-    'in_progress': 'In Progress',
-    'complete': 'Complete',
-    'incomplete': 'Incomplete',
-    'cancelled': 'Cancelled',
-  };
-  const completionOK = gate(client.completion_date);
-  const serviceOutcome = completionOK ? (serviceOutcomeMap[client.program_status] || 'In Progress') : '';
+  // Service Outcome — Complete is triggered by EDA completion
+  // (eda_completion_date), not full program completion. The Service Outcome
+  // Date is the EDA completion date. Incomplete/Cancelled follow program_status.
+  const edaOK = gate(client.eda_completion_date);
+  let serviceOutcome = 'In Progress';
+  let serviceOutcomeDate = '';
+  if (edaOK && client.eda_completion_date) {
+    serviceOutcome = 'Complete';
+    serviceOutcomeDate = formatDateForCrt(client.eda_completion_date);
+  } else if (client.program_status === 'complete') {
+    // Legacy: program marked complete before eda_completion_date was tracked
+    serviceOutcome = 'Complete';
+    serviceOutcomeDate = gate(client.completion_date) ? formatDateForCrt(client.completion_date) : '';
+  } else if (client.program_status === 'cancelled') {
+    serviceOutcome = 'Cancelled';
+  } else if (client.program_status === 'incomplete') {
+    serviceOutcome = 'Incomplete';
+  }
 
   // Placement Outcome (map portal values to CRT-accepted values)
   const placementOK = gate(client.post_completion_employment_date);
@@ -224,7 +233,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceElement,                                    // E: Service Element
     isWd ? startDateForCrt : '',                        // F: Service Start Date (WD only)
     serviceOutcome,                                    // G: Service Outcome
-    completionOK ? formatDateForCrt(client.completion_date) : '',           // H: Service Outcome Date
+    serviceOutcomeDate,                                 // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome
     placementOK ? formatDateForCrt(client.post_completion_employment_date) : '', // J: Placement Outcome Date
     '',                                                // K: 30 Day Outcome

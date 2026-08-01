@@ -89,6 +89,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       const updates = {
         completion_date: completionDate,
+        eda_completion_date: completionDate,
         roadmap_progress_notes: await addProgressNote(
           me,
           `EDAs marked complete on ${completionDate}.`

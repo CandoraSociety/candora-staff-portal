@@ -183,6 +183,11 @@
       "type": "string",
       "format": "date"
     },
+    "eda_completion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the Employment Development Activities (EDAs) were marked complete \u2014 used as the CRT Service Outcome Date"
+    },
     "employment_start_date": {
       "type": "string",
       "format": "date"
