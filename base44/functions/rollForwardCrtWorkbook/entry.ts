@@ -103,8 +103,9 @@ export default async function(req: Request): Promise<Response> {
     const rangeErrors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, 'mm/dd/yy');
-        await patchWithRetry(accessToken, newFile.id, r.sheet, r.endCell, endDateSerial, 'mm/dd/yy');
+        const fmt = r.skipFormat ? undefined : 'mm/dd/yy';
+        await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, fmt);
+        await patchWithRetry(accessToken, newFile.id, r.sheet, r.endCell, endDateSerial, fmt);
       } catch (e) {
         rangeErrors.push(e.message);
       }

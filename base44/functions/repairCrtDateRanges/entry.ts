@@ -31,8 +31,9 @@ export default async function(req: Request): Promise<Response> {
     const errors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, 'mm/dd/yy');
-        await patchCell(accessToken, active.id, r.sheet, r.endCell, endSerial, 'mm/dd/yy');
+        const fmt = r.skipFormat ? undefined : 'mm/dd/yy';
+        await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, fmt);
+        await patchCell(accessToken, active.id, r.sheet, r.endCell, endSerial, fmt);
       } catch (e) { errors.push(`${r.sheet} ${r.startCell}/${r.endCell}: ${e.message.split('\n')[0]}`); }
     }
 

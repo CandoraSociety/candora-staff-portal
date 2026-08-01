@@ -7,11 +7,29 @@ export function excelSerial(d: Date): number {
   return Math.round((d.getTime() - Date.UTC(1899, 11, 30)) / 86400000);
 }
 
-// Patch a single cell range on a workbook worksheet.
+// Column letter(s) → 1-based number, e.g. "B" → 2, "AA" → 27.
+function colToNum(col: string): number {
+  return col.split('').reduce((n, c) => n * 26 + (c.charCodeAt(0) - 64), 0);
+}
+
+// Width (column count) of a range address: 'B8' → 1, 'B9:C9' → 2.
+function rangeWidth(cell: string): number {
+  const i = cell.indexOf(':');
+  if (i < 0) return 1;
+  const startCol = cell.slice(0, i).match(/[A-Z]+/)![0];
+  const endCol = cell.slice(i + 1).match(/[A-Z]+/)![0];
+  return colToNum(endCol) - colToNum(startCol) + 1;
+}
+
+// Patch a cell (or merged range) on a workbook worksheet. For merged cells,
+// pass the full merged range address (e.g. 'B9:C9'); the value is written to
+// every cell in the range — Excel retains only the top-left for merged ranges.
 export async function patchCell(accessToken, itemId, sheet, cell, value, fmt?) {
+  const width = rangeWidth(cell);
+  const rowVals = Array(width).fill(value);
   const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/worksheets('${sheet}')/range(address='${cell}')`;
-  const body: any = { values: [[value]] };
-  if (fmt) body.numberFormat = [[fmt]];
+  const body: any = { values: [rowVals] };
+  if (fmt) body.numberFormat = [Array(width).fill(fmt)];
   const res = await fetch(url, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -32,5 +50,8 @@ export async function patchWithRetry(accessToken, itemId, sheet, cell, value, fm
 export const SUBMISSION_RANGE_CELLS = [
   { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
   { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
-  { sheet: 'Outcomes Report', startCell: 'B9', endCell: 'B10' },
+  // Outcomes Report sheet is protected — only B9/B10 (merged with C) are
+  // editable. Protection blocks numberFormat writes, so write the value only
+  // and rely on the cells' existing mm/dd/yy format carried over from the copy.
+  { sheet: 'Outcomes Report', startCell: 'B9:C9', endCell: 'B10:C10', skipFormat: true },
 ];
