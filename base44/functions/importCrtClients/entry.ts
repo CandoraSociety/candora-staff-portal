@@ -1,39 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW,
-  getGraphToken, getActiveCrtWorkbook
+  getGraphToken, getActiveCrtWorkbook, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
-
-// Convert MM/DD/YY (or MM/DD/YYYY) Excel date string → YYYY-MM-DD
-function parseCrtDate(val) {
-  if (!val) return null;
-  const s = String(val).trim();
-  if (!s) return null;
-  // Already ISO?
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) return s.slice(0, 10);
-  // MM/DD/YY or MM/DD/YYYY
-  const parts = s.split('/');
-  if (parts.length === 3) {
-    let [mm, dd, yy] = parts;
-    mm = mm.padStart(2, '0');
-    dd = dd.padStart(2, '0');
-    if (yy.length === 2) yy = '20' + yy;
-    if (yy.length === 4) yy = yy;
-    if (mm && dd && yy && Number(mm) <= 12 && Number(dd) <= 31) {
-      return `${yy}-${mm}-${dd}`;
-    }
-  }
-  // Excel serial date number
-  const num = Number(s);
-  if (!isNaN(num) && num > 30000 && num < 80000) {
-    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
-    if (!isNaN(date.getTime())) {
-      return date.toISOString().slice(0, 10);
-    }
-  }
-  return null;
-}
 
 // Parse "Last, First" → { first_name, last_name }
 function parseName(fullName) {
@@ -105,12 +74,20 @@ function parseCrtRowToClient(row) {
   else if (day90Outcome === 'C') followupStatus = 'no_contact';
   else if (day90Outcome === 'P') followupStatus = 'no_contact';
 
+  // Start date lives in different columns by stream: DEA → column D (index 3,
+  // "DEA Start Date"), WD → column F (index 5, "Service Start Date"). Fall back
+  // to the other column if the expected one is blank so a date in the "wrong"
+  // column is still captured.
+  const startDateRaw = serviceType === 'direct_to_employment'
+    ? (row[3] || row[5])
+    : (row[5] || row[3]);
+
   const client = {
     first_name: name.first_name,
     last_name: name.last_name,
     compass_hsid: String(row[1] || '').trim() || null,
     service_type: serviceType || null,
-    service_start_date: parseCrtDate(row[5]),
+    service_start_date: parseCrtDate(startDateRaw),
     program_status: programStatus || null,
     completion_date: parseCrtDate(row[7]),
     post_completion_employment_status: postCompletionStatus || null,

@@ -129,6 +129,30 @@ export function formatDateForCrt(dateStr) {
   return `${mm}/${dd}/${yy}`;
 }
 
+// Parse a CRT date cell (MM/DD/YY, MM/DD/YYYY, ISO YYYY-MM-DD, or Excel serial)
+// → YYYY-MM-DD, or null if unparseable/empty. Shared with importCrtClients.
+export function parseCrtDate(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  if (!s) return null;
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return s.slice(0, 10);
+  const parts = s.split('/');
+  if (parts.length === 3) {
+    let [mm, dd, yy] = parts;
+    mm = mm.padStart(2, '0');
+    dd = dd.padStart(2, '0');
+    if (yy.length === 2) yy = '20' + yy;
+    if (mm && dd && yy && Number(mm) <= 12 && Number(dd) <= 31) return `${yy}-${mm}-${dd}`;
+  }
+  const num = Number(s);
+  if (!isNaN(num) && num > 30000 && num < 80000) {
+    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) return date.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
 // Map a Client entity to a CRT Client Data row (25 columns A–Y)
 export function mapClientToCrtRow(client, monthEnd) {
   // monthEnd (Date|null): when set, date fields dated after monthEnd are blanked
