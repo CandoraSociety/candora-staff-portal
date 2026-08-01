@@ -121,7 +121,7 @@ export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
     try { await unprotectWorksheet(accessToken, itemId, sheet); }
     catch (e) { unprotectErr = e; }
     if (unprotectErr) {
-      throw new Error(`${sheet} is password-protected — the app cannot update ${writes.map(w => w.cell).join(' & ')} or their format. In Excel, go to Review → Unprotect Sheet (or unlock cells B9/B10), then run Repair or Roll Forward.`);
+      throw new Error(`${sheet} is password-protected — the app cannot update ${writes.map(w => w.cell).join(' & ')}. Ask the funder to remove the sheet password (or share it), then run Repair or Roll Forward.`);
     }
   } else {
     throw new Error(`${sheet} write blocked (${directErr ? directErr.message.split('\n')[0] : 'unknown'}).`);
