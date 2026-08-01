@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { getGraphToken, getActiveCrtWorkbook, CLIENT_DATA_SHEET } from '../../shared/crtWorkbook.ts';
-import { excelSerial, patchCell, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
+import { excelSerial, patchCell, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -31,9 +31,15 @@ export default async function(req: Request): Promise<Response> {
     const errors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        const fmt = r.skipFormat ? undefined : 'mm/dd/yy';
-        await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, fmt);
-        await patchCell(accessToken, active.id, r.sheet, r.endCell, endSerial, fmt);
+        if (r.protected) {
+          await patchProtectedSheet(accessToken, active.id, r.sheet, [
+            { cell: r.startCell, value: startSerial, fmt: 'mm/dd/yy' },
+            { cell: r.endCell, value: endSerial, fmt: 'mm/dd/yy' },
+          ]);
+        } else {
+          await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, 'mm/dd/yy');
+          await patchCell(accessToken, active.id, r.sheet, r.endCell, endSerial, 'mm/dd/yy');
+        }
       } catch (e) { errors.push(`${r.sheet} ${r.startCell}/${r.endCell}: ${e.message.split('\n')[0]}`); }
     }
 

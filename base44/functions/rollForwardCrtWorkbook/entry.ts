@@ -3,7 +3,7 @@ import {
   DRIVE_ID,
   getGraphToken, getActiveCrtWorkbook, getPathwaysFolder, formatDateForCrt
 } from '../../shared/crtWorkbook.ts';
-import { excelSerial, patchWithRetry, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
+import { excelSerial, patchWithRetry, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -103,9 +103,15 @@ export default async function(req: Request): Promise<Response> {
     const rangeErrors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        const fmt = r.skipFormat ? undefined : 'mm/dd/yy';
-        await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, fmt);
-        await patchWithRetry(accessToken, newFile.id, r.sheet, r.endCell, endDateSerial, fmt);
+        if (r.protected) {
+          await patchProtectedSheet(accessToken, newFile.id, r.sheet, [
+            { cell: r.startCell, value: startDateSerial, fmt: 'mm/dd/yy' },
+            { cell: r.endCell, value: endDateSerial, fmt: 'mm/dd/yy' },
+          ]);
+        } else {
+          await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, 'mm/dd/yy');
+          await patchWithRetry(accessToken, newFile.id, r.sheet, r.endCell, endDateSerial, 'mm/dd/yy');
+        }
       } catch (e) {
         rangeErrors.push(e.message);
       }

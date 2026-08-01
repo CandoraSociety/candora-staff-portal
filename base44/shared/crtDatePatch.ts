@@ -46,12 +46,68 @@ export async function patchWithRetry(accessToken, itemId, sheet, cell, value, fm
   }
 }
 
+// --- Worksheet protection helpers (for protected sheets like Outcomes Report) ---
+// Sheet protection blocks app-only writes even to unlocked cells. We capture the
+// sheet's protection options, temporarily unprotect, write, then restore the
+// exact protection. Only works for password-less protection.
+async function getWorksheetProtection(accessToken, itemId, sheet) {
+  const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/worksheets('${sheet}')/protection`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+async function unprotectWorksheet(accessToken, itemId, sheet) {
+  const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/worksheets('${sheet}')/protection/unprotect`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: '{}'
+  });
+  if (!res.ok) throw new Error(`unprotect ${sheet}: ${res.status} ${await res.text()}`);
+}
+
+async function protectWorksheet(accessToken, itemId, sheet, options) {
+  const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/worksheets('${sheet}')/protection/protect`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ options: options || {} })
+  });
+  if (!res.ok) throw new Error(`protect ${sheet}: ${res.status} ${await res.text()}`);
+}
+
+// Unprotect a worksheet, run several writes, then restore protection.
+// writes: [{ cell, value, fmt }]. Uses retry (fresh copies may need a moment).
+export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
+  let wasProtected = false;
+  let options: any = {};
+  const prot = await getWorksheetProtection(accessToken, itemId, sheet);
+  if (prot?.protected) {
+    wasProtected = true;
+    options = prot.options || {};
+    try { await unprotectWorksheet(accessToken, itemId, sheet); }
+    catch (e) {
+      throw new Error(`${sheet} is password-protected — the app connection cannot unprotect it. Update ${writes.map(w => w.cell).join(' & ')} manually each month.`);
+    }
+  }
+  try {
+    for (const w of writes) {
+      await patchWithRetry(accessToken, itemId, sheet, w.cell, w.value, w.fmt);
+    }
+  } finally {
+    if (wasProtected) {
+      try { await protectWorksheet(accessToken, itemId, sheet, options); }
+      catch { /* best-effort — leave unprotected if restore fails */ }
+    }
+  }
+}
+
 // Submission start/end date cells across CRT workbook sheets.
 export const SUBMISSION_RANGE_CELLS = [
   { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
   { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
-  // Outcomes Report sheet is protected — only B9/B10 (merged with C) are
-  // editable. Protection blocks numberFormat writes, so write the value only
-  // and rely on the cells' existing mm/dd/yy format carried over from the copy.
-  { sheet: 'Outcomes Report', startCell: 'B9:C9', endCell: 'B10:C10', skipFormat: true },
+  // Outcomes Report sheet is protected with only B9/B10 (merged with C) editable.
+  // The writer temporarily unprotects the sheet, writes both cells, then restores protection.
+  { sheet: 'Outcomes Report', startCell: 'B9:C9', endCell: 'B10:C10', protected: true },
 ];
