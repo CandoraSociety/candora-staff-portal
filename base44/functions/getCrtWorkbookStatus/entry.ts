@@ -87,6 +87,17 @@ export default async function(req: Request): Promise<Response> {
       }
     } catch (e) { /* optional */ }
 
+    // Open/closed status per file (default 'open' when no record exists yet)
+    let statusMap = {};
+    try {
+      const recs = await base44.asServiceRole.entities.CrtWorkbook.list();
+      for (const r of recs) statusMap[r.file_name] = r.status;
+    } catch { /* default open */ }
+    const allFiles = (await listCrtFiles(accessToken)).map(f => ({
+      id: f.id, name: f.name, webUrl: f.webUrl, lastModifiedDateTime: f.lastModifiedDateTime,
+      crtStatus: statusMap[f.name] || 'open',
+    }));
+
     return Response.json({
       status: 'success',
       outcomesRange,
@@ -99,11 +110,10 @@ export default async function(req: Request): Promise<Response> {
         createdDateTime: activeWorkbook.createdDateTime,
         lastModifiedDateTime: activeWorkbook.lastModifiedDateTime,
         size: activeWorkbook.size,
+        crtStatus: statusMap[activeWorkbook.name] || 'open',
       },
       clientCount,
-      allFiles: (await listCrtFiles(accessToken)).map(f => ({
-        id: f.id, name: f.name, webUrl: f.webUrl, lastModifiedDateTime: f.lastModifiedDateTime
-      })),
+      allFiles,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

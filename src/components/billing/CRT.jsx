@@ -6,10 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   AlertCircle, CheckCircle2, Download, ExternalLink, FileSpreadsheet,
-  Loader2, RefreshCw, CalendarPlus, Clock, Users, Wrench
+  Loader2, RefreshCw, CalendarPlus, Clock, Users, Wrench, Lock, Unlock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import moment from 'moment';
+import CreateMonthDialog from './CreateMonthDialog';
 
 export default function CRT() {
   const [syncing, setSyncing] = useState(false);
@@ -46,8 +47,13 @@ export default function CRT() {
       const res = await base44.functions.invoke('syncCrtWorkbook', {});
       const data = res.data;
       if (data.status === 'success') {
+        const synced = (data.files || []).filter(f => f.status === 'synced');
+        const skipped = (data.files || []).filter(f => f.status === 'skipped_closed');
+        const errs = (data.files || []).filter(f => f.status === 'error');
         toast.success(
-          `Synced ${data.totalPortalClients} clients — ${data.updated} updated, ${data.added} added to ${data.activeWorkbook}`
+          `Synced ${synced.length} open workbook(s)` +
+          (skipped.length ? ` · ${skipped.length} closed skipped` : '') +
+          (errs.length ? ` · ${errs.length} error(s)` : '')
         );
         refetch();
       } else if (data.status === 'no_workbook') {
@@ -106,6 +112,26 @@ export default function CRT() {
     }
   };
 
+  const handleToggleStatus = async (file) => {
+    const newStatus = file.crtStatus === 'closed' ? 'open' : 'closed';
+    try {
+      const res = await base44.functions.invoke('setCrtWorkbookStatus', {
+        file_name: file.name,
+        drive_item_id: file.id,
+        status: newStatus,
+      });
+      const data = res.data;
+      if (data.status === 'success') {
+        toast.success(data.message);
+        refetch();
+      } else {
+        toast.error(data.error || 'Could not update status');
+      }
+    } catch (err) {
+      toast.error('Failed: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -148,6 +174,9 @@ export default function CRT() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-green-600" />
                 {wb?.name || 'CRT Workbook'}
+                {wb?.crtStatus === 'closed' && (
+                  <Badge className="text-xs bg-slate-500 hover:bg-slate-500 text-white">Complete</Badge>
+                )}
               </CardTitle>
               <CardDescription className="mt-1">
                 Common Reporting Tool — auto-synced from Pathways portal data
@@ -162,6 +191,7 @@ export default function CRT() {
                 {creatingMonth ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarPlus className="h-4 w-4 mr-2" />}
                 {creatingMonth ? 'Creating...' : 'Create This Month Now'}
               </Button>
+              <CreateMonthDialog onCreated={refetch} />
               <Button onClick={handleRepair} disabled={repairing} variant="outline" size="sm">
                 {repairing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wrench className="h-4 w-4 mr-2" />}
                 {repairing ? 'Repairing...' : 'Repair Date Ranges'}
@@ -337,6 +367,17 @@ export default function CRT() {
                     <div className="flex items-center gap-2">
                       {isViewing && <Badge className="text-xs bg-amber-500 hover:bg-amber-500 text-white">Viewing</Badge>}
                       {isActive && <Badge variant="secondary" className="text-xs">Active</Badge>}
+                      {file.crtStatus === 'closed' && (
+                        <Badge className="text-xs bg-slate-500 hover:bg-slate-500 text-white">Complete</Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); handleToggleStatus(file); }}
+                        title={file.crtStatus === 'closed' ? 'Reopen (sync again)' : 'Mark complete (freeze)'}
+                      >
+                        {file.crtStatus === 'closed' ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                      </Button>
                       <Button asChild variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                         <a href={file.webUrl} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3.5 w-3.5" />

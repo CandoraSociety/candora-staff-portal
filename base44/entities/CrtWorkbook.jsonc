@@ -1,0 +1,33 @@
+{
+  "name": "CrtWorkbook",
+  "type": "object",
+  "properties": {
+    "file_name": {
+      "type": "string",
+      "description": "CRT_<Month>_<Year>.xlsx filename \u2014 the key for this monthly workbook"
+    },
+    "drive_item_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open",
+      "description": "open = keeps syncing with portal (month-bound); closed = frozen snapshot, no longer synced"
+    },
+    "closed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closed_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "file_name",
+    "status"
+  ]
+}

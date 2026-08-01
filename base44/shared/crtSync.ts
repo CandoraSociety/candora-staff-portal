@@ -1,17 +1,16 @@
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
-  mapClientToCrtRow, crtMonthEnd
+  mapClientToCrtRow, crtMonthEnd, listCrtFiles
 } from './crtWorkbook.ts';
 
-// Month-bound sync: writes portal clients whose service_start_date is on or
-// before the workbook's month-end into the given workbook's Client Data sheet.
-// Date fields dated after that month are blanked (see mapClientToCrtRow) so each
-// monthly CRT is a point-in-time snapshot through that month — a client entered
-// after month-end never appears, and a future-dated milestone never leaks in.
-export async function syncClientsIntoWorkbook(base44, accessToken, workbook) {
+// Sync a single workbook's Client Data sheet with the given portal clients,
+// month-bound: only clients whose service_start_date is on or before the
+// workbook's month-end are included, and date fields dated after month-end are
+// blanked. Updates rows in place (does NOT clear) — callers must ensure the
+// file already holds the correct client set (creation clears first to avoid
+// carrying future-started clients over from the copied source).
+export async function syncClientsIntoWorkbook(accessToken, workbook, allClients) {
   const monthEnd = crtMonthEnd(workbook.name);
-
-  const allClients = await base44.asServiceRole.entities.Client.list();
   const crtClients = allClients.filter(c => {
     if (!((c.service_type === 'pathways' || c.service_type === 'direct_to_employment') &&
           c.compass_hsid && String(c.compass_hsid).trim() && c.service_start_date)) return false;
@@ -23,11 +22,9 @@ export async function syncClientsIntoWorkbook(base44, accessToken, workbook) {
   });
 
   if (crtClients.length === 0) {
-    return { totalPortalClients: 0, updated: 0, added: 0, totalRowsInWorkbook: 0,
-      message: 'No eligible portal clients found (need WD/DEA service type + HSID + service start date on or before this month).' };
+    return { totalPortalClients: 0, updated: 0, added: 0, totalRowsInWorkbook: 0 };
   }
 
-  // Read existing Client Data values from the workbook
   const rangeRes = await fetch(
     `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -42,7 +39,6 @@ export async function syncClientsIntoWorkbook(base44, accessToken, workbook) {
     return padded.slice(0, NUM_COLUMNS);
   });
 
-  // Build HSID → row index map (client data starts at CLIENT_DATA_START_ROW, HSID in col B = index 1)
   const hsidToRowIndex = {};
   for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
     const row = allValues[i];
@@ -99,4 +95,30 @@ export async function syncClientsIntoWorkbook(base44, accessToken, workbook) {
   }
 
   return { totalPortalClients: crtClients.length, updated: updatedCount, added: addedCount, totalRowsInWorkbook: updatedCount + addedCount };
+}
+
+// Sync every OPEN monthly CRT. Closed workbooks (marked complete) are frozen
+// and skipped. Portal clients are fetched once and reused across files.
+// The reporting date ranges (row 8 / Outcomes Report) are never touched here —
+// they're set per-file at creation and stay fixed for that month.
+export async function syncAllOpenWorkbooks(base44, accessToken) {
+  const files = await listCrtFiles(accessToken);
+  if (!files.length) return { files: [], totalSynced: 0 };
+
+  let closedNames = new Set();
+  try {
+    const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+    closedNames = new Set(closed.map(r => r.file_name));
+  } catch { /* default: nothing closed */ }
+
+  const allClients = await base44.asServiceRole.entities.Client.list();
+  const results = [];
+  for (const f of files) {
+    if (closedNames.has(f.name)) { results.push({ file: f.name, status: 'skipped_closed' }); continue; }
+    try {
+      const r = await syncClientsIntoWorkbook(accessToken, f, allClients);
+      results.push({ file: f.name, status: 'synced', ...r });
+    } catch (e) { results.push({ file: f.name, status: 'error', error: e.message }); }
+  }
+  return { files: results, totalSynced: results.filter(r => r.status === 'synced').length };
 }
