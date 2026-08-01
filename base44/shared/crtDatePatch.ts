@@ -64,12 +64,22 @@ async function getWorksheetProtection(accessToken, itemId, sheet) {
 
 async function unprotectWorksheet(accessToken, itemId, sheet) {
   const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${itemId}/workbook/worksheets('${sheet}')/protection/unprotect`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: '{}'
-  });
-  if (!res.ok) throw new Error(`unprotect ${sheet}: ${res.status} ${await res.text()}`);
+  // Per MS Graph docs the unprotect body is empty. Try no-body first; if the
+  // service insists on JSON, fall back to an empty object, then an empty password.
+  const attempts = [
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+    { headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: '{}' },
+    { headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: '' }) },
+  ];
+  let lastErr: any;
+  for (const a of attempts) {
+    const res = await fetch(url, { method: 'POST', ...a });
+    if (res.ok) return;
+    lastErr = new Error(`unprotect ${sheet}: ${res.status} ${await res.text()}`);
+    // If it's a real auth/access error, stop trying.
+    if (res.status === 401 || res.status === 403) break;
+  }
+  throw lastErr;
 }
 
 async function protectWorksheet(accessToken, itemId, sheet, options) {
@@ -88,15 +98,16 @@ async function protectWorksheet(accessToken, itemId, sheet, options) {
 // which only succeeds for password-less protection.
 // writes: [{ cell, value, fmt }]
 export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
+  let directErr: any = null;
   try {
     for (const w of writes) {
       await patchWithRetry(accessToken, itemId, sheet, w.cell, w.value, w.fmt);
     }
     return;
-  } catch (directErr) {
-    // Only fall back to unprotect if the direct write was actually blocked.
-    const msg = String(directErr.message || '');
-    if (!/403|401|accessdenied|forbidden/i.test(msg)) throw directErr;
+  } catch (e) {
+    directErr = e;
+    const msg = String(e.message || '');
+    if (!/403|401|accessdenied|forbidden/i.test(msg)) throw e;
     // fall through to unprotect path
   }
 
@@ -106,10 +117,14 @@ export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
   if (prot?.protected) {
     wasProtected = true;
     options = prot.options || {};
+    let unprotectErr: any;
     try { await unprotectWorksheet(accessToken, itemId, sheet); }
-    catch (e) {
-      throw new Error(`${sheet} is password-protected — the app connection cannot unprotect it. Update ${writes.map(w => w.cell).join(' & ')} manually each month.`);
+    catch (e) { unprotectErr = e; }
+    if (unprotectErr) {
+      throw new Error(`${sheet} is password-protected — the app cannot update ${writes.map(w => w.cell).join(' & ')} or their format. In Excel, go to Review → Unprotect Sheet (or unlock cells B9/B10), then run Repair or Roll Forward.`);
     }
+  } else {
+    throw new Error(`${sheet} write blocked (${directErr ? directErr.message.split('\n')[0] : 'unknown'}).`);
   }
   try {
     for (const w of writes) {
