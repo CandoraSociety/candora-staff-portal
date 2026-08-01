@@ -104,9 +104,10 @@ export default async function(req: Request): Promise<Response> {
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
         if (r.protected) {
+          // Password-protected sheet: value-only write (no fmt) — see repairCrtDateRanges.
           await patchProtectedSheet(accessToken, newFile.id, r.sheet, [
-            { cell: r.startCell, value: startDateSerial, fmt: 'mm/dd/yy' },
-            { cell: r.endCell, value: endDateSerial, fmt: 'mm/dd/yy' },
+            { cell: r.startCell, value: startDateSerial },
+            { cell: r.endCell, value: endDateSerial },
           ]);
         } else {
           await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, 'mm/dd/yy');

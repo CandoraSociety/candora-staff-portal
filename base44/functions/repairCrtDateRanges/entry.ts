@@ -32,9 +32,12 @@ export default async function(req: Request): Promise<Response> {
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
         if (r.protected) {
+          // Password-protected sheet: writing a value to an unlocked cell is allowed,
+          // but setting numberFormat is blocked by protection — so write value-only
+          // (no fmt) and rely on the cell's existing date format from the template.
           await patchProtectedSheet(accessToken, active.id, r.sheet, [
-            { cell: r.startCell, value: startSerial, fmt: 'mm/dd/yy' },
-            { cell: r.endCell, value: endSerial, fmt: 'mm/dd/yy' },
+            { cell: r.startCell, value: startSerial },
+            { cell: r.endCell, value: endSerial },
           ]);
         } else {
           await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, 'mm/dd/yy');
