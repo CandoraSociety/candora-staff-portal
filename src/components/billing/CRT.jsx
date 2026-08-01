@@ -217,7 +217,7 @@ export default function CRT() {
       )}
 
       {/* Previous Files */}
-      {status?.allFiles && status.allFiles.length > 1 && (
+      {status?.allFiles && status.allFiles.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">All CRT Files</CardTitle>
