@@ -200,6 +200,17 @@ export default function CRT() {
                 <p className="text-sm font-medium text-green-600">Active</p>
               </div>
             </div>
+            <div className="flex items-center gap-2 sm:col-span-2">
+              <FileSpreadsheet className="h-4 w-4 text-slate-400" />
+              <div>
+                <p className="text-xs text-slate-500">Outcomes Report Range</p>
+                <p className="text-sm font-medium">
+                  {status?.outcomesRange?.start && status?.outcomesRange?.end
+                    ? `${moment(status.outcomesRange.start).format('MMM D')} – ${moment(status.outcomesRange.end).format('MMM D, YYYY')}`
+                    : '—'}
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

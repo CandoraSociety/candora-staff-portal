@@ -42,7 +42,12 @@ export async function patchCell(accessToken, itemId, sheet, cell, value, fmt?) {
 export async function patchWithRetry(accessToken, itemId, sheet, cell, value, fmt?) {
   for (let i = 0; i < 4; i++) {
     try { await patchCell(accessToken, itemId, sheet, cell, value, fmt); return; }
-    catch (e) { if (i === 3) throw e; await new Promise(r => setTimeout(r, 2500)); }
+    catch (e) {
+      // Protection/access errors are terminal — retrying won't help.
+      if (/403|401|accessdenied|forbidden/i.test(String(e.message || ''))) throw e;
+      if (i === 3) throw e;
+      await new Promise(r => setTimeout(r, 2500));
+    }
   }
 }
 
@@ -77,9 +82,24 @@ async function protectWorksheet(accessToken, itemId, sheet, options) {
   if (!res.ok) throw new Error(`protect ${sheet}: ${res.status} ${await res.text()}`);
 }
 
-// Unprotect a worksheet, run several writes, then restore protection.
-// writes: [{ cell, value, fmt }]. Uses retry (fresh copies may need a moment).
+// Try a direct write first. If the sheet is writable (common right after a
+// roll-forward copy), this just works. Only if the write is blocked (403/401)
+// do we attempt to temporarily unprotect, write, and restore protection —
+// which only succeeds for password-less protection.
+// writes: [{ cell, value, fmt }]
 export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
+  try {
+    for (const w of writes) {
+      await patchWithRetry(accessToken, itemId, sheet, w.cell, w.value, w.fmt);
+    }
+    return;
+  } catch (directErr) {
+    // Only fall back to unprotect if the direct write was actually blocked.
+    const msg = String(directErr.message || '');
+    if (!/403|401|accessdenied|forbidden/i.test(msg)) throw directErr;
+    // fall through to unprotect path
+  }
+
   let wasProtected = false;
   let options: any = {};
   const prot = await getWorksheetProtection(accessToken, itemId, sheet);
@@ -107,7 +127,8 @@ export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
 export const SUBMISSION_RANGE_CELLS = [
   { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
   { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
-  // Outcomes Report sheet is protected with only B9/B10 (merged with C) editable.
-  // The writer temporarily unprotects the sheet, writes both cells, then restores protection.
+  // Outcomes Report B9/B10 (merged B9:C9 / B10:C10). The sheet is marked "protected"
+  // but is writable right after a roll-forward copy; try a direct write first and
+  // only fall back to unprotect/protect if the direct write is blocked.
   { sheet: 'Outcomes Report', startCell: 'B9:C9', endCell: 'B10:C10', protected: true },
 ];

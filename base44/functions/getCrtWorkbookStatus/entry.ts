@@ -41,6 +41,7 @@ export default async function(req: Request): Promise<Response> {
     // Count client rows in the workbook (read column A from row 15)
     let clientCount = 0;
     let submissionRange = { start: '', end: '' };
+    let outcomesRange = { start: '', end: '' };
     // Graph returns date cells as Excel serial numbers (days since 1899-12-30)
     // when valuesOnly=true; convert back to an ISO date for display.
     const cellToISO = (v) => {
@@ -72,8 +73,24 @@ export default async function(req: Request): Promise<Response> {
       }
     } catch (e) { /* range read is optional */ }
 
+    // Read Outcomes Report B9:B10 (merged B9:C9 / B10:C10) to see what's actually there.
+    try {
+      const orRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${activeWorkbook.id}/workbook/worksheets('Outcomes Report')/range(address='B9:B10')`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (orRes.ok) {
+        const orData = await orRes.json();
+        const vals = orData.values || [];
+        outcomesRange.start = cellToISO(vals[0]?.[0]);
+        outcomesRange.end = cellToISO(vals[1]?.[0]);
+      }
+    } catch (e) { /* optional */ }
+
     return Response.json({
       status: 'success',
+      outcomesRange,
+      submissionRange,
       activeWorkbook: {
         id: activeWorkbook.id,
         name: activeWorkbook.name,
@@ -83,7 +100,6 @@ export default async function(req: Request): Promise<Response> {
         lastModifiedDateTime: activeWorkbook.lastModifiedDateTime,
         size: activeWorkbook.size,
       },
-      submissionRange,
       clientCount,
       allFiles: (await listCrtFiles(accessToken)).map(f => ({
         id: f.id, name: f.name, webUrl: f.webUrl, lastModifiedDateTime: f.lastModifiedDateTime
