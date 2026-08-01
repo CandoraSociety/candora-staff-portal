@@ -143,8 +143,17 @@ export function mapClientToCrtRow(client, monthEnd) {
 
   const fullName = `${(client.last_name || '').trim()}, ${(client.first_name || '').trim()}`.trim();
 
+  // Stream: DEA (CEIS) vs WD
+  const isDea = client.service_type === 'direct_to_employment';
+  const isWd = client.service_type === 'pathways';
+
+  // Program start date (service_start_date), month-bound. Routed to either the
+  // DEA Start Date column (DEA clients) or the Service Start Date column (WD
+  // clients) — never both.
+  const startDateForCrt = gate(client.service_start_date) ? formatDateForCrt(client.service_start_date) : '';
+
   // CEIS (DEA) — Y/N
-  const ceis = client.service_type === 'direct_to_employment' ? 'Yes' : 'No';
+  const ceis = isDea ? 'Yes' : 'No';
 
   // Service Element
   const serviceElementMap = {
@@ -161,7 +170,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     'cancelled': 'Cancelled',
   };
   const completionOK = gate(client.completion_date);
-  const serviceOutcome = completionOK ? (serviceOutcomeMap[client.program_status] || '') : '';
+  const serviceOutcome = completionOK ? (serviceOutcomeMap[client.program_status] || 'In Progress') : '';
 
   // Placement Outcome (map portal values to CRT-accepted values)
   const placementOK = gate(client.post_completion_employment_date);
@@ -211,9 +220,9 @@ export function mapClientToCrtRow(client, monthEnd) {
     fullName,                                          // A: Client Legal Name
     client.compass_hsid || '',                         // B: COMPASS HSID #
     ceis,                                              // C: CEIS (DEA)
-    '',                                                // D: DEA Start Date
+    isDea ? startDateForCrt : '',                      // D: DEA Start Date (DEA only)
     serviceElement,                                    // E: Service Element
-    gate(client.service_start_date) ? formatDateForCrt(client.service_start_date) : '',       // F: Service Start Date
+    isWd ? startDateForCrt : '',                        // F: Service Start Date (WD only)
     serviceOutcome,                                    // G: Service Outcome
     completionOK ? formatDateForCrt(client.completion_date) : '',           // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome

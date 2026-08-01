@@ -11,18 +11,18 @@ import {
 // carrying future-started clients over from the copied source).
 export async function syncClientsIntoWorkbook(accessToken, workbook, allClients) {
   const monthEnd = crtMonthEnd(workbook.name);
-  // Eligibility: a client first appears on the CRT for the month containing
-  // their intake date (falling back to service_start_date when no intake date
-  // is recorded), and then on every subsequent open month. Clients whose
-  // intake/service start falls AFTER this workbook's month are excluded.
+  // Eligibility: only clients assigned to a program stream (DEA or WD) with a
+  // program start date set appear on the CRT. They first appear on the month
+  // containing their program start date (service_start_date), then on every
+  // subsequent open month. Casual, rejected, and not-yet-assigned clients are
+  // excluded. Clients whose program start date falls AFTER this workbook's
+  // month are excluded.
   const crtClients = allClients.filter(c => {
     if (!((c.service_type === 'pathways' || c.service_type === 'direct_to_employment') &&
-          c.compass_hsid && String(c.compass_hsid).trim())) return false;
-    const gateDateRaw = c.intake_date || c.service_start_date;
-    if (!gateDateRaw) return false;
+          c.compass_hsid && String(c.compass_hsid).trim() && c.service_start_date)) return false;
     if (monthEnd) {
-      const d = new Date(gateDateRaw);
-      if (!isNaN(d.getTime()) && d > monthEnd) return false;
+      const sd = new Date(c.service_start_date);
+      if (!isNaN(sd.getTime()) && sd > monthEnd) return false;
     }
     return true;
   });
