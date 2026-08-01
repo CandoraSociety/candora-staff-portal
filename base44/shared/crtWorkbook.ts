@@ -6,6 +6,26 @@ export const PATHWAYS_FOLDER = '_DEPT_Pathways';
 export const FINANCE_FOLDER = '_VAULT_Finance';
 export const MASTER_TEMPLATE_NAME = 'CRT_Master_Template.xlsx';
 export const CLIENT_DATA_SHEET = 'Client Data';
+
+// Month names in calendar order — used to sort CRT_<Month>_<Year> files chronologically
+// (alphabetical sort is wrong: "April" < "March" even though April is the later month).
+const CRT_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function crtFileDate(file) {
+  const m = file.name.match(/CRT_(\w+)_(\d{4})/i);
+  if (!m) return null;
+  const month = CRT_MONTHS.indexOf(m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase());
+  if (month < 0) return null;
+  return { year: parseInt(m[2], 10), month };
+}
+
+function sortCrtFilesDesc(files) {
+  return files.sort((a, b) => {
+    const da = crtFileDate(a), db = crtFileDate(b);
+    if (!da || !db) return b.name.localeCompare(a.name);
+    return (db.year * 12 + db.month) - (da.year * 12 + da.month);
+  });
+}
 export const CLIENT_DATA_START_ROW = 15; // 1-based Excel row where client data begins
 export const NUM_COLUMNS = 25; // A through Y
 
@@ -64,8 +84,9 @@ export async function getActiveCrtWorkbook(accessToken) {
   if (crtFiles.length === 0) {
     return null;
   }
-  // Sort by name descending — CRT_March_2026.xlsx > CRT_February_2026.xlsx
-  crtFiles.sort((a, b) => b.name.localeCompare(a.name));
+  // Sort by parsed month/year descending so the latest month is active
+  // (alphabetical sort is wrong — "April" sorts before "March").
+  sortCrtFilesDesc(crtFiles);
   return crtFiles[0];
 }
 
@@ -80,7 +101,7 @@ export async function listCrtFiles(accessToken) {
   const crtFiles = (filesData.value || []).filter(f =>
     /^CRT_.*\.xlsx$/i.test(f.name) && !/master/i.test(f.name)
   );
-  crtFiles.sort((a, b) => b.name.localeCompare(a.name));
+  sortCrtFilesDesc(crtFiles);
   return crtFiles;
 }
 
