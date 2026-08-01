@@ -18,8 +18,11 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
   // excluded. Clients whose program start date falls AFTER this workbook's
   // month are excluded.
   const crtClients = allClients.filter(c => {
+    // A COMPASS HSID is NOT required to appear on the CRT — the field stays
+    // blank until entered in the portal, then the next sync writes it in.
+    // Only a program stream (DEA/WD) + program start date are required.
     if (!((c.service_type === 'pathways' || c.service_type === 'direct_to_employment') &&
-          c.compass_hsid && String(c.compass_hsid).trim() && c.service_start_date)) return false;
+          c.service_start_date)) return false;
     if (monthEnd) {
       const sd = new Date(c.service_start_date);
       if (!isNaN(sd.getTime()) && sd > monthEnd) return false;
@@ -45,12 +48,26 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     return padded.slice(0, NUM_COLUMNS);
   });
 
+  // Match rows by HSID; fall back to normalized name for HSID-blank rows (and
+  // for portal clients without an HSID yet). This keeps clients without a
+  // COMPASS HSID on the CRT — the HSID field stays blank until entered in the
+  // portal, at which point the next sync writes it into the matched row and
+  // future syncs match that row by HSID.
+  // Token-sort normalization so a row matches regardless of name word order
+  // (e.g. a manual CRT row "Therese ... Ngosso" vs the portal's "Ngosso, ...").
+  // Only used as the HSID-blank fallback, so collision risk is limited to
+  // HSID-less clients.
+  const normName = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+  const portalNameKey = (c) => normName(`${c.last_name || ''}, ${c.first_name || ''}`);
+
   const hsidToRowIndex = {};
+  const nameToRowIndex = {};
   for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
     const row = allValues[i];
-    if (row && row[1] && String(row[1]).trim()) {
-      hsidToRowIndex[String(row[1]).trim()] = i;
-    }
+    if (!row) continue;
+    const h = row[1] ? String(row[1]).trim() : '';
+    if (h) hsidToRowIndex[h] = i;
+    else if (row[0] && String(row[0]).trim()) nameToRowIndex[normName(row[0])] = i;
   }
 
   let lastDataRow = CLIENT_DATA_START_ROW - 2;
@@ -63,14 +80,29 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
 
   let updatedCount = 0, addedCount = 0;
   for (const client of crtClients) {
-    const hsid = String(client.compass_hsid).trim();
+    const hsid = client.compass_hsid ? String(client.compass_hsid).trim() : '';
     const portalRow = mapClientToCrtRow(client, monthEnd);
-    if (hsidToRowIndex[hsid] !== undefined) {
-      const rowIdx = hsidToRowIndex[hsid];
+    let rowIdx = -1;
+    if (hsid && hsidToRowIndex[hsid] !== undefined) {
+      rowIdx = hsidToRowIndex[hsid];
+    } else {
+      const nk = portalNameKey(client);
+      if (nameToRowIndex[nk] !== undefined) rowIdx = nameToRowIndex[nk];
+    }
+
+    if (rowIdx >= 0) {
       for (let col = 0; col < NUM_COLUMNS; col++) {
         if (portalRow[col] !== '' && portalRow[col] !== null && portalRow[col] !== undefined) {
           allValues[rowIdx][col] = portalRow[col];
         }
+      }
+      // Name-matched row that now has an HSID in the portal: the HSID was just
+      // written — index by HSID and drop the name entry so it matches by HSID
+      // going forward (and isn't matched again as a name row).
+      if (hsid) {
+        hsidToRowIndex[hsid] = rowIdx;
+        const nk = portalNameKey(client);
+        if (nameToRowIndex[nk] !== undefined) delete nameToRowIndex[nk];
       }
       updatedCount++;
     } else {
@@ -79,7 +111,8 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
         allValues.push(new Array(NUM_COLUMNS).fill(''));
       }
       allValues[newRowIndex] = portalRow;
-      hsidToRowIndex[hsid] = newRowIndex;
+      if (hsid) hsidToRowIndex[hsid] = newRowIndex;
+      nameToRowIndex[portalNameKey(client)] = newRowIndex;
       lastDataRow = newRowIndex;
       addedCount++;
     }
