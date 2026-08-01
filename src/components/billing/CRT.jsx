@@ -15,6 +15,10 @@ export default function CRT() {
   const [syncing, setSyncing] = useState(false);
   const [rollingForward, setRollingForward] = useState(false);
   const [repairing, setRepairing] = useState(false);
+  // Which file is shown in the live preview. null = the active workbook.
+  // This is a VIEW-ONLY toggle — it never changes which workbook is active
+  // for sync or roll-forward.
+  const [viewFileId, setViewFileId] = useState(null);
 
   // Fetch CRT workbook status
   const { data: status, isLoading, refetch } = useQuery({
@@ -23,6 +27,17 @@ export default function CRT() {
       const res = await base44.functions.invoke('getCrtWorkbookStatus', {});
       return res.data;
     },
+  });
+
+  // Embed URL for a user-selected (non-active) file. When viewFileId is null
+  // the active workbook's embed (from status) is used directly.
+  const { data: previewData, isLoading: previewLoading } = useQuery({
+    queryKey: ['crt-file-preview', viewFileId],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getCrtFilePreview', { fileId: viewFileId });
+      return res.data;
+    },
+    enabled: !!viewFileId,
   });
 
   const handleSync = async () => {
@@ -121,7 +136,11 @@ export default function CRT() {
   }
 
   const wb = status?.activeWorkbook;
-  const embedUrl = wb?.embedUrl;
+  const activeEmbedUrl = wb?.embedUrl;
+  const viewedFile = viewFileId ? status?.allFiles?.find(f => f.id === viewFileId) : wb;
+  const effectiveEmbedUrl = viewFileId ? (previewData?.embedUrl || null) : activeEmbedUrl;
+  const showPreviewLoading = !!viewFileId && previewLoading;
+  const isViewingArchive = !!viewFileId && viewFileId !== wb?.id;
 
   return (
     <div className="space-y-4">
@@ -216,15 +235,50 @@ export default function CRT() {
       </Card>
 
       {/* Embedded Workbook View */}
-      {embedUrl ? (
+      {showPreviewLoading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center h-[80vh] min-h-[700px]">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            </div>
+          </CardContent>
+        </Card>
+      ) : effectiveEmbedUrl ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Live Workbook Preview</CardTitle>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                  {viewedFile?.name || 'CRT Workbook'}
+                </CardTitle>
+                {isViewingArchive && (
+                  <CardDescription className="mt-1 text-amber-600">
+                    Viewing an archived month — not the active workbook.
+                  </CardDescription>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {isViewingArchive && (
+                  <Button onClick={() => setViewFileId(null)} variant="outline" size="sm">
+                    Show Active Workbook
+                  </Button>
+                )}
+                {viewedFile?.webUrl && (
+                  <Button asChild variant="outline" size="sm">
+                    <a href={viewedFile.webUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open in Excel
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="rounded-lg overflow-hidden border border-slate-200 h-[80vh] min-h-[700px]">
               <iframe
-                src={embedUrl}
+                src={effectiveEmbedUrl}
                 className="w-full h-full"
                 frameBorder="0"
                 title="CRT Workbook"
@@ -240,9 +294,9 @@ export default function CRT() {
               <p className="text-sm text-slate-600 mb-3">
                 Live preview unavailable. Click "Open in Excel" to view the full workbook.
               </p>
-              {wb?.webUrl && (
+              {viewedFile?.webUrl && (
                 <Button asChild variant="outline" size="sm">
-                  <a href={wb.webUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={viewedFile.webUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Open Workbook
                   </a>
@@ -253,35 +307,49 @@ export default function CRT() {
         </Card>
       )}
 
-      {/* Previous Files */}
+      {/* All CRT Files — click to preview (view-only; doesn't change active) */}
       {status?.allFiles && status.allFiles.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">All CRT Files</CardTitle>
+            <CardDescription className="text-xs">
+              Click a file to preview it above. This doesn't change the active workbook.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              {status.allFiles.map((file, idx) => (
-                <div key={file.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50">
-                  <div className="flex items-center gap-3">
-                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
-                    <div>
-                      <p className="text-sm font-medium">{file.name}</p>
-                      <p className="text-xs text-slate-500">
-                        {file.lastModifiedDateTime ? moment(file.lastModifiedDateTime).format('MMM D, YYYY [at] h:mm A') : ''}
-                      </p>
+              {status.allFiles.map((file) => {
+                const isActive = file.id === wb?.id;
+                const isViewing = file.id === (viewFileId || wb?.id);
+                return (
+                  <div
+                    key={file.id}
+                    onClick={() => setViewFileId(isActive ? null : file.id)}
+                    className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
+                      isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium">{file.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {file.lastModifiedDateTime ? moment(file.lastModifiedDateTime).format('MMM D, YYYY [at] h:mm A') : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isViewing && <Badge className="text-xs bg-amber-500 hover:bg-amber-500 text-white">Viewing</Badge>}
+                      {isActive && <Badge variant="secondary" className="text-xs">Active</Badge>}
+                      <Button asChild variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                        <a href={file.webUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {idx === 0 && <Badge variant="secondary" className="text-xs">Active</Badge>}
-                    <Button asChild variant="ghost" size="sm">
-                      <a href={file.webUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
