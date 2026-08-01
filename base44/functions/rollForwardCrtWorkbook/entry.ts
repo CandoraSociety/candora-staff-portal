@@ -1,8 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
-  DRIVE_ID, CLIENT_DATA_SHEET,
+  DRIVE_ID,
   getGraphToken, getActiveCrtWorkbook, getPathwaysFolder, formatDateForCrt
 } from '../../shared/crtWorkbook.ts';
+import { excelSerial, patchWithRetry, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -96,51 +97,14 @@ export default async function(req: Request): Promise<Response> {
     const lastDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
     const startDateStr = formatDateForCrt(firstDay.toISOString());
     const endDateStr = formatDateForCrt(lastDay.toISOString());
-    const excelSerial = (isoStr) => Math.round(
-      (new Date(isoStr).getTime() - Date.UTC(1899, 11, 30)) / 86400000
-    );
-    const startDateSerial = excelSerial(firstDay.toISOString());
-    const endDateSerial = excelSerial(lastDay.toISOString());
-
-    // Sheets + cells that hold the submission start/end date range.
-    const SUBMISSION_RANGE_CELLS = [
-      { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },
-      { sheet: 'Invoice Tracker', startCell: 'B8', endCell: 'B9' },
-      { sheet: 'Outcomes Report', startCell: 'B9', endCell: 'B10' },
-    ];
-
-    // Write the serial number and force a mm/dd/yy date format so the cells display
-    // as real dates regardless of the copied cell's existing number format.
-    const patchCell = async (sheet, cell, value) => {
-      const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('${sheet}')/range(address='${cell}')`;
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [[value]], numberFormat: [['mm/dd/yy']] })
-      });
-      if (!res.ok) {
-        throw new Error(`${sheet}!${cell}: ${res.status} ${await res.text()}`);
-      }
-    };
-
-    // The workbook may not be ready for edits immediately after a copy — retry briefly.
-    const patchWithRetry = async (sheet, cell, value) => {
-      for (let attempt = 0; attempt < 4; attempt++) {
-        try {
-          await patchCell(sheet, cell, value);
-          return true;
-        } catch (e) {
-          if (attempt === 3) throw e;
-          await new Promise(r => setTimeout(r, 3000));
-        }
-      }
-    };
+    const startDateSerial = excelSerial(firstDay);
+    const endDateSerial = excelSerial(lastDay);
 
     const rangeErrors = [];
     for (const r of SUBMISSION_RANGE_CELLS) {
       try {
-        await patchWithRetry(r.sheet, r.startCell, startDateSerial);
-        await patchWithRetry(r.sheet, r.endCell, endDateSerial);
+        await patchWithRetry(accessToken, newFile.id, r.sheet, r.startCell, startDateSerial, 'mm/dd/yy');
+        await patchWithRetry(accessToken, newFile.id, r.sheet, r.endCell, endDateSerial, 'mm/dd/yy');
       } catch (e) {
         rangeErrors.push(e.message);
       }

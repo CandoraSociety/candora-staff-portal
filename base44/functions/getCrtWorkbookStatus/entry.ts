@@ -41,6 +41,15 @@ export default async function(req: Request): Promise<Response> {
     // Count client rows in the workbook (read column A from row 15)
     let clientCount = 0;
     let submissionRange = { start: '', end: '' };
+    // Graph returns date cells as Excel serial numbers (days since 1899-12-30)
+    // when valuesOnly=true; convert back to an ISO date for display.
+    const cellToISO = (v) => {
+      if (typeof v === 'number' && v > 0) {
+        return new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000).toISOString().slice(0, 10);
+      }
+      if (v && typeof v === 'string') return v;
+      return '';
+    };
     try {
       const rangeRes = await fetch(
         `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${activeWorkbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
@@ -51,8 +60,8 @@ export default async function(req: Request): Promise<Response> {
         const values = rangeData.values || [];
         // Submission range is in row 8: B8 = start, E8 = end
         if (values[7]) {
-          submissionRange.start = values[7][1] || '';
-          submissionRange.end = values[7][4] || '';
+          submissionRange.start = cellToISO(values[7][1]);
+          submissionRange.end = cellToISO(values[7][4]);
         }
         // Count rows from row 15 that have a name in column A
         for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   AlertCircle, CheckCircle2, Download, ExternalLink, FileSpreadsheet,
-  Loader2, RefreshCw, CalendarPlus, Clock, Users
+  Loader2, RefreshCw, CalendarPlus, Clock, Users, Wrench
 } from 'lucide-react';
 import { toast } from 'sonner';
 import moment from 'moment';
@@ -14,6 +14,7 @@ import moment from 'moment';
 export default function CRT() {
   const [syncing, setSyncing] = useState(false);
   const [rollingForward, setRollingForward] = useState(false);
+  const [repairing, setRepairing] = useState(false);
 
   // Fetch CRT workbook status
   const { data: status, isLoading, refetch } = useQuery({
@@ -73,6 +74,27 @@ export default function CRT() {
     }
   };
 
+  const handleRepair = async () => {
+    setRepairing(true);
+    try {
+      const res = await base44.functions.invoke('repairCrtDateRanges', {});
+      const data = res.data;
+      if (data.status === 'success') {
+        toast.success(data.message);
+        refetch();
+      } else if (data.status === 'partial') {
+        toast.info(data.message);
+        refetch();
+      } else {
+        toast.error(data.error || 'Repair failed');
+      }
+    } catch (err) {
+      toast.error('Repair failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setRepairing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -124,6 +146,10 @@ export default function CRT() {
               <Button onClick={handleRollForward} disabled={rollingForward} variant="outline" size="sm">
                 {rollingForward ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CalendarPlus className="h-4 w-4 mr-2" />}
                 {rollingForward ? 'Rolling...' : 'Roll Forward to Next Month'}
+              </Button>
+              <Button onClick={handleRepair} disabled={repairing} variant="outline" size="sm">
+                {repairing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Wrench className="h-4 w-4 mr-2" />}
+                {repairing ? 'Repairing...' : 'Repair Date Ranges'}
               </Button>
               {wb?.webUrl && (
                 <Button asChild variant="outline" size="sm">
