@@ -152,6 +152,9 @@ export function mapClientToCrtRow(client, monthEnd) {
   // clients) — never both.
   const startDateForCrt = gate(client.service_start_date) ? formatDateForCrt(client.service_start_date) : '';
 
+  // EDA completion date, month-bound (Service Outcome Date + WD EDA Completion column)
+  const edaDateForCrt = gate(client.eda_completion_date) ? formatDateForCrt(client.eda_completion_date) : '';
+
   // CEIS (DEA) — Y/N
   const ceis = isDea ? 'Yes' : 'No';
 
@@ -208,6 +211,13 @@ export function mapClientToCrtRow(client, monthEnd) {
     else if (raw === 'E-URF') day90Outcome = 'E-UF';
   }
 
+  // 90 Day Outcome Date — DEA: anticipated (EDA completion + 90 days), shown
+  // from the month of the Service Outcome date onward (not gated by the future
+  // 90-day date itself). WD: actual follow-up date, month-bound.
+  const day90DateForCrt = isDea
+    ? (gate(client.eda_completion_date) ? formatDateForCrt(client.followup_90day_date) : '')
+    : (day90OK ? formatDateForCrt(client.followup_90day_date) : '');
+
   // Work Exposure Y/N
   const workExposure = (client.paid_external_placement || client.exposure_course) ? 'Yes' : 'No';
 
@@ -241,11 +251,11 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // M: 60 Day Outcome
     '',                                                // N: 60 Day Outcome Date
     day90Outcome,                                      // O: 90 Day Outcome
-    day90OK ? formatDateForCrt(client.followup_90day_date) : '',     // P: 90 Day Outcome Date
+    day90DateForCrt,                                    // P: 90 Day Outcome Date
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     client.intake_notes || '',                         // S: Comments
-    '',                                                // T: EDA Completion Date
+    isWd ? edaDateForCrt : '',                          // T: EDA Completion Date (WD only)
     workExposure,                                      // U: Work Exposure Y/N
     'No',                                              // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
