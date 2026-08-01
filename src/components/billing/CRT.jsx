@@ -185,7 +185,7 @@ export default function CRT() {
             <CardTitle className="text-base">Live Workbook Preview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg overflow-hidden border border-slate-200" style={{ height: '600px' }}>
+            <div className="rounded-lg overflow-hidden border border-slate-200 h-[80vh] min-h-[700px]">
               <iframe
                 src={embedUrl}
                 className="w-full h-full"

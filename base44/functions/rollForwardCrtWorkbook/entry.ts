@@ -16,9 +16,19 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'No active CRT workbook found to copy from.' }, { status: 404 });
     }
 
-    // 1. Determine next month name + year
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    // 1. Determine next month — derived from the ACTIVE workbook's filename, not the calendar,
+    //    so it always advances one billing month past the current workbook (even if you're behind).
+    const nameMatch = activeWorkbook.name.match(/CRT_([A-Za-z]+)_(\d{4})/i);
+    let nextMonth;
+    if (nameMatch) {
+      const baseMonthIdx = new Date(`${nameMatch[1]} 1, ${nameMatch[2]}`).getMonth();
+      const baseYear = parseInt(nameMatch[2], 10);
+      nextMonth = new Date(baseYear, baseMonthIdx + 1, 1);
+    } else {
+      // Fallback: calendar next month (active workbook name didn't parse)
+      const now = new Date();
+      nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
     const monthName = nextMonth.toLocaleString('en-US', { month: 'long' });
     const year = nextMonth.getFullYear();
     const newFileName = `CRT_${monthName}_${year}.xlsx`;
@@ -77,33 +87,55 @@ export default async function(req: Request): Promise<Response> {
       });
     }
 
-    // 4. Update the submission range (B9 = start, E9 = end) to the new month
+    // 4. Update the submission range to the new month.
+    //    Values are written as ISO date strings so Excel stores them as real dates
+    //    (required for the conditional highlighting that compares client dates to this range).
     const firstDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1);
     const lastDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
+    const startDateISO = firstDay.toISOString();
+    const endDateISO = lastDay.toISOString();
     const startDateStr = formatDateForCrt(firstDay.toISOString());
     const endDateStr = formatDateForCrt(lastDay.toISOString());
 
-    try {
-      // Update B9 (start date)
-      await fetch(
-        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='B9')`,
-        {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [[startDateStr]] })
+    // Sheets + cells that hold the submission start/end date range.
+    // Extend this list with any other sheets the workbook uses for range-based highlighting.
+    const SUBMISSION_RANGE_CELLS = [
+      { sheet: CLIENT_DATA_SHEET, startCell: 'B9', endCell: 'E9' },
+    ];
+
+    const patchCell = async (sheet, cell, value) => {
+      const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('${sheet}')/range(address='${cell}')`;
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[value]] })
+      });
+      if (!res.ok) {
+        throw new Error(`${sheet}!${cell}: ${res.status} ${await res.text()}`);
+      }
+    };
+
+    // The workbook may not be ready for edits immediately after a copy — retry briefly.
+    const patchWithRetry = async (sheet, cell, value) => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          await patchCell(sheet, cell, value);
+          return true;
+        } catch (e) {
+          if (attempt === 3) throw e;
+          await new Promise(r => setTimeout(r, 3000));
         }
-      );
-      // Update E9 (end date)
-      await fetch(
-        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='E9')`,
-        {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [[endDateStr]] })
-        }
-      );
-    } catch (e) {
-      // Submission range update is non-critical
+      }
+    };
+
+    const rangeErrors = [];
+    for (const r of SUBMISSION_RANGE_CELLS) {
+      try {
+        await patchWithRetry(r.sheet, r.startCell, startDateISO);
+        await patchWithRetry(r.sheet, r.endCell, endDateISO);
+      } catch (e) {
+        rangeErrors.push(e.message);
+      }
     }
 
     // 5. Get embed URL for the new file
@@ -125,7 +157,9 @@ export default async function(req: Request): Promise<Response> {
 
     return Response.json({
       status: 'success',
-      message: `Rolled forward to ${newFileName}. All previous client data carried over, submission range updated to ${startDateStr} – ${endDateStr}.`,
+      message: rangeErrors.length
+        ? `Rolled forward to ${newFileName}, but ${rangeErrors.length} submission-range cell(s) could not be updated: ${rangeErrors.join('; ')}`
+        : `Rolled forward to ${newFileName}. All client data carried over, submission range updated to ${startDateStr} – ${endDateStr}.`,
       newWorkbook: {
         id: newFile.id,
         name: newFile.name,
@@ -133,6 +167,7 @@ export default async function(req: Request): Promise<Response> {
         embedUrl,
       },
       submissionRange: { start: startDateStr, end: endDateStr },
+      rangeErrors: rangeErrors.length ? rangeErrors : undefined,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
