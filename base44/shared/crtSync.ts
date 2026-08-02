@@ -92,7 +92,11 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
 
     if (rowIdx >= 0) {
       for (let col = 0; col < NUM_COLUMNS; col++) {
-        if (portalRow[col] !== '' && portalRow[col] !== null && portalRow[col] !== undefined) {
+        // Columns D (3) and F (5) are the stream-specific start dates. A client
+        // is only in one stream, so always write both — this clears a stale date
+        // left in the opposite column (e.g. a DEA date after a switch to WD).
+        const force = (col === 3 || col === 5);
+        if (force || (portalRow[col] !== '' && portalRow[col] !== null && portalRow[col] !== undefined)) {
           allValues[rowIdx][col] = portalRow[col];
         }
       }

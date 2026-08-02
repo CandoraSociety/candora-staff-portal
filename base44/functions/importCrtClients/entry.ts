@@ -34,11 +34,14 @@ function parseCrtRowToClient(row) {
   const employedFtPt = String(row[22] || '').trim().toUpperCase();
   const serviceNav = String(row[23] || '').trim().toUpperCase() === 'YES';
 
-  // Determine service_type from Service Element (E) or CEIS flag (C)
+  // Determine service_type from Service Element (E) or CEIS flag (C).
+  // CEIS (DEA) is Y/N: "Yes" = DEA, "No" = WD (the only other stream), so an
+  // explicit "No" resolves the ambiguity of a blank Service Element.
   let serviceType = '';
   if (serviceElement === 'CEIS') serviceType = 'direct_to_employment';
   else if (serviceElement === 'WD') serviceType = 'pathways';
   else if (ceisFlag === 'YES') serviceType = 'direct_to_employment';
+  else if (ceisFlag === 'NO') serviceType = 'pathways';
 
   // Map service outcome → program_status
   const outcomeMap = {
