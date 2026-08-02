@@ -247,14 +247,14 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcomeDate,                                 // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome
     placementOK ? formatDateForCrt(client.post_completion_employment_date) : '', // J: Placement Outcome Date
-    '',                                                // K: not managed by portal — existing value preserved
-    '',                                                // L: not managed by portal — existing value preserved
-    '',                                                // M: not managed by portal — existing value preserved
-    '',                                                // N: not managed by portal — existing value preserved
+    '',                                                // K: 30 Day Outcome
+    '',                                                // L: 30 Day Outcome Date
+    '',                                                // M: 60 Day Outcome
+    '',                                                // N: 60 Day Outcome Date
     day90Outcome,                                      // O: 90 Day Outcome
     day90DateForCrt,                                    // P: 90 Day Outcome Date
-    '',                                                // Q: not managed by portal — existing value preserved
-    '',                                                // R: not managed by portal — existing value preserved
+    '',                                                // Q: 180 Day Outcome
+    '',                                                // R: 180 Day Outcome Date
     client.intake_notes || '',                         // S: Comments
     isWd ? edaDateForCrt : '',                          // T: EDA Completion Date (WD only)
     workExposure,                                      // U: Work Exposure Y/N
