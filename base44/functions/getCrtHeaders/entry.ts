@@ -16,6 +16,14 @@ export default async function(req: Request): Promise<Response> {
     const wb = await getActiveCrtWorkbook(accessToken);
     if (!wb) return Response.json({ error: 'No active CRT workbook found' }, { status: 404 });
 
+    // List ALL worksheets so it's unambiguous which sheet 'Client Data' is
+    const sheetsRes = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${wb.id}/workbook/worksheets`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const sheetsData = sheetsRes.ok ? await sheetsRes.json() : { value: [] };
+    const worksheetNames = (sheetsData.value || []).map(s => s.name);
+
     const rangeRes = await fetch(
       `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${wb.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -40,6 +48,8 @@ export default async function(req: Request): Promise<Response> {
 
     return Response.json({
       workbook: wb.name,
+      worksheetQueried: CLIENT_DATA_SHEET,
+      allWorksheets: worksheetNames,
       totalRows: values.length,
       // Rows 9-15 raw, so any multi-row header band is visible
       rawRows: values.slice(9, 15).map((r, i) => ({ excelRow: 10 + i, cells: r })),
