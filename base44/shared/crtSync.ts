@@ -165,3 +165,98 @@ export async function syncAllOpenWorkbooks(base44, accessToken) {
   }
   return { files: results, totalSynced: results.filter(r => r.status === 'synced').length };
 }
+
+// Sync a single client into every OPEN monthly workbook using a targeted
+// single-row PATCH — race-safe vs concurrent edits to other clients (each
+// client's row is written independently). Mirrors the eligibility + matching
+// rules of syncClientsIntoWorkbook but writes only the one changed row instead
+// of the full data region. Used by the entity-triggered sync (Client update).
+export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, client) {
+  const files = await listCrtFiles(accessToken);
+  if (!files.length) return { files: [], synced: 0 };
+
+  let closedNames = new Set();
+  try {
+    const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+    closedNames = new Set(closed.map(r => r.file_name));
+  } catch { /* default: nothing closed */ }
+
+  const normName = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+  const portalNameKey = (c) => normName(`${c.last_name || ''}, ${c.first_name || ''}`);
+
+  const results = [];
+  for (const f of files) {
+    if (closedNames.has(f.name)) { results.push({ file: f.name, status: 'skipped_closed' }); continue; }
+    const monthEnd = crtMonthEnd(f.name);
+    // Eligibility — same as the batch sync
+    if (!((client.service_type === 'pathways' || client.service_type === 'direct_to_employment') && client.service_start_date)) {
+      results.push({ file: f.name, status: 'skipped_ineligible' }); continue;
+    }
+    if (monthEnd) {
+      const sd = new Date(client.service_start_date);
+      if (!isNaN(sd.getTime()) && sd > monthEnd) { results.push({ file: f.name, status: 'skipped_future_start' }); continue; }
+    }
+
+    try {
+      const rangeRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (!rangeRes.ok) { results.push({ file: f.name, status: 'error', error: 'read failed' }); continue; }
+      const rangeData = await rangeRes.json();
+      const allValues = (rangeData.values || []).map(row => {
+        const padded = [...row];
+        while (padded.length < NUM_COLUMNS) padded.push('');
+        return padded.slice(0, NUM_COLUMNS);
+      });
+
+      const hsid = client.compass_hsid ? String(client.compass_hsid).trim() : '';
+      let rowIdx = -1;
+      if (hsid) {
+        for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
+          const row = allValues[i];
+          if (row && row[1] && String(row[1]).trim() === hsid) { rowIdx = i; break; }
+        }
+      }
+      if (rowIdx < 0) {
+        const nk = portalNameKey(client);
+        for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
+          const row = allValues[i];
+          if (!row) continue;
+          const rh = row[1] ? String(row[1]).trim() : '';
+          if (!rh && row[0] && String(row[0]).trim() && normName(row[0]) === nk) { rowIdx = i; break; }
+        }
+      }
+
+      const portalRow = mapClientToCrtRow(client, monthEnd);
+      let targetRow1;
+      if (rowIdx >= 0) {
+        targetRow1 = rowIdx + 1;
+      } else {
+        let lastDataRow = CLIENT_DATA_START_ROW - 2;
+        for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
+          if (allValues[i] && allValues[i].some(v => v !== '' && v !== null && v !== undefined)) { lastDataRow = i; break; }
+        }
+        targetRow1 = lastDataRow + 2; // next empty row (1-based)
+      }
+
+      const rangeAddress = `A${targetRow1}:Y${targetRow1}`;
+      const patchRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='${rangeAddress}')`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [portalRow] })
+        }
+      );
+      if (!patchRes.ok) {
+        const errText = await patchRes.text().catch(() => '');
+        results.push({ file: f.name, status: 'error', error: 'write failed: ' + errText.slice(0, 200) }); continue;
+      }
+      results.push({ file: f.name, status: rowIdx >= 0 ? 'updated' : 'added', row: targetRow1 });
+    } catch (e) {
+      results.push({ file: f.name, status: 'error', error: e.message });
+    }
+  }
+  return { files: results, synced: results.filter(r => r.status === 'updated' || r.status === 'added').length };
+}
