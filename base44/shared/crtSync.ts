@@ -229,9 +229,22 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
       }
 
       const portalRow = mapClientToCrtRow(client, monthEnd);
+      let rowToWrite = portalRow;
       let targetRow1;
       if (rowIdx >= 0) {
         targetRow1 = rowIdx + 1;
+        // Preserve values in columns the portal doesn't manage. The batch sync
+        // only writes non-empty cells, so manually-entered CRT data in columns
+        // the portal doesn't populate is kept. Mirror that here for the targeted
+        // single-row PATCH so a client update never clobbers staff's manual
+        // workbook entries. Forced columns D/F (stream start dates) are always
+        // overwritten to clear stale values on stream switches.
+        const existing = allValues[rowIdx] || [];
+        rowToWrite = portalRow.map((val, col) => {
+          if (col === 3 || col === 5) return val;
+          if (val !== '' && val !== null && val !== undefined) return val;
+          return existing[col] !== undefined ? existing[col] : '';
+        });
       } else {
         let lastDataRow = CLIENT_DATA_START_ROW - 2;
         for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
@@ -246,7 +259,7 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
         {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [portalRow] })
+          body: JSON.stringify({ values: [rowToWrite] })
         }
       );
       if (!patchRes.ok) {
