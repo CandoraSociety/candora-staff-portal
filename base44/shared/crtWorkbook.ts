@@ -233,15 +233,19 @@ export function mapClientToCrtRow(client, monthEnd) {
     ? formatDateForCrt(client.followup_90day_date)
     : '';
 
-  // Work Exposure Y/N
+  // Work Exposure Y/N — Y when a completed work exposure placement exists, or
+  // when the action-plan flags indicate a paid external placement / exposure course.
   const workExposure = (client.paid_external_placement || client.exposure_course) ? 'Yes' : 'No';
+
+  // Wage Subsidy Accessed Y/N — set when a work exposure placement was completed
+  const wageSubsidy = client.wage_subsidy_accessed ? 'Yes' : 'No';
 
   // Service Navigation Support Y/N
   const serviceNav = client.service_navigation_supports ? 'Yes' : 'No';
 
-  // Employed FT/PT
-  let employedFtPt = '';
-  if (client.job_hours) {
+  // Employed FT/PT — explicit selection takes priority, else derive from job_hours text
+  let employedFtPt = client.employed_ftpt || '';
+  if (!employedFtPt && client.job_hours) {
     const hours = String(client.job_hours).toLowerCase();
     if (hours.includes('full') || hours.includes('ft')) employedFtPt = 'FT';
     else if (hours.includes('part') || hours.includes('pt')) employedFtPt = 'PT';
@@ -268,7 +272,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     client.intake_notes || '',                         // S: Comments
     isWd ? edaDateForCrt : '',                          // T: EDA Completion Date (WD only)
     workExposure,                                      // U: Work Exposure Y/N
-    'No',                                              // V: Wage subsidy accessed Y/N
+    wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
     serviceNav,                                        // X: Service Navigation Support Y/N
     gate(client.service_navigation_date) ? formatDateForCrt(client.service_navigation_date) : '', // Y: Service Nav Billing Month

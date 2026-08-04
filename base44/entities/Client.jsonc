@@ -388,6 +388,10 @@
     "paid_external_placement": {
       "type": "boolean"
     },
+    "wage_subsidy_accessed": {
+      "type": "boolean",
+      "description": "Whether a wage subsidy was accessed (set when a Work Exposure Placement is completed) \u2014 populates CRT column V"
+    },
     "employment_supports": {
       "type": "boolean"
     },
@@ -443,6 +447,14 @@
     },
     "job_hours": {
       "type": "string"
+    },
+    "employed_ftpt": {
+      "type": "string",
+      "enum": [
+        "FT",
+        "PT"
+      ],
+      "description": "Employed Full-Time or Part-Time \u2014 populates CRT column W"
     },
     "sdp_items": {
       "type": "array",

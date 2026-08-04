@@ -26,6 +26,7 @@ import { classifyClient } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
+import { getIncompleteRoadmapItems } from '@/lib/roadmapItems';
 
 // Determine the most recent forward step that can be undone, one step at a time.
 // Each step clears the client-file fields that step introduced, plus its progress note.
@@ -123,6 +124,9 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showEmploymentConfirm, setShowEmploymentConfirm] = useState(false);
   const [showOutcomeConfirm, setShowOutcomeConfirm] = useState(false);
   const [outcomeStatus, setOutcomeStatus] = useState('E-RF');
+  const [employedFtPt, setEmployedFtPt] = useState('');
+  const [showIncompletePrompt, setShowIncompletePrompt] = useState(false);
+  const [incompleteItems, setIncompleteItems] = useState([]);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [completionDate, setCompletionDate] = useState(
     new Date().toISOString().split('T')[0]
@@ -165,6 +169,27 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
       compass_entered: false,
     });
     return notes;
+  };
+
+  // Before opening the "Mark EDAs as Complete" confirmation, check whether any
+  // timeline items are still incomplete. If so, prompt the user to complete them
+  // first instead of opening the confirmation dialog.
+  const handleAttemptMarkEdasComplete = async () => {
+    try {
+      const [internalTrainings, workExposures] = await Promise.all([
+        base44.entities.InternalTraining.filter({ client_id: client.id }),
+        base44.entities.WorkExposurePlacement.filter({ client_id: client.id }),
+      ]);
+      const incomplete = getIncompleteRoadmapItems(client, internalTrainings, workExposures);
+      if (incomplete.length > 0) {
+        setIncompleteItems(incomplete);
+        setShowIncompletePrompt(true);
+        return;
+      }
+    } catch (_) {
+      // If the check fails, allow proceeding rather than blocking the workflow
+    }
+    setShowConfirm(true);
   };
 
   const handleMarkEdasComplete = async () => {
@@ -258,6 +283,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         post_completion_employment_date: employmentDate,
         followup_90day_date: followupDate,
         job_start_date: employmentDate,
+        employed_ftpt: employedFtPt || null,
         roadmap_progress_notes: notes,
       };
       // Autofill the Current Employment Status card (enum only allows these employed codes)
@@ -281,7 +307,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       onClientUpdate?.(updated);
       setShowEmploymentConfirm(false);
-      setEmployerName(''); setJobTitle(''); setJobHours(''); setJobWage('');
+      setEmployerName(''); setJobTitle(''); setJobHours(''); setJobWage(''); setEmployedFtPt('');
       toast.success('Employment recorded — moved to Follow-up Period. 90-day follow-up date set.');
     } catch (e) {
       toast.error('Failed to update status');
@@ -316,6 +342,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       const updated = await base44.entities.Client.update(client.id, {
         followup_90day_status: outcomeStatus,
+        employed_ftpt: employedFtPt || null,
         roadmap_progress_notes: notes,
       });
 
@@ -329,6 +356,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       onClientUpdate?.(updated);
       setShowOutcomeConfirm(false);
+      setEmployedFtPt('');
       toast.success('Outcome recorded — moved to Completed.');
     } catch (e) {
       toast.error('Failed to update status');
@@ -446,7 +474,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           </DropdownMenuLabel>
           {inActiveEda && (
             <DropdownMenuItem
-              onSelect={() => setShowConfirm(true)}
+              onSelect={handleAttemptMarkEdasComplete}
               className="text-sm cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
@@ -455,7 +483,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           )}
           {inWorkSearch && (
             <DropdownMenuItem
-              onSelect={() => setShowEmploymentConfirm(true)}
+              onSelect={() => { setEmployedFtPt(client?.employed_ftpt || ''); setShowEmploymentConfirm(true); }}
               className="text-sm cursor-pointer"
             >
               <Briefcase className="w-4 h-4 mr-2 text-green-600" />
@@ -464,7 +492,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           )}
           {inFollowup && (
             <DropdownMenuItem
-              onSelect={() => setShowOutcomeConfirm(true)}
+              onSelect={() => { setEmployedFtPt(client?.employed_ftpt || ''); setShowOutcomeConfirm(true); }}
               className="text-sm cursor-pointer"
             >
               <ClipboardCheck className="w-4 h-4 mr-2 text-blue-600" />
@@ -666,6 +694,27 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Employed FT / PT <span className="font-normal text-slate-400">(for CRT column W)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {['FT', 'PT'].map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setEmployedFtPt(employedFtPt === opt ? '' : opt)}
+                        className={`px-4 py-1.5 rounded-md border text-sm font-medium transition-colors ${
+                          employedFtPt === opt
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {opt === 'FT' ? 'FT — Full-Time' : 'PT — Part-Time'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-400">
                   Employer details will autofill the Employment section of the client file.
                 </p>
@@ -701,7 +750,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                   </span>
                   . The client will move into the <span className="font-medium">Completed</span> section.
                 </p>
-                <div className="pt-1 grid grid-cols-1 gap-1.5 max-h-[55vh] overflow-y-auto pr-1">
+                <div className="pt-1 grid grid-cols-1 gap-1.5 max-h-[45vh] overflow-y-auto pr-1">
                   {OUTCOME_OPTIONS.map((opt) => (
                     <label
                       key={opt.value}
@@ -725,6 +774,27 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                     </label>
                   ))}
                 </div>
+                <div className="pt-2">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Employed FT / PT <span className="font-normal text-slate-400">(for CRT column W)</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {['FT', 'PT'].map(opt => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setEmployedFtPt(employedFtPt === opt ? '' : opt)}
+                        className={`px-4 py-1.5 rounded-md border text-sm font-medium transition-colors ${
+                          employedFtPt === opt
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {opt === 'FT' ? 'FT — Full-Time' : 'PT — Part-Time'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -738,6 +808,42 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               disabled={saving || !outcomeStatus}
             >
               {saving ? 'Saving...' : 'Confirm Outcome'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Incomplete timeline items prompt — blocks Mark EDAs as Complete */}
+      <AlertDialog open={showIncompletePrompt} onOpenChange={setShowIncompletePrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete timeline items first</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  The following roadmap items have not been marked complete. Please
+                  mark them as complete (or cancelled) on the timeline before marking
+                  EDAs as complete for{' '}
+                  <span className="font-semibold text-slate-800">
+                    {client?.first_name} {client?.last_name}
+                  </span>.
+                </p>
+                <div className="max-h-[45vh] overflow-y-auto rounded-md border border-slate-200 divide-y divide-slate-100">
+                  {incompleteItems.map(item => (
+                    <div key={item.key} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <span className="text-slate-700">{item.label}</span>
+                      <span className="text-xs font-medium text-amber-600">
+                        {item.status === 'started' ? 'In Progress' : 'Not Started'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowIncompletePrompt(false)}>
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

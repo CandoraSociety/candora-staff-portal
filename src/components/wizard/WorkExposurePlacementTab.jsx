@@ -109,6 +109,16 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         await base44.entities.FinancialRecord.create(frData);
       }
 
+      // Sync CRT flags on the client: column U (Work Exposure) and column V
+      // (Wage Subsidy) are both marked Yes when at least one work exposure
+      // placement for this client is completed. Clear them if none are completed.
+      const allPlacements = await base44.entities.WorkExposurePlacement.filter({ client_id: client.id });
+      const hasCompleted = allPlacements.some(p => p.status === 'completed');
+      await base44.entities.Client.update(client.id, {
+        paid_external_placement: hasCompleted,
+        wage_subsidy_accessed: hasCompleted,
+      });
+
       toast.success(existing ? 'Placement updated' : 'Work exposure placement added');
       onDone();
     } catch { toast.error('Failed to save'); }
