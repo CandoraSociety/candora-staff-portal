@@ -219,10 +219,11 @@ export function mapClientToCrtRow(client, monthEnd) {
   // 90 Day follow-up is "triggered" (projected) once employment is found (WD) or
   // EDAs are marked complete (DEA). Before the actual outcome is recorded, the
   // 90 Day Outcome shows 'P' (Pending) and the date is the projected date
-  // (90 days after the trigger event).
+  // (90 days after the trigger event). Requires the trigger date to actually
+  // exist so that undoing the trigger step clears the follow-up projection.
   const followupTriggered = isDea
-    ? gate(client.eda_completion_date)
-    : gate(client.employment_start_date);
+    ? (!!client.eda_completion_date && gate(client.eda_completion_date))
+    : (!!client.employment_start_date && gate(client.employment_start_date));
 
   // 90 Day Outcome — actual status if recorded & month-bound, else 'P' once triggered.
   const day90Outcome = (gate(client.followup_90day_date) && client.followup_90day_status)
@@ -246,8 +247,8 @@ export function mapClientToCrtRow(client, monthEnd) {
     (i) => client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved'
   ).length;
   const reachedFollowup = isDea
-    ? gate(client.eda_completion_date)
-    : gate(client.employment_start_date);
+    ? (!!client.eda_completion_date && gate(client.eda_completion_date))
+    : (!!client.employment_start_date && gate(client.employment_start_date));
   const serviceNav = (reachedFollowup && resolvedBarriers >= 2) ? 'Yes' : 'No';
 
   // Service Navigation Support Billing Month — when Service Nav Support is Y
