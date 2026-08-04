@@ -145,7 +145,6 @@ function buildItems(client, internalTrainings = [], workExposures = []) {
       label: `Internal: ${PLACEMENT_TYPE_LABELS[t.placement_type] || t.placement_type}`,
       color: '#22c55e',
       isBarrier: false,
-      readOnly: true,
       detail: { timeline_start: t.start_date, timeline_end: t.expected_end_date, notes: t.training_goals },
       status,
       statusData: {
@@ -168,7 +167,6 @@ function buildItems(client, internalTrainings = [], workExposures = []) {
       label: `Work Exposure: ${w.business_name}`,
       color: '#22c55e',
       isBarrier: false,
-      readOnly: true,
       detail: { timeline_start: w.start_date, timeline_end: w.anticipated_completion_date, notes: w.notes },
       status,
       statusData: {
@@ -301,13 +299,52 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   // ── Items missing dates ────────────────────────────────────────────────────
   const missingDates = items.filter(i => {
     const hasDates = i.detail?.timeline_start || i.detail?.timeline_end || i.statusData?.timeline_start || i.statusData?.started_date;
-    return !hasDates && i.status !== 'cancelled' && !i.readOnly;
+    return !hasDates && i.status !== 'cancelled';
   });
 
   // ── Save handlers ──────────────────────────────────────────────────────────
   const handleSaveItem = async (key, saveData) => {
     setSaving(true);
     try {
+      // Entity-backed items: Internal Training placement
+      if (key.startsWith('it_')) {
+        const itemId = key.substring(3);
+        const itUpdate = {
+          status: saveData.status === 'completed' ? 'completed'
+            : saveData.status === 'started' ? 'active'
+            : saveData.status === 'cancelled' ? 'cancelled'
+            : 'referred',
+        };
+        if (saveData.startDate) itUpdate.start_date = saveData.startDate;
+        if (saveData.endDate) itUpdate.expected_end_date = saveData.endDate;
+        if (saveData.status === 'started' && saveData.startedDate) itUpdate.start_date = saveData.startedDate;
+        if (saveData.status === 'completed' && saveData.completedDate) itUpdate.actual_end_date = saveData.completedDate;
+        await base44.entities.InternalTraining.update(itemId, itUpdate);
+        const refreshedIT = await base44.entities.InternalTraining.filter({ client_id: client.id }, '-created_date');
+        setInternalTrainings(refreshedIT);
+        setOpenItem(null);
+        return;
+      }
+      // Entity-backed items: Work Exposure Placement
+      if (key.startsWith('wep_')) {
+        const itemId = key.substring(4);
+        const wepUpdate = {
+          status: saveData.status === 'completed' ? 'completed'
+            : saveData.status === 'started' ? 'in_progress'
+            : saveData.status === 'cancelled' ? 'cancelled'
+            : 'pending',
+        };
+        if (saveData.startDate) wepUpdate.start_date = saveData.startDate;
+        if (saveData.endDate) wepUpdate.anticipated_completion_date = saveData.endDate;
+        if (saveData.status === 'started' && saveData.startedDate) wepUpdate.start_date = saveData.startedDate;
+        if (saveData.notes !== undefined && saveData.notes !== '') wepUpdate.notes = saveData.notes;
+        await base44.entities.WorkExposurePlacement.update(itemId, wepUpdate);
+        const refreshedWEP = await base44.entities.WorkExposurePlacement.filter({ client_id: client.id }, '-created_date');
+        setWorkExposures(refreshedWEP);
+        setOpenItem(null);
+        return;
+      }
+
       const oldStatus = client?.roadmap_item_status?.[key]?.status || 'planned';
       const currentStatus = { ...(client?.roadmap_item_status || {}) };
       currentStatus[key] = {
@@ -777,7 +814,7 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
             color: labelColor,
             textDecoration: isCancelled ? 'line-through' : 'none',
           }}
-          onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
+          onClick={() => setOpenItem(isOpen ? null : item.key)}
           title={item.label}
         >
           {item.label}
@@ -785,7 +822,7 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
         <div
           className="w-full h-6 rounded-md relative cursor-pointer"
           style={{ backgroundColor: trackBg, outline: `2px solid ${cfg.ring}` }}
-          onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
+          onClick={() => setOpenItem(isOpen ? null : item.key)}
         >
           {/* Deadline marker — dashed line at anticipated completion date */}
           {deadlineP !== null && (
@@ -832,10 +869,11 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
           )}
         </div>
       </div>
-      {isOpen && !item.readOnly && (
+      {isOpen && (
         <div className="mb-2 ml-0 relative z-40">
           <RoadmapItemPanel
             item={item}
+            hideNotes={item.key?.startsWith('it_')}
             currentStatus={item.status}
             onSave={(data) => onSave(item.key, data)}
             onCancel={() => setOpenItem(null)}
@@ -866,7 +904,7 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
       <button
         className="w-full text-left px-3 py-2.5 rounded-lg border-2 text-sm flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
         style={{ borderColor: cfg.ring }}
-        onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
+        onClick={() => setOpenItem(isOpen ? null : item.key)}
       >
         <div className="flex items-center gap-2 min-w-0">
           <Icon className="w-4 h-4 shrink-0" style={{ color: cfg.ring }} />
@@ -878,10 +916,11 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
           <span className={`text-xs px-2 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
         </div>
       </button>
-      {isOpen && !item.readOnly && (
+      {isOpen && (
         <div className="mt-1 relative z-40">
           <RoadmapItemPanel
             item={item}
+            hideNotes={item.key?.startsWith('it_')}
             currentStatus={item.status}
             onSave={(data) => onSave(item.key, data)}
             onCancel={() => setOpenItem(null)}

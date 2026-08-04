@@ -254,8 +254,11 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   }
 
   // Default: not started / in progress
+  const hasEdaCompletion = !!client?.completion_date;
   const wdPhase = isWD && (!ps || ps === 'in_progress')
-    ? isEmployed ? '90-Day Follow-Up Phase' : 'Job Search Phase'
+    ? isEmployed ? 'Follow-up Period'
+      : hasEdaCompletion ? 'Work Search Phase'
+      : 'Active (EDA)'
     : null;
   const wdWeeksElapsed = isWD && client?.service_start_date
     ? Math.floor(differenceInDays(new Date(), new Date(client.service_start_date + 'T12:00:00')) / 7)

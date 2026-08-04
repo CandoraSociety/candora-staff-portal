@@ -14,7 +14,7 @@ const STATUS_OPTS = [
   { key: 'cancelled', label: 'Cancelled',   color: '#ef4444' },
 ];
 
-export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel, saving, projectedEndDate, serviceStartDate }) {
+export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel, saving, projectedEndDate, serviceStartDate, hideNotes }) {
   const existing = item.statusData || {};
 
   const [status,        setStatus]        = useState(currentStatus || 'planned');
@@ -131,10 +131,12 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
         )}
 
         {/* Notes */}
-        <div>
-          <Label className="text-xs font-semibold">Case Manager Notes <span className="font-normal text-muted-foreground">(internal only)</span></Label>
-          <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="mt-1 text-xs" placeholder="Progress, challenges, outcomes..." />
-        </div>
+        {!hideNotes && (
+          <div>
+            <Label className="text-xs font-semibold">Case Manager Notes <span className="font-normal text-muted-foreground">(internal only)</span></Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="mt-1 text-xs" placeholder="Progress, challenges, outcomes..." />
+          </div>
+        )}
 
         {/* Late date warning */}
         {showLateDatePrompt && (
