@@ -701,7 +701,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                   </span>
                   . The client will move into the <span className="font-medium">Completed</span> section.
                 </p>
-                <div className="pt-1 grid grid-cols-1 gap-1.5">
+                <div className="pt-1 grid grid-cols-1 gap-1.5 max-h-[55vh] overflow-y-auto pr-1">
                   {OUTCOME_OPTIONS.map((opt) => (
                     <label
                       key={opt.value}
