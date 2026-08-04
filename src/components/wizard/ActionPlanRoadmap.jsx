@@ -75,7 +75,7 @@ function fmtDate(d) {
 function buildItems(client, internalTrainings = [], workExposures = []) {
   const roadmapStatus = client?.roadmap_item_status || {};
   const itemDetails = client?.sdp_item_details || {};
-  const selectedItems = (client?.sdp_items || []).filter(k => k !== 'barrier_support');
+  const selectedItems = (client?.sdp_items || []).filter(k => k !== 'barrier_support' && k !== 'internal_placement' && k !== 'paid_external_placement');
 
   const items = selectedItems.map(key => ({
     key,

@@ -32,7 +32,7 @@ const ITEM_LABELS = {
   other: 'Other',
 };
 
-const EXPOSURE_KEYS = ['exposure_course', 'paid_external_placement', 'employment_supports'];
+const EXPOSURE_KEYS = ['exposure_course', 'employment_supports'];
 
 function getEDASubItems(client) {
   if (!client?.action_plan_submitted) return [];
@@ -51,13 +51,11 @@ function getEDASubItems(client) {
 
   for (const key of items) {
     if (key === 'barrier_support') continue;
+    if (key === 'internal_placement') continue;        // managed via the Internal Placements tab
+    if (key === 'paid_external_placement') continue;  // managed via the Work Exposure Placement tab
     if (EXPOSURE_KEYS.includes(key)) continue;
-    if (key === 'internal_placement') {
-      subItems.push({ key: 'internal_placement', label: 'Internal Placement', component: 'internal_placement' });
-    } else {
-      const label = key === 'other' ? (client.sdp_other_desc || 'Other') : (ITEM_LABELS[key] || key);
-      subItems.push({ key, label, component: 'eda' });
-    }
+    const label = key === 'other' ? (client.sdp_other_desc || 'Other') : (ITEM_LABELS[key] || key);
+    subItems.push({ key, label, component: 'eda' });
   }
 
   if (hasExposure) {
