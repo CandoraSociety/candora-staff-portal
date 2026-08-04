@@ -82,6 +82,7 @@ function getUndoStep(client) {
         job_title: null,
         job_hours: null,
         job_wage: null,
+        employed_ftpt: null,
       },
       removeNoteType: 'employment_found',
       noteLabel: 'Undo Found Employment',
