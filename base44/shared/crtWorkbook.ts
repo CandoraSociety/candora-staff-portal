@@ -241,23 +241,24 @@ export function mapClientToCrtRow(client, monthEnd) {
   // Wage Subsidy Accessed Y/N — set when a work exposure placement was completed
   const wageSubsidy = client.wage_subsidy_accessed ? 'Yes' : 'No';
 
-  // Service Navigation Support Y/N — Y when the client has entered the
-  // follow-up period AND has at least 2 successfully resolved barriers.
+  // Service Navigation Support Y/N — WD only. Blank for DEA clients (not applicable).
+  // Y when the WD client has entered the follow-up period with >= 2 resolved barriers.
   const resolvedBarriers = [1, 2, 3].filter(
     (i) => client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved'
   ).length;
-  const reachedFollowup = isDea
-    ? (!!client.eda_completion_date && gate(client.eda_completion_date))
-    : (!!client.employment_start_date && gate(client.employment_start_date));
-  const serviceNav = (reachedFollowup && resolvedBarriers >= 2) ? 'Yes' : 'No';
+  const reachedFollowup = !!client.employment_start_date && gate(client.employment_start_date);
+  const serviceNav = isWd
+    ? ((reachedFollowup && resolvedBarriers >= 2) ? 'Yes' : 'No')
+    : '';
 
-  // Service Navigation Support Billing Month — when Service Nav Support is Y
-  // and the 90-day outcome is E-RF, E-UF, or SE, use the 90-day outcome date.
+  // Service Navigation Support Billing Month — WD only. Blank for DEA clients.
+  // When Service Nav Support is Y and the 90-day outcome is E-RF, E-UF, or SE,
+  // use the 90-day outcome date.
   const SERVICENAV_BILLING_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
   let serviceNavBillingMonth = '';
-  if (serviceNav === 'Yes' && client.followup_90day_status && SERVICENAV_BILLING_OUTCOMES.includes(client.followup_90day_status)) {
+  if (isWd && serviceNav === 'Yes' && client.followup_90day_status && SERVICENAV_BILLING_OUTCOMES.includes(client.followup_90day_status)) {
     serviceNavBillingMonth = gate(client.followup_90day_date) ? formatDateForCrt(client.followup_90day_date) : '';
-  } else {
+  } else if (isWd) {
     serviceNavBillingMonth = gate(client.service_navigation_date) ? formatDateForCrt(client.service_navigation_date) : '';
   }
 
