@@ -165,6 +165,17 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const inWorkSearch = isWD && section === 'work_search' && !client?.employment_start_date;
   const inFollowup = (isDEA || isWD) && section === 'followup_period' && !client?.followup_90day_status;
 
+  // 90-day outcome entry unlocks 2 days before the projected follow-up date
+  const followupUnlockDate = (() => {
+    if (!client?.followup_90day_date) return null;
+    const d = new Date(client.followup_90day_date + 'T00:00:00');
+    d.setDate(d.getDate() - 2);
+    return d;
+  })();
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+  const canEnterOutcome = !!followupUnlockDate && todayMidnight >= followupUnlockDate;
+
   const nextSectionLabel = isWD ? 'Work Search Phase' : isDEA ? 'Follow-up Period' : 'next section';
 
   // Mark Cancelled is available whenever the program is not already complete/cancelled/incomplete
@@ -524,6 +535,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           )}
           {inFollowup && (
             <DropdownMenuItem
+              disabled={!canEnterOutcome}
               onSelect={() => {
                 setEmployedFtPt(client?.employed_ftpt || '');
                 setOutcomeEmployerName(client?.employer_name || '');
@@ -535,8 +547,15 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               }}
               className="text-sm cursor-pointer"
             >
-              <ClipboardCheck className="w-4 h-4 mr-2 text-blue-600" />
+              <ClipboardCheck className={`w-4 h-4 mr-2 ${canEnterOutcome ? 'text-blue-600' : 'text-slate-300'}`} />
               Enter 90-Day Follow-up Outcome
+              {!canEnterOutcome && (
+                <span className="ml-auto text-[10px] text-slate-400">
+                  {followupUnlockDate
+                    ? `Available ${followupUnlockDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : 'Date not set'}
+                </span>
+              )}
             </DropdownMenuItem>
           )}
           {canCancel && (
