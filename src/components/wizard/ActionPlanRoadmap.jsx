@@ -362,6 +362,18 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
         if (saveData.endDate)   extraFields[`barrier_${n}_timeline_end`]   = saveData.endDate;
         const bStatus = saveData.status === 'completed' ? 'resolved' : saveData.status === 'started' ? 'in_progress' : 'unresolved';
         extraFields[`barrier_${n}_status`] = bStatus;
+      } else if (key.startsWith('dea_')) {
+        // DEA activity — mirror status/notes back into the dea_activities array
+        const deaId = key.substring(4);
+        const updatedActivities = (client?.dea_activities || []).map(a =>
+          a.id === deaId ? {
+            ...a,
+            completed_date: saveData.completedDate || a.completed_date,
+            anticipated_end_date: saveData.endDate || a.anticipated_end_date,
+            notes: (saveData.notes !== undefined && saveData.notes !== '') ? saveData.notes : a.notes,
+          } : a
+        );
+        extraFields.dea_activities = updatedActivities;
       } else {
         const details = { ...(client?.sdp_item_details || {}) };
         details[key] = { ...(details[key] || {}) };

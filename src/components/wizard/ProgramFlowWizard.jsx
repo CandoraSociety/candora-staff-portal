@@ -274,6 +274,19 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                   <div className="ml-6 mt-1 mb-2 space-y-0.5 border-l-2 border-slate-200 pl-2">
                     {edaSubItems.map(sub => {
                       const subActive = activeStep === `eda:${sub.key}`;
+                      let subStatus = null;
+                      if (sub.component === 'eda') {
+                        subStatus = client?.roadmap_item_status?.[sub.key]?.status;
+                        if (!subStatus && sub.key.startsWith('dea_')) {
+                          const a = (client?.dea_activities || []).find(x => x.id === sub.key.substring(4));
+                          subStatus = a?.completed_date ? 'completed' : 'planned';
+                        }
+                        if (!subStatus) subStatus = 'planned';
+                      }
+                      const dotColor = subStatus === 'completed' ? 'bg-green-500'
+                        : subStatus === 'started' ? 'bg-blue-500'
+                        : subStatus === 'cancelled' ? 'bg-red-400'
+                        : 'bg-slate-300';
                       return (
                         <button
                           key={sub.key}
@@ -286,7 +299,9 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                                 : 'text-slate-600 hover:bg-slate-100'
                           }`}
                         >
-                          {sub.highlight && <Briefcase className="w-3 h-3 shrink-0" />}
+                          {sub.highlight
+                            ? <Briefcase className="w-3 h-3 shrink-0" />
+                            : <span className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0`} />}
                           {sub.label}
                         </button>
                       );
