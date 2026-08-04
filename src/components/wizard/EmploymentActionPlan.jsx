@@ -22,8 +22,9 @@ const ALL_ITEMS = [
   { key: 'skills_assessment',           label: 'Skills Assessment',              category: 'Programs' },
   { key: 'internal_placement',          label: 'Internal Placement',             category: 'Placement/Training', pathwaysOnly: true },
   { key: 'exposure_course',             label: 'Exposure Course',                category: 'Placement/Training' },
-  { key: 'paid_external_placement',     label: 'Paid External Placement',        category: 'Placement/Training', notDEA: true },
+  { key: 'paid_external_placement',     label: 'Work Exposure Placement',        category: 'Placement/Training', notDEA: true },
   { key: 'employment_supports',         label: 'Employment Supports',            category: 'Supports' },
+  { key: 'one_on_one_counselling',      label: 'One on One Career Counselling',  category: 'Supports' },
   { key: 'job_applications',            label: 'Job Applications',               category: 'Job Search' },
   { key: 'networking',                  label: 'Networking',                     category: 'Job Search' },
   { key: 'other',                       label: 'Other',                          category: 'Other' },
@@ -38,6 +39,7 @@ const DEA_ACTIVITY_TYPES = [
   'Skills Assessment',
   'Exposure Course',
   'Employment Supports',
+  'One on One Career Counselling',
   'Job Applications',
   'Networking',
   'Other',
@@ -276,6 +278,15 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                       )}
                       {item.key === 'other' && selectedItems.includes('other') && (
                         <Input value={otherDesc} onChange={e => setOtherDesc(e.target.value)} className="mt-2 text-sm" placeholder="Describe other activity..." />
+                      )}
+                      {item.key === 'one_on_one_counselling' && selectedItems.includes('one_on_one_counselling') && (
+                        <Textarea
+                          value={itemDetails['one_on_one_counselling']?.notes || ''}
+                          onChange={e => setItemDetails(prev => ({ ...prev, one_on_one_counselling: { ...prev['one_on_one_counselling'], notes: e.target.value } }))}
+                          className="mt-2 text-sm"
+                          rows={2}
+                          placeholder="Counselling focus areas, session frequency, goals..."
+                        />
                       )}
                     </div>
                   ))}

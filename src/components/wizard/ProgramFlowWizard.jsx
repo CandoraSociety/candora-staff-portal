@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign, AlertTriangle } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
 import CasualNotesPanel from './CasualNotesPanel';
@@ -25,8 +26,9 @@ const ITEM_LABELS = {
   skills_assessment: 'Skills Assessment',
   internal_placement: 'Internal Placement',
   exposure_course: 'Exposure Course',
-  paid_external_placement: 'Paid External Placement',
+  paid_external_placement: 'Work Exposure Placement',
   employment_supports: 'Employment Supports',
+  one_on_one_counselling: 'One on One Career Counselling',
   job_applications: 'Job Applications',
   networking: 'Networking',
   other: 'Other',
@@ -95,6 +97,38 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'employment_action_plan' : null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
+  const [placementFlags, setPlacementFlags] = useState({ internalNeedsInfo: false, workExposureNeedsInfo: false });
+
+  // Flag Internal Placement / Work Exposure Placement sub-tabs when selected in the action plan
+  // but not yet filled out with complete info.
+  useEffect(() => {
+    if (!client?.id) return;
+    let cancelled = false;
+    const sdpItems = client.sdp_items || [];
+    const internalSelected = sdpItems.includes('internal_placement');
+    const workExposureSelected = sdpItems.includes('paid_external_placement');
+    const run = async () => {
+      let internalNeedsInfo = false;
+      let workExposureNeedsInfo = false;
+      if (internalSelected) {
+        try {
+          const recs = await base44.entities.InternalTraining.filter({ client_id: client.id });
+          const hasComplete = recs.some(r => r.placement_type && r.start_date && r.supervisor_name);
+          internalNeedsInfo = !hasComplete;
+        } catch { internalNeedsInfo = true; }
+      }
+      if (workExposureSelected) {
+        try {
+          const recs = await base44.entities.WorkExposurePlacement.filter({ client_id: client.id });
+          const hasComplete = recs.some(r => r.business_name && r.start_date && r.position_type);
+          workExposureNeedsInfo = !hasComplete;
+        } catch { workExposureNeedsInfo = true; }
+      }
+      if (!cancelled) setPlacementFlags({ internalNeedsInfo, workExposureNeedsInfo });
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [client?.id, JSON.stringify(client?.sdp_items), client?.action_plan_submitted]);
 
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
@@ -142,7 +176,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
 
-  const edaSubItems = getEDASubItems(client);
+  const edaSubItems = getEDASubItems(client).map(sub => {
+    if (sub.key === 'internal_placements') return { ...sub, needsInfo: placementFlags.internalNeedsInfo };
+    if (sub.key === 'work_exposure_placement') return { ...sub, needsInfo: placementFlags.workExposureNeedsInfo };
+    return sub;
+  });
 
   const renderStepContent = (key) => {
     const goNext = () => {
@@ -303,6 +341,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                             ? <Briefcase className="w-3 h-3 shrink-0" />
                             : <span className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0`} />}
                           {sub.label}
+                          {sub.needsInfo && (
+                            <span className="ml-auto flex items-center gap-1 text-amber-600 text-[10px] font-semibold" title="Selected in action plan — needs complete info">
+                              <AlertTriangle className="w-3 h-3" /> Needs info
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -354,6 +397,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                         ? <Briefcase className="w-3 h-3" />
                         : <span className="w-1 h-1 rounded-full bg-slate-400" />}
                       {sub.label}
+                      {sub.needsInfo && (
+                        <span className="ml-auto flex items-center gap-1 text-amber-600 text-[10px] font-semibold">
+                          <AlertTriangle className="w-3 h-3" />
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
