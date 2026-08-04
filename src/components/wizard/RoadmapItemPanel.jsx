@@ -4,6 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { Lock, Unlock, AlertTriangle, Bell } from 'lucide-react';
 import Celebration from '@/components/Celebration';
 
@@ -25,6 +29,7 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
   const [completedDate, setCompletedDate] = useState(existing.completed_date || new Date().toISOString().split('T')[0]);
   const [unlockRange,   setUnlockRange]   = useState(false);
   const [celebrate,     setCelebrate]     = useState(false);
+  const [showFutureEnd, setShowFutureEnd] = useState(false);
 
   const minDate = serviceStartDate ? serviceStartDate.toISOString().split('T')[0] : undefined;
   const maxDate = (!unlockRange && projectedEndDate) ? projectedEndDate.toISOString().split('T')[0] : undefined;
@@ -32,9 +37,25 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
   const endForWarn = endDate || completedDate;
   const isLate = !unlockRange && projectedEndDate && endForWarn && new Date(endForWarn + 'T12:00:00') > projectedEndDate;
 
-  const handleSave = async () => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const endIsFuture = status === 'completed' && endDate && endDate > todayStr;
+
+  const doSave = async () => {
     if (status === 'completed') setCelebrate(true);
     await onSave({ startDate, endDate, notes, status, startedDate, completedDate });
+  };
+
+  const handleSave = async () => {
+    if (endIsFuture) {
+      setShowFutureEnd(true);
+      return;
+    }
+    await doSave();
+  };
+
+  const confirmFutureEnd = async () => {
+    setShowFutureEnd(false);
+    await doSave();
   };
 
   return (
@@ -148,6 +169,22 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
           <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       </CardContent>
+
+      <AlertDialog open={showFutureEnd} onOpenChange={setShowFutureEnd}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End date is in the future</AlertDialogTitle>
+            <AlertDialogDescription>
+              You're marking "{item.label}" as Completed, but the planned end date ({endDate}) is still in the future.
+              Are you sure you want to complete this item ahead of schedule?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmFutureEnd}>Yes, mark completed</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
