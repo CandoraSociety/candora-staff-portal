@@ -94,7 +94,7 @@ function getStepStatus(key, client) {
 }
 
 export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate, onRequireProgramPath }) {
-  const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'employment_action_plan' : null);
+  const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'roadmap' : null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
   const [placementFlags, setPlacementFlags] = useState({ internalNeedsInfo: false, workExposureNeedsInfo: false });
