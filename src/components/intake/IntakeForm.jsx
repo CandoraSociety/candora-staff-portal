@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,13 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Upload, X, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-
-const STAFF_ROLE_LABELS = {
-  career_counsellor: 'Career Counsellor',
-  service_navigator: 'Service Navigator',
-  admin: 'Admin',
-  manager: 'Manager',
-};
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 
@@ -172,19 +165,8 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
   const [educationEntries, setEducationEntries] = useState([]);
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
-  const [staff, setStaff] = useState([]);
-
-  useEffect(() => {
-    base44.entities.PathwaysStaff.filter({ is_active: true }).then(setStaff).catch(() => {});
-  }, []);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
-
-  const handleWorkerSelect = (email) => {
-    const s = staff.find(s => s.email === email);
-    set('assigned_worker', email);
-    set('assigned_worker_name', s?.name || '');
-  };
 
   const submitForm = async (continueAfter = false) => {
     const errs = validate(form);
@@ -302,18 +284,6 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
                 <SelectItem value="external_agency">External Agency</SelectItem>
                 <SelectItem value="alberta_works">Alberta Works</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Assign to Worker">
-            <Select value={form.assigned_worker} onValueChange={handleWorkerSelect}>
-              <SelectTrigger><SelectValue placeholder="Select worker" /></SelectTrigger>
-              <SelectContent>
-                {staff.map(s => (
-                  <SelectItem key={s.email} value={s.email}>
-                    {s.name} ({STAFF_ROLE_LABELS[s.role] || s.role})
-                  </SelectItem>
-                ))}
               </SelectContent>
             </Select>
           </Field>

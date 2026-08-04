@@ -208,9 +208,12 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcome = 'Incomplete';
   }
 
-  // Placement Outcome — portal values are now CRT-accepted values directly
+  // Placement Outcome — once the Service Outcome is "Complete", default to "P"
+  // (Pending) until an actual post-completion employment outcome is recorded.
   const placementOK = gate(client.post_completion_employment_date);
-  const placementOutcome = (placementOK && client.post_completion_employment_status) || '';
+  const placementOutcome = serviceOutcome === 'Complete'
+    ? ((placementOK && client.post_completion_employment_status) || 'P')
+    : '';
 
   // 90 Day Outcome — portal values are now CRT-accepted values directly
   const day90OK = gate(client.followup_90day_date);
