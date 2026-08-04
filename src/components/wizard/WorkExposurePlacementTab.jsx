@@ -241,7 +241,7 @@ function PlacementCard({ placement, onEdit, onDelete }) {
   );
 }
 
-export default function WorkExposurePlacementTab({ client, onSave }) {
+export default function WorkExposurePlacementTab({ client, onSave, onPlacementsChange }) {
   const [placements, setPlacements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -262,6 +262,7 @@ export default function WorkExposurePlacementTab({ client, onSave }) {
     setShowForm(false);
     setEditingPlacement(null);
     await fetchPlacements();
+    onPlacementsChange?.();
   };
 
   const handleDelete = async (placement) => {
@@ -280,6 +281,7 @@ export default function WorkExposurePlacementTab({ client, onSave }) {
       }
       toast.success('Placement deleted');
       fetchPlacements();
+      onPlacementsChange?.();
     } catch { toast.error('Failed to delete'); }
   };
 

@@ -98,6 +98,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
   const [placementFlags, setPlacementFlags] = useState({ internalNeedsInfo: false, workExposureNeedsInfo: false });
+  const [placementRefreshKey, setPlacementRefreshKey] = useState(0);
 
   // Flag Internal Placement / Work Exposure Placement sub-tabs when selected in the action plan
   // but not yet filled out with complete info.
@@ -113,14 +114,16 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       if (internalSelected) {
         try {
           const recs = await base44.entities.InternalTraining.filter({ client_id: client.id });
-          const hasComplete = recs.some(r => r.placement_type && r.start_date && r.supervisor_name);
+          // Minimum info: placement_type (selection) + start_date + expected_end_date
+          const hasComplete = recs.some(r => r.placement_type && r.start_date && r.expected_end_date);
           internalNeedsInfo = !hasComplete;
         } catch { internalNeedsInfo = true; }
       }
       if (workExposureSelected) {
         try {
           const recs = await base44.entities.WorkExposurePlacement.filter({ client_id: client.id });
-          const hasComplete = recs.some(r => r.business_name && r.start_date && r.position_type);
+          // Minimum info: business_name (employer) + start_date + anticipated_completion_date
+          const hasComplete = recs.some(r => r.business_name && r.start_date && r.anticipated_completion_date);
           workExposureNeedsInfo = !hasComplete;
         } catch { workExposureNeedsInfo = true; }
       }
@@ -128,7 +131,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     };
     run();
     return () => { cancelled = true; };
-  }, [client?.id, JSON.stringify(client?.sdp_items), client?.action_plan_submitted]);
+  }, [client?.id, JSON.stringify(client?.sdp_items), client?.action_plan_submitted, placementRefreshKey]);
 
   const isCasual = client?.service_type === 'casual';
   const isComplete = client?.program_status === 'complete';
@@ -205,9 +208,9 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         case 'exposures':
           return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />;
         case 'internal_placements':
-          return <InternalPlacementsTab client={client} />;
+          return <InternalPlacementsTab client={client} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         case 'work_exposure_placement':
-          return <WorkExposurePlacementTab client={client} onSave={onSave} />;
+          return <WorkExposurePlacementTab client={client} onSave={onSave} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         default:
           return null;
       }
