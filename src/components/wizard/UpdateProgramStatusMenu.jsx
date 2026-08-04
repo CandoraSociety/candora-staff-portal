@@ -464,7 +464,9 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         const idx = notes.findIndex((n) => n.event_type === revertStep.removeNoteType);
         if (idx >= 0) notes.splice(idx, 1);
       }
-      // Add an audit note documenting the revert
+      // Add an audit note documenting the revert — marked compass_entered so it
+      // stays in the audit trail but doesn't create a Compass to-do item (undos
+      // are in-the-moment corrections, not Compass data-entry tasks)
       notes.unshift({
         id: Date.now().toString(),
         date: new Date().toISOString().split('T')[0],
@@ -474,7 +476,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         note: revertStep.noteText,
         logged_by: me?.email || '',
         logged_by_name: me?.full_name || '',
-        compass_entered: false,
+        compass_entered: true,
       });
 
       const updated = await base44.entities.Client.update(client.id, {

@@ -29,7 +29,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   const followupUrgent  = daysUntilFollowup !== null && daysUntilFollowup >= 0 && daysUntilFollowup <= 5;
   const followupOverdue = daysUntilFollowup !== null && daysUntilFollowup < 0;
 
-  const addProgressNote = async (client_obj, me, event_type, label, note) => {
+  const addProgressNote = async (client_obj, me, event_type, label, note, compassEntered = false) => {
     const notes = [...(client_obj?.roadmap_progress_notes || [])];
     notes.unshift({
       id: Date.now().toString(),
@@ -40,7 +40,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       note: note || '',
       logged_by: me?.email || '',
       logged_by_name: me?.full_name || '',
-      compass_entered: false,
+      compass_entered: compassEntered,
     });
     return notes;
   };
@@ -167,7 +167,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
     setSaving(true);
     try {
       let me = null; try { me = await base44.auth.me(); } catch (_) {}
-      const notes = await addProgressNote(client, me, 'reverted', 'Status Reverted', `Reverted from ${ps} to in_progress`);
+      const notes = await addProgressNote(client, me, 'reverted', 'Status Reverted', `Reverted from ${ps} to in_progress`, true);
       const updates = { program_status: 'in_progress', completion_date: null, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
       await logStatusChange({
