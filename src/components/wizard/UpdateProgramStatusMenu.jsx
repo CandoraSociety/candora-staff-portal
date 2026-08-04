@@ -19,13 +19,104 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck, Ban } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck, Ban, RotateCcw } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
+
+// Determine the most recent forward step that can be undone, one step at a time.
+// Each step clears the client-file fields that step introduced, plus its progress note.
+function getUndoStep(client) {
+  if (!client) return null;
+  const isDEA = client.service_type === 'direct_to_employment';
+  const isWD = client.service_type === 'pathways';
+  if (!isDEA && !isWD) return null;
+  const ps = client.program_status;
+  const hasFollowupStatus = !!client.followup_90day_status;
+  const foundEmployment = !!client.post_completion_employment_date;
+  const hasEdaCompletion = !!client.eda_completion_date || !!client.completion_date;
+  const hasServiceStart = !!client.service_start_date;
+
+  if (ps === 'complete') {
+    return {
+      key: 'undo_complete',
+      label: 'Undo Mark Complete',
+      description:
+        'Reverts from Completed back to the Follow-up Period. Clears the program completion date (restores the EDA completion date); keeps the 90-day follow-up outcome.',
+      updates: { program_status: 'in_progress', completion_date: client.eda_completion_date || null },
+      removeNoteType: 'completed',
+      noteLabel: 'Undo Mark Complete',
+      noteText: 'Reverted program completion back to the Follow-up Period.',
+    };
+  }
+  if (hasFollowupStatus) {
+    return {
+      key: 'undo_followup_outcome',
+      label: 'Undo 90-Day Follow-up Outcome',
+      description:
+        'Clears the recorded 90-day follow-up outcome and returns to the Follow-up Period (pending).',
+      updates: { followup_90day_status: null },
+      removeNoteType: 'followup_outcome',
+      noteLabel: 'Undo 90-Day Follow-up Outcome',
+      noteText: 'Cleared the 90-day follow-up outcome.',
+    };
+  }
+  if (isWD && foundEmployment) {
+    return {
+      key: 'undo_employment',
+      label: 'Undo Found Employment',
+      description:
+        'Reverts from the Follow-up Period back to the Work Search Phase. Clears the employment date, type, employer details, and the 90-day follow-up date.',
+      updates: {
+        employment_start_date: null,
+        post_completion_employment_status: null,
+        post_completion_employment_date: null,
+        followup_90day_date: null,
+        job_start_date: null,
+        employment_status: null,
+        employer_name: null,
+        job_title: null,
+        job_hours: null,
+        job_wage: null,
+      },
+      removeNoteType: 'employment_found',
+      noteLabel: 'Undo Found Employment',
+      noteText: 'Reverted Found Employment back to the Work Search Phase.',
+    };
+  }
+  if (hasEdaCompletion) {
+    return {
+      key: 'undo_edas',
+      label: 'Undo Mark EDAs Complete',
+      description: isWD
+        ? 'Reverts from the Work Search Phase back to Active (EDA). Clears the EDA completion date and 90-day follow-up date.'
+        : 'Reverts from the Follow-up Period back to Active (EDA). Clears the EDA completion date and 90-day follow-up date.',
+      updates: {
+        completion_date: null,
+        eda_completion_date: null,
+        followup_90day_date: null,
+      },
+      removeNoteType: 'eda_completed',
+      noteLabel: 'Undo Mark EDAs Complete',
+      noteText: 'Reverted EDAs complete back to Active (EDA).',
+    };
+  }
+  if (hasServiceStart) {
+    return {
+      key: 'undo_start',
+      label: 'Undo Start Program',
+      description: 'Reverts from Active (EDA) back to Not Started. Clears the service start date.',
+      updates: { service_start_date: null, program_status: null },
+      removeNoteType: 'started',
+      noteLabel: 'Undo Start Program',
+      noteText: 'Reverted program start back to Not Started.',
+    };
+  }
+  return null;
+}
 
 export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -44,6 +135,8 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [jobTitle, setJobTitle] = useState('');
   const [jobHours, setJobHours] = useState('');
   const [jobWage, setJobWage] = useState('');
+  const [showRevertConfirm, setShowRevertConfirm] = useState(false);
+  const [revertPin, setRevertPin] = useState('');
   const [saving, setSaving] = useState(false);
 
   const isDEA = client?.service_type === 'direct_to_employment';
@@ -281,6 +374,62 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
     }
   };
 
+  const revertStep = getUndoStep(client);
+
+  const handleRevert = async () => {
+    if (revertPin !== '5011') {
+      toast.error('Incorrect pin');
+      return;
+    }
+    if (!revertStep) return;
+    setSaving(true);
+    try {
+      let me = null;
+      try { me = await base44.auth.me(); } catch (_) {}
+
+      // Remove the original progress note for the undone action
+      const notes = [...(client?.roadmap_progress_notes || [])];
+      if (revertStep.removeNoteType) {
+        const idx = notes.findIndex((n) => n.event_type === revertStep.removeNoteType);
+        if (idx >= 0) notes.splice(idx, 1);
+      }
+      // Add an audit note documenting the revert
+      notes.unshift({
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        event_type: 'reverted',
+        item_label: revertStep.noteLabel,
+        item_key: 'reverted',
+        note: revertStep.noteText,
+        logged_by: me?.email || '',
+        logged_by_name: me?.full_name || '',
+        compass_entered: false,
+      });
+
+      const updated = await base44.entities.Client.update(client.id, {
+        ...revertStep.updates,
+        roadmap_progress_notes: notes,
+      });
+
+      await logStatusChange({
+        client,
+        change_type: 'program_status_change',
+        from_value: classifyClient(client),
+        to_value: revertStep.key,
+        notes: revertStep.noteText,
+      });
+
+      onClientUpdate?.(updated);
+      setShowRevertConfirm(false);
+      setRevertPin('');
+      toast.success(`${revertStep.noteLabel} — the CRT will update on the next sync.`);
+    } catch (e) {
+      toast.error('Failed to revert status');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-end">
       <DropdownMenu>
@@ -340,6 +489,18 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                 ? 'No status updates available at this stage.'
                 : 'Select a program pathway first.'}
             </div>
+          )}
+          {revertStep && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => { setRevertPin(''); setShowRevertConfirm(true); }}
+                className="text-sm cursor-pointer text-amber-700 focus:text-amber-800"
+              >
+                <RotateCcw className="w-4 h-4 mr-2 text-amber-600" />
+                {revertStep.label}
+              </DropdownMenuItem>
+            </>
           )}
           <DropdownMenuSeparator />
           <div className="px-2 py-1.5 text-[10px] text-slate-400">
@@ -606,6 +767,56 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {saving ? 'Saving...' : 'Yes, Mark Cancelled'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Revert status (step back) confirmation — requires pin */}
+      <AlertDialog open={showRevertConfirm} onOpenChange={setShowRevertConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{revertStep?.label || 'Revert Status'}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>{revertStep?.description}</p>
+                <p className="text-xs text-amber-700 font-medium">
+                  This removes the data associated with this status from the client file and the
+                  CRT (on the next sync). You can step back again afterward if needed.
+                </p>
+                <div className="pt-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    Enter pin to confirm
+                  </label>
+                  <Input
+                    type="password"
+                    inputMode="numeric"
+                    value={revertPin}
+                    onChange={(e) => setRevertPin(e.target.value)}
+                    className="text-sm"
+                    placeholder="Pin"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={saving}
+              onClick={() => setRevertPin('')}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleRevert();
+              }}
+              disabled={saving || revertPin !== '5011'}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {saving ? 'Reverting...' : 'Confirm Revert'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
