@@ -208,23 +208,30 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcome = 'Incomplete';
   }
 
-  // Placement Outcome — once the Service Outcome is "Complete", default to "P"
-  // (Pending) until an actual post-completion employment outcome is recorded.
+  // Placement Outcome — WD only. Once the Service Outcome is "Complete", default
+  // to "P" (Pending) until an actual post-completion employment outcome is
+  // recorded. DEA clients: columns I and J stay blank (not applicable).
   const placementOK = gate(client.post_completion_employment_date);
-  const placementOutcome = serviceOutcome === 'Complete'
+  const placementOutcome = (isWd && serviceOutcome === 'Complete')
     ? ((placementOK && client.post_completion_employment_status) || 'P')
     : '';
 
-  // 90 Day Outcome — portal values are now CRT-accepted values directly
-  const day90OK = gate(client.followup_90day_date);
-  const day90Outcome = (day90OK && client.followup_90day_status) || '';
+  // 90 Day follow-up is "triggered" (projected) once employment is found (WD) or
+  // EDAs are marked complete (DEA). Before the actual outcome is recorded, the
+  // 90 Day Outcome shows 'P' (Pending) and the date is the projected date
+  // (90 days after the trigger event).
+  const followupTriggered = isDea
+    ? gate(client.eda_completion_date)
+    : gate(client.employment_start_date);
 
-  // 90 Day Outcome Date — DEA: anticipated (EDA completion + 90 days), shown
-  // from the month of the Service Outcome date onward (not gated by the future
-  // 90-day date itself). WD: actual follow-up date, month-bound.
-  const day90DateForCrt = isDea
-    ? (gate(client.eda_completion_date) ? formatDateForCrt(client.followup_90day_date) : '')
-    : (day90OK ? formatDateForCrt(client.followup_90day_date) : '');
+  // 90 Day Outcome — actual status if recorded & month-bound, else 'P' once triggered.
+  const day90Outcome = (gate(client.followup_90day_date) && client.followup_90day_status)
+    || (followupTriggered ? 'P' : '');
+
+  // 90 Day Outcome Date — projected/actual date, shown from the trigger month onward.
+  const day90DateForCrt = (client.followup_90day_date && followupTriggered)
+    ? formatDateForCrt(client.followup_90day_date)
+    : '';
 
   // Work Exposure Y/N
   const workExposure = (client.paid_external_placement || client.exposure_course) ? 'Yes' : 'No';
@@ -249,7 +256,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcome,                                    // G: Service Outcome
     serviceOutcomeDate,                                 // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome
-    placementOK ? formatDateForCrt(client.post_completion_employment_date) : '', // J: Placement Outcome Date
+    (isWd && placementOK) ? formatDateForCrt(client.post_completion_employment_date) : '', // J: Placement Outcome Date
     '',                                                // K: 30 Day Outcome
     '',                                                // L: 30 Day Outcome Date
     '',                                                // M: 60 Day Outcome

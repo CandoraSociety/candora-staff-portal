@@ -28,8 +28,9 @@ export function classifyClient(c) {
 
   if (ps === 'in_progress' || (!ps && c.service_start_date)) {
     if (c.service_type === 'pathways') {
-      // WD: Active (EDA) → Work Search → Follow-up
-      if (isEmployed) return 'followup_period';
+      // WD: Active (EDA) → Work Search → Follow-up (once employment is recorded)
+      const foundEmployment = isEmployed || !!c.post_completion_employment_date;
+      if (foundEmployment) return 'followup_period';
       if (hasEdaCompletion) return 'work_search';
       return 'program_started'; // Active (EDA)
     }

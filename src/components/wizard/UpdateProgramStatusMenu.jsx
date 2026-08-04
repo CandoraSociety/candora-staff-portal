@@ -25,7 +25,7 @@ import { base44 } from '@/api/base44Client';
 import { classifyClient } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
-import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS } from '@/lib/crtCodes';
+import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
 
 export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showConfirm, setShowConfirm] = useState(false);
@@ -39,6 +39,11 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [employmentDate, setEmploymentDate] = useState(
     new Date().toISOString().split('T')[0]
   );
+  const [employmentStatus, setEmploymentStatus] = useState('E-RF');
+  const [employerName, setEmployerName] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [jobHours, setJobHours] = useState('');
+  const [jobWage, setJobWage] = useState('');
   const [saving, setSaving] = useState(false);
 
   const isDEA = client?.service_type === 'direct_to_employment';
@@ -127,6 +132,10 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
       toast.error('Please enter an employment date');
       return;
     }
+    if (!employmentStatus) {
+      toast.error('Please select an employment type');
+      return;
+    }
     setSaving(true);
     try {
       let me = null;
@@ -142,30 +151,44 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         id: Date.now().toString(),
         date: new Date().toISOString().split('T')[0],
         event_type: 'employment_found',
-        item_label: 'Found Employment',
+        item_label: `Found Employment — ${employmentStatus}`,
         item_key: 'employment_found',
-        note: `Employment found on ${employmentDate}. 90-day follow-up due ${followupDate}.`,
+        note: `Employment found on ${employmentDate} (${employmentStatus}). 90-day follow-up due ${followupDate}.`,
         logged_by: me?.email || '',
         logged_by_name: me?.full_name || '',
         compass_entered: false,
       });
 
-      const updated = await base44.entities.Client.update(client.id, {
+      const updates = {
         employment_start_date: employmentDate,
+        post_completion_employment_status: employmentStatus,
+        post_completion_employment_date: employmentDate,
         followup_90day_date: followupDate,
+        job_start_date: employmentDate,
         roadmap_progress_notes: notes,
-      });
+      };
+      // Autofill the Current Employment Status card (enum only allows these employed codes)
+      if (['E-RF', 'E-UF', 'E-PT'].includes(employmentStatus)) {
+        updates.employment_status = employmentStatus;
+      }
+      if (employerName) updates.employer_name = employerName;
+      if (jobTitle) updates.job_title = jobTitle;
+      if (jobHours) updates.job_hours = jobHours;
+      if (jobWage !== '') updates.job_wage = Number(jobWage);
+
+      const updated = await base44.entities.Client.update(client.id, updates);
 
       await logStatusChange({
         client,
         change_type: 'program_status_change',
         from_value: 'work_search',
         to_value: 'followup_period',
-        notes: `Employment found on ${employmentDate}. 90-day follow-up due ${followupDate}.`,
+        notes: `Employment found on ${employmentDate} (${employmentStatus}). 90-day follow-up due ${followupDate}.`,
       });
 
       onClientUpdate?.(updated);
       setShowEmploymentConfirm(false);
+      setEmployerName(''); setJobTitle(''); setJobHours(''); setJobWage('');
       toast.success('Employment recorded — moved to Follow-up Period. 90-day follow-up date set.');
     } catch (e) {
       toast.error('Failed to update status');
@@ -380,23 +403,21 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       {/* Found Employment confirmation dialog */}
       <AlertDialog open={showEmploymentConfirm} onOpenChange={setShowEmploymentConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Found Employment</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p>
                   This will record employment for{' '}
                   <span className="font-semibold text-slate-800">
                     {client?.first_name} {client?.last_name}
                   </span>{' '}
                   and move them from <span className="font-medium">Work Search</span> into the{' '}
-                  <span className="font-medium">Follow-up Period</span>.
+                  <span className="font-medium">Follow-up Period</span>. The 90-day follow-up date
+                  will be set to exactly 90 days after the employment date.
                 </p>
-                <p>
-                  The 90-day follow-up date will be set to exactly 90 days after the employment date.
-                </p>
-                <div className="pt-1">
+                <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Employment Date
                   </label>
@@ -407,6 +428,86 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                     className="text-sm"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Employment Type
+                  </label>
+                  <div className="grid grid-cols-1 gap-1.5 max-h-44 overflow-y-auto pr-1">
+                    {PLACEMENT_OUTCOME_OPTIONS.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={`flex items-start gap-2 rounded-md border px-3 py-1.5 cursor-pointer transition-colors ${
+                          employmentStatus === opt.value
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="employment-status"
+                          checked={employmentStatus === opt.value}
+                          onChange={() => setEmploymentStatus(opt.value)}
+                          className="mt-0.5"
+                        />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-800">{opt.value}</div>
+                          <div className="text-xs text-slate-500">{opt.desc}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      Employer Name
+                    </label>
+                    <Input
+                      value={employerName}
+                      onChange={(e) => setEmployerName(e.target.value)}
+                      className="text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      Job Title
+                    </label>
+                    <Input
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                      className="text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      Hours (e.g. 40 hrs/week)
+                    </label>
+                    <Input
+                      value={jobHours}
+                      onChange={(e) => setJobHours(e.target.value)}
+                      className="text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      Wage ($/hr)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={jobWage}
+                      onChange={(e) => setJobWage(e.target.value)}
+                      className="text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Employer details will autofill the Employment section of the client file.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -417,7 +518,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                 e.preventDefault();
                 handleFoundEmployment();
               }}
-              disabled={saving || !employmentDate}
+              disabled={saving || !employmentDate || !employmentStatus}
             >
               {saving ? 'Saving...' : 'Confirm & Record Employment'}
             </AlertDialogAction>

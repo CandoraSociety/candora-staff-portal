@@ -21,6 +21,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   const isDEA = client?.service_type === 'direct_to_employment';
   const isWD = client?.service_type === 'pathways';
   const isEmployed = ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status);
+  const foundEmployment = isEmployed || !!client?.post_completion_employment_date;
 
   const daysUntilFollowup = followup90Date
     ? differenceInDays(new Date(followup90Date + 'T12:00:00'), new Date())
@@ -256,7 +257,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   // Default: not started / in progress
   const hasEdaCompletion = !!client?.completion_date;
   const wdPhase = isWD && (!ps || ps === 'in_progress')
-    ? isEmployed ? 'Follow-up Period'
+    ? foundEmployment ? 'Follow-up Period'
       : hasEdaCompletion ? 'Work Search Phase'
       : 'Active (EDA)'
     : null;
@@ -292,7 +293,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
             </Button>
           ) : (
             <div className="text-[10px] text-slate-400 text-center px-1 py-1">
-              {isEmployed ? '90-Day Follow-Up in progress' : '90-Day Follow-Up required to complete'}
+              {foundEmployment ? '90-Day Follow-Up in progress' : '90-Day Follow-Up required to complete'}
             </div>
           )
         ) : (
