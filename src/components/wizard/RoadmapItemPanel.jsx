@@ -25,28 +25,15 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
   const [completedDate, setCompletedDate] = useState(existing.completed_date || new Date().toISOString().split('T')[0]);
   const [unlockRange,   setUnlockRange]   = useState(false);
   const [celebrate,     setCelebrate]     = useState(false);
-  const [showCompassPrompt, setShowCompassPrompt] = useState(false);
-  const [showLateDatePrompt, setShowLateDatePrompt] = useState(false);
 
   const minDate = serviceStartDate ? serviceStartDate.toISOString().split('T')[0] : undefined;
   const maxDate = (!unlockRange && projectedEndDate) ? projectedEndDate.toISOString().split('T')[0] : undefined;
 
+  const endForWarn = endDate || completedDate;
+  const isLate = !unlockRange && projectedEndDate && endForWarn && new Date(endForWarn + 'T12:00:00') > projectedEndDate;
+
   const handleSave = async () => {
-    // Late date warning
-    if (!unlockRange && projectedEndDate) {
-      const end = endDate || completedDate;
-      if (end && new Date(end + 'T12:00:00') > projectedEndDate) {
-        if (!showLateDatePrompt) { setShowLateDatePrompt(true); return; }
-      }
-    }
-    // Compass reminder
-    if ((status === 'started' || status === 'completed') && !showCompassPrompt) {
-      setShowCompassPrompt(true);
-      return;
-    }
-
     if (status === 'completed') setCelebrate(true);
-
     await onSave({ startDate, endDate, notes, status, startedDate, completedDate });
   };
 
@@ -139,18 +126,18 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
         )}
 
         {/* Late date warning */}
-        {showLateDatePrompt && (
+        {isLate && (
           <div className="bg-orange-50 border border-orange-300 rounded p-2 text-xs text-orange-800">
             <AlertTriangle className="w-3 h-3 inline mr-1" />
-            The end date is outside the program range. Click Save again to confirm.
+            The end date is outside the program range.
           </div>
         )}
 
         {/* Compass reminder */}
-        {showCompassPrompt && (
+        {(status === 'started' || status === 'completed') && (
           <div className="bg-amber-50 border border-amber-300 rounded p-2 text-xs text-amber-800 flex items-start gap-1">
             <Bell className="w-3 h-3 mt-0.5 shrink-0" />
-            Remember to update this in Compass. Click Save again to confirm.
+            Remember to update this in Compass.
           </div>
         )}
 
