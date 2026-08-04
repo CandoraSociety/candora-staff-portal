@@ -26,7 +26,6 @@ const ALL_ITEMS = [
   { key: 'employment_supports',         label: 'Employment Supports',            category: 'Supports' },
   { key: 'job_applications',            label: 'Job Applications',               category: 'Job Search' },
   { key: 'networking',                  label: 'Networking',                     category: 'Job Search' },
-  { key: 'barrier_support',             label: 'Barrier Support',                category: 'Supports' },
   { key: 'other',                       label: 'Other',                          category: 'Other' },
 ];
 
@@ -41,7 +40,6 @@ const DEA_ACTIVITY_TYPES = [
   'Employment Supports',
   'Job Applications',
   'Networking',
-  'Barrier Support',
   'Other',
 ];
 
@@ -61,7 +59,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   // Pathways state
   const defaultSelected = useMemo(() => {
     if (client?.sdp_items?.length > 0) return client.sdp_items;
-    return client?.barriers_addressed && client?.barrier_1 ? ['barrier_support'] : [];
+    return [];
   }, []);
   const [selectedItems, setSelectedItems] = useState(defaultSelected);
   const [itemDetails, setItemDetails] = useState(client?.sdp_item_details || {});

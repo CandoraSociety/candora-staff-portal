@@ -29,7 +29,6 @@ const ITEM_LABELS = {
   employment_supports: 'Employment Supports',
   job_applications: 'Job Applications',
   networking: 'Networking',
-  barrier_support: 'Barrier Support',
   other: 'Other',
 };
 
@@ -51,6 +50,7 @@ function getEDASubItems(client) {
   const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
 
   for (const key of items) {
+    if (key === 'barrier_support') continue;
     if (EXPOSURE_KEYS.includes(key)) continue;
     if (key === 'internal_placement') {
       subItems.push({ key: 'internal_placement', label: 'Internal Placement', component: 'internal_placement' });

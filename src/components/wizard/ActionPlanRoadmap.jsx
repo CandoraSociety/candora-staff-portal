@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCheck, X, Clock, Circle, Map, CalendarCheck } from 'lucide-react';
@@ -29,8 +29,17 @@ const ITEM_LABELS = {
   employment_supports: 'Employment Supports',
   job_applications: 'Job Applications',
   networking: 'Networking',
-  barrier_support: 'Barrier Support',
   other: 'Other',
+};
+
+const PLACEMENT_TYPE_LABELS = {
+  cleaning_arc: 'Cleaning ARC',
+  food_services_onsite: 'Food Services (Onsite)',
+  food_services_offsite: 'Food Services (Offsite)',
+  reception: 'Reception/Admin',
+  childcare: 'Childcare',
+  program_support: 'Program Support',
+  security: 'Security',
 };
 
 // ─── Color coding ─────────────────────────────────────────────────────────────
@@ -63,10 +72,10 @@ function fmtDate(d) {
 }
 
 // ─── Build items ──────────────────────────────────────────────────────────────
-function buildItems(client) {
+function buildItems(client, internalTrainings = [], workExposures = []) {
   const roadmapStatus = client?.roadmap_item_status || {};
   const itemDetails = client?.sdp_item_details || {};
-  const selectedItems = client?.sdp_items || [];
+  const selectedItems = (client?.sdp_items || []).filter(k => k !== 'barrier_support');
 
   const items = selectedItems.map(key => ({
     key,
@@ -125,6 +134,52 @@ function buildItems(client) {
     });
   });
 
+  // Internal training placements — actual records with real dates (read-only on timeline)
+  internalTrainings.forEach(t => {
+    const status = t.status === 'completed' ? 'completed'
+      : t.status === 'active' ? 'started'
+      : (t.status === 'withdrawn' || t.status === 'cancelled') ? 'cancelled'
+      : 'planned';
+    items.push({
+      key: `it_${t.id}`,
+      label: `Internal: ${PLACEMENT_TYPE_LABELS[t.placement_type] || t.placement_type}`,
+      color: '#22c55e',
+      isBarrier: false,
+      readOnly: true,
+      detail: { timeline_start: t.start_date, timeline_end: t.expected_end_date, notes: t.training_goals },
+      status,
+      statusData: {
+        timeline_start: t.start_date,
+        timeline_end: t.expected_end_date,
+        started_date: t.start_date,
+        completed_date: t.actual_end_date,
+      },
+    });
+  });
+
+  // Work exposure placements — actual records with real dates (read-only on timeline)
+  workExposures.forEach(w => {
+    const status = w.status === 'completed' ? 'completed'
+      : w.status === 'in_progress' ? 'started'
+      : w.status === 'cancelled' ? 'cancelled'
+      : 'planned';
+    items.push({
+      key: `wep_${w.id}`,
+      label: `Work Exposure: ${w.business_name}`,
+      color: '#22c55e',
+      isBarrier: false,
+      readOnly: true,
+      detail: { timeline_start: w.start_date, timeline_end: w.anticipated_completion_date, notes: w.notes },
+      status,
+      statusData: {
+        timeline_start: w.start_date,
+        timeline_end: w.anticipated_completion_date,
+        started_date: w.start_date,
+        completed_date: w.status === 'completed' ? w.anticipated_completion_date : undefined,
+      },
+    });
+  });
+
   return items;
 }
 
@@ -145,10 +200,20 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const [openItem, setOpenItem]     = useState(null);
   const [openBITReview, setOpenBITReview] = useState(null);
   const [saving, setSaving]         = useState(false);
+  const [internalTrainings, setInternalTrainings] = useState([]);
+  const [workExposures, setWorkExposures] = useState([]);
 
   const isDEA = client?.service_type === 'direct_to_employment';
 
-  const items = useMemo(() => buildItems(client), [client]);
+  useEffect(() => {
+    if (!client?.id) return;
+    base44.entities.InternalTraining.filter({ client_id: client.id }, '-created_date')
+      .then(setInternalTrainings).catch(() => {});
+    base44.entities.WorkExposurePlacement.filter({ client_id: client.id }, '-created_date')
+      .then(setWorkExposures).catch(() => {});
+  }, [client?.id]);
+
+  const items = useMemo(() => buildItems(client, internalTrainings, workExposures), [client, internalTrainings, workExposures]);
   const nonBarrier = items.filter(i => !i.isBarrier);
   const barriers   = items.filter(i => i.isBarrier);
 
@@ -236,7 +301,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   // ── Items missing dates ────────────────────────────────────────────────────
   const missingDates = items.filter(i => {
     const hasDates = i.detail?.timeline_start || i.detail?.timeline_end || i.statusData?.timeline_start || i.statusData?.started_date;
-    return !hasDates && i.status !== 'cancelled';
+    return !hasDates && i.status !== 'cancelled' && !i.readOnly;
   });
 
   // ── Save handlers ──────────────────────────────────────────────────────────
@@ -370,6 +435,11 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
     <div className="space-y-4">
       <style>{ANIM_STYLES}</style>
 
+      {/* Click-outside backdrop — closes item/BIT panels */}
+      {(openItem !== null || openBITReview !== null) && (
+        <div className="fixed inset-0 z-30" onClick={() => { setOpenItem(null); setOpenBITReview(null); }} />
+      )}
+
       {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Tabs value={view} onValueChange={setView}>
@@ -451,7 +521,10 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                   />
                 )}
 
-                {/* Non-barrier rows */}
+                {/* Action plan items */}
+                {nonBarrier.length > 0 && (
+                  <div className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 -ml-40 pl-1">ACTION PLAN ITEMS</div>
+                )}
                 {nonBarrier.map(item => (
                   <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
                 ))}
@@ -496,7 +569,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
                 {/* BIT checkin panel */}
                 {openBITReview !== null && (
-                  <div className="mb-2">
+                  <div className="mb-2 relative z-40">
                     <BITReviewCheckinPanel
                       reviewIndex={openBITReview}
                       scheduledDate={bitReviewDates[openBITReview]}
@@ -549,6 +622,9 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       {/* ── LIST VIEW ─────────────────────────────────────────────────────── */}
       {view === 'list' && (
         <div className="space-y-2">
+          {nonBarrier.length > 0 && (
+            <div className="text-xs font-bold text-slate-500 tracking-widest mb-1">ACTION PLAN ITEMS</div>
+          )}
           {nonBarrier.map(item => (
             <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
           ))}
@@ -580,7 +656,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                       <span className={`text-xs px-2 py-0.5 rounded-full ${done ? 'bg-green-100 text-green-700' : 'bg-rose-100 text-rose-700'}`}>{done ? 'Completed' : 'Pending'}</span>
                     </button>
                     {openBITReview === idx && (
-                      <div className="mt-1">
+                      <div className="mt-1 relative z-40">
                         <BITReviewCheckinPanel
                           reviewIndex={idx}
                           scheduledDate={dateStr}
@@ -701,7 +777,7 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
             color: labelColor,
             textDecoration: isCancelled ? 'line-through' : 'none',
           }}
-          onClick={() => setOpenItem(isOpen ? null : item.key)}
+          onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
           title={item.label}
         >
           {item.label}
@@ -709,7 +785,7 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
         <div
           className="w-full h-6 rounded-md relative cursor-pointer"
           style={{ backgroundColor: trackBg, outline: `2px solid ${cfg.ring}` }}
-          onClick={() => setOpenItem(isOpen ? null : item.key)}
+          onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
         >
           {/* Deadline marker — dashed line at anticipated completion date */}
           {deadlineP !== null && (
@@ -747,10 +823,17 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
               {isCancelled  && <X         className="absolute right-1 top-1/2 -translate-y-1/2 w-3 h-3 text-white" />}
             </div>
           )}
+          {/* Status indicator when no progress bar (e.g. barrier marked complete with no start date) */}
+          {!startD && (isCompleted || isCancelled) && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              {isCompleted && <CheckCheck className="w-3.5 h-3.5" style={{ color: cfg.ring }} />}
+              {isCancelled && <X className="w-3.5 h-3.5" style={{ color: cfg.ring }} />}
+            </div>
+          )}
         </div>
       </div>
-      {isOpen && (
-        <div className="mb-2 ml-0">
+      {isOpen && !item.readOnly && (
+        <div className="mb-2 ml-0 relative z-40">
           <RoadmapItemPanel
             item={item}
             currentStatus={item.status}
@@ -783,7 +866,7 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
       <button
         className="w-full text-left px-3 py-2.5 rounded-lg border-2 text-sm flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors"
         style={{ borderColor: cfg.ring }}
-        onClick={() => setOpenItem(isOpen ? null : item.key)}
+        onClick={() => !item.readOnly && setOpenItem(isOpen ? null : item.key)}
       >
         <div className="flex items-center gap-2 min-w-0">
           <Icon className="w-4 h-4 shrink-0" style={{ color: cfg.ring }} />
@@ -795,8 +878,8 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
           <span className={`text-xs px-2 py-0.5 rounded-full ${cfg.badge}`}>{cfg.label}</span>
         </div>
       </button>
-      {isOpen && (
-        <div className="mt-1">
+      {isOpen && !item.readOnly && (
+        <div className="mt-1 relative z-40">
           <RoadmapItemPanel
             item={item}
             currentStatus={item.status}
