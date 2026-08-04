@@ -28,6 +28,15 @@ import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
 import { getIncompleteRoadmapItems } from '@/lib/roadmapItems';
 
+// Count barriers that are successfully resolved (barrier exists + status === 'resolved')
+function countResolvedBarriers(client) {
+  let count = 0;
+  for (const i of [1, 2, 3]) {
+    if (client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved') count++;
+  }
+  return count;
+}
+
 // Determine the most recent forward step that can be undone, one step at a time.
 // Each step clears the client-file fields that step introduced, plus its progress note.
 function getUndoStep(client) {
@@ -126,6 +135,11 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const [showOutcomeConfirm, setShowOutcomeConfirm] = useState(false);
   const [outcomeStatus, setOutcomeStatus] = useState('E-RF');
   const [employedFtPt, setEmployedFtPt] = useState('');
+  const [outcomeEmployerName, setOutcomeEmployerName] = useState('');
+  const [outcomeJobTitle, setOutcomeJobTitle] = useState('');
+  const [outcomeJobWage, setOutcomeJobWage] = useState('');
+  const [outcomeJobHours, setOutcomeJobHours] = useState('');
+  const [outcomeEmploymentDate, setOutcomeEmploymentDate] = useState('');
   const [showIncompletePrompt, setShowIncompletePrompt] = useState(false);
   const [incompleteItems, setIncompleteItems] = useState([]);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -206,6 +220,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
       const updates = {
         completion_date: completionDate,
         eda_completion_date: completionDate,
+        service_navigation_supports: countResolvedBarriers(client) >= 2,
         roadmap_progress_notes: await addProgressNote(
           me,
           `EDAs marked complete on ${completionDate}.`
@@ -285,6 +300,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         followup_90day_date: followupDate,
         job_start_date: employmentDate,
         employed_ftpt: employedFtPt || null,
+        service_navigation_supports: countResolvedBarriers(client) >= 2,
         roadmap_progress_notes: notes,
       };
       // Autofill the Current Employment Status card (enum only allows these employed codes)
@@ -341,11 +357,25 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         compass_entered: false,
       });
 
-      const updated = await base44.entities.Client.update(client.id, {
+      const today = new Date().toISOString().split('T')[0];
+      const updates = {
         followup_90day_status: outcomeStatus,
         employed_ftpt: employedFtPt || null,
+        program_status: 'complete',
+        completion_date: today,
         roadmap_progress_notes: notes,
-      });
+      };
+      // Employment details from the outcome dialog — autopopulate the client profile
+      if (outcomeEmployerName) updates.employer_name = outcomeEmployerName;
+      if (outcomeJobTitle) updates.job_title = outcomeJobTitle;
+      if (outcomeJobHours) updates.job_hours = outcomeJobHours;
+      if (outcomeEmploymentDate) {
+        updates.employment_start_date = outcomeEmploymentDate;
+        updates.job_start_date = outcomeEmploymentDate;
+      }
+      if (outcomeJobWage !== '') updates.job_wage = Number(outcomeJobWage);
+
+      const updated = await base44.entities.Client.update(client.id, updates);
 
       await logStatusChange({
         client,
@@ -358,6 +388,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
       onClientUpdate?.(updated);
       setShowOutcomeConfirm(false);
       setEmployedFtPt('');
+      setOutcomeEmployerName(''); setOutcomeJobTitle(''); setOutcomeJobWage(''); setOutcomeJobHours(''); setOutcomeEmploymentDate('');
       toast.success('Outcome recorded — moved to Completed.');
     } catch (e) {
       toast.error('Failed to update status');
@@ -493,7 +524,15 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
           )}
           {inFollowup && (
             <DropdownMenuItem
-              onSelect={() => { setEmployedFtPt(client?.employed_ftpt || ''); setShowOutcomeConfirm(true); }}
+              onSelect={() => {
+                setEmployedFtPt(client?.employed_ftpt || '');
+                setOutcomeEmployerName(client?.employer_name || '');
+                setOutcomeJobTitle(client?.job_title || '');
+                setOutcomeJobWage(client?.job_wage != null ? String(client.job_wage) : '');
+                setOutcomeJobHours(client?.job_hours || '');
+                setOutcomeEmploymentDate(client?.employment_start_date || client?.job_start_date || '');
+                setShowOutcomeConfirm(true);
+              }}
               className="text-sm cursor-pointer"
             >
               <ClipboardCheck className="w-4 h-4 mr-2 text-blue-600" />
@@ -739,7 +778,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
 
       {/* 90-Day Follow-up Outcome dialog */}
       <AlertDialog open={showOutcomeConfirm} onOpenChange={setShowOutcomeConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Enter 90-Day Follow-up Outcome</AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -795,6 +834,66 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                       </button>
                     ))}
                   </div>
+                </div>
+                <div className="pt-3 border-t border-slate-200">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                    Employment Details <span className="font-normal text-slate-400">(updates the client profile)</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] text-slate-500 mb-0.5">Employer</label>
+                      <Input
+                        type="text"
+                        placeholder="Employer name"
+                        value={outcomeEmployerName}
+                        onChange={(e) => setOutcomeEmployerName(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500 mb-0.5">Position</label>
+                      <Input
+                        type="text"
+                        placeholder="Job title"
+                        value={outcomeJobTitle}
+                        onChange={(e) => setOutcomeJobTitle(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500 mb-0.5">Employment Start Date</label>
+                      <Input
+                        type="date"
+                        value={outcomeEmploymentDate}
+                        onChange={(e) => setOutcomeEmploymentDate(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500 mb-0.5">Hours / Week</label>
+                      <Input
+                        type="text"
+                        placeholder="e.g. 35-40"
+                        value={outcomeJobHours}
+                        onChange={(e) => setOutcomeJobHours(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] text-slate-500 mb-0.5">Wage ($/hr)</label>
+                      <Input
+                        type="number"
+                        step="0.25"
+                        placeholder="e.g. 18.00"
+                        value={outcomeJobWage}
+                        onChange={(e) => setOutcomeJobWage(e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1.5">
+                    These details will autofill the Employment section of the client file as current.
+                  </p>
                 </div>
               </div>
             </AlertDialogDescription>
