@@ -31,7 +31,36 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
   });
 
   if (crtClients.length === 0) {
-    return { totalPortalClients: 0, updated: 0, added: 0, totalRowsInWorkbook: 0 };
+    // No eligible clients — clear all existing data rows (clients were deleted
+    // or became ineligible). Read the sheet and blank out any rows with data.
+    const rangeRes = await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!rangeRes.ok) return { totalPortalClients: 0, updated: 0, added: 0, cleared: 0, totalRowsInWorkbook: 0 };
+    const rangeData = await rangeRes.json();
+    const allValues = (rangeData.values || []).map(row => {
+      const padded = [...row];
+      while (padded.length < NUM_COLUMNS) padded.push('');
+      return padded.slice(0, NUM_COLUMNS);
+    });
+    let lastDataRow = -1;
+    for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
+      if (allValues[i] && allValues[i].some(v => v !== '' && v !== null && v !== undefined)) { lastDataRow = i; break; }
+    }
+    if (lastDataRow < CLIENT_DATA_START_ROW - 1) return { totalPortalClients: 0, updated: 0, added: 0, cleared: 0, totalRowsInWorkbook: 0 };
+    const blankRows = [];
+    for (let i = CLIENT_DATA_START_ROW - 1; i <= lastDataRow; i++) blankRows.push(new Array(NUM_COLUMNS).fill(''));
+    const rangeAddress = `A${CLIENT_DATA_START_ROW}:Y${lastDataRow + 1}`;
+    await fetch(
+      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='${rangeAddress}')`,
+      {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: blankRows })
+      }
+    );
+    return { totalPortalClients: 0, updated: 0, added: 0, cleared: blankRows.length, totalRowsInWorkbook: 0 };
   }
 
   const rangeRes = await fetch(
@@ -79,6 +108,7 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
   }
 
   let updatedCount = 0, addedCount = 0;
+  const matchedRows = new Set();
   for (const client of crtClients) {
     const hsid = client.compass_hsid ? String(client.compass_hsid).trim() : '';
     const portalRow = mapClientToCrtRow(client, monthEnd);
@@ -91,6 +121,7 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     }
 
     if (rowIdx >= 0) {
+      matchedRows.add(rowIdx);
       for (let col = 0; col < NUM_COLUMNS; col++) {
         // Columns D (3) and F (5) are the stream-specific start dates. A client
         // is only in one stream, so always write both — this clears a stale date
@@ -118,7 +149,32 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
       if (hsid) hsidToRowIndex[hsid] = newRowIndex;
       nameToRowIndex[portalNameKey(client)] = newRowIndex;
       lastDataRow = newRowIndex;
+      matchedRows.add(newRowIndex);
       addedCount++;
+    }
+  }
+
+  // Cleanup: clear rows for clients no longer eligible (deleted from the portal,
+  // switched to casual/rejected, or future-started for this month). A row is
+  // orphaned if it has client data (name or HSID in columns A/B) but wasn't
+  // matched to any current eligible portal client during this sync pass.
+  let clearedCount = 0;
+  for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
+    if (matchedRows.has(i)) continue;
+    const row = allValues[i];
+    if (!row) continue;
+    const hasData = (row[0] && String(row[0]).trim()) || (row[1] && String(row[1]).trim());
+    if (!hasData) continue;
+    allValues[i] = new Array(NUM_COLUMNS).fill('');
+    clearedCount++;
+  }
+
+  // Recalculate lastDataRow after cleanup so we don't write trailing empty rows
+  lastDataRow = CLIENT_DATA_START_ROW - 2;
+  for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
+    if (allValues[i] && allValues[i].some(v => v !== '' && v !== null && v !== undefined)) {
+      lastDataRow = i;
+      break;
     }
   }
 
@@ -137,7 +193,7 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     throw new Error('Failed to write to workbook: ' + await updateRes.text());
   }
 
-  return { totalPortalClients: crtClients.length, updated: updatedCount, added: addedCount, totalRowsInWorkbook: updatedCount + addedCount };
+  return { totalPortalClients: crtClients.length, updated: updatedCount, added: addedCount, cleared: clearedCount, totalRowsInWorkbook: updatedCount + addedCount };
 }
 
 // Sync every OPEN monthly CRT. Closed workbooks (marked complete) are frozen
