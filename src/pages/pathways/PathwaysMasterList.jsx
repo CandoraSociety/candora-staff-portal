@@ -277,7 +277,7 @@ export default function PathwaysMasterList() {
                 onChange={e => setReassignClient({ ...reassignClient, _newWorker: e.target.value })}
               >
                 <option value="">Select a counsellor...</option>
-                {staff.filter(s => s.email !== reassignClient.assigned_worker).sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(s => (
+                {staff.filter(s => s.email !== reassignClient.assigned_worker && (s.role === 'career_counsellor' || s.secondary_role === 'career_counsellor' || s.tertiary_role === 'career_counsellor')).sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(s => (
                   <option key={s.id} value={s.email + "|" + (s.name || s.email)}>
                     {s.name || s.email}
                   </option>
