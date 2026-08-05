@@ -179,6 +179,14 @@ export function mapClientToCrtRow(client, monthEnd) {
   // EDA completion date, month-bound (Service Outcome Date + WD EDA Completion column)
   const edaDateForCrt = gate(client.eda_completion_date) ? formatDateForCrt(client.eda_completion_date) : '';
 
+  // Most recently completed EDA activity date (DEA clients) — the actual last
+  // activity completion date from the dea_activities log. Used as the Service
+  // Outcome Date for DEA clients (per reporting requirement). Falls back to
+  // eda_completion_date when no individual activity completion dates are recorded.
+  const deaActivities = Array.isArray(client.dea_activities) ? client.dea_activities : [];
+  const completedEdaDates = deaActivities.map(a => a.completed_date).filter(Boolean).sort();
+  const mostRecentEdaDate = completedEdaDates.length ? completedEdaDates[completedEdaDates.length - 1] : null;
+
   // CEIS (DEA) — Y/N
   const ceis = isDea ? 'Yes' : 'No';
 
@@ -190,14 +198,16 @@ export function mapClientToCrtRow(client, monthEnd) {
   const serviceElement = serviceElementMap[client.service_type] || '';
 
   // Service Outcome — Complete is triggered by EDA completion
-  // (eda_completion_date), not full program completion. The Service Outcome
-  // Date is the EDA completion date. Incomplete/Cancelled follow program_status.
+  // (eda_completion_date), not full program completion. For DEA clients the
+  // Service Outcome Date is the most recently completed EDA activity date.
+  // Incomplete/Cancelled follow program_status.
   const edaOK = gate(client.eda_completion_date);
   let serviceOutcome = 'In Progress';
   let serviceOutcomeDate = '';
   if (edaOK && client.eda_completion_date) {
     serviceOutcome = 'Complete';
-    serviceOutcomeDate = formatDateForCrt(client.eda_completion_date);
+    const sodSource = isDea ? (mostRecentEdaDate || client.eda_completion_date) : client.eda_completion_date;
+    serviceOutcomeDate = gate(sodSource) ? formatDateForCrt(sodSource) : '';
   } else if (client.program_status === 'complete') {
     // Legacy: program marked complete before eda_completion_date was tracked
     serviceOutcome = 'Complete';
@@ -219,8 +229,8 @@ export function mapClientToCrtRow(client, monthEnd) {
   // 90 Day follow-up is "triggered" (projected) once employment is found (WD) or
   // EDAs are marked complete (DEA). Before the actual outcome is recorded, the
   // 90 Day Outcome shows 'P' (Pending) and the date is the projected date
-  // (90 days after the trigger event). Requires the trigger date to actually
-  // exist so that undoing the trigger step clears the follow-up projection.
+  // (90 days after the trigger event). For DEA clients the projected 90-day
+  // date is 90 days after the Service Outcome Date (most recent EDA activity).
   const followupTriggered = isDea
     ? (!!client.eda_completion_date && gate(client.eda_completion_date))
     : (!!client.employment_start_date && gate(client.employment_start_date));
@@ -229,10 +239,21 @@ export function mapClientToCrtRow(client, monthEnd) {
   const day90Outcome = (gate(client.followup_90day_date) && client.followup_90day_status)
     || (followupTriggered ? 'P' : '');
 
-  // 90 Day Outcome Date — projected/actual date, shown from the trigger month onward.
-  const day90DateForCrt = (client.followup_90day_date && followupTriggered)
-    ? formatDateForCrt(client.followup_90day_date)
-    : '';
+  // 90 Day Outcome Date — for DEA clients, 90 days after the Service Outcome Date
+  // (most recent EDA activity date). For WD clients, the recorded follow-up date.
+  let day90DateForCrt = '';
+  if (followupTriggered) {
+    if (isDea) {
+      const sod = mostRecentEdaDate || client.eda_completion_date;
+      if (sod) {
+        const projected = new Date(sod + 'T12:00:00');
+        projected.setDate(projected.getDate() + 90);
+        day90DateForCrt = formatDateForCrt(projected);
+      }
+    } else if (client.followup_90day_date) {
+      day90DateForCrt = formatDateForCrt(client.followup_90day_date);
+    }
+  }
 
   // Work Exposure Y/N — Y when a completed work exposure placement exists, or
   // when the action-plan flags indicate a paid external placement / exposure course.
