@@ -141,8 +141,15 @@ export default function BarriersTab({ client, onSave, canEdit }) {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">Responsible</Label>
-                      <Input value={b.responsible} onChange={e => setField(n, 'responsible', e.target.value)} disabled={!canEdit} className="mt-1" />
+                      <Label className="text-xs">Internal/External Resources</Label>
+                      <Select value={b.responsible || ''} onValueChange={v => canEdit && setField(n, 'responsible', v === '__none__' ? '' : v)} disabled={!canEdit}>
+                        <SelectTrigger className="mt-1"><SelectValue placeholder="Select…" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">—</SelectItem>
+                          <SelectItem value="internal">Internal (Candora)</SelectItem>
+                          <SelectItem value="external">External (Referral)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
