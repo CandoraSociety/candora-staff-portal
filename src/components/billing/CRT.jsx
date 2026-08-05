@@ -160,18 +160,7 @@ export default function CRT() {
   const wb = status?.activeWorkbook;
   const activeEmbedUrl = wb?.embedUrl;
   const viewedFile = viewFileId ? status?.allFiles?.find(f => f.id === viewFileId) : wb;
-  // Force the embed to open on the "Client Data" sheet
-  const withClientDataSheet = (url) => {
-    if (!url) return url;
-    try {
-      const u = new URL(url);
-      u.searchParams.set('item', 'Client Data');
-      return u.toString();
-    } catch {
-      return url + (url.includes('?') ? '&' : '?') + 'item=' + encodeURIComponent('Client Data');
-    }
-  };
-  const effectiveEmbedUrl = withClientDataSheet(viewFileId ? (previewData?.embedUrl || null) : activeEmbedUrl);
+  const effectiveEmbedUrl = viewFileId ? (previewData?.embedUrl || null) : activeEmbedUrl;
   const showPreviewLoading = !!viewFileId && previewLoading;
   const isViewingArchive = !!viewFileId && viewFileId !== wb?.id;
 
