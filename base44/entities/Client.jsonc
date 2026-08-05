@@ -696,6 +696,10 @@
       "type": "boolean",
       "default": false,
       "description": "One-time flag for CRT-imported clients \u2014 unlocks all program flow steps without requiring prior steps to be completed"
+    },
+    "linked_rc_client_id": {
+      "type": "string",
+      "description": "ID of the staff-confirmed matching Candora Central Database (RCClient) record. When set, the central-db sync updates this existing record's Pathways program-participation indicator instead of creating a new one."
     }
   },
   "required": [

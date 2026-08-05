@@ -32,6 +32,10 @@ export interface ParticipationInput {
   indicator: string;         // computed participation-status text
   funderCategory?: string;   // optional funder tag (pathways | frn | phac_caregiver_capacity | other)
   personal: PersonalInput;
+  // When a staff member has manually confirmed a match in the portal, this
+  // holds the central RCClient record id to update — bypassing auto-match
+  // and never creating a new record.
+  linkedRcClientId?: string | null;
 }
 
 function findByIdentity(rc: any, personal: PersonalInput): Promise<any> {
@@ -60,7 +64,11 @@ export async function syncParticipantToCentralDb(base44: any, input: Participati
   const rc = base44.asServiceRole.entities.RCClient;
   const { program, linkedId, indicator, funderCategory, personal } = input;
 
-  const linked = await findLinked(rc, personal);
+  let linked: any = null;
+  if (input.linkedRcClientId) {
+    try { linked = await rc.get(input.linkedRcClientId); } catch { linked = null; }
+  }
+  if (!linked) linked = await findLinked(rc, personal);
   const updatedDate = new Date().toISOString();
   const entry = { program, linked_id: linkedId, indicator, updated_date: updatedDate };
 

@@ -46,6 +46,7 @@ export default async function syncPathwaysClientToRC(req: Request): Promise<Resp
       linkedId: client.id,
       indicator,
       funderCategory: 'pathways',
+      linkedRcClientId: client.linked_rc_client_id || null,
       personal: {
         first_name: client.first_name,
         last_name: client.last_name,

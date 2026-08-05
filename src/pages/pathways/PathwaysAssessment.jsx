@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, CheckCircle2, ClipboardCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
+import CentralDatabaseMatcher from '@/components/intake/CentralDatabaseMatcher';
 import BarrierIdentificationTool from '@/components/wizard/BarrierIdentificationTool';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -61,6 +62,12 @@ export default function PathwaysAssessment() {
   const handleSaveNotes = async () => {
     await base44.entities.Client.update(id, { intake_notes: assessmentNotes });
     toast.success('Notes saved');
+  };
+
+  const handleCentralDbLink = async (rcClientId) => {
+    await base44.entities.Client.update(id, { linked_rc_client_id: rcClientId || null });
+    setClient(prev => ({ ...prev, linked_rc_client_id: rcClientId || null }));
+    toast.success(rcClientId ? 'Linked to existing Central Database record' : 'Unlinked from Central Database record');
   };
 
   const handleCompleteAssessment = async () => {
@@ -201,7 +208,8 @@ export default function PathwaysAssessment() {
 
       {/* ─── OVERVIEW STEP ────────────────────────────────────────── */}
       {step === 'overview' && (
-        <div className="p-6">
+        <div className="p-6 space-y-6">
+          <CentralDatabaseMatcher client={client} onLinked={handleCentralDbLink} />
           <IntakeForm
             client={client}
             onSave={async (data) => { await handleSave(data); toast.success('Client overview saved'); return true; }}
