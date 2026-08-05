@@ -7,6 +7,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Shield, Lock, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { createCompassTask, taskBarrierResolved } from '@/lib/compassTasks';
 
 const BARRIER_STATUS = [
   { value: 'unresolved', label: 'Unresolved' },
@@ -88,6 +89,29 @@ export default function BarriersTab({ client, onSave, canEdit }) {
       }
 
       await onSave(data);
+
+      // Queue Compass tasks for barriers newly marked resolved (with the resolution comment)
+      try {
+        const fullName = `${client.first_name} ${client.last_name}`;
+        for (let n = 1; n <= 3; n++) {
+          const prevStatus = client[`barrier_${n}_status`] || 'unresolved';
+          const newStatus = local[n].status;
+          if (local[n].name && newStatus === 'resolved' && prevStatus !== 'resolved') {
+            const t = taskBarrierResolved(client, local[n].name, local[n].resolution_notes);
+            await createCompassTask({
+              client_id: client.id,
+              client_name: fullName,
+              compass_hsid: client.compass_hsid,
+              task_type: t.task_type,
+              title: t.title,
+              instructions: t.instructions,
+              assigned_worker: client.assigned_worker,
+              assigned_worker_name: client.assigned_worker_name,
+            });
+          }
+        }
+      } catch (_) { /* Compass queue is best-effort */ }
+
       toast.success('Barriers updated');
     } catch (e) {
       toast.error('Failed to save barriers');
