@@ -29,7 +29,7 @@ export default function RCDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">Resource Centre Dashboard</h1>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Candora Central Database</h1>
           <p className="text-muted-foreground text-sm mt-1">Client management, case work, and referrals</p>
         </div>
         <Link to="/rc/intake"><Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/30"><CardContent className="p-3 flex items-center gap-2"><UserPlus className="h-4 w-4 text-primary" /><span className="text-sm font-medium">New Intake</span></CardContent></Card></Link>

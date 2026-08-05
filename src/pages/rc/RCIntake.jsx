@@ -42,7 +42,7 @@ export default function RCIntake() {
     <div className="space-y-4 max-w-3xl mx-auto">
       <div>
         <h1 className="text-2xl font-heading font-bold text-foreground">New Client Intake</h1>
-        <p className="text-muted-foreground text-sm mt-1">Register a new client in the Resource Centre database</p>
+        <p className="text-muted-foreground text-sm mt-1">Register a new client in the Candora Central Database</p>
       </div>
       <Card><CardContent className="p-5"><ClientFormCore form={form} update={update} /></CardContent></Card>
       <div className="flex justify-end gap-2">

@@ -101,13 +101,30 @@
       "type": "string",
       "description": "General case notes"
     },
-    "pathways_client_id": {
-      "type": "string",
-      "description": "Linked Pathways CM Client record ID \u2014 set when this RC client was auto-created/synced from the Pathways portal. Used to keep the link unique and re-sync personal details."
-    },
-    "pathways_program_info": {
-      "type": "string",
-      "description": "Auto-maintained summary of the client's Pathways enrollment (program, start date, anticipated completion, career counsellor, service navigator). Managed by the Pathways\u2192RC sync \u2014 do not edit manually."
+    "program_participations": {
+      "type": "array",
+      "description": "Program-participation indicators auto-maintained by each program's sync into the Candora Central Database. One entry per program a person participates in. Managed by base44/shared/centralDbSync.ts \u2014 do not edit manually.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "program": {
+            "type": "string",
+            "description": "Program key (pathways, empoweru, frn, phac, community, ell, digilit)"
+          },
+          "linked_id": {
+            "type": "string",
+            "description": "ID of the participant record in the source program"
+          },
+          "indicator": {
+            "type": "string",
+            "description": "Human-readable participation status (e.g. 'Enrolled in the Pathways program. Anticipated completion: ...')"
+          },
+          "updated_date": {
+            "type": "string",
+            "description": "ISO timestamp of the last sync"
+          }
+        }
+      }
     }
   },
   "required": [

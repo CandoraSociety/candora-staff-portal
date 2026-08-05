@@ -36,11 +36,11 @@ export default function RCLayout() {
               <img src={logoUrl} alt={orgName} className="h-8 w-auto object-contain" />
             ) : (
               <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-display font-bold text-sm">R</span>
+                <span className="text-sidebar-primary-foreground font-display font-bold text-sm">C</span>
               </div>
             )}
             <div>
-              <h1 className="text-sidebar-foreground font-display font-bold text-sm leading-tight">Resource Centre</h1>
+              <h1 className="text-sidebar-foreground font-display font-bold text-sm leading-tight">Candora Central Database</h1>
               <p className="text-sidebar-foreground/60 text-xs leading-tight">Client Management &amp; Case Work</p>
             </div>
           </div>

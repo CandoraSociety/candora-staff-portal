@@ -17,6 +17,16 @@ import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMEN
 
 const EMPTY_FORM = {};
 
+const PROGRAM_META = {
+  pathways: { label: 'Pathways', color: '#8b5cf6' },
+  empoweru: { label: 'EmpowerU', color: '#10b981' },
+  frn: { label: 'FRN', color: '#22c55e' },
+  phac: { label: 'PHAC', color: '#0ea5e9' },
+  community: { label: 'Community Programs', color: '#f59e0b' },
+  ell: { label: 'English Language Learning', color: '#6366f1' },
+  digilit: { label: 'Digital Literacy', color: '#f43f5e' },
+};
+
 export default function RCClientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -92,12 +102,15 @@ export default function RCClientDetail() {
             {client.address && <p className="text-muted-foreground flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {client.city || ''}</p>}
             {client.date_of_birth && <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(client.date_of_birth).toLocaleDateString()}</p>}
           </div>
-          {client.pathways_program_info && (
-            <div className="mt-3 p-3 rounded-lg bg-violet-50 border border-violet-200">
-              <p className="text-sm font-medium text-violet-900 flex items-center gap-1.5"><Route className="h-4 w-4" /> Pathways Program</p>
-              <p className="text-xs text-violet-700 mt-0.5">{client.pathways_program_info}</p>
-            </div>
-          )}
+          {(client.program_participations || []).map((pp, i) => {
+            const meta = PROGRAM_META[pp.program] || { label: pp.program, color: '#64748b' };
+            return (
+              <div key={i} className="mt-3 p-3 rounded-lg border" style={{ backgroundColor: meta.color + '15', borderColor: meta.color + '40' }}>
+                <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: meta.color }}><Route className="h-4 w-4" /> {meta.label}</p>
+                <p className="text-xs mt-0.5" style={{ color: meta.color }}>{pp.indicator}</p>
+              </div>
+            );
+          })}
           {phac && (
             <div className="mt-3 p-3 rounded-lg bg-sky-50 border border-sky-200">
               <p className="text-sm font-medium text-sky-900 flex items-center gap-1.5"><Baby className="h-4 w-4" /> PHAC Caregiver Capacity</p>
