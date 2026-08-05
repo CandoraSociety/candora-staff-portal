@@ -26,6 +26,10 @@ export default function PathwaysAssessment() {
   const [step, setStep] = useState('landing');
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [step]);
+
+  useEffect(() => {
     const load = async () => {
       const [c, staff] = await Promise.all([
         base44.entities.Client.get(id),
