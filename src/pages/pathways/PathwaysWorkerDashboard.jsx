@@ -8,7 +8,7 @@ import ClientListControls, { applyFiltersAndSort } from "@/components/lists/Clie
 import { clientRowColor } from "@/lib/clientRowColor";
 import CompassTaskList from "@/components/compass/CompassTaskList";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
-import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSections";
+import CollapsibleSection from "@/components/pathways/CollapsibleSection";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
@@ -117,9 +117,6 @@ export default function PathwaysWorkerDashboard() {
       // Union for alerts / placements / compass (clients in both lists appear once)
       setClients([...new Map([...cc, ...sn].map(c => [c.id, c])).values()]);
 
-      // Default to the Service Navigation tab for pure service navigators
-      if (userIsSN && !userIsCC) setActiveTab("service-nav");
-
       const myClientIds = new Set([...cc, ...sn].map(c => c.id));
       const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
       setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
@@ -136,6 +133,8 @@ export default function PathwaysWorkerDashboard() {
   const displayed = applyFiltersAndSort(ccClients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
   const snWdTotal = snClients.filter(c => c.service_type === "pathways").length;
   const snDisplayed = applyFiltersAndSort(snClients, search, filters, sortKey).filter(c => c.service_type === "pathways");
+  // Service Navigation clients not already shown in the CC list (avoids duplication in the single view)
+  const snOnlyDisplayed = snDisplayed.filter(c => !ccClients.find(cc => cc.id === c.id));
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
 
   // DEA Closing Alert
@@ -315,21 +314,6 @@ export default function PathwaysWorkerDashboard() {
               </span>
             )}
           </button>
-          {isServiceNavigator && (
-            <button
-              onClick={() => setActiveTab("service-nav")}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "service-nav" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" /> Service Navigation
-              {snWdTotal > 0 && (
-                <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {snWdTotal}
-                </span>
-              )}
-            </button>
-          )}
         </div>
 
         {/* Compass tab */}
@@ -339,35 +323,6 @@ export default function PathwaysWorkerDashboard() {
             currentUser={user}
             onRefresh={(updated) => setCompassTasks(updated)}
           />
-        )}
-
-        {/* Service Navigation tab */}
-        {activeTab === "service-nav" && (
-          snDisplayed.length === 0 ? (
-            <div className="text-center py-20 text-slate-400">
-              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-medium">No Service Navigation clients</p>
-              <p className="text-sm mt-1">
-                WD clients you are assigned to as Service Navigator will appear here.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-2 text-slate-600 mb-2">
-                <Users className="w-4 h-4" />
-                <span className="text-sm font-medium">
-                  {snDisplayed.length} of {snWdTotal} Service Navigation WD client{snWdTotal !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <ClientListControls
-                search={search} onSearch={setSearch}
-                filters={filters} onFilters={setFilters}
-                sortKey={sortKey} onSort={setSortKey}
-                variant="worker"
-              />
-              <ServiceNavigationSections clients={snDisplayed} renderTable={renderClientTable} />
-            </>
-          )
         )}
 
         {/* Clients tab */}
@@ -543,6 +498,26 @@ export default function PathwaysWorkerDashboard() {
               />
 
               <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
+
+              {/* Service Navigation section — below DEA/WD with a visible divider */}
+              {isServiceNavigator && snOnlyDisplayed.length > 0 && (
+                <>
+                  <div className="flex items-center gap-3 my-5">
+                    <div className="flex-1 h-px bg-slate-300" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Service Navigation</span>
+                    <div className="flex-1 h-px bg-slate-300" />
+                  </div>
+                  <CollapsibleSection
+                    title="Service Navigation WD Clients"
+                    count={snOnlyDisplayed.length}
+                    accentColor="#0f766e"
+                    variant="main"
+                    defaultOpen
+                  >
+                    {renderClientTable(snOnlyDisplayed, 'wd', 'all')}
+                  </CollapsibleSection>
+                </>
+              )}
               </>
               ) : (
                 <PlacementSections clients={displayed} type={placementSubTab === "internal_training" ? "internal" : "work_exposure"} />
