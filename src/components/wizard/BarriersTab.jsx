@@ -14,7 +14,7 @@ const BARRIER_STATUS = [
   { value: 'resolved', label: 'Resolved' },
 ];
 
-const BARRIER_FIELDS = ['status', 'notes', 'action_steps', 'challenges', 'timeline_start', 'timeline_end', 'responsible', 'resources'];
+const BARRIER_FIELDS = ['status', 'notes', 'action_steps', 'challenges', 'timeline_start', 'timeline_end', 'responsible', 'resources', 'resolution_notes'];
 
 function buildLocal(client) {
   const obj = {};
@@ -29,6 +29,7 @@ function buildLocal(client) {
       timeline_end: client[`barrier_${n}_timeline_end`] || '',
       responsible: client[`barrier_${n}_responsible`] || '',
       resources: client[`barrier_${n}_resources`] || '',
+      resolution_notes: client[`barrier_${n}_resolution_notes`] || '',
     };
   }
   return obj;
@@ -76,6 +77,15 @@ export default function BarriersTab({ client, onSave, canEdit }) {
         };
       }
       data.roadmap_item_status = roadmapStatus;
+
+      // Require a brief resolution note for any barrier marked resolved
+      const missingResolution = [1, 2, 3].find(n =>
+        local[n].name && local[n].status === 'resolved' && !String(local[n].resolution_notes || '').trim()
+      );
+      if (missingResolution) {
+        toast.error(`Please briefly explain how Barrier ${missingResolution} was resolved before saving.`);
+        return;
+      }
 
       await onSave(data);
       toast.success('Barriers updated');
@@ -178,6 +188,21 @@ export default function BarriersTab({ client, onSave, canEdit }) {
                     <Label className="text-xs">Notes</Label>
                     <Textarea value={b.notes} onChange={e => setField(n, 'notes', e.target.value)} disabled={!canEdit} rows={2} className="mt-1" />
                   </div>
+                  {b.status === 'resolved' && (
+                    <div>
+                      <Label className="text-xs font-medium text-green-700">
+                        How was this barrier resolved? <span className="font-normal text-muted-foreground">(required — keep it brief)</span>
+                      </Label>
+                      <Textarea
+                        value={b.resolution_notes}
+                        onChange={e => setField(n, 'resolution_notes', e.target.value)}
+                        disabled={!canEdit}
+                        rows={2}
+                        className="mt-1"
+                        placeholder="Briefly describe how the barrier was resolved (1–2 sentences). This appears in the CRT comments column."
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

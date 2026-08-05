@@ -293,6 +293,26 @@ export function mapClientToCrtRow(client, monthEnd) {
     if (hours.includes('full') || hours.includes('ft')) employedFtPt = 'FT';
     else if (hours.includes('part') || hours.includes('pt')) employedFtPt = 'PT';
   }
+
+  // Column S (Comments) — combine intake notes with any barrier resolution notes
+  // recorded by the Service Navigator. Resolution notes are only included for
+  // barriers marked resolved, so they naturally appear once that barrier is
+  // resolved. If the client isn't on the CRT yet, the next sync that adds them
+  // will populate this composed comment from the stored client fields.
+  const resolutionParts = [];
+  for (let i = 1; i <= 3; i++) {
+    if (client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved') {
+      const note = String(client[`barrier_${i}_resolution_notes`] || '').trim();
+      if (note) resolutionParts.push(`Barrier ${i} resolved: ${note}`);
+    }
+  }
+  const commentsParts = [];
+  if (client.intake_notes && String(client.intake_notes).trim()) {
+    commentsParts.push(String(client.intake_notes).trim());
+  }
+  commentsParts.push(...resolutionParts);
+  const comments = commentsParts.join(' | ');
+
   return [
     fullName,                                          // A: Client Legal Name
     client.compass_hsid || '',                         // B: COMPASS HSID #
@@ -312,7 +332,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     day90DateForCrt,                                    // P: 90 Day Outcome Date
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
-    client.intake_notes || '',                         // S: Comments
+    comments,                                          // S: Comments
     isWd ? edaDateForCrt : '',                          // T: EDA Completion Date (WD only)
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N

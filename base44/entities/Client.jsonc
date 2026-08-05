@@ -308,6 +308,10 @@
     "barrier_1_resources": {
       "type": "string"
     },
+    "barrier_1_resolution_notes": {
+      "type": "string",
+      "description": "Brief note explaining how this barrier was resolved. Required when status is 'resolved'. Populates CRT column S (Comments)."
+    },
     "barrier_2": {
       "type": "string"
     },
@@ -345,6 +349,10 @@
     "barrier_2_resources": {
       "type": "string"
     },
+    "barrier_2_resolution_notes": {
+      "type": "string",
+      "description": "Brief note explaining how this barrier was resolved. Required when status is 'resolved'. Populates CRT column S (Comments)."
+    },
     "barrier_3": {
       "type": "string"
     },
@@ -381,6 +389,10 @@
     },
     "barrier_3_resources": {
       "type": "string"
+    },
+    "barrier_3_resolution_notes": {
+      "type": "string",
+      "description": "Brief note explaining how this barrier was resolved. Required when status is 'resolved'. Populates CRT column S (Comments)."
     },
     "exposure_course": {
       "type": "boolean"
