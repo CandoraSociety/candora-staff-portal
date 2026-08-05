@@ -100,6 +100,14 @@
     "notes": {
       "type": "string",
       "description": "General case notes"
+    },
+    "pathways_client_id": {
+      "type": "string",
+      "description": "Linked Pathways CM Client record ID \u2014 set when this RC client was auto-created/synced from the Pathways portal. Used to keep the link unique and re-sync personal details."
+    },
+    "pathways_program_info": {
+      "type": "string",
+      "description": "Auto-maintained summary of the client's Pathways enrollment (program, start date, anticipated completion, career counsellor, service navigator). Managed by the Pathways\u2192RC sync \u2014 do not edit manually."
     }
   },
   "required": [
