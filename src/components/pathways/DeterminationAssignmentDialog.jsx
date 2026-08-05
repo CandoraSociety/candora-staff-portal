@@ -4,7 +4,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Determination options → service_type mapping
 export const DETERMINATION_OPTIONS = [
@@ -21,6 +22,12 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
 
   const selectedOption = DETERMINATION_OPTIONS.find(o => o.key === determination);
   const needsCounsellor = determination === 'dea' || determination === 'wd';
+
+  // Service Navigation is only tracked for WD clients. If a service navigator has
+  // already been assigned (or SN supports flagged), block DEA selection and prompt
+  // the user to choose WD instead (or cancel/remove the navigator first).
+  const hasServiceNav = !!(client?.assigned_service_navigator || client?.service_navigation_supports);
+  const blockDea = hasServiceNav;
 
   const handleConfirm = () => {
     if (!selectedOption) return;
@@ -51,21 +58,46 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
                 {client?.first_name} {client?.last_name}
               </span>.
             </p>
+            {blockDea && (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-800">
+                  This client already has a Service Navigator assigned. Service Navigation is only
+                  tracked for <span className="font-semibold">WD</span> clients — DEA is not
+                  available. Choose WD, or cancel and remove the Service Navigator assignment first.
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-1 gap-2">
-              {DETERMINATION_OPTIONS.map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setDetermination(opt.key)}
-                  className={`text-left rounded-lg border px-4 py-3 transition-colors ${
-                    determination === opt.key
-                      ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="font-semibold text-slate-800 text-sm">{opt.label}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{opt.description}</div>
-                </button>
-              ))}
+              {DETERMINATION_OPTIONS.map(opt => {
+                const isBlocked = blockDea && opt.key === 'dea';
+                return (
+                  <button
+                    key={opt.key}
+                    disabled={isBlocked}
+                    onClick={() => {
+                      if (isBlocked) {
+                        toast.error('DEA is not available — this client has a Service Navigator assigned. Select WD instead.');
+                        return;
+                      }
+                      setDetermination(opt.key);
+                    }}
+                    className={`text-left rounded-lg border px-4 py-3 transition-colors ${
+                      isBlocked
+                        ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
+                        : determination === opt.key
+                          ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200'
+                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="font-semibold text-slate-800 text-sm flex items-center gap-1.5">
+                      {opt.label}
+                      {isBlocked && <span className="text-[10px] font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">WD only — SN assigned</span>}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">{opt.description}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

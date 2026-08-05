@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, CheckCircle2, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ClipboardCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
 import CentralDatabaseMatcher from '@/components/intake/CentralDatabaseMatcher';
@@ -281,14 +281,37 @@ export default function PathwaysAssessment() {
 
             {/* Barrier Removal Determination */}
             <div className="border-t border-slate-200 pt-4 space-y-3">
+              {client.service_type === 'direct_to_employment' && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-800">
+                    This client is determined as <span className="font-semibold">DEA</span>. Service
+                    Navigation is only tracked for WD clients — a Service Navigator cannot be
+                    assigned. Switch the client to WD first, or proceed without barrier-removal
+                    support.
+                  </p>
+                </div>
+              )}
               <div>
                 <Label className="mb-1 block text-sm font-medium text-slate-700">
                   Does this client need barriers addressed by a service navigator?
                 </Label>
-                <Select value={needsBarrierRemoval} onValueChange={v => { setNeedsBarrierRemoval(v); if (v !== 'yes') setSelectedNavigator(''); }}>
+                <Select
+                  value={needsBarrierRemoval}
+                  onValueChange={v => {
+                    if (v === 'yes' && client.service_type === 'direct_to_employment') {
+                      toast.error('Service Navigation is only available for WD clients. Switch the client to WD first.');
+                      return;
+                    }
+                    setNeedsBarrierRemoval(v);
+                    if (v !== 'yes') setSelectedNavigator('');
+                  }}
+                >
                   <SelectTrigger className="w-full max-w-xs"><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="yes">Yes — assign to a service navigator</SelectItem>
+                    <SelectItem value="yes" disabled={client.service_type === 'direct_to_employment'}>
+                      Yes — assign to a service navigator
+                    </SelectItem>
                     <SelectItem value="no">No — barriers do not require service navigator support</SelectItem>
                   </SelectContent>
                 </Select>
