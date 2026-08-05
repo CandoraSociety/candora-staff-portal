@@ -169,15 +169,9 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     clearedCount++;
   }
 
-  // Recalculate lastDataRow after cleanup so we don't write trailing empty rows
-  lastDataRow = CLIENT_DATA_START_ROW - 2;
-  for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
-    if (allValues[i] && allValues[i].some(v => v !== '' && v !== null && v !== undefined)) {
-      lastDataRow = i;
-      break;
-    }
-  }
-
+  // NOTE: Do NOT recalculate lastDataRow after cleanup. The write range must
+  // still cover cleared rows so their empty values are written back to the
+  // workbook — otherwise orphaned rows at the end persist with stale data.
   const endRow = lastDataRow + 1;
   const rangeAddress = `A${CLIENT_DATA_START_ROW}:Y${endRow}`;
   const valuesToWrite = allValues.slice(CLIENT_DATA_START_ROW - 1, endRow);
