@@ -500,7 +500,7 @@ export default function PathwaysWorkerDashboard() {
               <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
 
               {/* Service Navigation section — below DEA/WD with a visible divider */}
-              {isServiceNavigator && snOnlyDisplayed.length > 0 && (
+              {isServiceNavigator && (
                 <>
                   <div className="flex items-center gap-3 my-5">
                     <div className="flex-1 h-px bg-slate-300" />
@@ -514,7 +514,9 @@ export default function PathwaysWorkerDashboard() {
                     variant="main"
                     defaultOpen
                   >
-                    {renderClientTable(snOnlyDisplayed, 'wd', 'all')}
+                    {snOnlyDisplayed.length > 0
+                      ? renderClientTable(snOnlyDisplayed, 'wd', 'all')
+                      : <p className="text-sm text-slate-400 italic px-4 py-3">No clients assigned to you as Service Navigator.</p>}
                   </CollapsibleSection>
                 </>
               )}
