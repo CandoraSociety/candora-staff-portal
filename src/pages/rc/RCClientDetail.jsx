@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -92,6 +92,12 @@ export default function RCClientDetail() {
             {client.address && <p className="text-muted-foreground flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {client.city || ''}</p>}
             {client.date_of_birth && <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(client.date_of_birth).toLocaleDateString()}</p>}
           </div>
+          {client.pathways_program_info && (
+            <div className="mt-3 p-3 rounded-lg bg-violet-50 border border-violet-200">
+              <p className="text-sm font-medium text-violet-900 flex items-center gap-1.5"><Route className="h-4 w-4" /> Pathways Program</p>
+              <p className="text-xs text-violet-700 mt-0.5">{client.pathways_program_info}</p>
+            </div>
+          )}
           {phac && (
             <div className="mt-3 p-3 rounded-lg bg-sky-50 border border-sky-200">
               <p className="text-sm font-medium text-sky-900 flex items-center gap-1.5"><Baby className="h-4 w-4" /> PHAC Caregiver Capacity</p>
