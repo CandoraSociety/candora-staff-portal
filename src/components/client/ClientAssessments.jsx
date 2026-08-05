@@ -17,10 +17,16 @@ export default function ClientAssessments({ client, onSave }) {
   const [savingERA, setSavingERA] = useState(false);
 
   useEffect(() => {
-    base44.entities.PathwaysStaff.filter({ role: 'service_navigator', is_active: true }, 'name')
+    // Include staff whose primary, secondary, or tertiary role is service navigator
+    base44.entities.PathwaysStaff.filter({ is_active: true }, 'name')
       .then(staff => {
-        setNavigatorStaff(staff);
-        setSelectedNavigator(staff.find(s => s.email === client.assigned_service_navigator)?.id || '');
+        const navigators = staff.filter(s =>
+          s.role === 'service_navigator' ||
+          s.secondary_role === 'service_navigator' ||
+          s.tertiary_role === 'service_navigator'
+        );
+        setNavigatorStaff(navigators);
+        setSelectedNavigator(navigators.find(s => s.email === client.assigned_service_navigator)?.id || '');
       })
       .catch(() => {});
   }, [client.assigned_service_navigator]);

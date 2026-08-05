@@ -19,7 +19,27 @@
         "manager"
       ],
       "default": "career_counsellor",
-      "description": "Pathways portal role"
+      "description": "Primary Pathways portal role"
+    },
+    "secondary_role": {
+      "type": "string",
+      "enum": [
+        "career_counsellor",
+        "service_navigator",
+        "admin",
+        "manager"
+      ],
+      "description": "Optional secondary Pathways portal role (blank if none). Lets a staff member appear in assignment dropdowns for this role in addition to their primary role."
+    },
+    "tertiary_role": {
+      "type": "string",
+      "enum": [
+        "career_counsellor",
+        "service_navigator",
+        "admin",
+        "manager"
+      ],
+      "description": "Optional tertiary Pathways portal role (blank if none). Lets a staff member appear in assignment dropdowns for this role in addition to their primary and secondary roles."
     },
     "is_active": {
       "type": "boolean",

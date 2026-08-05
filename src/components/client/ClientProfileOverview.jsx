@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,14 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Pencil, Save, X, ShieldCheck, AlertTriangle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-
-const WORKERS = [
-  { email: 'priscilla@candorasociety.com', full_name: 'Priscilla' },
-  { email: 'lola@candorasociety.com',      full_name: 'Lola' },
-  { email: 'john@candorasociety.com',      full_name: 'John' },
-  { email: 'Dawn.williston@candorasociety.com', full_name: 'Dawn' },
-  { email: 'olena@candorasociety.com',     full_name: 'Olena' },
-];
+import { base44 } from '@/api/base44Client';
 
 const RESIDENCY_STATUSES = [
   { value: 'canadian_citizen',   label: 'Canadian Citizen' },
@@ -95,8 +88,37 @@ export default function ClientProfileOverview({ client, onSave }) {
   const [form, setForm] = useState({ ...client });
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [workers, setWorkers] = useState([]);
+
+  // Load career counsellors from PathwaysStaff (primary, secondary, or tertiary
+  // role). Preserve a currently-assigned worker even if not in PathwaysStaff.
+  useEffect(() => {
+    base44.entities.PathwaysStaff.filter({ is_active: true }, 'name')
+      .then(staff => {
+        const counsellors = staff
+          .filter(s =>
+            s.role === 'career_counsellor' ||
+            s.secondary_role === 'career_counsellor' ||
+            s.tertiary_role === 'career_counsellor'
+          )
+          .map(s => ({ email: s.email, full_name: s.name }));
+        setWorkers(counsellors);
+      })
+      .catch(() => {});
+  }, []);
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  // Preserve a currently-assigned worker in the dropdown even if they aren't in
+  // the PathwaysStaff list (e.g. legacy assignments).
+  const workerOptions = (() => {
+    const list = [...workers];
+    const assignedEmail = (client.assigned_worker || '').toLowerCase();
+    if (assignedEmail && !list.some(w => w.email.toLowerCase() === assignedEmail)) {
+      list.push({ email: client.assigned_worker, full_name: client.assigned_worker_name || client.assigned_worker });
+    }
+    return list;
+  })();
 
   const handleCancel = () => {
     setForm({ ...client });
@@ -229,11 +251,11 @@ export default function ClientProfileOverview({ client, onSave }) {
               <div>
                 <Label>Assigned Worker</Label>
                 <Select value={form.assigned_worker || ''} onValueChange={v => {
-                  const w = WORKERS.find(w => w.email === v);
+                  const w = workerOptions.find(w => w.email === v);
                   setForm(prev => ({ ...prev, assigned_worker: v, assigned_worker_name: w?.full_name || '' }));
                 }}>
                   <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>{WORKERS.map(w => <SelectItem key={w.email} value={w.email}>{w.full_name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{workerOptions.map(w => <SelectItem key={w.email} value={w.email}>{w.full_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>

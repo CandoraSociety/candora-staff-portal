@@ -33,13 +33,19 @@ export default function PathwaysAssessment() {
     const load = async () => {
       const [c, staff] = await Promise.all([
         base44.entities.Client.get(id),
-        base44.entities.PathwaysStaff.filter({ role: 'service_navigator', is_active: true }, 'name'),
+        base44.entities.PathwaysStaff.filter({ is_active: true }, 'name'),
       ]);
+      // Include staff whose primary, secondary, or tertiary role is service navigator
+      const navigators = staff.filter(s =>
+        s.role === 'service_navigator' ||
+        s.secondary_role === 'service_navigator' ||
+        s.tertiary_role === 'service_navigator'
+      );
       setClient(c);
       setAssessmentNotes(c.intake_notes || '');
-      setNavigatorStaff(staff);
+      setNavigatorStaff(navigators);
       setNeedsBarrierRemoval(c.assigned_service_navigator ? 'yes' : '');
-      setSelectedNavigator(staff.find(s => s.email === c.assigned_service_navigator)?.id || '');
+      setSelectedNavigator(navigators.find(s => s.email === c.assigned_service_navigator)?.id || '');
       setEraCompassCompleted(!!c.era_compass_completed);
       setLoading(false);
     };
