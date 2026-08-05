@@ -8,6 +8,7 @@ import ClientListControls, { applyFiltersAndSort } from "@/components/lists/Clie
 import { clientRowColor } from "@/lib/clientRowColor";
 import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
+import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
 import { Switch } from "@/components/ui/switch";
@@ -112,6 +113,10 @@ export default function PathwaysMasterList() {
 
   const internalTrainingClients = activeClients.filter(c => c.internal_placement && c.internal_placement !== "none");
   const workExposureClients = activeClients.filter(c => c.exposure_course || c.paid_external_placement);
+  // Service Navigation WD clients — a cross-cutting view of clients that have an assigned
+  // Service Navigator. These are already included in the DEA/WD counts above (they also have
+  // an assigned Career Counsellor), so they do NOT add to the totals.
+  const snClients = displayed.filter(c => (c.assigned_service_navigator || c.assigned_service_navigator_name) && c.service_type === 'pathways');
 
   const renderClientTable = (rows, program, subSection) => (
     <ClientSubSectionTable
@@ -245,6 +250,16 @@ export default function PathwaysMasterList() {
               workers={workers}
             />
             <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} alwaysShowExtras />
+            {snClients.length > 0 && (
+              <>
+                <div className="flex items-center gap-3 my-5">
+                  <div className="flex-1 h-px bg-slate-300" />
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Service Navigation</span>
+                  <div className="flex-1 h-px bg-slate-300" />
+                </div>
+                <ServiceNavigationSections clients={snClients} renderTable={renderClientTable} />
+              </>
+            )}
           </>
         )}
       </div>
