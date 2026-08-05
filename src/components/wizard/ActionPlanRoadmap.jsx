@@ -91,13 +91,15 @@ function buildItems(client, internalTrainings = [], workExposures = []) {
     if (client?.[`barrier_${n}`]) {
       const tl_start = client[`barrier_${n}_timeline_start`];
       const tl_end   = client[`barrier_${n}_timeline_end`];
+      const bStatus = client[`barrier_${n}_status`];
       items.push({
         key: `barrier_${n}`,
         label: `Barrier: ${client[`barrier_${n}`]}`,
         color: '#f59e0b',
         isBarrier: true,
+        needsFollowupResolution: !!client?.eda_completion_date && bStatus !== 'resolved',
         detail: {
-          status: client[`barrier_${n}_status`],
+          status: bStatus,
           action_steps: client[`barrier_${n}_action_steps`],
           notes: client[`barrier_${n}_notes`],
           timeline_start: tl_start,
@@ -750,13 +752,22 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                   <div className="text-[10px] font-semibold mb-0.5 text-slate-600">{format(day, 'd')}</div>
                   {dayItems.slice(0, 3).map(item => {
                     const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
+                    const needsRes = item.needsFollowupResolution;
                     return (
-                      <div
-                        key={item.key}
-                        className="text-[9px] px-1 py-px rounded truncate mb-px"
-                        style={{ backgroundColor: item.color + '33', borderLeft: `2px solid ${cfg.ring}`, color: item.color }}
-                      >
-                        {item.label}
+                      <div key={item.key}>
+                        <div
+                          className={`text-[9px] px-1 py-px rounded truncate mb-px ${needsRes ? 'animate-pulse' : ''}`}
+                          style={{
+                            backgroundColor: needsRes ? '#fee2e2' : item.color + '33',
+                            borderLeft: `2px solid ${needsRes ? '#dc2626' : cfg.ring}`,
+                            color: needsRes ? '#dc2626' : item.color,
+                          }}
+                        >
+                          {item.label}
+                        </div>
+                        {needsRes && (
+                          <div className="text-[8px] text-red-600 leading-tight mb-px">Resolve before 90-day follow-up</div>
+                        )}
                       </div>
                     );
                   })}
@@ -820,16 +831,25 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
     <>
       <div className="relative h-8 flex items-center mb-1 group">
         <div
-          className="absolute w-40 pr-2 text-[11px] text-right truncate cursor-pointer"
+          className="absolute w-40 pr-2 text-[11px] text-right cursor-pointer"
           style={{
             left: -160,
-            color: labelColor,
             textDecoration: isCancelled ? 'line-through' : 'none',
           }}
           onClick={() => setOpenItem(isOpen ? null : item.key)}
           title={item.label}
         >
-          {item.label}
+          <span
+            className={`block truncate ${item.needsFollowupResolution ? 'text-red-600 animate-pulse' : ''}`}
+            style={{ color: item.needsFollowupResolution ? undefined : labelColor }}
+          >
+            {item.label}
+          </span>
+          {item.needsFollowupResolution && (
+            <span className="block text-[9px] text-red-600 leading-tight text-right">
+              Barrier needs to be resolved before 90 Day follow Up
+            </span>
+          )}
         </div>
         <div
           className="w-full h-6 rounded-md relative cursor-pointer"
@@ -918,9 +938,21 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
         style={{ borderColor: cfg.ring }}
         onClick={() => setOpenItem(isOpen ? null : item.key)}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon className="w-4 h-4 shrink-0" style={{ color: cfg.ring }} />
-          <span className="truncate font-medium" style={{ color: item.color }}>{item.label}</span>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Icon className="w-4 h-4 shrink-0" style={{ color: cfg.ring }} />
+            <span
+              className={`truncate font-medium ${item.needsFollowupResolution ? 'text-red-600 animate-pulse' : ''}`}
+              style={{ color: item.needsFollowupResolution ? undefined : item.color }}
+            >
+              {item.label}
+            </span>
+          </div>
+          {item.needsFollowupResolution && (
+            <span className="text-[10px] text-red-600 leading-tight pl-6">
+              Barrier needs to be resolved before 90 Day follow Up
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {startedDate && !completedDate && <span className="text-xs text-muted-foreground">Started: {startedDate}</span>}
