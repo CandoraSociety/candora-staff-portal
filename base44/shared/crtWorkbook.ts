@@ -7,13 +7,26 @@ export const FINANCE_FOLDER = '_VAULT_Finance';
 export const MASTER_TEMPLATE_NAME = 'CRT_Master_Template.xlsx';
 export const CLIENT_DATA_SHEET = 'Client Data';
 
-// Appends a query parameter to a SharePoint Excel embed URL so the embedded
-// workbook opens on the "Client Data" sheet by default (instead of whichever
-// sheet was last active when the file was saved).
-export function applyDefaultSheet(embedUrl: string | null): string | null {
-  if (!embedUrl) return embedUrl;
+// Builds an embed URL that opens the workbook on the "Client Data" sheet by
+// default. The Graph /preview endpoint returns an embed.aspx URL that ignores
+// wdActiveCell, so we construct a WopiFrame.aspx URL from the file's webUrl
+// instead (requires the viewer to be authenticated to SharePoint — Candora
+// staff are). Falls back to the preview embed URL if webUrl is unavailable.
+export function buildCrtEmbedUrl(webUrl: string | null, embedUrl: string | null): string | null {
+  if (webUrl) {
+    try {
+      const url = new URL(webUrl);
+      const sitePath = url.pathname.split('/_layouts')[0];
+      const sourcedoc = url.searchParams.get('sourcedoc');
+      if (sitePath && sourcedoc) {
+        const cellRef = `'${CLIENT_DATA_SHEET}'!A1`;
+        return `${url.origin}${sitePath}/_layouts/15/WopiFrame.aspx?sourcedoc=${encodeURIComponent(sourcedoc)}&action=embedview&wdActiveCell=${encodeURIComponent(cellRef)}`;
+      }
+    } catch { /* fall through to embedUrl */ }
+  }
+  if (!embedUrl) return null;
   const sep = embedUrl.includes('?') ? '&' : '?';
-  return `${embedUrl}${sep}wdActiveCell=${encodeURIComponent(CLIENT_DATA_SHEET)}!A1`;
+  return `${embedUrl}${sep}wdActiveCell=${encodeURIComponent("'" + CLIENT_DATA_SHEET + "'!A1")}`;
 }
 
 // Month names in calendar order — used to sort CRT_<Month>_<Year> files chronologically

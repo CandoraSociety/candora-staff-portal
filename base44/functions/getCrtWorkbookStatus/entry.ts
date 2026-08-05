@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW,
-  getGraphToken, getActiveCrtWorkbook, listCrtFiles, applyDefaultSheet
+  getGraphToken, getActiveCrtWorkbook, listCrtFiles, buildCrtEmbedUrl
 } from '../../shared/crtWorkbook.ts';
 
 export default async function(req: Request): Promise<Response> {
@@ -34,7 +34,7 @@ export default async function(req: Request): Promise<Response> {
       );
       if (previewRes.ok) {
         const previewData = await previewRes.json();
-        embedUrl = applyDefaultSheet(previewData.getUrl || null);
+        embedUrl = buildCrtEmbedUrl(activeWorkbook.webUrl, previewData.getUrl || null);
       }
     } catch (e) { /* preview is optional */ }
 
