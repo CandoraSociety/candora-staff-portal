@@ -13,6 +13,7 @@ import PlacementSections from "@/components/pathways/PlacementSections";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
+import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways/RecentlyViewedClients";
 
 const EMPTY_FILTERS = {
   service_type: [], program_status: [], employment_status: [],
@@ -173,7 +174,7 @@ export default function PathwaysWorkerDashboard() {
       rows={rows}
       program={program}
       subSection={subSection}
-      onRowClick={(c) => navigate(`/pathways/client/${c.id}`)}
+      onRowClick={(c) => { recordRecentClient(c); navigate(`/pathways/client/${c.id}`); }}
       onSwitchClient={setSwitchClient}
     />
   );
@@ -214,6 +215,9 @@ export default function PathwaysWorkerDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Recently viewed clients */}
+        <RecentlyViewedClients />
+
         {/* Pending Client Transfers */}
         {transfers.length > 0 && (
           <div className="mb-5 border border-blue-300 bg-blue-50 rounded-xl p-4">
