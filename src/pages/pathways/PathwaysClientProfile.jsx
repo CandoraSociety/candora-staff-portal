@@ -44,8 +44,10 @@ export default function PathwaysClientProfile() {
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [closingSaving, setClosingSaving] = useState(false);
   const [showProgramDetermination, setShowProgramDetermination] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
     base44.entities.Client.list().then(clients => {
       const found = clients.find(c => c.id === id);
       setClient(found || null);
@@ -120,6 +122,10 @@ export default function PathwaysClientProfile() {
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
   if (!client) return <div className="p-8 text-center">Client not found</div>;
+
+  const userEmail = currentUser?.email;
+  const isAssignedSN = !!userEmail && !!client.assigned_service_navigator && userEmail === client.assigned_service_navigator;
+  const isSNOnly = isAssignedSN && (!client.assigned_worker || userEmail !== client.assigned_worker);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -242,6 +248,8 @@ export default function PathwaysClientProfile() {
               onSave={handleSave}
               onClientUpdate={(updates) => setClient(prev => ({ ...prev, ...updates }))}
               onRequireProgramPath={() => setShowProgramDetermination(true)}
+              isSNOnly={isSNOnly}
+              isAssignedSN={isAssignedSN}
             />
           </TabsContent>
 

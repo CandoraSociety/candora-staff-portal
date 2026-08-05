@@ -195,7 +195,7 @@ const ANIM_STYLES = `
 }
 `;
 
-export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, otherDesc, onClientUpdate }) {
+export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, otherDesc, onClientUpdate, barrierOnly }) {
   const [view, setView]             = useState('timeline');
   const [openItem, setOpenItem]     = useState(null);
   const [openBITReview, setOpenBITReview] = useState(null);
@@ -216,6 +216,8 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const items = useMemo(() => buildItems(client, internalTrainings, workExposures), [client, internalTrainings, workExposures]);
   const nonBarrier = items.filter(i => !i.isBarrier);
   const barriers   = items.filter(i => i.isBarrier);
+  const renderNonBarrier = barrierOnly ? [] : nonBarrier;
+  const renderItems = barrierOnly ? barriers : items;
 
   // ── Timeline math ──────────────────────────────────────────────────────────
   const intakeDate      = parseDate(client?.intake_date);
@@ -299,7 +301,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const bitCheckins    = client?.bit_review_checkins || [];
 
   // ── Items missing dates ────────────────────────────────────────────────────
-  const missingDates = items.filter(i => {
+  const missingDates = (barrierOnly ? barriers : items).filter(i => {
     const hasDates = i.detail?.timeline_start || i.detail?.timeline_end || i.statusData?.timeline_start || i.statusData?.started_date;
     return !hasDates && i.status !== 'cancelled';
   });
@@ -473,7 +475,16 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
   // ── Empty state ─────────────────────────────────────────────────────────────
   const hasItems = items.length > 0;
-  if (!client?.action_plan_submitted || !hasItems) {
+  if (barrierOnly) {
+    if (barriers.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
+          <Map className="w-10 h-10 opacity-30" />
+          <p className="text-sm">No barriers have been identified for this client yet.</p>
+        </div>
+      );
+    }
+  } else if (!client?.action_plan_submitted || !hasItems) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
         <Map className="w-10 h-10 opacity-30" />
@@ -500,18 +511,20 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
         </Tabs>
-        <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
+        {!barrierOnly && <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />}
       </div>
 
       {/* Editable program start date — visible in all views */}
-      <div className="flex items-center gap-2 text-xs">
-        <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
-        <span className="text-slate-500">Program Start:</span>
-        <ServiceStartDateEditor client={client} onClientUpdate={onClientUpdate} />
-        {client?.service_start_date && (
-          <span className="text-slate-400 text-[10px]">(click to edit — adjusts anticipated dates)</span>
-        )}
-      </div>
+      {!barrierOnly && (
+        <div className="flex items-center gap-2 text-xs">
+          <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="text-slate-500">Program Start:</span>
+          <ServiceStartDateEditor client={client} onClientUpdate={onClientUpdate} />
+          {client?.service_start_date && (
+            <span className="text-slate-400 text-[10px]">(click to edit — adjusts anticipated dates)</span>
+          )}
+        </div>
+      )}
 
       {/* ── TIMELINE VIEW ─────────────────────────────────────────────────── */}
       {view === 'timeline' && (
@@ -573,10 +586,10 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                 )}
 
                 {/* Action plan items */}
-                {nonBarrier.length > 0 && (
+                {renderNonBarrier.length > 0 && (
                   <div className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 -ml-40 pl-1">ACTION PLAN ITEMS</div>
                 )}
-                {nonBarrier.map(item => (
+                {renderNonBarrier.map(item => (
                   <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
                 ))}
 
@@ -673,10 +686,10 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       {/* ── LIST VIEW ─────────────────────────────────────────────────────── */}
       {view === 'list' && (
         <div className="space-y-2">
-          {nonBarrier.length > 0 && (
+          {renderNonBarrier.length > 0 && (
             <div className="text-xs font-bold text-slate-500 tracking-widest mb-1">ACTION PLAN ITEMS</div>
           )}
-          {nonBarrier.map(item => (
+          {renderNonBarrier.map(item => (
             <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
           ))}
           {barriers.length > 0 && (
@@ -737,7 +750,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
             ))}
             {eachDayOfInterval({ start: startOfMonth(new Date()), end: endOfMonth(new Date()) }).map(day => {
               const isToday = isSameDay(day, new Date());
-              const dayItems = items.filter(item => {
+              const dayItems = renderItems.filter(item => {
                 const s = parseDate(item.statusData?.started_date);
                 const e = parseDate(item.statusData?.completed_date);
                 const deadline = parseDate(item.detail?.timeline_end);
@@ -789,7 +802,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       )}
 
       {/* Update Program/Activities Status menu */}
-      <UpdateProgramStatusMenu client={client} onClientUpdate={onClientUpdate} />
+      {!barrierOnly && <UpdateProgramStatusMenu client={client} onClientUpdate={onClientUpdate} />}
 
       {/* Progress notes */}
       <RoadmapProgressNotes

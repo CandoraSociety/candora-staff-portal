@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Map, ChevronDown, Briefcase, CalendarCheck, FileText, Plus, DollarSign, AlertTriangle, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
@@ -14,8 +14,10 @@ import ProgramStatusPanel from './ProgramStatusPanel';
 import EDAStep from './EDAStep';
 import InternalPlacementStep from './InternalPlacementStep';
 import ExposuresSupportsStep from './ExposuresSupportsStep';
+import BarriersTab from './BarriersTab';
 
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
+const BARRIERS_STEP = { key: 'barriers', label: 'Barriers', short: 'Barriers', icon: Shield };
 
 const ITEM_LABELS = {
   job_search_workshop: 'Job Search Workshop',
@@ -93,8 +95,8 @@ function getStepStatus(key, client) {
   }
 }
 
-export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate, onRequireProgramPath }) {
-  const [activeStep, setActiveStep] = useState(client?.action_plan_submitted ? 'roadmap' : null);
+export default function ProgramFlowWizard({ client, onSave, onComplete, onClientUpdate, onRequireProgramPath, isSNOnly, isAssignedSN }) {
+  const [activeStep, setActiveStep] = useState(isSNOnly ? 'barriers' : (client?.action_plan_submitted ? 'roadmap' : null));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [actionPlanExpanded, setActionPlanExpanded] = useState(true);
   const [placementFlags, setPlacementFlags] = useState({ internalNeedsInfo: false, workExposureNeedsInfo: false });
@@ -166,18 +168,25 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
 
   // DEA: Action Plan → Supports → (complete) 90-Day Follow-Up → Progress
   // WD:  Action Plan → Supports → Employment Search → (employed) 90-Day Follow-Up → Progress
-  const steps = isDEA ? [
+  let steps = isDEA ? [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
+    BARRIERS_STEP,
     { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
     ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ] : [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
+    BARRIERS_STEP,
     { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
+
+  // Service Navigators (only the SN, not also the career counsellor) get a restricted view
+  if (isSNOnly) {
+    steps = steps.filter(s => s.key === 'barriers' || s.key === 'roadmap');
+  }
 
   const edaSubItems = getEDASubItems(client).map(sub => {
     if (sub.key === 'internal_placements') return { ...sub, needsInfo: placementFlags.internalNeedsInfo };
@@ -219,6 +228,8 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     switch (key) {
       case 'employment_action_plan':
         return <EmploymentActionPlan client={client} onSave={onSave} onComplete={goNext} onClientUpdate={onClientUpdate} />;
+      case 'barriers':
+        return <BarriersTab client={client} onSave={onSave} canEdit={!!isAssignedSN} />;
       case 'employment_supports':
         return <EmploymentSupportsStep client={client} onSave={onSave} onComplete={goNext} />;
       case 'employment_search':
@@ -233,6 +244,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
             itemDetails={client?.sdp_item_details || {}}
             otherDesc={client?.sdp_other_desc}
             onClientUpdate={onClientUpdate || onSave}
+            barrierOnly={!!isSNOnly}
           />
         );
       default:
@@ -256,7 +268,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           {steps.map((step, idx) => {
             const status = getStepStatus(step.key, client);
             const isActive = activeStep === step.key || (step.key === 'employment_action_plan' && activeStep?.startsWith('eda:'));
-            const isLocked = !flowUnlocked && !hasActionPlan && step.key !== 'employment_action_plan' && step.key !== 'employment_supports';
+            const isLocked = !isSNOnly && !flowUnlocked && !hasActionPlan && step.key !== 'employment_action_plan' && step.key !== 'employment_supports' && step.key !== 'barriers';
             const isFollowup = step.key === 'followup_90day';
             const StepIcon = step.icon;
             const isActionPlan = step.key === 'employment_action_plan';
@@ -359,9 +371,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           })}
 
           {/* Program Status Controls */}
-          <div className="pt-4 border-t border-slate-200 mt-2">
-            <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
-          </div>
+          {!isSNOnly && (
+            <div className="pt-4 border-t border-slate-200 mt-2">
+              <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
+            </div>
+          )}
         </div>
       </aside>
 
@@ -376,7 +390,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         </button>
         {mobileOpen && (
           <div className="border rounded-lg mt-1 bg-white shadow divide-y">
-            {steps.filter(s => flowUnlocked || hasActionPlan || s.key === 'employment_action_plan' || s.key === 'employment_supports').map((step) => {
+            {steps.filter(s => isSNOnly || flowUnlocked || hasActionPlan || s.key === 'employment_action_plan' || s.key === 'employment_supports' || s.key === 'barriers').map((step) => {
               const status = getStepStatus(step.key, client);
               const subItems = step.key === 'employment_action_plan' ? edaSubItems : [];
               return (
@@ -412,9 +426,11 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
             })}
           </div>
         )}
-        <div className="mt-3 p-3 border rounded-lg bg-white">
-          <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
-        </div>
+        {!isSNOnly && (
+          <div className="mt-3 p-3 border rounded-lg bg-white">
+            <ProgramStatusPanel client={client} onClientUpdate={onClientUpdate} />
+          </div>
+        )}
       </div>
 
       {/* Main content */}
