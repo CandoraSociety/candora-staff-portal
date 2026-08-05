@@ -262,15 +262,18 @@ export function mapClientToCrtRow(client, monthEnd) {
   // Wage Subsidy Accessed Y/N — set when a work exposure placement was completed
   const wageSubsidy = client.wage_subsidy_accessed ? 'Yes' : 'No';
 
-  // Service Navigation Support Y/N — WD only. Blank for DEA clients (not applicable).
-  // Y when the WD client has entered the follow-up period with >= 2 resolved barriers.
+  // Service Navigation Support Y/N — WD: Y when the client has entered the
+  // follow-up period with >= 2 resolved barriers, else N. DEA: 'N' while the
+  // client is in the 90-day follow-up period (EDAs complete, no outcome yet),
+  // blank otherwise.
   const resolvedBarriers = [1, 2, 3].filter(
     (i) => client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved'
   ).length;
   const reachedFollowup = !!client.employment_start_date && gate(client.employment_start_date);
+  const inDeaFollowup = isDea && followupTriggered && !client.followup_90day_status;
   const serviceNav = isWd
     ? ((reachedFollowup && resolvedBarriers >= 2) ? 'Yes' : 'No')
-    : '';
+    : (inDeaFollowup ? 'N' : '');
 
   // Service Navigation Support Billing Month — WD only. Blank for DEA clients.
   // When Service Nav Support is Y and the 90-day outcome is E-RF, E-UF, or SE,
