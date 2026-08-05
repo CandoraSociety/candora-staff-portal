@@ -55,6 +55,28 @@ export default function BarriersTab({ client, onSave, canEdit }) {
       for (let n = 1; n <= 3; n++) {
         BARRIER_FIELDS.forEach(f => { data[`barrier_${n}_${f}`] = local[n][f]; });
       }
+
+      // Keep the Progress roadmap (roadmap_item_status) in sync with barrier changes
+      // so the roadmap circles/states reflect updates made here.
+      const roadmapStatus = { ...(client?.roadmap_item_status || {}) };
+      const STATUS_MAP = { resolved: 'completed', in_progress: 'started', unresolved: 'planned' };
+      const today = new Date().toISOString().split('T')[0];
+      for (let n = 1; n <= 3; n++) {
+        const b = local[n];
+        if (!b.name) continue;
+        const key = `barrier_${n}`;
+        const prev = roadmapStatus[key] || {};
+        const newRoadStatus = STATUS_MAP[b.status] || 'planned';
+        roadmapStatus[key] = {
+          ...prev,
+          status: newRoadStatus,
+          timeline_start: b.timeline_start || prev.timeline_start,
+          timeline_end: b.timeline_end || prev.timeline_end,
+          completed_date: b.status === 'resolved' ? (prev.completed_date || today) : undefined,
+        };
+      }
+      data.roadmap_item_status = roadmapStatus;
+
       await onSave(data);
       toast.success('Barriers updated');
     } catch (e) {
