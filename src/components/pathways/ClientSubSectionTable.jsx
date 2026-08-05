@@ -98,9 +98,10 @@ export default function ClientSubSectionTable({
   onReassign,
   showClosedColumns = false,
   showTransitionBadge = false,
+  showServiceNavigator = false,
 }) {
   const columns = getSubSectionColumns(program, subSection);
-  const totalCols = columns.length + (showCounsellor ? 1 : 0) + (showClosedColumns ? 2 : 0);
+  const totalCols = columns.length + (showServiceNavigator ? 1 : 0) + (showCounsellor ? 1 : 0) + (showClosedColumns ? 2 : 0);
 
   const renderCell = (c, colKey) => {
     switch (colKey) {
@@ -224,6 +225,7 @@ export default function ClientSubSectionTable({
               {columns.map(col => (
                 <th key={col} className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">{getColLabel(col, subSection)}</th>
               ))}
+              {showServiceNavigator && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Service Navigator</th>}
               {showCounsellor && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Career Counsellor</th>}
               {showClosedColumns && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Close Reason</th>}
               {showClosedColumns && <th className="text-left px-3 py-3 font-semibold text-white whitespace-nowrap">Closed Date</th>}
@@ -237,6 +239,11 @@ export default function ClientSubSectionTable({
                 className={`group transition-colors cursor-pointer hover:brightness-95 ${clientRowColor(c)}`}
               >
                 {columns.map(col => renderCell(c, col))}
+                {showServiceNavigator && (
+                  <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                    {c.assigned_service_navigator_name || "—"}
+                  </td>
+                )}
                 {showCounsellor && (
                   <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">

@@ -130,6 +130,21 @@ export default function PathwaysMasterList() {
     />
   );
 
+  // Dedicated renderer for the Service Navigation section — adds a Service Navigator
+  // column (before Career Counsellor) showing each client's assigned Service Navigator.
+  const renderSnTable = (rows, program, subSection) => (
+    <ClientSubSectionTable
+      rows={rows}
+      program={program}
+      subSection={subSection}
+      onRowClick={(c) => navigate(`/pathways/client/${c.id}`)}
+      onSwitchClient={setSwitchClient}
+      showCounsellor={program !== 'casual' && program !== 'rejected'}
+      showServiceNavigator
+      onReassign={setReassignClient}
+    />
+  );
+
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -257,7 +272,7 @@ export default function PathwaysMasterList() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Service Navigation</span>
                   <div className="flex-1 h-px bg-slate-300" />
                 </div>
-                <ServiceNavigationSections clients={snClients} renderTable={renderClientTable} />
+                <ServiceNavigationSections clients={snClients} renderTable={renderSnTable} />
               </>
             )}
           </>
