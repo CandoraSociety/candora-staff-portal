@@ -9,6 +9,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from '@/components/ui/alert-dialog';
 import { Lock, Unlock, AlertTriangle, Bell } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import Celebration from '@/components/Celebration';
 
 const STATUS_OPTS = [
@@ -24,6 +25,11 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
   const [status,        setStatus]        = useState(currentStatus || 'planned');
   const [startDate,     setStartDate]     = useState(existing.timeline_start || item.detail?.timeline_start || '');
   const [endDate,       setEndDate]       = useState(existing.timeline_end   || item.detail?.timeline_end   || '');
+  const [singleDay,     setSingleDay]     = useState(() => {
+    const s = existing.timeline_start || item.detail?.timeline_start || '';
+    const e = existing.timeline_end   || item.detail?.timeline_end   || '';
+    return !!(s && e && s === e);
+  });
   const [notes,         setNotes]         = useState(existing.case_manager_notes || '');
   const [startedDate,   setStartedDate]   = useState(existing.started_date   || '');
   const [completedDate, setCompletedDate] = useState(existing.completed_date || new Date().toISOString().split('T')[0]);
@@ -106,12 +112,26 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
           <div>
             <Label className="text-xs font-semibold">Planned Start</Label>
             <Input type="date" value={startDate} min={!unlockRange ? minDate : undefined} max={!unlockRange ? maxDate : undefined}
-              onChange={e => setStartDate(e.target.value)} className="mt-1" />
+              onChange={e => {
+                setStartDate(e.target.value);
+                if (singleDay) setEndDate(e.target.value);
+              }} className="mt-1" />
+            <label className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+              <Checkbox checked={singleDay} onCheckedChange={(v) => {
+                setSingleDay(v);
+                if (v && startDate) setEndDate(startDate);
+              }} />
+              Single day
+            </label>
           </div>
           <div>
             <Label className="text-xs font-semibold">Planned End</Label>
-            <Input type="date" value={endDate} min={!unlockRange ? minDate : undefined} max={!unlockRange ? maxDate : undefined}
-              onChange={e => setEndDate(e.target.value)} className="mt-1" />
+            <Input type="date" value={endDate} min={startDate || (!unlockRange ? minDate : undefined)} max={!unlockRange ? maxDate : undefined}
+              disabled={singleDay}
+              onChange={e => {
+                const v = e.target.value;
+                if (startDate && v && v < startDate) { setEndDate(startDate); } else { setEndDate(v); }
+              }} className="mt-1" />
           </div>
         </div>
 

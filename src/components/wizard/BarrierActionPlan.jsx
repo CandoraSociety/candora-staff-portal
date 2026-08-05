@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, Plus, X, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 function loadPlans(client) {
@@ -15,12 +16,15 @@ function loadPlans(client) {
     const stepsArr = typeof stepsRaw === 'string'
       ? stepsRaw.split('\n').map(s => s.trim()).filter(Boolean)
       : Array.isArray(stepsRaw) ? stepsRaw : [];
+    const tlStart = client[`barrier_${n}_timeline_start`] || '';
+    const tlEnd = client[`barrier_${n}_timeline_end`] || '';
     plans.push({
       num: n,
       barrier: client[`barrier_${n}`],
       action_steps: stepsArr.length > 0 ? stepsArr : [''],
-      timeline_start: client[`barrier_${n}_timeline_start`] || '',
-      timeline_end: client[`barrier_${n}_timeline_end`] || '',
+      timeline_start: tlStart,
+      timeline_end: tlEnd,
+      single_day: !!(tlStart && tlEnd && tlStart === tlEnd),
       responsible_party: client[`barrier_${n}_responsible`] || '',
       resources_needed: client[`barrier_${n}_resources`] || '',
     });
@@ -41,7 +45,20 @@ export default function BarrierActionPlan({ client, onSave, onComplete }) {
   }, [client?.barrier_1, client?.barrier_2, client?.barrier_3, client?.barrier_1_action_steps, client?.barrier_2_action_steps, client?.barrier_3_action_steps]);
 
   const updatePlan = (num, field, value) =>
-    setPlans(prev => prev.map(p => p.num === num ? { ...p, [field]: value } : p));
+    setPlans(prev => prev.map(p => {
+      if (p.num !== num) return p;
+      const next = { ...p, [field]: value };
+      if (field === 'single_day' && value && next.timeline_start) {
+        next.timeline_end = next.timeline_start;
+      }
+      if (field === 'timeline_start' && next.single_day) {
+        next.timeline_end = value;
+      }
+      if (field === 'timeline_end' && next.timeline_start && value && value < next.timeline_start) {
+        next.timeline_end = next.timeline_start;
+      }
+      return next;
+    }));
 
   const addStep = (num) =>
     setPlans(prev => prev.map(p => p.num === num ? { ...p, action_steps: [...p.action_steps, ''] } : p));
@@ -186,10 +203,14 @@ export default function BarrierActionPlan({ client, onSave, onComplete }) {
               <div>
                 <Label className="text-xs font-semibold">Start Date</Label>
                 <Input type="date" value={p.timeline_start} onChange={(e) => updatePlan(p.num, 'timeline_start', e.target.value)} className="mt-1" />
+                <label className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                  <Checkbox checked={!!p.single_day} onCheckedChange={(v) => updatePlan(p.num, 'single_day', v)} />
+                  Single day
+                </label>
               </div>
               <div>
                 <Label className="text-xs font-semibold">Target Completion Date</Label>
-                <Input type="date" value={p.timeline_end} onChange={(e) => updatePlan(p.num, 'timeline_end', e.target.value)} className="mt-1" />
+                <Input type="date" value={p.timeline_end} min={p.timeline_start || undefined} disabled={!!p.single_day} onChange={(e) => updatePlan(p.num, 'timeline_end', e.target.value)} className="mt-1" />
               </div>
               <div>
                 <Label className="text-xs font-semibold">Responsible Party</Label>
