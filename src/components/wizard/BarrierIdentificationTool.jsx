@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Save, ChevronRight, Pencil, CheckCircle2, Download, AlertTriangle } from "lucide-react";
+import { Save, ChevronRight, Pencil, CheckCircle2, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 import { exportBitPdf } from "@/lib/exportBitPdf";
@@ -291,15 +291,10 @@ export default function BarrierIdentificationTool({ client, onSave, onComplete }
               return (
                 <Card key={b.key} className="bg-amber-50 border-amber-200">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-semibold text-sm">{b.key}</div>
-                      {needsResolutionBeforeFollowup && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-200/70 border border-amber-300 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
-                          <AlertTriangle className="w-3 h-3" />
-                          Resolve before 90-day follow-up
-                        </span>
-                      )}
-                    </div>
+                    <div className={`font-semibold text-sm${needsResolutionBeforeFollowup ? ' text-red-600 animate-pulse' : ''}`}>{b.key}</div>
+                    {needsResolutionBeforeFollowup && (
+                      <div className="text-[11px] text-red-600 mt-0.5">Barrier needs to be resolved before 90 Day follow Up</div>
+                    )}
                     {challenges.length > 0 && (
                       <div className="text-xs text-muted-foreground mt-1">Challenges: {challenges.join(", ")}</div>
                     )}
