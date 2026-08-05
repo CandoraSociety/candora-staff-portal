@@ -7,6 +7,15 @@ export const FINANCE_FOLDER = '_VAULT_Finance';
 export const MASTER_TEMPLATE_NAME = 'CRT_Master_Template.xlsx';
 export const CLIENT_DATA_SHEET = 'Client Data';
 
+// Appends a query parameter to a SharePoint Excel embed URL so the embedded
+// workbook opens on the "Client Data" sheet by default (instead of whichever
+// sheet was last active when the file was saved).
+export function applyDefaultSheet(embedUrl: string | null): string | null {
+  if (!embedUrl) return embedUrl;
+  const sep = embedUrl.includes('?') ? '&' : '?';
+  return `${embedUrl}${sep}wdActiveCell=${encodeURIComponent(CLIENT_DATA_SHEET)}!A1`;
+}
+
 // Month names in calendar order — used to sort CRT_<Month>_<Year> files chronologically
 // (alphabetical sort is wrong: "April" < "March" even though April is the later month).
 const CRT_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];

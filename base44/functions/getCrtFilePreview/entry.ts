@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { DRIVE_ID, getGraphToken } from '../../shared/crtWorkbook.ts';
+import { DRIVE_ID, getGraphToken, applyDefaultSheet } from '../../shared/crtWorkbook.ts';
 
 // Returns the embed (preview) URL for a specific CRT workbook file so the
 // frontend can show any monthly file in the live preview WITHOUT changing
@@ -34,7 +34,7 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: `Preview failed: ${previewRes.status}` }, { status: previewRes.status });
     }
     const previewData = await previewRes.json();
-    return Response.json({ embedUrl: previewData.getUrl || null });
+    return Response.json({ embedUrl: applyDefaultSheet(previewData.getUrl || null) });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
