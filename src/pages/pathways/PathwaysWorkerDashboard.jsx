@@ -8,6 +8,7 @@ import ClientListControls, { applyFiltersAndSort } from "@/components/lists/Clie
 import { clientRowColor } from "@/lib/clientRowColor";
 import CompassTaskList from "@/components/compass/CompassTaskList";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
+import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
@@ -68,6 +69,10 @@ export default function PathwaysWorkerDashboard() {
   const [placementSubTab, setPlacementSubTab] = useState("all");
   const [exposurePlacements, setExposurePlacements] = useState([]);
   const [switchClient, setSwitchClient] = useState(null);
+  const [isCareerCounsellor, setIsCareerCounsellor] = useState(false);
+  const [isServiceNavigator, setIsServiceNavigator] = useState(false);
+  const [ccClients, setCcClients] = useState([]);
+  const [snClients, setSnClients] = useState([]);
 
   const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
@@ -83,21 +88,40 @@ export default function PathwaysWorkerDashboard() {
     const init = async () => {
       const me = await base44.auth.me();
       setUser(me);
-      const allClients = await base44.entities.Client.list("-created_date", 1000);
       const myEmail = (me.email || "").toLowerCase();
       const myName = (me.full_name || "").toLowerCase();
       const isDawnInit = myEmail === "dawn.williston@candorasociety.com";
-      const matchesMe = (c) =>
+
+      // Determine the user's Pathways roles (primary, secondary, tertiary)
+      const staffRecords = await base44.entities.PathwaysStaff.filter({ is_active: true }, "name", 200);
+      const myStaff = staffRecords.find(s => (s.email || "").toLowerCase() === myEmail);
+      const roles = myStaff ? [myStaff.role, myStaff.secondary_role, myStaff.tertiary_role].filter(Boolean) : [];
+      const userIsCC = roles.includes("career_counsellor");
+      const userIsSN = roles.includes("service_navigator") || isDawnInit;
+      setIsCareerCounsellor(userIsCC);
+      setIsServiceNavigator(userIsSN);
+
+      const allClients = await base44.entities.Client.list("-created_date", 1000);
+      const matchesCc = (c) =>
         (c.assigned_worker && c.assigned_worker.toLowerCase() === myEmail) ||
-        (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName) ||
+        (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName);
+      const matchesSn = (c) =>
         (c.assigned_service_navigator && c.assigned_service_navigator.toLowerCase() === myEmail) ||
         (c.assigned_service_navigator_name && c.assigned_service_navigator_name.toLowerCase() === myName);
-      const myClients = isDawnInit
-        ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
-        : allClients.filter(matchesMe);
-      setClients(myClients);
+      const cc = allClients.filter(matchesCc);
+      const sn = isDawnInit
+        ? allClients.filter(c => (c.barriers_addressed || matchesSn(c)))
+        : allClients.filter(matchesSn);
+      setCcClients(cc);
+      setSnClients(sn);
+      // Union for alerts / placements / compass (clients in both lists appear once)
+      setClients([...new Map([...cc, ...sn].map(c => [c.id, c])).values()]);
+
+      // Default to the Service Navigation tab for pure service navigators
+      if (userIsSN && !userIsCC) setActiveTab("service-nav");
+
+      const myClientIds = new Set([...cc, ...sn].map(c => c.id));
       const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
-      const myClientIds = new Set(myClients.map(c => c.id));
       setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
       await loadCompassTasks(me.email, me.full_name);
       const pendingTransfers = await base44.entities.ClientTransfer.filter({ status: "pending" });
@@ -108,8 +132,10 @@ export default function PathwaysWorkerDashboard() {
   }, []);
 
   const isDawn = (user?.email || "").toLowerCase() === "dawn.williston@candorasociety.com";
-  const deaWdTotal = clients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length;
-  const displayed = applyFiltersAndSort(clients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
+  const deaWdTotal = ccClients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length;
+  const displayed = applyFiltersAndSort(ccClients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
+  const snWdTotal = snClients.filter(c => c.service_type === "pathways").length;
+  const snDisplayed = applyFiltersAndSort(snClients, search, filters, sortKey).filter(c => c.service_type === "pathways");
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
 
   // DEA Closing Alert
@@ -172,7 +198,11 @@ export default function PathwaysWorkerDashboard() {
       >
         <div>
           <h1 className="text-xl font-bold text-white">
-            {isDawn ? "Service Navigator Dashboard" : "My Clients"}
+            {isServiceNavigator && !isCareerCounsellor
+              ? "Service Navigation Dashboard"
+              : isDawn
+                ? "Service Navigator Dashboard"
+                : "My Clients"}
           </h1>
           <p className="text-sm text-white/60">Welcome, {user?.full_name}</p>
         </div>
@@ -220,18 +250,24 @@ export default function PathwaysWorkerDashboard() {
                           });
                         } catch {}
                         setTransfers(prev => prev.filter(x => x.id !== t.id));
-                        // Refresh client list
+                        // Refresh client lists (CC + SN split)
                         const allClients = await base44.entities.Client.list("-created_date", 1000);
                         const myEmail = (user?.email || "").toLowerCase();
                         const myName = (user?.full_name || "").toLowerCase();
                         const isDawnInit = myEmail === "dawn.williston@candorasociety.com";
-                        const matchesMe = (c) =>
+                        const matchesCc = (c) =>
                           (c.assigned_worker && c.assigned_worker.toLowerCase() === myEmail) ||
                           (c.assigned_worker_name && c.assigned_worker_name.toLowerCase() === myName);
-                        const myClients = isDawnInit
-                          ? allClients.filter(c => c.barriers_addressed || matchesMe(c))
-                          : allClients.filter(matchesMe);
-                        setClients(myClients);
+                        const matchesSn = (c) =>
+                          (c.assigned_service_navigator && c.assigned_service_navigator.toLowerCase() === myEmail) ||
+                          (c.assigned_service_navigator_name && c.assigned_service_navigator_name.toLowerCase() === myName);
+                        const cc = allClients.filter(matchesCc);
+                        const sn = isDawnInit
+                          ? allClients.filter(c => (c.barriers_addressed || matchesSn(c)))
+                          : allClients.filter(matchesSn);
+                        setCcClients(cc);
+                        setSnClients(sn);
+                        setClients([...new Map([...cc, ...sn].map(c => [c.id, c])).values()]);
                       }}
                       className="flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold text-white transition-colors hover:opacity-90"
                       style={{ background: "hsl(142,55%,35%)" }}
@@ -279,6 +315,21 @@ export default function PathwaysWorkerDashboard() {
               </span>
             )}
           </button>
+          {isServiceNavigator && (
+            <button
+              onClick={() => setActiveTab("service-nav")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "service-nav" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" /> Service Navigation
+              {snWdTotal > 0 && (
+                <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {snWdTotal}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Compass tab */}
@@ -288,6 +339,35 @@ export default function PathwaysWorkerDashboard() {
             currentUser={user}
             onRefresh={(updated) => setCompassTasks(updated)}
           />
+        )}
+
+        {/* Service Navigation tab */}
+        {activeTab === "service-nav" && (
+          snDisplayed.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-lg font-medium">No Service Navigation clients</p>
+              <p className="text-sm mt-1">
+                WD clients you are assigned to as Service Navigator will appear here.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-slate-600 mb-2">
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {snDisplayed.length} of {snWdTotal} Service Navigation WD client{snWdTotal !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <ClientListControls
+                search={search} onSearch={setSearch}
+                filters={filters} onFilters={setFilters}
+                sortKey={sortKey} onSort={setSortKey}
+                variant="worker"
+              />
+              <ServiceNavigationSections clients={snDisplayed} renderTable={renderClientTable} />
+            </>
+          )
         )}
 
         {/* Clients tab */}
