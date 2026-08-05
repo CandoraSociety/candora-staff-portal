@@ -206,7 +206,10 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         base44.entities.InternalTraining.filter({ client_id: client.id }),
         base44.entities.WorkExposurePlacement.filter({ client_id: client.id }),
       ]);
-      const incomplete = getIncompleteRoadmapItems(client, internalTrainings, workExposures);
+      // Barriers are intentionally excluded — they can be resolved after EDAs are
+      // marked complete, but must be resolved before the 90-day follow-up outcome.
+      const incomplete = getIncompleteRoadmapItems(client, internalTrainings, workExposures)
+        .filter(item => !item.key.startsWith('barrier_'));
       if (incomplete.length > 0) {
         setIncompleteItems(incomplete);
         setShowIncompletePrompt(true);

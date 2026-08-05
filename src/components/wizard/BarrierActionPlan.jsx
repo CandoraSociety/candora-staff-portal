@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Plus, X, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Plus, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
@@ -143,10 +143,22 @@ export default function BarrierActionPlan({ client, onSave, onComplete }) {
           </div>
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit</Button>
         </div>
-        {plans.map(p => (
+        {plans.map(p => {
+          const barrierStatus = client?.[`barrier_${p.num}_status`];
+          const edasComplete = !!client?.eda_completion_date || !!client?.completion_date;
+          const needsResolutionBeforeFollowup = edasComplete && barrierStatus && barrierStatus !== 'resolved';
+          return (
           <Card key={p.num}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Barrier {p.num}: {p.barrier}</CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-sm">Barrier {p.num}: {p.barrier}</CardTitle>
+                {needsResolutionBeforeFollowup && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-200/70 border border-amber-300 rounded-full px-2 py-0.5 whitespace-nowrap shrink-0">
+                    <AlertTriangle className="w-3 h-3" />
+                    Resolve before 90-day follow-up
+                  </span>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="text-sm space-y-1">
               <div><span className="text-muted-foreground">Steps:</span> {p.action_steps.filter(Boolean).join(', ')}</div>
@@ -155,7 +167,8 @@ export default function BarrierActionPlan({ client, onSave, onComplete }) {
               {p.resources_needed && <div><span className="text-muted-foreground">Resources:</span> {p.resources_needed}</div>}
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
         <Button className="w-full" onClick={() => onComplete?.()}>
           Continue to Next Step <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
