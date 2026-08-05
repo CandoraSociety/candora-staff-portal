@@ -200,7 +200,7 @@ ${hsidLine(client)}`,
 }
 
 // 6. Barrier resolved — mark as complete in Compass with notes
-export function taskBarrierResolved(client, barrierLabel, notes = '') {
+export function taskBarrierResolved(client, barrierLabel, notes = '', endDate = '') {
   const name = `${client.first_name} ${client.last_name}`;
   return {
     task_type: 'barrier_resolved',
@@ -208,6 +208,7 @@ export function taskBarrierResolved(client, barrierLabel, notes = '') {
     instructions: `A barrier has been resolved for this client. Mark it as complete in Compass.
 
 • Barrier: ${barrierLabel}
+• End Date: ${fmtDate(endDate)}
 • Resolution Notes: ${notes || 'N/A'}
 
 ${hsidLine(client)}`,

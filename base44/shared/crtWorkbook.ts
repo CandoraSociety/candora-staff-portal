@@ -303,7 +303,13 @@ export function mapClientToCrtRow(client, monthEnd) {
   for (let i = 1; i <= 3; i++) {
     if (client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved') {
       const note = String(client[`barrier_${i}_resolution_notes`] || '').trim();
-      if (note) resolutionParts.push(`Barrier ${i} resolved: ${note}`);
+      const endDate = client[`barrier_${i}_timeline_end`]
+        ? formatDateForCrt(client[`barrier_${i}_timeline_end`])
+        : '';
+      if (note) {
+        const dateTag = endDate ? ` (resolved ${endDate})` : '';
+        resolutionParts.push(`Barrier ${i} resolved${dateTag}: ${note}`);
+      }
     }
   }
   const commentsParts = [];

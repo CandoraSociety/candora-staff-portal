@@ -79,6 +79,15 @@ export default function BarriersTab({ client, onSave, canEdit }) {
       }
       data.roadmap_item_status = roadmapStatus;
 
+      // Require an end date for any barrier marked resolved
+      const missingEnd = [1, 2, 3].find(n =>
+        local[n].name && local[n].status === 'resolved' && !local[n].timeline_end
+      );
+      if (missingEnd) {
+        toast.error(`Please select an End Date for Barrier ${missingEnd} before marking it resolved.`);
+        return;
+      }
+
       // Require a brief resolution note for any barrier marked resolved
       const missingResolution = [1, 2, 3].find(n =>
         local[n].name && local[n].status === 'resolved' && !String(local[n].resolution_notes || '').trim()
@@ -97,7 +106,7 @@ export default function BarriersTab({ client, onSave, canEdit }) {
           const prevStatus = client[`barrier_${n}_status`] || 'unresolved';
           const newStatus = local[n].status;
           if (local[n].name && newStatus === 'resolved' && prevStatus !== 'resolved') {
-            const t = taskBarrierResolved(client, local[n].name, local[n].resolution_notes);
+            const t = taskBarrierResolved(client, local[n].name, local[n].resolution_notes, local[n].timeline_end);
             await createCompassTask({
               client_id: client.id,
               client_name: fullName,
@@ -192,7 +201,10 @@ export default function BarriersTab({ client, onSave, canEdit }) {
                       <Input type="date" value={b.timeline_start} onChange={e => setField(n, 'timeline_start', e.target.value)} disabled={!canEdit} className="mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs">End Date</Label>
+                      <Label className="text-xs">
+                        End Date
+                        {b.status === 'resolved' && <span className="text-red-600 font-medium"> * (required to resolve)</span>}
+                      </Label>
                       <Input type="date" value={b.timeline_end} onChange={e => setField(n, 'timeline_end', e.target.value)} disabled={!canEdit} className="mt-1" />
                     </div>
                   </div>
