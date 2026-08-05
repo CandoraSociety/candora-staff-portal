@@ -133,8 +133,6 @@ export default function PathwaysWorkerDashboard() {
   const displayed = applyFiltersAndSort(ccClients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
   const snWdTotal = snClients.filter(c => c.service_type === "pathways").length;
   const snDisplayed = applyFiltersAndSort(snClients, search, filters, sortKey).filter(c => c.service_type === "pathways");
-  // Service Navigation clients not already shown in the CC list (avoids duplication in the single view)
-  const snOnlyDisplayed = snDisplayed.filter(c => !ccClients.find(cc => cc.id === c.id));
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
 
   // DEA Closing Alert
@@ -509,13 +507,13 @@ export default function PathwaysWorkerDashboard() {
                   </div>
                   <CollapsibleSection
                     title="Service Navigation WD Clients"
-                    count={snOnlyDisplayed.length}
+                    count={snDisplayed.length}
                     accentColor="#0f766e"
                     variant="main"
                     defaultOpen
                   >
-                    {snOnlyDisplayed.length > 0
-                      ? renderClientTable(snOnlyDisplayed, 'wd', 'all')
+                    {snDisplayed.length > 0
+                      ? renderClientTable(snDisplayed, 'wd', 'all')
                       : <p className="text-sm text-slate-400 italic px-4 py-3">No clients assigned to you as Service Navigator.</p>}
                   </CollapsibleSection>
                 </>
