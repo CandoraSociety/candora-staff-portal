@@ -9,6 +9,7 @@ import { ArrowLeft, Pencil, Save, X, Upload, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import SupportingDocuments from './SupportingDocuments';
+import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 
 export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -48,10 +49,11 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
       </div>
 
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="placements">Paid Placements</TabsTrigger>
+          <TabsTrigger value="childminding">Childminding</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
@@ -276,6 +278,10 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="childminding" className="space-y-4">
+          <ChildmindingBillingSheet billingMonth={pkg.billing_month} />
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">

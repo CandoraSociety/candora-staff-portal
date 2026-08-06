@@ -221,7 +221,6 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     <th className="text-left py-2 px-2">Check-out</th>
                     <th className="text-center py-2 px-2">Hours</th>
                     <th className="text-right py-2 px-2">Billing</th>
-                    <th className="text-left py-2 px-2">Supporting Docs</th>
                     <th className="text-left py-2 px-2">Notes</th>
                   </tr>
                 </thead>
@@ -235,23 +234,13 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                       <td className="py-2 px-2 whitespace-nowrap">{r.check_out_time || '-'}</td>
                       <td className="text-center py-2 px-2">{r.hours || 0}</td>
                       <td className="text-right py-2 px-2 font-bold">${(r.billing_amount || 0).toFixed(2)}</td>
-                      <td className="py-2 px-2">
-                        <div className="space-y-0.5">
-                          {(r.document_urls || []).map((url, i) => (
-                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline flex items-center gap-1">
-                              <ExternalLink className="w-2.5 h-2.5" /> Doc {i + 1}
-                            </a>
-                          ))}
-                          <SupportingDocUpload recordType="childminding" record={r} urlField="document_urls" queryKey={['childminding-records']} />
-                        </div>
-                      </td>
                       <td className="py-2 px-2 max-w-[120px] truncate text-slate-600">{r.notes || '-'}</td>
                     </tr>
                   ))}
                   <tr className="bg-slate-100 border-t-2 border-slate-300">
                     <td colSpan={6} className="text-right py-2 px-2 font-semibold">SUBTOTAL:</td>
                     <td className="text-right py-2 px-2 font-bold text-lg">${subtotal.toFixed(2)}</td>
-                    <td colSpan={2}></td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>
