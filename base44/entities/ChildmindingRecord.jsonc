@@ -69,6 +69,13 @@
       "type": "string",
       "description": "Linked ChildmindingSession ID \u2014 set when this intake was added from within a session. When set, the record is shown inside that session rather than as a standalone calendar entry."
     },
+    "document_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supporting document URLs attached to this childminding record (e.g. attendance sheets, sign-in sheets) for billing submission"
+    },
     "notes": {
       "type": "string"
     }
