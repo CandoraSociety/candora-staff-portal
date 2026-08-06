@@ -10,7 +10,7 @@ import ProgramStatusPanel from './ProgramStatusPanel';
 import UpdateProgramStatusMenu from './UpdateProgramStatusMenu';
 import ServiceStartDateEditor from './ServiceStartDateEditor';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
+import { createCompassTask, scratchCompassTasks, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
 
 // ─── Item labels ──────────────────────────────────────────────────────────────
 const ITEM_LABELS = {

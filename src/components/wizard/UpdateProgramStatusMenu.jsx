@@ -27,6 +27,7 @@ import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
 import { getIncompleteRoadmapItems } from '@/lib/roadmapItems';
+import { scratchCompassTasks } from '@/lib/compassTasks';
 
 // Employment outcomes that require FT/PT selection (for the 90-day follow-up
 // outcome dialog and the CRT Column S "was employed" comment).
@@ -61,6 +62,7 @@ function getUndoStep(client) {
       description:
         'Reverts from Completed back to the Follow-up Period. Clears the program completion date (restores the EDA completion date); keeps the 90-day follow-up outcome.',
       updates: { program_status: 'in_progress', completion_date: client.eda_completion_date || null },
+      scratchTaskTypes: [],
       removeNoteType: 'completed',
       noteLabel: 'Undo Mark Complete',
       noteText: 'Reverted program completion back to the Follow-up Period.',
@@ -73,6 +75,7 @@ function getUndoStep(client) {
       description:
         'Clears the recorded 90-day follow-up outcome and returns to the Follow-up Period (pending).',
       updates: { followup_90day_status: null },
+      scratchTaskTypes: ['followup_90day'],
       removeNoteType: 'followup_outcome',
       noteLabel: 'Undo 90-Day Follow-up Outcome',
       noteText: 'Cleared the 90-day follow-up outcome.',
@@ -97,6 +100,7 @@ function getUndoStep(client) {
         job_wage: null,
         employed_ftpt: null,
       },
+      scratchTaskTypes: ['employment_outcome'],
       removeNoteType: 'employment_found',
       noteLabel: 'Undo Found Employment',
       noteText: 'Reverted Found Employment back to the Work Search Phase.',
@@ -114,6 +118,7 @@ function getUndoStep(client) {
         eda_completion_date: null,
         followup_90day_date: null,
       },
+      scratchTaskTypes: ['eda_program_completed'],
       removeNoteType: 'eda_completed',
       noteLabel: 'Undo Mark EDAs Complete',
       noteText: 'Reverted EDAs complete back to Active (EDA).',
@@ -125,6 +130,7 @@ function getUndoStep(client) {
       label: 'Undo Start Program',
       description: 'Reverts from Active (EDA) back to Not Started. Clears the service start date.',
       updates: { service_start_date: null, program_status: null },
+      scratchTaskTypes: [],
       removeNoteType: 'started',
       noteLabel: 'Undo Start Program',
       noteText: 'Reverted program start back to Not Started.',
@@ -498,6 +504,12 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
         ...revertStep.updates,
         roadmap_progress_notes: notes,
       });
+
+      // Scratch any Compass queue items that the undone action had created,
+      // so the worker is prompted to check whether Compass needs updating.
+      if (revertStep.scratchTaskTypes && revertStep.scratchTaskTypes.length) {
+        await scratchCompassTasks({ client_id: client.id, task_types: revertStep.scratchTaskTypes });
+      }
 
       await logStatusChange({
         client,

@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ExternalLink, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { CheckCircle2, ExternalLink, ChevronDown, ChevronUp, RotateCcw, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -37,10 +37,13 @@ const TASK_TYPE_LABELS = {
 
 function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, onMarkComplete, onMarkUncomplete }) {
   const navigate = useNavigate();
+  const scratched = !!task.is_scratched;
 
   return (
     <Card className={`border ${
-      task.status === "completed" ? "border-slate-200 opacity-70" : "border-slate-300 shadow-sm"
+      scratched ? "border-amber-300 bg-amber-50/40"
+        : task.status === "completed" ? "border-slate-200 opacity-70"
+        : "border-slate-300 shadow-sm"
     }`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
@@ -49,6 +52,11 @@ function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, 
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${TASK_TYPE_COLORS[task.task_type] || "bg-slate-100 text-slate-600"}`}>
                 {TASK_TYPE_LABELS[task.task_type] || task.task_type}
               </span>
+              {scratched && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Scratched
+                </span>
+              )}
               {task.compass_hsid && (
                 <span className="text-xs text-slate-400">HSID: {task.compass_hsid}</span>
               )}
@@ -56,7 +64,9 @@ function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, 
                 {task.created_date ? format(new Date(task.created_date), "MMM d, yyyy h:mm a") : ""}
               </span>
             </div>
-            <CardTitle className="text-base font-semibold text-slate-800">{task.title}</CardTitle>
+            <CardTitle className={`text-base font-semibold text-slate-800 ${scratched ? "line-through text-slate-500" : ""}`}>
+              {task.title}
+            </CardTitle>
             {task.triggered_by_name && (
               <p className="text-xs text-slate-400 mt-0.5">Triggered by {task.triggered_by_name}</p>
             )}
@@ -81,6 +91,12 @@ function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, 
 
       {expanded && (
         <CardContent className="pt-0 space-y-4">
+          {scratched && task.scratch_note && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-amber-800 font-medium">{task.scratch_note}</p>
+            </div>
+          )}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Instructions</p>
             <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
@@ -152,9 +168,10 @@ export default function CompassTaskList({ tasks: initialTasks, currentUser, onRe
     setTasks(initialTasks);
   }
 
-  const pending   = tasks.filter(t => t.status === "pending");
-  const completed = tasks.filter(t => t.status === "completed");
-  const shown     = tab === "pending" ? pending : completed;
+  const pending   = tasks.filter(t => t.status === "pending" && !t.is_scratched);
+  const completed = tasks.filter(t => t.status === "completed" && !t.is_scratched);
+  const scratched = tasks.filter(t => t.is_scratched);
+  const shown     = tab === "pending" ? pending : tab === "completed" ? completed : scratched;
 
   const reload = async () => {
     const all = await base44.entities.CompassTask.list("-created_date", 500);
@@ -208,6 +225,14 @@ export default function CompassTaskList({ tasks: initialTasks, currentUser, onRe
         >
           Completed ({completed.length})
         </button>
+        <button
+          onClick={() => setTab("scratched")}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === "scratched" ? "bg-white shadow text-amber-800" : "text-amber-600 hover:text-amber-800"
+          }`}
+        >
+          Scratched ({scratched.length})
+        </button>
       </div>
 
       {shown.length === 0 ? (
@@ -216,7 +241,9 @@ export default function CompassTaskList({ tasks: initialTasks, currentUser, onRe
           <p className="text-slate-500 text-sm font-medium">
             {tab === "pending"
               ? "No pending Compass tasks — all caught up!"
-              : "No completed tasks yet."}
+              : tab === "completed"
+                ? "No completed tasks yet."
+                : "No scratched tasks."}
           </p>
         </div>
       ) : (

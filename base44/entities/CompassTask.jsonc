@@ -52,6 +52,15 @@
     },
     "completed_notes": {
       "type": "string"
+    },
+    "is_scratched": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the portal action that created this task was undone. The task is kept visible (in the Scratched tab) with a note asking whether Compass needs updating, rather than deleted."
+    },
+    "scratch_note": {
+      "type": "string",
+      "description": "Note attached when the task was scratched (e.g. 'This action was undone. Does this need to be changed in Compass?')."
     }
   },
   "required": [

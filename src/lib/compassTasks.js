@@ -60,6 +60,36 @@ export async function createCompassTask({
   });
 }
 
+// ─── Scratch (flag as undone) ─────────────────────────────────────────────────
+// When the portal action that created a Compass task is undone (a status
+// revert, an EDA moved back, a barrier changed from resolved, etc.), the
+// task(s) that action created are "scratched": kept visible in the queue with
+// a note asking whether Compass needs updating, rather than silently deleted.
+//
+// Matches by client_id + task_type, optionally narrowed to exact `titles`
+// (used when a client can have several tasks of the same type — e.g. multiple
+// EDAs or barriers — so only the specific item's task is scratched). Scratches
+// both pending and already-completed tasks: a completed task means it was
+// already entered in Compass, so the worker needs to know the action was
+// undone and decide whether to update Compass.
+export async function scratchCompassTasks({ client_id, task_types, titles, note }) {
+  if (!client_id || !task_types || task_types.length === 0) return;
+  const SCRATCH_NOTE = note || 'This action was undone. Does this need to be changed in Compass?';
+  try {
+    const tasks = await base44.entities.CompassTask.filter({ client_id });
+    const titleSet = titles && titles.length ? new Set(titles) : null;
+    for (const t of tasks) {
+      if (t.is_scratched) continue;
+      if (!task_types.includes(t.task_type)) continue;
+      if (titleSet && !titleSet.has(t.title)) continue;
+      await base44.entities.CompassTask.update(t.id, {
+        is_scratched: true,
+        scratch_note: SCRATCH_NOTE,
+      });
+    }
+  } catch (_) { /* best-effort — queue must never block the undo */ }
+}
+
 // ─── Task Factory Functions ──────────────────────────────────────────────────
 // Each returns { task_type, title, instructions }
 
