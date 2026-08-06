@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { FileText, Plus, ArrowLeft, Pencil, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoicePackageDetail from './InvoicePackageDetail';
+import ContractConfigDialog from './ContractConfigDialog';
 
 const STATUS_BADGES = {
   draft: { variant: 'secondary', color: 'text-slate-600' },
@@ -30,13 +31,14 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
     crt_included: true,
     notes: '',
   });
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
 
   const handleCreatePackage = () => {
-    if (!formData.billing_month || !formData.config_id) {
-      toast.error('Please fill in all required fields');
+    if (!formData.billing_month) {
+      toast.error('Please select a billing month');
       return;
     }
-    
+
     onCreatePackage(formData);
     setShowGenerator(false);
     setFormData({
@@ -69,6 +71,7 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
 
   if (showGenerator) {
     return (
+      <>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
@@ -94,13 +97,22 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="config">Contract Configuration</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="config">Contract Configuration</Label>
+                <button
+                  type="button"
+                  className="text-xs text-blue-600 hover:underline"
+                  onClick={() => setShowConfigDialog(true)}
+                >
+                  + New
+                </button>
+              </div>
               <Select
                 value={formData.config_id}
                 onValueChange={(value) => setFormData({ ...formData, config_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select configuration" />
+                  <SelectValue placeholder={configs.length === 0 ? 'No configurations yet' : 'Select configuration'} />
                 </SelectTrigger>
                 <SelectContent>
                   {configs.map((config) => (
@@ -110,6 +122,9 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-slate-500">
+                Holds the funder contract terms (rates &amp; caps) used to calculate this month&rsquo;s invoice. Optional — add one with &ldquo;+ New&rdquo;.
+              </p>
             </div>
           </div>
 
@@ -144,6 +159,8 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
           </div>
         </CardContent>
       </Card>
+      <ContractConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
+      </>
     );
   }
 
