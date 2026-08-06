@@ -23,9 +23,17 @@
       "format": "date",
       "description": "Date of childminding session"
     },
+    "check_in_time": {
+      "type": "string",
+      "description": "Check-in time (HH:MM 24h)"
+    },
+    "check_out_time": {
+      "type": "string",
+      "description": "Check-out time (HH:MM 24h)"
+    },
     "hours": {
       "type": "number",
-      "description": "Number of hours of childminding",
+      "description": "Calculated hours of childminding (from check-in/out, rounded up to nearest 15 min)",
       "default": 0
     },
     "program": {
