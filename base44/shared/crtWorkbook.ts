@@ -262,28 +262,31 @@ export function mapClientToCrtRow(client, monthEnd) {
   // Wage Subsidy Accessed Y/N — set when a work exposure placement was completed
   const wageSubsidy = client.wage_subsidy_accessed ? 'Yes' : 'No';
 
-  // Service Navigation Support Y/N — WD: Y when the client has entered the
-  // follow-up period with >= 2 resolved barriers, else N. DEA: 'N' while the
-  // client is in the 90-day follow-up period (EDAs complete, no outcome yet),
-  // blank otherwise.
+  // Service Navigation Support Y/N — WD: blank until a 90 Day Outcome is
+  // entered. Once entered, "Yes" only if >= 2 barriers were resolved AND the
+  // 90 Day Outcome is E-RF, E-UF, or SE; otherwise "No". DEA: 'N' while in the
+  // 90-day follow-up period (EDAs complete, no outcome yet), blank otherwise.
   const resolvedBarriers = [1, 2, 3].filter(
     (i) => client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved'
   ).length;
-  const reachedFollowup = !!client.employment_start_date && gate(client.employment_start_date);
   const inDeaFollowup = isDea && followupTriggered && !client.followup_90day_status;
-  const serviceNav = isWd
-    ? ((reachedFollowup && resolvedBarriers >= 2) ? 'Yes' : 'No')
-    : (inDeaFollowup ? 'N' : '');
+  const SERVICENAV_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+  const day90OutcomeEntered = !!(gate(client.followup_90day_date) && client.followup_90day_status);
+  let serviceNav = '';
+  if (isWd) {
+    if (day90OutcomeEntered) {
+      serviceNav = (resolvedBarriers >= 2 && SERVICENAV_OUTCOMES.includes(client.followup_90day_status)) ? 'Yes' : 'No';
+    }
+    // else: blank until a 90 Day Outcome is entered
+  } else {
+    serviceNav = inDeaFollowup ? 'N' : '';
+  }
 
-  // Service Navigation Support Billing Month — WD only. Blank for DEA clients.
-  // When Service Nav Support is Y and the 90-day outcome is E-RF, E-UF, or SE,
-  // use the 90-day outcome date.
-  const SERVICENAV_BILLING_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+  // Service Navigation Support Billing Month — WD only. When column X is "Yes",
+  // column Y mirrors column P (the 90 Day Outcome Date).
   let serviceNavBillingMonth = '';
-  if (isWd && serviceNav === 'Yes' && client.followup_90day_status && SERVICENAV_BILLING_OUTCOMES.includes(client.followup_90day_status)) {
-    serviceNavBillingMonth = gate(client.followup_90day_date) ? formatDateForCrt(client.followup_90day_date) : '';
-  } else if (isWd) {
-    serviceNavBillingMonth = gate(client.service_navigation_date) ? formatDateForCrt(client.service_navigation_date) : '';
+  if (isWd && serviceNav === 'Yes') {
+    serviceNavBillingMonth = day90DateForCrt;
   }
 
   // Employed FT/PT — explicit selection takes priority, else derive from job_hours text
