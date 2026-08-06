@@ -72,6 +72,16 @@ function TaskCard({ task, expanded, onToggle, completing, notes, onNotesChange, 
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {task.status === "completed" && !scratched && (
+              <Button
+                variant="ghost" size="sm"
+                onClick={() => onMarkUncomplete(task)}
+                className="text-slate-500 hover:text-amber-700 gap-1 text-xs"
+                title="Undo — move back to Pending (not yet entered in Compass)"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Undo
+              </Button>
+            )}
             <Button
               variant="ghost" size="sm"
               onClick={() => navigate(`/pathways/client/${task.client_id}`)}

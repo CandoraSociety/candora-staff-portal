@@ -10,7 +10,8 @@ import ProgramStatusPanel from './ProgramStatusPanel';
 import UpdateProgramStatusMenu from './UpdateProgramStatusMenu';
 import ServiceStartDateEditor from './ServiceStartDateEditor';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, scratchCompassTasks, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
+import { createCompassTask, scratchCompassTasks, withCrtComments, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
+import CrtAdditionalComments from './CrtAdditionalComments';
 
 // ─── Item labels ──────────────────────────────────────────────────────────────
 const ITEM_LABELS = {
@@ -426,20 +427,20 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       if (n) {
         // Barrier resolved → mark as complete in Compass with notes
         if (oldStatus !== 'completed' && saveData.status === 'completed') {
-          await createCompassTask({ ...taskBase, ...taskBarrierResolved(updated, itemLabel, saveData.notes) });
+          await createCompassTask({ ...taskBase, ...withCrtComments(taskBarrierResolved(updated, itemLabel, saveData.notes), updated) });
         }
       } else {
         // EDA started → enter in Compass comments
         if (oldStatus !== 'started' && saveData.status === 'started') {
-          await createCompassTask({ ...taskBase, ...taskEdaStarted(updated, itemLabel, { start_date: saveData.startedDate }) });
+          await createCompassTask({ ...taskBase, ...withCrtComments(taskEdaStarted(updated, itemLabel, { start_date: saveData.startedDate }), updated) });
         }
         // EDA completed → mark action item as complete in Compass
         if (oldStatus !== 'completed' && saveData.status === 'completed') {
-          await createCompassTask({ ...taskBase, ...taskEdaCompleted(updated, itemLabel, { completion_date: saveData.completedDate }) });
+          await createCompassTask({ ...taskBase, ...withCrtComments(taskEdaCompleted(updated, itemLabel, { completion_date: saveData.completedDate }), updated) });
         }
         // EDA cancelled → update in Compass
         if (oldStatus !== 'cancelled' && saveData.status === 'cancelled') {
-          await createCompassTask({ ...taskBase, ...taskEdaCancelled(updated, itemLabel, saveData.notes) });
+          await createCompassTask({ ...taskBase, ...withCrtComments(taskEdaCancelled(updated, itemLabel, saveData.notes), updated) });
         }
       }
     } catch (e) {
@@ -803,6 +804,9 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
       {/* Update Program/Activities Status menu */}
       {!barrierOnly && <UpdateProgramStatusMenu client={client} onClientUpdate={onClientUpdate} />}
+
+      {/* Additional CRT Comments (Column S) — sits underneath the status menu */}
+      {!barrierOnly && <CrtAdditionalComments client={client} onClientUpdate={onClientUpdate} />}
 
       {/* Progress notes */}
       <RoadmapProgressNotes

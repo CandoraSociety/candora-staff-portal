@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
+import { buildCrtComments } from './crtComments';
 
 const fmtDate = (d) => {
   if (!d) return 'N/A';
@@ -88,6 +89,19 @@ export async function scratchCompassTasks({ client_id, task_types, titles, note 
       });
     }
   } catch (_) { /* best-effort — queue must never block the undo */ }
+}
+
+// ─── CRT Comments attachment ───────────────────────────────────────────────────
+// Appends the full CRT Comments (Column S) text — exactly what will be written
+// to the CRT on the next sync — to a task's instructions, so the Compass data
+// entry worker sees the same text that populated the comments section.
+export function withCrtComments(taskObj, client) {
+  const comments = buildCrtComments(client);
+  if (!comments) return taskObj;
+  return {
+    ...taskObj,
+    instructions: `${taskObj.instructions}\n\n--- CRT Comments (Column S) — the exact text written to the Comments field ---\n${comments}`,
+  };
 }
 
 // ─── Task Factory Functions ──────────────────────────────────────────────────

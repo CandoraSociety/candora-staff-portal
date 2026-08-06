@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban, Briefcase } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, taskEdaProgramCompleted } from '@/lib/compassTasks';
+import { createCompassTask, taskEdaProgramCompleted, withCrtComments } from '@/lib/compassTasks';
 import DEAProgramCompletionDialog from './DEAProgramCompletionDialog';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
@@ -74,7 +74,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
       const notes = await addProgressNote(client, me, 'completed', 'Program Completed', `Completion date: ${today}`);
       const updates = { program_status: 'complete', completion_date: today, followup_90day_date: f90, roadmap_progress_notes: notes };
       const updated = await base44.entities.Client.update(client.id, updates);
-      const task = taskEdaProgramCompleted({ ...client, ...updates });
+      const task = withCrtComments(taskEdaProgramCompleted({ ...client, ...updates }), { ...client, ...updates });
       await createCompassTask({
         client_id: client.id,
         client_name: `${client.first_name} ${client.last_name}`,

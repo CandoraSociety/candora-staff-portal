@@ -638,6 +638,10 @@
     "intake_notes": {
       "type": "string"
     },
+    "crt_additional_comments": {
+      "type": "string",
+      "description": "Free-text comment appended to CRT Column S (Comments) on every sync, alongside the auto-generated notes. Cleared (drops out of Column S) when emptied. Managed from the Additional CRT Comments card under the status menu."
+    },
     "intake_date": {
       "type": "string",
       "format": "date"

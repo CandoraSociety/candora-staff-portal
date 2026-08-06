@@ -433,6 +433,11 @@ export function mapClientToCrtRow(client, monthEnd) {
   commentsParts.push(...edaParts);
   commentsParts.push(...employmentParts);
   commentsParts.push(...followupParts);
+  // Staff-entered additional comments (from the Additional CRT Comments card
+  // under the status menu). State-derived — drops out when the field is cleared.
+  if (client.crt_additional_comments && String(client.crt_additional_comments).trim()) {
+    commentsParts.push(String(client.crt_additional_comments).trim());
+  }
   const comments = commentsParts.join(' | ');
 
   return [

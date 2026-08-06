@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, CheckCircle2, Save, TrendingUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, taskEmploymentOutcome } from '@/lib/compassTasks';
+import { createCompassTask, taskEmploymentOutcome, withCrtComments } from '@/lib/compassTasks';
 import { toast } from 'sonner';
 import { addDays, format } from 'date-fns';
 
@@ -73,7 +73,7 @@ export default function EmploymentSearchPanel({ client, onSave, onClientUpdate }
           compass_hsid: client.compass_hsid || '',
           assigned_worker: client.assigned_worker,
           assigned_worker_name: client.assigned_worker_name,
-          ...taskEmploymentOutcome({ ...client, ...updates }),
+          ...withCrtComments(taskEmploymentOutcome({ ...client, ...updates }), { ...client, ...updates }),
         });
         const me = await base44.auth.me().catch(() => null);
         await base44.entities.StatusChange.create({

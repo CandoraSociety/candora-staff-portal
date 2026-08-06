@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle2, CalendarCheck, Bell, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { createCompassTask, task90DayFollowup } from '@/lib/compassTasks';
+import { createCompassTask, task90DayFollowup, withCrtComments } from '@/lib/compassTasks';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
 import { PLACEMENT_OUTCOME_OPTIONS, FOLLOWUP_90DAY_OPTIONS, outcomeLabel } from '@/lib/crtCodes';
@@ -53,7 +53,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
         compass_hsid: client.compass_hsid || '',
         assigned_worker: client.assigned_worker,
         assigned_worker_name: client.assigned_worker_name,
-        ...task90DayFollowup({ ...client, ...updates }),
+        ...withCrtComments(task90DayFollowup({ ...client, ...updates }), { ...client, ...updates }),
       });
 
       // StatusChange log
