@@ -13,6 +13,12 @@ import { format } from 'date-fns';
 import InvoicePackageDetail from './InvoicePackageDetail';
 import ContractConfigDialog from './ContractConfigDialog';
 
+// Parse a "YYYY-MM" billing month as a local date (avoids UTC-offset shifting it back a month)
+const parseBillingMonth = (ym) => {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1);
+};
+
 const STATUS_BADGES = {
   draft: { variant: 'secondary', color: 'text-slate-600' },
   ready_for_review: { variant: 'default', color: 'text-blue-600' },
@@ -207,7 +213,7 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
               <CardContent className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-slate-600">
                   <span>📅</span>
-                  <span>{format(new Date(pkg.billing_month + '-01'), 'MMMM yyyy')}</span>
+                  <span>{format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <span>👤</span>

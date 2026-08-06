@@ -11,6 +11,12 @@ import { base44 } from '@/api/base44Client';
 import SupportingDocuments from './SupportingDocuments';
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 
+// Parse a "YYYY-MM" billing month as a local date (avoids UTC-offset shifting it back a month)
+const parseBillingMonth = (ym) => {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1);
+};
+
 export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(pkg.notes || '');
@@ -37,7 +43,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         <div>
           <h2 className="text-xl font-bold">{pkg.package_number}</h2>
           <p className="text-sm text-slate-600">
-            {format(new Date(pkg.billing_month + '-01'), 'MMMM yyyy')} Billing Package
+            {format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')} Billing Package
           </p>
         </div>
         <Badge
