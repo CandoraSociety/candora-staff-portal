@@ -11,6 +11,7 @@ import { base44 } from '@/api/base44Client';
 import SupportingDocuments from './SupportingDocuments';
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 import WorkExposurePlacementsTab from './WorkExposurePlacementsTab';
+import PackageContents from './PackageContents';
 import { parseBillingMonth } from './billingMonth';
 
 export default function InvoicePackageDetail({ pkg, configs, onBack }) {
@@ -136,6 +137,8 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
               </CardContent>
             </Card>
           </div>
+
+          <PackageContents pkg={pkg} />
 
           {/* Auto-Populated Items */}
           <Card>
