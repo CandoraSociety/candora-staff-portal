@@ -10,12 +10,8 @@ import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import SupportingDocuments from './SupportingDocuments';
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
-
-// Parse a "YYYY-MM" billing month as a local date (avoids UTC-offset shifting it back a month)
-const parseBillingMonth = (ym) => {
-  const [y, m] = ym.split('-').map(Number);
-  return new Date(y, m - 1, 1);
-};
+import WorkExposurePlacementsTab from './WorkExposurePlacementsTab';
+import { parseBillingMonth } from './billingMonth';
 
 export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -58,7 +54,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
-          <TabsTrigger value="placements">Paid Placements</TabsTrigger>
+          <TabsTrigger value="placements">Work Exposure Placements</TabsTrigger>
           <TabsTrigger value="childminding">Childminding</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
@@ -233,57 +229,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         </TabsContent>
 
         <TabsContent value="placements" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-base">Paid External Placements</CardTitle>
-                <Button variant="outline" size="sm">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Add Placement
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {pkg.paid_placements?.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b bg-slate-50">
-                        <th className="text-left py-2 px-3">Client</th>
-                        <th className="text-left py-2 px-3">Employer</th>
-                        <th className="text-left py-2 px-3">Dates</th>
-                        <th className="text-right py-2 px-3">Wage</th>
-                        <th className="text-right py-2 px-3">Hours</th>
-                        <th className="text-right py-2 px-3">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pkg.paid_placements.map((placement, idx) => (
-                        <tr key={idx} className="border-b last:border-0">
-                          <td className="py-2 px-3 font-medium">{placement.client_name}</td>
-                          <td className="py-2 px-3">{placement.employer_name}</td>
-                          <td className="py-2 px-3 whitespace-nowrap">
-                            {placement.start_date} to {placement.end_date}
-                          </td>
-                          <td className="text-right py-2 px-3">
-                            ${placement.wage?.toFixed(2) || '0.00'}/hr
-                          </td>
-                          <td className="text-right py-2 px-3">{placement.hours}</td>
-                          <td className="text-right py-2 px-3 font-bold">
-                            ${placement.total?.toFixed(2) || '0.00'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500 text-center py-8">
-                  No paid placements added
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <WorkExposurePlacementsTab billingMonth={pkg.billing_month} />
         </TabsContent>
 
         <TabsContent value="childminding" className="space-y-4">
