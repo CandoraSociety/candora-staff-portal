@@ -60,9 +60,14 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     queryFn: () => base44.entities.ChildmindingRecord.list('-date', 1000),
   });
 
+  const pathwaysChildminding = useMemo(
+    () => (childmindingRecords || []).filter(r => r.program === 'pathways'),
+    [childmindingRecords]
+  );
+
   const stats = useMemo(() => {
     const records = financialRecords || [];
-    const cmRecords = childmindingRecords || [];
+    const cmRecords = pathwaysChildminding;
     const byType = {
       paid_external_placement: { total: 0, count: 0 },
       exposure_course: { total: 0, count: 0 },
@@ -81,7 +86,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     });
     const total = records.reduce((s, r) => s + (r.total || 0), 0) + byType.childminding.total;
     return { total, byType };
-  }, [financialRecords, childmindingRecords]);
+  }, [financialRecords, pathwaysChildminding]);
 
   const renderRecordsByType = (type) => {
     const records = (financialRecords || []).filter(r => r.record_type === type);
@@ -196,7 +201,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   };
 
   const renderChildmindingSection = () => {
-    const records = childmindingRecords || [];
+    const records = pathwaysChildminding;
     const subtotal = records.reduce((s, r) => s + (r.billing_amount || 0), 0);
 
     return (
@@ -265,7 +270,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           <CardContent>
             <p className="text-2xl font-bold">${stats.total.toFixed(2)}</p>
             <p className="text-xs text-slate-600 mt-1">
-              {(financialRecords?.length || 0) + (childmindingRecords?.length || 0)} records
+              {(financialRecords?.length || 0) + pathwaysChildminding.length} records
             </p>
           </CardContent>
         </Card>
