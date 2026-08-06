@@ -297,11 +297,16 @@ export function mapClientToCrtRow(client, monthEnd) {
     else if (hours.includes('part') || hours.includes('pt')) employedFtPt = 'PT';
   }
 
-  // Column S (Comments) — combine intake notes with any barrier resolution notes
-  // recorded by the Service Navigator. Resolution notes are only included for
-  // barriers marked resolved, so they naturally appear once that barrier is
-  // resolved. If the client isn't on the CRT yet, the next sync that adds them
-  // will populate this composed comment from the stored client fields.
+  // Column S (Comments) — fully recomposed from CURRENT client state on every
+  // sync (intake notes + resolved barrier notes + EDA/action-plan completions).
+  // It is never append-only: each part is derived from a live field, so when an
+  // action is undone (a barrier changed back to unresolved/in_progress, EDAs
+  // un-marked complete, etc.) that part simply drops out of the recomposed
+  // value. The entity-triggered sync force-writes column S (even when empty)
+  // so the undone line is removed from the cell rather than left behind.
+  // PRINCIPLE FOR FUTURE AUTOMATED COLUMN S POPULATION: always compose from
+  // current client state — never append to the existing cell — so an undo
+  // naturally clears the corresponding comment.
   const resolutionParts = [];
   for (let i = 1; i <= 3; i++) {
     if (client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved') {

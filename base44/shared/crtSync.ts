@@ -305,6 +305,13 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
         const existing = allValues[rowIdx] || [];
         rowToWrite = portalRow.map((val, col) => {
           if (col === 3 || col === 5) return val;
+          // Column S (18, Comments) is fully portal-composed from current
+          // client state (intake notes + resolved barrier notes + EDA/action-plan
+          // completions). Always overwrite it with the recomposed value — even
+          // when empty — so an undone action (barrier changed back to
+          // unresolved/in_progress, EDAs un-marked complete, etc.) is removed
+          // from the cell instead of leaving the stale line behind.
+          if (col === 18) return val;
           if (val !== '' && val !== null && val !== undefined) return val;
           return existing[col] !== undefined ? existing[col] : '';
         });
