@@ -11,8 +11,9 @@ import {
 import { toast } from 'sonner';
 import moment from 'moment';
 import CreateMonthDialog from './CreateMonthDialog';
+import CrtBillingHeader from './CrtBillingHeader';
 
-export default function CRT() {
+export default function CRT({ clients = [] }) {
   const [syncing, setSyncing] = useState(false);
   const [creatingMonth, setCreatingMonth] = useState(false);
   const [repairing, setRepairing] = useState(false);
@@ -259,6 +260,9 @@ export default function CRT() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Billing Summary Header — counts for the month being viewed */}
+      <CrtBillingHeader clients={clients} viewedFileName={viewedFile?.name} />
 
       {/* Embedded Workbook View */}
       {showPreviewLoading ? (

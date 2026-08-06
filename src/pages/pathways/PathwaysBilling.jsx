@@ -40,7 +40,7 @@ export default function PathwaysBilling() {
   
   const { data: clients = [] } = useQuery({
     queryKey: ['clients-billing'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: () => base44.entities.Client.list('-created_date', 1000),
   });
 
   const createPackageMutation = useMutation({
