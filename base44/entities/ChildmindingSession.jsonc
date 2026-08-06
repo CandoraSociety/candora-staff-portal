@@ -1,0 +1,46 @@
+{
+  "name": "ChildmindingSession",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Session title/label (e.g. 'Morning Childminding')"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the childminding session"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM 24h)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM 24h)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where the session is held"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Maximum number of children"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

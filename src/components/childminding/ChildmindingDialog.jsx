@@ -9,16 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { PROGRAM_OPTIONS, calculateBilling, RATE_PER_HOUR, BILLING_STATUS_OPTIONS } from '@/lib/childmindingConstants';
 
-const EMPTY = { child_first_name: '', parent_first_name: '', parent_last_name: '', parent_name: '', date: '', hours: 0, program: 'pathways', program_other: '', billing_amount: 0, billing_status: 'unbilled', notes: '' };
+const EMPTY = { child_first_name: '', parent_first_name: '', parent_last_name: '', parent_name: '', date: '', hours: 0, program: 'pathways', program_other: '', billing_amount: 0, billing_status: 'unbilled', notes: '', session_id: '' };
 
-export default function ChildmindingDialog({ open, onOpenChange, record, onSaved }) {
+export default function ChildmindingDialog({ open, onOpenChange, record, onSaved, sessionId, presetDate }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
-    if (open) setForm(record ? { ...record } : { ...EMPTY, date: new Date().toISOString().split('T')[0] });
-  }, [open, record]);
+    if (open) {
+      if (record) setForm({ ...record });
+      else setForm({ ...EMPTY, date: presetDate || new Date().toISOString().split('T')[0], session_id: sessionId || '' });
+    }
+  }, [open, record, sessionId, presetDate]);
 
   const update = (field, value) => {
     setForm(prev => {
@@ -50,6 +53,7 @@ export default function ChildmindingDialog({ open, onOpenChange, record, onSaved
     try {
       const data = {
         ...form,
+        session_id: sessionId || form.session_id || '',
         parent_name: `${form.parent_first_name} ${form.parent_last_name}`.trim(),
         billing_amount: calculateBilling(form.program, form.hours),
       };

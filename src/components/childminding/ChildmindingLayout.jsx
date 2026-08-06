@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, CalendarDays, Plus, Menu, X, ArrowLeft, Baby } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, CalendarDays, Menu, X, ArrowLeft, Baby } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { path: '/childminding', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/childminding/records', label: 'Records', icon: ClipboardList },
   { path: '/childminding/schedule', label: 'Schedule', icon: CalendarDays },
-  { path: '/childminding/intake', label: 'Intake', icon: Plus },
 ];
 
 export default function ChildmindingLayout() {

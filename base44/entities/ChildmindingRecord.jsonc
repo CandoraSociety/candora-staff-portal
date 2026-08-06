@@ -57,6 +57,10 @@
       "default": "unbilled",
       "description": "Billing status (only Pathways is billed)"
     },
+    "session_id": {
+      "type": "string",
+      "description": "Linked ChildmindingSession ID \u2014 set when this intake was added from within a session. When set, the record is shown inside that session rather than as a standalone calendar entry."
+    },
     "notes": {
       "type": "string"
     }
