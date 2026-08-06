@@ -384,6 +384,47 @@ export function mapClientToCrtRow(client, monthEnd) {
     employmentParts.push(`Found Employment (${formatDateForCrt(client.post_completion_employment_date)}): ${bits.join('; ')}`);
   }
 
+  // 90-Day Follow-up Outcome (WD and DEA) — recorded via the "Enter 90-Day
+  // Follow-up Outcome" status menu action. State-derived from followup_90day_status
+  // and followup_90day_date, so the line drops out when "Undo 90-Day Follow-up
+  // Outcome" clears the status. For employment outcomes (E-RF, E-UF, SE) the
+  // comment includes the same employment details as the Found Employment line
+  // (employer, job title, hours/week, wage, FT/PT). For other outcomes the
+  // comment reflects the selected status.
+  const EMPLOYED_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+  const OUTCOME_DESC = {
+    'E-RF': 'Employed, Related Field',
+    'E-UF': 'Employed, Unrelated Field',
+    'SE': 'Self-Employed',
+    'UE-LFW': 'Unemployed, Looking for Work',
+    'UE-NLF': 'Unemployed, Not in Labour Force',
+    'FTT': 'Further Training',
+    'AoP': 'Attending other Program',
+    'UTC': 'Unable to Contact',
+    'P': 'Pending',
+    'C': 'Cancelled',
+  };
+  const followupParts = [];
+  if (client.followup_90day_status && gate(client.followup_90day_date)) {
+    const fDate = formatDateForCrt(client.followup_90day_date);
+    if (EMPLOYED_OUTCOMES.includes(client.followup_90day_status)) {
+      const bits = [];
+      if (client.employer_name) bits.push(`Employer: ${client.employer_name}`);
+      if (client.job_title) bits.push(`Job Title: ${client.job_title}`);
+      if (client.job_hours) bits.push(`Hours/week: ${client.job_hours}`);
+      if (client.job_wage !== undefined && client.job_wage !== null && client.job_wage !== '') {
+        bits.push(`Wage: $${client.job_wage}/hr`);
+      }
+      if (client.employed_ftpt) {
+        bits.push(client.employed_ftpt === 'FT' ? 'Full-Time' : 'Part-Time');
+      }
+      followupParts.push(`At the 90 Day Follow up, the client was employed (${fDate})${bits.length ? ': ' + bits.join('; ') : ''}`);
+    } else {
+      const desc = OUTCOME_DESC[client.followup_90day_status] || client.followup_90day_status;
+      followupParts.push(`At the 90 Day Follow up, the client was ${desc} (${client.followup_90day_status}) (${fDate})`);
+    }
+  }
+
   const commentsParts = [];
   if (client.intake_notes && String(client.intake_notes).trim()) {
     commentsParts.push(String(client.intake_notes).trim());
@@ -391,6 +432,7 @@ export function mapClientToCrtRow(client, monthEnd) {
   commentsParts.push(...resolutionParts);
   commentsParts.push(...edaParts);
   commentsParts.push(...employmentParts);
+  commentsParts.push(...followupParts);
   const comments = commentsParts.join(' | ');
 
   return [

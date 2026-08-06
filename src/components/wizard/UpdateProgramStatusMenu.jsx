@@ -28,6 +28,10 @@ import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
 import { getIncompleteRoadmapItems } from '@/lib/roadmapItems';
 
+// Employment outcomes that require FT/PT selection (for the 90-day follow-up
+// outcome dialog and the CRT Column S "was employed" comment).
+const EMPLOYED_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+
 // Count barriers that are successfully resolved (barrier exists + status === 'resolved')
 function countResolvedBarriers(client) {
   let count = 0;
@@ -354,6 +358,10 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const handleEnterOutcome = async () => {
     if (!outcomeStatus) {
       toast.error('Please select an outcome status');
+      return;
+    }
+    if (EMPLOYED_OUTCOMES.includes(outcomeStatus) && !employedFtPt) {
+      toast.error('Please select Full-Time or Part-Time for an employment outcome');
       return;
     }
     setSaving(true);
@@ -844,7 +852,9 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                 </div>
                 <div className="pt-2">
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                    Employed FT / PT <span className="font-normal text-slate-400">(for CRT column W)</span>
+                    Employed FT / PT
+                    {EMPLOYED_OUTCOMES.includes(outcomeStatus) && <span className="text-red-500">*</span>}{' '}
+                    <span className="font-normal text-slate-400">(for CRT column W)</span>
                   </label>
                   <div className="flex gap-2">
                     {['FT', 'PT'].map(opt => (
@@ -933,7 +943,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                 e.preventDefault();
                 handleEnterOutcome();
               }}
-              disabled={saving || !outcomeStatus}
+              disabled={saving || !outcomeStatus || (EMPLOYED_OUTCOMES.includes(outcomeStatus) && !employedFtPt)}
             >
               {saving ? 'Saving...' : 'Confirm Outcome'}
             </AlertDialogAction>
