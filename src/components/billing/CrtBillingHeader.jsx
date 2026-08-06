@@ -4,13 +4,18 @@ import { computeCrtBillingCounts } from '@/lib/crtBillingCounts';
 import { CalendarDays } from 'lucide-react';
 
 const TILES = [
-  { key: 'deaStarters', label: 'CEIS (DEA) Starters', col: 'DEA Start Date' },
-  { key: 'wdPlacementCompletion', label: 'WD Placement (EDA Completion)', col: 'Service Outcome' },
-  { key: 'wdComplete', label: 'WD Complete', col: 'Placement Outcome' },
-  { key: 'dea90Day', label: 'CEIS (DEA) 90 Day', col: '90 Day Outcome' },
-  { key: 'wd90Day', label: 'WD 90 Day', col: '90 Day Outcome' },
-  { key: 'serviceNavFee', label: 'Service Navigation Fee', col: 'Service Nav Support' },
+  { key: 'deaStarters', label: 'CEIS (DEA) Starters', col: 'DEA Start Date', tone: 'blue' },
+  { key: 'wdComplete', label: 'WD Complete', col: 'Placement Outcome', tone: 'blue' },
+  { key: 'wdPlacementCompletion', label: 'WD Placement (EDA Completion)', col: 'Service Outcome', tone: 'red' },
+  { key: 'dea90Day', label: 'CEIS (DEA) 90 Day', col: '90 Day Outcome', tone: 'red' },
+  { key: 'wd90Day', label: 'WD 90 Day', col: '90 Day Outcome', tone: 'red' },
+  { key: 'serviceNavFee', label: 'Service Navigation Fee', col: 'Service Nav Support', tone: 'red' },
 ];
+
+const TONE_STYLES = {
+  blue: 'border-blue-200 bg-blue-50 text-blue-800',
+  red: 'border-red-200 bg-red-50 text-red-800',
+};
 
 export default function CrtBillingHeader({ clients, viewedFileName }) {
   const counts = useMemo(
@@ -36,11 +41,11 @@ export default function CrtBillingHeader({ clients, viewedFileName }) {
           {TILES.map((t) => (
             <div
               key={t.key}
-              className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5"
+              className={`rounded-lg border px-3 py-2.5 ${TONE_STYLES[t.tone]}`}
             >
-              <p className="text-xs font-medium text-slate-600 leading-tight">{t.label}</p>
-              <p className="text-2xl font-bold text-slate-800 mt-1">{counts[t.key]}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-wide">{t.col}</p>
+              <p className="text-xs font-medium leading-tight opacity-80">{t.label}</p>
+              <p className="text-2xl font-bold mt-1">{counts[t.key]}</p>
+              <p className="text-[10px] mt-0.5 uppercase tracking-wide opacity-60">{t.col}</p>
             </div>
           ))}
         </div>
