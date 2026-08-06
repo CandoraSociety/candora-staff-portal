@@ -315,11 +315,57 @@ export function mapClientToCrtRow(client, monthEnd) {
       }
     }
   }
+  // EDA activity completion notes — each individually completed EDA, plus an
+  // overall Action Plan completion note when all EDAs are marked complete (via
+  // the "Mark EDAs as Complete" status action). Completion date is required for
+  // individual EDAs, so each entry includes its MM/DD/YY completion date.
+  const edaParts = [];
+  if (isDea) {
+    deaActivities.forEach(a => {
+      if (a.completed_date && gate(a.completed_date)) {
+        const label = String(a.type || 'EDA Activity').trim() || 'EDA Activity';
+        edaParts.push(`EDA: ${label} completed (${formatDateForCrt(a.completed_date)})`);
+      }
+    });
+  } else if (isWd) {
+    const SDP_LABELS = {
+      job_search_workshop: 'Job Search Workshop',
+      resume_writing_workshop: 'Resume Writing Workshop',
+      interview_skills_workshop: 'Interview Skills Workshop',
+      workplace_readiness_workshop: 'Workplace Readiness Workshop',
+      financial_literacy_workshop: 'Financial Literacy Workshop',
+      digital_literacy_workshop: 'Digital Literacy Workshop',
+      empoweru: 'EmpowerU',
+      ell_classes: 'ELL Classes',
+      skills_assessment: 'Skills Assessment',
+      exposure_course: 'Exposure Course',
+      employment_supports: 'Employment Supports',
+      job_applications: 'Job Applications',
+      networking: 'Networking',
+      other: 'Other',
+    };
+    const EXCLUDED_SDP = ['barrier_support', 'internal_placement', 'paid_external_placement'];
+    const roadmapStatus = client.roadmap_item_status || {};
+    (client.sdp_items || []).forEach(key => {
+      if (EXCLUDED_SDP.includes(key)) return;
+      const st = roadmapStatus[key] || {};
+      if (st.status === 'completed' && st.completed_date && gate(st.completed_date)) {
+        const label = SDP_LABELS[key] || key.replace(/_/g, ' ');
+        edaParts.push(`EDA: ${label} completed (${formatDateForCrt(st.completed_date)})`);
+      }
+    });
+  }
+  // Overall Action Plan completion — when all EDAs are marked complete
+  if (client.eda_completion_date && gate(client.eda_completion_date)) {
+    edaParts.push(`Action Plan completed (${formatDateForCrt(client.eda_completion_date)})`);
+  }
+
   const commentsParts = [];
   if (client.intake_notes && String(client.intake_notes).trim()) {
     commentsParts.push(String(client.intake_notes).trim());
   }
   commentsParts.push(...resolutionParts);
+  commentsParts.push(...edaParts);
   const comments = commentsParts.join(' | ');
 
   return [

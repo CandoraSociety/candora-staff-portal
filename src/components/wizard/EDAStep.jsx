@@ -52,6 +52,10 @@ export default function EDAStep({ client, edaKey, edaLabel, onSave, onComplete }
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (status === 'completed' && !completionDate) {
+      toast.error('Please enter a completion date before marking this activity as complete.');
+      return;
+    }
     setSaving(true);
     try {
       const finalStatus = completionDate ? 'completed' : status;
