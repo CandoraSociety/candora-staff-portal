@@ -284,6 +284,10 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
       toast.error('Please select an employment type');
       return;
     }
+    if (!employedFtPt) {
+      toast.error('Please select Full-Time or Part-Time');
+      return;
+    }
     setSaving(true);
     try {
       let me = null;
@@ -760,7 +764,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                    Employed FT / PT <span className="font-normal text-slate-400">(for CRT column W)</span>
+                    Employed FT / PT <span className="text-red-500">*</span> <span className="font-normal text-slate-400">(for CRT column W)</span>
                   </label>
                   <div className="flex gap-2">
                     {['FT', 'PT'].map(opt => (

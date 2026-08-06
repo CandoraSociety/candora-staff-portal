@@ -365,12 +365,32 @@ export function mapClientToCrtRow(client, monthEnd) {
     edaParts.push(`Action Plan completed (${formatDateForCrt(client.eda_completion_date)})`);
   }
 
+  // Found Employment (WD only) — recorded via the "Found Employment" status
+  // menu action. State-derived from the employment fields, so the line drops
+  // out when "Undo Found Employment" clears them. Includes the employer name,
+  // job title, hours/week, wage, and FT/PT where available.
+  const employmentParts = [];
+  if (isWd && client.post_completion_employment_date && gate(client.post_completion_employment_date)) {
+    const bits = [];
+    if (client.employer_name) bits.push(`Employer: ${client.employer_name}`);
+    if (client.job_title) bits.push(`Job Title: ${client.job_title}`);
+    if (client.job_hours) bits.push(`Hours/week: ${client.job_hours}`);
+    if (client.job_wage !== undefined && client.job_wage !== null && client.job_wage !== '') {
+      bits.push(`Wage: $${client.job_wage}/hr`);
+    }
+    if (client.employed_ftpt) {
+      bits.push(client.employed_ftpt === 'FT' ? 'Full-Time' : 'Part-Time');
+    }
+    employmentParts.push(`Found Employment (${formatDateForCrt(client.post_completion_employment_date)}): ${bits.join('; ')}`);
+  }
+
   const commentsParts = [];
   if (client.intake_notes && String(client.intake_notes).trim()) {
     commentsParts.push(String(client.intake_notes).trim());
   }
   commentsParts.push(...resolutionParts);
   commentsParts.push(...edaParts);
+  commentsParts.push(...employmentParts);
   const comments = commentsParts.join(' | ');
 
   return [
