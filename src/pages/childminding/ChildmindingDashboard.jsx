@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { ClipboardList, CalendarDays, DollarSign, Baby, Plus, ArrowRight, CalendarPlus, Clock, MapPin } from 'lucide-react';
+import { ClipboardList, CalendarDays, DollarSign, Baby, ArrowRight, CalendarPlus, Clock, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PROGRAM_OPTIONS, PROGRAM_LABELS, PROGRAM_COLORS, calculateBilling, getProgramLabel, MONTH_NAMES } from '@/lib/childmindingConstants';
@@ -55,10 +55,7 @@ export default function ChildmindingDashboard() {
           <h1 className="text-2xl font-heading font-bold text-foreground">Childminding Dashboard</h1>
           <p className="text-muted-foreground text-sm mt-1">{MONTH_NAMES[currentMonth]} {currentYear} overview</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setCreateSessionOpen(true)}><CalendarPlus className="h-4 w-4" /> Create Session</Button>
-          <Link to="/childminding/intake"><Button><Plus className="h-4 w-4" /> New Intake</Button></Link>
-        </div>
+        <Button variant="secondary" onClick={() => setCreateSessionOpen(true)}><CalendarPlus className="h-4 w-4" /> Create Session</Button>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
