@@ -18,8 +18,15 @@ export default async function(req: Request): Promise<Response> {
     const clientId = payload?.event?.entity_id || payload?.data?.id || payload?.client_id;
     if (!clientId) return Response.json({ error: 'No client id provided.' }, { status: 400 });
 
-    const client = await base44.asServiceRole.entities.Client.get(clientId);
-    if (!client || !client.id) return Response.json({ status: 'not_found', message: 'Client not found.' });
+    const fetched = await base44.asServiceRole.entities.Client.get(clientId);
+    if (!fetched || !fetched.id) return Response.json({ status: 'not_found', message: 'Client not found.' });
+
+    // Entity-automation payloads carry the freshest full entity data. The SDK
+    // get() can return null for some date fields (eda_completion_date,
+    // completion_date) even when they're stored in the DB, so prefer the
+    // payload's `data` values where present and fall back to the fetched record.
+    const payloadData = (payload?.data && typeof payload.data === 'object') ? payload.data : null;
+    const client = payloadData ? { ...fetched, ...payloadData } : fetched;
 
     const accessToken = await getGraphToken();
     const result = await syncOneClientIntoAllOpenWorkbooks(base44, accessToken, client);

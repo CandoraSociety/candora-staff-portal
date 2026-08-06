@@ -181,7 +181,8 @@
     },
     "completion_date": {
       "type": "string",
-      "format": "date"
+      "format": "date",
+      "description": "Date the program was marked complete (legacy/overall completion). Used alongside eda_completion_date for CRT Service Outcome."
     },
     "eda_completion_date": {
       "type": "string",

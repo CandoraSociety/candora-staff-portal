@@ -122,12 +122,25 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
 
     if (rowIdx >= 0) {
       matchedRows.add(rowIdx);
+      const existingRow = allValues[rowIdx] || [];
       for (let col = 0; col < NUM_COLUMNS; col++) {
         // Columns D (3) and F (5) are the stream-specific start dates. A client
         // is only in one stream, so always write both — this clears a stale date
         // left in the opposite column (e.g. a DEA date after a switch to WD).
         const force = (col === 3 || col === 5);
         if (force || (portalRow[col] !== '' && portalRow[col] !== null && portalRow[col] !== undefined)) {
+          // Column S (18, Comments) can include an "Action Plan completed (...)"
+          // line that depends on eda_completion_date. The SDK read can return
+          // null for that field even when it's stored, which would make the
+          // recomputed comment drop the action-plan line. Don't clobber an
+          // existing cell that already has it.
+          if (col === 18) {
+            const existingComment = String(existingRow[col] || '');
+            const newComment = String(portalRow[col] || '');
+            if (existingComment.includes('Action Plan completed') && !newComment.includes('Action Plan completed')) {
+              continue;
+            }
+          }
           allValues[rowIdx][col] = portalRow[col];
         }
       }
