@@ -114,6 +114,10 @@
       "type": "string",
       "description": "If this record was auto-created from a WorkExposurePlacement, the placement ID"
     },
+    "linked_submission_id": {
+      "type": "string",
+      "description": "If this record was auto-created from a WorkExposureHoursSubmission, the submission ID"
+    },
     "invoiced": {
       "type": "boolean",
       "default": false,

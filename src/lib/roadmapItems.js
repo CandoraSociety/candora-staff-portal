@@ -86,6 +86,7 @@ export function buildRoadmapItems(client, internalTrainings = [], workExposures 
       key: `wep_${w.id}`,
       label: `Work Exposure: ${w.business_name}`,
       status,
+      hoursWorked: w.hours_worked,
     });
   });
 

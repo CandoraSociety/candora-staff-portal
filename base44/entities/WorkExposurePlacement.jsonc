@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Denormalized client full name"
     },
+    "employer_id": {
+      "type": "string",
+      "description": "Linked Employer ID (Candora Central employer record). When set, business_name mirrors the employer's company name."
+    },
     "business_name": {
       "type": "string",
       "description": "Name of the business/employer"
@@ -28,7 +32,7 @@
     },
     "hours_worked": {
       "type": "number",
-      "description": "Total hours worked during the placement"
+      "description": "Total hours worked during the placement \u2014 auto-aggregated from employer/staff hours submissions"
     },
     "hourly_rate": {
       "type": "number",

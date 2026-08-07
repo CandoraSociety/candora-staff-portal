@@ -50,6 +50,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
                   <th className="text-right py-2 px-3">Hours</th>
                   <th className="text-right py-2 px-3">Rate</th>
                   <th className="text-right py-2 px-3">Billing Amount</th>
+                  <th className="text-center py-2 px-3">Timesheet</th>
                   <th className="text-center py-2 px-3">Status</th>
                 </tr>
               </thead>
@@ -69,6 +70,11 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
                       ${(Number(r.total || r.amount || 0)).toFixed(2)}
                     </td>
                     <td className="text-center py-2 px-3">
+                      {r.receipt_urls && r.receipt_urls.length > 0 ? (
+                        <a href={r.receipt_urls[0]} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs">view</a>
+                      ) : '—'}
+                    </td>
+                    <td className="text-center py-2 px-3">
                       {r.invoiced ? (
                         <Badge variant="outline" className="text-green-600">Invoiced</Badge>
                       ) : (
@@ -80,7 +86,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 bg-slate-50">
-                  <td className="py-2 px-3 font-semibold text-right" colSpan={5}>Total Billing</td>
+                  <td className="py-2 px-3 font-semibold text-right" colSpan={6}>Total Billing</td>
                   <td className="text-right py-2 px-3 font-bold text-base">${totalAmount.toFixed(2)}</td>
                   <td />
                 </tr>

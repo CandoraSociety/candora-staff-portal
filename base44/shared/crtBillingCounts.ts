@@ -147,3 +147,14 @@ export function computeMonthBillingCounts(clients, year, month0) {
 
   return { deaStarters, wdPlacementCompletion, wdComplete, dea90Day, wd90Day, serviceNavFee };
 }
+
+// Running dollar total of all paid work-exposure placements billed in a given
+// calendar month. Sums the `total` of every paid_external_placement
+// FinancialRecord whose billing_month matches the month. Used to populate
+// column CJ (Paid Work Exposure) of the Invoice Tracker sheet.
+export function computeMonthWorkExposureTotal(financialRecords, year, month0) {
+  const prefix = `${year}-${String(month0 + 1).padStart(2, '0')}`;
+  return (financialRecords || [])
+    .filter((r) => r.record_type === 'paid_external_placement' && r.billing_month === prefix)
+    .reduce((s, r) => s + (Number(r.total) || 0), 0);
+}

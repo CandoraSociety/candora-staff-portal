@@ -1,0 +1,86 @@
+{
+  "name": "WorkExposureHoursSubmission",
+  "type": "object",
+  "properties": {
+    "employer_id": {
+      "type": "string",
+      "description": "Linked Employer ID"
+    },
+    "employer_name": {
+      "type": "string",
+      "description": "Denormalized employer / business name"
+    },
+    "placement_id": {
+      "type": "string",
+      "description": "Linked WorkExposurePlacement ID"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client ID"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "hours_worked": {
+      "type": "number",
+      "description": "Total hours worked during the submission period"
+    },
+    "period_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date of the submission period"
+    },
+    "period_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End date of the submission period"
+    },
+    "billing_month": {
+      "type": "string",
+      "description": "YYYY-MM \u2014 the month this submission is billed in (derived from period_end_date)"
+    },
+    "timesheet_url": {
+      "type": "string",
+      "description": "Uploaded timesheet supporting document URL"
+    },
+    "comments": {
+      "type": "string",
+      "description": "Employer notes \u2014 progress, challenges, etc."
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "description": "Name of whoever submitted (employer contact or staff member)"
+    },
+    "submitted_by_email": {
+      "type": "string"
+    },
+    "submitted_by_staff": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when entered by a career counsellor on behalf of the employer"
+    },
+    "invoiced": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "reviewed"
+      ],
+      "default": "submitted"
+    }
+  },
+  "required": [
+    "placement_id",
+    "client_id",
+    "hours_worked",
+    "period_end_date"
+  ]
+}

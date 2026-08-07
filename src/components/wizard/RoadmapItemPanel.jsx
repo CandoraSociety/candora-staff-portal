@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction,
 } from '@/components/ui/alert-dialog';
-import { Lock, Unlock, AlertTriangle, Bell } from 'lucide-react';
+import { Lock, Unlock, AlertTriangle, Bell, Clock } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import Celebration from '@/components/Celebration';
 
@@ -85,6 +85,11 @@ export default function RoadmapItemPanel({ item, currentStatus, onSave, onCancel
         )}
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
+        {item.hoursWorked != null && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded p-2 text-xs text-indigo-800 flex items-center gap-1">
+            <Clock className="w-3 h-3" /> Total hours submitted: <strong className="ml-1">{item.hoursWorked}</strong>
+          </div>
+        )}
         {/* Status buttons */}
         <div>
           <Label className="text-xs font-semibold">Status</Label>

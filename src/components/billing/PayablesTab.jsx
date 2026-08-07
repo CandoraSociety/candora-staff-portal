@@ -75,7 +75,7 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
     if (f === 'date') next.billing_month = deriveBillingMonth(v);
     return next;
   });
-  const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
+  const total = rec.record_type === 'paid_external_placement' ? (parseFloat(rec.amount) || 0) : (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
 
   const selectedClient = clients.find(c => c.id === rec.client_id);
 
@@ -169,15 +169,17 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
             <Input value={rec.description} onChange={e => update('description', e.target.value)} className="mt-1" placeholder="Brief description..." />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className={`grid ${rec.record_type === 'paid_external_placement' ? 'grid-cols-2' : 'grid-cols-3'} gap-3`}>
             <div>
               <Label className="text-xs">Amount ($)</Label>
               <Input type="number" step="0.01" value={rec.amount} onChange={e => update('amount', e.target.value)} className="mt-1" />
             </div>
-            <div>
-              <Label className="text-xs">Tax ($)</Label>
-              <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1" />
-            </div>
+            {rec.record_type !== 'paid_external_placement' && (
+              <div>
+                <Label className="text-xs">Tax ($)</Label>
+                <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1" />
+              </div>
+            )}
             <div>
               <Label className="text-xs">Total ($)</Label>
               <Input value={total.toFixed(2)} disabled className="mt-1" />
@@ -268,7 +270,7 @@ function InlineEditRow({ record, clients, onDone, onCancel }) {
     if (f === 'date') next.billing_month = deriveBillingMonth(v);
     return next;
   });
-  const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
+  const total = rec.record_type === 'paid_external_placement' ? (parseFloat(rec.amount) || 0) : (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
 
   const handleUpload = async (files) => {
     setUploading(true);
@@ -306,15 +308,17 @@ function InlineEditRow({ record, clients, onDone, onCancel }) {
   return (
     <tr className="bg-amber-50/40 border-b border-slate-100">
       <td colSpan={9} className="p-3">
-        <div className="grid grid-cols-4 gap-2 text-xs">
+        <div className={`grid ${rec.record_type === 'paid_external_placement' ? 'grid-cols-3' : 'grid-cols-4'} gap-2 text-xs`}>
           <div>
             <Label className="text-xs">Amount ($)</Label>
             <Input type="number" step="0.01" value={rec.amount} onChange={e => update('amount', e.target.value)} className="mt-1 h-8 text-xs" />
           </div>
-          <div>
-            <Label className="text-xs">Tax ($)</Label>
-            <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1 h-8 text-xs" />
-          </div>
+          {rec.record_type !== 'paid_external_placement' && (
+            <div>
+              <Label className="text-xs">Tax ($)</Label>
+              <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1 h-8 text-xs" />
+            </div>
+          )}
           <div>
             <Label className="text-xs">Total</Label>
             <Input value={`$${total.toFixed(2)}`} disabled className="mt-1 h-8 text-xs" />

@@ -322,6 +322,13 @@ import ReceptionProgramRegistration from '@/pages/reception/ReceptionProgramRegi
 import ReceptionResourceFinder from '@/pages/reception/ReceptionResourceFinder';
 import ReceptionUrgentAlerts from '@/pages/reception/ReceptionUrgentAlerts';
 
+// Employer Portal (isolated)
+import EmployerPortalGuard from '@/components/employer-portal/EmployerPortalGuard';
+import EmployerPortalLayout from '@/components/employer-portal/EmployerPortalLayout';
+import EmployerLogin from '@/pages/employer-portal/EmployerLogin';
+import EmployerRegister from '@/pages/employer-portal/EmployerRegister';
+import EmployerDashboard from '@/pages/employer-portal/EmployerDashboard';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -356,6 +363,15 @@ const AuthenticatedApp = () => {
       <Route path="/volunteer-portal" element={<VolunteerPortal />} />
       <Route path="/staff-portal" element={<StaffPortal />} />
       <Route path="/pathways-intake" element={<PathwaysPublicIntake />} />
+
+      {/* Employer Portal — isolated, employer-only (login is public) */}
+      <Route path="/employer-portal/login" element={<EmployerLogin />} />
+      <Route path="/employer-portal/register" element={<EmployerRegister />} />
+      <Route element={<EmployerPortalGuard />}>
+        <Route element={<EmployerPortalLayout />}>
+          <Route path="/employer-portal" element={<EmployerDashboard />} />
+        </Route>
+      </Route>
 
       {/* Catering Portal — fully public, no auth */}
       <Route element={<PublicLayout />}>

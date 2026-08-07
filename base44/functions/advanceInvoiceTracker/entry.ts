@@ -3,7 +3,7 @@ import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell
 } from '../../shared/invoiceTracker.ts';
-import { computeMonthBillingCounts } from '../../shared/crtBillingCounts.ts';
+import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from '../../shared/crtBillingCounts.ts';
 
 // Advances the monthly columns of the Invoice Tracker sheet inside the active
 // CRT workbook up to and including the current reporting month:
@@ -46,6 +46,14 @@ const COUNT_COLUMNS = {
   wd90Day: 'BL',                // WD 90 Day                     (formula in BM)
   serviceNavFee: 'CD',          // Service Navigation Fee        (formula in CE)
 };
+
+// Dollar-value columns (written directly — no separate formula column).
+const DOLLAR_COLUMNS = {
+  paidWorkExposure: 'CJ',          // Paid Work Exposure (running $ total)
+};
+const DOLLAR_INDICES = Object.fromEntries(
+  Object.entries(DOLLAR_COLUMNS).map(([k, c]) => [k, colIndex(c)])
+);
 
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
@@ -91,10 +99,16 @@ export default async function(req: Request): Promise<Response> {
     try { clients = await base44.asServiceRole.entities.Client.list('-created_date', 5000) || []; }
     catch { clients = []; }
 
+    let financialRecords = [];
+    try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; }
+    catch { financialRecords = []; }
+
     const dFilled = [];
     const bFilled = [];
     const countFilled = [];
     const countErrors = [];
+    const dollarFilled = [];
+    let dollarSkipped = 0;
     let invoiceNumber = 0;
     let dSkipped = 0;
     let bSkipped = 0;
@@ -149,6 +163,25 @@ export default async function(req: Request): Promise<Response> {
             }
           }
         }
+
+        // Dollar-value columns (CJ — paid work exposure running total) — only
+        // for months from April 2026 onward (earlier months left untouched).
+        if (kRank >= dStartRank) {
+          for (const [dk, col] of Object.entries(DOLLAR_COLUMNS)) {
+            const dollarExpected = dk === 'paidWorkExposure'
+              ? computeMonthWorkExposureTotal(financialRecords, key.year, key.month)
+              : 0;
+            const dollarExisting = row[DOLLAR_INDICES[dk]];
+            const dollarExistingNum = (dollarExisting == null || dollarExisting === '') ? 0 : Number(dollarExisting);
+            if (dollarExistingNum === dollarExpected) { dollarSkipped++; continue; }
+            try {
+              await writeTrackerCell(accessToken, workbook.id, sheetName, col, excelRow, dollarExpected);
+              dollarFilled.push({ row: excelRow, month: monthLabel, column: col, key: dk, value: dollarExpected });
+            } catch (e) {
+              countErrors.push({ row: excelRow, month: monthLabel, column: col, key: dk, error: String(e.message || e).slice(0, 120) });
+            }
+          }
+        }
       }
     }
 
@@ -160,7 +193,8 @@ export default async function(req: Request): Promise<Response> {
       clientsConsidered: clients.length,
       columnD: { filledCount: dFilled.length, filled: dFilled, skippedAlreadyFilled: dSkipped },
       columnB: { filledCount: bFilled.length, filled: bFilled, skippedAlreadyFilled: bSkipped, lastInvoiceNumber: invoiceNumber },
-      billingCounts: { filledCount: countFilled.length, filled: countFilled, skippedAlreadyFilled: countSkipped, errors: countErrors }
+      billingCounts: { filledCount: countFilled.length, filled: countFilled, skippedAlreadyFilled: countSkipped, errors: countErrors },
+      dollarColumns: { filledCount: dollarFilled.length, filled: dollarFilled, skippedAlreadyFilled: dollarSkipped }
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { label: "My Dashboard",      path: "/pathways/dashboard" },
   { label: "Reports",           path: "/pathways/reports" },
   { label: "Billing",           path: "/pathways/billing" },
+  { label: "Employer Portal",    path: "/pathways/employers" },
   { label: "Internal Supervisor", path: "/pathways/supervisor" },
   { label: "Resources",         path: "/pathways/resources" },
   { label: "Compass",           path: "/pathways/compass" },

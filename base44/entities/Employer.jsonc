@@ -3,28 +3,85 @@
   "type": "object",
   "properties": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Company / business name"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Contact person's first name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Contact person's last name"
+    },
+    "position": {
+      "type": "string",
+      "description": "Contact person's position / title"
     },
     "contact_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Denormalized contact full name (first + last)"
     },
     "contact_email": {
-      "type": "string"
+      "type": "string",
+      "description": "Login email address for the Employer Portal"
     },
     "contact_phone": {
-      "type": "string"
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "alt_contact_name": {
+      "type": "string",
+      "description": "Alternate contact name"
+    },
+    "alt_contact_position": {
+      "type": "string",
+      "description": "Alternate contact position / title"
+    },
+    "alt_contact_phone": {
+      "type": "string",
+      "description": "Alternate contact phone"
+    },
+    "alt_contact_email": {
+      "type": "string",
+      "description": "Alternate contact email"
     },
     "address": {
-      "type": "string"
+      "type": "string",
+      "description": "Company address"
     },
     "industry": {
-      "type": "string"
+      "type": "string",
+      "description": "Industry"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Linked platform User ID \u2014 set after invite is accepted or on self-registration"
+    },
+    "invite_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a login invite has been sent to this employer"
+    },
+    "invite_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "inactive"
+      ],
+      "default": "pending"
     },
     "notes": {
       "type": "string"
     }
   },
   "required": [
-    "name"
+    "name",
+    "contact_email"
   ]
 }

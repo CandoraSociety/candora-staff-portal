@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [employerProfile, setEmployerProfile] = useState(null);
 
   useEffect(() => {
     checkAppState();
@@ -94,6 +95,13 @@ export const AuthProvider = ({ children }) => {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
+      // Detect employer-portal users so the main app can be gated off.
+      let empProfile = null;
+      try {
+        const emps = await base44.entities.Employer.filter({ contact_email: currentUser.email });
+        if (emps && emps.length > 0) empProfile = emps[0];
+      } catch {}
+      setEmployerProfile(empProfile);
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
@@ -115,6 +123,7 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
+    setEmployerProfile(null);
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
@@ -138,6 +147,7 @@ export const AuthProvider = ({ children }) => {
       isLoadingPublicSettings,
       authError,
       appPublicSettings,
+      employerProfile,
       authChecked,
       logout,
       navigateToLogin,
