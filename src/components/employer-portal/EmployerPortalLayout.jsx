@@ -21,9 +21,7 @@ export default function EmployerPortalLayout() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Candora Employer Portal</div>
-              <div className="text-xs text-white/60">
-                {isStaff ? 'Staff review mode' : (employerProfile?.name || '')}
-              </div>
+              <div className="text-xs text-white/60">{employerProfile?.name || ''}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">

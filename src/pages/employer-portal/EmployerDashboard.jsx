@@ -3,10 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, FileText, Plus, Building2, Phone, Mail, MapPin, Briefcase, UserCog } from 'lucide-react';
+import { Clock, FileText, Plus, Building2, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import TimesheetSubmissionForm from '@/components/wizard/TimesheetSubmissionForm';
 import { toast } from 'sonner';
@@ -14,34 +12,24 @@ import { toast } from 'sonner';
 export default function EmployerDashboard() {
   const { employerProfile, user } = useAuth();
   const isStaff = !employerProfile;
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [placements, setPlacements] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [employers, setEmployers] = useState([]);
-  const [selectedEmployer, setSelectedEmployer] = useState(null);
+  const [employer, setEmployer] = useState(employerProfile || null);
 
-  // The employer whose portal we are viewing.
-  const activeEmployerId = isStaff
-    ? (searchParams.get('employer') || '')
-    : (employerProfile?.id || '');
+  // The employer whose portal we are viewing: own profile, or ?employer= (staff deep-linking in).
+  const activeEmployerId = employerProfile?.id || searchParams.get('employer') || '';
 
-  // Staff mode: load the list of employers for the picker.
+  // Staff deep-link: fetch the employer record so the page renders exactly as the employer sees it.
   useEffect(() => {
-    if (!isStaff) return;
-    base44.entities.Employer.list('-created_date', 500)
-      .then(setEmployers)
-      .catch(() => toast.error('Failed to load employers'));
-  }, [isStaff]);
-
-  // Resolve the selected employer object (employer users always see their own).
-  useEffect(() => {
-    if (!isStaff) { setSelectedEmployer(employerProfile); return; }
-    if (!activeEmployerId) { setSelectedEmployer(null); return; }
-    const found = employers.find(e => e.id === activeEmployerId) || null;
-    setSelectedEmployer(found);
-  }, [isStaff, activeEmployerId, employers, employerProfile]);
+    if (employerProfile) { setEmployer(employerProfile); return; }
+    if (!activeEmployerId) { setEmployer(null); return; }
+    base44.asServiceRole.entities.Employer.get(activeEmployerId)
+      .then(setEmployer)
+      .catch(() => setEmployer(null));
+  }, [employerProfile, activeEmployerId]);
 
   const fetchData = async () => {
     if (!activeEmployerId) {
@@ -74,59 +62,24 @@ export default function EmployerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeEmployerId]);
 
-  const onPickEmployer = (id) => {
-    if (!id) setSearchParams({});
-    else setSearchParams({ employer: id });
-  };
-
   const activePlacements = placements;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
-            {isStaff
-              ? 'Employer Portal — Staff Review'
-              : `Welcome, ${employerProfile?.contact_name?.split(' ')[0] || 'Employer'}`}
-          </h1>
-          <p className="text-sm text-slate-600">
-            {isStaff
-              ? 'View a participating employer\'s portal and submit hours on their behalf.'
-              : 'Submit work exposure hours for your placement participants.'}
-          </p>
+          <h1 className="text-2xl font-bold text-slate-800">{employer?.name || 'Employer Portal'}</h1>
+          <p className="text-sm text-slate-600">Submit work exposure hours for your placement participants.</p>
         </div>
         <Button onClick={() => setShowForm(true)} disabled={!activeEmployerId || activePlacements.length === 0}>
           <Plus className="w-4 h-4 mr-2" /> Submit Hours
         </Button>
       </div>
 
-      {isStaff && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <UserCog className="w-4 h-4" /> Viewing as staff:
-              </div>
-              <div className="min-w-[260px]">
-                <Select value={activeEmployerId} onValueChange={onPickEmployer}>
-                  <SelectTrigger><SelectValue placeholder="Select an employer to view…" /></SelectTrigger>
-                  <SelectContent>
-                    {employers.map(e => (
-                      <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {isStaff && !activeEmployerId && (
+      {!activeEmployerId && (
         <Card>
           <CardContent className="py-10 text-center text-sm text-slate-500">
-            Select an employer above to view their portal — placements, submitted hours, and company info.
+            Open an employer from the staff app to view their portal.
           </CardContent>
         </Card>
       )}
@@ -134,8 +87,7 @@ export default function EmployerDashboard() {
       {activeEmployerId && activePlacements.length === 0 && !loading && (
         <Card>
           <CardContent className="py-10 text-center text-sm text-slate-500">
-            No active work exposure participants are assigned to this company yet.
-            {isStaff ? ' Link participants to this employer from a client\'s Work Exposure tab.' : ' A Candora career counsellor will link participants to your business once a placement begins.'}
+            No active work exposure participants are assigned to this company yet. A Candora career counsellor will link participants to your business once a placement begins.
           </CardContent>
         </Card>
       )}
@@ -145,7 +97,7 @@ export default function EmployerDashboard() {
           placements={activePlacements}
           user={user}
           isStaff={isStaff}
-          employer={selectedEmployer}
+          employer={employer}
           onDone={() => { setShowForm(false); fetchData(); }}
           onCancel={() => setShowForm(false)}
         />
@@ -195,7 +147,6 @@ export default function EmployerDashboard() {
                             </td>
                             <td className="py-2 px-3 whitespace-nowrap text-xs text-slate-500">
                               {s.submitted_date ? format(new Date(s.submitted_date + 'T00:00:00'), 'MMM d, yy') : ''}
-                              {s.submitted_by_staff && <Badge variant="outline" className="ml-1 text-xs">by staff</Badge>}
                             </td>
                             <td className="py-2 px-3 text-xs text-slate-600 max-w-[240px] truncate" title={s.comments}>{s.comments || '—'}</td>
                           </tr>
@@ -213,12 +164,12 @@ export default function EmployerDashboard() {
               <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-5 w-5" /> Company Information</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <InfoRow icon={Building2} label="Company" value={selectedEmployer?.name} />
-              <InfoRow icon={Briefcase} label="Industry" value={selectedEmployer?.industry} />
-              <InfoRow icon={MapPin} label="Address" value={selectedEmployer?.address} />
-              <InfoRow icon={Phone} label="Phone" value={selectedEmployer?.contact_phone} />
-              <InfoRow icon={Mail} label="Login email" value={selectedEmployer?.contact_email} />
-              <InfoRow icon={Building2} label="Contact" value={selectedEmployer?.contact_name} />
+              <InfoRow icon={Building2} label="Company" value={employer?.name} />
+              <InfoRow icon={Briefcase} label="Industry" value={employer?.industry} />
+              <InfoRow icon={MapPin} label="Address" value={employer?.address} />
+              <InfoRow icon={Phone} label="Phone" value={employer?.contact_phone} />
+              <InfoRow icon={Mail} label="Login email" value={employer?.contact_email} />
+              <InfoRow icon={Building2} label="Contact" value={employer?.contact_name} />
             </CardContent>
           </Card>
         </>
