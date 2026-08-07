@@ -141,7 +141,7 @@ export default function PathwaysEmployers() {
         <div className="flex items-center gap-2">
           <Button onClick={() => setShowForm(true)}><Plus className="h-4 h-4 mr-2" /> Add Employer</Button>
           <Button asChild variant="outline">
-            <Link to="/employer-portal"><ExternalLink className="w-4 h-4 mr-2" /> Open Employer Portal</Link>
+            <Link to="/employer-portal"><ExternalLink className="w-4 h-4 mr-2" /> External Employer Portal</Link>
           </Button>
         </div>
       </div>
