@@ -1,11 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 
-// Guards the isolated Employer Portal. Only logged-in users who have a linked
-// Employer profile may enter; everyone else is sent away (authed staff users
-// back to the main app, unauthed users to the employer login).
+// Guards the isolated Employer Portal. Any authenticated user may enter —
+// employer-profile users see their own company view; staff see a read/submit
+// "review mode" with an employer picker. Unauthed users are sent to employer login.
+// Employers themselves are kept out of the main app by ProtectedRoute.
 export default function EmployerPortalGuard() {
-  const { isAuthenticated, isLoadingAuth, authChecked, employerProfile } = useAuth();
+  const { isAuthenticated, isLoadingAuth, authChecked } = useAuth();
 
   if (isLoadingAuth || !authChecked) {
     return (
@@ -16,7 +17,6 @@ export default function EmployerPortalGuard() {
   }
 
   if (!isAuthenticated) return <Navigate to="/employer-portal/login" replace />;
-  if (!employerProfile) return <Navigate to="/" replace />;
 
   return <Outlet />;
 }

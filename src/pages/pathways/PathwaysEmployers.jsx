@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Briefcase, Plus, Mail, Phone, MapPin, ChevronDown, ChevronRight, Clock, Send, Building2 } from 'lucide-react';
+import { Briefcase, Plus, Mail, Phone, MapPin, ChevronDown, ChevronRight, Clock, Send, Building2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
 const EMPTY = {
@@ -137,7 +138,12 @@ export default function PathwaysEmployers() {
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2"><Building2 className="h-6 w-6" /> Employer Portal</h1>
           <p className="text-sm text-slate-600 mt-1">Manage employer accounts and review submitted work exposure hours.</p>
         </div>
-        <Button onClick={() => setShowForm(true)}><Plus className="h-4 w-4 mr-2" /> Add Employer</Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowForm(true)}><Plus className="h-4 h-4 mr-2" /> Add Employer</Button>
+          <Button asChild variant="outline">
+            <Link to="/employer-portal"><ExternalLink className="w-4 h-4 mr-2" /> Open Employer Portal</Link>
+          </Button>
+        </div>
       </div>
 
       {showForm && (
@@ -181,6 +187,9 @@ export default function PathwaysEmployers() {
                             <Send className="w-3.5 h-3.5 mr-1" /> Invite
                           </Button>
                         )}
+                        <Button asChild size="sm" variant="ghost">
+                          <Link to={`/employer-portal?employer=${emp.id}`}><ExternalLink className="w-3.5 h-3.5 mr-1" /> Open in Portal</Link>
+                        </Button>
                         <Button size="sm" variant="ghost" onClick={() => toggle(emp)}>
                           {expanded[emp.id] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />} Submissions
                         </Button>
