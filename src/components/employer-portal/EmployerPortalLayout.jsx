@@ -1,11 +1,10 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { getEmployerSession, clearEmployerSession } from '@/lib/employerPortalSession';
 import { useOrgSettings } from '@/lib/useOrgSettings';
-import { LogOut, ArrowLeft } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 export default function EmployerPortalLayout() {
   const portalEmployerId = getEmployerSession();
-  const isStaff = !portalEmployerId;
   const { logoUrl } = useOrgSettings();
 
   const handleLogout = () => {
@@ -30,11 +29,7 @@ export default function EmployerPortalLayout() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            {isStaff ? (
-              <Link to="/pathways/employers" className="flex items-center gap-1 text-xs text-white/80 hover:text-white">
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Staff App
-              </Link>
-            ) : (
+            {portalEmployerId && (
               <button onClick={handleLogout} className="flex items-center gap-1 text-xs text-white/80 hover:text-white">
                 <LogOut className="w-3.5 h-3.5" /> Sign out
               </button>
