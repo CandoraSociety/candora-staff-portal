@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X } from "lucide-react";
+import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
@@ -10,6 +10,7 @@ import CompassTaskList from "@/components/compass/CompassTaskList";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import CollapsibleSection from "@/components/pathways/CollapsibleSection";
 import PlacementSections from "@/components/pathways/PlacementSections";
+import EmployersListTab from "@/components/pathways/EmployersListTab";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
@@ -68,6 +69,7 @@ export default function PathwaysWorkerDashboard() {
   const [activeTab, setActiveTab] = useState("clients");
   const [transfers, setTransfers] = useState([]);
   const [placementSubTab, setPlacementSubTab] = useState("all");
+  const [exposureView, setExposureView] = useState("placements");
   const [exposurePlacements, setExposurePlacements] = useState([]);
   const [switchClient, setSwitchClient] = useState(null);
   const [isCareerCounsellor, setIsCareerCounsellor] = useState(false);
@@ -523,8 +525,24 @@ export default function PathwaysWorkerDashboard() {
                 </>
               )}
               </>
+              ) : placementSubTab === "work_exposure" ? (
+                <>
+                  <div className="flex gap-1 mb-4">
+                    <button
+                      onClick={() => setExposureView("placements")}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md ${exposureView === "placements" ? "bg-slate-200 text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
+                    >Placements</button>
+                    <button
+                      onClick={() => setExposureView("employers")}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1 ${exposureView === "employers" ? "bg-slate-200 text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
+                    ><Building2 className="w-3.5 h-3.5" /> Employers</button>
+                  </div>
+                  {exposureView === "placements"
+                    ? <PlacementSections clients={displayed} type="work_exposure" />
+                    : <EmployersListTab />}
+                </>
               ) : (
-                <PlacementSections clients={displayed} type={placementSubTab === "internal_training" ? "internal" : "work_exposure"} />
+                <PlacementSections clients={displayed} type="internal" />
               )}
             </>
           )

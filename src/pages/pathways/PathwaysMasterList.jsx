@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, AlertTriangle, Users } from "lucide-react";
+import { LogOut, AlertTriangle, Users, Building2 } from "lucide-react";
 import { format } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
 import { clientRowColor } from "@/lib/clientRowColor";
@@ -10,6 +10,7 @@ import PathwaysStaffManager from "@/components/pathways/PathwaysStaffManager";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
+import EmployersListTab from "@/components/pathways/EmployersListTab";
 import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
 import { Switch } from "@/components/ui/switch";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
@@ -75,6 +76,7 @@ export default function PathwaysMasterList() {
   const [loading, setLoading] = useState(true);
   const [workers, setWorkers] = useState([]);
   const [placementSubTab, setPlacementSubTab] = useState("all");
+  const [exposureView, setExposureView] = useState("placements");
   const [reassignClient, setReassignClient] = useState(null);
   const [staff, setStaff] = useState([]);
   const [reassigning, setReassigning] = useState(false);
@@ -251,11 +253,24 @@ export default function PathwaysMasterList() {
               onReassign={setReassignClient}
             />
           </>
-        ) : placementSubTab !== "all" ? (
-          <PlacementSections
-            clients={displayed}
-            type={placementSubTab === "internal_training" ? "internal" : "work_exposure"}
-          />
+        ) : placementSubTab === "work_exposure" ? (
+          <>
+            <div className="flex gap-1 mb-4">
+              <button
+                onClick={() => setExposureView("placements")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md ${exposureView === "placements" ? "bg-slate-200 text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
+              >Placements</button>
+              <button
+                onClick={() => setExposureView("employers")}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md flex items-center gap-1 ${exposureView === "employers" ? "bg-slate-200 text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
+              ><Building2 className="w-3.5 h-3.5" /> Employers</button>
+            </div>
+            {exposureView === "placements"
+              ? <PlacementSections clients={displayed} type="work_exposure" />
+              : <EmployersListTab />}
+          </>
+        ) : placementSubTab === "internal_training" ? (
+          <PlacementSections clients={displayed} type="internal" />
         ) : (
           <>
             <ClientListControls
