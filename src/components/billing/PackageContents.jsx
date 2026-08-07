@@ -13,7 +13,7 @@ import {
   monthLabelFromBillingMonth,
   findCrtFileForMonth,
   buildChildmindingPdfBlob,
-  buildWorkExposureCsvBlob,
+  buildWorkExposurePdfBlob,
   downloadBlob,
   downloadUrl,
   extFromUrl,
@@ -92,7 +92,7 @@ export default function PackageContents({ pkg }) {
       toast.info(`No work exposure placements for ${monthLabel}`);
       return;
     }
-    downloadBlob(buildWorkExposureCsvBlob(weRecords), `Work_Exposure_Payments_${billingMonth}.csv`);
+    downloadBlob(buildWorkExposurePdfBlob(weRecords, billingMonth), `Work_Exposure_Payments_${billingMonth}.pdf`);
   };
 
   const handleDownloadAll = async () => {
@@ -107,7 +107,7 @@ export default function PackageContents({ pkg }) {
         bundled++;
       }
       if (weRecords.length) {
-        zip.file(`Work_Exposure_Payments_${billingMonth}.csv`, buildWorkExposureCsvBlob(weRecords));
+        zip.file(`Work_Exposure_Payments_${billingMonth}.pdf`, buildWorkExposurePdfBlob(weRecords, billingMonth));
         bundled++;
       }
 

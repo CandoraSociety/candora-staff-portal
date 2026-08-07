@@ -53,6 +53,101 @@ export const buildWorkExposureCsvBlob = (records) =>
   new Blob([buildWorkExposureCsv(records)], { type: 'text/csv;charset=utf-8;' });
 
 /**
+ * Build a Candora-branded PDF of the month's Work Exposure Payments.
+ * Returns a Blob (used both for the standalone download and the ZIP bundle).
+ */
+export const buildWorkExposurePdfBlob = (records, billingMonth) => {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const monthLabel = monthLabelFromBillingMonth(billingMonth);
+  const NAVY = [23, 37, 84];
+  const GOLD = [212, 175, 55];
+  const widths = [24, 140, 110, 70, 50, 50, 50];
+  const tableW = widths.reduce((a, b) => a + b, 0);
+  const left = 40;
+  const right = left + tableW;
+
+  let y = 44;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(...NAVY);
+  doc.text('Candora', left, y);
+  y += 18;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(70, 70, 70);
+  doc.text(`Work Exposure Payments — ${monthLabel}`, left, y);
+  y += 8;
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(1.5);
+  doc.line(left, y, right, y);
+  y += 18;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.setFillColor(...NAVY);
+  doc.rect(left, y - 12, tableW, 16, 'F');
+  let x = left;
+  ['#', 'Client', 'Employer / Vendor', 'Work End', 'Hours', 'Rate', 'Amount'].forEach((c, i) => {
+    doc.text(c, x + 3, y);
+    x += widths[i];
+  });
+  y += 16;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 30, 30);
+
+  if (!records.length) {
+    doc.text(`No work exposure placements recorded for ${monthLabel}.`, left, y + 6);
+    return doc.output('blob');
+  }
+
+  records.forEach((r, i) => {
+    if (y > 740) {
+      doc.addPage();
+      y = 44;
+    }
+    if (i % 2 === 1) {
+      doc.setFillColor(245, 247, 250);
+      doc.rect(left, y - 12, tableW, 14, 'F');
+    }
+    const amount = Number(r.total || r.amount || 0);
+    const vals = [
+      String(i + 1),
+      r.client_name || '-',
+      r.vendor || '-',
+      r.work_end_date ? format(new Date(r.work_end_date + 'T00:00:00'), 'MMM d, yyyy') : '-',
+      r.hours_worked != null ? String(r.hours_worked) : '-',
+      r.hourly_rate != null ? `$${Number(r.hourly_rate).toFixed(2)}` : '-',
+      `$${amount.toFixed(2)}`,
+    ];
+    let xx = left;
+    vals.forEach((v, j) => {
+      doc.text(String(v), xx + 3, y);
+      xx += widths[j];
+    });
+    y += 14;
+  });
+
+  const totalHours = records.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
+  const totalAmount = records.reduce((s, r) => s + Number(r.total || r.amount || 0), 0);
+  y += 6;
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(1);
+  doc.line(left, y - 4, right, y - 4);
+  y += 12;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(
+    `TOTAL (${records.length} placements)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+    left,
+    y
+  );
+
+  return doc.output('blob');
+};
+
+/**
  * Build a clean, branded PDF of the month's Pathways childminding sessions.
  * Returns a Blob (used both for the standalone download and the ZIP bundle).
  */
