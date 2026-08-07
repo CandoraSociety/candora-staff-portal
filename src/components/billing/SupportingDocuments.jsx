@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, FileText, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, FileText, DollarSign, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import SupportingDocUpload from '@/components/billing/SupportingDocUpload';
 
 const TYPE_LABELS = {
@@ -49,11 +51,38 @@ const COMPLETION_STATUS_COLORS = {
 };
 
 export default function SupportingDocuments({ financialRecords, clients }) {
+  const [syncing, setSyncing] = useState(false);
+
   const clientMap = useMemo(() => {
     const map = {};
     clients?.forEach(c => { map[c.id] = `${c.first_name} ${c.last_name}`; });
     return map;
   }, [clients]);
+
+  const handleSyncChildminding = async () => {
+    setSyncing(true);
+    try {
+      const res = await base44.functions.invoke('syncChildmindingToInvoiceTracker', {});
+      const synced = (res.data?.results || []).filter(r => r.status === 'synced');
+      const missing = (res.data?.results || []).filter(r => r.status === 'row_not_found');
+      if (res.data?.status === 'success') {
+        toast.success(`Synced ${synced.length} month(s) to the Invoice Tracker`, {
+          description: synced.map(r => `${r.month} → row ${r.row} (CH): $${r.total.toFixed(2)}`).join('\n') || undefined,
+        });
+        if (missing.length) {
+          toast.warning(`${missing.length} month(s) had no matching row`, {
+            description: missing.map(r => r.month).join(', '),
+          });
+        }
+      } else {
+        toast.error(res.data?.message || 'Sync failed');
+      }
+    } catch (e) {
+      toast.error(e?.response?.data?.error || e?.message || 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: childmindingRecords = [] } = useQuery({
     queryKey: ['childminding-records'],
@@ -207,9 +236,20 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Badge className={TYPE_COLORS.childminding}>{TYPE_LABELS.childminding}</Badge>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Badge className={TYPE_COLORS.childminding}>{TYPE_LABELS.childminding}</Badge>
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncChildminding}
+              disabled={syncing || records.length === 0}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
