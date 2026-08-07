@@ -229,19 +229,7 @@ function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours
               {placement.hourly_rate > 0 && <span className="flex items-center gap-1 text-slate-600"><DollarSign className="w-3 h-3" />{placement.hourly_rate}/hr</span>}
               {timesheetCount > 0 && <span className="flex items-center gap-1 text-blue-600"><FileText className="w-3 h-3" />{timesheetCount} timesheet{timesheetCount > 1 ? 's' : ''}</span>}
             </div>
-            {submissions && submissions.length > 0 && (
-              <div className="ml-6 mt-1 space-y-0.5">
-                {submissions.map(s => (
-                  <div key={s.id} className="text-xs text-slate-600 flex items-center gap-2">
-                    <span>{s.period_end_date ? format(new Date(s.period_end_date + 'T00:00:00'), 'MMM d, yy') : ''}: <strong>{s.hours_worked} hrs</strong></span>
-                    {s.submitted_by_staff && <Badge variant="outline" className="text-[10px]">staff</Badge>}
-                    {s.timesheet_url && <a href={s.timesheet_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 inline-flex items-center"><FileText className="w-3 h-3" /></a>}
-                    {s.comments && <span className="text-slate-400 truncate max-w-[160px]" title={s.comments}>· {s.comments}</span>}
-                    <button className="text-red-400 hover:text-red-600" onClick={() => onDeleteSubmission(s, placement)}><Trash2 className="w-3 h-3" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
+
           </div>
           <div className="flex flex-col gap-1 shrink-0">
             <Button variant="outline" size="sm" onClick={onSubmitHours}><Clock className="w-3.5 h-3.5 mr-1" /> Submit Hours</Button>
@@ -253,6 +241,52 @@ function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function SubmissionsSection({ placement, submissions, onDeleteSubmission }) {
+  if (!submissions || submissions.length === 0) return null;
+  const rate = Number(placement.hourly_rate) || 0;
+  return (
+    <div className="rounded-lg border bg-slate-50/60 px-3 py-2.5 mx-1">
+      <div className="flex items-center gap-2 mb-2">
+        <FileText className="w-3.5 h-3.5 text-slate-400" />
+        <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Submitted Hours &amp; Attachments ({submissions.length})
+        </h4>
+      </div>
+      <div className="space-y-1.5">
+        {submissions.map(s => (
+          <SubmissionRow key={s.id} s={s} rate={rate} onDelete={() => onDeleteSubmission(s, placement)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SubmissionRow({ s, rate, onDelete }) {
+  const pay = (Number(s.hours_worked) || 0) * rate;
+  return (
+    <div className="flex items-start gap-2 text-xs bg-white rounded-md border border-slate-200 px-2.5 py-2">
+      <div className="flex-1 min-w-0 space-y-0.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-slate-700">
+            {s.period_end_date ? format(new Date(s.period_end_date + 'T00:00:00'), 'MMM d, yy') : '—'}
+          </span>
+          <Badge variant="outline" className="text-[10px]">{s.hours_worked} hrs</Badge>
+          {rate > 0 && <span className="text-slate-500">${pay.toFixed(2)}</span>}
+          {s.submitted_by_staff && <Badge variant="secondary" className="text-[10px]">staff</Badge>}
+          {s.status === 'reviewed' && <Badge className="text-[10px] bg-green-100 text-green-800">reviewed</Badge>}
+        </div>
+        {s.comments && <p className="text-slate-500">{s.comments}</p>}
+        {s.timesheet_url && (
+          <a href={s.timesheet_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
+            <FileText className="w-3 h-3" /> View timesheet
+          </a>
+        )}
+      </div>
+      <button className="text-red-400 hover:text-red-600 mt-0.5" onClick={onDelete}><Trash2 className="w-3.5 h-3.5" /></button>
+    </div>
   );
 }
 
@@ -284,6 +318,21 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
   }, [client.id]);
 
   const submissionsFor = (placementId) => submissions.filter(s => s.placement_id === placementId);
+
+  const totalHoursAll = submissions.reduce((s, x) => s + (Number(x.hours_worked) || 0), 0);
+  const totalPayAll = submissions.reduce((sum, s) => {
+    const p = placements.find(pl => pl.id === s.placement_id);
+    return sum + (Number(s.hours_worked) || 0) * (Number(p?.hourly_rate) || 0);
+  }, 0);
+  const daysUntilEnd = (() => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const ends = placements
+      .filter(p => p.anticipated_completion_date && p.status !== 'completed' && p.status !== 'cancelled')
+      .map(p => new Date(p.anticipated_completion_date + 'T00:00:00'))
+      .sort((a, b) => a - b);
+    if (!ends.length) return null;
+    return Math.round((ends[0] - today) / 86400000);
+  })();
 
   const handleDone = async () => {
     setShowForm(false);
@@ -329,6 +378,34 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
         </Button>
       </div>
 
+      {!loading && placements.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-lg border bg-card p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center"><Clock className="w-4 h-4" /></div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Total Hours</p>
+              <p className="text-lg font-semibold text-foreground">{totalHoursAll} hrs</p>
+            </div>
+          </div>
+          <div className="rounded-lg border bg-card p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center"><DollarSign className="w-4 h-4" /></div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Total Pay</p>
+              <p className="text-lg font-semibold text-foreground">${totalPayAll.toFixed(2)}</p>
+            </div>
+          </div>
+          <div className="rounded-lg border bg-card p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center"><Calendar className="w-4 h-4" /></div>
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Days Until End of Placement</p>
+              <p className="text-lg font-semibold text-foreground">
+                {daysUntilEnd === null ? '—' : daysUntilEnd < 0 ? `${Math.abs(daysUntilEnd)} overdue` : daysUntilEnd}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && !editingPlacement && (
         <PlacementForm client={client} onDone={handleDone} onCancel={() => setShowForm(false)} />
       )}
@@ -355,18 +432,27 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {placements.map(p => (
-            <PlacementCard
-              key={p.id}
-              placement={p}
-              submissions={submissionsFor(p.id)}
-              onEdit={() => { setEditingPlacement(p); setShowForm(false); }}
-              onDelete={() => handleDelete(p)}
-              onSubmitHours={() => setSubmitPlacement(p)}
-              onDeleteSubmission={handleDeleteSubmission}
-            />
-          ))}
+        <div className="space-y-3">
+          {placements.map(p => {
+            const subs = submissionsFor(p.id);
+            return (
+              <div key={p.id} className="space-y-2">
+                <PlacementCard
+                  placement={p}
+                  submissions={subs}
+                  onEdit={() => { setEditingPlacement(p); setShowForm(false); }}
+                  onDelete={() => handleDelete(p)}
+                  onSubmitHours={() => setSubmitPlacement(p)}
+                  onDeleteSubmission={handleDeleteSubmission}
+                />
+                <SubmissionsSection
+                  placement={p}
+                  submissions={subs}
+                  onDeleteSubmission={handleDeleteSubmission}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
