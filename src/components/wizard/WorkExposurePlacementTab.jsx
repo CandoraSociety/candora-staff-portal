@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, Calendar, DollarSign, Building2, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, Briefcase, MapPin, Clock, Calendar, DollarSign, Building2, FileText, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
@@ -46,13 +46,23 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
   });
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [employerDetail, setEmployerDetail] = useState(null);
 
   const update = (f, v) => setRec(p => ({ ...p, [f]: v }));
 
   const handlePickEmployer = (emp) => {
-    setRec(p => ({ ...p, employer_id: emp.id, business_name: emp.name, location: p.location || emp.address || '' }));
+    setRec(p => ({ ...p, employer_id: emp.id, business_name: emp.name, location: emp.address || '' }));
+    setEmployerDetail(emp);
     setShowPicker(false);
   };
+
+  useEffect(() => {
+    if (existing?.employer_id) {
+      base44.entities.Employer.get(existing.employer_id)
+        .then(e => { setEmployerDetail(e); if (e?.address) setRec(p => ({ ...p, location: e.address })); })
+        .catch(() => setEmployerDetail(null));
+    }
+  }, []);
 
   const handleSave = async () => {
     if (!rec.employer_id && !rec.business_name.trim()) {
@@ -112,10 +122,35 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
                 </Button>
               )}
             </div>
-            <div>
-              <Label className="text-xs">Location</Label>
-              <Input value={rec.location} onChange={e => update('location', e.target.value)} className="mt-1" placeholder="Address or area" />
-            </div>
+            {rec.employer_id ? (
+              <div>
+                <Label className="text-xs">Location &amp; Contact (from employer)</Label>
+                <div className="mt-1 p-2 rounded-md border bg-slate-50 text-sm text-slate-700 space-y-0.5">
+                  <div className="flex items-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                    <span>{rec.location || 'No address on file'}</span>
+                  </div>
+                  {employerDetail?.contact_phone && (
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{employerDetail.contact_phone}</span>
+                    </div>
+                  )}
+                  {employerDetail?.contact_email && (
+                    <div className="flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{employerDetail.contact_email}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">These come from the employer record — edit them on the Employers page, not here.</p>
+              </div>
+            ) : (
+              <div>
+                <Label className="text-xs">Location</Label>
+                <Input value={rec.location} onChange={e => update('location', e.target.value)} className="mt-1" placeholder="Address or area" />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Position Type</Label>
