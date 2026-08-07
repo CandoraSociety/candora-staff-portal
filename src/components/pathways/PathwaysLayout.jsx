@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 ];
 
 const PORTAL_ITEMS = [
-  { label: "Employer Portal",           path: "/pathways/employers" },
+  { label: "External Employer Portal",   path: "/employer-portal/login", external: true },
   { label: "Internal Placement Portal", path: "/pathways/supervisor" },
   { label: "Public Portal",             path: "/pathways-intake", external: true },
 ];

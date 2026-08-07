@@ -9,8 +9,10 @@ import AuthLayout from '@/components/AuthLayout';
 import { toast } from 'sonner';
 import { setEmployerSession } from '@/lib/employerPortalSession';
 import { propagateEmployerName } from '@/lib/employerNameSync';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 export default function EmployerRegister() {
+  const { logoUrl } = useOrgSettings();
   const [searchParams] = useSearchParams();
   const employerId = searchParams.get('employer');
   const [employer, setEmployer] = useState(null);
@@ -91,9 +93,11 @@ export default function EmployerRegister() {
     }
   };
 
+  const brand = { logoUrl, brandText: "Pathways Employer Portal" };
+
   if (loadingEmployer) {
     return (
-      <AuthLayout icon={Building2} title="Employer Portal" subtitle="Loading…">
+      <AuthLayout icon={Building2} {...brand} title="Pathways Employer Portal" subtitle="Loading…">
         <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       </AuthLayout>
     );
@@ -101,7 +105,7 @@ export default function EmployerRegister() {
 
   if (!employerId || !employer) {
     return (
-      <AuthLayout icon={Building2} title="Employer Portal" subtitle="Registration is by invitation only">
+      <AuthLayout icon={Building2} {...brand} title="Pathways Employer Portal" subtitle="Registration is by invitation only">
         <p className="text-sm text-muted-foreground text-center">
           Please use the registration link your Candora contact sent you. If you don't have one, ask your Candora career counsellor to invite you.
         </p>
@@ -114,7 +118,7 @@ export default function EmployerRegister() {
 
   if (employer.password_hash) {
     return (
-      <AuthLayout icon={Building2} title="Employer Portal" subtitle="Account already set up">
+      <AuthLayout icon={Building2} {...brand} title="Pathways Employer Portal" subtitle="Account already set up">
         <p className="text-sm text-muted-foreground text-center">
           This employer account has already been registered. Please sign in.
         </p>
@@ -128,6 +132,7 @@ export default function EmployerRegister() {
   return (
     <AuthLayout
       icon={Building2}
+      {...brand}
       title="Register your company"
       subtitle="Review your details and set your portal password"
       footer={

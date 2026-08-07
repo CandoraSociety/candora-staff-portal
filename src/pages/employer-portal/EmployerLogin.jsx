@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { LogIn, Mail, Lock, Loader2 } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
 import { setEmployerSession } from '@/lib/employerPortalSession';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 export default function EmployerLogin() {
+  const { logoUrl } = useOrgSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -54,7 +56,9 @@ export default function EmployerLogin() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="Employer Portal"
+      logoUrl={logoUrl}
+      brandText="Pathways Employer Portal"
+      title="Pathways Employer Portal"
       subtitle="Sign in to submit work exposure hours"
       footer={
         <>

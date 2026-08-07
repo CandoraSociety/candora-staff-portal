@@ -4,9 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, FileText, Plus, Building2, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
+import { Clock, FileText, Plus, Building2, Phone, Mail, MapPin, Briefcase, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import TimesheetSubmissionForm from '@/components/wizard/TimesheetSubmissionForm';
+import EmployerProfileEditDialog from '@/components/employer-portal/EmployerProfileEditDialog';
 import { toast } from 'sonner';
 import { getEmployerSession } from '@/lib/employerPortalSession';
 
@@ -19,24 +20,22 @@ export default function EmployerDashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [employer, setEmployer] = useState(null);
 
-  // Portal employer (session) sees their own company; staff deep-link via ?employer=.
   const activeEmployerId = portalEmployerId || searchParams.get('employer') || '';
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!activeEmployerId) { setEmployer(null); return; }
-      try {
-        const all = await base44.entities.Employer.list('-created_date', 500);
-        if (!cancelled) setEmployer(all.find(e => e.id === activeEmployerId) || null);
-      } catch {
-        if (!cancelled) setEmployer(null);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [activeEmployerId]);
+  const loadEmployer = async () => {
+    if (!activeEmployerId) { setEmployer(null); return; }
+    try {
+      const all = await base44.entities.Employer.list('-created_date', 500);
+      setEmployer(all.find(e => e.id === activeEmployerId) || null);
+    } catch {
+      setEmployer(null);
+    }
+  };
+
+  useEffect(() => { loadEmployer(); /* eslint-disable-next-line */ }, [activeEmployerId]);
 
   const fetchData = async () => {
     if (!activeEmployerId) {
@@ -69,14 +68,24 @@ export default function EmployerDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">{employer?.name || 'Employer Portal'}</h1>
-          <p className="text-sm text-slate-600">Submit work exposure hours for your placement participants.</p>
+      {/* Branded hero */}
+      <div className="rounded-xl p-6 text-white shadow-sm" style={{ background: 'linear-gradient(135deg, hsl(231,64%,20%), hsl(231,55%,28%))' }}>
+        <div className="flex justify-between items-start flex-wrap gap-3">
+          <div>
+            <div className="flex items-center gap-1.5 text-amber-300 text-[11px] font-semibold tracking-wide uppercase mb-1">
+              <Building2 className="h-3.5 w-3.5" /> Pathways Employer Portal
+            </div>
+            <h1 className="text-2xl font-bold">{employer?.name || 'Employer Portal'}</h1>
+            <p className="text-white/70 text-sm">Submit work exposure hours for your placement participants.</p>
+          </div>
+          <Button
+            onClick={() => setShowForm(true)}
+            disabled={!activeEmployerId || activePlacements.length === 0}
+            className="bg-amber-400 text-slate-900 hover:bg-amber-300"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Submit Hours
+          </Button>
         </div>
-        <Button onClick={() => setShowForm(true)} disabled={!activeEmployerId || activePlacements.length === 0}>
-          <Plus className="w-4 h-4 mr-2" /> Submit Hours
-        </Button>
       </div>
 
       {activeEmployerId && activePlacements.length === 0 && !loading && (
@@ -98,11 +107,21 @@ export default function EmployerDashboard() {
         />
       )}
 
+      {editingProfile && employer && (
+        <EmployerProfileEditDialog
+          employer={employer}
+          onClose={() => setEditingProfile(false)}
+          onSaved={() => { setEditingProfile(false); loadEmployer(); fetchData(); }}
+        />
+      )}
+
       {activeEmployerId && (
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2"><Clock className="h-5 w-5" /> Submitted Hours</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2" style={{ color: 'hsl(231,64%,20%)' }}>
+                <Clock className="h-5 w-5" /> Submitted Hours
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -155,8 +174,15 @@ export default function EmployerDashboard() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-5 w-5" /> Company Information</CardTitle>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base flex items-center gap-2" style={{ color: 'hsl(231,64%,20%)' }}>
+                <Building2 className="h-5 w-5" /> Company Information
+              </CardTitle>
+              {!isStaff && (
+                <Button variant="outline" size="sm" onClick={() => setEditingProfile(true)}>
+                  <Pencil className="w-3.5 h-3.5 mr-1" /> Edit Profile
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <InfoRow icon={Building2} label="Company" value={employer?.name} />
