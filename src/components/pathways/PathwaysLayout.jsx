@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 const PORTAL_ITEMS = [
   { label: "External Employer Portal",   path: "/employer-portal/login", external: true },
   { label: "Internal Placement Portal", path: "/pathways/supervisor" },
-  { label: "Public Portal",             path: "/pathways-intake", external: true },
+  { label: "Public Intake Portal",       path: "/pathways-intake", external: true },
 ];
 
 function AppNav({ isSupervisorOnly = false }) {
