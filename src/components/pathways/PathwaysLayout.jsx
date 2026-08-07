@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
-import { Menu, X, ChevronLeft, ExternalLink } from 'lucide-react';
+import { Menu, X, ChevronLeft, ChevronDown, ExternalLink } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: "Intake",            path: "/pathways/intake" },
@@ -11,11 +11,14 @@ const NAV_ITEMS = [
   { label: "My Dashboard",      path: "/pathways/dashboard" },
   { label: "Reports",           path: "/pathways/reports" },
   { label: "Billing",           path: "/pathways/billing" },
-  { label: "Employer Portal",    path: "/pathways/employers" },
-  { label: "Internal Supervisor", path: "/pathways/supervisor" },
   { label: "Resources",         path: "/pathways/resources" },
   { label: "Compass",           path: "/pathways/compass" },
-  { label: "Public Portal",     path: "/pathways-intake", external: true },
+];
+
+const PORTAL_ITEMS = [
+  { label: "Employer Portal",           path: "/pathways/employers" },
+  { label: "Internal Placement Portal", path: "/pathways/supervisor" },
+  { label: "Public Portal",             path: "/pathways-intake", external: true },
 ];
 
 function AppNav({ isSupervisorOnly = false }) {
@@ -39,7 +42,7 @@ function AppNav({ isSupervisorOnly = false }) {
   if (location.pathname.startsWith("/pathways/client/")) return null;
 
   const visibleNavItems = isSupervisorOnly
-    ? NAV_ITEMS.filter(item => item.path === '/pathways/supervisor')
+    ? PORTAL_ITEMS.filter(item => item.path === '/pathways/supervisor')
     : NAV_ITEMS;
 
   const NavButton = ({ item }) => {
@@ -78,6 +81,65 @@ function AppNav({ isSupervisorOnly = false }) {
     );
   };
 
+  const DropdownItem = ({ item }) => {
+    if (item.external) {
+      return (
+        <a
+          href={item.path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-2 text-sm rounded-md font-medium text-white/80 hover:text-white hover:bg-white/10 flex items-center gap-1.5"
+        >
+          {item.label}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      );
+    }
+    const active = location.pathname === item.path;
+    return (
+      <button
+        onClick={() => navigate(item.path)}
+        className={cn(
+          "px-3 py-2 text-sm rounded-md font-medium text-left transition-colors w-full",
+          active
+            ? "text-[hsl(231,64%,16%)] font-semibold"
+            : "text-white/80 hover:text-white hover:bg-white/10"
+        )}
+        style={active ? { background: "hsl(42,100%,54%)" } : {}}
+      >
+        {item.label}
+      </button>
+    );
+  };
+
+  const NavDropdown = () => {
+    const active = PORTAL_ITEMS.some(p => location.pathname === p.path);
+    return (
+      <div className="relative group">
+        <button
+          className={cn(
+            "px-3 py-1.5 text-sm rounded-md font-medium transition-colors flex items-center gap-1",
+            active
+              ? "text-[hsl(231,64%,16%)] font-semibold"
+              : "text-white/80 hover:text-white hover:bg-white/10"
+          )}
+          style={active ? { background: "hsl(42,100%,54%)" } : {}}
+        >
+          Portals
+          <ChevronDown className="w-3.5 h-3.5" />
+        </button>
+        <div className="absolute left-0 top-full hidden group-hover:block z-50 pt-1">
+          <div
+            className="flex flex-col gap-0.5 min-w-[210px] p-1 rounded-md shadow-lg border border-white/10"
+            style={{ background: "hsl(231,55%,25%)" }}
+          >
+            {PORTAL_ITEMS.map((item) => <DropdownItem key={item.path} item={item} />)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="sticky top-0 z-40" style={{ background: "hsl(231,64%,20%)" }}>
       <div className="max-w-screen-2xl mx-auto px-4 flex items-center justify-between h-14">
@@ -98,6 +160,7 @@ function AppNav({ isSupervisorOnly = false }) {
         {/* Desktop Nav Items */}
         <div className="hidden md:flex items-center gap-0.5 flex-1 mx-4">
           {visibleNavItems.map((item) => <NavButton key={item.path} item={item} />)}
+          {!isSupervisorOnly && <NavDropdown />}
         </div>
 
         {/* User Name */}
@@ -125,6 +188,12 @@ function AppNav({ isSupervisorOnly = false }) {
           </Link>
           <div className="border-t border-white/10 my-1" />
           {visibleNavItems.map((item) => <NavButton key={item.path} item={item} />)}
+          {!isSupervisorOnly && (
+            <>
+              <p className="text-xs text-white/40 px-2 pt-2 pb-0.5 font-semibold">Portals</p>
+              {PORTAL_ITEMS.map((item) => <NavButton key={item.path} item={item} />)}
+            </>
+          )}
           {user && (
             <p className="text-xs text-white/40 mt-2 pt-2 border-t border-white/10">
               {user.full_name || user.email}
