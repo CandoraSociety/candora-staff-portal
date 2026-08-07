@@ -11,7 +11,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
     queryKey: ['we-placements', billingMonth],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
     select: (recs) => (recs || [])
-      .filter((r) => r.billing_month === billingMonth)
+      .filter((r) => r.billing_month === billingMonth && r.invoiced !== true)
       .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
   });
 

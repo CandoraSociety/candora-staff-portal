@@ -50,7 +50,7 @@ export default function PackageContents({ pkg }) {
   const { data: weRecords = [] } = useQuery({
     queryKey: ['we-placements', billingMonth],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
-    select: (recs) => (recs || []).filter((r) => r.billing_month === billingMonth),
+    select: (recs) => (recs || []).filter((r) => r.billing_month === billingMonth && r.invoiced !== true),
   });
 
   // Supporting documents: financial records for the month with uploaded receipts / completion docs
