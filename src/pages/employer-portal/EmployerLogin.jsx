@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn, Mail, Lock, Loader2 } from 'lucide-react';
 import AuthLayout from '@/components/AuthLayout';
+import { setEmployerSession } from '@/lib/employerPortalSession';
 
 export default function EmployerLogin() {
   const [email, setEmail] = useState('');
@@ -18,10 +19,33 @@ export default function EmployerLogin() {
     setError('');
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      const emps = await base44.entities.Employer.filter({ contact_email: email.trim().toLowerCase() });
+      if (!emps || emps.length === 0) {
+        setError('No employer account found for that email.');
+        return;
+      }
+      const emp = emps[0];
+      if (!emp.password_hash) {
+        setError("Your portal account isn't set up yet. Please use the registration link your Candora contact sent you.");
+        return;
+      }
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hash !== emp.password_hash) {
+        setError('Incorrect password.');
+        return;
+      }
+      if (emp.status === 'inactive') {
+        setError('Your account is inactive. Please contact your Candora career counsellor.');
+        return;
+      }
+      setEmployerSession(emp.id);
       window.location.href = '/employer-portal';
     } catch (err) {
-      setError(err.message || 'Invalid email or password');
+      setError(err.message || 'Sign in failed');
     } finally {
       setLoading(false);
     }
@@ -35,9 +59,7 @@ export default function EmployerLogin() {
       footer={
         <>
           Need an account?{' '}
-          <Link to="/employer-portal/register" className="text-primary font-medium hover:underline">
-            Register your company
-          </Link>
+          <span className="text-muted-foreground">Ask your Candora contact for a registration link.</span>
         </>
       }
     >

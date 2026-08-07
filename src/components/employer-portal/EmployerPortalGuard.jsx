@@ -1,12 +1,16 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { getEmployerSession } from '@/lib/employerPortalSession';
 
-// Guards the isolated Employer Portal. Any authenticated user may enter —
-// employer-profile users see their own company view; staff see a read/submit
-// "review mode" with an employer picker. Unauthed users are sent to employer login.
-// Employers themselves are kept out of the main app by ProtectedRoute.
+// Guards the isolated Employer Portal. A self-contained portal employer
+// (sessionStorage employer id) passes directly. Authenticated Base44 users
+// (staff reviewing a specific employer) also pass. Everyone else is sent to
+// the employer login.
 export default function EmployerPortalGuard() {
-  const { isAuthenticated, isLoadingAuth, authChecked } = useAuth();
+  const { isLoadingAuth, authChecked, isAuthenticated } = useAuth();
+  const portalEmployerId = getEmployerSession();
+
+  if (portalEmployerId) return <Outlet />;
 
   if (isLoadingAuth || !authChecked) {
     return (

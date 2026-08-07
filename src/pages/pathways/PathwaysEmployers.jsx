@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { Briefcase, Plus, Mail, Phone, MapPin, ChevronDown, ChevronRight, Clock, Send, Building2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import EmployerInviteLinkDialog from '@/components/pathways/EmployerInviteLinkDialog';
 
 const EMPTY = {
   name: '', first_name: '', last_name: '', position: '',
@@ -36,7 +37,7 @@ function EmployerFormDialog({ onDone, onCancel }) {
         last_name: form.last_name.trim(),
         position: form.position.trim(),
         contact_name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
-        contact_email: form.contact_email.trim(),
+        contact_email: form.contact_email.trim().toLowerCase(),
         contact_phone: form.contact_phone.trim(),
         alt_contact_name: form.alt_contact_name.trim(),
         alt_contact_position: form.alt_contact_position.trim(),
@@ -104,21 +105,21 @@ export default function PathwaysEmployers() {
     queryFn: () => base44.entities.Employer.list('-created_date', 500),
   });
 
-  const inviteMutation = useMutation({
-    mutationFn: async ({ employer }) => {
-      await base44.users.inviteUser(employer.contact_email, 'user');
-      await base44.entities.Employer.update(employer.id, {
+  const [inviteLinkEmployer, setInviteLinkEmployer] = useState(null);
+
+  const sendInvite = async (emp) => {
+    try {
+      await base44.entities.Employer.update(emp.id, {
         invite_sent: true,
         invite_date: format(new Date(), 'yyyy-MM-dd'),
         status: 'pending',
       });
-    },
-    onSuccess: () => {
-      toast.success('Invite sent — the employer will set their own password by email');
       queryClient.invalidateQueries({ queryKey: ['pathways-employers'] });
-    },
-    onError: (e) => toast.error('Invite failed: ' + (e.message || '')),
-  });
+    } catch (e) {
+      toast.error('Failed: ' + (e.message || ''));
+    }
+    setInviteLinkEmployer(emp);
+  };
 
   const toggle = async (emp) => {
     const isOpen = !!expanded[emp.id];
@@ -182,9 +183,9 @@ export default function PathwaysEmployers() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {!emp.invite_sent && emp.contact_email && (
-                          <Button size="sm" variant="outline" onClick={() => inviteMutation.mutate({ employer: emp })} disabled={inviteMutation.isPending}>
-                            <Send className="w-3.5 h-3.5 mr-1" /> Invite
+                        {emp.contact_email && (
+                          <Button size="sm" variant="outline" onClick={() => sendInvite(emp)}>
+                            <Send className="w-3.5 h-3.5 mr-1" /> {emp.invite_sent ? 'Invite Link' : 'Invite'}
                           </Button>
                         )}
                         <Button asChild size="sm" variant="ghost">
@@ -232,6 +233,10 @@ export default function PathwaysEmployers() {
           )}
         </CardContent>
       </Card>
+
+      {inviteLinkEmployer && (
+        <EmployerInviteLinkDialog employer={inviteLinkEmployer} onClose={() => setInviteLinkEmployer(null)} />
+      )}
     </div>
   );
 }

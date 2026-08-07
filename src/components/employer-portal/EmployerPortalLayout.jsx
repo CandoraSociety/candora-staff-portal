@@ -1,14 +1,14 @@
 import { Outlet, Link } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { getEmployerSession, clearEmployerSession } from '@/lib/employerPortalSession';
 import { LogOut, ArrowLeft } from 'lucide-react';
 
 export default function EmployerPortalLayout() {
-  const { employerProfile, user } = useAuth();
-  const isStaff = !employerProfile;
+  const portalEmployerId = getEmployerSession();
+  const isStaff = !portalEmployerId;
 
   const handleLogout = () => {
-    base44.auth.logout('/employer-portal/login');
+    clearEmployerSession();
+    window.location.href = '/employer-portal/login';
   };
 
   return (
@@ -21,13 +21,9 @@ export default function EmployerPortalLayout() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Candora Employer Portal</div>
-              <div className="text-xs text-white/60">{employerProfile?.name || ''}</div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-white/60 hidden sm:block">
-              {employerProfile?.contact_name || user?.full_name || user?.email}
-            </span>
             {isStaff ? (
               <Link
                 to="/pathways/employers"

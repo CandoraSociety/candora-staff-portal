@@ -61,7 +61,7 @@
     "invite_sent": {
       "type": "boolean",
       "default": false,
-      "description": "Whether a login invite has been sent to this employer"
+      "description": "Whether a registration link has been generated/shared with this employer"
     },
     "invite_date": {
       "type": "string",
@@ -78,6 +78,15 @@
     },
     "notes": {
       "type": "string"
+    },
+    "password_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the employer's portal password (self-service portal login, like the volunteer portal)"
+    },
+    "must_change_password": {
+      "type": "boolean",
+      "default": true,
+      "description": "Force a password change on next portal login"
     }
   },
   "required": [

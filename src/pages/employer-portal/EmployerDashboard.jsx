@@ -8,28 +8,35 @@ import { Clock, FileText, Plus, Building2, Phone, Mail, MapPin, Briefcase } from
 import { format } from 'date-fns';
 import TimesheetSubmissionForm from '@/components/wizard/TimesheetSubmissionForm';
 import { toast } from 'sonner';
+import { getEmployerSession } from '@/lib/employerPortalSession';
 
 export default function EmployerDashboard() {
-  const { employerProfile, user } = useAuth();
-  const isStaff = !employerProfile;
+  const portalEmployerId = getEmployerSession();
+  const isStaff = !portalEmployerId;
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [placements, setPlacements] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [employer, setEmployer] = useState(employerProfile || null);
+  const [employer, setEmployer] = useState(null);
 
-  // The employer whose portal we are viewing: own profile, or ?employer= (staff deep-linking in).
-  const activeEmployerId = employerProfile?.id || searchParams.get('employer') || '';
+  // Portal employer (session) sees their own company; staff deep-link via ?employer=.
+  const activeEmployerId = portalEmployerId || searchParams.get('employer') || '';
 
-  // Staff deep-link: fetch the employer record so the page renders exactly as the employer sees it.
   useEffect(() => {
-    if (employerProfile) { setEmployer(employerProfile); return; }
-    if (!activeEmployerId) { setEmployer(null); return; }
-    base44.asServiceRole.entities.Employer.get(activeEmployerId)
-      .then(setEmployer)
-      .catch(() => setEmployer(null));
-  }, [employerProfile, activeEmployerId]);
+    let cancelled = false;
+    (async () => {
+      if (!activeEmployerId) { setEmployer(null); return; }
+      try {
+        const all = await base44.entities.Employer.list('-created_date', 500);
+        if (!cancelled) setEmployer(all.find(e => e.id === activeEmployerId) || null);
+      } catch {
+        if (!cancelled) setEmployer(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeEmployerId]);
 
   const fetchData = async () => {
     if (!activeEmployerId) {
@@ -53,11 +60,7 @@ export default function EmployerDashboard() {
     }
   };
 
-  // One-time: link this employer's User id to their Employer record if missing.
   useEffect(() => {
-    if (employerProfile && !employerProfile.user_id && user?.id) {
-      base44.entities.Employer.update(employerProfile.id, { user_id: user.id }).catch(() => {});
-    }
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeEmployerId]);
@@ -75,14 +78,6 @@ export default function EmployerDashboard() {
           <Plus className="w-4 h-4 mr-2" /> Submit Hours
         </Button>
       </div>
-
-      {!activeEmployerId && (
-        <Card>
-          <CardContent className="py-10 text-center text-sm text-slate-500">
-            Open an employer from the staff app to view their portal.
-          </CardContent>
-        </Card>
-      )}
 
       {activeEmployerId && activePlacements.length === 0 && !loading && (
         <Card>
