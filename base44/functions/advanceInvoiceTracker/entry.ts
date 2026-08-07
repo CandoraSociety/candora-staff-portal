@@ -132,18 +132,21 @@ export default async function(req: Request): Promise<Response> {
           bFilled.push({ row: excelRow, month: monthLabel, invoiceNumber });
         }
 
-        // Billing-summary quantities for this month (recomputed from current data).
-        const counts = computeMonthBillingCounts(clients, key.year, key.month);
-        for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
-          const expected = counts[ck];
-          const existing = row[COUNT_INDICES[ck]];
-          const existingNum = (existing == null || existing === '') ? 0 : Number(existing);
-          if (existingNum === expected) { countSkipped++; continue; }
-          try {
-            await writeTrackerCell(accessToken, workbook.id, sheetName, col, excelRow, expected);
-            countFilled.push({ row: excelRow, month: monthLabel, column: col, key: ck, value: expected });
-          } catch (e) {
-            countErrors.push({ row: excelRow, month: monthLabel, column: col, key: ck, error: String(e.message || e).slice(0, 120) });
+        // Billing-summary quantities — only for months from April 2026 onward.
+        // Earlier months are already completed and must not be touched.
+        if (kRank >= dStartRank) {
+          const counts = computeMonthBillingCounts(clients, key.year, key.month);
+          for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
+            const expected = counts[ck];
+            const existing = row[COUNT_INDICES[ck]];
+            const existingNum = (existing == null || existing === '') ? 0 : Number(existing);
+            if (existingNum === expected) { countSkipped++; continue; }
+            try {
+              await writeTrackerCell(accessToken, workbook.id, sheetName, col, excelRow, expected);
+              countFilled.push({ row: excelRow, month: monthLabel, column: col, key: ck, value: expected });
+            } catch (e) {
+              countErrors.push({ row: excelRow, month: monthLabel, column: col, key: ck, error: String(e.message || e).slice(0, 120) });
+            }
           }
         }
       }
