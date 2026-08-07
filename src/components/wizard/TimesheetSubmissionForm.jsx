@@ -91,11 +91,11 @@ export default function TimesheetSubmissionForm({ placement, placements, user, i
           <DialogTitle className="flex items-center gap-2"><Clock className="w-4 h-4" /> Submit Work Exposure Hours</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          {list.length > 1 && (
+          {list.length >= 1 && (
             <div>
-              <Label className="text-xs">Participant</Label>
+              <Label className="text-xs">Employee (Participant) *</Label>
               <Select value={placementId} onValueChange={setPlacementId}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select a participant..." /></SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select an employee..." /></SelectTrigger>
                 <SelectContent>
                   {list.map(p => (
                     <SelectItem key={p.id} value={p.id}>
