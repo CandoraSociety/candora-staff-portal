@@ -271,7 +271,7 @@ export default function PackageContents({ pkg }) {
                     onClick={handleWorkExposureCsv}
                     disabled={!weRecords.length}
                   >
-                    <Download className="h-3.5 w-3.5 mr-1" /> CSV
+                    <Download className="h-3.5 w-3.5 mr-1" /> PDF
                   </Button>
                 </td>
               </tr>
