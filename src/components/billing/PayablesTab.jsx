@@ -738,7 +738,6 @@ export default function PayablesTab({ financialRecords, clients }) {
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Billing Amount</th>
                                         <th className="text-center py-2 px-3 font-medium text-slate-500">Timesheet</th>
                                         <th className="text-center py-2 px-3 font-medium text-slate-500">Status</th>
-                                        <th className="text-center py-2 px-3 font-medium text-slate-500">Actions</th>
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -775,17 +774,12 @@ export default function PayablesTab({ financialRecords, clients }) {
                                                 )}
                                               </div>
                                             </td>
-                                            <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(editingId === rec.id ? null : rec.id)}>
-                                                <Pencil className="w-3.5 h-3.5" />
-                                              </Button>
-                                            </td>
                                           </tr>
                                           {editingId === rec.id && (
                                             <InlineEditRow
                                               record={rec}
                                               clients={clients}
-                                              colSpan={9}
+                                              colSpan={8}
                                               onDone={() => { setEditingId(null); queryClient.invalidateQueries({ queryKey: ['financial-records'] }); }}
                                               onCancel={() => setEditingId(null)}
                                             />
