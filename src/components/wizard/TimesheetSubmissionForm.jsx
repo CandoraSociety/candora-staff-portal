@@ -46,8 +46,10 @@ export default function TimesheetSubmissionForm({ placement, placements, user, i
     if (!active) { toast.error('Select a participant'); return; }
     const h = parseFloat(hours);
     if (!h || h <= 0) { toast.error('Enter total hours worked'); return; }
+    if (!periodStart) { toast.error('Enter the period start date'); return; }
     if (!periodEnd) { toast.error('Enter the period end date'); return; }
-    if (periodStart && periodEnd < periodStart) { toast.error('End date is before start date'); return; }
+    if (periodEnd < periodStart) { toast.error('End date is before start date'); return; }
+    if (!timesheetUrl) { toast.error('Upload the timesheet supporting document'); return; }
     setSaving(true);
     try {
       const billingMonth = periodEnd.slice(0, 7);
@@ -118,7 +120,7 @@ export default function TimesheetSubmissionForm({ placement, placements, user, i
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Period Start Date</Label>
+              <Label className="text-xs">Period Start Date *</Label>
               <Input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className="mt-1" />
             </div>
             <div>
@@ -141,7 +143,7 @@ export default function TimesheetSubmissionForm({ placement, placements, user, i
             </div>
           </div>
           <div>
-            <Label className="text-xs">Timesheet (supporting document)</Label>
+            <Label className="text-xs">Timesheet (supporting document) *</Label>
             <div className="mt-1 flex items-center gap-2">
               <Input type="file" accept="image/*,.pdf" disabled={uploading} onChange={e => handleUpload(e.target.files?.[0])} className="text-xs" />
               {timesheetUrl && (
