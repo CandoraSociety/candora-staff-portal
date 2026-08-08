@@ -51,19 +51,24 @@ function getEDASubItems(client) {
 
   const items = client.sdp_items || [];
   const subItems = [];
-  const hasExposure = items.some(k => EXPOSURE_KEYS.includes(k));
 
   for (const key of items) {
     if (key === 'barrier_support') continue;
     if (key === 'internal_placement') continue;        // managed via the Internal Placements tab
     if (key === 'paid_external_placement') continue;  // managed via the Work Exposure Placement tab
-    if (EXPOSURE_KEYS.includes(key)) continue;
+    if (EXPOSURE_KEYS.includes(key)) continue;        // managed via dedicated sub-tabs below
     const label = key === 'other' ? (client.sdp_other_desc || 'Other') : (ITEM_LABELS[key] || key);
     subItems.push({ key, label, component: 'eda' });
   }
 
-  if (hasExposure) {
-    subItems.push({ key: 'exposures', label: 'Exposures & Supports', component: 'exposures' });
+  // Exposure Courses — dedicated sub-tab for exposure course financial records
+  if (items.includes('exposure_course')) {
+    subItems.push({ key: 'exposure_courses', label: 'Exposure Courses', component: 'exposure_courses' });
+  }
+
+  // Employment Supports — dedicated sub-tab for employment support financial records
+  if (items.includes('employment_supports')) {
+    subItems.push({ key: 'employment_supports_records', label: 'Employment Supports', component: 'employment_supports_records' });
   }
 
   // Internal Placements — always shown as a highlighted sub-tab
@@ -214,8 +219,10 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           return <EDAStep client={client} edaKey={edaKey} edaLabel={subItem.label} onSave={onSave} onComplete={goBack} />;
         case 'internal_placement':
           return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
-        case 'exposures':
-          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} />;
+        case 'exposure_courses':
+          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} recordType="exposure_course" />;
+        case 'employment_supports_records':
+          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} recordType="employment_supports" />;
         case 'internal_placements':
           return <InternalPlacementsTab client={client} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         case 'work_exposure_placement':
