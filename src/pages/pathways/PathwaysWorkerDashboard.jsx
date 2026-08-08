@@ -16,6 +16,7 @@ import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways/RecentlyViewedClients";
 import PurchaseRequestsTab from "@/components/pathways/PurchaseRequestsTab";
+import MyPendingPurchaseRequests from "@/components/pathways/MyPendingPurchaseRequests";
 
 const EMPTY_FILTERS = {
   service_type: [], program_status: [], employment_status: [],
@@ -128,12 +129,10 @@ export default function PathwaysWorkerDashboard() {
       const myClientIds = new Set([...cc, ...sn].map(c => c.id));
       const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
       setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
-      if (userIsManagerOrAdmin) {
-        try {
-          const allRequests = await base44.entities.PurchaseRequest.list("-requested_date", 500);
-          setPurchaseRequests(allRequests || []);
-        } catch { setPurchaseRequests([]); }
-      }
+      try {
+        const allRequests = await base44.entities.PurchaseRequest.list("-requested_date", 500);
+        setPurchaseRequests(allRequests || []);
+      } catch { setPurchaseRequests([]); }
       await loadCompassTasks(me.email, me.full_name);
       const pendingTransfers = await base44.entities.ClientTransfer.filter({ status: "pending" });
       setTransfers(pendingTransfers.filter(t => (t.to_worker || "").toLowerCase() === myEmail));
@@ -142,13 +141,27 @@ export default function PathwaysWorkerDashboard() {
     init();
   }, []);
 
+  // Realtime sync of purchase requests across users
+  useEffect(() => {
+    const unsubscribe = base44.entities.PurchaseRequest.subscribe((event) => {
+      setPurchaseRequests(prev => {
+        const list = prev || [];
+        if (event.type === 'create') return [event.data, ...list];
+        if (event.type === 'update') return list.map(r => (r.id === event.data.id ? event.data : r));
+        if (event.type === 'delete') return list.filter(r => r.id !== event.data.id);
+        return list;
+      });
+    });
+    return unsubscribe;
+  }, []);
+
   const isDawn = (user?.email || "").toLowerCase() === "dawn.williston@candorasociety.com";
   const deaWdTotal = ccClients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length;
   const displayed = applyFiltersAndSort(ccClients, search, filters, sortKey).filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways");
   const snWdTotal = snClients.filter(c => c.service_type === "pathways").length;
   const snDisplayed = applyFiltersAndSort(snClients, search, filters, sortKey).filter(c => c.service_type === "pathways");
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
-  const pendingPurchaseCount = purchaseRequests.filter(r => r.status === "pending").length;
+  const pendingPurchaseCount = purchaseRequests.filter(r => r.status === "pending" && !r.received_by).length;
 
   // DEA Closing Alert
   const deaClosingClients = clients.filter(c => {
@@ -231,6 +244,11 @@ export default function PathwaysWorkerDashboard() {
       <main className="max-w-7xl mx-auto px-4 py-6">
         {/* Recently viewed clients */}
         <RecentlyViewedClients />
+
+        {/* My pending purchase requests (career counsellors) */}
+        {isCareerCounsellor && (
+          <MyPendingPurchaseRequests requests={purchaseRequests} currentUser={user} />
+        )}
 
         {/* Pending Client Transfers */}
         {transfers.length > 0 && (
@@ -358,7 +376,7 @@ export default function PathwaysWorkerDashboard() {
 
         {/* Purchase Requests tab (managers/admins only) */}
         {activeTab === "purchases" && isManagerOrAdmin && (
-          <PurchaseRequestsTab requests={purchaseRequests} />
+          <PurchaseRequestsTab requests={purchaseRequests} currentUser={user} />
         )}
 
         {/* Clients tab */}

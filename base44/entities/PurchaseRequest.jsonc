@@ -66,6 +66,19 @@
       ],
       "default": "pending"
     },
+    "received_by": {
+      "type": "string",
+      "description": "Email of the manager/admin who acknowledged they will handle this request"
+    },
+    "received_by_name": {
+      "type": "string",
+      "description": "Name of the manager/admin who acknowledged they will handle this request"
+    },
+    "received_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was acknowledged/received by a manager"
+    },
     "reviewed_by": {
       "type": "string"
     },
