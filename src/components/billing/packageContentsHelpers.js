@@ -103,19 +103,22 @@ export const buildWorkExposurePdfBlob = (records, billingMonth) => {
   }
 
   records.forEach((r, i) => {
-    if (y > 740) {
+    const amount = Number(r.total || r.amount || 0);
+    const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[1] - 6);
+    const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[2] - 6);
+    const rowH = Math.max(14, Math.max(clientLines.length, vendorLines.length) * 10 + 4);
+    if (y + rowH > 760) {
       doc.addPage();
       y = 44;
     }
     if (i % 2 === 1) {
       doc.setFillColor(245, 247, 250);
-      doc.rect(left, y - 12, tableW, 14, 'F');
+      doc.rect(left, y - 12, tableW, rowH, 'F');
     }
-    const amount = Number(r.total || r.amount || 0);
     const vals = [
       String(i + 1),
-      r.client_name || '-',
-      r.vendor || '-',
+      null,
+      null,
       r.work_end_date ? format(new Date(r.work_end_date + 'T00:00:00'), 'MMM d, yyyy') : '-',
       r.hours_worked != null ? String(r.hours_worked) : '-',
       r.hourly_rate != null ? `$${Number(r.hourly_rate).toFixed(2)}` : '-',
@@ -123,10 +126,16 @@ export const buildWorkExposurePdfBlob = (records, billingMonth) => {
     ];
     let xx = left;
     vals.forEach((v, j) => {
-      doc.text(String(v), xx + 3, y);
+      if (j === 1) {
+        clientLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+      } else if (j === 2) {
+        vendorLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+      } else {
+        doc.text(String(v), xx + 3, y);
+      }
       xx += widths[j];
     });
-    y += 14;
+    y += rowH;
   });
 
   const totalHours = records.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
