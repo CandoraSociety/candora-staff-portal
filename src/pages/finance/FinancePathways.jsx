@@ -30,7 +30,7 @@ export default function FinancePathways() {
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="we" className="text-xs">Work Exposure Payments</TabsTrigger>
-          <TabsTrigger value="supports" className="text-xs">Staff Reimbursement Requests</TabsTrigger>
+          <TabsTrigger value="supports" className="text-xs">Employment Supports</TabsTrigger>
           <TabsTrigger value="courses" className="text-xs">Exposure Courses</TabsTrigger>
           <TabsTrigger value="invoices" className="text-xs">Invoices</TabsTrigger>
         </TabsList>
