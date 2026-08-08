@@ -66,11 +66,6 @@ function getEDASubItems(client) {
     subItems.push({ key: 'exposure_courses', label: 'Exposure Courses', component: 'exposure_courses' });
   }
 
-  // Employment Supports — dedicated sub-tab for employment support financial records
-  if (items.includes('employment_supports')) {
-    subItems.push({ key: 'employment_supports_records', label: 'Employment Supports', component: 'employment_supports_records' });
-  }
-
   // Internal Placements — always shown as a highlighted sub-tab
   subItems.push({ key: 'internal_placements', label: 'Internal Placements', component: 'internal_placements', highlight: true });
 
@@ -176,13 +171,13 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
   let steps = isDEA ? [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     BARRIERS_STEP,
-    { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
+    { key: 'employment_supports', label: 'Employment Supports', short: 'Employment Supports', icon: DollarSign },
     ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ] : [
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     BARRIERS_STEP,
-    { key: 'employment_supports', label: 'Employment Supports', short: 'Supports', icon: DollarSign },
+    { key: 'employment_supports', label: 'Employment Supports', short: 'Employment Supports', icon: DollarSign },
     { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
@@ -221,8 +216,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
         case 'exposure_courses':
           return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} recordType="exposure_course" />;
-        case 'employment_supports_records':
-          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} recordType="employment_supports" />;
         case 'internal_placements':
           return <InternalPlacementsTab client={client} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         case 'work_exposure_placement':
