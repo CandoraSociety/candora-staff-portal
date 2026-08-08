@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientEmployment from '@/components/client/ClientEmployment';
-import ClientPlacements from '@/components/client/ClientPlacements';
 import ClientAssessments from '@/components/client/ClientAssessments';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
@@ -230,7 +229,6 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="overview">Client Overview</TabsTrigger>
             <TabsTrigger value="employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
-            <TabsTrigger value="placements">Placements</TabsTrigger>
             <TabsTrigger value="assessments">BIT / ERA</TabsTrigger>
             <TabsTrigger value="stream_switches" className="relative">
               Stream Switches
@@ -263,10 +261,6 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="employment">
             <ClientEmployment client={client} onSave={handleSave} />
-          </TabsContent>
-
-          <TabsContent value="placements">
-            <ClientPlacements client={client} onSave={handleSave} />
           </TabsContent>
 
           <TabsContent value="assessments">
