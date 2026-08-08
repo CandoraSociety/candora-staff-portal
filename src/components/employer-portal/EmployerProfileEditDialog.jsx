@@ -18,6 +18,7 @@ export default function EmployerProfileEditDialog({ employer, onClose, onSaved }
     contact_phone: employer.contact_phone || '',
     address: employer.address || '',
     industry: employer.industry || '',
+    payment_payable_to: employer.payment_payable_to || 'employer',
   });
   const [saving, setSaving] = useState(false);
   const set = (f, v) => setForm(p => ({ ...p, [f]: v }));
@@ -38,6 +39,7 @@ export default function EmployerProfileEditDialog({ employer, onClose, onSaved }
         contact_phone: form.contact_phone.trim(),
         address: form.address.trim(),
         industry: form.industry.trim(),
+        payment_payable_to: form.payment_payable_to,
       });
       if (nameChanged) await propagateEmployerName(employer.id, newName);
       toast.success('Profile updated');
@@ -92,6 +94,20 @@ export default function EmployerProfileEditDialog({ employer, onClose, onSaved }
           <div>
             <Label className="text-xs">Industry</Label>
             <Input value={form.industry} onChange={e => set('industry', e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Payments payable to</Label>
+            <select
+              value={form.payment_payable_to}
+              onChange={e => set('payment_payable_to', e.target.value)}
+              className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="employer">Employer (Candora reimburses the employer, who pays the client)</option>
+              <option value="client">Client (Candora pays the client directly)</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Some employers pay the client themselves and get reimbursed by Candora; others have Candora pay the client directly.
+            </p>
           </div>
         </div>
         <DialogFooter>

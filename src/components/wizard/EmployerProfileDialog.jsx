@@ -4,10 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { Building2, MapPin, Phone, Mail, Briefcase, Pencil, User, Loader2 } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, Briefcase, Pencil, User, Loader2, Wallet } from 'lucide-react';
 import EmployerProfileEditDialog from '@/components/employer-portal/EmployerProfileEditDialog';
 
 const STATUS_LABEL = { pending: 'Pending', active: 'Active', inactive: 'Inactive' };
+const PAYABLE_LABEL = {
+  employer: 'Employer (Candora reimburses the employer)',
+  client: 'Client (Candora pays the client directly)',
+};
 const STATUS_BADGE = {
   pending: 'bg-amber-100 text-amber-800',
   active: 'bg-green-100 text-green-800',
@@ -79,6 +83,7 @@ export default function EmployerProfileDialog({ employerId, onClose, onSaved }) 
               <InfoRow icon={Phone} label="Phone" value={employer.contact_phone} />
               <InfoRow icon={MapPin} label="Address" value={employer.address} />
               <InfoRow icon={Building2} label="Industry" value={employer.industry} />
+              <InfoRow icon={Wallet} label="Payments payable to" value={PAYABLE_LABEL[employer.payment_payable_to] || 'Employer (default)'} />
             </div>
           )}
           <DialogFooter>

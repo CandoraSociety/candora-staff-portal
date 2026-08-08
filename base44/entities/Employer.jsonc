@@ -54,6 +54,15 @@
       "type": "string",
       "description": "Industry"
     },
+    "payment_payable_to": {
+      "type": "string",
+      "enum": [
+        "employer",
+        "client"
+      ],
+      "default": "employer",
+      "description": "Who Candora pays for Work Exposure placements: 'employer' = Candora reimburses the employer (who already paid the client); 'client' = Candora pays the client directly"
+    },
     "user_id": {
       "type": "string",
       "description": "Linked platform User ID \u2014 set after invite is accepted or on self-registration"
