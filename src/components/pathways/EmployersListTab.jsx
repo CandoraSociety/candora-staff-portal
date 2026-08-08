@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Mail, Phone, MapPin, ChevronDown, ChevronRight, Users, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import EmployerProfileDialog from '@/components/wizard/EmployerProfileDialog';
 
 const STATUS_LABELS = { pending: 'Pending', in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled' };
 const STATUS_COLORS = {
@@ -20,6 +21,7 @@ export default function EmployersListTab() {
   const [placements, setPlacements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
+  const [profileEmployerId, setProfileEmployerId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -64,7 +66,13 @@ export default function EmployersListTab() {
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm">{emp.name}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setProfileEmployerId(emp.id); }}
+                    className="font-semibold text-sm text-blue-700 hover:underline"
+                  >
+                    {emp.name}
+                  </button>
                   <Badge variant="outline" className="text-xs">{emp.status}</Badge>
                 </div>
                 <div className="text-xs text-slate-600 mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
@@ -90,6 +98,13 @@ export default function EmployersListTab() {
           </div>
         );
       })}
+
+      {profileEmployerId && (
+        <EmployerProfileDialog
+          employerId={profileEmployerId}
+          onClose={() => setProfileEmployerId(null)}
+        />
+      )}
     </div>
   );
 }
