@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2 } from "lucide-react";
+import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
@@ -15,6 +15,7 @@ import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways/RecentlyViewedClients";
+import PurchaseRequestsTab from "@/components/pathways/PurchaseRequestsTab";
 
 const EMPTY_FILTERS = {
   service_type: [], program_status: [], employment_status: [],
@@ -74,6 +75,8 @@ export default function PathwaysWorkerDashboard() {
   const [switchClient, setSwitchClient] = useState(null);
   const [isCareerCounsellor, setIsCareerCounsellor] = useState(false);
   const [isServiceNavigator, setIsServiceNavigator] = useState(false);
+  const [isManagerOrAdmin, setIsManagerOrAdmin] = useState(false);
+  const [purchaseRequests, setPurchaseRequests] = useState([]);
   const [ccClients, setCcClients] = useState([]);
   const [snClients, setSnClients] = useState([]);
 
@@ -101,8 +104,10 @@ export default function PathwaysWorkerDashboard() {
       const roles = myStaff ? [myStaff.role, myStaff.secondary_role, myStaff.tertiary_role].filter(Boolean) : [];
       const userIsCC = roles.includes("career_counsellor");
       const userIsSN = roles.includes("service_navigator") || isDawnInit;
+      const userIsManagerOrAdmin = myStaff ? (myStaff.role === "manager" || myStaff.role === "admin") : false;
       setIsCareerCounsellor(userIsCC);
       setIsServiceNavigator(userIsSN);
+      setIsManagerOrAdmin(userIsManagerOrAdmin);
 
       const allClients = await base44.entities.Client.list("-created_date", 1000);
       const matchesCc = (c) =>
@@ -123,6 +128,12 @@ export default function PathwaysWorkerDashboard() {
       const myClientIds = new Set([...cc, ...sn].map(c => c.id));
       const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
       setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
+      if (userIsManagerOrAdmin) {
+        try {
+          const allRequests = await base44.entities.PurchaseRequest.list("-requested_date", 500);
+          setPurchaseRequests(allRequests || []);
+        } catch { setPurchaseRequests([]); }
+      }
       await loadCompassTasks(me.email, me.full_name);
       const pendingTransfers = await base44.entities.ClientTransfer.filter({ status: "pending" });
       setTransfers(pendingTransfers.filter(t => (t.to_worker || "").toLowerCase() === myEmail));
@@ -137,6 +148,7 @@ export default function PathwaysWorkerDashboard() {
   const snWdTotal = snClients.filter(c => c.service_type === "pathways").length;
   const snDisplayed = applyFiltersAndSort(snClients, search, filters, sortKey).filter(c => c.service_type === "pathways");
   const pendingCompassCount = compassTasks.filter(t => t.status === "pending").length;
+  const pendingPurchaseCount = purchaseRequests.filter(r => r.status === "pending").length;
 
   // DEA Closing Alert
   const deaClosingClients = clients.filter(c => {
@@ -318,6 +330,21 @@ export default function PathwaysWorkerDashboard() {
               </span>
             )}
           </button>
+          {isManagerOrAdmin && (
+            <button
+              onClick={() => setActiveTab("purchases")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "purchases" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" /> Purchase Requests
+              {pendingPurchaseCount > 0 && (
+                <span className="bg-amber-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {pendingPurchaseCount}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Compass tab */}
@@ -327,6 +354,11 @@ export default function PathwaysWorkerDashboard() {
             currentUser={user}
             onRefresh={(updated) => setCompassTasks(updated)}
           />
+        )}
+
+        {/* Purchase Requests tab (managers/admins only) */}
+        {activeTab === "purchases" && isManagerOrAdmin && (
+          <PurchaseRequestsTab requests={purchaseRequests} />
         )}
 
         {/* Clients tab */}

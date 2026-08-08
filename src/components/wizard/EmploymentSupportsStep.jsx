@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, X, Pencil, CheckCircle2, DollarSign } from 'lucide-react';
+import { Plus, Pencil, DollarSign, Link as LinkIcon, ShoppingCart, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
@@ -41,81 +41,69 @@ const SUPPORT_TYPE_SHORT = {
   'Other': 'Other',
 };
 
-function SupportForm({ client, existing, onDone, onCancel }) {
+const STATUS_BADGE = {
+  pending: { className: 'bg-amber-100 text-amber-800', label: 'Pending', icon: Clock },
+  approved: { className: 'bg-green-100 text-green-800', label: 'Approved', icon: CheckCircle2 },
+  rejected: { className: 'bg-red-100 text-red-800', label: 'Rejected', icon: XCircle },
+};
+
+function RequestPurchaseForm({ client, existing, onDone, onCancel }) {
+  const today = format(new Date(), 'yyyy-MM-dd');
   const [rec, setRec] = useState(existing || {
     support_type: SUPPORT_TYPES[0],
     support_type_other: '',
     description: '',
-    amount: '',
-    tax: '',
-    date: format(new Date(), 'yyyy-MM-dd'),
-    billing_month: format(new Date(), 'yyyy-MM'),
+    product_link: '',
+    estimated_amount: '',
     vendor: '',
-    reimbursed: false,
-    reimbursement_date: '',
     notes: '',
   });
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [receiptUrls, setReceiptUrls] = useState(existing?.receipt_urls || []);
 
-  const update = (f, v) => setRec(p => {
-    const next = { ...p, [f]: v };
-    if (f === 'date') {
-      try { next.billing_month = format(new Date(v), 'yyyy-MM'); } catch {}
-    }
-    return next;
-  });
-  const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
-
-  const handleUpload = async (files) => {
-    setUploading(true);
-    try {
-      for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        setReceiptUrls(p => [...p, file_url]);
-      }
-    } catch { toast.error('Upload failed'); }
-    finally { setUploading(false); }
-  };
+  const update = (f, v) => setRec(p => ({ ...p, [f]: v }));
 
   const handleSave = async () => {
+    if (!rec.estimated_amount && rec.estimated_amount !== 0) {
+      toast.error('Please enter an estimated amount');
+      return;
+    }
     setSaving(true);
     try {
+      const me = await base44.auth.me().catch(() => null);
       const data = {
-        record_type: 'employment_supports',
-        support_type: rec.support_type === 'Other' ? 'Other' : rec.support_type,
-        support_type_other: rec.support_type === 'Other' ? rec.support_type_other : '',
-        description: rec.description,
-        amount: parseFloat(rec.amount) || 0,
-        tax: parseFloat(rec.tax) || 0,
-        total,
-        date: rec.date,
-        billing_month: rec.billing_month || (rec.date ? format(new Date(rec.date), 'yyyy-MM') : format(new Date(), 'yyyy-MM')),
-        vendor: rec.vendor,
-        reimbursed: rec.reimbursed,
-        reimbursement_date: rec.reimbursed ? rec.reimbursement_date : '',
-        receipt_urls: receiptUrls,
-        notes: rec.notes,
         client_id: client.id,
         client_name: `${client.first_name} ${client.last_name}`,
-        assigned_worker: client.assigned_worker,
+        support_type: rec.support_type,
+        support_type_other: rec.support_type === 'Other' ? rec.support_type_other : '',
+        description: rec.description,
+        product_link: rec.product_link,
+        estimated_amount: parseFloat(rec.estimated_amount) || 0,
+        vendor: rec.vendor,
+        requested_date: existing?.requested_date || today,
+        requested_by: existing?.requested_by || me?.email || client.assigned_worker || '',
+        requested_by_name: existing?.requested_by_name || me?.full_name || '',
+        assigned_worker: client.assigned_worker || '',
+        notes: rec.notes,
+        status: existing?.status || 'pending',
       };
       if (existing) {
-        await base44.entities.FinancialRecord.update(existing.id, data);
+        await base44.entities.PurchaseRequest.update(existing.id, data);
       } else {
-        await base44.entities.FinancialRecord.create(data);
+        await base44.entities.PurchaseRequest.create(data);
       }
-      toast.success('Support record saved');
+      toast.success(existing ? 'Purchase request updated' : 'Purchase request submitted to managers');
       onDone();
-    } catch { toast.error('Failed to save'); }
+    } catch { toast.error('Failed to submit request'); }
     finally { setSaving(false); }
   };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">{existing ? 'Edit Support' : 'Add Employment Support'}</CardTitle>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <ShoppingCart className="w-4 h-4 text-green-600" />
+          {existing ? 'Edit Purchase Request' : 'Request Purchase'}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
         <div className="grid grid-cols-2 gap-3">
@@ -130,18 +118,7 @@ function SupportForm({ client, existing, onDone, onCancel }) {
           </div>
           <div>
             <Label className="text-xs">Date</Label>
-            <Input type="date" value={rec.date} onChange={e => update('date', e.target.value)} className="mt-1" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs">Billing Month</Label>
-            <Input type="month" value={rec.billing_month} onChange={e => update('billing_month', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Vendor</Label>
-            <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
+            <Input type="date" value={today} disabled className="mt-1 bg-slate-50 text-slate-500" />
           </div>
         </div>
 
@@ -157,53 +134,28 @@ function SupportForm({ client, existing, onDone, onCancel }) {
           <Input value={rec.description} onChange={e => update('description', e.target.value)} className="mt-1" placeholder="Brief description..." />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs">Amount ($)</Label>
-            <Input type="number" step="0.01" value={rec.amount} onChange={e => update('amount', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Tax ($)</Label>
-            <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Total ($)</Label>
-            <Input value={total.toFixed(2)} disabled className="mt-1" />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pt-1">
-          <input
-            type="checkbox"
-            id="reimbursed"
-            checked={rec.reimbursed}
-            onChange={e => update('reimbursed', e.target.checked)}
-            className="accent-primary w-4 h-4"
-          />
-          <Label htmlFor="reimbursed" className="text-xs cursor-pointer">Reimbursed</Label>
-        </div>
-
-        {rec.reimbursed && (
-          <div>
-            <Label className="text-xs">Reimbursement Date</Label>
-            <Input type="date" value={rec.reimbursement_date} onChange={e => update('reimbursement_date', e.target.value)} className="mt-1 max-w-[200px]" />
-          </div>
-        )}
-
         <div>
-          <Label className="text-xs">Receipts</Label>
-          <Input type="file" multiple accept="image/*,.pdf" disabled={uploading}
-            onChange={e => handleUpload(Array.from(e.target.files))} className="mt-1 text-xs" />
-          {receiptUrls.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {receiptUrls.map(url => (
-                <Badge key={url} variant="outline" className="text-xs flex gap-1">
-                  {url.split('/').pop().slice(0, 20)}
-                  <button onClick={() => setReceiptUrls(p => p.filter(u => u !== url))}><X className="w-3 h-3" /></button>
-                </Badge>
-              ))}
-            </div>
-          )}
+          <Label className="text-xs">Product Link</Label>
+          <div className="relative mt-1">
+            <LinkIcon className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Input
+              value={rec.product_link}
+              onChange={e => update('product_link', e.target.value)}
+              className="pl-8"
+              placeholder="https://..."
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Estimated Amount ($)</Label>
+            <Input type="number" step="0.01" value={rec.estimated_amount} onChange={e => update('estimated_amount', e.target.value)} className="mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs">Vendor</Label>
+            <Input value={rec.vendor} onChange={e => update('vendor', e.target.value)} className="mt-1" />
+          </div>
         </div>
 
         <div>
@@ -212,7 +164,9 @@ function SupportForm({ client, existing, onDone, onCancel }) {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saving} size="sm">{saving ? 'Saving...' : 'Save Support'}</Button>
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            {saving ? 'Submitting...' : 'Request Purchase'}
+          </Button>
           <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         </div>
       </CardContent>
@@ -220,7 +174,7 @@ function SupportForm({ client, existing, onDone, onCancel }) {
   );
 }
 
-export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
+export default function EmploymentSupportsStep({ client, onSave }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -229,12 +183,11 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const recs = await base44.entities.FinancialRecord.filter({
+      const recs = await base44.entities.PurchaseRequest.filter({
         client_id: client.id,
-        record_type: 'employment_supports',
-      }, '-created_date');
+      }, '-requested_date');
       setRecords(recs);
-    } catch { toast.error('Failed to load support records'); }
+    } catch { toast.error('Failed to load purchase requests'); }
     finally { setLoading(false); }
   };
 
@@ -244,14 +197,14 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
     setShowForm(false);
     setEditingRecord(null);
     await fetchRecords();
-    if (records.length > 0 || true) {
-      await onSave({ employment_supports: true });
-    }
+    if (onSave) await onSave({ employment_supports: true });
   };
 
-  const totalSpent = records.reduce((sum, r) => sum + (r.total || 0), 0);
-  const totalReimbursed = records.filter(r => r.reimbursed).reduce((sum, r) => sum + (r.total || 0), 0);
-  const outstanding = totalSpent - totalReimbursed;
+  const totalRequested = records.reduce((s, r) => s + (r.estimated_amount || 0), 0);
+  const pending = records.filter(r => r.status === 'pending');
+  const approved = records.filter(r => r.status === 'approved');
+  const pendingTotal = pending.reduce((s, r) => s + (r.estimated_amount || 0), 0);
+  const approvedTotal = approved.reduce((s, r) => s + (r.estimated_amount || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -262,11 +215,11 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
             Employment Supports
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Track financial support provided to the client (PPE, bus passes, work clothes, etc.) and reimbursement status.
+            Request purchases of employment supports (PPE, bus passes, work clothes, etc.) for manager approval.
           </p>
         </div>
         <Button size="sm" onClick={() => { setEditingRecord(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" /> Add Support
+          <Plus className="w-4 h-4 mr-1" /> Request Purchase
         </Button>
       </div>
 
@@ -274,26 +227,29 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
       <div className="grid grid-cols-3 gap-3">
         <Card className="border-slate-200">
           <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Total Spent</div>
-            <div className="text-lg font-bold text-slate-800">${totalSpent.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-green-200 bg-green-50/50">
-          <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Reimbursed</div>
-            <div className="text-lg font-bold text-green-700">${totalReimbursed.toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground">Total Requested</div>
+            <div className="text-lg font-bold text-slate-800">${totalRequested.toFixed(2)}</div>
+            <div className="text-xs text-slate-400">{records.length} request{records.length !== 1 ? 's' : ''}</div>
           </CardContent>
         </Card>
         <Card className="border-amber-200 bg-amber-50/50">
           <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Outstanding</div>
-            <div className="text-lg font-bold text-amber-700">${outstanding.toFixed(2)}</div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> Pending</div>
+            <div className="text-lg font-bold text-amber-700">${pendingTotal.toFixed(2)}</div>
+            <div className="text-xs text-slate-400">{pending.length} pending</div>
+          </CardContent>
+        </Card>
+        <Card className="border-green-200 bg-green-50/50">
+          <CardContent className="p-3">
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved</div>
+            <div className="text-lg font-bold text-green-700">${approvedTotal.toFixed(2)}</div>
+            <div className="text-xs text-slate-400">{approved.length} approved</div>
           </CardContent>
         </Card>
       </div>
 
       {showForm && !editingRecord && (
-        <SupportForm client={client} onDone={handleDone} onCancel={() => setShowForm(false)} />
+        <RequestPurchaseForm client={client} onDone={handleDone} onCancel={() => setShowForm(false)} />
       )}
 
       {loading ? (
@@ -301,14 +257,15 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
       ) : records.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground text-sm">
-            No employment support records yet. Click "Add Support" to get started.
+            No purchase requests yet. Click "Request Purchase" to submit one for manager approval.
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          {records.map(rec => (
-            editingRecord?.id === rec.id
-              ? <SupportForm key={rec.id} client={client} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
+          {records.map(rec => {
+            const StatusIcon = STATUS_BADGE[rec.status]?.icon || Clock;
+            return editingRecord?.id === rec.id
+              ? <RequestPurchaseForm key={rec.id} client={client} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
               : (
                 <Card key={rec.id}>
                   <CardContent className="p-3">
@@ -319,23 +276,26 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
                             {SUPPORT_TYPE_SHORT[rec.support_type] || rec.support_type}
                             {rec.support_type === 'Other' && rec.support_type_other ? `: ${rec.support_type_other}` : ''}
                           </Badge>
-                          {rec.reimbursed ? (
-                            <Badge className="text-xs bg-green-100 text-green-800">
-                              <CheckCircle2 className="w-3 h-3 mr-0.5" /> Reimbursed
-                            </Badge>
-                          ) : (
-                            <Badge className="text-xs bg-amber-100 text-amber-800">Pending Reimbursement</Badge>
-                          )}
-                          <span className="text-xs text-muted-foreground">{rec.date || '—'}</span>
+                          <Badge className={`text-xs ${STATUS_BADGE[rec.status]?.className || ''}`}>
+                            <StatusIcon className="w-3 h-3 mr-0.5" /> {STATUS_BADGE[rec.status]?.label || rec.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{rec.requested_date || '—'}</span>
                         </div>
                         {rec.description && <div className="text-sm mt-1 truncate">{rec.description}</div>}
-                        {rec.vendor && <div className="text-xs text-muted-foreground">{rec.vendor}</div>}
-                        {rec.total > 0 && (
+                        {rec.product_link && (
+                          <a href={rec.product_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5 w-fit">
+                            <LinkIcon className="w-3 h-3" /> Product Link
+                          </a>
+                        )}
+                        {(rec.vendor || rec.requested_by_name) && (
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {rec.vendor && <span>Vendor: {rec.vendor} · </span>}
+                            <span>Requested by {rec.requested_by_name || rec.requested_by || '—'}</span>
+                          </div>
+                        )}
+                        {rec.estimated_amount > 0 && (
                           <div className="text-xs font-medium mt-1">
-                            ${rec.total.toFixed(2)}
-                            {rec.reimbursed && rec.reimbursement_date && (
-                              <span className="text-green-600 ml-2">Reimbursed {rec.reimbursement_date}</span>
-                            )}
+                            Estimated: ${(rec.estimated_amount || 0).toFixed(2)}
                           </div>
                         )}
                       </div>
@@ -345,8 +305,8 @@ export default function EmploymentSupportsStep({ client, onSave, onComplete }) {
                     </div>
                   </CardContent>
                 </Card>
-              )
-          ))}
+              );
+          })}
         </div>
       )}
     </div>

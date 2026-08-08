@@ -1,0 +1,83 @@
+{
+  "name": "PurchaseRequest",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client ID"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "support_type": {
+      "type": "string",
+      "description": "Type of employment support (PPE, Bus Pass, Work Clothes, etc.)"
+    },
+    "support_type_other": {
+      "type": "string",
+      "description": "If support type is 'Other', specify"
+    },
+    "description": {
+      "type": "string"
+    },
+    "product_link": {
+      "type": "string",
+      "description": "URL link to the product to be purchased"
+    },
+    "estimated_amount": {
+      "type": "number",
+      "description": "Estimated cost of the purchase"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "requested_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was submitted (auto-set to the current date, not editable)"
+    },
+    "requested_by": {
+      "type": "string",
+      "description": "Email of the career counsellor who submitted the request"
+    },
+    "requested_by_name": {
+      "type": "string",
+      "description": "Name of the career counsellor who submitted the request"
+    },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Email of the client's assigned career counsellor"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_by_name": {
+      "type": "string"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "review_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "client_id",
+    "support_type",
+    "estimated_amount"
+  ]
+}
