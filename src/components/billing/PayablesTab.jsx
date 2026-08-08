@@ -764,12 +764,15 @@ export default function PayablesTab({ financialRecords, clients }) {
                                             </td>
                                             <td className="px-3 py-2.5 text-center whitespace-nowrap">
                                               <div className="flex flex-col gap-1 items-center">
-                                                <button onClick={() => toggleInvoiced(rec)} className="text-xs">
-                                                  {rec.invoiced
-                                                    ? <Badge className="text-xs bg-blue-100 text-blue-800">Invoiced</Badge>
-                                                    : <Badge className="text-xs bg-amber-100 text-amber-800">Pending</Badge>}
-                                                </button>
-                                                {rec.reimbursed && <Badge className="text-xs bg-green-100 text-green-800">Reimbursed</Badge>}
+                                                {rec.reimbursed ? (
+                                                  <Badge className="text-xs bg-green-100 text-green-800">Paid</Badge>
+                                                ) : rec.invoiced ? (
+                                                  <Badge className="text-xs bg-blue-100 text-blue-800">Invoiced</Badge>
+                                                ) : (
+                                                  <button onClick={() => toggleInvoiced(rec)} className="text-xs">
+                                                    <Badge className="text-xs bg-amber-100 text-amber-800">Pending</Badge>
+                                                  </button>
+                                                )}
                                               </div>
                                             </td>
                                             <td className="px-3 py-2.5 text-center whitespace-nowrap">
