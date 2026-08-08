@@ -81,9 +81,29 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         assigned_worker_name: client.assigned_worker_name,
       };
       if (existing) {
-        await base44.entities.WorkExposurePlacement.update(existing.id, data);
+        const vendorChanged = !!existing.business_name && !!rec.business_name && existing.business_name !== rec.business_name;
+        if (vendorChanged) {
+          const subs = await base44.entities.WorkExposureHoursSubmission.filter({ placement_id: existing.id });
+          if (subs.length > 0) {
+            // Hours already submitted under the old vendor — keep the existing
+            // placement (and its billed lines) intact, and add a NEW placement
+            // line for the new vendor within the same client.
+            await base44.entities.WorkExposurePlacement.create(data);
+            toast.success('New vendor line added (previous placement retained)');
+          } else {
+            // No hours submitted yet — just update the existing vendor line.
+            await base44.entities.WorkExposurePlacement.update(existing.id, data);
+            const frs = await base44.entities.FinancialRecord.filter({ linked_placement_id: existing.id });
+            await Promise.all(frs.map(fr => base44.entities.FinancialRecord.update(fr.id, { vendor: data.business_name })));
+            toast.success('Vendor line updated');
+          }
+        } else {
+          await base44.entities.WorkExposurePlacement.update(existing.id, data);
+          toast.success('Placement updated');
+        }
       } else {
         await base44.entities.WorkExposurePlacement.create(data);
+        toast.success('Work exposure placement added');
       }
 
       // Keep the client's CRT work-exposure / wage-subsidy flags in sync with
@@ -95,7 +115,6 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
         wage_subsidy_accessed: hasCompleted,
       });
 
-      toast.success(existing ? 'Placement updated' : 'Work exposure placement added');
       onDone();
     } catch { toast.error('Failed to save'); }
     finally { setSaving(false); }
