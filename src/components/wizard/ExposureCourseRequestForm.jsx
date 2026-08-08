@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
@@ -23,52 +24,65 @@ const COURSE_OPTIONS = [
 
 export default function ExposureCourseRequestForm({ client, existing, onDone, onCancel }) {
   const [rec, setRec] = useState(existing || {
-    record_type: 'exposure_course',
+    request_type: 'exposure_course',
     course_type: '',
     course_type_other: '',
     course_identifier: '',
     course_link: '',
     description: '',
     vendor: '',
-    date: '',
-    amount: '',
-    tax: '',
+    program_start_date: '',
+    estimated_amount: '',
     notes: '',
   });
   const [saving, setSaving] = useState(false);
 
   const update = (f, v) => setRec(p => ({ ...p, [f]: v }));
-  const total = (parseFloat(rec.amount) || 0) + (parseFloat(rec.tax) || 0);
 
   const handleSave = async () => {
+    if (!rec.course_type) { toast.error('Please select a course'); return; }
+    if (!rec.estimated_amount && rec.estimated_amount !== 0) {
+      toast.error('Please enter an estimated amount'); return;
+    }
     setSaving(true);
     try {
+      const me = await base44.auth.me().catch(() => null);
+      const today = format(new Date(), 'yyyy-MM-dd');
       const data = {
-        ...rec,
-        record_type: 'exposure_course',
-        amount: parseFloat(rec.amount) || 0,
-        tax: parseFloat(rec.tax) || 0,
-        total,
-        billing_month: rec.date ? format(new Date(rec.date), 'yyyy-MM') : format(new Date(), 'yyyy-MM'),
+        request_type: 'exposure_course',
         client_id: client.id,
         client_name: `${client.first_name} ${client.last_name}`,
-        assigned_worker: client.assigned_worker,
+        course_type: rec.course_type,
+        course_type_other: rec.course_type === 'Other' ? rec.course_type_other : '',
+        course_identifier: rec.course_identifier,
+        course_link: rec.course_link,
+        description: rec.description,
+        vendor: rec.vendor,
+        program_start_date: rec.program_start_date,
+        estimated_amount: parseFloat(rec.estimated_amount) || 0,
+        requested_date: existing?.requested_date || today,
+        requested_by: existing?.requested_by || me?.email || client.assigned_worker || '',
+        requested_by_name: existing?.requested_by_name || me?.full_name || '',
+        assigned_worker: client.assigned_worker || '',
+        notes: rec.notes,
+        status: existing?.status || 'pending',
       };
       if (existing) {
-        await base44.entities.FinancialRecord.update(existing.id, data);
+        await base44.entities.PurchaseRequest.update(existing.id, data);
       } else {
-        await base44.entities.FinancialRecord.create(data);
+        await base44.entities.PurchaseRequest.create(data);
       }
-      toast.success('Exposure course request saved');
+      toast.success(existing ? 'Exposure course request updated' : 'Exposure course request submitted to managers');
       onDone();
-    } catch { toast.error('Failed to save'); }
+    } catch { toast.error('Failed to submit request'); }
     finally { setSaving(false); }
   };
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-indigo-600" />
           {existing ? 'Edit Exposure Course Request' : 'Exposure Course Request Form'}
         </CardTitle>
       </CardHeader>
@@ -99,7 +113,7 @@ export default function ExposureCourseRequestForm({ client, existing, onDone, on
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-xs">Program Start Date</Label>
-            <Input type="date" value={rec.date} onChange={e => update('date', e.target.value)} className="mt-1" />
+            <Input type="date" value={rec.program_start_date} onChange={e => update('program_start_date', e.target.value)} className="mt-1" />
           </div>
           <div>
             <Label className="text-xs">Course Identifier</Label>
@@ -117,19 +131,9 @@ export default function ExposureCourseRequestForm({ client, existing, onDone, on
           <Input value={rec.description} onChange={e => update('description', e.target.value)} className="mt-1" />
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs">Amount ($)</Label>
-            <Input type="number" step="0.01" value={rec.amount} onChange={e => update('amount', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Tax ($)</Label>
-            <Input type="number" step="0.01" value={rec.tax} onChange={e => update('tax', e.target.value)} className="mt-1" />
-          </div>
-          <div>
-            <Label className="text-xs">Total ($)</Label>
-            <Input value={total.toFixed(2)} disabled className="mt-1" />
-          </div>
+        <div>
+          <Label className="text-xs">Estimated Amount ($)</Label>
+          <Input type="number" step="0.01" value={rec.estimated_amount} onChange={e => update('estimated_amount', e.target.value)} className="mt-1" />
         </div>
 
         <div>
@@ -138,7 +142,9 @@ export default function ExposureCourseRequestForm({ client, existing, onDone, on
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={handleSave} disabled={saving} size="sm">{saving ? 'Saving...' : 'Save Request'}</Button>
+          <Button onClick={handleSave} disabled={saving} size="sm">
+            {saving ? 'Submitting...' : 'Request Exposure Course'}
+          </Button>
           <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
         </div>
       </CardContent>

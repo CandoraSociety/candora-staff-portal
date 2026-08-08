@@ -57,8 +57,9 @@ export default function MyPendingPurchaseRequests({ requests = [], currentUser }
                           {r.client_name || '—'}
                         </Link>
                         <Badge variant="outline" className="text-xs">
-                          {SUPPORT_TYPE_SHORT[r.support_type] || r.support_type}
-                          {r.support_type === 'Other' && r.support_type_other ? `: ${r.support_type_other}` : ''}
+                          {r.request_type === 'exposure_course'
+                            ? (r.course_type === 'Other' && r.course_type_other ? `Course: ${r.course_type_other}` : (r.course_type || 'Exposure Course'))
+                            : (SUPPORT_TYPE_SHORT[r.support_type] || r.support_type) + (r.support_type === 'Other' && r.support_type_other ? `: ${r.support_type_other}` : '')}
                         </Badge>
                         <Badge className={`text-xs flex items-center gap-1 ${style.badge}`}>
                           <StatusIcon className="w-3 h-3" /> {style.label}
@@ -98,15 +99,24 @@ export default function MyPendingPurchaseRequests({ requests = [], currentUser }
                       )}
                       {r.status === 'approved' && (
                         <div className="text-xs text-green-800 bg-green-100 border border-green-200 rounded p-2 mt-1.5 space-y-0.5">
-                          <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved & Purchased</div>
-                          {r.purchase_date && <div>Purchased {r.purchase_date} · ${(r.total || 0).toFixed(2)}</div>}
-                          {r.pickup_instructions && <div className="font-medium">Pick up: {r.pickup_instructions}</div>}
-                          {r.purchase_notes && <div>Notes: {r.purchase_notes}</div>}
-                          {r.receipt_url && (
-                            <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 w-fit">
-                              <ExternalLink className="w-3 h-3" /> Receipt
-                            </a>
+                          <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {r.request_type === 'exposure_course' ? 'Approved' : 'Approved & Purchased'}</div>
+                          {r.request_type === 'exposure_course' ? (
+                            <>
+                              {r.program_start_date && <div>Starts {format(new Date(r.program_start_date), 'MMM d, yy')}</div>}
+                              {r.course_identifier && <div>Course ID: {r.course_identifier}</div>}
+                            </>
+                          ) : (
+                            <>
+                              {r.purchase_date && <div>Purchased {r.purchase_date} · ${(r.total || 0).toFixed(2)}</div>}
+                              {r.pickup_instructions && <div className="font-medium">Pick up: {r.pickup_instructions}</div>}
+                              {r.receipt_url && (
+                                <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 w-fit">
+                                  <ExternalLink className="w-3 h-3" /> Receipt
+                                </a>
+                              )}
+                            </>
                           )}
+                          {r.purchase_notes && <div>Notes: {r.purchase_notes}</div>}
                         </div>
                       )}
                     </div>

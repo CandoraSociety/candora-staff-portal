@@ -2,6 +2,15 @@
   "name": "PurchaseRequest",
   "type": "object",
   "properties": {
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "employment_supports",
+        "exposure_course"
+      ],
+      "default": "employment_supports",
+      "description": "Which kind of request this is \u2014 employment support purchase or exposure course registration"
+    },
     "client_id": {
       "type": "string",
       "description": "Linked Client ID"
@@ -18,6 +27,27 @@
       "type": "string",
       "description": "If support type is 'Other', specify"
     },
+    "course_type": {
+      "type": "string",
+      "description": "Exposure course selected (H2S Alive, Standard First Aid and CPR, etc.)"
+    },
+    "course_type_other": {
+      "type": "string",
+      "description": "If course type is 'Other', specify"
+    },
+    "course_link": {
+      "type": "string",
+      "description": "URL link to the exposure course offering"
+    },
+    "course_identifier": {
+      "type": "string",
+      "description": "Provider-specific code or cohort naming convention for the course"
+    },
+    "program_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Program start date for the exposure course"
+    },
     "description": {
       "type": "string"
     },
@@ -32,7 +62,7 @@
     },
     "estimated_amount": {
       "type": "number",
-      "description": "Estimated cost of the purchase"
+      "description": "Estimated cost of the purchase / course"
     },
     "vendor": {
       "type": "string"
@@ -142,7 +172,6 @@
   },
   "required": [
     "client_id",
-    "support_type",
     "estimated_amount"
   ]
 }

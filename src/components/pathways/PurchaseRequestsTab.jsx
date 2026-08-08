@@ -33,6 +33,7 @@ const STATUS_STYLE = {
 };
 
 function StatusNotice({ r }) {
+  const isCourse = r.request_type === 'exposure_course';
   if (r.status === 'rejected') {
     return (
       <div className="text-xs text-red-800 bg-red-100 border border-red-200 rounded p-2 mt-1.5">
@@ -52,6 +53,16 @@ function StatusNotice({ r }) {
     );
   }
   if (r.status === 'approved') {
+    if (isCourse) {
+      return (
+        <div className="text-xs text-green-800 bg-green-100 border border-green-200 rounded p-2 mt-1.5 space-y-0.5">
+          <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved</div>
+          {r.program_start_date && <div>Starts {format(new Date(r.program_start_date), 'MMM d, yy')}</div>}
+          {r.course_identifier && <div>Course ID: {r.course_identifier}</div>}
+          {r.purchase_notes && <div>Notes: {r.purchase_notes}</div>}
+        </div>
+      );
+    }
     return (
       <div className="text-xs text-green-800 bg-green-100 border border-green-200 rounded p-2 mt-1.5 space-y-0.5">
         <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved & Purchased</div>
@@ -87,8 +98,9 @@ function RequestCard({ r, currentUser, onAcknowledge, onDetermine, busy }) {
                 {r.client_name || '—'}
               </Link>
               <Badge variant="outline" className="text-xs">
-                {SUPPORT_TYPE_SHORT[r.support_type] || r.support_type}
-                {r.support_type === 'Other' && r.support_type_other ? `: ${r.support_type_other}` : ''}
+                {r.request_type === 'exposure_course'
+                  ? (r.course_type === 'Other' && r.course_type_other ? `Course: ${r.course_type_other}` : (r.course_type || 'Exposure Course'))
+                  : (SUPPORT_TYPE_SHORT[r.support_type] || r.support_type) + (r.support_type === 'Other' && r.support_type_other ? `: ${r.support_type_other}` : '')}
               </Badge>
               <Badge className={`text-xs flex items-center gap-1 ${style.badge}`}>
                 <StatusIcon className="w-3 h-3" /> {style.label}
@@ -99,12 +111,18 @@ function RequestCard({ r, currentUser, onAcknowledge, onDetermine, busy }) {
             </div>
             {r.description && <div className="text-sm mt-1.5">{r.description}</div>}
             <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground flex-wrap">
-              {r.product_link && (
-                <a href={r.product_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
-                  <ExternalLink className="w-3 h-3" /> Product Link
-                </a>
-              )}
-              {r.purchase_exact_item && <Badge className="text-xs bg-blue-100 text-blue-800">Purchase exact item in link</Badge>}
+              {r.request_type === 'exposure_course'
+                ? (r.course_link && (
+                    <a href={r.course_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Course Link
+                    </a>
+                  ))
+                : (r.product_link && (
+                    <a href={r.product_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Product Link
+                    </a>
+                  ))}
+              {r.purchase_exact_item && r.request_type !== 'exposure_course' && <Badge className="text-xs bg-blue-100 text-blue-800">Purchase exact item in link</Badge>}
               {r.vendor && <span>Vendor: {r.vendor}</span>}
               <span>Requested by: {r.requested_by_name || r.requested_by || '—'}</span>
               {r.received_by_name && (

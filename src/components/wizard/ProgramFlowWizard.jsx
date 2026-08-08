@@ -6,6 +6,7 @@ import EmploymentActionPlan from './EmploymentActionPlan';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSupportsStep from './EmploymentSupportsStep';
+import ExposureCoursesStep from './ExposureCoursesStep';
 import WorkExposurePlacementTab from './WorkExposurePlacementTab';
 import InternalPlacementsTab from './InternalPlacementsTab';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
@@ -211,7 +212,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         case 'internal_placement':
           return <InternalPlacementStep client={client} onSave={onSave} onComplete={goBack} />;
         case 'exposure_courses':
-          return <ExposuresSupportsStep client={client} onSave={onSave} isDEA={false} recordType="exposure_course" />;
+          return <ExposureCoursesStep client={client} onSave={onSave} />;
         case 'internal_placements':
           return <InternalPlacementsTab client={client} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         case 'work_exposure_placement':

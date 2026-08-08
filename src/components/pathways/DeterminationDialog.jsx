@@ -11,6 +11,7 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 export default function DeterminationDialog({ request, currentUser, onClose, onDone }) {
+  const isCourse = request.request_type === 'exposure_course';
   const [choice, setChoice] = useState(null);
   const [reason, setReason] = useState(request.rejection_reason || '');
   const [infoNote, setInfoNote] = useState(request.needs_more_info_note || '');
@@ -42,7 +43,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
     if (saving) return;
     if (choice === 'rejected' && !reason.trim()) { toast.error('Please enter a rejection reason'); return; }
     if (choice === 'needs_more_info' && !infoNote.trim()) { toast.error('Please enter what info is needed'); return; }
-    if (choice === 'approved') {
+    if (choice === 'approved' && !isCourse) {
       if (amount === '' || amount === null) { toast.error('Enter the purchase amount (without tax)'); return; }
       if (tax === '' || tax === null) { toast.error('Enter the tax amount (enter 0 if none)'); return; }
       if (!receiptUrl) { toast.error('Receipt upload is required'); return; }
@@ -62,35 +63,44 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
         await base44.entities.PurchaseRequest.update(request.id, { ...base, status: 'needs_more_info', needs_more_info_note: infoNote.trim() });
         toast.success('Marked as needing more info — requester notified');
       } else if (choice === 'approved') {
-        const amt = parseFloat(amount) || 0;
-        const tx = parseFloat(tax) || 0;
-        const tot = amt + tx;
-        const billingMonth = purchaseDate.slice(0, 7);
-        const fr = await base44.entities.FinancialRecord.create({
-          client_id: request.client_id,
-          client_name: request.client_name,
-          assigned_worker: request.assigned_worker || request.requested_by,
-          record_type: 'employment_supports',
-          support_type: request.support_type,
-          description: request.description,
-          amount: amt,
-          tax: tx,
-          total: tot,
-          date: purchaseDate,
-          vendor: request.vendor,
-          billing_month: billingMonth,
-          receipt_urls: [receiptUrl],
-          completion_status: 'completed',
-          notes: [pickup.trim() ? `Pickup: ${pickup.trim()}` : '', notes.trim()].filter(Boolean).join(' | '),
-        });
-        await base44.entities.PurchaseRequest.update(request.id, {
-          ...base, status: 'approved',
-          purchase_date: purchaseDate, amount_without_tax: amt, tax: tx, total: tot,
-          pickup_instructions: pickup.trim(), purchase_notes: notes.trim(), receipt_url: receiptUrl,
-          linked_financial_record_id: fr?.id || '',
-        });
-        try { await base44.functions.invoke('syncEmploymentSupportsToInvoiceTracker', { billing_month: billingMonth }); } catch {}
-        toast.success('Purchase approved & added to Employment Supports billing');
+        if (isCourse) {
+          // Exposure course approval — no billing / finance portal automations
+          await base44.entities.PurchaseRequest.update(request.id, {
+            ...base, status: 'approved',
+            purchase_notes: notes.trim(),
+          });
+          toast.success('Exposure course request approved');
+        } else {
+          const amt = parseFloat(amount) || 0;
+          const tx = parseFloat(tax) || 0;
+          const tot = amt + tx;
+          const billingMonth = purchaseDate.slice(0, 7);
+          const fr = await base44.entities.FinancialRecord.create({
+            client_id: request.client_id,
+            client_name: request.client_name,
+            assigned_worker: request.assigned_worker || request.requested_by,
+            record_type: 'employment_supports',
+            support_type: request.support_type,
+            description: request.description,
+            amount: amt,
+            tax: tx,
+            total: tot,
+            date: purchaseDate,
+            vendor: request.vendor,
+            billing_month: billingMonth,
+            receipt_urls: [receiptUrl],
+            completion_status: 'completed',
+            notes: [pickup.trim() ? `Pickup: ${pickup.trim()}` : '', notes.trim()].filter(Boolean).join(' | '),
+          });
+          await base44.entities.PurchaseRequest.update(request.id, {
+            ...base, status: 'approved',
+            purchase_date: purchaseDate, amount_without_tax: amt, tax: tx, total: tot,
+            pickup_instructions: pickup.trim(), purchase_notes: notes.trim(), receipt_url: receiptUrl,
+            linked_financial_record_id: fr?.id || '',
+          });
+          try { await base44.functions.invoke('syncEmploymentSupportsToInvoiceTracker', { billing_month: billingMonth }); } catch {}
+          toast.success('Purchase approved & added to Employment Supports billing');
+        }
       }
       onDone();
     } catch (e) { toast.error('Failed to save determination'); }
@@ -112,7 +122,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           <div className="grid grid-cols-1 gap-2">
             <button onClick={() => setChoice('approved')} className="flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50 hover:bg-green-100 text-left transition-colors">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <div><div className="font-semibold text-green-800">Approve & Purchase</div><div className="text-xs text-green-700">Fill purchase info & upload receipt</div></div>
+              <div><div className="font-semibold text-green-800">{isCourse ? 'Approve Course' : 'Approve & Purchase'}</div><div className="text-xs text-green-700">{isCourse ? 'Approve this exposure course request' : 'Fill purchase info & upload receipt'}</div></div>
             </button>
             <button onClick={() => setChoice('rejected')} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-left transition-colors">
               <XCircle className="w-5 h-5 text-red-600" />
@@ -139,7 +149,16 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           </div>
         )}
 
-        {choice === 'approved' && (
+        {choice === 'approved' && isCourse && (
+          <div className="space-y-3">
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Optional approval notes..." />
+            </div>
+          </div>
+        )}
+
+        {choice === 'approved' && !isCourse && (
           <div className="space-y-3">
             <div>
               <Label>Purchase Date *</Label>
@@ -182,7 +201,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           <DialogFooter>
             <Button variant="outline" onClick={() => setChoice(null)}>Back</Button>
             <Button onClick={submit} disabled={saving || uploading}>
-              {saving ? 'Saving...' : choice === 'approved' ? 'Mark as Purchased' : choice === 'rejected' ? 'Confirm Rejection' : 'Send'}
+              {saving ? 'Saving...' : choice === 'approved' ? (isCourse ? 'Approve Course' : 'Mark as Purchased') : choice === 'rejected' ? 'Confirm Rejection' : 'Send'}
             </Button>
           </DialogFooter>
         )}
