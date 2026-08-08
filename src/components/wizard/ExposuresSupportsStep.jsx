@@ -10,6 +10,7 @@ import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
+import ExposureCourseRequestForm from '@/components/wizard/ExposureCourseRequestForm';
 
 const RECORD_TYPE_LABELS = {
   exposure_course:         'Exposure Course',
@@ -242,7 +243,9 @@ export default function ExposuresSupportsStep({ client, onSave, isDEA, recordTyp
       </div>
 
       {showForm && !editingRecord && (
-        <RecordForm client={client} isDEA={isDEA} recordType={recordType} onDone={handleDone} onCancel={() => setShowForm(false)} />
+        recordType === 'exposure_course'
+          ? <ExposureCourseRequestForm client={client} onDone={handleDone} onCancel={() => setShowForm(false)} />
+          : <RecordForm client={client} isDEA={isDEA} recordType={recordType} onDone={handleDone} onCancel={() => setShowForm(false)} />
       )}
 
       {loading ? (
@@ -257,7 +260,9 @@ export default function ExposuresSupportsStep({ client, onSave, isDEA, recordTyp
         <div className="space-y-2">
           {records.map(rec => (
             editingRecord?.id === rec.id
-              ? <RecordForm key={rec.id} client={client} isDEA={isDEA} recordType={recordType} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
+              ? (recordType === 'exposure_course'
+                  ? <ExposureCourseRequestForm key={rec.id} client={client} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />
+                  : <RecordForm key={rec.id} client={client} isDEA={isDEA} recordType={recordType} existing={rec} onDone={handleDone} onCancel={() => setEditingRecord(null)} />)
               : (
                 <Card key={rec.id}>
                   <CardContent className="p-3">

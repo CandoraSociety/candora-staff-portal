@@ -29,6 +29,14 @@
     "course_type_other": {
       "type": "string"
     },
+    "course_link": {
+      "type": "string",
+      "description": "URL link to the exposure course offering"
+    },
+    "course_identifier": {
+      "type": "string",
+      "description": "Provider-specific code or cohort naming convention for the course"
+    },
     "description": {
       "type": "string"
     },
