@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Wallet, Briefcase, UtensilsCrossed, DollarSign, Clock } from 'lucide-react';
+import { Wallet, Briefcase, UtensilsCrossed, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function FinanceDashboard() {
@@ -11,17 +11,12 @@ export default function FinanceDashboard() {
     queryKey: ['financial-records'],
     queryFn: () => base44.entities.FinancialRecord.list('-date', 200),
   });
-  const { data: hoursSubs = [] } = useQuery({
-    queryKey: ['work-exposure-hours-submissions-all'],
-    queryFn: () => base44.entities.WorkExposureHoursSubmission.list('-submitted_date', 100),
-  });
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-active'],
     queryFn: () => base44.entities.Employee.filter({ status: 'active' }),
   });
 
   const outstandingPayables = financialRecords.filter(r => !r.reimbursed).reduce((s, r) => s + (r.total || 0), 0);
-  const pendingWeHours = hoursSubs.filter(s => s.status === 'submitted').length;
   const paidThisMonth = financialRecords
     .filter(r => r.reimbursed && r.reimbursement_date && r.reimbursement_date.startsWith(format(new Date(), 'yyyy-MM')))
     .reduce((s, r) => s + (r.total || 0), 0);
@@ -43,13 +38,6 @@ export default function FinanceDashboard() {
             <div className="text-xs text-muted-foreground flex items-center gap-1"><DollarSign className="w-3 h-3" /> Outstanding Payables</div>
             <div className="text-2xl font-bold text-amber-700">${outstandingPayables.toFixed(2)}</div>
             <div className="text-xs text-muted-foreground">{financialRecords.filter(r => !r.reimbursed).length} unpaid records</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> Pending WE Hours</div>
-            <div className="text-2xl font-bold text-blue-700">{pendingWeHours}</div>
-            <div className="text-xs text-muted-foreground">employer submissions awaiting review</div>
           </CardContent>
         </Card>
         <Card>
