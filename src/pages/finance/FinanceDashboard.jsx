@@ -16,7 +16,9 @@ export default function FinanceDashboard() {
     queryFn: () => base44.entities.Employee.filter({ status: 'active' }),
   });
 
-  const outstandingPayables = financialRecords.filter(r => !r.reimbursed).reduce((s, r) => s + (r.total || 0), 0);
+  const outstandingPayables = financialRecords
+    .filter(r => !r.reimbursed && r.record_type !== 'employment_supports')
+    .reduce((s, r) => s + (r.total || 0), 0);
   const paidThisMonth = financialRecords
     .filter(r => r.reimbursed && r.reimbursement_date && r.reimbursement_date.startsWith(format(new Date(), 'yyyy-MM')))
     .reduce((s, r) => s + (r.total || 0), 0);
@@ -37,7 +39,7 @@ export default function FinanceDashboard() {
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground flex items-center gap-1"><DollarSign className="w-3 h-3" /> Outstanding Payables</div>
             <div className="text-2xl font-bold text-amber-700">${outstandingPayables.toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">{financialRecords.filter(r => !r.reimbursed).length} unpaid records</div>
+            <div className="text-xs text-muted-foreground">{financialRecords.filter(r => !r.reimbursed && r.record_type !== 'employment_supports').length} unpaid records</div>
           </CardContent>
         </Card>
         <Card>

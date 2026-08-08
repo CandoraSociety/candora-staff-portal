@@ -201,7 +201,7 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                     <th className="text-left px-3 py-2 font-semibold">Timesheet</th>
                   </>
                 )}
-                <th className="text-right px-3 py-2 font-semibold">{recordType === 'employment_supports' ? 'Total to be Reimbursed' : 'Amount'}</th>
+                <th className="text-right px-3 py-2 font-semibold">{recordType === 'employment_supports' ? 'Amount (without tax)' : 'Amount'}</th>
                 {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
                 {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Total</th>}
                 <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
