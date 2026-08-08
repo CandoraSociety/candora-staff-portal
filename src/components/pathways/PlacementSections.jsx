@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import CollapsibleSection from './CollapsibleSection';
+import EmployerProfileDialog from '@/components/wizard/EmployerProfileDialog';
 
 const PLACEMENT_TYPE_LABELS = {
   cleaning_arc: "Cleaning (ARC)",
@@ -57,6 +58,7 @@ export default function PlacementSections({ clients, type = 'both' }) {
   const [internalTrainings, setInternalTrainings] = useState([]);
   const [workExposures, setWorkExposures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileEmployerId, setProfileEmployerId] = useState(null);
 
   useEffect(() => {
     const fetches = [
@@ -132,6 +134,7 @@ export default function PlacementSections({ clients, type = 'both' }) {
       client_name: we.client_name || (client ? `${client.first_name} ${client.last_name}` : '—'),
       hsid: client?.compass_hsid,
       placement_location: we.business_name || '—',
+      employer_id: we.employer_id,
       start_date: we.start_date,
       anticipated_completion_date: we.anticipated_completion_date,
       actual_completion_date: null,
@@ -199,7 +202,19 @@ export default function PlacementSections({ clients, type = 'both' }) {
               >
                 <td className="px-3 py-2.5 whitespace-nowrap font-semibold" style={{ color: "hsl(231,64%,28%)" }}>{r.client_name}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{r.hsid || "—"}</td>
-                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{r.placement_location}</td>
+                <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                  {r.source_type === 'work_exposure' && r.employer_id ? (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setProfileEmployerId(r.employer_id); }}
+                      className="text-blue-700 hover:underline text-left"
+                    >
+                      {r.placement_location}
+                    </button>
+                  ) : (
+                    r.placement_location
+                  )}
+                </td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(r.start_date)}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(r.anticipated_completion_date)}</td>
                 <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{fmtDate(r.actual_completion_date)}</td>
@@ -259,6 +274,13 @@ export default function PlacementSections({ clients, type = 'both' }) {
             ))}
           </div>
         </CollapsibleSection>
+      )}
+
+      {profileEmployerId && (
+        <EmployerProfileDialog
+          employerId={profileEmployerId}
+          onClose={() => setProfileEmployerId(null)}
+        />
       )}
     </div>
   );
