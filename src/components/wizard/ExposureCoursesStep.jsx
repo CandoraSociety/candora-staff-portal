@@ -151,9 +151,13 @@ export default function ExposureCoursesStep({ client, onSave }) {
                           </div>
                         )}
                         {rec.status === 'approved' && (
-                          <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2 mt-1">
-                            <span className="font-semibold">Approved</span>
-                            {rec.reviewed_by_name && <span className="block">by {rec.reviewed_by_name}</span>}
+                          <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded p-2 mt-1 space-y-0.5">
+                            <div className="font-semibold">Approved & Paid</div>
+                            {rec.purchase_date && <div>Paid {rec.purchase_date} · ${(rec.total || 0).toFixed(2)} (tax ${(rec.tax || 0).toFixed(2)})</div>}
+                            {rec.reviewed_by_name && <div>by {rec.reviewed_by_name}</div>}
+                            {rec.receipt_url && (
+                              <a href={rec.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Receipt</a>
+                            )}
                           </div>
                         )}
                       </div>

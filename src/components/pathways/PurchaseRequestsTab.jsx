@@ -56,10 +56,16 @@ function StatusNotice({ r }) {
     if (isCourse) {
       return (
         <div className="text-xs text-green-800 bg-green-100 border border-green-200 rounded p-2 mt-1.5 space-y-0.5">
-          <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved</div>
+          <div className="font-semibold flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Approved & Paid</div>
+          {r.purchase_date && <div>Paid {r.purchase_date} · ${(r.total || 0).toFixed(2)} (tax ${(r.tax || 0).toFixed(2)})</div>}
           {r.program_start_date && <div>Starts {format(new Date(r.program_start_date), 'MMM d, yy')}</div>}
           {r.course_identifier && <div>Course ID: {r.course_identifier}</div>}
           {r.purchase_notes && <div>Notes: {r.purchase_notes}</div>}
+          {r.receipt_url && (
+            <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 w-fit">
+              <ExternalLink className="w-3 h-3" /> Receipt
+            </a>
+          )}
         </div>
       );
     }

@@ -43,8 +43,8 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
     if (saving) return;
     if (choice === 'rejected' && !reason.trim()) { toast.error('Please enter a rejection reason'); return; }
     if (choice === 'needs_more_info' && !infoNote.trim()) { toast.error('Please enter what info is needed'); return; }
-    if (choice === 'approved' && !isCourse) {
-      if (amount === '' || amount === null) { toast.error('Enter the purchase amount (without tax)'); return; }
+    if (choice === 'approved') {
+      if (amount === '' || amount === null) { toast.error(`Enter the ${isCourse ? 'course' : 'purchase'} amount (without tax)`); return; }
       if (tax === '' || tax === null) { toast.error('Enter the tax amount (enter 0 if none)'); return; }
       if (!receiptUrl) { toast.error('Receipt upload is required'); return; }
     }
@@ -64,12 +64,16 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
         toast.success('Marked as needing more info — requester notified');
       } else if (choice === 'approved') {
         if (isCourse) {
-          // Exposure course approval — no billing / finance portal automations
+          // Exposure course approval — record actual cost & receipt, but no billing / finance portal automations
+          const amt = parseFloat(amount) || 0;
+          const tx = parseFloat(tax) || 0;
+          const tot = amt + tx;
           await base44.entities.PurchaseRequest.update(request.id, {
             ...base, status: 'approved',
-            purchase_notes: notes.trim(),
+            purchase_date: purchaseDate, amount_without_tax: amt, tax: tx, total: tot,
+            purchase_notes: notes.trim(), receipt_url: receiptUrl,
           });
-          toast.success('Exposure course request approved');
+          toast.success('Exposure course approved & payment recorded');
         } else {
           const amt = parseFloat(amount) || 0;
           const tx = parseFloat(tax) || 0;
@@ -114,7 +118,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           <DialogTitle className="flex items-center gap-2"><ShoppingCart className="w-4 h-4" /> Request Determination</DialogTitle>
         </DialogHeader>
         <div className="text-sm text-muted-foreground mb-3">
-          {request.client_name} · {request.support_type}
+          {request.client_name} · {isCourse ? (request.course_type === 'Other' && request.course_type_other ? request.course_type_other : request.course_type || 'Exposure Course') : request.support_type}
           {request.estimated_amount > 0 && <span className="ml-1">· est ${(request.estimated_amount || 0).toFixed(2)}</span>}
         </div>
 
@@ -122,7 +126,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           <div className="grid grid-cols-1 gap-2">
             <button onClick={() => setChoice('approved')} className="flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50 hover:bg-green-100 text-left transition-colors">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <div><div className="font-semibold text-green-800">{isCourse ? 'Approve Course' : 'Approve & Purchase'}</div><div className="text-xs text-green-700">{isCourse ? 'Approve this exposure course request' : 'Fill purchase info & upload receipt'}</div></div>
+              <div><div className="font-semibold text-green-800">{isCourse ? 'Approve & Record Payment' : 'Approve & Purchase'}</div><div className="text-xs text-green-700">{isCourse ? 'Enter actual course cost & upload receipt' : 'Fill purchase info & upload receipt'}</div></div>
             </button>
             <button onClick={() => setChoice('rejected')} className="flex items-center gap-3 p-3 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-left transition-colors">
               <XCircle className="w-5 h-5 text-red-600" />
@@ -149,24 +153,15 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           </div>
         )}
 
-        {choice === 'approved' && isCourse && (
+        {choice === 'approved' && (
           <div className="space-y-3">
             <div>
-              <Label>Notes</Label>
-              <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Optional approval notes..." />
-            </div>
-          </div>
-        )}
-
-        {choice === 'approved' && !isCourse && (
-          <div className="space-y-3">
-            <div>
-              <Label>Purchase Date *</Label>
+              <Label>{isCourse ? 'Payment Date *' : 'Purchase Date *'}</Label>
               <Input type="date" value={purchaseDate} onChange={e => setPurchaseDate(e.target.value)} />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <Label>Amount (no tax) *</Label>
+                <Label>{isCourse ? 'Course Cost (no tax) *' : 'Amount (no tax) *'}</Label>
                 <Input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" />
               </div>
               <div>
@@ -178,10 +173,12 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
                 <Input value={`$${total.toFixed(2)}`} disabled className="bg-slate-50 font-semibold" />
               </div>
             </div>
-            <div>
-              <Label>Pick Up Instructions</Label>
-              <Textarea value={pickup} onChange={e => setPickup(e.target.value)} rows={2} placeholder="Optional..." />
-            </div>
+            {!isCourse && (
+              <div>
+                <Label>Pick Up Instructions</Label>
+                <Textarea value={pickup} onChange={e => setPickup(e.target.value)} rows={2} placeholder="Optional..." />
+              </div>
+            )}
             <div>
               <Label>Notes</Label>
               <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Optional..." />
@@ -201,7 +198,7 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
           <DialogFooter>
             <Button variant="outline" onClick={() => setChoice(null)}>Back</Button>
             <Button onClick={submit} disabled={saving || uploading}>
-              {saving ? 'Saving...' : choice === 'approved' ? (isCourse ? 'Approve Course' : 'Mark as Purchased') : choice === 'rejected' ? 'Confirm Rejection' : 'Send'}
+              {saving ? 'Saving...' : choice === 'approved' ? (isCourse ? 'Approve & Record' : 'Mark as Purchased') : choice === 'rejected' ? 'Confirm Rejection' : 'Send'}
             </Button>
           </DialogFooter>
         )}
