@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
   FileText, BarChart3, Utensils, Megaphone, Archive, Calendar,
   FolderOpen, Mail, CalendarDays, GraduationCap,
-  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank, ConciergeBell, ClipboardList, Monitor, Snowflake
+  Code, HelpCircle, AppWindow, Baby, LifeBuoy, PiggyBank, ConciergeBell, ClipboardList, Monitor, Snowflake, Landmark
 } from 'lucide-react';
 
 const PORTAL_REGISTRY = {
@@ -35,6 +35,7 @@ const PORTAL_REGISTRY = {
   '/community': { label: 'Community Programs', icon: Heart },
   '/winter-wonderland': { label: 'Winter Wonderland', icon: Snowflake },
   '/lms': { label: 'LMS', icon: GraduationCap },
+  '/finance': { label: 'Finance', icon: Landmark },
   '/dev-tasks': { label: 'Dev Tasks', icon: Code },
   '/how-to-admin': { label: 'How-To', icon: HelpCircle },
 };
