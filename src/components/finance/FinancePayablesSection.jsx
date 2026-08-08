@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 
 const RECORD_LABELS = {
   paid_external_placement: 'Work Exposure Payment',
-  employment_supports: 'Employment Supports',
+  employment_supports: 'Staff Reimbursement Requests',
   exposure_course: 'Exposure Course',
 };
 
@@ -137,7 +137,7 @@ export default function FinancePayablesSection({ recordType }) {
       ) : (
         isES ? (
           <PayablesTable
-            title="Employment Supports"
+            title="Staff Reimbursement Requests"
             records={filtered}
             recordType={recordType}
             payableByVendor={payableByVendor}
