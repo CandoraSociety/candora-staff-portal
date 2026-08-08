@@ -16,9 +16,9 @@ export const DEFAULT_TIER_CONFIGS = [
 
 // Default module access per tier (module IDs each tier can access)
 export const DEFAULT_TIER_PORTAL_ACCESS = {
-  executive_director:   ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food','ed'],
-  director:             ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food'],
-  manager:              ['volunteermgr','eventsmgr','reporting','filemanager','food'],
+  executive_director:   ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food','ed','finance'],
+  director:             ['grants','volunteermgr','eventsmgr','marketing','reporting','filemanager','food','finance'],
+  manager:              ['volunteermgr','eventsmgr','reporting','filemanager','food','finance'],
   supervisor_team_lead: ['volunteermgr','eventsmgr','filemanager'],
   frontline:            ['filemanager'],
   assistant:            ['filemanager'],
@@ -59,6 +59,7 @@ export const PORTAL_MODULES = [
   { id: 'frn',              label: 'FRN Programs',                   route: '/frn' },
   { id: 'archives',         label: 'Candora Archives',                route: '/archives' },
   { id: 'winter-wonderland', label: 'Winter Wonderland',              route: '/winter-wonderland' },
+  { id: 'finance',           label: 'Finance',                           route: '/finance' },
 ];
 
 export const TIER_PRESETS = DEFAULT_TIER_PORTAL_ACCESS;

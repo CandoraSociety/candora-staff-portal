@@ -314,6 +314,13 @@ import LMSPrograms from '@/pages/lms/Programs';
 
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
+
+// Finance Portal
+import FinanceLayout from '@/components/finance/FinanceLayout';
+import FinanceDashboard from '@/pages/finance/FinanceDashboard';
+import FinancePayroll from '@/pages/finance/FinancePayroll';
+import FinancePathways from '@/pages/finance/FinancePathways';
+import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
@@ -684,6 +691,14 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/collections" element={<Collections />} />
           <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
           <Route path="/filemanager/search" element={<SearchPage />} />
+        </Route>
+
+        {/* Finance Portal - standalone layout */}
+        <Route element={<FinanceLayout />}>
+          <Route path="/finance" element={<FinanceDashboard />} />
+          <Route path="/finance/payroll" element={<FinancePayroll />} />
+          <Route path="/finance/pathways" element={<FinancePathways />} />
+          <Route path="/finance/food" element={<FinanceFoodServices />} />
         </Route>
 
         {/* Dev Tasks - standalone page */}
