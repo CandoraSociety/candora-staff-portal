@@ -158,3 +158,15 @@ export function computeMonthWorkExposureTotal(financialRecords, year, month0) {
     .filter((r) => r.record_type === 'paid_external_placement' && r.billing_month === prefix)
     .reduce((s, r) => s + (Number(r.total) || 0), 0);
 }
+
+// Running dollar total of all employment-supports purchases billed in a given
+// calendar month. Sums the `amount` (EXCLUDING tax — tax is documented but never
+// reimbursable) of every employment_supports FinancialRecord whose billing_month
+// matches the month. Used to populate column CI (Employment Supports) of the
+// Invoice Tracker sheet as a cumulative running total.
+export function computeMonthEmploymentSupportsTotal(financialRecords, year, month0) {
+  const prefix = `${year}-${String(month0 + 1).padStart(2, '0')}`;
+  return (financialRecords || [])
+    .filter((r) => r.record_type === 'employment_supports' && r.billing_month === prefix)
+    .reduce((s, r) => s + (Number(r.amount) || 0), 0);
+}

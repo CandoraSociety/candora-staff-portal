@@ -114,3 +114,53 @@ export async function writeTrackerCell(accessToken, workbookId, sheetName, colLe
   if (!res.ok) throw new Error(`Failed to write ${address}: ` + await res.text());
   return true;
 }
+
+// Convert a spreadsheet column letter (e.g. 'CI') to a 0-based column index.
+export function colIndex(letter: string): number {
+  let n = 0;
+  for (let i = 0; i < letter.length; i++) n = n * 26 + (letter.charCodeAt(i) - 64);
+  return n - 1;
+}
+
+// Derive a "YYYY-MM" billing month from a webhook/payload object, looking at
+// billing_month, period_end_date, or purchase_date (falling back to now).
+export function trackerMonthFromPayload(data: any): string {
+  if (data?.billing_month) return data.billing_month;
+  if (data?.period_end_date) {
+    const d = new Date(data.period_end_date.length === 10 ? data.period_end_date + 'T12:00:00' : data.period_end_date);
+    if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  if (data?.purchase_date) {
+    const d = new Date(data.purchase_date.length === 10 ? data.purchase_date + 'T12:00:00' : data.purchase_date);
+    if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Find the Invoice Tracker row whose month label matches the target month and
+// write `expected` into `colLetter` for that row (skipping the write if the
+// cell already holds that value). Returns { rowFound, written, skipped }.
+export async function writeMonthlyRunningTotal(accessToken, workbookId, sheetName, values, startRow, colLetter, year, month0, expected): Promise<{ rowFound: number; written: boolean; skipped: boolean }> {
+  const idx = colIndex(colLetter);
+  let rowFound = -1, written = false, skipped = false;
+  for (let r = 0; r < (values || []).length; r++) {
+    const row = values[r];
+    if (!row) continue;
+    const key = cellToMonthKey(row[0]);
+    if (!key) continue;
+    if (key.year === year && key.month === month0) {
+      rowFound = startRow + r;
+      const existing = row[idx];
+      const existingNum = (existing == null || existing === '') ? 0 : Number(existing);
+      if (existingNum === expected) {
+        skipped = true;
+      } else {
+        await writeTrackerCell(accessToken, workbookId, sheetName, colLetter, rowFound, expected);
+        written = true;
+      }
+      break;
+    }
+  }
+  return { rowFound, written, skipped };
+}

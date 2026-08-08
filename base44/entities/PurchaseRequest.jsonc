@@ -62,7 +62,8 @@
       "enum": [
         "pending",
         "approved",
-        "rejected"
+        "rejected",
+        "needs_more_info"
       ],
       "default": "pending"
     },
@@ -80,17 +81,63 @@
       "description": "Date the request was acknowledged/received by a manager"
     },
     "reviewed_by": {
-      "type": "string"
+      "type": "string",
+      "description": "Email of the manager/admin who made the determination"
     },
     "reviewed_by_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of the manager/admin who made the determination"
     },
     "reviewed_date": {
       "type": "string",
-      "format": "date"
+      "format": "date",
+      "description": "Date the determination was made"
     },
-    "review_notes": {
-      "type": "string"
+    "determination_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the most recent determination was made"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Reason provided when a request is rejected"
+    },
+    "needs_more_info_note": {
+      "type": "string",
+      "description": "Note describing what additional information is needed from the requester"
+    },
+    "purchase_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the approved purchase was made"
+    },
+    "amount_without_tax": {
+      "type": "number",
+      "description": "Purchase amount excluding tax (the reimbursable amount)"
+    },
+    "tax": {
+      "type": "number",
+      "description": "Tax portion of the purchase (documented only \u2014 never included in billing/reimbursement tallies)"
+    },
+    "total": {
+      "type": "number",
+      "description": "Total of the purchase (amount_without_tax + tax)"
+    },
+    "pickup_instructions": {
+      "type": "string",
+      "description": "Instructions for the requester on picking up the purchased item"
+    },
+    "purchase_notes": {
+      "type": "string",
+      "description": "Notes attached by the manager when marking a purchase complete"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Uploaded receipt/invoice for the approved purchase"
+    },
+    "linked_financial_record_id": {
+      "type": "string",
+      "description": "ID of the FinancialRecord auto-created in billing when this purchase was approved"
     }
   },
   "required": [

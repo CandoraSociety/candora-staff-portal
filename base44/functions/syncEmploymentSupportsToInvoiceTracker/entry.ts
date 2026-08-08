@@ -3,14 +3,16 @@ import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, trackerMonthFromPayload, writeMonthlyRunningTotal
 } from '../../shared/invoiceTracker.ts';
-import { computeMonthWorkExposureTotal } from '../../shared/crtBillingCounts.ts';
+import { computeMonthEmploymentSupportsTotal } from '../../shared/crtBillingCounts.ts';
 
-// Writes the running dollar total of all paid work-exposure placements for a
-// given billing month into column CJ of the Invoice Tracker sheet inside the
-// active CRT workbook. Idempotent. Triggered manually (SDK, { billing_month })
-// or automatically by the WorkExposureHoursSubmission entity automation.
+// Writes the cumulative running dollar total of all employment-supports
+// purchases for a given billing month into column CI of the Invoice Tracker
+// sheet inside the active CRT workbook. The total EXCLUDES tax (only the
+// reimbursable `amount` is summed). Idempotent — recomputes the full month
+// total each call, so additional purchases accumulate into the CI column.
+// Triggered from the purchase-request determination flow on approval.
 
-const COL_CJ = 'CJ';
+const COL_CI = 'CI';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -37,8 +39,8 @@ export default async function(req: Request): Promise<Response> {
     try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; }
     catch { financialRecords = []; }
 
-    const expected = computeMonthWorkExposureTotal(financialRecords, year, month0);
-    const { rowFound, written, skipped } = await writeMonthlyRunningTotal(accessToken, workbook.id, sheetName, values, startRow, COL_CJ, year, month0, expected);
+    const expected = computeMonthEmploymentSupportsTotal(financialRecords, year, month0);
+    const { rowFound, written, skipped } = await writeMonthlyRunningTotal(accessToken, workbook.id, sheetName, values, startRow, COL_CI, year, month0, expected);
 
     return Response.json({
       status: rowFound < 0 ? 'no_row' : 'success',

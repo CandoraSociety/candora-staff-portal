@@ -84,8 +84,9 @@ export default function FinancePayablesSection({ recordType }) {
     } catch (e) { toast.error('Failed to update'); }
   };
 
-  const totalOutstanding = outstanding.reduce((s, r) => s + (r.total || r.amount || 0), 0);
-  const totalPaid = paid.reduce((s, r) => s + (r.total || r.amount || 0), 0);
+  const valOf = (r) => recordType === 'employment_supports' ? (r.amount || 0) : (r.total || r.amount || 0);
+  const totalOutstanding = outstanding.reduce((s, r) => s + valOf(r), 0);
+  const totalPaid = paid.reduce((s, r) => s + valOf(r), 0);
 
   return (
     <div className="space-y-4">
@@ -188,7 +189,8 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                     <th className="text-left px-3 py-2 font-semibold">Timesheet</th>
                   </>
                 )}
-                <th className="text-right px-3 py-2 font-semibold">Amount</th>
+                <th className="text-right px-3 py-2 font-semibold">{recordType === 'employment_supports' ? 'Total to be Reimbursed' : 'Amount'}</th>
+                {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
                 <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
                 <th className="text-center px-3 py-2 font-semibold">Status</th>
                 <th className="text-center px-3 py-2 font-semibold">Action</th>
@@ -224,7 +226,8 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                         </td>
                       </>
                     )}
-                    <td className="px-3 py-2 text-right font-semibold">${Number(rec.total || rec.amount || 0).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-semibold">${Number(recordType === 'employment_supports' ? (rec.amount || 0) : (rec.total || rec.amount || 0)).toFixed(2)}</td>
+                    {recordType === 'employment_supports' && <td className="px-3 py-2 text-right text-muted-foreground">${Number(rec.tax || 0).toFixed(2)}</td>}
                     <td className="px-3 py-2">{rec.billing_month || '—'}</td>
                     <td className="px-3 py-2 text-center">
                       {rec.reimbursed

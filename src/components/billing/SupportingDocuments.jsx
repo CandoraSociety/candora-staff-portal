@@ -106,7 +106,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     };
     records.forEach(r => {
       if (byType[r.record_type]) {
-        byType[r.record_type].total += r.total || 0;
+        byType[r.record_type].total += r.record_type === 'employment_supports' ? (r.amount || 0) : (r.total || 0);
         byType[r.record_type].count += 1;
       }
     });
@@ -114,14 +114,15 @@ export default function SupportingDocuments({ financialRecords, clients }) {
       byType.childminding.total += r.billing_amount || 0;
       byType.childminding.count += 1;
     });
-    const total = records.reduce((s, r) => s + (r.total || 0), 0) + byType.childminding.total;
+    const total = records.reduce((s, r) => s + (r.record_type === 'employment_supports' ? (r.amount || 0) : (r.total || 0)), 0) + byType.childminding.total;
     return { total, byType };
   }, [financialRecords, pathwaysChildminding]);
 
   const renderRecordsByType = (type) => {
     const records = (financialRecords || []).filter(r => r.record_type === type);
     const colSpanBefore = type === 'exposure_course' ? 8 : type === 'employment_supports' ? 6 : 5;
-    const subtotal = records.reduce((sum, r) => sum + (r.total || 0), 0);
+    const reimbursable = type === 'employment_supports';
+    const subtotal = records.reduce((sum, r) => sum + (reimbursable ? (r.amount || 0) : (r.total || 0)), 0);
     const taxTotal = records.reduce((sum, r) => sum + (r.tax || 0), 0);
 
     return (
@@ -155,7 +156,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     )}
                     <th className="text-left py-2 px-2">Vendor</th>
                     <th className="text-left py-2 px-2">Date</th>
-                    <th className="text-right py-2 px-2">Subtotal</th>
+                    <th className="text-right py-2 px-2">{type === 'employment_supports' ? 'Total to be Reimbursed' : 'Subtotal'}</th>
                     <th className="text-right py-2 px-2">Tax</th>
                     <th className="text-right py-2 px-2">Total</th>
                     <th className="text-left py-2 px-2">Supporting Docs</th>
