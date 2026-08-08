@@ -320,6 +320,7 @@ import FinanceLayout from '@/components/finance/FinanceLayout';
 import FinanceDashboard from '@/pages/finance/FinanceDashboard';
 import FinancePayroll from '@/pages/finance/FinancePayroll';
 import FinancePathways from '@/pages/finance/FinancePathways';
+import FinanceReimbursements from '@/pages/finance/FinanceReimbursements';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
@@ -698,6 +699,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance" element={<FinanceDashboard />} />
           <Route path="/finance/payroll" element={<FinancePayroll />} />
           <Route path="/finance/pathways" element={<FinancePathways />} />
+          <Route path="/finance/reimbursements" element={<FinanceReimbursements />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
         </Route>
 

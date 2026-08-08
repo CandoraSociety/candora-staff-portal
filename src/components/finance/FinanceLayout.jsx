@@ -2,15 +2,16 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
-import { LayoutDashboard, Wallet, Briefcase, UtensilsCrossed } from 'lucide-react';
+import { LayoutDashboard, Wallet, Briefcase, UtensilsCrossed, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const NAV_ITEMS = [
   { path: '/finance',          label: 'Dashboard',     icon: LayoutDashboard, exact: true },
-  { path: '/finance/payroll',  label: 'Payroll',        icon: Wallet },
-  { path: '/finance/pathways', label: 'Pathways',       icon: Briefcase },
-  { path: '/finance/food',     label: 'Food Services',  icon: UtensilsCrossed },
+  { path: '/finance/payroll',      label: 'Payroll',                  icon: Wallet },
+  { path: '/finance/pathways',     label: 'Pathways',                 icon: Briefcase },
+  { path: '/finance/reimbursements', label: 'Staff Reimbursement Requests', icon: Receipt },
+  { path: '/finance/food',         label: 'Food Services',            icon: UtensilsCrossed },
 ];
 
 export default function FinanceLayout() {
