@@ -13,6 +13,7 @@ import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
 import EmployerPickerDialog from './EmployerPickerDialog';
 import TimesheetSubmissionForm from './TimesheetSubmissionForm';
+import EmployerProfileDialog from './EmployerProfileDialog';
 import { syncSubmissionDelete } from '@/lib/workExposureSync';
 
 const STATUS_LABELS = {
@@ -224,7 +225,7 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
   );
 }
 
-function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours, onDeleteSubmission }) {
+function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours, onDeleteSubmission, onOpenEmployer }) {
   return (
     <Card>
       <CardContent className="p-3">
@@ -232,7 +233,13 @@ function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <Briefcase className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="font-semibold text-sm truncate">{placement.business_name}</span>
+              {placement.employer_id ? (
+                <button type="button" onClick={() => onOpenEmployer?.(placement)} className="font-semibold text-sm truncate text-blue-700 hover:underline">
+                  {placement.business_name}
+                </button>
+              ) : (
+                <span className="font-semibold text-sm truncate">{placement.business_name}</span>
+              )}
               <Badge className={`text-xs ${STATUS_BADGE[placement.status] || ''}`}>{STATUS_LABELS[placement.status] || placement.status}</Badge>
             </div>
             {placement.position_type && <div className="text-sm text-slate-600 ml-6">{placement.position_type}</div>}
@@ -308,6 +315,7 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
   const [showForm, setShowForm] = useState(false);
   const [editingPlacement, setEditingPlacement] = useState(null);
   const [submitPlacement, setSubmitPlacement] = useState(null);
+  const [profileEmployerId, setProfileEmployerId] = useState(null);
   const [user, setUser] = useState(null);
 
   const fetchAll = async () => {
@@ -434,6 +442,14 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
         />
       )}
 
+      {profileEmployerId && (
+        <EmployerProfileDialog
+          employerId={profileEmployerId}
+          onClose={() => setProfileEmployerId(null)}
+          onSaved={fetchAll}
+        />
+      )}
+
       {loading ? (
         <div className="text-center py-6 text-muted-foreground text-sm">Loading...</div>
       ) : placements.length === 0 ? (
@@ -455,6 +471,7 @@ export default function WorkExposurePlacementTab({ client, onSave, onPlacementsC
                   onDelete={() => handleDelete(p)}
                   onSubmitHours={() => setSubmitPlacement(p)}
                   onDeleteSubmission={handleDeleteSubmission}
+                  onOpenEmployer={(pl) => setProfileEmployerId(pl.employer_id)}
                 />
                 <SubmissionsSection
                   placement={p}
