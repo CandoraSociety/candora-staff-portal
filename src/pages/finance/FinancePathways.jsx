@@ -4,12 +4,14 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Briefcase, FileText, Calendar } from 'lucide-react';
+import { Briefcase, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import FinancePayablesSection from '@/components/finance/FinancePayablesSection';
+import PackageContents from '@/components/billing/PackageContents';
 import { format } from 'date-fns';
 
 export default function FinancePathways() {
   const [tab, setTab] = useState('we');
+  const [expandedPkg, setExpandedPkg] = useState(null);
 
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['invoice-packages'],
@@ -49,6 +51,9 @@ export default function FinancePathways() {
               <CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4" /> Monthly Invoice Packages</CardTitle>
             </CardHeader>
             <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Click a package to view and download all of its documents (CRT workbook, invoice, childminding sheet, work exposure payments, and supporting documents). Files are stored on SharePoint automatically.
+              </p>
               {isLoading ? (
                 <div className="text-sm text-muted-foreground">Loading...</div>
               ) : packages.length === 0 ? (
@@ -56,39 +61,36 @@ export default function FinancePathways() {
                   No invoice packages yet. Packages created in Pathways Billing will appear here automatically.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b bg-muted/50">
-                      <tr>
-                        <th className="text-left px-3 py-2 font-semibold">Package #</th>
-                        <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
-                        <th className="text-left px-3 py-2 font-semibold">Prepared By</th>
-                        <th className="text-left px-3 py-2 font-semibold">Prepared</th>
-                        <th className="text-center px-3 py-2 font-semibold">Status</th>
-                        <th className="text-center px-3 py-2 font-semibold">CRT</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {packages.map(p => (
-                        <tr key={p.id} className="hover:bg-muted/30">
-                          <td className="px-3 py-2 font-medium">{p.package_number || '—'}</td>
-                          <td className="px-3 py-2">{p.billing_month || '—'}</td>
-                          <td className="px-3 py-2">{p.prepared_by_name || p.prepared_by || '—'}</td>
-                          <td className="px-3 py-2">{p.prepared_date ? format(new Date(p.prepared_date), 'MMM d, yy') : '—'}</td>
-                          <td className="px-3 py-2 text-center"><Badge variant="outline">{p.status}</Badge></td>
-                          <td className="px-3 py-2 text-center">{p.crt_included ? <Badge className="text-xs bg-green-100 text-green-800">Yes</Badge> : <Badge className="text-xs bg-slate-100 text-slate-600">No</Badge>}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-2">
+                  {packages.map(p => {
+                    const isOpen = expandedPkg === p.id;
+                    return (
+                      <div key={p.id} className="rounded-lg border overflow-hidden">
+                        <button
+                          onClick={() => setExpandedPkg(isOpen ? null : p.id)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                            <span className="font-medium text-sm">{p.package_number || '—'}</span>
+                            <Badge variant="outline" className="text-xs">{p.billing_month || '—'}</Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{p.prepared_by_name || p.prepared_by || '—'}</span>
+                            <Badge variant="outline">{p.status}</Badge>
+                            {p.crt_included ? <Badge className="text-xs bg-green-100 text-green-800">CRT</Badge> : <Badge className="text-xs bg-slate-100 text-slate-600">No CRT</Badge>}
+                          </div>
+                        </button>
+                        {isOpen && (
+                          <div className="border-t p-4 bg-card">
+                            <PackageContents pkg={p} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="py-8 text-center">
-              <Calendar className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Supporting documents uploaded in Pathways Billing are saved to the Finance SharePoint folder automatically.</p>
             </CardContent>
           </Card>
         </TabsContent>
