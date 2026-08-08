@@ -237,7 +237,7 @@ export default function ExposuresSupportsStep({ client, onSave, isDEA, recordTyp
           <p className="text-xs text-muted-foreground mt-0.5">{recordType === 'employment_supports' ? 'Track financial records for employment supports (PPE, transit, work clothes, etc.).' : 'Track financial records for exposure courses the client is going to take.'}</p>
         </div>
         <Button size="sm" onClick={() => { setEditingRecord(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-1" /> Add Record
+          <Plus className="w-4 h-4 mr-1" /> {recordType === 'exposure_course' ? 'Request Exposure Course' : 'Add Record'}
         </Button>
       </div>
 
