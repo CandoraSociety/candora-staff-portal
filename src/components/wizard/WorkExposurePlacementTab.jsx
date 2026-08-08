@@ -225,8 +225,6 @@ function PlacementForm({ client, existing, onDone, onCancel }) {
 }
 
 function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours, onDeleteSubmission }) {
-  const totalHours = (submissions || []).reduce((s, x) => s + (Number(x.hours_worked) || 0), 0);
-  const timesheetCount = (submissions || []).filter(s => s.timesheet_url).length;
   return (
     <Card>
       <CardContent className="p-3">
@@ -243,13 +241,7 @@ function PlacementCard({ placement, submissions, onEdit, onDelete, onSubmitHours
               {placement.expected_hours_per_week > 0 && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{placement.expected_hours_per_week} hrs/week</span>}
               {placement.start_date && <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{fmtDate(placement.start_date)}{placement.anticipated_completion_date ? ` – ${fmtDate(placement.anticipated_completion_date)}` : ''}</span>}
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs ml-6">
-              <span className="flex items-center gap-1 font-semibold text-slate-700"><Clock className="w-3 h-3" />{totalHours} hrs submitted</span>
-              {placement.hourly_rate > 0 && <span className="flex items-center gap-1 text-slate-600"><DollarSign className="w-3 h-3" />{placement.hourly_rate}/hr</span>}
-              {timesheetCount > 0 && <span className="flex items-center gap-1 text-blue-600"><FileText className="w-3 h-3" />{timesheetCount} timesheet{timesheetCount > 1 ? 's' : ''}</span>}
             </div>
-
-          </div>
           <div className="flex flex-col gap-1 shrink-0">
             <Button variant="outline" size="sm" onClick={onSubmitHours}><Clock className="w-3.5 h-3.5 mr-1" /> Submit Hours</Button>
             <div className="flex gap-1 justify-end">
