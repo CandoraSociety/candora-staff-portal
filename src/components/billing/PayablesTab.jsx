@@ -399,6 +399,32 @@ export default function PayablesTab({ financialRecords, clients }) {
     return map;
   }, [employers]);
   const resolvePayableTo = (vendor) => payableByVendor[vendor] === 'client' ? 'Client' : 'Employer';
+
+  // Fetch work exposure hours submissions to resolve pay-period date ranges
+  const { data: hoursSubs = [] } = useQuery({
+    queryKey: ['work-exposure-hours-submissions-all'],
+    queryFn: async () => {
+      const res = await base44.entities.WorkExposureHoursSubmission.list();
+      return res || [];
+    },
+  });
+  const periodBySubmissionId = useMemo(() => {
+    const map = {};
+    hoursSubs.forEach(s => {
+      if (s.id) map[s.id] = { start: s.period_start_date, end: s.period_end_date };
+    });
+    return map;
+  }, [hoursSubs]);
+  const formatPeriod = (rec) => {
+    const p = rec.linked_submission_id ? periodBySubmissionId[rec.linked_submission_id] : null;
+    if (p && (p.start || p.end)) {
+      const s = p.start ? format(new Date(p.start + 'T00:00:00'), 'MMM d, yy') : '—';
+      const e = p.end ? format(new Date(p.end + 'T00:00:00'), 'MMM d, yy') : '—';
+      return `${s} – ${e}`;
+    }
+    // fallback: work_end_date if no linked submission period
+    return rec.work_end_date ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy') : (rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—');
+  };
   const [search, setSearch] = useState('');
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterType, setFilterType] = useState('all');
@@ -706,7 +732,7 @@ export default function PayablesTab({ financialRecords, clients }) {
                                       <tr className="border-b border-slate-100">
                                         <th className="text-left py-2 px-3 font-medium text-slate-500">Employer / Vendor</th>
                                         <th className="text-center py-2 px-3 font-medium text-slate-500">Payable To</th>
-                                        <th className="text-left py-2 px-3 font-medium text-slate-500">Work End Date</th>
+                                        <th className="text-left py-2 px-3 font-medium text-slate-500">Pay Period</th>
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Hours</th>
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Rate</th>
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Billing Amount</th>
@@ -725,11 +751,7 @@ export default function PayablesTab({ financialRecords, clients }) {
                                                 {resolvePayableTo(rec.vendor)}
                                               </Badge>
                                             </td>
-                                            <td className="px-3 py-2.5 whitespace-nowrap">
-                                              {rec.work_end_date
-                                                ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy')
-                                                : (rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—')}
-                                            </td>
+                                            <td className="px-3 py-2.5 whitespace-nowrap">{formatPeriod(rec)}</td>
                                             <td className="px-3 py-2.5 text-right">{rec.hours_worked != null ? rec.hours_worked : '—'}</td>
                                             <td className="px-3 py-2.5 text-right">{rec.hourly_rate != null ? `$${Number(rec.hourly_rate).toFixed(2)}/hr` : '—'}</td>
                                             <td className="px-3 py-2.5 text-right font-semibold whitespace-nowrap">${(Number(rec.total || rec.amount || 0)).toFixed(2)}</td>
