@@ -160,7 +160,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     <th className="text-right py-2 px-2">Tax</th>
                     <th className="text-right py-2 px-2">Total</th>
                     <th className="text-left py-2 px-2">Supporting Docs</th>
-                    <th className="text-left py-2 px-2">Notes</th>
+                    {type !== 'employment_supports' && <th className="text-left py-2 px-2">Notes</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -213,14 +213,14 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                           <SupportingDocUpload recordType="financial" record={record} urlField="receipt_urls" queryKey={['financial-records']} />
                         </div>
                       </td>
-                      <td className="py-2 px-2 max-w-[120px] truncate text-slate-600">{record.notes || '-'}</td>
+                      {type !== 'employment_supports' && <td className="py-2 px-2 max-w-[120px] truncate text-slate-600">{record.notes || '-'}</td>}
                     </tr>
                   ))}
                   <tr className="bg-slate-100 border-t-2 border-slate-300">
                     <td colSpan={colSpanBefore} className="text-right py-2 px-2 font-semibold">SUBTOTAL:</td>
                     <td className="text-right py-2 px-2 font-semibold">${taxTotal.toFixed(2)}</td>
                     <td className="text-right py-2 px-2 font-bold text-lg">${subtotal.toFixed(2)}</td>
-                    <td colSpan={2}></td>
+                    <td colSpan={type === 'employment_supports' ? 1 : 2}></td>
                   </tr>
                 </tbody>
               </table>

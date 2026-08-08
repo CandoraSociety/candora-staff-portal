@@ -85,8 +85,9 @@ export default function FinancePayablesSection({ recordType }) {
   };
 
   const valOf = (r) => recordType === 'employment_supports' ? (r.amount || 0) : (r.total || r.amount || 0);
-  const totalOutstanding = outstanding.reduce((s, r) => s + valOf(r), 0);
-  const totalPaid = paid.reduce((s, r) => s + valOf(r), 0);
+  const isES = recordType === 'employment_supports';
+  const totalOutstanding = isES ? 0 : outstanding.reduce((s, r) => s + valOf(r), 0);
+  const totalPaid = isES ? filtered.reduce((s, r) => s + valOf(r), 0) : paid.reduce((s, r) => s + valOf(r), 0);
 
   return (
     <div className="space-y-4">
@@ -134,33 +135,44 @@ export default function FinancePayablesSection({ recordType }) {
           No {RECORD_LABELS[recordType]?.toLowerCase() || 'records'} found.
         </CardContent></Card>
       ) : (
-        <>
+        isES ? (
           <PayablesTable
-            title="Outstanding"
-            records={outstanding}
+            title="Employment Supports"
+            records={filtered}
             recordType={recordType}
             payableByVendor={payableByVendor}
             periodBySubId={periodBySubId}
-            togglePaid={togglePaid}
+            alwaysPaid
           />
-          {paid.length > 0 && (
+        ) : (
+          <>
             <PayablesTable
-              title="Paid"
-              records={paid}
+              title="Outstanding"
+              records={outstanding}
               recordType={recordType}
               payableByVendor={payableByVendor}
               periodBySubId={periodBySubId}
               togglePaid={togglePaid}
-              collapsible
             />
-          )}
-        </>
+            {paid.length > 0 && (
+              <PayablesTable
+                title="Paid"
+                records={paid}
+                recordType={recordType}
+                payableByVendor={payableByVendor}
+                periodBySubId={periodBySubId}
+                togglePaid={togglePaid}
+                collapsible
+              />
+            )}
+          </>
+        )
       )}
     </div>
   );
 }
 
-function PayablesTable({ title, records, recordType, payableByVendor, periodBySubId, togglePaid, collapsible }) {
+function PayablesTable({ title, records, recordType, payableByVendor, periodBySubId, togglePaid, collapsible, alwaysPaid }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
     <Card>
@@ -191,9 +203,10 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                 )}
                 <th className="text-right px-3 py-2 font-semibold">{recordType === 'employment_supports' ? 'Total to be Reimbursed' : 'Amount'}</th>
                 {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
+                {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Total</th>}
                 <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
                 <th className="text-center px-3 py-2 font-semibold">Status</th>
-                <th className="text-center px-3 py-2 font-semibold">Action</th>
+                {!alwaysPaid && <th className="text-center px-3 py-2 font-semibold">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -228,17 +241,22 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                     )}
                     <td className="px-3 py-2 text-right font-semibold">${Number(recordType === 'employment_supports' ? (rec.amount || 0) : (rec.total || rec.amount || 0)).toFixed(2)}</td>
                     {recordType === 'employment_supports' && <td className="px-3 py-2 text-right text-muted-foreground">${Number(rec.tax || 0).toFixed(2)}</td>}
+                    {recordType === 'employment_supports' && <td className="px-3 py-2 text-right">${Number(rec.total || 0).toFixed(2)}</td>}
                     <td className="px-3 py-2">{rec.billing_month || '—'}</td>
                     <td className="px-3 py-2 text-center">
-                      {rec.reimbursed
+                      {alwaysPaid
                         ? <Badge className="text-xs bg-green-100 text-green-800">Paid</Badge>
-                        : <Badge className="text-xs bg-amber-100 text-amber-800">Unpaid</Badge>}
+                        : rec.reimbursed
+                          ? <Badge className="text-xs bg-green-100 text-green-800">Paid</Badge>
+                          : <Badge className="text-xs bg-amber-100 text-amber-800">Unpaid</Badge>}
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <Button size="sm" variant={rec.reimbursed ? 'outline' : 'default'} onClick={() => togglePaid(rec)}>
-                        {rec.reimbursed ? 'Mark Unpaid' : 'Mark Paid'}
-                      </Button>
-                    </td>
+                    {!alwaysPaid && (
+                      <td className="px-3 py-2 text-center">
+                        <Button size="sm" variant={rec.reimbursed ? 'outline' : 'default'} onClick={() => togglePaid(rec)}>
+                          {rec.reimbursed ? 'Mark Unpaid' : 'Mark Paid'}
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
