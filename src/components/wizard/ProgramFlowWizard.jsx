@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import EmploymentActionPlan from './EmploymentActionPlan';
 import CasualNotesPanel from './CasualNotesPanel';
 import ActionPlanRoadmap from './ActionPlanRoadmap';
-import EmploymentSearchPanel from './EmploymentSearchPanel';
 import EmploymentSupportsStep from './EmploymentSupportsStep';
 import WorkExposurePlacementTab from './WorkExposurePlacementTab';
 import InternalPlacementsTab from './InternalPlacementsTab';
@@ -81,8 +80,6 @@ function getStepStatus(key, client) {
       return client?.action_plan_submitted ? 'done' : 'active';
     case 'employment_supports':
       return client?.employment_supports ? 'done' : 'active';
-    case 'employment_search':
-      return ['E-RF', 'E-UF', 'E-PT'].includes(client?.employment_status) ? 'done' : 'active';
     case 'roadmap':
       return client?.program_status === 'complete' ? 'done' :
              client?.program_status === 'cancelled' ? 'done' :
@@ -178,7 +175,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     { key: 'employment_action_plan', label: 'Employment Action Plan', short: 'Action Plan', icon: null },
     BARRIERS_STEP,
     { key: 'employment_supports', label: 'Employment Supports', short: 'Employment Supports', icon: DollarSign },
-    { key: 'employment_search', label: 'Employment Search', short: 'Employment', icon: Briefcase },
     ...(showFollowup ? [FOLLOWUP_STEP] : []),
     { key: 'roadmap', label: 'Program Progress', short: 'Progress', icon: Map },
   ];
@@ -232,8 +228,6 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
         return <BarriersTab client={client} onSave={onSave} canEdit={!!isAssignedSN} />;
       case 'employment_supports':
         return <EmploymentSupportsStep client={client} onSave={onSave} onComplete={goNext} />;
-      case 'employment_search':
-        return <EmploymentSearchPanel client={client} onSave={onSave} onClientUpdate={onClientUpdate} />;
       case 'followup_90day':
         return <FollowUp90DayPanel client={client} onClientUpdate={onClientUpdate} />;
       case 'roadmap':
