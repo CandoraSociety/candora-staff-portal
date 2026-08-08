@@ -1,0 +1,124 @@
+{
+  "name": "StaffReimbursementRequest",
+  "type": "object",
+  "properties": {
+    "requester_name": {
+      "type": "string",
+      "description": "Full name of the staff member requesting reimbursement"
+    },
+    "requester_email": {
+      "type": "string",
+      "description": "Email of the staff member requesting reimbursement"
+    },
+    "department": {
+      "type": "string",
+      "enum": [
+        "Administration",
+        "Operations",
+        "Finance",
+        "Human Resources",
+        "Marketing",
+        "IT",
+        "Pathways",
+        "Food Services",
+        "Facilities",
+        "Childcare",
+        "Fundraising",
+        "Reception",
+        "Other"
+      ],
+      "description": "Department the expense relates to"
+    },
+    "expense_category": {
+      "type": "string",
+      "enum": [
+        "travel",
+        "mileage",
+        "parking",
+        "supplies",
+        "meals",
+        "training",
+        "equipment",
+        "software",
+        "office",
+        "other"
+      ],
+      "description": "Category of personal expense incurred for the organization"
+    },
+    "expense_category_other": {
+      "type": "string",
+      "description": "If expense category is 'other', specify"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the expense was for"
+    },
+    "vendor": {
+      "type": "string",
+      "description": "Where the purchase was made (store, service, etc.)"
+    },
+    "date_incurred": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the expense was incurred by the staff member"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Full amount the staff member paid out of pocket (tax included). This is the amount to be reimbursed."
+    },
+    "tax": {
+      "type": "number",
+      "description": "Tax portion of the amount (documented only). The full amount is reimbursed regardless."
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Uploaded receipt for the expense"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "paid",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Workflow status of the reimbursement request"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was submitted (auto-set)"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Email of the finance staff who reviewed the request"
+    },
+    "reviewed_by_name": {
+      "type": "string"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was approved or rejected"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the reimbursement was paid out to the staff member"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "requester_name",
+    "requester_email",
+    "expense_category",
+    "date_incurred",
+    "amount"
+  ]
+}
