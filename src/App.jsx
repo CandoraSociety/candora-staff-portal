@@ -321,6 +321,7 @@ import FinanceDashboard from '@/pages/finance/FinanceDashboard';
 import FinancePayroll from '@/pages/finance/FinancePayroll';
 import FinancePathways from '@/pages/finance/FinancePathways';
 import FinanceReimbursements from '@/pages/finance/FinanceReimbursements';
+import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
@@ -700,6 +701,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/payroll" element={<FinancePayroll />} />
           <Route path="/finance/pathways" element={<FinancePathways />} />
           <Route path="/finance/reimbursements" element={<FinanceReimbursements />} />
+          <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
         </Route>
 
