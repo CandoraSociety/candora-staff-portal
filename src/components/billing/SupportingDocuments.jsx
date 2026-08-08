@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileText, DollarSign, RefreshCw } from 'lucide-react';
+import { ExternalLink, FileText, DollarSign, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import SupportingDocUpload from '@/components/billing/SupportingDocUpload';
 
@@ -52,6 +52,7 @@ const COMPLETION_STATUS_COLORS = {
 
 export default function SupportingDocuments({ financialRecords, clients }) {
   const [syncing, setSyncing] = useState(false);
+  const [weExpanded, setWeExpanded] = useState({});
 
   const clientMap = useMemo(() => {
     const map = {};
@@ -229,6 +230,107 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     );
   };
 
+  const renderWorkExposureSection = () => {
+    const records = (financialRecords || []).filter(r => r.record_type === 'paid_external_placement');
+    const subtotal = records.reduce((sum, r) => sum + (r.total || 0), 0);
+    const taxTotal = records.reduce((sum, r) => sum + (r.tax || 0), 0);
+
+    const grouped = (() => {
+      const map = {};
+      records.forEach(r => {
+        const key = r.client_id || r.client_name || 'unknown';
+        if (!map[key]) map[key] = { client_name: r.client_name || 'Unknown', subs: [] };
+        map[key].subs.push(r);
+      });
+      return Object.entries(map);
+    })();
+
+    const toggleWe = (key) => setWeExpanded(p => ({ ...p, [key]: !p[key] }));
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Badge className={TYPE_COLORS.paid_external_placement}>{TYPE_LABELS.paid_external_placement}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {records.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-6">No work exposure placement records yet</p>
+          ) : (
+            <div className="space-y-2">
+              {grouped.map(([key, group]) => {
+                const isOpen = !!weExpanded[key];
+                const subs = group.subs;
+                const clientHours = subs.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
+                const clientTotal = subs.reduce((s, r) => s + (r.total || 0), 0);
+                return (
+                  <div key={key} className="rounded-lg border border-slate-200 overflow-hidden">
+                    <button
+                      onClick={() => toggleWe(key)}
+                      className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        {isOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                        <span className="font-medium text-sm text-slate-700">{group.client_name}</span>
+                        <Badge variant="outline" className="text-xs">{subs.length} submission{subs.length !== 1 ? 's' : ''}</Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs text-slate-600">
+                        <span>{clientHours} hrs</span>
+                        <span className="font-semibold">${clientTotal.toFixed(2)}</span>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div className="overflow-x-auto border-t border-slate-100">
+                        <table className="w-full text-xs">
+                          <thead className="bg-slate-50/50">
+                            <tr className="border-b border-slate-100">
+                              <th className="text-left py-2 px-2 font-medium text-slate-500">Employer / Vendor</th>
+                              <th className="text-left py-2 px-2 font-medium text-slate-500">Date</th>
+                              <th className="text-right py-2 px-2 font-medium text-slate-500">Subtotal</th>
+                              <th className="text-right py-2 px-2 font-medium text-slate-500">Tax</th>
+                              <th className="text-right py-2 px-2 font-medium text-slate-500">Total</th>
+                              <th className="text-left py-2 px-2 font-medium text-slate-500">Supporting Docs</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {subs.map(r => (
+                              <tr key={r.id} className="hover:bg-slate-50">
+                                <td className="py-2 px-2 max-w-[180px] break-words whitespace-normal align-top">{r.vendor || '-'}</td>
+                                <td className="py-2 px-2 whitespace-nowrap">{r.work_end_date || r.date || '-'}</td>
+                                <td className="text-right py-2 px-2">${(r.amount || 0).toFixed(2)}</td>
+                                <td className="text-right py-2 px-2">${(r.tax || 0).toFixed(2)}</td>
+                                <td className="text-right py-2 px-2 font-bold">${(r.total || 0).toFixed(2)}</td>
+                                <td className="py-2 px-2">
+                                  <div className="space-y-0.5">
+                                    {r.receipt_urls?.length > 0 && r.receipt_urls.map((url, i) => (
+                                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1">
+                                        <ExternalLink className="w-2.5 h-2.5" /> Receipt {i + 1}
+                                      </a>
+                                    ))}
+                                    <SupportingDocUpload recordType="financial" record={r} urlField="receipt_urls" queryKey={['financial-records']} />
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="flex justify-end pt-2 border-t border-slate-100 text-xs gap-6">
+                <span className="text-slate-500">Tax: <strong>${taxTotal.toFixed(2)}</strong></span>
+                <span className="font-bold text-base">${subtotal.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   const renderChildmindingSection = () => {
     const records = pathwaysChildminding;
     const subtotal = records.reduce((s, r) => s + (r.billing_amount || 0), 0);
@@ -332,7 +434,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
       {/* Records by Type — all sections always visible */}
       <div className="space-y-4">
-        {renderRecordsByType('paid_external_placement')}
+        {renderWorkExposureSection()}
         {renderRecordsByType('exposure_course')}
         {renderRecordsByType('employment_supports')}
         {renderChildmindingSection()}

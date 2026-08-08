@@ -14,7 +14,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
     queryKey: ['we-placements', billingMonth],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
     select: (recs) => (recs || [])
-      .filter((r) => r.billing_month === billingMonth && r.invoiced !== true)
+      .filter((r) => r.billing_month === billingMonth && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0)
       .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
   });
 
@@ -100,7 +100,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
                         <tbody className="divide-y divide-slate-100">
                           {subs.map((r) => (
                             <tr key={r.id} className="hover:bg-slate-50">
-                              <td className="py-2 px-3">{r.vendor || '—'}</td>
+                              <td className="py-2 px-3 max-w-[200px] break-words whitespace-normal align-top">{r.vendor || '—'}</td>
                               <td className="py-2 px-3 whitespace-nowrap">
                                 {r.work_end_date
                                   ? format(new Date(r.work_end_date + 'T00:00:00'), 'MMM d, yyyy')

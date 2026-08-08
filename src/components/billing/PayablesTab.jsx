@@ -701,7 +701,7 @@ export default function PayablesTab({ financialRecords, clients }) {
                                       {subs.map(rec => (
                                         <Fragment key={rec.id}>
                                           <tr className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-3 py-2.5">{rec.vendor || '—'}</td>
+                                            <td className="px-3 py-2.5 max-w-[200px] break-words whitespace-normal align-top">{rec.vendor || '—'}</td>
                                             <td className="px-3 py-2.5 whitespace-nowrap">
                                               {rec.work_end_date
                                                 ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy')
