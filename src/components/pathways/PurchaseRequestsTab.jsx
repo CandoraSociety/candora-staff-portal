@@ -128,7 +128,7 @@ function RequestCard({ r, currentUser, onAcknowledge, onDetermine, busy }) {
               </label>
             )}
             {canDetermine && (
-              <Button onClick={() => onDetermine(r)} size="sm" className="h-8 bg-slate-800 hover:bg-slate-900 text-xs">
+              <Button onClick={() => onDetermine(r)} size="sm" className="h-8 bg-primary text-primary-foreground hover:bg-primary/90 text-xs">
                 <Gavel className="w-3.5 h-3.5 mr-1" /> Request Determination
               </Button>
             )}
