@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -382,6 +382,23 @@ function InlineEditRow({ record, clients, onDone, onCancel, colSpan = 9 }) {
 
 export default function PayablesTab({ financialRecords, clients }) {
   const queryClient = useQueryClient();
+
+  // Fetch employers to resolve the "payment_payable_to" selection per vendor
+  const { data: employers = [] } = useQuery({
+    queryKey: ['employers-all'],
+    queryFn: async () => {
+      const res = await base44.entities.Employer.list();
+      return res || [];
+    },
+  });
+  const payableByVendor = useMemo(() => {
+    const map = {};
+    employers.forEach(e => {
+      if (e.name) map[e.name] = e.payment_payable_to || 'employer';
+    });
+    return map;
+  }, [employers]);
+  const resolvePayableTo = (vendor) => payableByVendor[vendor] === 'client' ? 'Client' : 'Employer';
   const [search, setSearch] = useState('');
   const [filterMonth, setFilterMonth] = useState('all');
   const [filterType, setFilterType] = useState('all');
@@ -688,6 +705,7 @@ export default function PayablesTab({ financialRecords, clients }) {
                                     <thead className="bg-slate-50/50">
                                       <tr className="border-b border-slate-100">
                                         <th className="text-left py-2 px-3 font-medium text-slate-500">Employer / Vendor</th>
+                                        <th className="text-center py-2 px-3 font-medium text-slate-500">Payable To</th>
                                         <th className="text-left py-2 px-3 font-medium text-slate-500">Work End Date</th>
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Hours</th>
                                         <th className="text-right py-2 px-3 font-medium text-slate-500">Rate</th>
@@ -702,6 +720,11 @@ export default function PayablesTab({ financialRecords, clients }) {
                                         <Fragment key={rec.id}>
                                           <tr className="hover:bg-slate-50 transition-colors">
                                             <td className="px-3 py-2.5 max-w-[200px] break-words whitespace-normal align-top">{rec.vendor || '—'}</td>
+                                            <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                                              <Badge className={rec.vendor && payableByVendor[rec.vendor] === 'client' ? 'text-xs bg-purple-100 text-purple-800' : 'text-xs bg-sky-100 text-sky-800'}>
+                                                {resolvePayableTo(rec.vendor)}
+                                              </Badge>
+                                            </td>
                                             <td className="px-3 py-2.5 whitespace-nowrap">
                                               {rec.work_end_date
                                                 ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy')
@@ -737,7 +760,7 @@ export default function PayablesTab({ financialRecords, clients }) {
                                             <InlineEditRow
                                               record={rec}
                                               clients={clients}
-                                              colSpan={8}
+                                              colSpan={9}
                                               onDone={() => { setEditingId(null); queryClient.invalidateQueries({ queryKey: ['financial-records'] }); }}
                                               onCancel={() => setEditingId(null)}
                                             />
