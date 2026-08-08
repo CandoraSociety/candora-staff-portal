@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, X, Paperclip, DollarSign, FileText, CheckCircle2, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, X, Paperclip, DollarSign, FileText, CheckCircle2, Search, ChevronDown, ChevronRight, Briefcase } from 'lucide-react';
 import { Fragment } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -108,7 +108,7 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
         reimbursement_date: rec.reimbursed ? rec.reimbursement_date : '',
         completion_status: rec.completion_status,
         receipt_urls: receiptUrls,
-        notes: rec.notes,
+        notes: rec.record_type === 'paid_external_placement' ? '' : rec.notes,
         client_id: rec.client_id,
         client_name: selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : '',
         assigned_worker: selectedClient?.assigned_worker || '',
@@ -241,10 +241,12 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
             )}
           </div>
 
-          <div>
-            <Label className="text-xs">Notes</Label>
-            <Textarea value={rec.notes} onChange={e => update('notes', e.target.value)} rows={2} className="mt-1 text-xs" />
-          </div>
+          {rec.record_type !== 'paid_external_placement' && (
+            <div>
+              <Label className="text-xs">Notes</Label>
+              <Textarea value={rec.notes} onChange={e => update('notes', e.target.value)} rows={2} className="mt-1 text-xs" />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
@@ -255,7 +257,7 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
   );
 }
 
-function InlineEditRow({ record, clients, onDone, onCancel }) {
+function InlineEditRow({ record, clients, onDone, onCancel, colSpan = 9 }) {
   const [rec, setRec] = useState({
     ...record,
     amount: record.amount || '',
@@ -297,7 +299,7 @@ function InlineEditRow({ record, clients, onDone, onCancel }) {
         reimbursement_date: rec.reimbursed ? rec.reimbursement_date : '',
         completion_status: rec.completion_status,
         receipt_urls: receiptUrls,
-        notes: rec.notes,
+        notes: rec.record_type === 'paid_external_placement' ? '' : rec.notes,
       });
       toast.success('Updated');
       onDone();
@@ -307,7 +309,7 @@ function InlineEditRow({ record, clients, onDone, onCancel }) {
 
   return (
     <tr className="bg-amber-50/40 border-b border-slate-100">
-      <td colSpan={9} className="p-3">
+      <td colSpan={colSpan} className="p-3">
         <div className={`grid ${rec.record_type === 'paid_external_placement' ? 'grid-cols-3' : 'grid-cols-4'} gap-2 text-xs`}>
           <div>
             <Label className="text-xs">Amount ($)</Label>
@@ -366,7 +368,7 @@ function InlineEditRow({ record, clients, onDone, onCancel }) {
             </Badge>
           ))}
         </div>
-        {(rec.notes !== undefined) && (
+        {rec.record_type !== 'paid_external_placement' && (
           <Input value={rec.notes || ''} onChange={e => update('notes', e.target.value)} className="mt-2 h-8 text-xs" placeholder="Notes..." />
         )}
         <div className="flex gap-2 mt-2">
@@ -387,6 +389,7 @@ export default function PayablesTab({ financialRecords, clients }) {
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [expandedMonths, setExpandedMonths] = useState({});
+  const [weExpanded, setWeExpanded] = useState({});
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => await base44.entities.FinancialRecord.update(id, data),
@@ -461,6 +464,8 @@ export default function PayablesTab({ financialRecords, clients }) {
   const toggleMonth = (month) => {
     setExpandedMonths(p => ({ ...p, [month]: !p[month] }));
   };
+
+  const toggleWe = (key) => setWeExpanded(p => ({ ...p, [key]: !p[key] }));
 
   return (
     <div className="space-y-4">
@@ -542,6 +547,17 @@ export default function PayablesTab({ financialRecords, clients }) {
           {grouped.map(([month, records]) => {
             const monthTotal = records.reduce((s, r) => s + (r.total || 0), 0);
             const isExpanded = expandedMonths[month] !== false; // default expanded
+            const weRecords = records.filter(r => r.record_type === 'paid_external_placement');
+            const otherRecords = records.filter(r => r.record_type !== 'paid_external_placement');
+            const weGrouped = (() => {
+              const map = {};
+              weRecords.forEach(r => {
+                const k = r.client_id || r.client_name || 'unknown';
+                if (!map[k]) map[k] = { client_name: r.client_name || '—', subs: [] };
+                map[k].subs.push(r);
+              });
+              return Object.entries(map);
+            })();
             return (
               <Card key={month} className="overflow-hidden">
                 <button
@@ -558,93 +574,185 @@ export default function PayablesTab({ financialRecords, clients }) {
                   <span className="text-sm font-bold text-slate-700">${monthTotal.toFixed(2)}</span>
                 </button>
                 {isExpanded && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="border-b border-slate-100 bg-slate-50/50">
-                        <tr>
-                          <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Client</th>
-                          <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Type</th>
-                          <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Description / Vendor</th>
-                          <th className="text-right px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Amount</th>
-                          <th className="text-right px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Total</th>
-                          <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Date</th>
-                          <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Receipts</th>
-                          <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Status</th>
-                          <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {records.map(rec => (
-                          <Fragment key={rec.id}>
-                            <tr className="hover:bg-slate-50 transition-colors">
-                              <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-700">{rec.client_name || '—'}</td>
-                              <td className="px-3 py-2.5 whitespace-nowrap">
-                                <Badge className={`text-xs ${RECORD_TYPE_BADGE[rec.record_type] || ''}`}>{RECORD_TYPE_LABELS[rec.record_type] || rec.record_type}</Badge>
-                              </td>
-                              <td className="px-3 py-2.5">
-                                <div className="text-slate-700 truncate max-w-[200px]">{rec.description || rec.support_type || '—'}</div>
-                                {rec.vendor && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{rec.vendor}</div>}
-                                {rec.record_type === 'paid_external_placement' && (rec.hours_worked > 0 || rec.hourly_rate > 0) && (
-                                  <div className="text-xs text-slate-500 mt-0.5">
-                                    {rec.hours_worked > 0 && <span>{rec.hours_worked} hrs</span>}
-                                    {rec.hours_worked > 0 && rec.hourly_rate > 0 && <span> × </span>}
-                                    {rec.hourly_rate > 0 && <span>${rec.hourly_rate}/hr</span>}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-3 py-2.5 text-right text-slate-600 whitespace-nowrap">${(rec.amount || 0).toFixed(2)}</td>
-                              <td className="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">${(rec.total || 0).toFixed(2)}</td>
-                              <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
-                                {rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—'}
-                                {rec.record_type === 'paid_external_placement' && rec.work_end_date && (
-                                  <div className="text-xs text-slate-400">to {format(new Date(rec.work_end_date), 'MMM d, yy')}</div>
-                                )}
-                              </td>
-                              <td className="px-3 py-2.5 text-center">
-                                {rec.receipt_urls?.length > 0 ? (
-                                  <Badge variant="outline" className="text-xs flex gap-1 items-center w-fit mx-auto">
-                                    <Paperclip className="w-3 h-3" />{rec.receipt_urls.length}
-                                  </Badge>
-                                ) : (
-                                  <span className="text-slate-300 text-xs">—</span>
-                                )}
-                              </td>
-                              <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                                <div className="flex flex-col gap-1 items-center">
-                                  <button onClick={() => toggleReimbursed(rec)} className="text-xs">
-                                    {rec.reimbursed
-                                      ? <Badge className="text-xs bg-green-100 text-green-800">Reimbursed</Badge>
-                                      : <Badge className="text-xs bg-amber-100 text-amber-800">Pending</Badge>}
-                                  </button>
-                                  {rec.invoiced && <Badge className="text-xs bg-blue-100 text-blue-800">Invoiced</Badge>}
-                                  {rec.completion_status && (
-                                    <Badge className={`text-xs ${COMPLETION_COLORS[rec.completion_status] || ''}`}>{rec.completion_status.replace(/_/g, ' ')}</Badge>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                                <div className="flex justify-center gap-0.5">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(editingId === rec.id ? null : rec.id)}>
-                                    <Pencil className="w-3.5 h-3.5" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleInvoiced(rec)} title="Toggle invoiced">
-                                    <FileText className="w-3.5 h-3.5" />
-                                  </Button>
-                                </div>
-                              </td>
+                  <div className="space-y-3 p-3">
+                    {otherRecords.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="border-b border-slate-100 bg-slate-50/50">
+                            <tr>
+                              <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Client</th>
+                              <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Type</th>
+                              <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Description / Vendor</th>
+                              <th className="text-right px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Amount</th>
+                              <th className="text-right px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Total</th>
+                              <th className="text-left px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Date</th>
+                              <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Receipts</th>
+                              <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Status</th>
+                              <th className="text-center px-3 py-2 font-semibold text-slate-500 whitespace-nowrap">Actions</th>
                             </tr>
-                            {editingId === rec.id && (
-                              <InlineEditRow
-                                record={rec}
-                                clients={clients}
-                                onDone={() => { setEditingId(null); queryClient.invalidateQueries({ queryKey: ['financial-records'] }); }}
-                                onCancel={() => setEditingId(null)}
-                              />
-                            )}
-                          </Fragment>
-                        ))}
-                      </tbody>
-                    </table>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {otherRecords.map(rec => (
+                              <Fragment key={rec.id}>
+                                <tr className="hover:bg-slate-50 transition-colors">
+                                  <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-700">{rec.client_name || '—'}</td>
+                                  <td className="px-3 py-2.5 whitespace-nowrap">
+                                    <Badge className={`text-xs ${RECORD_TYPE_BADGE[rec.record_type] || ''}`}>{RECORD_TYPE_LABELS[rec.record_type] || rec.record_type}</Badge>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <div className="text-slate-700 truncate max-w-[200px]">{rec.description || rec.support_type || '—'}</div>
+                                    {rec.vendor && <div className="text-xs text-muted-foreground truncate max-w-[200px]">{rec.vendor}</div>}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right text-slate-600 whitespace-nowrap">${(rec.amount || 0).toFixed(2)}</td>
+                                  <td className="px-3 py-2.5 text-right font-semibold text-slate-700 whitespace-nowrap">${(rec.total || 0).toFixed(2)}</td>
+                                  <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">
+                                    {rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—'}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    {rec.receipt_urls?.length > 0 ? (
+                                      <Badge variant="outline" className="text-xs flex gap-1 items-center w-fit mx-auto">
+                                        <Paperclip className="w-3 h-3" />{rec.receipt_urls.length}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-slate-300 text-xs">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                                    <div className="flex flex-col gap-1 items-center">
+                                      <button onClick={() => toggleReimbursed(rec)} className="text-xs">
+                                        {rec.reimbursed
+                                          ? <Badge className="text-xs bg-green-100 text-green-800">Reimbursed</Badge>
+                                          : <Badge className="text-xs bg-amber-100 text-amber-800">Pending</Badge>}
+                                      </button>
+                                      {rec.invoiced && <Badge className="text-xs bg-blue-100 text-blue-800">Invoiced</Badge>}
+                                      {rec.completion_status && (
+                                        <Badge className={`text-xs ${COMPLETION_COLORS[rec.completion_status] || ''}`}>{rec.completion_status.replace(/_/g, ' ')}</Badge>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                                    <div className="flex justify-center gap-0.5">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(editingId === rec.id ? null : rec.id)}>
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleInvoiced(rec)} title="Toggle invoiced">
+                                        <FileText className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                {editingId === rec.id && (
+                                  <InlineEditRow
+                                    record={rec}
+                                    clients={clients}
+                                    onDone={() => { setEditingId(null); queryClient.invalidateQueries({ queryKey: ['financial-records'] }); }}
+                                    onCancel={() => setEditingId(null)}
+                                  />
+                                )}
+                              </Fragment>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {weRecords.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                          <Briefcase className="w-3.5 h-3.5" /> Work Exposure Placements
+                        </div>
+                        {weGrouped.map(([key, group]) => {
+                          const isOpen = !!weExpanded[key];
+                          const subs = group.subs;
+                          const clientHours = subs.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
+                          const clientTotal = subs.reduce((s, r) => s + (r.total || r.amount || 0), 0);
+                          return (
+                            <div key={key} className="rounded-lg border border-slate-200 overflow-hidden">
+                              <button
+                                onClick={() => toggleWe(key)}
+                                className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-slate-100 transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  {isOpen ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                                  <span className="font-medium text-sm text-slate-700">{group.client_name}</span>
+                                  <Badge variant="outline" className="text-xs">{subs.length} submission{subs.length !== 1 ? 's' : ''}</Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-slate-600">
+                                  <span>{clientHours} hrs</span>
+                                  <span className="font-semibold">${clientTotal.toFixed(2)}</span>
+                                </div>
+                              </button>
+                              {isOpen && (
+                                <div className="overflow-x-auto border-t border-slate-100">
+                                  <table className="w-full text-sm">
+                                    <thead className="bg-slate-50/50">
+                                      <tr className="border-b border-slate-100">
+                                        <th className="text-left py-2 px-3 font-medium text-slate-500">Employer / Vendor</th>
+                                        <th className="text-left py-2 px-3 font-medium text-slate-500">Work End Date</th>
+                                        <th className="text-right py-2 px-3 font-medium text-slate-500">Hours</th>
+                                        <th className="text-right py-2 px-3 font-medium text-slate-500">Rate</th>
+                                        <th className="text-right py-2 px-3 font-medium text-slate-500">Billing Amount</th>
+                                        <th className="text-center py-2 px-3 font-medium text-slate-500">Timesheet</th>
+                                        <th className="text-center py-2 px-3 font-medium text-slate-500">Status</th>
+                                        <th className="text-center py-2 px-3 font-medium text-slate-500">Actions</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                      {subs.map(rec => (
+                                        <Fragment key={rec.id}>
+                                          <tr className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-3 py-2.5">{rec.vendor || '—'}</td>
+                                            <td className="px-3 py-2.5 whitespace-nowrap">
+                                              {rec.work_end_date
+                                                ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy')
+                                                : (rec.date ? format(new Date(rec.date), 'MMM d, yy') : '—')}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-right">{rec.hours_worked != null ? rec.hours_worked : '—'}</td>
+                                            <td className="px-3 py-2.5 text-right">{rec.hourly_rate != null ? `$${Number(rec.hourly_rate).toFixed(2)}/hr` : '—'}</td>
+                                            <td className="px-3 py-2.5 text-right font-semibold whitespace-nowrap">${(Number(rec.total || rec.amount || 0)).toFixed(2)}</td>
+                                            <td className="px-3 py-2.5 text-center">
+                                              {rec.receipt_urls?.length > 0 ? (
+                                                <a href={rec.receipt_urls[0]} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-xs">view</a>
+                                              ) : (
+                                                <span className="text-slate-300 text-xs">—</span>
+                                              )}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                                              <div className="flex flex-col gap-1 items-center">
+                                                <button onClick={() => toggleInvoiced(rec)} className="text-xs">
+                                                  {rec.invoiced
+                                                    ? <Badge className="text-xs bg-blue-100 text-blue-800">Invoiced</Badge>
+                                                    : <Badge className="text-xs bg-amber-100 text-amber-800">Pending</Badge>}
+                                                </button>
+                                                {rec.reimbursed && <Badge className="text-xs bg-green-100 text-green-800">Reimbursed</Badge>}
+                                              </div>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingId(editingId === rec.id ? null : rec.id)}>
+                                                <Pencil className="w-3.5 h-3.5" />
+                                              </Button>
+                                            </td>
+                                          </tr>
+                                          {editingId === rec.id && (
+                                            <InlineEditRow
+                                              record={rec}
+                                              clients={clients}
+                                              colSpan={8}
+                                              onDone={() => { setEditingId(null); queryClient.invalidateQueries({ queryKey: ['financial-records'] }); }}
+                                              onCancel={() => setEditingId(null)}
+                                            />
+                                          )}
+                                        </Fragment>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>
