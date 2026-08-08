@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, DollarSign } from 'lucide-react';
+import { CheckCircle2, DollarSign, ExternalLink, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -39,7 +39,7 @@ export default function FinancePayablesSection({ recordType }) {
   }, [employers]);
   const periodBySubId = useMemo(() => {
     const m = {};
-    hoursSubs.forEach(s => { if (s.id) m[s.id] = { start: s.period_start_date, end: s.period_end_date }; });
+    hoursSubs.forEach(s => { if (s.id) m[s.id] = { start: s.period_start_date, end: s.period_end_date, timesheet_url: s.timesheet_url }; });
     return m;
   }, [hoursSubs]);
 
@@ -122,6 +122,7 @@ export default function FinancePayablesSection({ recordType }) {
                     <>
                       <th className="text-center px-3 py-2 font-semibold">Payable To</th>
                       <th className="text-left px-3 py-2 font-semibold">Pay Period</th>
+                      <th className="text-left px-3 py-2 font-semibold">Timesheet</th>
                     </>
                   )}
                   <th className="text-right px-3 py-2 font-semibold">Amount</th>
@@ -136,6 +137,7 @@ export default function FinancePayablesSection({ recordType }) {
                   const period = p && (p.start || p.end)
                     ? `${p.start ? format(new Date(p.start + 'T00:00:00'), 'MMM d, yy') : '—'} – ${p.end ? format(new Date(p.end + 'T00:00:00'), 'MMM d, yy') : '—'}`
                     : (rec.work_end_date ? format(new Date(rec.work_end_date + 'T00:00:00'), 'MMM d, yy') : '—');
+                  const timesheetUrl = p?.timesheet_url || (rec.receipt_urls && rec.receipt_urls[0]);
                   return (
                     <tr key={rec.id} className="hover:bg-muted/30">
                       <td className="px-3 py-2 font-medium">{rec.client_name || '—'}</td>
@@ -148,6 +150,15 @@ export default function FinancePayablesSection({ recordType }) {
                             </Badge>
                           </td>
                           <td className="px-3 py-2 whitespace-nowrap">{period}</td>
+                          <td className="px-3 py-2">
+                            {timesheetUrl ? (
+                              <a href={timesheetUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                                <FileText className="w-3.5 h-3.5" /> View <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
                         </>
                       )}
                       <td className="px-3 py-2 text-right font-semibold">${Number(rec.total || rec.amount || 0).toFixed(2)}</td>
