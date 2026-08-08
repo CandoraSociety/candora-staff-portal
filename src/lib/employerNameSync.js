@@ -11,6 +11,15 @@ export async function propagateEmployerName(employerId, newName) {
       await base44.entities.WorkExposurePlacement.bulkUpdate(
         placements.map(p => ({ id: p.id, business_name: newName }))
       );
+      // Propagate the rename to billing payables linked to these placements
+      const placementIds = new Set(placements.map(p => p.id));
+      const frs = await base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' });
+      const linkedFrs = frs.filter(fr => placementIds.has(fr.linked_placement_id));
+      if (linkedFrs.length) {
+        await base44.entities.FinancialRecord.bulkUpdate(
+          linkedFrs.map(fr => ({ id: fr.id, vendor: newName }))
+        );
+      }
     }
   } catch {}
   try {
