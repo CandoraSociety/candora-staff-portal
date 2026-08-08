@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Wallet, Briefcase, UtensilsCrossed, DollarSign, Clock, FolderOpen, RefreshCw } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Wallet, Briefcase, UtensilsCrossed, DollarSign, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
 
 export default function FinanceDashboard() {
-  const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => { base44.auth.me().then(setUser).catch(() => {}); }, []);
-  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'executive_director';
-
   const { data: financialRecords = [] } = useQuery({
     queryKey: ['financial-records'],
     queryFn: () => base44.entities.FinancialRecord.list('-date', 200),
@@ -34,18 +25,6 @@ export default function FinanceDashboard() {
   const paidThisMonth = financialRecords
     .filter(r => r.reimbursed && r.reimbursement_date && r.reimbursement_date.startsWith(format(new Date(), 'yyyy-MM')))
     .reduce((s, r) => s + (r.total || 0), 0);
-
-  const [syncing, setSyncing] = useState(false);
-  const ensureFinanceFolder = async () => {
-    setSyncing(true);
-    try {
-      const res = await base44.functions.invoke('syncPortalFolders', {});
-      if (res?.data?.errors?.length) toast.error('Some folders failed to sync');
-      else toast.success('Finance folder ensured on SharePoint');
-      queryClient.invalidateQueries({ queryKey: ['finance-folder'] });
-    } catch (e) { toast.error('Sync failed: ' + (e.message || '')); }
-    finally { setSyncing(false); }
-  };
 
   return (
     <div className="space-y-6">
@@ -119,24 +98,6 @@ export default function FinanceDashboard() {
         </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><FolderOpen className="w-4 h-4" /> Finance Documents (SharePoint)</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Funder budgets, program budgets, invoices, payment requests and payroll/timesheet submissions are stored in the <strong>Finance</strong> folder on the Candora SharePoint site. Supporting documents uploaded in the Pathways portal are saved here automatically.
-          </p>
-          {isAdmin ? (
-            <Button variant="outline" size="sm" onClick={ensureFinanceFolder} disabled={syncing}>
-              <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Ensure Finance folder on SharePoint'}
-            </Button>
-          ) : (
-            <Badge variant="outline">Ask an admin to sync the SharePoint folder</Badge>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
