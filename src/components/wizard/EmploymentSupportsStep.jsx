@@ -54,6 +54,7 @@ function RequestPurchaseForm({ client, existing, onDone, onCancel }) {
     support_type_other: '',
     description: '',
     product_link: '',
+    purchase_exact_item: false,
     estimated_amount: '',
     vendor: '',
     notes: '',
@@ -77,6 +78,7 @@ function RequestPurchaseForm({ client, existing, onDone, onCancel }) {
         support_type_other: rec.support_type === 'Other' ? rec.support_type_other : '',
         description: rec.description,
         product_link: rec.product_link,
+        purchase_exact_item: !!rec.purchase_exact_item,
         estimated_amount: parseFloat(rec.estimated_amount) || 0,
         vendor: rec.vendor,
         requested_date: existing?.requested_date || today,
@@ -145,6 +147,15 @@ function RequestPurchaseForm({ client, existing, onDone, onCancel }) {
               placeholder="https://..."
             />
           </div>
+          <label className="flex items-center gap-2 mt-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!!rec.purchase_exact_item}
+              onChange={e => update('purchase_exact_item', e.target.checked)}
+              className="accent-primary w-4 h-4"
+            />
+            <span className="text-xs text-slate-600">Purchase exact item in link</span>
+          </label>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -286,6 +297,9 @@ export default function EmploymentSupportsStep({ client, onSave }) {
                           <a href={rec.product_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-0.5 w-fit">
                             <LinkIcon className="w-3 h-3" /> Product Link
                           </a>
+                        )}
+                        {rec.purchase_exact_item && (
+                          <Badge className="text-xs bg-blue-100 text-blue-800 w-fit mt-0.5">Purchase exact item</Badge>
                         )}
                         {(rec.vendor || rec.requested_by_name) && (
                           <div className="text-xs text-muted-foreground mt-0.5">

@@ -25,6 +25,11 @@
       "type": "string",
       "description": "URL link to the product to be purchased"
     },
+    "purchase_exact_item": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the manager should purchase the exact item shown in the product link"
+    },
     "estimated_amount": {
       "type": "number",
       "description": "Estimated cost of the purchase"

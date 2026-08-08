@@ -111,6 +111,9 @@ export default function PurchaseRequestsTab({ requests = [] }) {
                           <ExternalLink className="w-3 h-3" /> Product Link
                         </a>
                       )}
+                      {r.purchase_exact_item && (
+                        <Badge className="text-xs bg-blue-100 text-blue-800">Purchase exact item in link</Badge>
+                      )}
                       {r.vendor && <span>Vendor: {r.vendor}</span>}
                       <span>Requested by: {r.requested_by_name || r.requested_by || '—'}</span>
                     </div>
