@@ -33,6 +33,19 @@ export default function FinancePayablesSection({ recordType }) {
     queryKey: ['work-exposure-hours-submissions-all'],
     queryFn: () => base44.entities.WorkExposureHoursSubmission.list(),
   });
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-all-finance-payables'],
+    queryFn: () => base44.entities.Client.list('-created_date', 5000),
+  });
+  const clientProgram = useMemo(() => {
+    const m = {};
+    clients.forEach(c => {
+      if (!c.id) return;
+      if (c.service_type === 'direct_to_employment') m[c.id] = 'dea';
+      else if (c.service_type === 'pathways') m[c.id] = 'wd';
+    });
+    return m;
+  }, [clients]);
 
   const payableByVendor = useMemo(() => {
     const m = {};
@@ -84,10 +97,15 @@ export default function FinancePayablesSection({ recordType }) {
     } catch (e) { toast.error('Failed to update'); }
   };
 
-  const valOf = (r) => recordType === 'employment_supports' ? (r.amount || 0) : (r.total || r.amount || 0);
   const isES = recordType === 'employment_supports';
-  const totalOutstanding = isES ? 0 : outstanding.reduce((s, r) => s + valOf(r), 0);
-  const totalPaid = isES ? filtered.reduce((s, r) => s + valOf(r), 0) : paid.reduce((s, r) => s + valOf(r), 0);
+  const isCourse = recordType === 'exposure_course';
+  const supportsLike = isES || isCourse;
+  const valOf = (r) => supportsLike ? (r.amount || 0) : (r.total || r.amount || 0);
+  const totalOutstanding = supportsLike ? 0 : outstanding.reduce((s, r) => s + valOf(r), 0);
+  const totalPaid = supportsLike ? filtered.reduce((s, r) => s + valOf(r), 0) : paid.reduce((s, r) => s + valOf(r), 0);
+  const courseDea = useMemo(() => isCourse ? filtered.filter(r => clientProgram[r.client_id] === 'dea') : [], [isCourse, filtered, clientProgram]);
+  const courseWd = useMemo(() => isCourse ? filtered.filter(r => clientProgram[r.client_id] === 'wd') : [], [isCourse, filtered, clientProgram]);
+  const courseUnmatched = useMemo(() => isCourse ? filtered.filter(r => !clientProgram[r.client_id]) : [], [isCourse, filtered, clientProgram]);
 
   return (
     <div className="space-y-4">
@@ -135,15 +153,46 @@ export default function FinancePayablesSection({ recordType }) {
           No {RECORD_LABELS[recordType]?.toLowerCase() || 'records'} found.
         </CardContent></Card>
       ) : (
-        isES ? (
-          <PayablesTable
-            title="Employment Supports"
-            records={filtered}
-            recordType={recordType}
-            payableByVendor={payableByVendor}
-            periodBySubId={periodBySubId}
-            alwaysPaid
-          />
+        supportsLike ? (
+          isCourse ? (
+            <div className="space-y-4">
+              <PayablesTable
+                title="DEA Clients — Exposure Courses"
+                records={courseDea}
+                recordType={recordType}
+                payableByVendor={payableByVendor}
+                periodBySubId={periodBySubId}
+                alwaysPaid
+              />
+              <PayablesTable
+                title="WD Clients — Exposure Courses"
+                records={courseWd}
+                recordType={recordType}
+                payableByVendor={payableByVendor}
+                periodBySubId={periodBySubId}
+                alwaysPaid
+              />
+              {courseUnmatched.length > 0 && (
+                <PayablesTable
+                  title="Uncategorized Clients — Exposure Courses"
+                  records={courseUnmatched}
+                  recordType={recordType}
+                  payableByVendor={payableByVendor}
+                  periodBySubId={periodBySubId}
+                  alwaysPaid
+                />
+              )}
+            </div>
+          ) : (
+            <PayablesTable
+              title="Employment Supports"
+              records={filtered}
+              recordType={recordType}
+              payableByVendor={payableByVendor}
+              periodBySubId={periodBySubId}
+              alwaysPaid
+            />
+          )
         ) : (
           <>
             <PayablesTable
@@ -174,6 +223,7 @@ export default function FinancePayablesSection({ recordType }) {
 
 function PayablesTable({ title, records, recordType, payableByVendor, periodBySubId, togglePaid, collapsible, alwaysPaid }) {
   const [collapsed, setCollapsed] = useState(false);
+  const showTaxCols = recordType === 'employment_supports' || recordType === 'exposure_course';
   return (
     <Card>
       <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/40">
@@ -201,9 +251,9 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                     <th className="text-left px-3 py-2 font-semibold">Timesheet</th>
                   </>
                 )}
-                <th className="text-right px-3 py-2 font-semibold">{recordType === 'employment_supports' ? 'Amount (without tax)' : 'Amount'}</th>
-                {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
-                {recordType === 'employment_supports' && <th className="text-right px-3 py-2 font-semibold">Total</th>}
+                <th className="text-right px-3 py-2 font-semibold">{showTaxCols ? 'Amount (without tax)' : 'Amount'}</th>
+                {showTaxCols && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
+                {showTaxCols && <th className="text-right px-3 py-2 font-semibold">Total</th>}
                 <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
                 <th className="text-center px-3 py-2 font-semibold">Status</th>
                 {!alwaysPaid && <th className="text-center px-3 py-2 font-semibold">Action</th>}
@@ -239,9 +289,9 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                         </td>
                       </>
                     )}
-                    <td className="px-3 py-2 text-right font-semibold">${Number(recordType === 'employment_supports' ? (rec.amount || 0) : (rec.total || rec.amount || 0)).toFixed(2)}</td>
-                    {recordType === 'employment_supports' && <td className="px-3 py-2 text-right text-muted-foreground">${Number(rec.tax || 0).toFixed(2)}</td>}
-                    {recordType === 'employment_supports' && <td className="px-3 py-2 text-right">${Number(rec.total || 0).toFixed(2)}</td>}
+                    <td className="px-3 py-2 text-right font-semibold">${Number(showTaxCols ? (rec.amount || 0) : (rec.total || rec.amount || 0)).toFixed(2)}</td>
+                    {showTaxCols && <td className="px-3 py-2 text-right text-muted-foreground">${Number(rec.tax || 0).toFixed(2)}</td>}
+                    {showTaxCols && <td className="px-3 py-2 text-right">${Number(rec.total || 0).toFixed(2)}</td>}
                     <td className="px-3 py-2">{rec.billing_month || '—'}</td>
                     <td className="px-3 py-2 text-center">
                       {alwaysPaid

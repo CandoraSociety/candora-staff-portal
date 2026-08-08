@@ -170,3 +170,30 @@ export function computeMonthEmploymentSupportsTotal(financialRecords, year, mont
     .filter((r) => r.record_type === 'employment_supports' && r.billing_month === prefix)
     .reduce((s, r) => s + (Number(r.amount) || 0), 0);
 }
+
+// Running dollar total of all exposure-course purchases billed in a given
+// calendar month, SPLIT by the client's program:
+//   dea = DEA clients (service_type 'direct_to_employment')  → column CF
+//   wd  = WD clients  (service_type 'pathways')              → column CG
+// Sums the `amount` (EXCLUDING tax — tax is documented but never reimbursable)
+// of every exposure_course FinancialRecord whose billing_month matches the
+// month. Used to populate columns CF / CG of the Invoice Tracker sheet as
+// cumulative running totals.
+export function computeMonthExposureCourseTotals(financialRecords, clients, year, month0) {
+  const prefix = `${year}-${String(month0 + 1).padStart(2, '0')}`;
+  const clientProgram: Record<string, string> = {};
+  for (const c of (clients || [])) {
+    if (!c.id) continue;
+    if (c.service_type === 'direct_to_employment') clientProgram[c.id] = 'dea';
+    else if (c.service_type === 'pathways') clientProgram[c.id] = 'wd';
+  }
+  let dea = 0, wd = 0;
+  for (const r of (financialRecords || [])) {
+    if (r.record_type !== 'exposure_course' || r.billing_month !== prefix) continue;
+    const amt = Number(r.amount) || 0;
+    const prog = clientProgram[r.client_id];
+    if (prog === 'dea') dea += amt;
+    else if (prog === 'wd') wd += amt;
+  }
+  return { dea, wd };
+}

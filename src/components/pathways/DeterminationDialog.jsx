@@ -64,16 +64,41 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
         toast.success('Marked as needing more info — requester notified');
       } else if (choice === 'approved') {
         if (isCourse) {
-          // Exposure course approval — record actual cost & receipt, but no billing / finance portal automations
+          // Exposure course approval — creates a FinancialRecord (record_type exposure_course)
+          // and syncs the cumulative month total to CRT Invoice Tracker columns CF (DEA) / CG (WD).
           const amt = parseFloat(amount) || 0;
           const tx = parseFloat(tax) || 0;
           const tot = amt + tx;
+          const billingMonth = purchaseDate.slice(0, 7);
+          const courseLabel = request.course_type === 'Other' && request.course_type_other ? request.course_type_other : (request.course_type || 'Exposure Course');
+          const fr = await base44.entities.FinancialRecord.create({
+            client_id: request.client_id,
+            client_name: request.client_name,
+            assigned_worker: request.assigned_worker || request.requested_by,
+            record_type: 'exposure_course',
+            course_type: request.course_type,
+            course_type_other: request.course_type_other,
+            course_link: request.course_link,
+            course_identifier: request.course_identifier,
+            description: request.description || courseLabel,
+            amount: amt,
+            tax: tx,
+            total: tot,
+            date: purchaseDate,
+            vendor: request.vendor,
+            billing_month: billingMonth,
+            receipt_urls: [receiptUrl],
+            completion_status: 'completed',
+            notes: notes.trim(),
+          });
           await base44.entities.PurchaseRequest.update(request.id, {
             ...base, status: 'approved',
             purchase_date: purchaseDate, amount_without_tax: amt, tax: tx, total: tot,
             purchase_notes: notes.trim(), receipt_url: receiptUrl,
+            linked_financial_record_id: fr?.id || '',
           });
-          toast.success('Exposure course approved & payment recorded');
+          try { await base44.functions.invoke('syncExposureCoursesToInvoiceTracker', { billing_month: billingMonth }); } catch {}
+          toast.success('Exposure course approved & added to Exposure Courses billing');
         } else {
           const amt = parseFloat(amount) || 0;
           const tx = parseFloat(tax) || 0;
