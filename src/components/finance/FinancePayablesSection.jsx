@@ -103,6 +103,7 @@ export default function FinancePayablesSection({ recordType }) {
   const valOf = (r) => supportsLike ? (r.total || ((r.amount || 0) + (r.tax || 0))) : (r.total || r.amount || 0);
   const totalOutstanding = supportsLike ? 0 : outstanding.reduce((s, r) => s + valOf(r), 0);
   const totalPaid = supportsLike ? filtered.reduce((s, r) => s + valOf(r), 0) : paid.reduce((s, r) => s + valOf(r), 0);
+  const totalReimbursable = supportsLike ? filtered.reduce((s, r) => s + (r.amount || 0), 0) : 0;
   const courseDea = useMemo(() => isCourse ? filtered.filter(r => clientProgram[r.client_id] === 'dea') : [], [isCourse, filtered, clientProgram]);
   const courseWd = useMemo(() => isCourse ? filtered.filter(r => clientProgram[r.client_id] === 'wd') : [], [isCourse, filtered, clientProgram]);
   const courseUnmatched = useMemo(() => isCourse ? filtered.filter(r => !clientProgram[r.client_id]) : [], [isCourse, filtered, clientProgram]);
@@ -118,9 +119,9 @@ export default function FinancePayablesSection({ recordType }) {
         </Card>
         <Card className="border-green-200 bg-green-50/50">
           <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Paid (incl. tax)</div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Paid</div>
             <div className="text-lg font-bold text-green-700">${totalPaid.toFixed(2)}</div>
-            {supportsLike && <div className="text-[10px] text-muted-foreground">Full amount paid by Candora · funder reimburses amount without tax</div>}
+            {supportsLike && <div className="text-[11px] text-muted-foreground/80">(reimbursable from GOA: ${totalReimbursable.toFixed(2)})</div>}
           </CardContent>
         </Card>
       </div>
