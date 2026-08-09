@@ -13,6 +13,7 @@ import { Plus, Pencil, X, Paperclip, DollarSign, FileText, CheckCircle2, Search,
 import { Fragment } from 'react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { buildBillingDocName, descriptorFromFinancialRecord } from '@/lib/billingDocName';
 
 const RECORD_TYPE_LABELS = {
   exposure_course: 'Exposure Course',
@@ -82,8 +83,19 @@ function PayableForm({ clients, existing, onDone, onCancel }) {
   const handleUpload = async (files) => {
     setUploading(true);
     try {
+      const clientName = selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : '';
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const namedName = buildBillingDocName({
+          recordType: rec.record_type,
+          descriptor: descriptorFromFinancialRecord(rec),
+          clientName,
+          month: rec.billing_month,
+          originalName: file.name,
+        });
+        const uploadFile = namedName !== file.name
+          ? new File([file], namedName, { type: file.type })
+          : file;
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
         setReceiptUrls(p => [...p, file_url]);
       }
     } catch { toast.error('Upload failed'); }
@@ -278,7 +290,17 @@ function InlineEditRow({ record, clients, onDone, onCancel, colSpan = 9 }) {
     setUploading(true);
     try {
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const namedName = buildBillingDocName({
+          recordType: rec.record_type,
+          descriptor: descriptorFromFinancialRecord(rec),
+          clientName: rec.client_name,
+          month: rec.billing_month,
+          originalName: file.name,
+        });
+        const uploadFile = namedName !== file.name
+          ? new File([file], namedName, { type: file.type })
+          : file;
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
         setReceiptUrls(p => [...p, file_url]);
       }
     } catch { toast.error('Upload failed'); }

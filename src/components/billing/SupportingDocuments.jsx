@@ -185,13 +185,13 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                       <td className="py-2 px-2">
                         <div className="space-y-0.5">
                           {record.receipt_urls?.length > 0 && record.receipt_urls.map((url, i) => (
-                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1">
-                              <ExternalLink className="w-2.5 h-2.5" /> Receipt {i + 1}
+                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1" title={url.split('/').pop()}>
+                              <ExternalLink className="w-2.5 h-2.5" /> {decodeURIComponent(url.split('/').pop()).slice(0, 28)}
                             </a>
                           ))}
                           {record.completion_record_urls?.length > 0 && record.completion_record_urls.map((url, i) => (
-                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline flex items-center gap-1">
-                              <ExternalLink className="w-2.5 h-2.5" /> Completion {i + 1}
+                            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-green-600 hover:underline flex items-center gap-1" title={url.split('/').pop()}>
+                              <ExternalLink className="w-2.5 h-2.5" /> {decodeURIComponent(url.split('/').pop()).slice(0, 28)}
                             </a>
                           ))}
                           <SupportingDocUpload recordType="financial" record={record} urlField="receipt_urls" queryKey={['financial-records']} />
@@ -290,8 +290,8 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                                 <td className="py-2 px-2">
                                   <div className="space-y-0.5">
                                     {r.receipt_urls?.length > 0 && r.receipt_urls.map((url, i) => (
-                                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1">
-                                        <ExternalLink className="w-2.5 h-2.5" /> Receipt {i + 1}
+                                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-600 hover:underline flex items-center gap-1" title={url.split('/').pop()}>
+                                        <ExternalLink className="w-2.5 h-2.5" /> {decodeURIComponent(url.split('/').pop()).slice(0, 28)}
                                       </a>
                                     ))}
                                     <SupportingDocUpload recordType="financial" record={r} urlField="receipt_urls" queryKey={['financial-records']} />
