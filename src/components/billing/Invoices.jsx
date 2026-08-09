@@ -17,6 +17,11 @@ export default function Invoices() {
   const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const ensuredRef = useRef(new Set());
+  // Tracks whether the user has manually picked a month this billing cycle.
+  // Until they do, the view always follows the live current month (so a
+  // kept-alive tab that was last opened in a prior month snaps back to the
+  // current billing period instead of reading last month's empty row).
+  const userPickedRef = useRef(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -46,15 +51,18 @@ export default function Invoices() {
     queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
   }, [queryClient]);
 
-  // When the billing month rolls over (e.g. July → August), always advance the
-  // view to the new current month so the "current invoice" reflects the live
-  // billing period. Users can still browse older months in between rollovers.
+  // Snap to the current billing month whenever it changes (rollover) OR on
+  // mount — the mount snap is what recovers a kept-alive Invoices tab that was
+  // last opened in a previous month and would otherwise keep reading that
+  // prior month's (empty) tracker row. Re-asserting is skipped if the user has
+  // manually picked a month this cycle.
   const prevCurrentRef = useRef(currentMonth);
   useEffect(() => {
     if (prevCurrentRef.current !== currentMonth) {
-      setSelectedMonth(currentMonth);
+      userPickedRef.current = false;
       prevCurrentRef.current = currentMonth;
     }
+    if (!userPickedRef.current) setSelectedMonth(currentMonth);
   }, [currentMonth]);
 
   const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
@@ -224,7 +232,7 @@ export default function Invoices() {
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => setSelectedMonth(inv.billing_month)}
+                    onClick={() => { userPickedRef.current = true; setSelectedMonth(inv.billing_month); }}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}
