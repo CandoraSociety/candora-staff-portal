@@ -6,7 +6,8 @@
       "type": "string"
     },
     "billing_month": {
-      "type": "string"
+      "type": "string",
+      "description": "YYYY-MM \u2014 the month this invoice covers"
     },
     "config_id": {
       "type": "string"
@@ -18,10 +19,26 @@
         "finalized",
         "submitted"
       ],
-      "default": "draft"
+      "default": "draft",
+      "description": "draft = open, re-reads live Invoice Tracker data; finalized = closed off, frozen snapshot; submitted = sent to funder"
     },
     "base_amount": {
       "type": "number"
+    },
+    "header_info": {
+      "type": "array",
+      "description": "Snapshot of CRT Client Data A2:B6 (rows 2\u20136) captured at close-off \u2014 the org/contract header shown on the invoice.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
     },
     "line_items": {
       "type": "array",
