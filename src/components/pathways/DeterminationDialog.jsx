@@ -9,6 +9,7 @@ import { CheckCircle2, XCircle, AlertCircle, Upload, ShoppingCart } from 'lucide
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { buildBillingDocName } from '@/lib/billingDocName';
 
 export default function DeterminationDialog({ request, currentUser, onClose, onDone }) {
   const isCourse = request.request_type === 'exposure_course';
@@ -32,7 +33,21 @@ export default function DeterminationDialog({ request, currentUser, onClose, onD
     if (!file) return;
     setUploading(true);
     try {
-      const res = await base44.integrations.Core.UploadFile({ file });
+      const recordType = isCourse ? 'exposure_course' : 'employment_supports';
+      const descriptor = isCourse
+        ? (request.course_type === 'Other' && request.course_type_other ? request.course_type_other : request.course_type)
+        : request.support_type;
+      const namedName = buildBillingDocName({
+        recordType,
+        descriptor,
+        clientName: request.client_name,
+        month: purchaseDate.slice(0, 7),
+        originalName: file.name,
+      });
+      const uploadFile = namedName !== file.name
+        ? new File([file], namedName, { type: file.type })
+        : file;
+      const res = await base44.integrations.Core.UploadFile({ file: uploadFile });
       setReceiptUrl(res.file_url);
       toast.success('Receipt uploaded');
     } catch { toast.error('Upload failed'); }
