@@ -15,13 +15,23 @@ export default function Invoices() {
   // default + auto-rollover always land on the correct month regardless of
   // the browser/device timezone.
   const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  // pickedMonth = the month the user manually clicked, or null to follow the
+  // live current month. Deriving selectedMonth synchronously (instead of via an
+  // effect) means a kept-alive Invoices tab that was last opened in a prior
+  // month snaps to the current billing period on its very next render — no
+  // effect-timing dependency, no stale last-month row.
+  const [pickedMonth, setPickedMonth] = useState(null);
+  const prevCurrentRef = useRef(currentMonth);
+  // When the billing month advances, drop the user's manual pick so the view
+  // re-locks to the new current month. Adjusting state during render is the
+  // React-recommended pattern for responding to a changed value (guarded so it
+  // fires once per month change — no loop).
+  if (prevCurrentRef.current !== currentMonth) {
+    prevCurrentRef.current = currentMonth;
+    setPickedMonth(null);
+  }
+  const selectedMonth = pickedMonth ?? currentMonth;
   const ensuredRef = useRef(new Set());
-  // Tracks whether the user has manually picked a month this billing cycle.
-  // Until they do, the view always follows the live current month (so a
-  // kept-alive tab that was last opened in a prior month snaps back to the
-  // current billing period instead of reading last month's empty row).
-  const userPickedRef = useRef(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -50,20 +60,6 @@ export default function Invoices() {
   useEffect(() => {
     queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
   }, [queryClient]);
-
-  // Snap to the current billing month whenever it changes (rollover) OR on
-  // mount — the mount snap is what recovers a kept-alive Invoices tab that was
-  // last opened in a previous month and would otherwise keep reading that
-  // prior month's (empty) tracker row. Re-asserting is skipped if the user has
-  // manually picked a month this cycle.
-  const prevCurrentRef = useRef(currentMonth);
-  useEffect(() => {
-    if (prevCurrentRef.current !== currentMonth) {
-      userPickedRef.current = false;
-      prevCurrentRef.current = currentMonth;
-    }
-    if (!userPickedRef.current) setSelectedMonth(currentMonth);
-  }, [currentMonth]);
 
   const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
   const isFinalized = selected?.status === 'finalized';
@@ -232,7 +228,7 @@ export default function Invoices() {
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => { userPickedRef.current = true; setSelectedMonth(inv.billing_month); }}
+                    onClick={() => setPickedMonth(inv.billing_month)}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}
