@@ -120,7 +120,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   const renderRecordsByType = (type) => {
     const records = (financialRecords || []).filter(r => r.record_type === type);
-    const colSpanBefore = type === 'exposure_course' ? 7 : 5;
+    const colSpanBefore = 5;
     const reimbursableTotal = records.reduce((sum, r) => sum + (r.amount || 0), 0);
     const taxTotal = records.reduce((sum, r) => sum + (r.tax || 0), 0);
     const totalWithTax = records.reduce((sum, r) => sum + (r.total || 0), 0);
@@ -145,11 +145,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     <th className="text-left py-2 px-2">Client</th>
                     <th className="text-left py-2 px-2">Description</th>
                     {type === 'exposure_course' && (
-                      <>
-                        <th className="text-left py-2 px-2">Course Type</th>
-                        <th className="text-left py-2 px-2">Registration</th>
-                        <th className="text-left py-2 px-2">Completion</th>
-                      </>
+                      <th className="text-left py-2 px-2">Course Type</th>
                     )}
                     {type === 'employment_supports' && (
                       <th className="text-left py-2 px-2">Support Type</th>
@@ -174,21 +170,9 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                       </td>
                       <td className="py-2 px-2 max-w-[160px] truncate">{record.description}</td>
                       {type === 'exposure_course' && (
-                        <>
-                          <td className="py-2 px-2 whitespace-nowrap">
-                            {record.course_type_other || record.course_type || '-'}
-                          </td>
-                          <td className="py-2 px-2">
-                            <Badge variant="outline" className={REGISTRATION_STATUS_COLORS[record.registration_status] || 'bg-slate-100 text-slate-700'}>
-                              {REGISTRATION_STATUS_LABELS[record.registration_status] || record.registration_status}
-                            </Badge>
-                          </td>
-                          <td className="py-2 px-2">
-                            <Badge variant="outline" className={COMPLETION_STATUS_COLORS[record.completion_status] || 'bg-slate-100 text-slate-700'}>
-                              {COMPLETION_STATUS_LABELS[record.completion_status] || record.completion_status}
-                            </Badge>
-                          </td>
-                        </>
+                        <td className="py-2 px-2 whitespace-nowrap">
+                          {record.course_type_other || record.course_type || '-'}
+                        </td>
                       )}
                       {type === 'employment_supports' && (
                         <td className="py-2 px-2 whitespace-nowrap">{record.course_type || '-'}</td>
