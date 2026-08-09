@@ -73,16 +73,15 @@ export default function InvoiceDocument({ data, status }) {
       {/* Top gold accent strip */}
       <div style={{ height: 6, background: gold }} />
 
-      {/* Letterhead — dominant navy brand band, logo on a white chip */}
-      <div className="flex items-center justify-between px-8 py-6" style={{ background: navy }}>
-        <div className="bg-white rounded-xl px-6 py-3 shadow-sm">
-          <img
-            src={invoiceLogoUrl}
-            alt="Candora"
-            className="h-24 w-auto object-contain"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        </div>
+      {/* Letterhead — dominant navy brand band, logo directly on navy (tightly cropped, larger) */}
+      <div className="flex items-center justify-between px-8 py-5" style={{ background: navy }}>
+        <img
+          src={invoiceLogoUrl}
+          alt="Candora"
+          className="h-36 w-auto max-w-[420px] object-contain"
+          style={{ mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
         <div className="text-right">
           <p className="font-display font-extrabold text-3xl tracking-widest" style={{ color: gold }}>INVOICE</p>
           <p className="text-sm mt-1.5 font-semibold text-white">
