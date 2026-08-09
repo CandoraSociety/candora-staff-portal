@@ -73,24 +73,26 @@ export default function InvoiceDocument({ data, status }) {
       {/* Top gold accent strip */}
       <div style={{ height: 6, background: gold }} />
 
-      {/* Letterhead — Candora logo (left) + INVOICE (right) on white with navy base */}
-      <div className="flex items-center justify-between px-8 py-5 bg-white" style={{ borderBottom: `2px solid ${navy}` }}>
-        <img
-          src={invoiceLogoUrl}
-          alt="Candora"
-          className="h-16 w-auto object-contain"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
-        />
+      {/* Letterhead — dominant navy brand band, logo on a white chip */}
+      <div className="flex items-center justify-between px-8 py-6" style={{ background: navy }}>
+        <div className="bg-white rounded-xl px-6 py-3 shadow-sm">
+          <img
+            src={invoiceLogoUrl}
+            alt="Candora"
+            className="h-24 w-auto object-contain"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        </div>
         <div className="text-right">
-          <p className="font-display font-extrabold text-2xl tracking-widest" style={{ color: navy }}>INVOICE</p>
-          <p className="text-sm mt-1 font-semibold" style={{ color: blue }}>
+          <p className="font-display font-extrabold text-3xl tracking-widest" style={{ color: gold }}>INVOICE</p>
+          <p className="text-sm mt-1.5 font-semibold text-white">
             {invoiceNumber != null ? `Invoice #${invoiceNumber}` : 'Draft Invoice'}
           </p>
         </div>
       </div>
 
-      {/* Invoice meta */}
-      <div className="grid grid-cols-3 gap-4 px-8 py-4 border-b border-slate-100 text-sm">
+      {/* Invoice meta — navy-tinted band */}
+      <div className="grid grid-cols-3 gap-4 px-8 py-4 border-b border-slate-100 text-sm" style={{ background: navy + '0d' }}>
         <div>
           <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>Billing Month</p>
           <p className="font-medium mt-0.5">{monthLabel}</p>
