@@ -13,10 +13,13 @@ export function useOrgSettings() {
   const s = list[0] || {};
   const logos = s.logos || [];
   const longLogo = logos.find((l) => l.name?.toLowerCase().includes('long')) || null;
+  const noAnniversary = logos.find((l) => /no anniversary/i.test(l.name || '') && !/circle/i.test(l.name || ''));
   return {
     orgName: s.org_name || 'Candora',
     logoUrl: s.logo_url || FALLBACK_LOGO,
     longLogoUrl: longLogo?.url || s.logo_url || FALLBACK_LOGO,
+    invoiceLogoUrl: noAnniversary?.url || longLogo?.url || s.logo_url || FALLBACK_LOGO,
+    logos,
     primaryColor: s.primary_color || '#f5c116',
     secondaryColor: s.secondary_color || '#0f1f6b',
     accentColor: s.accent_color || '#2b2de8',

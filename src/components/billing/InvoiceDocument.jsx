@@ -5,12 +5,12 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
 const qty = (n) => (n == null ? '—' : Number(n));
 
-function Section({ title, items }) {
+function Section({ title, items, navy }) {
   if (!items.length) return null;
   return (
     <>
-      <tr className="bg-slate-50">
-        <td colSpan={4} className="py-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+      <tr style={{ background: navy + '14' }}>
+        <td colSpan={4} className="py-1.5 px-3 text-[11px] font-semibold uppercase tracking-wide" style={{ color: navy }}>
           {title}
         </td>
       </tr>
@@ -36,12 +36,16 @@ const PROGRAM_OVERRIDE = 'Pathways Employment Program';
 const PO_NUMBER = '9000158238';
 
 export default function InvoiceDocument({ data, status }) {
-  const { longLogoUrl } = useOrgSettings();
+  const { invoiceLogoUrl, primaryColor, secondaryColor, accentColor } = useOrgSettings();
   if (!data) return null;
   const {
     invoiceNumber, billingMonth, header = [],
     lineItems = [], subtotalDeliverables = 0, subtotalDirectCosts = 0, total = 0,
   } = data;
+
+  const navy = secondaryColor || '#0f1f6b';
+  const gold = primaryColor || '#f5c116';
+  const blue = accentColor || '#2b2de8';
 
   const fixed = lineItems.filter((i) => i.section === 'fixed');
   const deliverables = lineItems.filter((i) => i.section === 'deliverable');
@@ -66,17 +70,20 @@ export default function InvoiceDocument({ data, status }) {
 
   return (
     <div className="bg-white text-slate-900 mx-auto max-w-[850px] shadow-sm border border-slate-200 rounded-lg overflow-hidden">
-      {/* Letterhead — Candora long-form logo (left) + INVOICE (right) */}
-      <div className="flex items-center justify-between px-8 py-5 border-b border-slate-200">
+      {/* Top gold accent strip */}
+      <div style={{ height: 6, background: gold }} />
+
+      {/* Letterhead — Candora logo (left) + INVOICE (right) on white with navy base */}
+      <div className="flex items-center justify-between px-8 py-5 bg-white" style={{ borderBottom: `2px solid ${navy}` }}>
         <img
-          src={longLogoUrl}
+          src={invoiceLogoUrl}
           alt="Candora"
           className="h-16 w-auto object-contain"
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="text-right">
-          <p className="font-display font-extrabold text-2xl tracking-widest text-accent">INVOICE</p>
-          <p className="text-sm mt-1 font-semibold text-slate-700">
+          <p className="font-display font-extrabold text-2xl tracking-widest" style={{ color: navy }}>INVOICE</p>
+          <p className="text-sm mt-1 font-semibold" style={{ color: blue }}>
             {invoiceNumber != null ? `Invoice #${invoiceNumber}` : 'Draft Invoice'}
           </p>
         </div>
@@ -85,28 +92,28 @@ export default function InvoiceDocument({ data, status }) {
       {/* Invoice meta */}
       <div className="grid grid-cols-3 gap-4 px-8 py-4 border-b border-slate-100 text-sm">
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">Billing Month</p>
+          <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>Billing Month</p>
           <p className="font-medium mt-0.5">{monthLabel}</p>
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">Date Issued</p>
+          <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>Date Issued</p>
           <p className="font-medium mt-0.5">{issued}</p>
         </div>
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">Status</p>
+          <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>Status</p>
           <p className="font-medium mt-0.5 capitalize">{status || (data.status) || 'Draft'}</p>
         </div>
       </div>
 
       {/* Program / Contract info — dates stacked on the left, details on the right */}
       <div className="px-8 py-4 border-b border-slate-100">
-        <p className="text-[11px] uppercase tracking-wide text-slate-400 mb-3">Program / Contract Info</p>
+        <p className="text-[11px] uppercase tracking-wide mb-3" style={{ color: navy }}>Program / Contract Info</p>
         <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
           <div className="space-y-1.5">
             {dateFields.map((h, i) => (
               <div key={i} className="text-sm">
                 <p className="text-slate-500">{h.label}:</p>
-                <p className="font-medium text-slate-800">{h.value || '—'}</p>
+                <p className="font-medium" style={{ color: navy }}>{h.value || '—'}</p>
               </div>
             ))}
           </div>
@@ -125,24 +132,24 @@ export default function InvoiceDocument({ data, status }) {
       <div className="px-8 py-5">
         <table className="w-full">
           <thead>
-            <tr className="border-b-2 border-slate-200 text-[11px] uppercase tracking-wide text-slate-500">
-              <th className="text-left py-2 px-3 font-semibold">Description</th>
-              <th className="text-center py-2 px-3 font-semibold">Qty</th>
-              <th className="text-right py-2 px-3 font-semibold">Unit Price</th>
-              <th className="text-right py-2 px-3 font-semibold">Amount</th>
+            <tr className="border-b-2 text-[11px] uppercase tracking-wide" style={{ borderColor: navy }}>
+              <th className="text-left py-2 px-3 font-semibold" style={{ color: navy }}>Description</th>
+              <th className="text-center py-2 px-3 font-semibold" style={{ color: navy }}>Qty</th>
+              <th className="text-right py-2 px-3 font-semibold" style={{ color: navy }}>Unit Price</th>
+              <th className="text-right py-2 px-3 font-semibold" style={{ color: navy }}>Amount</th>
             </tr>
           </thead>
           <tbody>
             {fixed.map((it) => (
-              <tr key={it.key} className="border-b border-slate-100 bg-slate-50/60">
+              <tr key={it.key} className="border-b border-slate-100" style={{ background: navy + '0a' }}>
                 <td className="py-2 px-3 text-sm font-medium text-slate-800">{it.label}</td>
                 <td className="py-2 px-3 text-sm text-center text-slate-400">—</td>
                 <td className="py-2 px-3 text-sm text-right text-slate-400">—</td>
                 <td className="py-2 px-3 text-sm text-right font-medium text-slate-900 tabular-nums">{money(it.amount)}</td>
               </tr>
             ))}
-            <Section title="Deliverables" items={deliverables} />
-            <Section title="Direct Costs (Reimbursements)" items={directCosts} />
+            <Section title="Deliverables" items={deliverables} navy={navy} />
+            <Section title="Direct Costs (Reimbursements)" items={directCosts} navy={navy} />
           </tbody>
         </table>
 
@@ -163,18 +170,18 @@ export default function InvoiceDocument({ data, status }) {
               <span className="text-slate-500">Subtotal — Direct Costs</span>
               <span className="tabular-nums font-medium">{money(subtotalDirectCosts)}</span>
             </div>
-            <div className="flex justify-between pt-2 border-t-2 border-accent text-base">
-              <span className="font-bold text-accent">Total Due</span>
-              <span className="tabular-nums font-bold text-accent">{money(total)}</span>
+            <div className="flex justify-between px-3 py-2 mt-1 text-base" style={{ background: navy, borderTop: `3px solid ${gold}` }}>
+              <span className="font-bold" style={{ color: gold }}>Total Due</span>
+              <span className="tabular-nums font-bold text-white">{money(total)}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 text-center">
+      <div className="px-8 py-4 text-center" style={{ background: navy }}>
         {footerLines.map((l, i) => (
-          <p key={i} className="text-xs text-slate-500 mt-0.5">{l}</p>
+          <p key={i} className="text-xs mt-0.5" style={{ color: i === 0 ? gold : '#e2e8f0' }}>{l}</p>
         ))}
       </div>
     </div>
