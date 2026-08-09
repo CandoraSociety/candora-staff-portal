@@ -11,7 +11,10 @@ import InvoiceDocument from './InvoiceDocument';
 
 export default function Invoices() {
   const queryClient = useQueryClient();
-  const currentMonth = format(new Date(), 'yyyy-MM');
+  // Current month in Edmonton time (the org's billing timezone), so the
+  // default + auto-rollover always land on the correct month regardless of
+  // the browser/device timezone.
+  const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const ensuredRef = useRef(new Set());
 
@@ -36,8 +39,26 @@ export default function Invoices() {
     }
   }, [isLoading, currentMonth, invoices]);
 
+  // When the billing month rolls over (e.g. July → August), advance the view
+  // to the new current month if the user was still on the prior current month.
+  // Lets them browse older months without being yanked back.
+  const prevCurrentRef = useRef(currentMonth);
+  useEffect(() => {
+    if (prevCurrentRef.current !== currentMonth) {
+      if (selectedMonth === prevCurrentRef.current) setSelectedMonth(currentMonth);
+      prevCurrentRef.current = currentMonth;
+    }
+  }, [currentMonth, selectedMonth]);
+
   const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
   const isFinalized = selected?.status === 'finalized';
+
+  // Always show the current (in-progress) month in the list even if its draft
+  // record hasn't been created yet, so the user can always see up to the
+  // current billing month.
+  const displayInvoices = invoices.some((i) => i.billing_month === currentMonth)
+    ? invoices
+    : [{ id: '__current__', billing_month: currentMonth, status: 'draft' }, ...invoices];
 
   // Live read from the active CRT workbook for the open (non-finalized) month.
   const { data: live, isLoading: liveLoading, refetch } = useQuery({
@@ -47,6 +68,8 @@ export default function Invoices() {
       return res.data;
     },
     enabled: !!selectedMonth && !isFinalized,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const closeOffMutation = useMutation({
@@ -178,7 +201,7 @@ export default function Invoices() {
             <p className="text-center text-sm text-slate-500 py-6">No invoices yet.</p>
           ) : (
             <div className="space-y-1">
-              {invoices.map((inv) => {
+              {displayInvoices.map((inv) => {
                 const isViewing = inv.billing_month === selectedMonth;
                 const fin = inv.status === 'finalized';
                 return (
