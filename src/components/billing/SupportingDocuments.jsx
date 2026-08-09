@@ -106,7 +106,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     };
     records.forEach(r => {
       if (byType[r.record_type]) {
-        byType[r.record_type].total += r.record_type === 'employment_supports' ? (r.amount || 0) : (r.total || 0);
+        byType[r.record_type].total += (r.record_type === 'employment_supports' || r.record_type === 'exposure_course') ? (r.amount || 0) : (r.total || 0);
         byType[r.record_type].count += 1;
       }
     });
@@ -120,10 +120,10 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   const renderRecordsByType = (type) => {
     const records = (financialRecords || []).filter(r => r.record_type === type);
-    const colSpanBefore = type === 'exposure_course' ? 8 : type === 'employment_supports' ? 6 : 5;
-    const reimbursable = type === 'employment_supports';
-    const subtotal = records.reduce((sum, r) => sum + (reimbursable ? (r.amount || 0) : (r.total || 0)), 0);
+    const colSpanBefore = type === 'exposure_course' ? 7 : 5;
+    const reimbursableTotal = records.reduce((sum, r) => sum + (r.amount || 0), 0);
     const taxTotal = records.reduce((sum, r) => sum + (r.tax || 0), 0);
+    const totalWithTax = records.reduce((sum, r) => sum + (r.total || 0), 0);
 
     return (
       <Card>
@@ -156,7 +156,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     )}
                     <th className="text-left py-2 px-2">Vendor</th>
                     <th className="text-left py-2 px-2">Date</th>
-                    <th className="text-right py-2 px-2">{type === 'employment_supports' ? 'Total to be Reimbursed' : 'Subtotal'}</th>
+                    <th className="text-right py-2 px-2">Total Reimbursable</th>
                     <th className="text-right py-2 px-2">Tax</th>
                     <th className="text-right py-2 px-2">Total</th>
                     <th className="text-left py-2 px-2">Supporting Docs</th>
@@ -218,8 +218,9 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                   ))}
                   <tr className="bg-slate-100 border-t-2 border-slate-300">
                     <td colSpan={colSpanBefore} className="text-right py-2 px-2 font-semibold">SUBTOTAL:</td>
+                    <td className="text-right py-2 px-2 font-bold text-base bg-amber-200/60 text-amber-900">${reimbursableTotal.toFixed(2)}</td>
                     <td className="text-right py-2 px-2 font-semibold">${taxTotal.toFixed(2)}</td>
-                    <td className="text-right py-2 px-2 font-bold text-lg">${subtotal.toFixed(2)}</td>
+                    <td className="text-right py-2 px-2 font-bold text-lg">${totalWithTax.toFixed(2)}</td>
                     <td colSpan={type === 'employment_supports' ? 1 : 2}></td>
                   </tr>
                 </tbody>
@@ -427,7 +428,10 @@ export default function SupportingDocuments({ financialRecords, clients }) {
             </CardHeader>
             <CardContent>
               <p className="text-xl font-bold">${stats.byType[typeKey]?.total.toFixed(2) || '0.00'}</p>
-              <p className="text-xs text-slate-600 mt-1">{stats.byType[typeKey]?.count || 0} records</p>
+              <p className="text-xs text-slate-600 mt-1">
+                {stats.byType[typeKey]?.count || 0} records
+                {(typeKey === 'employment_supports' || typeKey === 'exposure_course') && <span className="block text-[10px] text-slate-500">(excluding tax)</span>}
+              </p>
             </CardContent>
           </Card>
         ))}
