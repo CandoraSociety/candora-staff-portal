@@ -4,6 +4,35 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Upload, Loader2 } from 'lucide-react';
 
+function sanitize(part) {
+  return String(part || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+// Build a descriptive filename for Pathways payables supporting documents.
+// Convention: <Type>_<Descriptor>_<Client>_<Month>.<ext>
+function buildDocName(record, originalName) {
+  const type = record?.record_type;
+  let prefix, descriptor;
+  if (type === 'exposure_course') {
+    prefix = 'Exposure_Course';
+    descriptor = record.course_type_other || record.course_type;
+  } else if (type === 'employment_supports') {
+    prefix = 'Employment_Support';
+    descriptor = record.support_type;
+  } else if (type === 'paid_external_placement') {
+    prefix = 'Work_Exposure_Payment';
+    descriptor = record.vendor; // company / employer name
+  } else {
+    return originalName;
+  }
+  const ext = originalName && originalName.includes('.') ? originalName.split('.').pop() : '';
+  const month = record.billing_month || '';
+  const parts = [prefix, sanitize(descriptor), sanitize(record.client_name), month].filter(Boolean);
+  let name = parts.join('_');
+  if (ext) name += '.' + ext;
+  return name;
+}
+
 export default function SupportingDocUpload({ recordType, record, urlField, queryKey }) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef(null);
@@ -14,7 +43,11 @@ export default function SupportingDocUpload({ recordType, record, urlField, quer
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const namedName = buildDocName(record, file.name);
+      const uploadFile = namedName !== file.name
+        ? new File([file], namedName, { type: file.type })
+        : file;
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
       const existing = record[urlField] || [];
       const entity = recordType === 'childminding'
         ? base44.entities.ChildmindingRecord
