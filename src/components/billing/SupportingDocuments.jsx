@@ -114,7 +114,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
       byType.childminding.total += r.billing_amount || 0;
       byType.childminding.count += 1;
     });
-    const total = records.reduce((s, r) => s + (r.record_type === 'employment_supports' ? (r.amount || 0) : (r.total || 0)), 0) + byType.childminding.total;
+    const total = records.reduce((s, r) => s + ((r.record_type === 'employment_supports' || r.record_type === 'exposure_course') ? (r.amount || 0) : (r.total || 0)), 0) + byType.childminding.total;
     return { total, byType };
   }, [financialRecords, pathwaysChildminding]);
 

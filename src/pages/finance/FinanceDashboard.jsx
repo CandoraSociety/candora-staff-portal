@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Wallet, Briefcase, UtensilsCrossed, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
 
 export default function FinanceDashboard() {
   const { data: financialRecords = [] } = useQuery({
@@ -17,11 +16,9 @@ export default function FinanceDashboard() {
   });
 
   const outstandingPayables = financialRecords
-    .filter(r => !r.reimbursed && r.record_type !== 'employment_supports')
+    .filter(r => !r.reimbursed && r.record_type !== 'employment_supports' && r.record_type !== 'exposure_course')
     .reduce((s, r) => s + (r.total || 0), 0);
-  const paidThisMonth = financialRecords
-    .filter(r => r.reimbursed && r.reimbursement_date && r.reimbursement_date.startsWith(format(new Date(), 'yyyy-MM')))
-    .reduce((s, r) => s + (r.total || 0), 0);
+  const unpaidCount = financialRecords.filter(r => !r.reimbursed && r.record_type !== 'employment_supports' && r.record_type !== 'exposure_course').length;
 
   return (
     <div className="space-y-6">
@@ -34,19 +31,12 @@ export default function FinanceDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground flex items-center gap-1"><DollarSign className="w-3 h-3" /> Outstanding Payables</div>
             <div className="text-2xl font-bold text-amber-700">${outstandingPayables.toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">{financialRecords.filter(r => !r.reimbursed && r.record_type !== 'employment_supports').length} unpaid records</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground flex items-center gap-1"><DollarSign className="w-3 h-3" /> Paid This Month</div>
-            <div className="text-2xl font-bold text-green-700">${paidThisMonth.toFixed(2)}</div>
-            <div className="text-xs text-muted-foreground">reimbursements in {format(new Date(), 'MMM yyyy')}</div>
+            <div className="text-xs text-muted-foreground">{unpaidCount} unpaid records</div>
           </CardContent>
         </Card>
         <Card>
