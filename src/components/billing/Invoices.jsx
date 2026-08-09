@@ -15,14 +15,17 @@ export default function Invoices() {
   // default + auto-rollover always land on the correct month regardless of
   // the browser/device timezone.
   const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  // The viewed month is the current billing month by default; the user's pick
+  // is an optional override. Deriving it this way means the default can never
+  // get "stuck" on a prior month across hot-reloads or kept-alive reuse.
+  const [pickedMonth, setPickedMonth] = useState(null);
+  const selectedMonth = pickedMonth || currentMonth;
   const ensuredRef = useRef(new Set());
 
-  // Auto-rollover: whenever the live billing month advances, drop any manual
-  // selection and re-lock the view to the current month. Fires on mount AND on
-  // reuse of a kept-alive instance whose last render was in a prior month.
+  // Auto-rollover: whenever the live billing month advances, clear the user's
+  // manual pick so the view re-locks to the current month.
   useEffect(() => {
-    setSelectedMonth(currentMonth);
+    setPickedMonth(null);
   }, [currentMonth]);
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -130,10 +133,9 @@ export default function Invoices() {
       ? live
       : null;
 
-  // Prefer the actual data month (the row that was read) so the header always
-  // matches the figures shown; fall back to the selected month while loading.
-  const displayMonth = renderData?.billingMonth || selectedMonth;
-  const monthLabel = displayMonth ? format(new Date(displayMonth + '-01'), 'MMMM yyyy') : '';
+  // The heading always reflects the month the user is viewing (selectedMonth),
+  // which defaults to the current billing month and auto-rolls over each month.
+  const monthLabel = format(new Date(selectedMonth + '-01'), 'MMMM yyyy');
 
   return (
     <div className="space-y-4">
@@ -220,7 +222,7 @@ export default function Invoices() {
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => setSelectedMonth(inv.billing_month)}
+                    onClick={() => setPickedMonth(inv.billing_month)}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}
