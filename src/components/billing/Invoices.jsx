@@ -76,6 +76,8 @@ export default function Invoices() {
     },
     enabled: !!selectedMonth && !isFinalized,
     staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
 
@@ -87,6 +89,11 @@ export default function Invoices() {
       return base44.entities.Invoice.update(selected.id, {
         status: 'finalized',
         finalized_date: format(new Date(), 'yyyy-MM-dd'),
+        // Always stamp the record with the ACTUAL month of the row the data
+        // came from (column A), not the month the user happened to have
+        // selected — so a finalized invoice's label can never drift from its
+        // frozen figures.
+        billing_month: live.billingMonth || selected.billing_month,
         invoice_number: live.invoiceNumber != null ? String(live.invoiceNumber) : (selected.invoice_number || ''),
         header_info: live.header,
         line_items: live.lineItems,
