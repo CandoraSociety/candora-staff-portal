@@ -15,22 +15,7 @@ export default function Invoices() {
   // default + auto-rollover always land on the correct month regardless of
   // the browser/device timezone.
   const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
-  // pickedMonth = the month the user manually clicked, or null to follow the
-  // live current month. Deriving selectedMonth synchronously (instead of via an
-  // effect) means a kept-alive Invoices tab that was last opened in a prior
-  // month snaps to the current billing period on its very next render — no
-  // effect-timing dependency, no stale last-month row.
-  const [pickedMonth, setPickedMonth] = useState(null);
-  const prevCurrentRef = useRef(currentMonth);
-  // When the billing month advances, drop the user's manual pick so the view
-  // re-locks to the new current month. Adjusting state during render is the
-  // React-recommended pattern for responding to a changed value (guarded so it
-  // fires once per month change — no loop).
-  if (prevCurrentRef.current !== currentMonth) {
-    prevCurrentRef.current = currentMonth;
-    setPickedMonth(null);
-  }
-  const selectedMonth = pickedMonth ?? currentMonth;
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const ensuredRef = useRef(new Set());
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -228,7 +213,7 @@ export default function Invoices() {
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => setPickedMonth(inv.billing_month)}
+                    onClick={() => setSelectedMonth(inv.billing_month)}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}

@@ -17,6 +17,11 @@ import PayablesTab from '@/components/billing/PayablesTab';
 export default function PathwaysBilling() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("packages");
+  // Current billing month in the org's timezone. Used as a `key` on the
+  // Invoices tab so it fully remounts (fresh state) when the billing month
+  // advances — a kept-alive Invoices instance from a prior month can never
+  // keep showing that prior month's row.
+  const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
   
   const { data: packages = [], isLoading: packagesLoading } = useQuery({
     queryKey: ['invoice-packages'],
@@ -123,6 +128,7 @@ export default function PathwaysBilling() {
 
         <TabsContent value="invoices" className="space-y-4">
           <Invoices
+            key={currentMonth}
             invoices={invoices}
             configs={configs}
             clients={clients}
