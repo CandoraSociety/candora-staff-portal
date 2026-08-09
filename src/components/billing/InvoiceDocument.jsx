@@ -138,9 +138,6 @@ export default function InvoiceDocument({ data, status }) {
         {footerLines.map((l, i) => (
           <p key={i} className="text-xs text-slate-500 mt-0.5">{l}</p>
         ))}
-        {CANDORA_BRAND.charitableNumber && (
-          <p className="text-xs text-slate-400 mt-1">Charitable #: {CANDORA_BRAND.charitableNumber}</p>
-        )}
       </div>
     </div>
   );

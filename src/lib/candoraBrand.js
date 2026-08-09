@@ -4,22 +4,20 @@ export const CANDORA_BRAND = {
   name: 'Candora Society',
   legalName: 'Candora Society',
   tagline: 'Employment & Community Development',
-  // Contact details — confirm/refine the real address & phone:
-  address: '', // e.g. "123 Example Street"
+  address: '#262, 3210 118 Avenue NW',
   city: 'Edmonton',
-  province: 'AB',
-  postalCode: '',
-  phone: '',
+  province: 'Alberta',
+  postalCode: 'T5W 4W1',
+  phone: '780.474.5011',
   email: 'graham.currie@candorasociety.com',
   website: 'candorasociety.com',
-  charitableNumber: '',
 };
 
 export function brandFooterLines() {
-  const lines = [];
   const { address, city, province, postalCode, phone, email, website } = CANDORA_BRAND;
-  const cityLine = [city, province, postalCode].filter(Boolean).join(', ');
-  if (address || cityLine) lines.push([address, cityLine].filter(Boolean).join(' — '));
+  const cityLine = [city, province, postalCode].filter(Boolean).join(' ');
+  const lines = [];
+  if (address || cityLine) lines.push([address, cityLine].filter(Boolean).join(', '));
   if (phone) lines.push(`Phone: ${phone}`);
   if (email) lines.push(`Email: ${email}`);
   if (website) lines.push(`Website: ${website}`);

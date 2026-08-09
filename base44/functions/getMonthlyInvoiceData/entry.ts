@@ -32,7 +32,7 @@ const DIRECT_COSTS = [
   { key: 'childminding', label: 'Childminding (Reimbursement)', amtCol: 'CH' },
   { key: 'paidWorkExposure', label: 'Paid Work Exposure (Reimbursement)', amtCol: 'CJ' },
 ];
-const INVOICE_NUMBER_COL = 'C';
+const INVOICE_NUMBER_COL = 'B';
 
 function colIndex(letter) {
   let n = 0;
