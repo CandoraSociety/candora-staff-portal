@@ -75,13 +75,15 @@ export default function InvoiceDocument({ data, status }) {
       {/* Top gold accent strip */}
       <div style={{ height: 6, background: gold }} />
 
-      {/* Letterhead — dominant navy brand band, logo directly on navy (tightly cropped, larger) */}
-      <div className="flex items-center justify-between px-8 py-1" style={{ background: navy }}>
+      {/* Letterhead — fixed-height navy band; logo is zoomed via negative margins so the
+          transparent padding around the mark is cropped (overflow hidden) instead of
+          pushing the header height taller. */}
+      <div className="relative flex items-center justify-between px-8 overflow-hidden" style={{ height: '120px', background: navy }}>
         <img
           src={invoiceLogoUrl}
           alt="Candora"
           className="w-auto object-contain"
-          style={{ height: '320px', mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
+          style={{ height: '200px', marginTop: '-40px', marginBottom: '-40px', mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="text-right">
