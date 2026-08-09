@@ -46,16 +46,16 @@ export default function Invoices() {
     queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
   }, [queryClient]);
 
-  // When the billing month rolls over (e.g. July → August), advance the view
-  // to the new current month if the user was still on the prior current month.
-  // Lets them browse older months without being yanked back.
+  // When the billing month rolls over (e.g. July → August), always advance the
+  // view to the new current month so the "current invoice" reflects the live
+  // billing period. Users can still browse older months in between rollovers.
   const prevCurrentRef = useRef(currentMonth);
   useEffect(() => {
     if (prevCurrentRef.current !== currentMonth) {
-      if (selectedMonth === prevCurrentRef.current) setSelectedMonth(currentMonth);
+      setSelectedMonth(currentMonth);
       prevCurrentRef.current = currentMonth;
     }
-  }, [currentMonth, selectedMonth]);
+  }, [currentMonth]);
 
   const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
   const isFinalized = selected?.status === 'finalized';
