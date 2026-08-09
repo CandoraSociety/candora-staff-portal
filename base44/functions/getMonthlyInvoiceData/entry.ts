@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { DRIVE_ID, CLIENT_DATA_SHEET, getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
-import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonthToKey } from '../../shared/invoiceTracker.ts';
+import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonthToKey, cellToMonthKey } from '../../shared/invoiceTracker.ts';
 
 // Reads everything needed to render a single month's auto-generated invoice
 // from the ACTIVE CRT workbook:
@@ -131,6 +131,12 @@ export default async function(req: Request): Promise<Response> {
 
     const row = values[rowNumber - startRow] || [];
 
+    // The actual month of the row we read (from column A). The invoice's
+    // billing month MUST reflect the data it shows, not the month the caller
+    // requested — so the label always matches the figures displayed.
+    const rowKey = cellToMonthKey(row[0]);
+    const actualMonth = rowKey ? `${rowKey.year}-${String(rowKey.month + 1).padStart(2, '0')}` : billingMonth;
+
     const invRaw = row[colIndex(INVOICE_NUMBER_COL)];
     const invoiceNumber = invRaw != null && invRaw !== '' && !isNaN(Number(invRaw)) ? Number(invRaw) : null;
 
@@ -161,7 +167,7 @@ export default async function(req: Request): Promise<Response> {
       status: 'success',
       workbook: wb.name,
       sheet: sheetName,
-      billingMonth,
+      billingMonth: actualMonth,
       invoiceNumber,
       header,
       lineItems,

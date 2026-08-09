@@ -76,11 +76,11 @@ export default function InvoiceDocument({ data, status }) {
       <div style={{ height: 6, background: gold }} />
 
       {/* Letterhead — dominant navy brand band, logo directly on navy (tightly cropped, larger) */}
-      <div className="flex items-center justify-between px-8 py-2" style={{ background: navy }}>
+      <div className="flex items-center justify-between px-8 py-1" style={{ background: navy }}>
         <img
           src={invoiceLogoUrl}
           alt="Candora"
-          className="h-52 w-auto max-w-[480px] object-contain"
+          className="h-20 w-auto max-w-[360px] object-contain"
           style={{ mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />

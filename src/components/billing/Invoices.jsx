@@ -39,6 +39,13 @@ export default function Invoices() {
     }
   }, [isLoading, currentMonth, invoices]);
 
+  // Clear any stale cached monthly reads on mount so the invoice always shows
+  // fresh tracker data (prevents a previous session's figures from lingering
+  // under the wrong month label).
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
+  }, [queryClient]);
+
   // When the billing month rolls over (e.g. July → August), advance the view
   // to the new current month if the user was still on the prior current month.
   // Lets them browse older months without being yanked back.
@@ -120,7 +127,10 @@ export default function Invoices() {
       ? live
       : null;
 
-  const monthLabel = selectedMonth ? format(new Date(selectedMonth + '-01'), 'MMMM yyyy') : '';
+  // Prefer the actual data month (the row that was read) so the header always
+  // matches the figures shown; fall back to the selected month while loading.
+  const displayMonth = renderData?.billingMonth || selectedMonth;
+  const monthLabel = displayMonth ? format(new Date(displayMonth + '-01'), 'MMMM yyyy') : '';
 
   return (
     <div className="space-y-4">
