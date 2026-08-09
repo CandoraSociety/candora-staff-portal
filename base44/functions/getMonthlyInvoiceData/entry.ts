@@ -91,6 +91,33 @@ export default async function(req: Request): Promise<Response> {
 
     const rowNumber = findMonthRow(values, key, startRow);
     if (!rowNumber) {
+      // Current in-progress month whose row hasn't been added to the tracker yet:
+      // still render the invoice with the fixed monthly fee and zeroed activity,
+      // so the open month is always visible. Past/other months stay not_found.
+      if (billingMonth === currentMonthEdmonton()) {
+        const lineItems: any[] = [
+          { key: 'fixedMonthlyFee', label: 'Fixed Monthly Fee', section: 'fixed', quantity: null, unitPrice: null, amount: FIXED_MONTHLY_FEE },
+        ];
+        for (const d of DELIVERABLES) {
+          lineItems.push({ key: d.key, label: d.label, section: 'deliverable', quantity: 0, unitPrice: 0, amount: 0 });
+        }
+        for (const d of DIRECT_COSTS) {
+          lineItems.push({ key: d.key, label: d.label, section: 'direct_cost', quantity: null, unitPrice: null, amount: 0 });
+        }
+        return Response.json({
+          status: 'success',
+          workbook: wb.name,
+          sheet: sheetName,
+          billingMonth,
+          invoiceNumber: null,
+          header,
+          lineItems,
+          subtotalDeliverables: 0,
+          subtotalDirectCosts: 0,
+          subtotalFixed: FIXED_MONTHLY_FEE,
+          total: FIXED_MONTHLY_FEE,
+        });
+      }
       return Response.json({ status: 'month_not_found', workbook: wb.name, sheet: sheetName, billingMonth, header });
     }
 
