@@ -18,6 +18,13 @@ export default function Invoices() {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const ensuredRef = useRef(new Set());
 
+  // Auto-rollover: whenever the live billing month advances, drop any manual
+  // selection and re-lock the view to the current month. Fires on mount AND on
+  // reuse of a kept-alive instance whose last render was in a prior month.
+  useEffect(() => {
+    setSelectedMonth(currentMonth);
+  }, [currentMonth]);
+
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => base44.entities.Invoice.list('-billing_month', 100),
@@ -139,9 +146,6 @@ export default function Invoices() {
                 <FileText className="h-5 w-5 text-accent" />
                 Monthly Invoice — {monthLabel}
               </CardTitle>
-              <p className="text-[11px] text-slate-400 mt-1 font-mono">
-                [diag currentMonth={currentMonth} | selectedMonth={selectedMonth} | renderMonth={renderData?.billingMonth || '—'} | status={selected?.status || 'none'}]
-              </p>
               <CardDescription className="mt-1">
                 Auto-generated from the CRT Invoice Tracker. A new invoice appears as the month rolls over and keeps updating until closed off.
               </CardDescription>
