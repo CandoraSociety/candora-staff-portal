@@ -139,6 +139,9 @@ export default function Invoices() {
                 <FileText className="h-5 w-5 text-accent" />
                 Monthly Invoice — {monthLabel}
               </CardTitle>
+              <p className="text-[11px] text-slate-400 mt-1 font-mono">
+                [diag currentMonth={currentMonth} | selectedMonth={selectedMonth} | renderMonth={renderData?.billingMonth || '—'} | status={selected?.status || 'none'}]
+              </p>
               <CardDescription className="mt-1">
                 Auto-generated from the CRT Invoice Tracker. A new invoice appears as the month rolls over and keeps updating until closed off.
               </CardDescription>
