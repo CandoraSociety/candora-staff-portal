@@ -80,8 +80,8 @@ export default function InvoiceDocument({ data, status }) {
         <img
           src={invoiceLogoUrl}
           alt="Candora"
-          className="h-20 w-auto max-w-[360px] object-contain"
-          style={{ mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
+          className="w-auto object-contain"
+          style={{ height: '320px', mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
           onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
         <div className="text-right">
