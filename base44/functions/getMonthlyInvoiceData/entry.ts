@@ -29,8 +29,12 @@ const DIRECT_COSTS = [
   { key: 'employmentSupports', label: 'Employment Supports (Reimbursement)', amtCol: 'CI' },
   { key: 'exposureCourseDea', label: 'Exposure Courses — DEA (Reimbursement)', amtCol: 'CF' },
   { key: 'exposureCourseWd', label: 'Exposure Courses — WD (Reimbursement)', amtCol: 'CG' },
-  { key: 'childminding', label: 'Childminding (Reimbursement)', amtCol: 'CH' },
   { key: 'paidWorkExposure', label: 'Paid Work Exposure (Reimbursement)', amtCol: 'CJ' },
+];
+// Other services (not a reimbursement/direct cost): childminding is billed as
+// a fixed-rate service, not an expense reimbursement.
+const OTHER_SERVICES = [
+  { key: 'childminding', label: 'Childminding', amtCol: 'CH' },
 ];
 const INVOICE_NUMBER_COL = 'B';
 const FIXED_MONTHLY_FEE = 31755;
@@ -104,6 +108,9 @@ export default async function(req: Request): Promise<Response> {
         for (const d of DIRECT_COSTS) {
           lineItems.push({ key: d.key, label: d.label, section: 'direct_cost', quantity: null, unitPrice: null, amount: 0 });
         }
+        for (const d of OTHER_SERVICES) {
+          lineItems.push({ key: d.key, label: d.label, section: 'other_services', quantity: null, unitPrice: null, amount: 0 });
+        }
         return Response.json({
           status: 'success',
           workbook: wb.name,
@@ -114,6 +121,7 @@ export default async function(req: Request): Promise<Response> {
           lineItems,
           subtotalDeliverables: 0,
           subtotalDirectCosts: 0,
+          subtotalOtherServices: 0,
           subtotalFixed: FIXED_MONTHLY_FEE,
           total: FIXED_MONTHLY_FEE,
         });
@@ -142,6 +150,12 @@ export default async function(req: Request): Promise<Response> {
       subtotalDirectCosts += amount;
       lineItems.push({ key: d.key, label: d.label, section: 'direct_cost', quantity: null, unitPrice: null, amount });
     }
+    let subtotalOtherServices = 0;
+    for (const d of OTHER_SERVICES) {
+      const amount = num(row[colIndex(d.amtCol)]);
+      subtotalOtherServices += amount;
+      lineItems.push({ key: d.key, label: d.label, section: 'other_services', quantity: null, unitPrice: null, amount });
+    }
 
     return Response.json({
       status: 'success',
@@ -153,8 +167,9 @@ export default async function(req: Request): Promise<Response> {
       lineItems,
       subtotalDeliverables: Math.round(subtotalDeliverables * 100) / 100,
       subtotalDirectCosts: Math.round(subtotalDirectCosts * 100) / 100,
+      subtotalOtherServices: Math.round(subtotalOtherServices * 100) / 100,
       subtotalFixed: FIXED_MONTHLY_FEE,
-      total: Math.round((FIXED_MONTHLY_FEE + subtotalDeliverables + subtotalDirectCosts) * 100) / 100,
+      total: Math.round((FIXED_MONTHLY_FEE + subtotalDeliverables + subtotalDirectCosts + subtotalOtherServices) * 100) / 100,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

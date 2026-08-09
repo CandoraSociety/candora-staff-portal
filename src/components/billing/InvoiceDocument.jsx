@@ -50,7 +50,9 @@ export default function InvoiceDocument({ data, status }) {
   const fixed = lineItems.filter((i) => i.section === 'fixed');
   const deliverables = lineItems.filter((i) => i.section === 'deliverable');
   const directCosts = lineItems.filter((i) => i.section === 'direct_cost');
+  const otherServices = lineItems.filter((i) => i.section === 'other_services');
   const subtotalFixed = fixed.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const subtotalOtherServices = otherServices.reduce((s, i) => s + (Number(i.amount) || 0), 0);
 
   const monthLabel = billingMonth ? format(new Date(billingMonth + '-01'), 'MMMM yyyy') : '';
   const issued = format(new Date(), 'MMMM d, yyyy');
@@ -151,6 +153,7 @@ export default function InvoiceDocument({ data, status }) {
             ))}
             <Section title="Deliverables" items={deliverables} navy={navy} />
             <Section title="Direct Costs (Reimbursements)" items={directCosts} navy={navy} />
+            <Section title="Other Services" items={otherServices} navy={navy} />
           </tbody>
         </table>
 
@@ -171,6 +174,12 @@ export default function InvoiceDocument({ data, status }) {
               <span className="text-slate-500">Subtotal — Direct Costs</span>
               <span className="tabular-nums font-medium">{money(subtotalDirectCosts)}</span>
             </div>
+            {subtotalOtherServices > 0 && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Subtotal — Other Services</span>
+                <span className="tabular-nums font-medium">{money(subtotalOtherServices)}</span>
+              </div>
+            )}
             <div className="flex justify-between px-3 py-2 mt-1 text-base" style={{ background: navy, borderTop: `3px solid ${gold}` }}>
               <span className="font-bold" style={{ color: gold }}>Total Due</span>
               <span className="tabular-nums font-bold text-white">{money(total)}</span>
