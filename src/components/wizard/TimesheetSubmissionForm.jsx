@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Clock, Upload, X, FileText, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { syncSubmissionCreate } from '@/lib/workExposureSync';
+import { buildBillingDocName } from '@/lib/billingDocName';
 
 // Reusable timesheet submission form used by both:
 //   • employers (in the Employer Portal) — pass `placements` to pick a participant
@@ -32,7 +33,18 @@ export default function TimesheetSubmissionForm({ placement, placements, user, i
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const companyName = active?.business_name || employer?.name || '';
+      const namedName = buildBillingDocName({
+        recordType: 'paid_external_placement',
+        descriptor: companyName,
+        clientName: active?.client_name,
+        month: periodEnd ? periodEnd.slice(0, 7) : '',
+        originalName: file.name,
+      });
+      const uploadFile = namedName !== file.name
+        ? new File([file], namedName, { type: file.type })
+        : file;
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadFile });
       setTimesheetUrl(file_url);
       toast.success('Timesheet uploaded');
     } catch {
