@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
 const qty = (n) => (n == null ? '—' : Number(n));
@@ -31,36 +32,52 @@ function Section({ title, items }) {
   );
 }
 
+const PROGRAM_OVERRIDE = 'Pathways Employment Program';
+const PO_NUMBER = '9000158238';
+
 export default function InvoiceDocument({ data, status }) {
+  const { longLogoUrl } = useOrgSettings();
   if (!data) return null;
   const {
     invoiceNumber, billingMonth, header = [],
     lineItems = [], subtotalDeliverables = 0, subtotalDirectCosts = 0, total = 0,
   } = data;
 
+  const fixed = lineItems.filter((i) => i.section === 'fixed');
   const deliverables = lineItems.filter((i) => i.section === 'deliverable');
   const directCosts = lineItems.filter((i) => i.section === 'direct_cost');
+  const subtotalFixed = fixed.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
   const monthLabel = billingMonth ? format(new Date(billingMonth + '-01'), 'MMMM yyyy') : '';
   const issued = format(new Date(), 'MMMM d, yyyy');
   const footerLines = brandFooterLines();
 
+  // Normalize header: strip trailing colons, override Program Name, split dates vs details.
+  const cleaned = (header || [])
+    .map((h) => ({ label: String(h.label ?? '').replace(/:\s*$/, '').trim(), value: String(h.value ?? '').trim() }))
+    .filter((h) => h.label || h.value);
+
+  const isDate = (label) => /start\s*date|end\s*date/i.test(label);
+  const dateFields = cleaned.filter((h) => isDate(h.label));
+  const detailFields = cleaned.filter((h) => !isDate(h.label)).map((h) =>
+    /program\s*name/i.test(h.label) ? { ...h, value: PROGRAM_OVERRIDE } : h
+  );
+  detailFields.push({ label: 'P.O Number', value: PO_NUMBER });
+
   return (
     <div className="bg-white text-slate-900 mx-auto max-w-[850px] shadow-sm border border-slate-200 rounded-lg overflow-hidden">
-      {/* Letterhead */}
-      <div className="flex items-center justify-between px-8 py-6 bg-accent text-accent-foreground">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-display font-extrabold text-xl">
-            C
-          </div>
-          <div>
-            <p className="font-display font-extrabold text-2xl tracking-wide leading-none">{CANDORA_BRAND.name}</p>
-            <p className="text-xs text-accent-foreground/80 mt-1">{CANDORA_BRAND.tagline}</p>
-          </div>
-        </div>
+      {/* Letterhead — Candora long-form logo (left) + INVOICE (right) */}
+      <div className="flex items-center justify-between px-8 py-5 border-b border-slate-200">
+        <img
+          src={longLogoUrl}
+          alt="Candora"
+          className="h-16 w-auto object-contain"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
         <div className="text-right">
-          <p className="font-display font-bold text-xl tracking-widest">INVOICE</p>
-          <p className="text-sm mt-1">
-            {invoiceNumber != null ? `#${invoiceNumber}` : 'Draft'}
+          <p className="font-display font-extrabold text-2xl tracking-widest text-accent">INVOICE</p>
+          <p className="text-sm mt-1 font-semibold text-slate-700">
+            {invoiceNumber != null ? `Invoice #${invoiceNumber}` : 'Draft Invoice'}
           </p>
         </div>
       </div>
@@ -81,20 +98,28 @@ export default function InvoiceDocument({ data, status }) {
         </div>
       </div>
 
-      {/* Header info (CRT Client Data A2:B6) */}
-      {header.length > 0 && (
-        <div className="px-8 py-4 border-b border-slate-100">
-          <p className="text-[11px] uppercase tracking-wide text-slate-400 mb-2">Program / Contract Info</p>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-            {header.map((h, i) => (
+      {/* Program / Contract info — dates stacked on the left, details on the right */}
+      <div className="px-8 py-4 border-b border-slate-100">
+        <p className="text-[11px] uppercase tracking-wide text-slate-400 mb-3">Program / Contract Info</p>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-1.5">
+          <div className="space-y-1.5">
+            {dateFields.map((h, i) => (
+              <div key={i} className="text-sm">
+                <p className="text-slate-500">{h.label}:</p>
+                <p className="font-medium text-slate-800">{h.value || '—'}</p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-1.5">
+            {detailFields.map((h, i) => (
               <div key={i} className="flex gap-2 text-sm">
-                <span className="text-slate-500 min-w-[120px]">{h.label}:</span>
-                <span className="font-medium text-slate-800">{h.value}</span>
+                <span className="text-slate-500 min-w-[130px]">{h.label}:</span>
+                <span className="font-medium text-slate-800">{h.value || '—'}</span>
               </div>
             ))}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Line items */}
       <div className="px-8 py-5">
@@ -108,6 +133,14 @@ export default function InvoiceDocument({ data, status }) {
             </tr>
           </thead>
           <tbody>
+            {fixed.map((it) => (
+              <tr key={it.key} className="border-b border-slate-100 bg-slate-50/60">
+                <td className="py-2 px-3 text-sm font-medium text-slate-800">{it.label}</td>
+                <td className="py-2 px-3 text-sm text-center text-slate-400">—</td>
+                <td className="py-2 px-3 text-sm text-right text-slate-400">—</td>
+                <td className="py-2 px-3 text-sm text-right font-medium text-slate-900 tabular-nums">{money(it.amount)}</td>
+              </tr>
+            ))}
             <Section title="Deliverables" items={deliverables} />
             <Section title="Direct Costs (Reimbursements)" items={directCosts} />
           </tbody>
@@ -116,6 +149,12 @@ export default function InvoiceDocument({ data, status }) {
         {/* Totals */}
         <div className="mt-4 flex justify-end">
           <div className="w-64 space-y-1.5 text-sm">
+            {subtotalFixed > 0 && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Subtotal — Fixed Fee</span>
+                <span className="tabular-nums font-medium">{money(subtotalFixed)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-slate-500">Subtotal — Deliverables</span>
               <span className="tabular-nums font-medium">{money(subtotalDeliverables)}</span>
@@ -134,7 +173,6 @@ export default function InvoiceDocument({ data, status }) {
 
       {/* Footer */}
       <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 text-center">
-        <p className="font-display font-bold text-sm text-slate-700">{CANDORA_BRAND.name}</p>
         {footerLines.map((l, i) => (
           <p key={i} className="text-xs text-slate-500 mt-0.5">{l}</p>
         ))}

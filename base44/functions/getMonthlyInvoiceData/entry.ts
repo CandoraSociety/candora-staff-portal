@@ -33,6 +33,7 @@ const DIRECT_COSTS = [
   { key: 'paidWorkExposure', label: 'Paid Work Exposure (Reimbursement)', amtCol: 'CJ' },
 ];
 const INVOICE_NUMBER_COL = 'B';
+const FIXED_MONTHLY_FEE = 31755;
 
 function colIndex(letter) {
   let n = 0;
@@ -100,6 +101,7 @@ export default async function(req: Request): Promise<Response> {
 
     const lineItems = [];
     let subtotalDeliverables = 0;
+    lineItems.push({ key: 'fixedMonthlyFee', label: 'Fixed Monthly Fee', section: 'fixed', quantity: null, unitPrice: null, amount: FIXED_MONTHLY_FEE });
     for (const d of DELIVERABLES) {
       const quantity = num(row[colIndex(d.qtyCol)]);
       const amount = num(row[colIndex(d.amtCol)]);
@@ -124,7 +126,8 @@ export default async function(req: Request): Promise<Response> {
       lineItems,
       subtotalDeliverables: Math.round(subtotalDeliverables * 100) / 100,
       subtotalDirectCosts: Math.round(subtotalDirectCosts * 100) / 100,
-      total: Math.round((subtotalDeliverables + subtotalDirectCosts) * 100) / 100,
+      subtotalFixed: FIXED_MONTHLY_FEE,
+      total: Math.round((FIXED_MONTHLY_FEE + subtotalDeliverables + subtotalDirectCosts) * 100) / 100,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
