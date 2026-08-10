@@ -154,6 +154,12 @@ export default function Invoices() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
+              {selectedMonth !== currentMonth && (
+                <Button onClick={() => setPickedMonth(null)} variant="outline" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Back to {format(new Date(currentMonth + '-01'), 'MMMM yyyy')}
+                </Button>
+              )}
               {selected && (
                 <Badge variant={isFinalized ? 'outline' : 'default'} className={isFinalized ? 'border-slate-400 text-slate-600' : ''}>
                   {isFinalized ? 'Closed Off' : 'Open — Live'}
