@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: "Intake",            path: "/pathways/intake" },
   { label: "Master List",       path: "/pathways/master" },
   { label: "My Dashboard",      path: "/pathways/dashboard" },
+  { label: "Employers",          path: "/pathways/employers" },
   { label: "Reports",           path: "/pathways/reports" },
   { label: "Billing",           path: "/pathways/billing" },
   { label: "Resources",         path: "/pathways/resources" },
