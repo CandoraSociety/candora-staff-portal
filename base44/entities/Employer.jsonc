@@ -96,6 +96,15 @@
       "type": "boolean",
       "default": true,
       "description": "Force a password change on next portal login"
+    },
+    "reset_token": {
+      "type": "string",
+      "description": "Single-use token emailed to the employer for a password reset. Cleared once consumed."
+    },
+    "reset_token_expires": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp when the reset token expires (typically 1 hour after issuance)."
     }
   },
   "required": [
