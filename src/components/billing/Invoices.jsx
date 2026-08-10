@@ -8,13 +8,14 @@ import { toast } from 'sonner';
 import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
+import { currentBillingMonth } from '@/components/billing/billingMonth';
 
 export default function Invoices() {
   const queryClient = useQueryClient();
   // Current month in Edmonton time (the org's billing timezone), so the
   // default + auto-rollover always land on the correct month regardless of
   // the browser/device timezone.
-  const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
+  const currentMonth = currentBillingMonth();
   // The viewed month is the current billing month by default; the user's pick
   // is an optional override. Deriving it this way means the default can never
   // get "stuck" on a prior month across hot-reloads or kept-alive reuse.

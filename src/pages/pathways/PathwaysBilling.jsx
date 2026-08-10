@@ -13,6 +13,7 @@ import CRT from '@/components/billing/CRT';
 import Invoices from '@/components/billing/Invoices';
 import SupportingDocuments from '@/components/billing/SupportingDocuments';
 import PayablesTab from '@/components/billing/PayablesTab';
+import { currentBillingMonth } from '@/components/billing/billingMonth';
 
 export default function PathwaysBilling() {
   const queryClient = useQueryClient();
@@ -21,7 +22,7 @@ export default function PathwaysBilling() {
   // Invoices tab so it fully remounts (fresh state) when the billing month
   // advances — a kept-alive Invoices instance from a prior month can never
   // keep showing that prior month's row.
-  const currentMonth = format(new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' })), 'yyyy-MM');
+  const currentMonth = currentBillingMonth();
   
   const { data: packages = [], isLoading: packagesLoading } = useQuery({
     queryKey: ['invoice-packages'],
