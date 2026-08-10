@@ -57,6 +57,16 @@ export default function Invoices() {
   const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
   const isFinalized = selected?.status === 'finalized';
 
+  // Bulletproof default: if the URL points at a month that isn't closed-off
+  // (finalized), snap back to the current billing month. Past open/draft months
+  // have no live workbook data, so the only meaningful "history" views are
+  // closed-off months — everything else always resolves to the current month.
+  useEffect(() => {
+    if (pickedMonth && selectedMonth !== currentMonth && isFinalized !== true) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [pickedMonth, selectedMonth, currentMonth, isFinalized, setSearchParams]);
+
   // Always show the current (in-progress) month in the list even if its draft
   // record hasn't been created yet, so the user can always see up to the
   // current billing month.
