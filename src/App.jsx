@@ -336,6 +336,7 @@ import EmployerPortalGuard from '@/components/employer-portal/EmployerPortalGuar
 import EmployerPortalLayout from '@/components/employer-portal/EmployerPortalLayout';
 import EmployerLogin from '@/pages/employer-portal/EmployerLogin';
 import EmployerRegister from '@/pages/employer-portal/EmployerRegister';
+import EmployerForgotPassword from '@/pages/employer-portal/EmployerForgotPassword';
 import EmployerDashboard from '@/pages/employer-portal/EmployerDashboard';
 
 const AuthenticatedApp = () => {
@@ -375,6 +376,7 @@ const AuthenticatedApp = () => {
 
       {/* Employer Portal — isolated, employer-only (login is public) */}
       <Route path="/employer-portal/login" element={<EmployerLogin />} />
+      <Route path="/employer-portal/forgot-password" element={<EmployerForgotPassword />} />
       <Route path="/employer-portal/register" element={<EmployerRegister />} />
       <Route element={<EmployerPortalGuard />}>
         <Route element={<EmployerPortalLayout />}>

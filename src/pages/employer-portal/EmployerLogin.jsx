@@ -103,6 +103,11 @@ export default function EmployerLogin() {
               required
             />
           </div>
+          <div className="text-right">
+            <Link to="/employer-portal/forgot-password" className="text-xs text-muted-foreground hover:text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
