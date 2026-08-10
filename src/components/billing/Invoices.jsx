@@ -54,13 +54,16 @@ export default function Invoices() {
     queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
   }, [queryClient]);
 
-  const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
-  const isFinalized = selected?.status === 'finalized';
+  const picked = invoices.find((i) => i.billing_month === selectedMonth) || null;
+  const isFinalized = picked?.status === 'finalized';
+  // The open/live invoice is ALWAYS the current billing month — only closed-off
+  // (finalized) months show their own month's snapshot. This means the view can
+  // never get "stuck" on a prior open month, regardless of URL or cached state.
+  const effectiveMonth = isFinalized ? selectedMonth : currentMonth;
+  const selected = invoices.find((i) => i.billing_month === effectiveMonth) || null;
 
-  // Bulletproof default: if the URL points at a month that isn't closed-off
-  // (finalized), snap back to the current billing month. Past open/draft months
-  // have no live workbook data, so the only meaningful "history" views are
-  // closed-off months — everything else always resolves to the current month.
+  // If the URL points at a non-finalized month, snap it back to the current
+  // month so the URL reflects what's actually being shown.
   useEffect(() => {
     if (pickedMonth && selectedMonth !== currentMonth && isFinalized !== true) {
       setSearchParams({}, { replace: true });
@@ -76,12 +79,12 @@ export default function Invoices() {
 
   // Live read from the active CRT workbook for the open (non-finalized) month.
   const { data: live, isLoading: liveLoading, refetch } = useQuery({
-    queryKey: ['monthly-invoice-data', selectedMonth],
+    queryKey: ['monthly-invoice-data', effectiveMonth],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: selectedMonth });
+      const res = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: effectiveMonth });
       return res.data;
     },
-    enabled: !!selectedMonth && !isFinalized,
+    enabled: !!effectiveMonth && !isFinalized,
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,
@@ -141,9 +144,9 @@ export default function Invoices() {
       ? live
       : null;
 
-  // The heading always reflects the month the user is viewing (selectedMonth),
-  // which defaults to the current billing month and auto-rolls over each month.
-  const monthLabel = format(new Date(selectedMonth + '-01'), 'MMMM yyyy');
+  // The heading reflects the month actually being shown: the current billing
+  // month for the open invoice, or the closed-off month for a finalized one.
+  const monthLabel = format(new Date(effectiveMonth + '-01'), 'MMMM yyyy');
 
   return (
     <div className="space-y-4">
@@ -231,7 +234,7 @@ export default function Invoices() {
           ) : (
             <div className="space-y-1">
               {displayInvoices.map((inv) => {
-                const isViewing = inv.billing_month === selectedMonth;
+                const isViewing = inv.billing_month === effectiveMonth;
                 const fin = inv.status === 'finalized';
                 return (
                   <div
