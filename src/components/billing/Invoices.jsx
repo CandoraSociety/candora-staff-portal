@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -16,18 +17,14 @@ export default function Invoices() {
   // default + auto-rollover always land on the correct month regardless of
   // the browser/device timezone.
   const currentMonth = currentBillingMonth();
-  // The viewed month is the current billing month by default; the user's pick
-  // is an optional override. Deriving it this way means the default can never
-  // get "stuck" on a prior month across hot-reloads or kept-alive reuse.
-  const [pickedMonth, setPickedMonth] = useState(null);
+  // The viewed month lives in the URL (?month=YYYY-MM) so a clean visit to the
+  // Billing page always lands on the current billing month — there's no
+  // component state for the keep-alive portal to preserve and get "stuck" on a
+  // prior month across navigations or refreshes.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pickedMonth = searchParams.get('month');
   const selectedMonth = pickedMonth || currentMonth;
   const ensuredRef = useRef(new Set());
-
-  // Auto-rollover: whenever the live billing month advances, clear the user's
-  // manual pick so the view re-locks to the current month.
-  useEffect(() => {
-    setPickedMonth(null);
-  }, [currentMonth]);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -155,7 +152,7 @@ export default function Invoices() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {selectedMonth !== currentMonth && (
-                <Button onClick={() => setPickedMonth(null)} variant="outline" size="sm">
+                <Button onClick={() => setSearchParams({})} variant="outline" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
                   Back to {format(new Date(currentMonth + '-01'), 'MMMM yyyy')}
                 </Button>
@@ -229,7 +226,7 @@ export default function Invoices() {
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => setPickedMonth(inv.billing_month)}
+                    onClick={() => setSearchParams({ month: inv.billing_month })}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}
