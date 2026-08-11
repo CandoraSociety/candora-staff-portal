@@ -116,6 +116,10 @@
     margin: 0.75in;
   }
   .no-print { display: none !important; }
+  /* Invoice PDF — print only the invoice, edge-to-edge on a letter page */
+  .invoice-viewer-card { border: none !important; border-radius: 0 !important; }
+  .invoice-viewer-content { padding: 0 !important; }
+  .invoice-document { width: 100% !important; max-width: 100% !important; border: none !important; border-radius: 0 !important; margin: 0 !important; }
   .print-break { page-break-before: always !important; }
   /* Hide app layout chrome */
   .app-sidebar, .app-sidebar-mobile, .app-topbar,

@@ -151,7 +151,7 @@ export default function MonthlyInvoices() {
   return (
     <div className="space-y-4">
       {/* Status + actions */}
-      <Card>
+      <Card className="no-print">
         <CardHeader>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
@@ -192,8 +192,8 @@ export default function MonthlyInvoices() {
       </Card>
 
       {/* Viewer */}
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="invoice-viewer-card">
+        <CardContent className="invoice-viewer-content pt-6">
           {liveLoading && !renderData ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -214,7 +214,7 @@ export default function MonthlyInvoices() {
       </Card>
 
       {/* All monthly invoices — click to view */}
-      <Card>
+      <Card className="no-print">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-500" />

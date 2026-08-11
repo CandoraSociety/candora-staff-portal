@@ -78,7 +78,7 @@ export default function InvoiceDocument({ data, status }) {
   detailFields.push({ label: 'P.O Number', value: PO_NUMBER });
 
   return (
-    <div className="bg-white text-slate-900 mx-auto max-w-[850px] shadow-sm border border-slate-200 rounded-lg overflow-hidden">
+    <div className="invoice-document bg-white text-slate-900 mx-auto max-w-[850px] shadow-sm border border-slate-200 rounded-lg overflow-hidden">
       {/* Top gold accent strip */}
       <div style={{ height: 6, background: gold }} />
 
