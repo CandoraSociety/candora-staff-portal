@@ -105,6 +105,7 @@ const validate = (data) => {
   if (data.email) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errs.email = 'Enter a valid email address.';
   }
+  if (data.referral_from_cec !== true && data.referral_from_cec !== false) errs.referral_from_cec = 'Please select Yes or No.';
   return errs;
 };
 
@@ -133,6 +134,7 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
     state: client?.state || 'AB',
     zip: client?.zip || '',
     referral_source: client?.referral_source || '',
+    referral_from_cec: client?.referral_from_cec ?? '',
     service_type: client?.service_type || '',
     assigned_worker: client?.assigned_worker || '',
     assigned_worker_name: client?.assigned_worker_name || '',
@@ -284,6 +286,18 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
                 <SelectItem value="external_agency">External Agency</SelectItem>
                 <SelectItem value="alberta_works">Alberta Works</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Referral from CEC *" error={errors.referral_from_cec}>
+            <Select
+              value={form.referral_from_cec === true ? 'yes' : form.referral_from_cec === false ? 'no' : ''}
+              onValueChange={v => set('referral_from_cec', v === 'yes')}
+            >
+              <SelectTrigger className={errors.referral_from_cec ? 'border-red-400' : ''}><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
               </SelectContent>
             </Select>
           </Field>

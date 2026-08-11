@@ -129,6 +129,11 @@
         "other"
       ]
     },
+    "referral_from_cec": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this client was referred from CEC (Community Employment Centre). Required at intake."
+    },
     "service_type": {
       "type": "string",
       "enum": [

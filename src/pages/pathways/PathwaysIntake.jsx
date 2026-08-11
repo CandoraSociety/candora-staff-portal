@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
+import AwaitingAssessmentTable from '@/components/pathways/AwaitingAssessmentTable';
 import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
 import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
 import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
@@ -73,6 +74,8 @@ export default function PathwaysIntake() {
   const workerNames = [...new Set(clients.map(c => c.assigned_worker_name).filter(Boolean))];
 
   const displayedPending = applyFiltersAndSort(assessmentPending, search, filters, sortKey);
+  const cecPending = displayedPending.filter(c => c.referral_from_cec === true);
+  const generalPending = displayedPending.filter(c => c.referral_from_cec !== true);
   const displayedComplete = applyFiltersAndSort(assessmentComplete, search, filters, sortKey);
 
   const findDuplicates = (data) => {
@@ -211,63 +214,35 @@ export default function PathwaysIntake() {
             />
 
             {/* Section 1: Awaiting Assessment */}
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="mb-8 space-y-5">
+              <div className="flex items-center gap-2">
                 <ClipboardCheck className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-bold text-slate-800">New Intake — Awaiting Assessment</h2>
                 <span className="text-sm text-slate-400">({assessmentPending.length})</span>
               </div>
-              <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Name</th>
-                        <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
-                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
-                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
-                        <th className="text-left px-3 py-3 font-semibold text-slate-600">Self-Reg</th>
-                        <th className="px-3 py-3" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {displayedPending.map(c => (
-                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-3 py-2.5 font-medium text-blue-700">
-                            {c.first_name} {c.last_name}
-                          </td>
-                          <td className="px-3 py-2.5 text-slate-600">{c.compass_hsid || '—'}</td>
-                          <td className="px-3 py-2.5 text-slate-600">{c.phone || '—'}</td>
-                          <td className="px-3 py-2.5 text-slate-500">
-                            {c.intake_date ? format(new Date(c.intake_date), 'MMM d, yyyy') : '—'}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            {c.self_registered ? (
-                              <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
-                                Yes
-                              </span>
-                            ) : '—'}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <Link to={`/pathways/assessment/${c.id}`}>
-                              <Button variant="outline" size="sm" className="gap-1">
-                                <ClipboardCheck className="w-3.5 h-3.5" />
-                                Assess
-                              </Button>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                      {displayedPending.length === 0 && (
-                        <tr>
-                          <td colSpan={6} className="text-center py-10 text-slate-400">
-                            No clients awaiting assessment.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+
+              {/* CEC Referral subsection */}
+              {cecPending.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                      CEC Referral
+                    </span>
+                    <span className="text-sm text-slate-400">({cecPending.length})</span>
+                  </div>
+                  <AwaitingAssessmentTable clients={cecPending} />
                 </div>
+              )}
+
+              {/* General intake subsection */}
+              <div>
+                {cecPending.length > 0 && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-semibold text-slate-600">General Intake</span>
+                    <span className="text-sm text-slate-400">({generalPending.length})</span>
+                  </div>
+                )}
+                <AwaitingAssessmentTable clients={generalPending} />
               </div>
             </div>
 
