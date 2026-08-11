@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart } from "lucide-react";
+import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart, ExternalLink } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
@@ -17,6 +17,8 @@ import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways/RecentlyViewedClients";
 import PurchaseRequestsTab from "@/components/pathways/PurchaseRequestsTab";
 import MyPendingPurchaseRequests from "@/components/pathways/MyPendingPurchaseRequests";
+
+const COMPASS_URL = 'https://csscm.alberta.ca/home';
 
 const EMPTY_FILTERS = {
   service_type: [], program_status: [], employment_status: [],
@@ -367,11 +369,20 @@ export default function PathwaysWorkerDashboard() {
 
         {/* Compass tab */}
         {activeTab === "compass" && (
-          <CompassTaskList
-            tasks={compassTasks}
-            currentUser={user}
-            onRefresh={(updated) => setCompassTasks(updated)}
-          />
+          <>
+            <div className="flex justify-end mb-3">
+              <Button asChild size="sm" className="gap-2">
+                <a href={COMPASS_URL} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3.5 h-3.5" /> Log in to Compass
+                </a>
+              </Button>
+            </div>
+            <CompassTaskList
+              tasks={compassTasks}
+              currentUser={user}
+              onRefresh={(updated) => setCompassTasks(updated)}
+            />
+          </>
         )}
 
         {/* Purchase Requests tab (managers/admins only) */}
