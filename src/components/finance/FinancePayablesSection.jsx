@@ -256,6 +256,7 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                 <th className="text-right px-3 py-2 font-semibold">{showTaxCols ? 'Amount (without tax)' : 'Amount'}</th>
                 {showTaxCols && <th className="text-right px-3 py-2 font-semibold">Tax</th>}
                 {showTaxCols && <th className="text-right px-3 py-2 font-semibold">Total</th>}
+                {showTaxCols && <th className="text-left px-3 py-2 font-semibold">Receipt</th>}
                 <th className="text-left px-3 py-2 font-semibold">Billing Month</th>
                 <th className="text-center px-3 py-2 font-semibold">Status</th>
                 {!alwaysPaid && <th className="text-center px-3 py-2 font-semibold">Action</th>}
@@ -294,6 +295,17 @@ function PayablesTable({ title, records, recordType, payableByVendor, periodBySu
                     <td className="px-3 py-2 text-right font-semibold">${Number(showTaxCols ? (rec.amount || 0) : (rec.total || rec.amount || 0)).toFixed(2)}</td>
                     {showTaxCols && <td className="px-3 py-2 text-right text-muted-foreground">${Number(rec.tax || 0).toFixed(2)}</td>}
                     {showTaxCols && <td className="px-3 py-2 text-right">${Number(rec.total || 0).toFixed(2)}</td>}
+                    {showTaxCols && (
+                      <td className="px-3 py-2">
+                        {rec.receipt_urls && rec.receipt_urls[0] ? (
+                          <a href={rec.receipt_urls[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                            <FileText className="w-3.5 h-3.5" /> View <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-3 py-2">{rec.billing_month || '—'}</td>
                     <td className="px-3 py-2 text-center">
                       {alwaysPaid
