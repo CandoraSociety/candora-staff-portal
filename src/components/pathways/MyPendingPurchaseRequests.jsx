@@ -42,7 +42,7 @@ export default function MyPendingPurchaseRequests({ requests = [], currentUser }
 
   return (
     <div className="mb-5">
-      <CollapsibleSection title="My Purchase Requests" count={mine.length} accentColor="#2b2de8" defaultOpen>
+      <CollapsibleSection title="My Purchase Requests" count={mine.length} accentColor="#2b2de8" defaultOpen={false}>
         <div className="space-y-2">
           {mine.map(r => {
             const style = STATUS_STYLE[r.status] || STATUS_STYLE.pending;
