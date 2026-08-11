@@ -11,6 +11,15 @@ import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 
+// Parse a "YYYY-MM" billing month into a LOCAL Date on the 1st of that month.
+// `new Date('2026-04-01')` is parsed as UTC midnight, which in Edmonton (UTC-6)
+// is March 31 — so date-fns renders the PREVIOUS month. Building the date from
+// explicit local components keeps the label on the correct month.
+const monthFirst = (ym) => {
+  const [y, m] = String(ym || '').split('-').map(Number);
+  return new Date(y, m - 1, 1);
+};
+
 export default function MonthlyInvoices() {
   const queryClient = useQueryClient();
   // Current month in Edmonton time (the org's billing timezone), so the
@@ -137,7 +146,7 @@ export default function MonthlyInvoices() {
       : null;
 
   // The heading reflects the month actually being shown.
-  const monthLabel = format(new Date(effectiveMonth + '-01'), 'MMMM yyyy');
+  const monthLabel = format(monthFirst(effectiveMonth), 'MMMM yyyy');
 
   return (
     <div className="space-y-4">
@@ -158,7 +167,7 @@ export default function MonthlyInvoices() {
               {selectedMonth !== currentMonth && (
                 <Button onClick={() => setSearchParams({})} variant="outline" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
-                  Back to {format(new Date(currentMonth + '-01'), 'MMMM yyyy')}
+                  Back to {format(monthFirst(currentMonth), 'MMMM yyyy')}
                 </Button>
               )}
               {selected && (
@@ -239,7 +248,7 @@ export default function MonthlyInvoices() {
                       <FileText className="h-4 w-4 text-accent" />
                       <div>
                         <p className="text-sm font-medium">
-                          {format(new Date(inv.billing_month + '-01'), 'MMMM yyyy')}
+                          {format(monthFirst(inv.billing_month), 'MMMM yyyy')}
                           {inv.invoice_number ? ` · #${inv.invoice_number}` : ''}
                         </p>
                         <p className="text-xs text-slate-500">

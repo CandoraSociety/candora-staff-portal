@@ -1,6 +1,12 @@
 import { format } from 'date-fns';
-// [cache-bust] force re-bundle — billing month renders from data.billingMonth
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
+
+// Parse "YYYY-MM" into a LOCAL Date on the 1st (avoids the UTC-midnight parse
+// shifting the displayed month back by one in Edmonton/western timezones).
+const monthFirst = (ym) => {
+  const [y, m] = String(ym || '').split('-').map(Number);
+  return new Date(y, m - 1, 1);
+};
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
@@ -55,7 +61,7 @@ export default function InvoiceDocument({ data, status }) {
   const subtotalFixed = fixed.reduce((s, i) => s + (Number(i.amount) || 0), 0);
   const subtotalOtherServices = otherServices.reduce((s, i) => s + (Number(i.amount) || 0), 0);
 
-  const monthLabel = billingMonth ? format(new Date(billingMonth + '-01'), 'MMMM yyyy') : '';
+  const monthLabel = billingMonth ? format(monthFirst(billingMonth), 'MMMM yyyy') : '';
   const issued = format(new Date(), 'MMMM d, yyyy');
   const footerLines = brandFooterLines();
 
