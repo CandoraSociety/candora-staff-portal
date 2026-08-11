@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+// [cache-bust] force re-bundle — invoice month logic is current-month-driven
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';

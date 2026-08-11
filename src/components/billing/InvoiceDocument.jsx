@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+// [cache-bust] force re-bundle — billing month renders from data.billingMonth
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
