@@ -55,21 +55,13 @@ export default function Invoices() {
     queryClient.invalidateQueries({ queryKey: ['monthly-invoice-data'] });
   }, [queryClient]);
 
-  const picked = invoices.find((i) => i.billing_month === selectedMonth) || null;
-  const isFinalized = picked?.status === 'finalized';
-  // The open/live invoice is ALWAYS the current billing month — only closed-off
-  // (finalized) months show their own month's snapshot. This means the view can
-  // never get "stuck" on a prior open month, regardless of URL or cached state.
-  const effectiveMonth = isFinalized ? selectedMonth : currentMonth;
-  const selected = invoices.find((i) => i.billing_month === effectiveMonth) || null;
-
-  // If the URL points at a non-finalized month, snap it back to the current
-  // month so the URL reflects what's actually being shown.
-  useEffect(() => {
-    if (pickedMonth && selectedMonth !== currentMonth && isFinalized !== true) {
-      setSearchParams({}, { replace: true });
-    }
-  }, [pickedMonth, selectedMonth, currentMonth, isFinalized, setSearchParams]);
+  // Each invoice shows its OWN month's data: the current (open) month reads
+  // live from the CRT workbook and keeps adjusting until closed off; a past
+  // month shows its own row (or its frozen snapshot once finalized). Default
+  // view (no ?month= param) always lands on the current billing month.
+  const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
+  const isFinalized = selected?.status === 'finalized';
+  const effectiveMonth = selectedMonth;
 
   // Always show the current (in-progress) month in the list even if its draft
   // record hasn't been created yet, so the user can always see up to the

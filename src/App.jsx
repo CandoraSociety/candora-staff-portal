@@ -713,7 +713,8 @@ const AuthenticatedApp = () => {
 
         {/* Pathways CM - standalone layout */}
         <Route element={<PathwaysLayout />}>
-          <Route path="/pathways" element={<PathwaysHome />} />
+          <Route path="/pathways" element={<Navigate to="/pathways/dashboard" replace />} />
+          <Route path="/pathways/home" element={<PathwaysHome />} />
           <Route path="/pathways/intake" element={<PathwaysIntake />} />
           <Route path="/pathways/dashboard" element={<PathwaysWorkerDashboard />} />
           <Route path="/pathways/master" element={<PathwaysMasterList />} />

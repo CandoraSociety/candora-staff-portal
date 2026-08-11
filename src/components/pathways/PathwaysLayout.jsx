@@ -6,9 +6,9 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import { Menu, X, ChevronLeft, ChevronDown, ExternalLink } from 'lucide-react';
 
 const NAV_ITEMS = [
+  { label: "My Dashboard",      path: "/pathways/dashboard" },
   { label: "Intake",            path: "/pathways/intake" },
   { label: "Master List",       path: "/pathways/master" },
-  { label: "My Dashboard",      path: "/pathways/dashboard" },
   { label: "Employers",          path: "/pathways/employers" },
   { label: "Reports",           path: "/pathways/reports" },
   { label: "Billing",           path: "/pathways/billing" },
