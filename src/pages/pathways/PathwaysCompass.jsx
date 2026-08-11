@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import CompassTaskList from '@/components/compass/CompassTaskList';
-import CompassBrowserPanel from '@/components/compass/CompassBrowserPanel';
-import { Clock, RotateCcw, User } from 'lucide-react';
+
+import { Clock, ExternalLink, RotateCcw, User } from 'lucide-react';
+
+const COMPASS_URL = 'https://csscm.alberta.ca/home';
 
 function groupTasksByCounsellor(tasks) {
   const groups = {};
@@ -73,47 +75,51 @@ export default function PathwaysCompass() {
           <Button variant="outline" size="sm" onClick={loadTasks} className="gap-2">
             <RotateCcw className="w-3.5 h-3.5" /> Refresh
           </Button>
+          <Button asChild size="sm" className="gap-2">
+            <a href={COMPASS_URL} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-3.5 h-3.5" /> Log in to Compass
+            </a>
+          </Button>
         </div>
       </div>
 
-      {/* Split screen: task queue + embedded browser */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-        {/* Left: Counsellor Groups */}
-        <div className="space-y-3 min-w-0">
-          {loading && groups.length === 0 && (
-            <p className="text-sm text-slate-500 py-6">Loading tasks…</p>
-          )}
-          {!loading && groups.length === 0 && (
-            <p className="text-sm text-slate-500 py-6">No tasks to show.</p>
-          )}
-          {groups.map(({ name, tasks: groupTasks }) => (
-            <div key={name} className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-                  style={{ background: 'hsl(231,64%,20%)', color: 'white' }}
-                >
-                  <User className="w-3.5 h-3.5" />
-                  {name}
-                </div>
-                <span className="text-xs text-slate-400">
-                  {groupTasks.filter(t => t.status === 'pending').length} pending
-                </span>
-              </div>
-              <CompassTaskList
-                tasks={groupTasks}
-                currentUser={currentUser}
-                onRefresh={loadTasks}
-              />
+      {/* Loading */}
+      {loading && groups.length === 0 && (
+        <div className="flex justify-center py-16">
+          <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
+        </div>
+      )}
+
+      {/* Empty */}
+      {!loading && groups.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Clock className="w-12 h-12 text-slate-300 mb-3" />
+          <p className="text-slate-500 font-medium">No Compass tasks yet.</p>
+        </div>
+      )}
+
+      {/* Counsellor Groups */}
+      {groups.map(({ name, tasks: groupTasks }) => (
+        <div key={name} className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+              style={{ background: 'hsl(231,64%,20%)', color: 'white' }}
+            >
+              <User className="w-3.5 h-3.5" />
+              {name}
             </div>
-          ))}
+            <span className="text-xs text-slate-400">
+              {groupTasks.filter(t => t.status === 'pending').length} pending
+            </span>
+          </div>
+          <CompassTaskList
+            tasks={groupTasks}
+            currentUser={currentUser}
+            onRefresh={loadTasks}
+          />
         </div>
-
-        {/* Right: Embedded browser */}
-        <div className="xl:sticky xl:top-20 min-w-0">
-          <CompassBrowserPanel />
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
