@@ -10,7 +10,7 @@ import { FileText, Plus, Settings, FileSpreadsheet, FolderOpen } from 'lucide-re
 import { format } from 'date-fns';
 import InvoicePackages from '@/components/billing/InvoicePackages';
 import CRT from '@/components/billing/CRT';
-import Invoices from '@/components/billing/Invoices';
+import MonthlyInvoices from '@/components/billing/MonthlyInvoices';
 import SupportingDocuments from '@/components/billing/SupportingDocuments';
 import PayablesTab from '@/components/billing/PayablesTab';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
@@ -128,13 +128,7 @@ export default function PathwaysBilling() {
         </TabsContent>
 
         <TabsContent value="invoices" className="space-y-4">
-          <Invoices
-            key={currentMonth}
-            invoices={invoices}
-            configs={configs}
-            clients={clients}
-            financialRecords={financialRecords}
-          />
+          <MonthlyInvoices key={currentMonth} />
         </TabsContent>
 
         <TabsContent value="supporting-docs" className="space-y-4">

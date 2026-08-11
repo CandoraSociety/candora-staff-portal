@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-// [cache-bust] force re-bundle — invoice month logic is current-month-driven
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,11 +11,11 @@ import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 
-export default function Invoices() {
+export default function MonthlyInvoices() {
   const queryClient = useQueryClient();
   // Current month in Edmonton time (the org's billing timezone), so the
-  // default + auto-rollover always land on the correct month regardless of
-  // the browser/device timezone.
+  // default view always lands on the correct month regardless of the
+  // browser/device timezone.
   const currentMonth = currentBillingMonth();
   // The viewed month lives in the URL (?month=YYYY-MM) so a clean visit to the
   // Billing page always lands on the current billing month — there's no
@@ -137,8 +136,7 @@ export default function Invoices() {
       ? live
       : null;
 
-  // The heading reflects the month actually being shown: the current billing
-  // month for the open invoice, or the closed-off month for a finalized one.
+  // The heading reflects the month actually being shown.
   const monthLabel = format(new Date(effectiveMonth + '-01'), 'MMMM yyyy');
 
   return (
