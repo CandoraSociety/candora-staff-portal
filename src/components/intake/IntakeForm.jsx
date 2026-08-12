@@ -133,7 +133,6 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
     city: client?.city || '',
     state: client?.state || 'AB',
     zip: client?.zip || '',
-    referral_source: client?.referral_source || '',
     referral_from_cec: client?.referral_from_cec ?? '',
     service_type: client?.service_type || '',
     assigned_worker: client?.assigned_worker || '',
@@ -275,20 +274,6 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
       <Card>
         <CardHeader><CardTitle className="text-base">Case &amp; Service Information</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Referral Source">
-            <Select value={form.referral_source} onValueChange={v => set('referral_source', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="self">Self</SelectItem>
-                <SelectItem value="family_friend">Family / Friend</SelectItem>
-                <SelectItem value="school">School</SelectItem>
-                <SelectItem value="employer">Employer</SelectItem>
-                <SelectItem value="external_agency">External Agency</SelectItem>
-                <SelectItem value="alberta_works">Alberta Works</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
           <Field label="Referral from CEC *" error={errors.referral_from_cec}>
             <Select
               value={form.referral_from_cec === true ? 'yes' : form.referral_from_cec === false ? 'no' : ''}
