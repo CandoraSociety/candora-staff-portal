@@ -7,10 +7,21 @@ import { Clock, ExternalLink, RotateCcw, User } from 'lucide-react';
 
 const COMPASS_URL = 'https://csscm.alberta.ca/home';
 
+function prettifyName(raw) {
+  if (!raw) return '';
+  let s = String(raw).trim();
+  if (s.includes('@')) s = s.split('@')[0];
+  if (!s.includes(' ') && /[._-]/.test(s)) {
+    return s.split(/[._-]+/).filter(Boolean).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+  }
+  return s.split(/\s+/).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
+
 function groupTasksByCounsellor(tasks) {
   const groups = {};
   for (const task of tasks) {
-    const name = task.assigned_worker_name || task.triggered_by_name || 'Unassigned';
+    const raw = task.assigned_worker_name || task.triggered_by_name || 'Unassigned';
+    const name = raw === 'Unassigned' ? 'Unassigned' : prettifyName(raw);
     if (!groups[name]) groups[name] = [];
     groups[name].push(task);
   }
