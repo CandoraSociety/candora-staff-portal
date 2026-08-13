@@ -106,31 +106,62 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
           {full && <span className="text-red-600 font-medium">Full</span>}
         </div>
 
-        <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-          {sessionSignups.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-6">No sign-ups yet for this session.</p>
-          ) : sessionSignups.map(s => {
-            const meta = STATUS_META[s.status] || STATUS_META.registered;
+        <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+          {(() => {
+            const clientsById = {};
+            (clients || []).forEach(c => { if (c.id) clientsById[c.id] = c; });
+            const isPathways = (s) => {
+              if (!s.client_id) return false;
+              const c = clientsById[s.client_id];
+              return c && (c.service_type === 'pathways' || c.service_type === 'direct_to_employment');
+            };
+            const pathways = sessionSignups.filter(isPathways);
+            const others = sessionSignups.filter(s => !isPathways(s));
+            if (sessionSignups.length === 0) return <p className="text-center text-sm text-muted-foreground py-6">No sign-ups yet for this session.</p>;
+            const renderRow = (s) => {
+              const meta = STATUS_META[s.status] || STATUS_META.registered;
+              const c = s.client_id ? clientsById[s.client_id] : null;
+              return (
+                <div key={s.id} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate flex items-center gap-1.5">
+                      {s.attendee_name}
+                      {c?.service_type === 'pathways' && <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1 py-px rounded">WD</span>}
+                      {c?.service_type === 'direct_to_employment' && <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1 py-px rounded">DEA</span>}
+                    </p>
+                    {s.attendee_email && <p className="text-xs text-muted-foreground truncate">{s.attendee_email}</p>}
+                  </div>
+                  <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${meta.cls}`}>{meta.label}</span>
+                  <div className="flex items-center gap-0.5">
+                    <button title="Mark attended" onClick={() => setStatus(s, 'attended')}
+                      className="p-1 rounded hover:bg-emerald-50 text-emerald-600"><Check className="w-3.5 h-3.5" /></button>
+                    <button title="Mark no-show" onClick={() => setStatus(s, 'no_show')}
+                      className="p-1 rounded hover:bg-amber-50 text-amber-600"><X className="w-3.5 h-3.5" /></button>
+                    <button title="Cancel registration" onClick={() => setStatus(s, 'cancelled')}
+                      className="p-1 rounded hover:bg-slate-100 text-slate-500"><UserMinus className="w-3.5 h-3.5" /></button>
+                    <button title="Remove" onClick={() => remove(s)}
+                      className="p-1 rounded hover:bg-red-50 text-red-500"><TrashIcon /></button>
+                  </div>
+                </div>
+              );
+            };
             return (
-              <div key={s.id} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{s.attendee_name}</p>
-                  {s.attendee_email && <p className="text-xs text-muted-foreground truncate">{s.attendee_email}</p>}
-                </div>
-                <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${meta.cls}`}>{meta.label}</span>
-                <div className="flex items-center gap-0.5">
-                  <button title="Mark attended" onClick={() => setStatus(s, 'attended')}
-                    className="p-1 rounded hover:bg-emerald-50 text-emerald-600"><Check className="w-3.5 h-3.5" /></button>
-                  <button title="Mark no-show" onClick={() => setStatus(s, 'no_show')}
-                    className="p-1 rounded hover:bg-amber-50 text-amber-600"><X className="w-3.5 h-3.5" /></button>
-                  <button title="Cancel registration" onClick={() => setStatus(s, 'cancelled')}
-                    className="p-1 rounded hover:bg-slate-100 text-slate-500"><UserMinus className="w-3.5 h-3.5" /></button>
-                  <button title="Remove" onClick={() => remove(s)}
-                    className="p-1 rounded hover:bg-red-50 text-red-500"><TrashIcon /></button>
-                </div>
-              </div>
+              <>
+                {pathways.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Pathways Clients (WD / DEA)</p>
+                    <div className="space-y-1.5">{pathways.map(renderRow)}</div>
+                  </div>
+                )}
+                {others.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Other Participants</p>
+                    <div className="space-y-1.5">{others.map(renderRow)}</div>
+                  </div>
+                )}
+              </>
             );
-          })}
+          })()}
         </div>
 
         <form onSubmit={addAttendee} className="space-y-2 border-t border-border pt-3 mt-1">
