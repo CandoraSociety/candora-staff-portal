@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCheck, X, Clock, Circle, Map, CalendarCheck } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isWithinInterval } from 'date-fns';
 import RoadmapItemPanel from './RoadmapItemPanel';
+import WorkshopRoadmapPanel from './WorkshopRoadmapPanel';
 import BITReviewCheckinPanel from './BITReviewCheckinPanel';
 import RoadmapProgressNotes from './RoadmapProgressNotes';
 import ProgramStatusPanel from './ProgramStatusPanel';
@@ -11,6 +12,7 @@ import UpdateProgramStatusMenu from './UpdateProgramStatusMenu';
 import ServiceStartDateEditor from './ServiceStartDateEditor';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, scratchCompassTasks, withCrtComments, taskEdaStarted, taskEdaCompleted, taskEdaCancelled, taskBarrierResolved } from '@/lib/compassTasks';
+import { WORKSHOP_CATEGORY_KEYS } from '@/lib/workshopSchedule';
 import CrtAdditionalComments from './CrtAdditionalComments';
 
 // ─── Item labels ──────────────────────────────────────────────────────────────
@@ -73,20 +75,44 @@ function fmtDate(d) {
 }
 
 // ─── Build items ──────────────────────────────────────────────────────────────
-function buildItems(client, internalTrainings = [], workExposures = []) {
+function buildItems(client, internalTrainings = [], workExposures = [], workshopSignups = [], workshops = []) {
   const roadmapStatus = client?.roadmap_item_status || {};
   const itemDetails = client?.sdp_item_details || {};
   const selectedItems = (client?.sdp_items || []).filter(k => k !== 'barrier_support' && k !== 'internal_placement' && k !== 'paid_external_placement');
 
-  const items = selectedItems.map(key => ({
-    key,
-    label: ITEM_LABELS[key] || key.replace(/_/g, ' '),
-    color: getItemColor(key),
-    detail: itemDetails[key] || {},
-    status: roadmapStatus[key]?.status || 'planned',
-    statusData: roadmapStatus[key] || {},
-    isBarrier: false,
-  }));
+  const workshopsById = {};
+  workshops.forEach(w => { workshopsById[w.id] = w; });
+  const activeSignups = (workshopSignups || []).filter(s => s.status !== 'cancelled');
+
+  const items = selectedItems.map(key => {
+    const item = {
+      key,
+      label: ITEM_LABELS[key] || key.replace(/_/g, ' '),
+      color: getItemColor(key),
+      detail: itemDetails[key] || {},
+      status: roadmapStatus[key]?.status || 'planned',
+      statusData: roadmapStatus[key] || {},
+      isBarrier: false,
+    };
+    if (WORKSHOP_CATEGORY_KEYS.includes(key)) {
+      const mySups = activeSignups.filter(s => workshopsById[s.workshop_id]?.category === key);
+      if (mySups.length) {
+        const attended = mySups.some(s => s.status === 'attended');
+        const registered = mySups.some(s => s.status === 'registered');
+        if (attended) item.status = 'completed';
+        else if (registered && item.status === 'planned') item.status = 'started';
+        const dates = mySups.map(s => s.session_date).filter(Boolean).sort();
+        if (dates.length) {
+          item.statusData = { ...item.statusData, started_date: dates[0], completed_date: attended ? dates[dates.length - 1] : undefined };
+          item.detail = { ...item.detail, timeline_start: dates[0], timeline_end: dates[dates.length - 1] };
+        }
+        item.isWorkshopSignup = true;
+        item.workshopSignups = mySups;
+        item.workshopCategoryKey = key;
+      }
+    }
+    return item;
+  });
 
   for (let n = 1; n <= 3; n++) {
     if (client?.[`barrier_${n}`]) {
@@ -181,6 +207,26 @@ function buildItems(client, internalTrainings = [], workExposures = []) {
     });
   });
 
+  // Workshop registrations not tied to an sdp item (DEA clients, or general/no-category workshops)
+  const sdpSet = new Set(client?.sdp_items || []);
+  activeSignups.forEach(s => {
+    const ws = workshopsById[s.workshop_id];
+    if (!ws) return;
+    if (ws.category && ws.category !== 'none' && sdpSet.has(ws.category)) return; // shown via sdp item
+    items.push({
+      key: `ws_${s.id}`,
+      label: ws.title,
+      color: ws.color || '#a855f7',
+      isBarrier: false,
+      isWorkshopSignup: true,
+      workshopSignups: [s],
+      fixedWorkshop: ws,
+      detail: { timeline_start: s.session_date, timeline_end: s.session_date },
+      status: s.status === 'attended' ? 'completed' : s.status === 'no_show' ? 'cancelled' : 'started',
+      statusData: { started_date: s.session_date, completed_date: s.status === 'attended' ? s.session_date : undefined },
+    });
+  });
+
   return items;
 }
 
@@ -203,6 +249,8 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const [saving, setSaving]         = useState(false);
   const [internalTrainings, setInternalTrainings] = useState([]);
   const [workExposures, setWorkExposures] = useState([]);
+  const [workshops, setWorkshops] = useState([]);
+  const [workshopSignups, setWorkshopSignups] = useState([]);
 
   const isDEA = client?.service_type === 'direct_to_employment';
 
@@ -212,9 +260,22 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       .then(setInternalTrainings).catch(() => {});
     base44.entities.WorkExposurePlacement.filter({ client_id: client.id }, '-created_date')
       .then(setWorkExposures).catch(() => {});
+    base44.entities.Workshop.list('-created_date').then(setWorkshops).catch(() => {});
+    base44.entities.WorkshopSignup.filter({ client_id: client.id }).then(setWorkshopSignups).catch(() => {});
   }, [client?.id]);
 
-  const items = useMemo(() => buildItems(client, internalTrainings, workExposures), [client, internalTrainings, workExposures]);
+  const items = useMemo(() => buildItems(client, internalTrainings, workExposures, workshopSignups, workshops), [client, internalTrainings, workExposures, workshopSignups, workshops]);
+  const reloadWorkshops = async () => {
+    try {
+      const [ws, su] = await Promise.all([
+        base44.entities.Workshop.list('-created_date'),
+        base44.entities.WorkshopSignup.filter({ client_id: client.id }),
+      ]);
+      setWorkshops(ws);
+      setWorkshopSignups(su);
+    } catch {}
+  };
+
   const nonBarrier = items.filter(i => !i.isBarrier);
   const barriers   = items.filter(i => i.isBarrier);
   const renderNonBarrier = barrierOnly ? [] : nonBarrier;
@@ -591,7 +652,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                   <div className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 -ml-40 pl-1">ACTION PLAN ITEMS</div>
                 )}
                 {renderNonBarrier.map(item => (
-                  <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                  <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
                 ))}
 
                 {/* Barrier section */}
@@ -600,7 +661,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                     <div className="h-px bg-amber-300 my-1" />
                     <div className="text-[9px] font-bold text-amber-600 tracking-widest mb-0.5 -ml-40 pl-1">BARRIERS</div>
                     {barriers.map(item => (
-                      <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                      <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
                     ))}
                   </>
                 )}
@@ -691,13 +752,13 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
             <div className="text-xs font-bold text-slate-500 tracking-widest mb-1">ACTION PLAN ITEMS</div>
           )}
           {renderNonBarrier.map(item => (
-            <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+            <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
           ))}
           {barriers.length > 0 && (
             <>
               <div className="text-xs font-bold text-amber-600 tracking-widest mt-3 mb-1">BARRIERS</div>
               {barriers.map(item => (
-                <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                <ListItem key={item.key} item={item} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
               ))}
             </>
           )}
@@ -769,8 +830,9 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                     const needsRes = item.needsFollowupResolution;
                     return (
                       <div key={item.key}>
-                        <div
-                          className={`text-[9px] px-1 py-px rounded truncate mb-px ${needsRes ? 'animate-pulse' : ''}`}
+                        <button
+                          onClick={() => setOpenItem(item.key)}
+                          className={`text-[9px] px-1 py-px rounded truncate mb-px w-full text-left ${needsRes ? 'animate-pulse' : ''}`}
                           style={{
                             backgroundColor: needsRes ? '#fee2e2' : item.color + '33',
                             borderLeft: `2px solid ${needsRes ? '#dc2626' : cfg.ring}`,
@@ -778,7 +840,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                           }}
                         >
                           {item.label}
-                        </div>
+                        </button>
                         {needsRes && (
                           <div className="text-[8px] text-red-600 leading-tight mb-px">Resolve before 90-day follow-up</div>
                         )}
@@ -793,6 +855,21 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
               );
             })}
           </div>
+
+          {openItem && (() => {
+            const it = renderItems.find(i => i.key === openItem);
+            if (!it) return null;
+            return (
+              <div className="mt-3 relative z-40">
+                {it.isWorkshopSignup ? (
+                  <WorkshopRoadmapPanel client={client} item={it} workshops={workshops} signups={workshopSignups} onReload={reloadWorkshops} onClientUpdate={onClientUpdate} onClose={() => setOpenItem(null)} />
+                ) : (
+                  <RoadmapItemPanel item={it} currentStatus={it.status} onSave={(data) => handleSaveItem(it.key, data)} onCancel={() => setOpenItem(null)} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} />
+                )}
+              </div>
+            );
+          })()}
+
           {/* Legend */}
           <div className="flex flex-wrap gap-3 mt-3 text-[10px] text-slate-500">
             {[['#f59e0b','Barriers'],['#22c55e','Placement'],['#a855f7','Workshops'],['#64748b','Other']].map(([c,l]) => (
@@ -823,7 +900,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate }) {
+function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate, client, workshops, workshopSignups, reloadWorkshops, onClientUpdate }) {
   const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
   const isOpen = openItem === item.key;
   const trackBg = item.isBarrier ? '#fffbeb' : '#f8fafc';
@@ -920,23 +997,35 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
       </div>
       {isOpen && (
         <div className="mb-2 ml-0 relative z-40">
-          <RoadmapItemPanel
-            item={item}
-            hideNotes={item.key?.startsWith('it_')}
-            currentStatus={item.status}
-            onSave={(data) => onSave(item.key, data)}
-            onCancel={() => setOpenItem(null)}
-            saving={saving}
-            projectedEndDate={projectedEndDate}
-            serviceStartDate={serviceStartDate}
-          />
+          {item.isWorkshopSignup ? (
+            <WorkshopRoadmapPanel
+              client={client}
+              item={item}
+              workshops={workshops}
+              signups={workshopSignups}
+              onReload={reloadWorkshops}
+              onClientUpdate={onClientUpdate}
+              onClose={() => setOpenItem(null)}
+            />
+          ) : (
+            <RoadmapItemPanel
+              item={item}
+              hideNotes={item.key?.startsWith('it_')}
+              currentStatus={item.status}
+              onSave={(data) => onSave(item.key, data)}
+              onCancel={() => setOpenItem(null)}
+              saving={saving}
+              projectedEndDate={projectedEndDate}
+              serviceStartDate={serviceStartDate}
+            />
+          )}
         </div>
       )}
     </>
   );
 }
 
-function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate }) {
+function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDate, serviceStartDate, client, workshops, workshopSignups, reloadWorkshops, onClientUpdate }) {
   const cfg = STATUS_CFG[item.status] || STATUS_CFG.planned;
   const isOpen = openItem === item.key;
 
@@ -979,16 +1068,28 @@ function ListItem({ item, openItem, setOpenItem, onSave, saving, projectedEndDat
       </button>
       {isOpen && (
         <div className="mt-1 relative z-40">
-          <RoadmapItemPanel
-            item={item}
-            hideNotes={item.key?.startsWith('it_')}
-            currentStatus={item.status}
-            onSave={(data) => onSave(item.key, data)}
-            onCancel={() => setOpenItem(null)}
-            saving={saving}
-            projectedEndDate={projectedEndDate}
-            serviceStartDate={serviceStartDate}
-          />
+          {item.isWorkshopSignup ? (
+            <WorkshopRoadmapPanel
+              client={client}
+              item={item}
+              workshops={workshops}
+              signups={workshopSignups}
+              onReload={reloadWorkshops}
+              onClientUpdate={onClientUpdate}
+              onClose={() => setOpenItem(null)}
+            />
+          ) : (
+            <RoadmapItemPanel
+              item={item}
+              hideNotes={item.key?.startsWith('it_')}
+              currentStatus={item.status}
+              onSave={(data) => onSave(item.key, data)}
+              onCancel={() => setOpenItem(null)}
+              saving={saving}
+              projectedEndDate={projectedEndDate}
+              serviceStartDate={serviceStartDate}
+            />
+          )}
         </div>
       )}
     </>
