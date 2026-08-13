@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { label: "Reports",           path: "/pathways/reports" },
   { label: "Billing",           path: "/pathways/billing" },
   { label: "Resources",         path: "/pathways/resources" },
+  { label: "Workshops",         path: "/pathways/workshops" },
   { label: "Compass",           path: "/pathways/compass" },
 ];
 

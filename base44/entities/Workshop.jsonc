@@ -1,0 +1,84 @@
+{
+  "name": "Workshop",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Workshop title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the workshop covers"
+    },
+    "facilitator_name": {
+      "type": "string",
+      "description": "Facilitator full name"
+    },
+    "facilitator_email": {
+      "type": "string",
+      "description": "Facilitator email (optional \u2014 usually a Pathways staff member)"
+    },
+    "location": {
+      "type": "string",
+      "description": "Room / address where the workshop is held"
+    },
+    "capacity": {
+      "type": "number",
+      "default": 15,
+      "description": "Maximum attendees per session"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "First / base session date"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time (HH:MM 24h)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time (HH:MM 24h)"
+    },
+    "recurrence_pattern": {
+      "type": "string",
+      "enum": [
+        "none",
+        "weekly",
+        "biweekly",
+        "monthly"
+      ],
+      "default": "none",
+      "description": "How the workshop recurs from the base date"
+    },
+    "recurrence_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last recurrence date (blank for a one-off session)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled"
+      ],
+      "default": "scheduled"
+    },
+    "color": {
+      "type": "string",
+      "default": "#2563eb",
+      "description": "Hex color used for the schedule block"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "created_by_email": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "date"
+  ]
+}

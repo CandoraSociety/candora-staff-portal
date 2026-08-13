@@ -1,0 +1,51 @@
+{
+  "name": "WorkshopSignup",
+  "type": "object",
+  "properties": {
+    "workshop_id": {
+      "type": "string",
+      "description": "Linked Workshop ID"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Which occurrence date the signup is for (workshops can recur)"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client ID (blank for non-client attendees)"
+    },
+    "attendee_name": {
+      "type": "string",
+      "description": "Attendee full name"
+    },
+    "attendee_email": {
+      "type": "string",
+      "description": "Attendee email"
+    },
+    "signup_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the signup was created (auto-set)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "attended",
+        "cancelled",
+        "no_show"
+      ],
+      "default": "registered",
+      "description": "Attendance status for this session"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workshop_id",
+    "session_date",
+    "attendee_name"
+  ]
+}
