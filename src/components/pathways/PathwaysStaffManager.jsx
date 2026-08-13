@@ -82,21 +82,12 @@ export default function PathwaysStaffManager({ onClose, onUpdated }) {
         if (u.email && ADMIN_ROLE_NAMES.includes(u.role)) candidateEmails.add(u.email.toLowerCase());
       });
 
-      // 2. Individual 'allow' permissions for the pathways module.
-      //    scope_value may be an email OR a user id — only treat email-shaped
-      //    values as candidates directly; resolve id-scoped overrides to the
-      //    user's email when a user list is available.
+      // 2. Individual 'allow' permissions for the pathways module
       permissions.forEach(p => {
         if (p.target_type === 'module' && p.target_id === PATHWAYS_MODULE_ID &&
             p.scope_type === 'individual' && p.is_active && p.permission === 'allow' &&
             p.scope_value) {
-          const sv = p.scope_value;
-          if (sv.includes('@')) {
-            candidateEmails.add(sv.toLowerCase());
-          } else {
-            const u = users.find(x => x.id === sv);
-            if (u && u.email) candidateEmails.add(u.email.toLowerCase());
-          }
+          candidateEmails.add(p.scope_value.toLowerCase());
         }
       });
 

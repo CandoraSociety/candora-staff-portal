@@ -10,7 +10,6 @@ import CompassTaskList from "@/components/compass/CompassTaskList";
 import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSections";
 import CollapsibleSection from "@/components/pathways/CollapsibleSection";
 import PlacementSections from "@/components/pathways/PlacementSections";
-import InternalTrainingClientsSection from "@/components/pathways/InternalTrainingClientsSection";
 import EmployersListTab from "@/components/pathways/EmployersListTab";
 import SwitchDogEar from "@/components/pathways/SwitchDogEar";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
@@ -83,9 +82,6 @@ export default function PathwaysWorkerDashboard() {
   const [purchaseRequests, setPurchaseRequests] = useState([]);
   const [ccClients, setCcClients] = useState([]);
   const [snClients, setSnClients] = useState([]);
-  const [isInternalPlacementCoordinator, setIsInternalPlacementCoordinator] = useState(false);
-  const [isPureIPC, setIsPureIPC] = useState(false);
-  const [itcClients, setItcClients] = useState([]);
 
   const loadCompassTasks = async (workerEmail, workerName) => {
     const allTasks = await base44.entities.CompassTask.list("-created_date", 500);
@@ -112,13 +108,9 @@ export default function PathwaysWorkerDashboard() {
       const userIsCC = roles.includes("career_counsellor");
       const userIsSN = roles.includes("service_navigator") || isDawnInit;
       const userIsManagerOrAdmin = myStaff ? (myStaff.role === "manager" || myStaff.role === "admin") : false;
-      const userIsIPC = roles.includes("internal_placement_coordinator");
-      const userIsPureIPC = userIsIPC && !userIsCC && !userIsSN && !userIsManagerOrAdmin;
       setIsCareerCounsellor(userIsCC);
       setIsServiceNavigator(userIsSN);
       setIsManagerOrAdmin(userIsManagerOrAdmin);
-      setIsInternalPlacementCoordinator(userIsIPC);
-      setIsPureIPC(userIsPureIPC);
 
       const allClients = await base44.entities.Client.list("-created_date", 1000);
       const matchesCc = (c) =>
@@ -139,22 +131,6 @@ export default function PathwaysWorkerDashboard() {
       const myClientIds = new Set([...cc, ...sn].map(c => c.id));
       const allPlacements = await base44.entities.WorkExposurePlacement.list("-created_date", 500);
       setExposurePlacements(allPlacements.filter(p => myClientIds.has(p.client_id)));
-
-      // Internal Training clients — Internal Placement Coordinators see their own;
-      // Managers see all (program oversight).
-      if (userIsIPC || userIsManagerOrAdmin) {
-        try {
-          const allTraining = await base44.entities.InternalTraining.list("-created_date", 1000);
-          const myTraining = userIsManagerOrAdmin
-            ? allTraining
-            : allTraining.filter(t =>
-                (t.assigned_worker && t.assigned_worker.toLowerCase() === myEmail) ||
-                (t.assigned_worker_name && t.assigned_worker_name.toLowerCase() === myName)
-              );
-          const trainingClientIds = new Set(myTraining.map(t => t.client_id).filter(Boolean));
-          setItcClients(allClients.filter(c => trainingClientIds.has(c.id)));
-        } catch { setItcClients([]); }
-      }
       try {
         const allRequests = await base44.entities.PurchaseRequest.list("-requested_date", 500);
         setPurchaseRequests(allRequests || []);
@@ -249,13 +225,11 @@ export default function PathwaysWorkerDashboard() {
       >
         <div>
           <h1 className="text-xl font-bold text-white">
-            {isPureIPC
-              ? "Internal Training Dashboard"
-              : isServiceNavigator && !isCareerCounsellor
-                ? "Service Navigation Dashboard"
-                : isDawn
-                  ? "Service Navigator Dashboard"
-                  : "My Clients"}
+            {isServiceNavigator && !isCareerCounsellor
+              ? "Service Navigation Dashboard"
+              : isDawn
+                ? "Service Navigator Dashboard"
+                : "My Clients"}
           </h1>
           <p className="text-sm text-white/60">Welcome, {user?.full_name}</p>
         </div>
@@ -361,9 +335,8 @@ export default function PathwaysWorkerDashboard() {
               activeTab === "clients" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            <Users className="w-3.5 h-3.5" /> {isPureIPC ? "Internal Training" : "My Clients"}
+            <Users className="w-3.5 h-3.5" /> My Clients
           </button>
-          {!isPureIPC && (
           <button
             onClick={() => setActiveTab("compass")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -377,7 +350,6 @@ export default function PathwaysWorkerDashboard() {
               </span>
             )}
           </button>
-          )}
           {isManagerOrAdmin && (
             <button
               onClick={() => setActiveTab("purchases")}
@@ -420,22 +392,17 @@ export default function PathwaysWorkerDashboard() {
 
         {/* Clients tab */}
         {activeTab === "clients" && (
-          <>
-          {/* Internal Training Clients section (Internal Placement Coordinators + Managers) */}
-          {(isInternalPlacementCoordinator || isManagerOrAdmin) && (
-            itcClients.length > 0 ? (
-              <InternalTrainingClientsSection clients={itcClients} renderTable={renderClientTable} />
-            ) : isPureIPC ? (
-              <div className="text-center py-20 text-slate-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p className="text-lg font-medium">No internal training clients</p>
-                <p className="text-sm mt-1">Clients assigned to you for internal training will appear here.</p>
-              </div>
-            ) : null
-          )}
-
-          {/* Standard client lists — hidden for pure Internal Placement Coordinators */}
-          {!isPureIPC && clients.length > 0 && (
+          clients.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p className="text-lg font-medium">No clients yet</p>
+              <p className="text-sm mt-1">
+                {isDawn
+                  ? "Clients with identified barriers will appear here."
+                  : "Clients assigned to you will appear here."}
+              </p>
+            </div>
+          ) : (
             <>
               {/* DEA Closing Alert */}
               {deaClosingClients.length > 0 && (
@@ -639,21 +606,7 @@ export default function PathwaysWorkerDashboard() {
                 <PlacementSections clients={displayed} type="internal" />
               )}
             </>
-          )}
-
-          {/* Empty state — non-managers with no assigned clients (pure IPCs handled above) */}
-          {!isPureIPC && clients.length === 0 && !isManagerOrAdmin && (
-            <div className="text-center py-20 text-slate-400">
-              <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-medium">No clients yet</p>
-              <p className="text-sm mt-1">
-                {isDawn
-                  ? "Clients with identified barriers will appear here."
-                  : "Clients assigned to you will appear here."}
-              </p>
-            </div>
-          )}
-          </>
+          )
         )}
       </main>
 
