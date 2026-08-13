@@ -5,6 +5,8 @@ import { X, Trash2, RefreshCw, UserCheck, Info } from 'lucide-react';
 export const STAFF_ROLE_LABELS = {
   career_counsellor: 'Career Counsellor',
   service_navigator: 'Service Navigator',
+  internal_placement_coordinator: 'Internal Placement Coordinator',
+  jobs_lab: 'Jobs Lab',
   admin: 'Admin',
   manager: 'Manager',
 };
