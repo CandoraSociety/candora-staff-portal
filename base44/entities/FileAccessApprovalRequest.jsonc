@@ -1,0 +1,74 @@
+{
+  "name": "FileAccessApprovalRequest",
+  "type": "object",
+  "properties": {
+    "employee_id": {
+      "type": "string",
+      "description": "Linked Employee record ID"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "Denormalized employee full name"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Employee email \u2014 the scope_value used for the file_access permission"
+    },
+    "access_level": {
+      "type": "string",
+      "enum": [
+        "finance"
+      ],
+      "default": "finance",
+      "description": "Which file access level is being requested. Currently only 'finance' requires Executive Director approval."
+    },
+    "requested_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who submitted the request"
+    },
+    "requested_by_email": {
+      "type": "string",
+      "description": "Email of the staff member who submitted the request"
+    },
+    "requested_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was submitted (auto-set)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Workflow status of the approval request"
+    },
+    "reviewed_by_name": {
+      "type": "string",
+      "description": "Name of the Executive Director who reviewed the request"
+    },
+    "reviewed_by_email": {
+      "type": "string",
+      "description": "Email of the Executive Director who reviewed the request"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was reviewed"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Optional reason provided when rejecting the request"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "employee_name",
+    "employee_email",
+    "access_level"
+  ]
+}

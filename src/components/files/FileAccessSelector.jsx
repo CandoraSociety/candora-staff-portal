@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
  */
 const FILE_ACCESS_OPTIONS = [
   { id: 'manager',   label: 'Manager Files',   description: 'Internal management documents' },
-  { id: 'finance',   label: 'Finance Files',   description: 'Invoices, budgets, financial reports' },
+  { id: 'finance',   label: 'Finance Files',   description: 'Invoices, budgets, financial reports', requiresApproval: true },
   { id: 'corporate', label: 'Corporate Files', description: 'Executive-level documents' },
 ];
 
@@ -42,6 +42,9 @@ export default function FileAccessSelector({ value = [], onChange }) {
             <div>
               <p className="text-sm font-medium leading-tight">{opt.label}</p>
               <p className="text-xs text-muted-foreground">{opt.description}</p>
+              {opt.requiresApproval && (
+                <span className="inline-block text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-1">Requires Executive Director approval</span>
+              )}
             </div>
           </label>
         ))}

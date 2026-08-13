@@ -77,16 +77,32 @@ export default function NexusEmployees() {
       await Promise.all(permRecords.map(p => base44.entities.AccessPermission.create(p)));
 
       // 3. Save file access permissions
+      //    Finance Files requires Executive Director approval — held as 'deny' until approved.
       const FILE_ACCESS_LEVELS = ['manager', 'finance', 'corporate'];
       const filePermRecords = FILE_ACCESS_LEVELS.map(level => ({
         target_type: 'file_access',
         target_id: level,
         scope_type: 'individual',
         scope_value: data.email,
-        permission: selectedFileAccess.includes(level) ? 'allow' : 'deny',
+        permission: level === 'finance' ? 'deny' : (selectedFileAccess.includes(level) ? 'allow' : 'deny'),
         is_active: true,
       }));
       await Promise.all(filePermRecords.map(p => base44.entities.AccessPermission.create(p)));
+
+      // If Finance Files was requested, create a pending approval request for the Executive Director
+      if (selectedFileAccess.includes('finance')) {
+        await base44.entities.FileAccessApprovalRequest.create({
+          employee_id: employee.id,
+          employee_name: `${data.first_name} ${data.last_name}`,
+          employee_email: data.email,
+          access_level: 'finance',
+          requested_by_name: user?.full_name || user?.email || 'Unknown',
+          requested_by_email: user?.email || '',
+          requested_date: new Date().toISOString().slice(0, 10),
+          status: 'pending',
+        });
+        toast({ title: 'Finance access requires ED approval', description: `${data.first_name}'s Finance Files access has been queued for the Executive Director to approve.` });
+      }
 
       queryClient.invalidateQueries({ queryKey: ['employees'] });
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { PORTAL_MODULES, TIER_PRESETS } from '@/lib/tierPermissionPresets';
+import { PORTAL_MODULES, TIER_PRESETS, LOCKED_PORTAL_ACCESS } from '@/lib/tierPermissionPresets';
 
 /**
  * Displays a checkbox list of portals.
@@ -31,7 +31,7 @@ export default function PortalAccessSelector({ value = [], onChange, orgTier }) 
         Pre-selected based on org tier. Adjust as needed before saving.
       </p>
       <div className="grid grid-cols-1 gap-2">
-        {PORTAL_MODULES.map(mod => (
+        {PORTAL_MODULES.filter(mod => !LOCKED_PORTAL_ACCESS[mod.id]).map(mod => (
           <label
             key={mod.id}
             className="flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer hover:bg-muted/40 transition-colors"
