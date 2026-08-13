@@ -13,7 +13,6 @@ export const STAFF_ROLE_LABELS = {
 
 const ROLE_OPTIONS = Object.entries(STAFF_ROLE_LABELS).map(([value, label]) => ({ value, label }));
 
-// Mirror of useAccessControl admin roles + Pathways module id
 const ADMIN_ROLE_NAMES = ['super_admin', 'executive_director', 'admin'];
 const PATHWAYS_MODULE_ID = 'pathways';
 
@@ -38,22 +37,9 @@ function deriveName(user) {
   return local.split(/[._-]+/).filter(Boolean).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ') || local || 'Unknown';
 }
 
-// Determine whether an app user has access to the Pathways CM portal, using the
-// same rules as useAccessControl.canAccessModule (admin override → individual
-// allow/deny override → tier-based access from the linked Employee record).
-function buildAccessChecker(users, permissions, tierPortalAccess, employeeByEmail) {
-  return function hasPathwaysAccess(user) {
-    if (ADMIN_ROLE_NAMES.includes(user.role)) return true;
-    const ind = permissions.find(p =>
-      p.target_type === 'module' && p.target_id === PATHWAYS_MODULE_ID &&
-      p.scope_type === 'individual' && p.is_active &&
-      (p.scope_value === user.id || (p.scope_value && user.email && p.scope_value.toLowerCase() === user.email.toLowerCase()))
-    );
-    if (ind) return ind.permission === 'allow';
-    const emp = user.email ? employeeByEmail[user.email.toLowerCase()] : null;
-    const tier = emp?.org_tier;
-    return !!(tier && tierPortalAccess[tier]?.includes(PATHWAYS_MODULE_ID));
-  };
+function nameFromEmail(email) {
+  const local = (email || '').split('@')[0];
+  return local.split(/[._-]+/).filter(Boolean).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ') || local || email || 'Unknown';
 }
 
 export default function PathwaysStaffManager({ onClose, onUpdated }) {
@@ -63,12 +49,17 @@ export default function PathwaysStaffManager({ onClose, onUpdated }) {
   const [syncMsg, setSyncMsg] = useState('');
   const [error, setError] = useState('');
 
+  // Builds the set of emails that have Pathways CM portal access WITHOUT requiring
+  // the ability to list platform users (which only platform admins can do).
+  // Sources: (1) admin users if readable, (2) individual 'allow' permissions for the
+  // pathways module, (3) employees whose org tier grants pathways access (and who
+  // have no active individual 'deny' override).
   const load = async () => {
     setLoading(true);
     setError('');
     try {
       let users = [];
-      try { users = await base44.entities.User.list(); } catch (_) { /* non-admins can't list */ }
+      try { users = await base44.entities.User.list(); } catch (_) { /* non-admins can't list users */ }
       const [permissions, orgSettings, employees, existingStaff] = await Promise.all([
         base44.entities.AccessPermission.list().catch(() => []),
         base44.entities.OrgSettings.list().catch(() => []),
@@ -79,40 +70,62 @@ export default function PathwaysStaffManager({ onClose, onUpdated }) {
       const tierPortalAccess = orgSettings[0]?.tier_portal_access || {};
       const employeeByEmail = {};
       employees.forEach(e => { if (e.email) employeeByEmail[e.email.toLowerCase()] = e; });
-
+      const userByEmail = {};
+      users.forEach(u => { if (u.email) userByEmail[u.email.toLowerCase()] = u; });
       const existingByEmail = {};
       existingStaff.forEach(s => { if (s.email) existingByEmail[s.email.toLowerCase()] = s; });
 
-      let refreshed = existingStaff;
+      const candidateEmails = new Set();
 
-      // Auto-create PathwaysStaff records for app users with Pathways portal access
-      if (users.length > 0) {
-        const hasPathways = buildAccessChecker(users, permissions, tierPortalAccess, employeeByEmail);
-        const toCreate = users
-          .filter(u => u.email && hasPathways(u) && !existingByEmail[u.email.toLowerCase()])
-          .map(u => ({
-            name: deriveName(u),
-            email: u.email.toLowerCase(),
-            role: 'career_counsellor',
-            secondary_role: null,
-            tertiary_role: null,
-            is_active: true,
-          }));
+      // 1. Platform admin users (only available if we could list users)
+      users.forEach(u => {
+        if (u.email && ADMIN_ROLE_NAMES.includes(u.role)) candidateEmails.add(u.email.toLowerCase());
+      });
 
-        if (toCreate.length > 0) {
-          setSyncing(true);
-          try {
-            await base44.entities.PathwaysStaff.bulkCreate(toCreate);
-            setSyncMsg(`Auto-added ${toCreate.length} staff member${toCreate.length > 1 ? 's' : ''} with Pathways portal access.`);
-            refreshed = await base44.entities.PathwaysStaff.list('name');
-          } catch (e) {
-            setError('Some staff could not be auto-added: ' + (e.message || 'Unknown error'));
-            refreshed = await base44.entities.PathwaysStaff.list('name');
-          }
-          setSyncing(false);
-        } else {
-          setSyncMsg('');
+      // 2. Individual 'allow' permissions for the pathways module
+      permissions.forEach(p => {
+        if (p.target_type === 'module' && p.target_id === PATHWAYS_MODULE_ID &&
+            p.scope_type === 'individual' && p.is_active && p.permission === 'allow' &&
+            p.scope_value) {
+          candidateEmails.add(p.scope_value.toLowerCase());
         }
+      });
+
+      // 3. Tier-based access from employee records (with no individual deny override)
+      employees.forEach(e => {
+        if (!e.email) return;
+        const tier = e.org_tier;
+        if (tier && tierPortalAccess[tier]?.includes(PATHWAYS_MODULE_ID)) {
+          const deny = permissions.some(p =>
+            p.target_type === 'module' && p.target_id === PATHWAYS_MODULE_ID &&
+            p.scope_type === 'individual' && p.is_active && p.permission === 'deny' &&
+            p.scope_value?.toLowerCase() === e.email.toLowerCase()
+          );
+          if (!deny) candidateEmails.add(e.email.toLowerCase());
+        }
+      });
+
+      const toCreate = [...candidateEmails]
+        .filter(email => !existingByEmail[email])
+        .map(email => {
+          const u = userByEmail[email];
+          const emp = employeeByEmail[email];
+          const name = (u && deriveName(u)) || (emp && `${emp.first_name} ${emp.last_name}`.trim()) || nameFromEmail(email);
+          return { name, email, role: 'career_counsellor', secondary_role: null, tertiary_role: null, is_active: true };
+        });
+
+      let refreshed = existingStaff;
+      if (toCreate.length > 0) {
+        setSyncing(true);
+        try {
+          await base44.entities.PathwaysStaff.bulkCreate(toCreate);
+          setSyncMsg(`Auto-added ${toCreate.length} staff member${toCreate.length > 1 ? 's' : ''} with Pathways portal access.`);
+          refreshed = await base44.entities.PathwaysStaff.list('name');
+        } catch (e) {
+          setError('Some staff could not be auto-added: ' + (e.message || 'Unknown error'));
+          refreshed = await base44.entities.PathwaysStaff.list('name');
+        }
+        setSyncing(false);
       } else {
         setSyncMsg('');
       }
