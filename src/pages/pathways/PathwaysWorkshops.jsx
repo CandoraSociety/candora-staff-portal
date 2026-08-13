@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, RefreshCw, Users, MapPin, User, Calendar, Clock, Repeat } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Users, MapPin, User, Calendar, Clock, Repeat, CheckCircle2 } from 'lucide-react';
 import WorkshopDialog from '@/components/pathways/workshops/WorkshopDialog';
 import WorkshopSchedule from '@/components/pathways/workshops/WorkshopSchedule';
 import SessionRosterDialog from '@/components/pathways/workshops/SessionRosterDialog';
 import { generateOccurrences, nextOccurrence, formatDateLong, formatDateShort } from '@/lib/workshopSchedule';
+import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
 
 const RECURRENCE_LABEL = { none: 'One-off', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
 const STATUS_CLS = {
@@ -62,6 +63,17 @@ export default function PathwaysWorkshops() {
       load();
     } catch (e) {
       alert('Could not delete: ' + (e.message || 'Unknown error'));
+    }
+  };
+
+  const handleComplete = async (w) => {
+    if (!confirm(`Mark "${w.title}" as completed? Attended clients will have the matching action-plan item marked complete.`)) return;
+    try {
+      await base44.entities.Workshop.update(w.id, { status: 'completed' });
+      try { await syncWorkshopCompletionToRoadmap(w.id); } catch (_) {}
+      load();
+    } catch (e) {
+      alert('Could not complete: ' + (e.message || 'Unknown error'));
     }
   };
 
@@ -128,6 +140,11 @@ export default function PathwaysWorkshops() {
                         <Button variant="outline" size="sm" className="h-8" onClick={() => setRoster({ workshop: w, date: next || w.date })}>
                           <Users className="w-3.5 h-3.5" /> Roster
                         </Button>
+                        {w.status === 'scheduled' && (
+                          <Button variant="outline" size="sm" className="h-8 text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => handleComplete(w)}>
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Complete
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" className="h-8" onClick={() => openEdit(w)}><Pencil className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="sm" className="h-8 text-red-500 hover:text-red-600" onClick={() => handleDelete(w)}><Trash2 className="w-3.5 h-3.5" /></Button>
                       </div>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { todayISO, formatDateLong } from '@/lib/workshopSchedule';
+import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
 import { Check, X, UserMinus, UserPlus, Users } from 'lucide-react';
 
 const STATUS_META = {
@@ -64,6 +65,9 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
   const setStatus = async (signup, status) => {
     try {
       await base44.entities.WorkshopSignup.update(signup.id, { status });
+      if (status === 'attended' && workshop?.id) {
+        try { await syncWorkshopCompletionToRoadmap(workshop.id); } catch (_) {}
+      }
       onChanged?.();
     } catch (err) {
       alert('Could not update: ' + (err.message || 'Unknown error'));

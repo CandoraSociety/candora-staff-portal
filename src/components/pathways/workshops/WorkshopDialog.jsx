@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
-import { todayISO } from '@/lib/workshopSchedule';
+import { todayISO, WORKSHOP_CATEGORIES } from '@/lib/workshopSchedule';
 
 const COLOR_CHOICES = ['#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2'];
 
@@ -18,6 +18,7 @@ const EMPTY = {
   date: todayISO(), start_time: '10:00', end_time: '11:30',
   recurrence_pattern: 'none', recurrence_end_date: '',
   status: 'scheduled', color: '#2563eb',
+  category: 'none',
 };
 
 export default function WorkshopDialog({ open, onClose, onSaved, workshop, user }) {
@@ -59,6 +60,7 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, user 
         recurrence_end_date: form.recurrence_pattern === 'none' ? '' : (form.recurrence_end_date || ''),
         status: form.status,
         color: form.color,
+        category: form.category || 'none',
       };
       if (workshop) {
         await base44.entities.Workshop.update(workshop.id, payload);
@@ -94,6 +96,17 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, user 
           <div>
             <Label>Description</Label>
             <Textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} className={fieldCls} />
+          </div>
+          <div>
+            <Label>Action-plan category (optional)</Label>
+            <select
+              value={form.category}
+              onChange={e => set('category', e.target.value)}
+              className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            >
+              {WORKSHOP_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Links this workshop to a client's action-plan item so it gets highlighted in the client file and auto-completed on attendance.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

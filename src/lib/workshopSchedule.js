@@ -93,3 +93,17 @@ export function formatDateShort(iso) {
   if (!d) return iso;
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
+
+// Workshop categories that link a Workshop to a client's action-plan workshop item.
+// The values match the SDP item keys used in client.sdp_items / roadmap_item_status.
+export const WORKSHOP_CATEGORIES = [
+  { value: 'none', label: '— General (no action-plan link) —' },
+  { value: 'job_search_workshop', label: 'Job Search Workshop' },
+  { value: 'resume_writing_workshop', label: 'Resume Writing Workshop' },
+  { value: 'interview_skills_workshop', label: 'Interview Skills Workshop' },
+  { value: 'workplace_readiness_workshop', label: 'Workplace Readiness Workshop' },
+  { value: 'financial_literacy_workshop', label: 'Financial Literacy Workshop' },
+  { value: 'digital_literacy_workshop', label: 'Digital Literacy Workshop' },
+];
+
+export const WORKSHOP_CATEGORY_KEYS = WORKSHOP_CATEGORIES.map(c => c.value).filter(v => v !== 'none');

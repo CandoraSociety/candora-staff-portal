@@ -8,6 +8,7 @@ import ActionPlanRoadmap from './ActionPlanRoadmap';
 import EmploymentSupportsStep from './EmploymentSupportsStep';
 import ExposureCoursesStep from './ExposureCoursesStep';
 import WorkExposurePlacementTab from './WorkExposurePlacementTab';
+import WorkshopsClientTab from './WorkshopsClientTab';
 import InternalPlacementsTab from './InternalPlacementsTab';
 import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
@@ -44,9 +45,11 @@ function getEDASubItems(client) {
   const isDEA = client?.service_type === 'direct_to_employment';
 
   if (isDEA) {
-    return (client.dea_activities || [])
+    const deaItems = (client.dea_activities || [])
       .filter(a => a.type)
       .map(a => ({ key: `dea_${a.id}`, label: a.type, component: 'eda' }));
+    deaItems.push({ key: 'workshops', label: 'Workshops', component: 'workshops', highlight: true });
+    return deaItems;
   }
 
   const items = client.sdp_items || [];
@@ -71,6 +74,9 @@ function getEDASubItems(client) {
 
   // Work Exposure Placement — always shown as a highlighted sub-tab
   subItems.push({ key: 'work_exposure_placement', label: 'Work Exposure Placement', component: 'work_exposure_placement', highlight: true });
+
+  // Workshops — register clients for scheduled workshop sessions
+  subItems.push({ key: 'workshops', label: 'Workshops', component: 'workshops', highlight: true });
 
   return subItems;
 }
@@ -217,6 +223,8 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           return <InternalPlacementsTab client={client} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
         case 'work_exposure_placement':
           return <WorkExposurePlacementTab client={client} onSave={onSave} onPlacementsChange={() => setPlacementRefreshKey(k => k + 1)} />;
+        case 'workshops':
+          return <WorkshopsClientTab client={client} />;
         default:
           return null;
       }
