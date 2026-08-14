@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
-import { todayISO, WORKSHOP_CATEGORY_KEYS } from './workshopSchedule';
+import { todayISO, WORKSHOP_CATEGORY_KEYS, WORKSHOP_CATEGORIES } from './workshopSchedule';
+import { createCompassTask, withCrtComments, taskEdaCompleted } from './compassTasks';
 
 /**
  * When a workshop is marked 'completed', every client signup marked 'attended'
@@ -50,13 +51,32 @@ export async function syncWorkshopCompletionToRoadmap(workshopId) {
       compass_entered: false,
     });
 
+    let updatedClient;
     try {
-      await base44.asServiceRole.entities.Client.update(client.id, {
+      updatedClient = await base44.asServiceRole.entities.Client.update(client.id, {
         roadmap_item_status: newRms,
         roadmap_progress_notes: notes,
       });
       updated++;
-    } catch (_) { /* skip clients we can't update */ }
+    } catch (_) { continue; }
+
+    // Mirror the timeline "completed" save: queue an EDA-completed Compass task
+    // with the CRT Comments (Column S) text attached, so the CRT note is written
+    // (the same note that appears when completing the item directly in the timeline).
+    try {
+      const itemLabel = WORKSHOP_CATEGORIES.find(c => c.value === cat)?.label || workshop.title;
+      const taskBase = {
+        client_id: client.id,
+        client_name: `${client.first_name} ${client.last_name}`,
+        compass_hsid: client.compass_hsid || '',
+        assigned_worker: client.assigned_worker,
+        assigned_worker_name: client.assigned_worker_name,
+      };
+      await createCompassTask({
+        ...taskBase,
+        ...withCrtComments(taskEdaCompleted(updatedClient, itemLabel, { completion_date: todayISO() }), updatedClient),
+      });
+    } catch (_) { /* best-effort — don't block the roadmap update */ }
   }
   return { updated };
 }
