@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 const ATTEMPT_STATUSES = [
@@ -21,7 +21,7 @@ const STATUS_TONE = {
   wrong_number: 'text-red-700 border-red-300 bg-red-50',
 };
 
-export default function AwaitingAssessmentTable({ clients, onUpdate }) {
+export default function AwaitingAssessmentTable({ clients, onUpdate, onWaitlist }) {
   const [overrides, setOverrides] = useState({});
   const [saving, setSaving] = useState({});
 
@@ -96,12 +96,23 @@ export default function AwaitingAssessmentTable({ clients, onUpdate }) {
                 <td className="px-3 py-2.5">{renderAttempt(c, 1)}</td>
                 <td className="px-3 py-2.5">{renderAttempt(c, 2)}</td>
                 <td className="px-3 py-2.5">
-                  <Link to={`/pathways/assessment/${c.id}`}>
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <ClipboardCheck className="w-3.5 h-3.5" />
-                      Assess
+                  <div className="flex items-center gap-1.5">
+                    <Link to={`/pathways/assessment/${c.id}`}>
+                      <Button variant="outline" size="sm" className="gap-1">
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        Assess
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1 text-amber-700 border-amber-300 hover:bg-amber-50"
+                      onClick={() => onWaitlist?.(c)}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      Add to Waitlist
                     </Button>
-                  </Link>
+                  </div>
                 </td>
               </tr>
             ))}

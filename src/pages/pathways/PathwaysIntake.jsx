@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, LogOut, ClipboardCheck, UserCheck, XCircle } from 'lucide-react';
+import { PlusCircle, LogOut, ClipboardCheck, UserCheck, XCircle, Clock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
 import AwaitingAssessmentTable from '@/components/pathways/AwaitingAssessmentTable';
+import WaitlistTable from '@/components/pathways/WaitlistTable';
 import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
 import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
 import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
@@ -64,8 +65,11 @@ export default function PathwaysIntake() {
     load();
   }, []);
 
-  // Unassigned = no assigned_worker AND not closed
-  const unassignedClients = clients.filter(c => !c.assigned_worker && !c.file_closed && c.status !== 'closed');
+  // Waitlisted clients (pulled out of the assessment queues into their own section)
+  const waitlistedClients = clients.filter(c => c.is_waitlisted && !c.file_closed && c.status !== 'closed');
+
+  // Unassigned = no assigned_worker AND not closed AND not waitlisted
+  const unassignedClients = clients.filter(c => !c.assigned_worker && !c.file_closed && c.status !== 'closed' && !c.is_waitlisted);
 
   // Split by assessment status
   const assessmentPending = unassignedClients.filter(c => c.status !== 'pending');
@@ -163,6 +167,32 @@ export default function PathwaysIntake() {
     }
   };
 
+  const handleWaitlist = async (client) => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const updated = await base44.entities.Client.update(client.id, {
+        is_waitlisted: true,
+        waitlist_date: today,
+      });
+      setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+      toast.success(`${client.first_name} ${client.last_name} added to waitlist`);
+    } catch (err) {
+      toast.error('Failed to add to waitlist');
+    }
+  };
+
+  const handleRemoveWaitlist = async (client) => {
+    try {
+      const updated = await base44.entities.Client.update(client.id, {
+        is_waitlisted: false,
+      });
+      setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+      toast.success(`${client.first_name} ${client.last_name} removed from waitlist`);
+    } catch (err) {
+      toast.error('Failed to remove from waitlist');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -180,7 +210,7 @@ export default function PathwaysIntake() {
         <div>
           <h1 className="text-xl font-bold text-slate-800">Intake</h1>
           <p className="text-sm text-slate-500">
-            {assessmentPending.length} awaiting assessment · {assessmentComplete.length} awaiting assignment · Welcome, {user?.full_name}
+            {assessmentPending.length} awaiting assessment · {assessmentComplete.length} awaiting assignment · {waitlistedClients.length} on waitlist · Welcome, {user?.full_name}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -230,7 +260,7 @@ export default function PathwaysIntake() {
                     </span>
                     <span className="text-sm text-slate-400">({cecPending.length})</span>
                   </div>
-                  <AwaitingAssessmentTable clients={cecPending} />
+                  <AwaitingAssessmentTable clients={cecPending} onWaitlist={handleWaitlist} />
                 </div>
               )}
 
@@ -242,7 +272,7 @@ export default function PathwaysIntake() {
                     <span className="text-sm text-slate-400">({generalPending.length})</span>
                   </div>
                 )}
-                <AwaitingAssessmentTable clients={generalPending} />
+                <AwaitingAssessmentTable clients={generalPending} onWaitlist={handleWaitlist} />
               </div>
             </div>
 
@@ -313,6 +343,18 @@ export default function PathwaysIntake() {
                 </div>
               </div>
             </div>
+
+            {/* Section 3: Waitlist */}
+            {waitlistedClients.length > 0 && (
+              <div className="mt-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                  <h2 className="text-lg font-bold text-slate-800">Waitlist</h2>
+                  <span className="text-sm text-slate-400">({waitlistedClients.length})</span>
+                </div>
+                <WaitlistTable clients={waitlistedClients} onRemove={handleRemoveWaitlist} />
+              </div>
+            )}
           </>
         )}
       </main>

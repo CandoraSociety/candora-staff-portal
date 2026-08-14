@@ -675,6 +675,16 @@
       "default": "not_attempted",
       "description": "Status of the second contact attempt to reach the client for assessment"
     },
+    "is_waitlisted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the client has been placed on the intake waitlist (pulled out of the assessment queue until capacity opens up)"
+    },
+    "waitlist_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the client was added to the waitlist"
+    },
     "program_stream_switches": {
       "type": "array",
       "items": {
