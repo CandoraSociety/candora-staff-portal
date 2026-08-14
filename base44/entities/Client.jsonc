@@ -651,6 +651,30 @@
       "type": "string",
       "format": "date"
     },
+    "contact_attempt_1_status": {
+      "type": "string",
+      "enum": [
+        "not_attempted",
+        "reached",
+        "left_message",
+        "no_answer",
+        "wrong_number"
+      ],
+      "default": "not_attempted",
+      "description": "Status of the first contact attempt to reach the client for assessment"
+    },
+    "contact_attempt_2_status": {
+      "type": "string",
+      "enum": [
+        "not_attempted",
+        "reached",
+        "left_message",
+        "no_answer",
+        "wrong_number"
+      ],
+      "default": "not_attempted",
+      "description": "Status of the second contact attempt to reach the client for assessment"
+    },
     "program_stream_switches": {
       "type": "array",
       "items": {

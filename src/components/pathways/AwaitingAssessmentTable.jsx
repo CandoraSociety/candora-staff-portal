@@ -1,9 +1,64 @@
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ClipboardCheck } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-export default function AwaitingAssessmentTable({ clients }) {
+const ATTEMPT_STATUSES = [
+  { value: 'not_attempted', label: 'Not attempted' },
+  { value: 'reached', label: 'Reached' },
+  { value: 'left_message', label: 'Left message' },
+  { value: 'no_answer', label: 'No answer' },
+  { value: 'wrong_number', label: 'Wrong number' },
+];
+
+const STATUS_TONE = {
+  not_attempted: 'text-slate-500 border-slate-200',
+  reached: 'text-green-700 border-green-300 bg-green-50',
+  left_message: 'text-blue-700 border-blue-300 bg-blue-50',
+  no_answer: 'text-amber-700 border-amber-300 bg-amber-50',
+  wrong_number: 'text-red-700 border-red-300 bg-red-50',
+};
+
+export default function AwaitingAssessmentTable({ clients, onUpdate }) {
+  const [overrides, setOverrides] = useState({});
+  const [saving, setSaving] = useState({});
+
+  const handleChange = async (client, attempt, value) => {
+    const field = `contact_attempt_${attempt}_status`;
+    setOverrides(o => ({ ...o, [`${client.id}_${attempt}`]: value }));
+    setSaving(s => ({ ...s, [`${client.id}_${attempt}`]: true }));
+    try {
+      const updated = await base44.entities.Client.update(client.id, { [field]: value });
+      onUpdate?.(updated);
+    } catch (e) {
+      console.error(e);
+      setOverrides(o => ({ ...o, [`${client.id}_${attempt}`]: client[field] }));
+    } finally {
+      setSaving(s => ({ ...s, [`${client.id}_${attempt}`]: false }));
+    }
+  };
+
+  const statusFor = (c, attempt) =>
+    overrides[`${c.id}_${attempt}`] ?? c[`contact_attempt_${attempt}_status`] ?? 'not_attempted';
+
+  const renderAttempt = (c, attempt) => {
+    const value = statusFor(c, attempt);
+    return (
+      <select
+        value={value}
+        disabled={saving[`${c.id}_${attempt}`]}
+        onChange={(e) => handleChange(c, attempt, e.target.value)}
+        className={`h-8 text-xs rounded-md border px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:opacity-50 ${STATUS_TONE[value] || 'text-slate-600 border-slate-200'}`}
+      >
+        {ATTEMPT_STATUSES.map(s => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -15,6 +70,8 @@ export default function AwaitingAssessmentTable({ clients }) {
               <th className="text-left px-3 py-3 font-semibold text-slate-600">Phone</th>
               <th className="text-left px-3 py-3 font-semibold text-slate-600">Intake Date</th>
               <th className="text-left px-3 py-3 font-semibold text-slate-600">Self-Reg</th>
+              <th className="text-left px-3 py-3 font-semibold text-slate-600">Contact Attempt 1</th>
+              <th className="text-left px-3 py-3 font-semibold text-slate-600">Contact Attempt 2</th>
               <th className="px-3 py-3" />
             </tr>
           </thead>
@@ -36,6 +93,8 @@ export default function AwaitingAssessmentTable({ clients }) {
                     </span>
                   ) : '—'}
                 </td>
+                <td className="px-3 py-2.5">{renderAttempt(c, 1)}</td>
+                <td className="px-3 py-2.5">{renderAttempt(c, 2)}</td>
                 <td className="px-3 py-2.5">
                   <Link to={`/pathways/assessment/${c.id}`}>
                     <Button variant="outline" size="sm" className="gap-1">
@@ -48,7 +107,7 @@ export default function AwaitingAssessmentTable({ clients }) {
             ))}
             {clients.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-10 text-slate-400">
+                <td colSpan={8} className="text-center py-10 text-slate-400">
                   No clients awaiting assessment.
                 </td>
               </tr>
