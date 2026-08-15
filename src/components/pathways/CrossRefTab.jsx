@@ -63,6 +63,31 @@ const CRT_COLUMNS = [
   { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
 ];
 
+const DATE_COLUMNS = [
+  { key: 'dea_start_date', label: 'DEA Start Date' },
+  { key: 'service_start_date', label: 'Service Start Date' },
+  { key: 'service_outcome_date', label: 'Service Outcome Date' },
+  { key: 'placement_outcome_date', label: 'Placement Outcome Date' },
+  { key: 'day30_outcome_date', label: '30 Day Outcome Date' },
+  { key: 'day60_outcome_date', label: '60 Day Outcome Date' },
+  { key: 'day90_outcome_date', label: '90 Day Outcome Date' },
+  { key: 'day180_outcome_date', label: '180 Day Outcome Date' },
+  { key: 'eda_completion_date', label: 'EDA Completion Date' },
+];
+
+// Parse CRT date strings (typically MM/DD/YY) into a Date for sorting/filtering.
+const parseCrtDate = (s) => {
+  if (!s) return null;
+  const m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) {
+    let y = +m[3]; if (y < 100) y += 2000;
+    const d = new Date(y, +m[1] - 1, +m[2]);
+    return isNaN(d) ? null : d;
+  }
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+};
+
 const COMPLETED_KEY = 'crossRefCompleted';
 
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
@@ -94,6 +119,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
   const [comments, setComments] = useState({});
   const [filter, setFilter] = useState('all');
+  const [dateColumn, setDateColumn] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [dateSort, setDateSort] = useState('none');
   const [completed, setCompleted] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]')); } catch { return new Set(); }
   });
@@ -230,7 +259,32 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const matchedCount = activeRows.filter(isMatch).length;
   const unmatchedCount = activeRows.length - matchedCount;
   const newCount = activeRows.filter(r => r.is_new).length;
-  const filteredActive = filter === 'all' ? activeRows : activeRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
+  const masterFiltered = filter === 'all' ? activeRows : activeRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
+  const filteredActive = useMemo(() => {
+    let list = masterFiltered;
+    if (dateColumn) {
+      const from = dateFrom ? new Date(dateFrom + 'T00:00:00') : null;
+      const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+      list = list.filter(r => {
+        const d = parseCrtDate(r.crt?.[dateColumn]);
+        if (!d) return false;
+        if (from && d < from) return false;
+        if (to && d > to) return false;
+        return true;
+      });
+    }
+    if (dateSort !== 'none' && dateColumn) {
+      list = [...list].sort((a, b) => {
+        const da = parseCrtDate(a.crt?.[dateColumn]);
+        const db = parseCrtDate(b.crt?.[dateColumn]);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return dateSort === 'asc' ? da - db : db - da;
+      });
+    }
+    return list;
+  }, [masterFiltered, dateColumn, dateFrom, dateTo, dateSort]);
 
   useEffect(() => {
     if (onCountsChange) onCountsChange({ all: activeRows.length, matched: matchedCount, unmatched: unmatchedCount });
@@ -382,6 +436,44 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         <Button variant="outline" size="sm" onClick={() => crtFileInput.current?.click()} className="gap-1">
           <Upload className="w-4 h-4" /> Upload CRT Workbook
         </Button>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date</span>
+        <select
+          value={dateColumn}
+          onChange={e => setDateColumn(e.target.value)}
+          className="h-8 text-sm rounded-md border border-slate-300 px-2 bg-white"
+        >
+          <option value="">No date column</option>
+          {DATE_COLUMNS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+        </select>
+        <label className="flex items-center gap-1 text-xs text-slate-600">
+          From
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-sm rounded-md border border-slate-300 px-2 bg-white" />
+        </label>
+        <label className="flex items-center gap-1 text-xs text-slate-600">
+          To
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-sm rounded-md border border-slate-300 px-2 bg-white" />
+        </label>
+        <span className="text-xs text-slate-500">Sort</span>
+        <select
+          value={dateSort}
+          onChange={e => setDateSort(e.target.value)}
+          className="h-8 text-sm rounded-md border border-slate-300 px-2 bg-white"
+        >
+          <option value="none">None</option>
+          <option value="asc">Oldest first</option>
+          <option value="desc">Newest first</option>
+        </select>
+        {(dateColumn || dateFrom || dateTo || dateSort !== 'none') && (
+          <button
+            onClick={() => { setDateColumn(''); setDateFrom(''); setDateTo(''); setDateSort('none'); }}
+            className="text-xs text-slate-500 hover:text-slate-700 underline"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       <div className="text-xs text-slate-600 bg-green-50 border border-green-200 rounded-md px-3 py-2">
