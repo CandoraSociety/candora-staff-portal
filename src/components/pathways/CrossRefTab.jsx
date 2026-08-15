@@ -34,6 +34,8 @@ export default function CrossRefTab({ activeClients }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
+  const [comments, setComments] = useState({});
+  const [filter, setFilter] = useState('all');
   const fileInput = useRef(null);
 
   const load = async (file_url, label) => {
@@ -77,6 +79,7 @@ export default function CrossRefTab({ activeClients }) {
   };
 
   const matchedCount = rows.filter(isMatch).length;
+  const filteredRows = filter === 'all' ? rows : rows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
 
   return (
     <div className="space-y-4">
@@ -85,7 +88,24 @@ export default function CrossRefTab({ activeClients }) {
           Source: <span className="font-medium text-slate-800">{fileName}</span> · {rows.length} rows ·{' '}
           <span className="text-green-700 font-medium">{matchedCount} matched in master list</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'matched', label: 'In Master List' },
+              { id: 'unmatched', label: 'Not in Master List' },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                  filter === f.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
           <input ref={fileInput} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleUpload} />
           <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()} className="gap-1">
             <Upload className="w-4 h-4" /> Upload Workbook
@@ -113,14 +133,16 @@ export default function CrossRefTab({ activeClients }) {
                   <th className="text-left px-3 py-3 font-semibold text-slate-600">Status</th>
                   <th className="text-left px-3 py-3 font-semibold text-slate-600">EDAS Completed</th>
                   <th className="text-left px-3 py-3 font-semibold text-slate-600">Extra Notes</th>
+                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
                   <th className="px-3 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {rows.map((r, i) => {
+                {filteredRows.map((r, i) => {
                   const matched = isMatch(r);
+                  const rowKey = `${r.source_sheet}|${r.hsid}|${r.client_name}`;
                   return (
-                    <tr key={i} className={matched ? 'bg-green-50' : 'hover:bg-slate-50'}>
+                    <tr key={rowKey} className={matched ? 'bg-green-50' : 'hover:bg-slate-50'}>
                       <td className="px-3 py-2.5">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{r.source_sheet}</span>
                       </td>
@@ -130,13 +152,22 @@ export default function CrossRefTab({ activeClients }) {
                       <td className="px-3 py-2.5 text-slate-600">{r.edas_completed || '—'}</td>
                       <td className="px-3 py-2.5 text-slate-500 max-w-xs">{r.extra_notes || '—'}</td>
                       <td className="px-3 py-2.5">
+                        <input
+                          type="text"
+                          value={comments[rowKey] || ''}
+                          onChange={(e) => setComments(c => ({ ...c, [rowKey]: e.target.value }))}
+                          placeholder="Add comment..."
+                          className="w-full max-w-[200px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        />
+                      </td>
+                      <td className="px-3 py-2.5">
                         {matched && <CheckCircle2 className="w-4 h-4 text-green-600" />}
                       </td>
                     </tr>
                   );
                 })}
-                {rows.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-10 text-slate-400">No data loaded.</td></tr>
+                {filteredRows.length === 0 && (
+                  <tr><td colSpan={8} className="text-center py-10 text-slate-400">No clients match this filter.</td></tr>
                 )}
               </tbody>
             </table>
