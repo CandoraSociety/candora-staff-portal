@@ -276,9 +276,7 @@ export default function PathwaysMasterList() {
           </>
         ) : placementSubTab === "internal_training" ? (
           <PlacementSections clients={displayed} type="internal" />
-        ) : placementSubTab === "cross_ref" ? (
-          <CrossRefTab activeClients={sourceList} onCountsChange={setCrossRefCounts} />
-        ) : (
+        ) : placementSubTab === "cross_ref" ? null : (
           <>
             <ClientListControls
               search={search} onSearch={setSearch}
@@ -299,6 +297,11 @@ export default function PathwaysMasterList() {
             )}
           </>
         )}
+
+        {/* Cross-Ref tab stays mounted so its count stays current without needing a click */}
+        <div className={placementSubTab === "cross_ref" && !viewAll ? "" : "hidden"}>
+          <CrossRefTab activeClients={sourceList} onCountsChange={setCrossRefCounts} />
+        </div>
       </div>
 
       {/* Reassign Confirmation Dialog */}
