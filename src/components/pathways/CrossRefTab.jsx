@@ -410,10 +410,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     {restorable && (
                       <button
                         onClick={() => toggleCompleted(r)}
-                        title="Restore to active list"
+                        title="Undo - move back to the active list"
                         className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" /> Restore
+                        <RotateCcw className="w-3.5 h-3.5" /> Undo
                       </button>
                     )}
                   </div>
