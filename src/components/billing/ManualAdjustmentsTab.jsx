@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -10,10 +9,9 @@ import { parseBillingMonth } from './billingMonth';
 
 export default function ManualAdjustmentsTab({ pkg }) {
   const [columns, setColumns] = useState([]);
-  const [monthRows, setMonthRows] = useState([]);
+  const [rowValues, setRowValues] = useState({});
+  const [edits, setEdits] = useState({});
   const [loading, setLoading] = useState(true);
-  const [colLetter, setColLetter] = useState('');
-  const [value, setValue] = useState('');
   const [applying, setApplying] = useState(false);
   const [result, setResult] = useState(null);
   const [invoice, setInvoice] = useState(null);
@@ -21,49 +19,69 @@ export default function ManualAdjustmentsTab({ pkg }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await base44.functions.invoke('getInvoiceTrackerColumns', {});
-        const data = res.data || {};
-        setColumns(data.columns || []);
-        setMonthRows(data.monthRows || []);
-        if ((data.columns || []).length) setColLetter(data.columns[0].colLetter);
-        if (data.status && data.status !== 'success' && data.status !== 'empty') {
-          toast.error(data.status === 'no_workbook' ? 'No active CRT workbook found' : 'Could not read Invoice Tracker');
+        const colRes = await base44.functions.invoke('getInvoiceTrackerColumns', {});
+        const colData = colRes.data || {};
+        setColumns(colData.columns || []);
+        if (colData.status && colData.status !== 'success') {
+          toast.error(colData.status === 'no_workbook' ? 'No active CRT workbook found' : 'Could not read Invoice Tracker');
         }
+        // Pre-fill current values for this package's month row.
+        try {
+          const rowRes = await base44.functions.invoke('getInvoiceTrackerMonthRow', { billingMonth: pkg.billing_month });
+          const rowData = rowRes.data || {};
+          if (rowData.status === 'success') {
+            setRowValues(rowData.valuesByCol || {});
+          } else if (rowData.status === 'month_not_found') {
+            // no row yet — leave blank, show the warning below
+          }
+        } catch { /* row read best-effort */ }
       } catch (e) {
         toast.error('Failed to load Invoice Tracker columns');
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [pkg.billing_month]);
 
-  const target = monthRows.find(m => m.monthLabel === pkg.billing_month);
-  const selectedCol = columns.find(c => c.colLetter === colLetter);
+  const hasRow = Object.keys(rowValues).length > 0;
+
+  const cellValue = (c) => {
+    if (Object.prototype.hasOwnProperty.call(edits, c)) return edits[c];
+    const v = rowValues[c];
+    return v == null ? '' : String(v);
+  };
+
+  const changed = columns.filter(c =>
+    c.colLetter !== 'A' &&
+    Object.prototype.hasOwnProperty.call(edits, c.colLetter) &&
+    String(edits[c.colLetter]).trim() !== String(rowValues[c.colLetter] ?? '').trim()
+  );
 
   const apply = async () => {
-    if (!colLetter) { toast.error('Select a column'); return; }
-    if (!target) { toast.error(`No Invoice Tracker row found for ${pkg.billing_month}`); return; }
+    if (!hasRow) { toast.error(`No Invoice Tracker row found for ${pkg.billing_month}`); return; }
+    if (!changed.length) { toast.message('No changes to apply'); return; }
     setApplying(true);
     setResult(null);
     try {
       const res = await base44.functions.invoke('applyManualTrackerAdjustment', {
         billingMonth: pkg.billing_month,
-        colLetter,
-        value,
+        adjustments: changed.map(c => ({ colLetter: c.colLetter, value: edits[c.colLetter] })),
       });
       const data = res.data || {};
       if (data.status === 'success') {
-        setResult({ ok: true, row: data.row, colLetter: data.colLetter, written: data.written });
-        toast.success(`Applied to cell ${data.colLetter}${data.row}`);
+        const next = { ...rowValues };
+        for (const w of (data.written || [])) next[w.colLetter] = w.value;
+        setRowValues(next);
+        setEdits({});
+        setResult({ ok: true, row: data.row, written: data.written || [] });
+        toast.success(`Applied ${data.written.length} change(s) to row ${data.row}`);
         try {
           const inv = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: pkg.billing_month });
           setInvoice(inv.data || null);
         } catch { /* invoice refresh best-effort */ }
       } else {
         setResult({ ok: false, message: data.status || 'failed' });
-        toast.error(data.status === 'month_not_found'
-          ? 'No row for this month in the active CRT workbook'
-          : 'Adjustment failed');
+        toast.error(data.status === 'month_not_found' ? 'No row for this month in the active CRT' : 'Adjustment failed');
       }
     } catch (e) {
       setResult({ ok: false, message: e?.message || 'error' });
@@ -81,73 +99,63 @@ export default function ManualAdjustmentsTab({ pkg }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-slate-600">
-            Write a value into any column of the Invoice Tracker sheet for{' '}
-            <span className="font-medium">{format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}</span>.
-            After applying, the invoice below refreshes straight from the tracker (the same
-            calculation the existing automations use), so the change flows through immediately.
+            Edit any cell below for{' '}
+            <span className="font-medium">{format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}</span>{' '}
+            — the row mirrors the Invoice Tracker sheet. After applying, the invoice refreshes
+            straight from the tracker (the same calculation the existing automations use), so the
+            change flows through immediately.
           </p>
 
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading Invoice Tracker columns…
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading Invoice Tracker row…
+            </div>
+          ) : !hasRow ? (
+            <div className="flex items-center gap-2 text-sm text-amber-700">
+              <AlertTriangle className="w-4 h-4" /> No Invoice Tracker row exists for {pkg.billing_month} in the active CRT workbook.
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Column</label>
-                  <select
-                    value={colLetter}
-                    onChange={(e) => setColLetter(e.target.value)}
-                    className="w-full h-9 rounded-md border border-slate-300 px-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  >
-                    {columns.map(c => (
-                      <option key={c.colLetter} value={c.colLetter}>
-                        {c.label} (col {c.colLetter})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">New Value</label>
-                  <Input
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    placeholder="e.g. 12 or 1500.00"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Target Month Row</label>
-                  <div className="h-9 flex items-center text-sm">
-                    {target ? (
-                      <span className="inline-flex items-center gap-1.5 text-slate-700">
-                        <CheckCircle2 className="w-4 h-4 text-green-600" /> Row {target.excelRow} · {target.monthLabel}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-amber-700">
-                        <AlertTriangle className="w-4 h-4" /> No row for {pkg.billing_month} in the active CRT
-                      </span>
-                    )}
-                  </div>
+              <div className="overflow-x-auto pb-2 -mx-1 px-1">
+                <div className="flex gap-2 min-w-max">
+                  {columns.map(c => (
+                    <div key={c.colLetter} className="flex-shrink-0 w-28 rounded-md border border-slate-200 overflow-hidden bg-white">
+                      <div className="px-2 py-1 bg-slate-100 border-b border-slate-200">
+                        <div className="text-xs font-bold text-slate-700 leading-tight">{c.colLetter}</div>
+                        <div className="text-[10px] text-slate-500 truncate leading-tight" title={c.label}>{c.short || c.label}</div>
+                      </div>
+                      <input
+                        value={cellValue(c.colLetter)}
+                        onChange={(e) => setEdits(prev => ({ ...prev, [c.colLetter]: e.target.value }))}
+                        disabled={c.colLetter === 'A' || applying}
+                        placeholder={c.colLetter === 'A' ? '' : '—'}
+                        className="w-full px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-slate-50 disabled:text-slate-500"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <Button onClick={apply} disabled={applying || !target || !colLetter}>
+                <Button onClick={apply} disabled={applying || !changed.length}>
                   {applying && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Apply Adjustment
+                  Apply Changes
                 </Button>
-                {selectedCol && (
-                  <span className="text-xs text-slate-500">
-                    Writing to column {selectedCol.colLetter} ({selectedCol.label})
-                  </span>
+                {changed.length > 0 && (
+                  <span className="text-xs text-slate-500">{changed.length} cell(s) changed</span>
+                )}
+                {changed.length === 0 && (
+                  <span className="text-xs text-slate-400">No changes yet</span>
                 )}
               </div>
 
               {result && (
                 <div className={`rounded-md border p-3 text-sm ${result.ok ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
                   {result.ok ? (
-                    <>Wrote <span className="font-mono font-semibold">{String(result.written)}</span> to cell <span className="font-mono">{result.colLetter}{result.row}</span>. Dependent formula columns were recalculated.</>
+                    <div className="space-y-1">
+                      <div>Wrote {result.written.length} cell(s) to row {result.row}. Formula columns were recalculated.</div>
+                      <div className="font-mono text-xs">{result.written.map(w => `${w.colLetter}=${String(w.value)}`).join('  ·  ')}</div>
+                    </div>
                   ) : (
                     <>Failed: {result.message}</>
                   )}
