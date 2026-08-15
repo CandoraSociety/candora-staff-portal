@@ -11,6 +11,7 @@ import CollapsibleClientSections from "@/components/pathways/CollapsibleClientSe
 import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSections";
 import PlacementSections from "@/components/pathways/PlacementSections";
 import EmployersListTab from "@/components/pathways/EmployersListTab";
+import CrossRefTab from "@/components/pathways/CrossRefTab";
 import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
 import { Switch } from "@/components/ui/switch";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
@@ -207,6 +208,7 @@ export default function PathwaysMasterList() {
                 { id: "all", label: "All Active", count: activeDeaWdCount },
                 { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
                 { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
+                { id: "cross_ref", label: "Cross-Ref" },
               ].map(sub => (
                 <button
                   key={sub.id}
@@ -219,12 +221,14 @@ export default function PathwaysMasterList() {
                   style={placementSubTab === sub.id ? { color: "hsl(231,64%,20%)", borderColor: "#2b2de8" } : {}}
                 >
                   {sub.label}
-                  <span
-                    className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
-                    style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
-                  >
-                    {sub.count}
-                  </span>
+                  {sub.count != null && (
+                    <span
+                      className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ background: "rgba(43,45,232,0.12)", color: "#2b2de8" }}
+                    >
+                      {sub.count}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -271,6 +275,8 @@ export default function PathwaysMasterList() {
           </>
         ) : placementSubTab === "internal_training" ? (
           <PlacementSections clients={displayed} type="internal" />
+        ) : placementSubTab === "cross_ref" ? (
+          <CrossRefTab activeClients={sourceList} />
         ) : (
           <>
             <ClientListControls
