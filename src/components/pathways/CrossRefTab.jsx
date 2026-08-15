@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
@@ -115,6 +115,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [crtRows, setCrtRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [crtLoading, setCrtLoading] = useState(false);
+  const [marchCrt, setMarchCrt] = useState([]);
+  const [marchLoading, setMarchLoading] = useState(false);
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
   const [comments, setComments] = useState({});
@@ -161,9 +163,22 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     }
   };
 
+  const loadMarchCrt = async () => {
+    setMarchLoading(true);
+    try {
+      const res = await base44.functions.invoke('getCrtWorkbookRows', { file_name: 'CRT_March_2026.xlsx' });
+      setMarchCrt(res.data?.rows || []);
+    } catch {
+      // flags just won't show if the March workbook can't be read
+    } finally {
+      setMarchLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadStatus(DEFAULT_FILE_URL, DEFAULT_FILE_NAME);
     loadCrt(DEFAULT_CRT_URL, DEFAULT_CRT_NAME);
+    loadMarchCrt();
   }, []);
 
   const handleUpload = async (e) => {
@@ -253,6 +268,29 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return out;
   }, [rows, crtRows]);
 
+  const marchMap = useMemo(() => {
+    const m = new Map();
+    marchCrt.forEach(r => {
+      const h = normHsid(r.hsid);
+      if (h) m.set(`h:${h}`, r);
+      rowNameKeys(r.participant_name).forEach(k => { if (!m.has(`n:${k}`)) m.set(`n:${k}`, r); });
+    });
+    return m;
+  }, [marchCrt]);
+
+  // Green flag = completed full program flow (90 Day Outcome filled with a real
+  // outcome, not the projected 'P'). Red flag = cancelled from the program
+  // (Service Outcome = "Cancelled"). Both read from the March 2026 CRT.
+  const flagFor = (row) => {
+    const mr = marchMap.get(`h:${normHsid(row.hsid)}`) || marchMap.get(`n:${normName(row.client_name)}`);
+    if (!mr) return null;
+    const so = (mr.service_outcome || '').trim().toLowerCase();
+    if (so === 'cancelled') return 'cancelled';
+    const d90 = (mr.day90_outcome || '').trim();
+    if (d90 && d90 !== 'P') return 'completed';
+    return null;
+  };
+
   const activeRows = merged.filter(r => !completed.has(stableKey(r)));
   const completedRows = merged.filter(r => completed.has(stableKey(r)));
 
@@ -317,6 +355,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         <tbody className="divide-y divide-slate-100">
           {list.map((r) => {
             const matched = isMatch(r);
+            const flag = flagFor(r);
             const rowBg = r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50');
             return (
               <tr key={r.id} className={rowBg}>
@@ -325,8 +364,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     ? <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{r.source_sheet}</span>
                     : <span className="text-slate-300">—</span>}
                 </td>
-                <td className="px-3 py-2.5 font-medium text-slate-800">
-                  <div className="flex items-center gap-2">
+                <td className="px-3 py-2.5 font-medium text-slate-800 relative">
+                  <div className="flex items-center gap-2 pr-5">
                     {r.client_name || '—'}
                     {r.is_new && (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
@@ -334,6 +373,16 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       </span>
                     )}
                   </div>
+                  {flag === 'completed' && (
+                    <span className="absolute top-1 right-1" title="Completed full program flow (March 2026 CRT)">
+                      <Flag className="w-4 h-4 text-green-600 fill-green-200" />
+                    </span>
+                  )}
+                  {flag === 'cancelled' && (
+                    <span className="absolute top-1 right-1" title="Cancelled from program (March 2026 CRT)">
+                      <Flag className="w-4 h-4 text-red-600 fill-red-200" />
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600">{r.hsid || '—'}</td>
                 <td className="px-3 py-2.5 text-slate-600">{r.status || '—'}</td>
@@ -480,9 +529,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         Rows highlighted in green are already in the All Active master list (matched by HSID# or name).
         Rows marked <span className="font-semibold text-amber-700">Newly Added</span> appear in the CRT workbook but not in the uploaded status workbook.
         Use <span className="font-semibold">Done</span> to move a client to the Completed section at the bottom.
+        A <span className="font-semibold text-green-700">green flag</span> marks clients who completed the full program flow (90 Day Outcome filled with a real outcome) and a <span className="font-semibold text-red-700">red flag</span> marks clients cancelled from the program — both as of the March 2026 CRT.
       </div>
 
-      {loading || crtLoading ? (
+      {loading || crtLoading || marchLoading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
