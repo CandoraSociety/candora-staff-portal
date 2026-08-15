@@ -364,8 +364,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     ? <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{r.source_sheet}</span>
                     : <span className="text-slate-300">—</span>}
                 </td>
-                <td className="px-3 py-2.5 font-medium text-slate-800 relative">
-                  <div className="flex items-center gap-2 pr-5">
+                <td className="px-3 py-2.5 font-medium text-slate-800">
+                  <div className="flex items-center gap-2">
                     {r.client_name || '—'}
                     {r.is_new && (
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
@@ -373,16 +373,6 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       </span>
                     )}
                   </div>
-                  {flag === 'completed' && (
-                    <span className="absolute top-1 right-1" title="Completed full program flow (March 2026 CRT)">
-                      <Flag className="w-4 h-4 text-green-600 fill-green-200" />
-                    </span>
-                  )}
-                  {flag === 'cancelled' && (
-                    <span className="absolute top-1 right-1" title="Cancelled from program (March 2026 CRT)">
-                      <Flag className="w-4 h-4 text-red-600 fill-red-200" />
-                    </span>
-                  )}
                 </td>
                 <td className="px-3 py-2.5 text-slate-600">{r.hsid || '—'}</td>
                 <td className="px-3 py-2.5 text-slate-600">{r.status || '—'}</td>
@@ -401,24 +391,32 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   {matched && <CheckCircle2 className="w-4 h-4 text-green-600" />}
                 </td>
                 <td className="px-3 py-2.5">
-                  {actionable && (
-                    <button
-                      onClick={() => toggleCompleted(r)}
-                      title="Move to Completed - No action needed"
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
-                    >
-                      <Check className="w-3.5 h-3.5" /> Done
-                    </button>
-                  )}
-                  {restorable && (
-                    <button
-                      onClick={() => toggleCompleted(r)}
-                      title="Restore to active list"
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" /> Restore
-                    </button>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {flag === 'completed' && (
+                      <Flag className="w-4 h-4 text-green-600 fill-green-200 shrink-0" title="Completed full program flow (March 2026 CRT)" />
+                    )}
+                    {flag === 'cancelled' && (
+                      <Flag className="w-4 h-4 text-red-600 fill-red-200 shrink-0" title="Cancelled from program (March 2026 CRT)" />
+                    )}
+                    {actionable && (
+                      <button
+                        onClick={() => toggleCompleted(r)}
+                        title="Move to Completed - No action needed"
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Done
+                      </button>
+                    )}
+                    {restorable && (
+                      <button
+                        onClick={() => toggleCompleted(r)}
+                        title="Restore to active list"
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Restore
+                      </button>
+                    )}
+                  </div>
                 </td>
                 {CRT_COLUMNS.map((c, i) => {
                   const val = r.crt ? (r.crt[c.key] || '') : '';
