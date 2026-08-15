@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
@@ -33,7 +33,6 @@ const buildClientNameKeys = (c) => {
   ].filter(Boolean);
 };
 
-// Columns rendered to the right of the black separator — all CRT fields + source sheet
 const CRT_COLUMNS = [
   { key: 'source_sheet', label: 'CRT Source Sheet' },
   { key: 'participant_name', label: 'Participant Legal Name' },
@@ -64,6 +63,28 @@ const CRT_COLUMNS = [
   { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
 ];
 
+const COMPLETED_KEY = 'crossRefCompleted';
+
+function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${open ? '' : '-rotate-90'}`} />
+          <span className="font-semibold text-slate-800">{title}</span>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>{count}</span>
+        </div>
+        {subtitle && <span className="text-xs text-slate-400">{subtitle}</span>}
+      </button>
+      {open && <div className="border-t border-slate-200">{children}</div>}
+    </div>
+  );
+}
+
 export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [rows, setRows] = useState([]);
   const [crtRows, setCrtRows] = useState([]);
@@ -73,8 +94,15 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
   const [comments, setComments] = useState({});
   const [filter, setFilter] = useState('all');
+  const [completed, setCompleted] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]')); } catch { return new Set(); }
+  });
   const fileInput = useRef(null);
   const crtFileInput = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem(COMPLETED_KEY, JSON.stringify([...completed]));
+  }, [completed]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -147,8 +175,20 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return rowNameKeys(row.client_name).some(k => nameKeys.has(k));
   };
 
-  // Merge first-workbook rows with CRT rows. Match by HSID, then by name.
-  // CRT clients with no match in the first workbook become "newly added" rows.
+  const stableKey = (r) => {
+    const h = normHsid(r.hsid);
+    return h ? `h:${h}` : `n:${normName(r.client_name)}`;
+  };
+
+  const toggleCompleted = (r) => {
+    const k = stableKey(r);
+    setCompleted(prev => {
+      const n = new Set(prev);
+      if (n.has(k)) n.delete(k); else n.add(k);
+      return n;
+    });
+  };
+
   const merged = useMemo(() => {
     const used = new Set();
     const findCrtMatch = (row) => {
@@ -184,14 +224,121 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return out;
   }, [rows, crtRows]);
 
-  const matchedCount = merged.filter(isMatch).length;
-  const unmatchedCount = merged.length - matchedCount;
-  const newCount = merged.filter(r => r.is_new).length;
-  const filteredRows = filter === 'all' ? merged : merged.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
+  const activeRows = merged.filter(r => !completed.has(stableKey(r)));
+  const completedRows = merged.filter(r => completed.has(stableKey(r)));
+
+  const matchedCount = activeRows.filter(isMatch).length;
+  const unmatchedCount = activeRows.length - matchedCount;
+  const newCount = activeRows.filter(r => r.is_new).length;
+  const filteredActive = filter === 'all' ? activeRows : activeRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
 
   useEffect(() => {
-    if (onCountsChange) onCountsChange({ all: merged.length, matched: matchedCount, unmatched: unmatchedCount });
-  }, [merged, matchedCount, unmatchedCount, onCountsChange]);
+    if (onCountsChange) onCountsChange({ all: activeRows.length, matched: matchedCount, unmatched: unmatchedCount });
+  }, [activeRows, matchedCount, unmatchedCount, onCountsChange]);
+
+  const renderTable = (list, { actionable, restorable }) => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead className="bg-slate-50 border-b border-slate-200">
+          <tr>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Source Sheet</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Status</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">EDAS Completed</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Extra Notes</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
+            <th className="px-3 py-3" />
+            <th className="text-left px-3 py-3 font-semibold text-slate-600">Action</th>
+            {CRT_COLUMNS.map((c, i) => (
+              <th
+                key={c.key}
+                className={`text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''}`}
+              >
+                {c.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {list.map((r) => {
+            const matched = isMatch(r);
+            const rowBg = r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50');
+            return (
+              <tr key={r.id} className={rowBg}>
+                <td className="px-3 py-2.5">
+                  {r.source_sheet
+                    ? <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{r.source_sheet}</span>
+                    : <span className="text-slate-300">—</span>}
+                </td>
+                <td className="px-3 py-2.5 font-medium text-slate-800">
+                  <div className="flex items-center gap-2">
+                    {r.client_name || '—'}
+                    {r.is_new && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
+                        <Sparkles className="w-2.5 h-2.5" /> Newly Added
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-3 py-2.5 text-slate-600">{r.hsid || '—'}</td>
+                <td className="px-3 py-2.5 text-slate-600">{r.status || '—'}</td>
+                <td className="px-3 py-2.5 text-slate-600">{r.edas_completed || '—'}</td>
+                <td className="px-3 py-2.5 text-slate-500 max-w-xs truncate">{r.extra_notes || '—'}</td>
+                <td className="px-3 py-2.5">
+                  <input
+                    type="text"
+                    value={comments[r.id] || ''}
+                    onChange={(e) => setComments(c => ({ ...c, [r.id]: e.target.value }))}
+                    placeholder="Add comment..."
+                    className="w-full max-w-[200px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  />
+                </td>
+                <td className="px-3 py-2.5">
+                  {matched && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                </td>
+                <td className="px-3 py-2.5">
+                  {actionable && (
+                    <button
+                      onClick={() => toggleCompleted(r)}
+                      title="Move to Completed - No action needed"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Done
+                    </button>
+                  )}
+                  {restorable && (
+                    <button
+                      onClick={() => toggleCompleted(r)}
+                      title="Restore to active list"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Restore
+                    </button>
+                  )}
+                </td>
+                {CRT_COLUMNS.map((c, i) => {
+                  const val = r.crt ? (r.crt[c.key] || '') : '';
+                  return (
+                    <td
+                      key={c.key}
+                      className={`px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${c.key === 'comments' ? 'max-w-[260px] truncate' : ''}`}
+                      title={c.key === 'comments' ? val : undefined}
+                    >
+                      {val || <span className="text-slate-300">—</span>}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+          {list.length === 0 && (
+            <tr><td colSpan={9 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -203,7 +350,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
             {[
-              { id: 'all', label: 'All', count: merged.length },
+              { id: 'all', label: 'All', count: activeRows.length },
               { id: 'matched', label: 'In Master List', count: matchedCount },
               { id: 'unmatched', label: 'Not in Master List', count: unmatchedCount },
             ].map(f => (
@@ -240,6 +387,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       <div className="text-xs text-slate-600 bg-green-50 border border-green-200 rounded-md px-3 py-2">
         Rows highlighted in green are already in the All Active master list (matched by HSID# or name).
         Rows marked <span className="font-semibold text-amber-700">Newly Added</span> appear in the CRT workbook but not in the uploaded status workbook.
+        Use <span className="font-semibold">Done</span> to move a client to the Completed section at the bottom.
       </div>
 
       {loading || crtLoading ? (
@@ -247,87 +395,25 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Source Sheet</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Status</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">EDAS Completed</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Extra Notes</th>
-                  <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
-                  <th className="px-3 py-3" />
-                  {CRT_COLUMNS.map((c, i) => (
-                    <th
-                      key={c.key}
-                      className={`text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''}`}
-                    >
-                      {c.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredRows.map((r) => {
-                  const matched = isMatch(r);
-                  const rowBg = r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50');
-                  return (
-                    <tr key={r.id} className={rowBg}>
-                      <td className="px-3 py-2.5">
-                        {r.source_sheet
-                          ? <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{r.source_sheet}</span>
-                          : <span className="text-slate-300">—</span>}
-                      </td>
-                      <td className="px-3 py-2.5 font-medium text-slate-800">
-                        <div className="flex items-center gap-2">
-                          {r.client_name || '—'}
-                          {r.is_new && (
-                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-200 text-amber-800">
-                              <Sparkles className="w-2.5 h-2.5" /> Newly Added
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600">{r.hsid || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-600">{r.status || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-600">{r.edas_completed || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-500 max-w-xs truncate">{r.extra_notes || '—'}</td>
-                      <td className="px-3 py-2.5">
-                        <input
-                          type="text"
-                          value={comments[r.id] || ''}
-                          onChange={(e) => setComments(c => ({ ...c, [r.id]: e.target.value }))}
-                          placeholder="Add comment..."
-                          className="w-full max-w-[200px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                        />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        {matched && <CheckCircle2 className="w-4 h-4 text-green-600" />}
-                      </td>
-                      {CRT_COLUMNS.map((c, i) => {
-                        const val = r.crt ? (r.crt[c.key] || '') : '';
-                        return (
-                          <td
-                            key={c.key}
-                            className={`px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${c.key === 'comments' ? 'max-w-[260px] truncate' : ''}`}
-                            title={c.key === 'comments' ? val : undefined}
-                          >
-                            {val || <span className="text-slate-300">—</span>}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-                {filteredRows.length === 0 && (
-                  <tr><td colSpan={8 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients match this filter.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-4">
+          <CollapsibleSection
+            title="Cross-Reference Clients"
+            count={activeRows.length}
+            badgeClass="bg-blue-100 text-blue-700"
+            subtitle={`${filteredActive.length} shown`}
+          >
+            {renderTable(filteredActive, { actionable: true })}
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Completed - No action needed"
+            count={completedRows.length}
+            badgeClass="bg-emerald-100 text-emerald-700"
+            subtitle="Moved from the active list"
+            defaultOpen={false}
+          >
+            {renderTable(completedRows, { restorable: true })}
+          </CollapsibleSection>
         </div>
       )}
     </div>
