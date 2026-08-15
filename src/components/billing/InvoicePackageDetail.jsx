@@ -13,6 +13,7 @@ import SupportingDocuments from './SupportingDocuments';
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 import WorkExposurePlacementsTab from './WorkExposurePlacementsTab';
 import PackageContents from './PackageContents';
+import ManualAdjustmentsTab from './ManualAdjustmentsTab';
 import { parseBillingMonth } from './billingMonth';
 
 const NOTE_TYPES = [
@@ -96,12 +97,13 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
       </div>
 
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="placements">Work Exposure Placements</TabsTrigger>
           <TabsTrigger value="childminding">Childminding</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="adjustments">Adjustments</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -332,6 +334,10 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
 
         <TabsContent value="documents" className="space-y-4">
           <SupportingDocuments billingMonth={pkg.billing_month} />
+        </TabsContent>
+
+        <TabsContent value="adjustments" className="space-y-4">
+          <ManualAdjustmentsTab pkg={pkg} />
         </TabsContent>
       </Tabs>
     </div>
