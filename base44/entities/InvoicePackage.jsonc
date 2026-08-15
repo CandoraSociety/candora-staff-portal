@@ -34,6 +34,34 @@
     "notes": {
       "type": "string"
     },
+    "note_entries": {
+      "type": "array",
+      "description": "Categorized notes attached to this package (e.g. invoice adjustment instructions). Each entry stores its type, free-text body, author and date.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "invoice_adjustment",
+              "general",
+              "reminder",
+              "follow_up"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "created_by_name": {
+            "type": "string"
+          },
+          "created_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
     "crt_included": {
       "type": "boolean",
       "default": true
