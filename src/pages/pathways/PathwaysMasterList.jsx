@@ -85,6 +85,7 @@ export default function PathwaysMasterList() {
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [switchClient, setSwitchClient] = useState(null);
   const [viewAll, setViewAll] = useState(false);
+  const [crossRefCounts, setCrossRefCounts] = useState({ all: 0, matched: 0, unmatched: 0 });
 
   useEffect(() => {
     Promise.all([
@@ -208,7 +209,7 @@ export default function PathwaysMasterList() {
                 { id: "all", label: "All Active", count: activeDeaWdCount },
                 { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
                 { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
-                { id: "cross_ref", label: "Cross-Ref" },
+                { id: "cross_ref", label: "Cross-Ref", count: crossRefCounts.all },
               ].map(sub => (
                 <button
                   key={sub.id}
@@ -276,7 +277,7 @@ export default function PathwaysMasterList() {
         ) : placementSubTab === "internal_training" ? (
           <PlacementSections clients={displayed} type="internal" />
         ) : placementSubTab === "cross_ref" ? (
-          <CrossRefTab activeClients={sourceList} />
+          <CrossRefTab activeClients={sourceList} onCountsChange={setCrossRefCounts} />
         ) : (
           <>
             <ClientListControls

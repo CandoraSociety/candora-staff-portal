@@ -30,7 +30,7 @@ const buildClientNameKeys = (c) => {
   ].filter(Boolean);
 };
 
-export default function CrossRefTab({ activeClients }) {
+export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
@@ -79,7 +79,12 @@ export default function CrossRefTab({ activeClients }) {
   };
 
   const matchedCount = rows.filter(isMatch).length;
+  const unmatchedCount = rows.length - matchedCount;
   const filteredRows = filter === 'all' ? rows : rows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
+
+  useEffect(() => {
+    if (onCountsChange) onCountsChange({ all: rows.length, matched: matchedCount, unmatched: unmatchedCount });
+  }, [rows, matchedCount, unmatchedCount, onCountsChange]);
 
   return (
     <div className="space-y-4">
@@ -91,9 +96,9 @@ export default function CrossRefTab({ activeClients }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
             {[
-              { id: 'all', label: 'All' },
-              { id: 'matched', label: 'In Master List' },
-              { id: 'unmatched', label: 'Not in Master List' },
+              { id: 'all', label: 'All', count: rows.length },
+              { id: 'matched', label: 'In Master List', count: matchedCount },
+              { id: 'unmatched', label: 'Not in Master List', count: unmatchedCount },
             ].map(f => (
               <button
                 key={f.id}
@@ -103,6 +108,7 @@ export default function CrossRefTab({ activeClients }) {
                 }`}
               >
                 {f.label}
+                <span className={`ml-1.5 ${filter === f.id ? 'text-slate-400' : 'text-slate-400'}`}>({f.count})</span>
               </button>
             ))}
           </div>
