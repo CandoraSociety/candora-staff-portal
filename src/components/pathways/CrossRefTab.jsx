@@ -37,8 +37,6 @@ const CRT_COLUMNS = [
   { key: 'source_sheet', label: 'CRT Source Sheet' },
   { key: 'participant_name', label: 'Participant Legal Name' },
   { key: 'hsid', label: 'COMPASS HSID #' },
-  { key: 'email', label: 'Participant Email' },
-  { key: 'phone', label: 'Participant Telephone' },
   { key: 'ceis_dea', label: 'CEIS (DEA)' },
   { key: 'dea_start_date', label: 'DEA Start Date' },
   { key: 'service_element', label: 'Service Element' },
