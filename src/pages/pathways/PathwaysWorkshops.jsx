@@ -102,10 +102,10 @@ export default function PathwaysWorkshops() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="w-full justify-start">
           <TabsTrigger value="workshops">All Workshops</TabsTrigger>
-          <TabsTrigger value="completed" className="ml-auto">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="completed" className="ml-auto">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workshops" className="mt-4">
