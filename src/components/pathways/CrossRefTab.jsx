@@ -115,6 +115,14 @@ const parseCrtDate = (s) => {
   return isNaN(d) ? null : d;
 };
 
+const CROSSREF_PUSH_KEYS = [
+  'participant_name','hsid','ceis_dea','dea_start_date','service_element',
+  'service_start_date','service_outcome','service_outcome_date',
+  'placement_outcome','placement_outcome_date','day90_outcome','comments',
+  'eda_completion_date','work_exposure','wage_subsidy','employed_ftpt',
+  'service_nav_support','service_nav_billing_month',
+];
+
 const COMPLETED_KEY = 'crossRefCompleted';
 const UPDATED_KEY = 'crossRefUpdated';
 const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
@@ -221,6 +229,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [updated, setUpdated] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(UPDATED_KEY) || '[]')); } catch { return new Set(); }
   });
+  const [pushing, setPushing] = useState(false);
   // Per-cell "resolved" set for yellow-highlighted date cells. Keyed by
   // `${rowId}:${columnKey}`. When resolved, the yellow highlight is suppressed
   // for that cell (even though the underlying sync gap still applies).
@@ -450,15 +459,56 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
 
   const isUpdatedRow = (r) => rowKeys(r).some(k => updated.has(k));
 
+  const assembleCrtFields = (r) => {
+    const f = { participant_name: r.client_name || '', hsid: r.hsid || '' };
+    for (const key of CROSSREF_PUSH_KEYS) {
+      if (key === 'participant_name' || key === 'hsid') continue;
+      const fallback = r.crt ? (r.crt[key] || '') : '';
+      f[key] = getEdit(r, key, fallback);
+    }
+    return f;
+  };
+
+  const pushCrossRefUpdate = async (r) => {
+    try {
+      const crt_fields = assembleCrtFields(r);
+      await base44.functions.invoke('syncCrossRefUpdatesToCrt', {
+        updates: [{ hsid: r.hsid || '', client_name: r.client_name || '', crt_fields }],
+      });
+      toast.success(`Pushed ${r.client_name || 'client'} to the live CRT`);
+    } catch (e) {
+      toast.error('Failed to push to the live CRT');
+    }
+  };
+
+  const pushAllUpdated = async () => {
+    if (!updatedRows.length) { toast.message('No updated clients to push'); return; }
+    setPushing(true);
+    try {
+      const updates = updatedRows.map(r => ({
+        hsid: r.hsid || '',
+        client_name: r.client_name || '',
+        crt_fields: assembleCrtFields(r),
+      }));
+      await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
+      toast.success(`Pushed ${updates.length} client(s) to the live CRT`);
+    } catch (e) {
+      toast.error('Failed to push updates to the live CRT');
+    } finally {
+      setPushing(false);
+    }
+  };
+
   const toggleUpdated = (r) => {
     const keys = rowKeys(r);
+    const wasUpdated = keys.some(k => updated.has(k));
     setUpdated(prev => {
       const n = new Set(prev);
-      const any = keys.some(k => n.has(k));
-      if (any) keys.forEach(k => n.delete(k));
+      if (wasUpdated) keys.forEach(k => n.delete(k));
       else keys.forEach(k => n.add(k));
       return n;
     });
+    if (!wasUpdated) pushCrossRefUpdate(r);
   };
 
   const merged = useMemo(() => {
@@ -807,10 +857,18 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           CRT source: <span className="font-medium text-slate-800">{crtFileName}</span> · {crtRows.length} CRT rows ·{' '}
           <span className="text-amber-700 font-medium">{newCount} newly added</span>
         </div>
-        <input ref={crtFileInput} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleCrtUpload} />
-        <Button variant="outline" size="sm" onClick={() => crtFileInput.current?.click()} className="gap-1">
-          <Upload className="w-4 h-4" /> Upload CRT Workbook
-        </Button>
+        <div className="flex items-center gap-2">
+          {updatedRows.length > 0 && (
+            <Button variant="default" size="sm" onClick={pushAllUpdated} disabled={pushing} className="gap-1">
+              {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Push Updated → CRT ({updatedRows.length})
+            </Button>
+          )}
+          <input ref={crtFileInput} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleCrtUpload} />
+          <Button variant="outline" size="sm" onClick={() => crtFileInput.current?.click()} className="gap-1">
+            <Upload className="w-4 h-4" /> Upload CRT Workbook
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
