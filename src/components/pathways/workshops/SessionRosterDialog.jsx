@@ -113,15 +113,23 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     )) return;
     setCompleting(true);
     try {
+      const attendedCount = pending.filter(s => s.present).length;
       const updates = pending.map(s => ({ id: s.id, status: s.present ? 'attended' : 'no_show' }));
       await base44.entities.WorkshopSignup.bulkUpdate(updates);
       let syncResult = null;
       try { syncResult = await syncSessionCompletionToRoadmap(workshop.id, sessionDate); } catch (_) {}
+      // Record on the CRT Deliverables sheet: +1 Workshops Delivered, +attended Clients Attended.
+      let delivResult = null;
+      try {
+        delivResult = await base44.functions.invoke('syncWorkshopDeliverablesToCrt', { sessionDate, attendedCount });
+      } catch (_) {}
       onChanged?.();
-      const msg = syncResult?.updated
-        ? `Attendance recorded. ${syncResult.updated} EDA(s) marked complete.`
-        : 'Attendance recorded.';
-      alert(msg);
+      const bits = ['Attendance recorded.'];
+      if (syncResult?.updated) bits.push(`${syncResult.updated} EDA(s) marked complete.`);
+      const dv = delivResult?.data;
+      if (dv?.status === 'success') bits.push(`CRT Deliverables updated (${dv.workshopsDelivered} delivered, ${dv.clientsAttended} attended).`);
+      else if (dv && dv.status !== 'success') bits.push(`Deliverables: ${dv.message || dv.status}.`);
+      alert(bits.join(' '));
     } catch (e) {
       alert('Could not complete session: ' + (e.message || 'Unknown error'));
     } finally {
