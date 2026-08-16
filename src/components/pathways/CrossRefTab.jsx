@@ -227,8 +227,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [yellowResolved, setYellowResolved] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(YELLOW_RESOLVED_KEY) || '[]')); } catch { return new Set(); }
   });
-  const toggleYellowResolved = (rowId, key) => {
-    const cellKey = `${rowId}:${key}`;
+  const toggleYellowResolved = (row, key) => {
+    const cellKey = `${rowStorageKey(row)}:${key}`;
     setYellowResolved(prev => {
       const n = new Set(prev);
       if (n.has(cellKey)) n.delete(cellKey);
@@ -236,7 +236,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       return n;
     });
   };
-  const isYellowResolved = (rowId, key) => yellowResolved.has(`${rowId}:${key}`);
+  const isYellowResolved = (row, key) => yellowResolved.has(`${rowStorageKey(row)}:${key}`);
   // "Phase Change" marker — flags a client as needing to move from the 90-Day
   // follow-up phase back to work-search phase. Persisted by HSID + name aliases
   // (same multi-key scheme as Done/Updated) so it survives workbook re-uploads.
@@ -701,7 +701,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   const editable = EDITABLE_CRT_KEYS.includes(c.key);
                   const cellDate = DATE_KEYS.has(c.key) ? parseCrtDate(val) : null;
                   const isYellow = showDogEar && cellDate && cellDate <= MARCH_2026_END;
-                  const highlightYellow = isYellow && !isYellowResolved(r.id, c.key);
+                  const highlightYellow = isYellow && !isYellowResolved(r, c.key);
                   return (
                     <td
                       key={c.key}
@@ -728,7 +728,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       )}
                       {isYellow && (
                         <button
-                          onClick={() => toggleYellowResolved(r.id, c.key)}
+                          onClick={() => toggleYellowResolved(r, c.key)}
                           title="Mark this sync gap as resolved — hides the yellow highlight"
                           className={`shrink-0 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md border transition-colors ${highlightYellow ? 'border-yellow-500 text-yellow-800 bg-yellow-300 hover:bg-yellow-400' : 'border-slate-300 text-slate-500 hover:bg-slate-50'}`}
                         >
