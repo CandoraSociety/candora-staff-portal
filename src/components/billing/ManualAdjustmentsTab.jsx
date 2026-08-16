@@ -130,7 +130,7 @@ export default function ManualAdjustmentsTab({ pkg }) {
                   <tbody>
                     <tr>
                       {columns.map(c => (
-                        <th key={c.colLetter} className="h-6 text-xs font-semibold text-slate-500 text-center border border-slate-300 bg-slate-200">{c.colLetter}</th>
+                        <th key={c.colLetter} className="h-6 text-xs font-semibold text-white text-center border border-slate-300" style={{ background: 'hsl(231,64%,20%)' }}>{c.colLetter}</th>
                       ))}
                     </tr>
                     <tr>
@@ -152,7 +152,7 @@ export default function ManualAdjustmentsTab({ pkg }) {
                       {columns.map(c => {
                         if (c.readOnly) {
                           return (
-                            <td key={c.colLetter} className="px-2 py-1.5 text-sm text-slate-600 text-center border border-slate-300 bg-slate-50" title={c.label}>
+                            <td key={c.colLetter} className="px-2 py-1.5 text-sm text-slate-400 text-center border border-slate-300 bg-slate-50 italic" title={c.label}>
                               {displayValue(c)}
                             </td>
                           );
