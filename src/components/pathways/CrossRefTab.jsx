@@ -302,10 +302,17 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         const me = await base44.auth.me();
         const s = me?.[SNAPSHOT_KEY];
         if (s && !cancelled) {
-          setCompleted(prev => prev.size ? prev : new Set(s.completed || []));
-          setUpdated(prev => prev.size ? prev : new Set(s.updated || []));
-          setYellowResolved(prev => prev.size ? prev : new Set(s.yellowResolved || []));
-          setPhaseChange(prev => prev.size ? prev : new Set(s.phaseChange || []));
+          // Merge (union) localStorage with the server snapshot rather than
+          // preferring one over the other. The preview sandbox's localStorage
+          // can be partially wiped on restart; if we kept only the smaller
+          // local set we'd silently lose Done/Updated/Phase flags that the
+          // server still holds. Union both directions so the full state
+          // survives a partial local wipe — and the next save writes the
+          // merged set back, re-seeding the server.
+          setCompleted(prev => new Set([...prev, ...(s.completed || [])]));
+          setUpdated(prev => new Set([...prev, ...(s.updated || [])]));
+          setYellowResolved(prev => new Set([...prev, ...(s.yellowResolved || [])]));
+          setPhaseChange(prev => new Set([...prev, ...(s.phaseChange || [])]));
           setComments(prev => ({ ...(s.comments || {}), ...prev }));
           setCellEdits(prev => ({ ...(s.cellEdits || {}), ...prev }));
         }
