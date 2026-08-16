@@ -119,6 +119,30 @@ const COMPLETED_KEY = 'crossRefCompleted';
 const UPDATED_KEY = 'crossRefUpdated';
 const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
 const PHASE_CHANGE_KEY = 'crossRefPhaseChange';
+const COMMENTS_KEY = 'crossRefComments';
+
+// Stable per-client storage key: HSID when present, otherwise a canonical
+// "lastname firstname" key derived from the name (comma-aware) so the same
+// client resolves to the same key across workbook re-uploads regardless of
+// name format ("Smith, John" vs "John Smith" vs "Smith, John A.").
+const canonicalNameKey = (name) => {
+  const n = normName(name);
+  if (!n) return '';
+  if (name.includes(',')) {
+    const [last, ...rest] = name.split(',').map(s => s.trim());
+    const firstTok = normName((rest.join(' ').split(/\s+/)[0]) || '');
+    const lastTok = normName((last.split(/\s+/)[0]) || '');
+    return firstTok && lastTok ? `${lastTok} ${firstTok}` : n;
+  }
+  const tokens = n.split(' ').filter(Boolean);
+  if (tokens.length >= 2) return `${tokens[tokens.length - 1]} ${tokens[0]}`;
+  return n;
+};
+const rowStorageKey = (r) => {
+  const h = normHsid(r.hsid);
+  if (h) return `h:${h}`;
+  return `n:${canonicalNameKey(r.client_name)}`;
+};
 
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -151,7 +175,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [liveLoading, setLiveLoading] = useState(false);
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
-  const [comments, setComments] = useState({});
+  const [comments, setComments] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); } catch { return {}; }
+  });
   const [cellEdits, setCellEdits] = useState({});
   const getEdit = (row, key, fallback) => {
     const e = cellEdits[row.id];
@@ -239,6 +265,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   useEffect(() => {
     localStorage.setItem(PHASE_CHANGE_KEY, JSON.stringify([...phaseChange]));
   }, [phaseChange]);
+
+  useEffect(() => {
+    localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+  }, [comments]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -549,8 +579,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 <td className="px-3 py-2.5">
                   <input
                     type="text"
-                    value={comments[r.id] || ''}
-                    onChange={(e) => setComments(c => ({ ...c, [r.id]: e.target.value }))}
+                    value={comments[rowStorageKey(r)] || ''}
+                    onChange={(e) => setComments(c => ({ ...c, [rowStorageKey(r)]: e.target.value }))}
                     placeholder="Add comment..."
                     className="w-full max-w-[200px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
                   />
