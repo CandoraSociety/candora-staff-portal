@@ -108,8 +108,12 @@ export default function StaffMonthlyReports() {
   };
 
   const categoryLabel = (key) => NARRATIVE_CATEGORIES.find(c => c.value === key)?.label || key;
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthLabel = (ym) => {
-    try { return new Date(ym + "-01").toLocaleDateString('en-CA', { year: 'numeric', month: 'long' }); } catch { return ym; }
+    const [y, m] = String(ym || '').split('-');
+    const idx = parseInt(m, 10) - 1;
+    if (isNaN(idx) || idx < 0 || idx > 11) return ym;
+    return `${MONTH_NAMES[idx]} ${y}`;
   };
 
   const groupedSummaries = useMemo(() => {
