@@ -55,6 +55,11 @@ const CRT_COLUMNS = [
   { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
 ];
 
+// CRT fields to the right of the COMPASS HSID # column — editable inline.
+const EDITABLE_CRT_KEYS = CRT_COLUMNS
+  .filter(c => !['source_sheet', 'participant_name', 'hsid'].includes(c.key))
+  .map(c => c.key);
+
 const DATE_COLUMNS = [
   { key: 'dea_start_date', label: 'DEA Start Date' },
   { key: 'service_start_date', label: 'Service Start Date' },
@@ -111,6 +116,20 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
   const [comments, setComments] = useState({});
+  const [cellEdits, setCellEdits] = useState({});
+  const getEdit = (row, key, fallback) => {
+    const e = cellEdits[row.id];
+    if (e && e[key] !== undefined) return e[key];
+    return fallback ?? '';
+  };
+  const setEdit = (row, key, value) => {
+    setCellEdits(prev => {
+      const n = { ...prev };
+      if (!n[row.id]) n[row.id] = {};
+      n[row.id][key] = value;
+      return n;
+    });
+  };
   const [filter, setFilter] = useState('all');
   const [dateColumn, setDateColumn] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -457,20 +476,31 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   </div>
                 </td>
                 {CRT_COLUMNS.map((c, i) => {
-                  const val = r.crt ? (r.crt[c.key] || '') : '';
+                  const fallback = r.crt ? (r.crt[c.key] || '') : '';
+                  const val = getEdit(r, c.key, fallback);
                   // Red dog-ear: this CRT field IS filled in on the uploaded
                   // cross-reference sheet, but blank in the live CRT Client
                   // Data sheet (Billing tab → CRT tab). Skip the Source Sheet
                   // column — it has no live-CRT counterpart.
                   const liveVal = liveRow ? (liveRow[c.key] || '') : '';
                   const showDogEar = r.crt && c.key !== 'source_sheet' && val && !liveVal;
+                  const editable = EDITABLE_CRT_KEYS.includes(c.key);
                   return (
                     <td
                       key={c.key}
-                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${c.key === 'comments' ? 'max-w-[260px] truncate' : ''}`}
-                      title={c.key === 'comments' ? val : undefined}
+                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''}`}
                     >
-                      {val || <span className="text-slate-300">—</span>}
+                      {editable ? (
+                        <input
+                          type="text"
+                          value={val}
+                          onChange={(e) => setEdit(r, c.key, e.target.value)}
+                          placeholder="—"
+                          className="w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                        />
+                      ) : (
+                        val || <span className="text-slate-300">—</span>
+                      )}
                       {showDogEar && (
                         <span
                           title="Filled in on the cross-reference sheet but blank on the live CRT Client Data sheet"
