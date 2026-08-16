@@ -1,6 +1,6 @@
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
-  mapClientToCrtRow, crtMonthEnd, listCrtFiles
+  mapClientToCrtRow, crtMonthEnd, listCrtFiles, parseCrtDate
 } from './crtWorkbook.ts';
 import { syncNarrativeReportIntoWorkbook } from './narrativeReport.ts';
 
@@ -182,6 +182,24 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     allValues[i] = new Array(NUM_COLUMNS).fill('');
     clearedCount++;
   }
+
+  // Reorder the data rows by the applicable start date — DEA Start Date
+  // (column D) for DEA clients, Service Start Date (column F) for WD clients
+  // — ascending, with undated clients sorted to the bottom. Rows above
+  // CLIENT_DATA_START_ROW are header/metadata and stay in place. The whole row
+  // is moved as a unit so any manually-entered values in unmanaged columns
+  // travel with the client.
+  const dataStart = CLIENT_DATA_START_ROW - 1;
+  const dataRows = allValues.slice(dataStart);
+  dataRows.sort((a, b) => {
+    const da = parseCrtDate(a?.[3]) || parseCrtDate(a?.[5]);
+    const db = parseCrtDate(b?.[3]) || parseCrtDate(b?.[5]);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da < db ? -1 : da > db ? 1 : 0; // YYYY-MM-DD strings compare lexicographically
+  });
+  for (let i = 0; i < dataRows.length; i++) allValues[dataStart + i] = dataRows[i];
 
   // NOTE: Do NOT recalculate lastDataRow after cleanup. The write range must
   // still cover cleared rows so their empty values are written back to the
