@@ -366,7 +366,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   }, [activeRows, matchedCount, unmatchedCount, onCountsChange]);
 
   const renderTable = (list, { actionable, restorable }) => (
-    <div className="overflow-auto max-h-[60vh]">
+    <div>
       <table className="w-full text-sm border-collapse">
         <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-30">
           <tr>
