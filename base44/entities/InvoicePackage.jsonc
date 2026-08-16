@@ -62,6 +62,46 @@
         }
       }
     },
+    "adjustment_notes": {
+      "type": "array",
+      "description": "Structured notes auto-created when a Manual Adjustment is applied to the Invoice Tracker. Each entry records the cell changed (old \u2192 new value), the client it applies to, the reason, and a field-note instruction for the Client Data sheet.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cell_letter": {
+            "type": "string"
+          },
+          "cell_label": {
+            "type": "string"
+          },
+          "old_value": {
+            "type": "string"
+          },
+          "new_value": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "created_by_name": {
+            "type": "string"
+          },
+          "created_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "billing_month": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "crt_included": {
       "type": "boolean",
       "default": true
