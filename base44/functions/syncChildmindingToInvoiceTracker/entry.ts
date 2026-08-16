@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow,
-  billingMonthToKey, writeTrackerCell
+  billingMonthToKey, cellToMonthKey, writeTrackerCell
 } from '../../shared/invoiceTracker.ts';
 
 // Column CH of the Invoice Tracker sheet holds the monthly childminding total.
@@ -45,9 +45,6 @@ export default async function(req: Request): Promise<Response> {
     if (months.length === 0) {
       months = [...new Set(recs.map(r => (r.date ? String(r.date).slice(0, 7) : null)).filter(Boolean))].sort();
     }
-    if (months.length === 0) {
-      return Response.json({ status: 'no_months', message: 'No childminding billing months to sync.' });
-    }
 
     const totals: Record<string, number> = {};
     for (const r of recs) {
@@ -66,6 +63,23 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ status: 'no_sheet', message: 'No Invoice Tracker sheet found in the active CRT workbook.', workbook: workbook.name });
     }
     const { values, startRow } = await readInvoiceTracker(accessToken, workbook.id, sheetName);
+
+    // Manual sync-all with no remaining records: cover every month row in the
+    // tracker so months whose records were deleted get zeroed out instead of
+    // left holding a stale total. (Explicit billingMonth/event paths already
+    // populated `months` above.)
+    if (months.length === 0 && !payload?.event) {
+      for (const row of (values || [])) {
+        if (!row) continue;
+        const key = cellToMonthKey(row[0]);
+        if (!key) continue;
+        months.push(`${key.year}-${String(key.month + 1).padStart(2, '0')}`);
+      }
+      months.sort();
+    }
+    if (months.length === 0) {
+      return Response.json({ status: 'no_months', message: 'No childminding billing months to sync.' });
+    }
 
     const results = [];
     for (const bm of months) {
