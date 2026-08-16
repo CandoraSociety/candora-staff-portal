@@ -210,16 +210,26 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return rowNameKeys(row.client_name).some(k => nameKeys.has(k));
   };
 
-  const stableKey = (r) => {
+  // Match a row against the completed set using ALL of its identifiers
+  // (HSID + every normalized name spelling) so the Done state survives
+  // minor HSID/name format drift between workbook versions.
+  const rowKeys = (r) => {
+    const keys = [];
     const h = normHsid(r.hsid);
-    return h ? `h:${h}` : `n:${normName(r.client_name)}`;
+    if (h) keys.push(`h:${h}`);
+    rowNameKeys(r.client_name).forEach(k => keys.push(`n:${k}`));
+    return keys;
   };
 
+  const isCompletedRow = (r) => rowKeys(r).some(k => completed.has(k));
+
   const toggleCompleted = (r) => {
-    const k = stableKey(r);
+    const keys = rowKeys(r);
     setCompleted(prev => {
       const n = new Set(prev);
-      if (n.has(k)) n.delete(k); else n.add(k);
+      const anyDone = keys.some(k => n.has(k));
+      if (anyDone) keys.forEach(k => n.delete(k));
+      else keys.forEach(k => n.add(k));
       return n;
     });
   };
@@ -282,8 +292,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return null;
   };
 
-  const activeRows = merged.filter(r => !completed.has(stableKey(r)));
-  const completedRows = merged.filter(r => completed.has(stableKey(r)));
+  const activeRows = merged.filter(r => !isCompletedRow(r));
+  const completedRows = merged.filter(r => isCompletedRow(r));
 
   const matchedCount = activeRows.filter(isMatch).length;
   const unmatchedCount = activeRows.length - matchedCount;
