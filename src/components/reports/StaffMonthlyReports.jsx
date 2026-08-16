@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, FileText, Clock, CheckCircle2, AlertCircle, User, Save } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle2, AlertCircle, User, Save, Loader2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { NARRATIVE_CATEGORIES } from "@/components/pathways/MonthlyNarrativeReportTab";
 
 export default function StaffMonthlyReports() {
   const queryClient = useQueryClient();
@@ -45,6 +46,60 @@ export default function StaffMonthlyReports() {
     queryKey: ['all-clients'],
     queryFn: () => base44.entities.Client.list("-created_date", 1000),
   });
+
+  const { data: narrativeSummaries = [], refetch: refetchSummaries } = useQuery({
+    queryKey: ['narrative-summaries'],
+    queryFn: () => base44.entities.NarrativeSummary.list("-submitted_date", 500),
+  });
+
+  const [pushingMonth, setPushingMonth] = useState(null);
+
+  const toggleIncludeInCrt = async (summary) => {
+    try {
+      await base44.entities.NarrativeSummary.update(summary.id, { include_in_crt: !summary.include_in_crt });
+      await refetchSummaries();
+    } catch (e) {
+      toast.error("Failed to update: " + (e.message || "Unknown error"));
+    }
+  };
+
+  const pushMonthToCrt = async (month) => {
+    setPushingMonth(month);
+    try {
+      const res = await base44.functions.invoke('syncNarrativeSummariesToCrt', { reportMonth: month });
+      const data = res.data;
+      if (data.status === 'success') {
+        toast.success(`Pushed ${data.checkedCount} narrative summary(ies) to ${data.workbook}.`);
+      } else if (data.status === 'not_found') {
+        toast.error(data.message);
+      } else {
+        toast.error(data.error || data.message || "Push failed");
+      }
+    } catch (e) {
+      toast.error("Push failed: " + (e.message || "Unknown error"));
+    } finally {
+      setPushingMonth(null);
+    }
+  };
+
+  const categoryLabel = (key) => NARRATIVE_CATEGORIES.find(c => c.value === key)?.label || key;
+  const monthLabel = (ym) => {
+    try { return new Date(ym + "-01").toLocaleDateString('en-CA', { year: 'numeric', month: 'long' }); } catch { return ym; }
+  };
+
+  // Group narrative summaries by month (filtered by the same worker filter)
+  const groupedSummaries = useMemo(() => {
+    let s = narrativeSummaries;
+    if (filterWorker !== "all") {
+      s = s.filter(x => x.submitted_by_name === filterWorker);
+    }
+    const groups = {};
+    s.forEach(x => {
+      if (!groups[x.report_month]) groups[x.report_month] = [];
+      groups[x.report_month].push(x);
+    });
+    return groups;
+  }, [narrativeSummaries, filterWorker]);
 
   const workers = useMemo(() => {
     const unique = new Set(clients.map(c => c.assigned_worker_name).filter(Boolean));
@@ -336,8 +391,79 @@ export default function StaffMonthlyReports() {
                 </CardContent>
               </Card>
             ))
-        )}
-      </div>
-    </div>
-  );
-}
+            )}
+
+            {/* Narrative Summaries — grouped by month with CRT inclusion checkboxes */}
+            <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Narrative Summaries</h3>
+            {Object.keys(groupedSummaries).length === 0 ? (
+            <Card>
+             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
+               <h3 className="text-lg font-semibold">No Narrative Summaries</h3>
+               <p className="text-muted-foreground">Staff can submit summaries from the My Dashboard → Monthly Narrative Report tab.</p>
+             </CardContent>
+            </Card>
+            ) : (
+            Object.entries(groupedSummaries)
+             .sort((a, b) => new Date(b[0] + "-01") - new Date(a[0] + "-01"))
+             .map(([month, items]) => {
+               const checkedCount = items.filter(i => i.include_in_crt).length;
+               return (
+                 <Card key={month}>
+                   <CardHeader>
+                     <div className="flex items-center justify-between gap-2 flex-wrap">
+                       <CardTitle className="text-base">{monthLabel(month)}</CardTitle>
+                       <div className="flex items-center gap-2">
+                         <Badge variant="outline">{items.length} summary{items.length !== 1 ? "ies" : ""}</Badge>
+                         <Badge variant={checkedCount > 0 ? "default" : "secondary"}>
+                           {checkedCount} selected
+                         </Badge>
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           onClick={() => pushMonthToCrt(month)}
+                           disabled={pushingMonth === month || checkedCount === 0}
+                           className="gap-1.5"
+                         >
+                           {pushingMonth === month
+                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                             : <Upload className="w-3.5 h-3.5" />}
+                           {pushingMonth === month ? "Pushing..." : "Push to CRT"}
+                         </Button>
+                       </div>
+                     </div>
+                   </CardHeader>
+                   <CardContent className="space-y-2">
+                     {items.map(item => (
+                       <div key={item.id} className="border rounded-lg p-3 flex gap-3">
+                         <input
+                           type="checkbox"
+                           checked={!!item.include_in_crt}
+                           onChange={() => toggleIncludeInCrt(item)}
+                           className="mt-1 w-4 h-4 rounded border-slate-300 accent-[#2b2de8] cursor-pointer shrink-0"
+                           title="Include in CRT Narrative Report sheet for this month"
+                         />
+                         <div className="min-w-0 flex-1">
+                           <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                             <span className="text-sm font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
+                               {categoryLabel(item.category)}
+                             </span>
+                             <span className="text-xs text-muted-foreground">
+                               {item.submitted_by_name} · {item.submitted_date}
+                             </span>
+                           </div>
+                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.summary}</p>
+                         </div>
+                       </div>
+                     ))}
+                   </CardContent>
+                 </Card>
+               );
+             })
+            )}
+            </div>
+            </div>
+            </div>
+            );
+            }

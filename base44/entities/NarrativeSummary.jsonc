@@ -1,0 +1,50 @@
+{
+  "name": "NarrativeSummary",
+  "type": "object",
+  "properties": {
+    "report_month": {
+      "type": "string",
+      "description": "YYYY-MM \u2014 the reporting month this narrative summary belongs to"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "trends",
+        "marketing_activities",
+        "success_stories",
+        "employer_engagements",
+        "challenges",
+        "goals_next_month",
+        "additional_notes"
+      ],
+      "description": "Narrative category \u2014 mirrors the Narrative Report sheet's Category column and the StaffMonthlyReport field keys."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Free-text narrative summary for this category/month"
+    },
+    "submitted_by": {
+      "type": "string",
+      "description": "Email of the staff member who submitted the summary"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who submitted the summary"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "include_in_crt": {
+      "type": "boolean",
+      "default": false,
+      "description": "When checked, this summary is included in the next push to the CRT Narrative Report sheet for its month."
+    }
+  },
+  "required": [
+    "report_month",
+    "category",
+    "summary",
+    "submitted_by"
+  ]
+}

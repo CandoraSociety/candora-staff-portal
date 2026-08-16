@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart, ExternalLink } from "lucide-react";
+import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart, ExternalLink, FileText } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format, addDays, differenceInDays } from "date-fns";
 import ClientListControls, { applyFiltersAndSort } from "@/components/lists/ClientListControls";
@@ -17,6 +17,7 @@ import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
 import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways/RecentlyViewedClients";
 import PurchaseRequestsTab from "@/components/pathways/PurchaseRequestsTab";
 import MyPendingPurchaseRequests from "@/components/pathways/MyPendingPurchaseRequests";
+import MonthlyNarrativeReportTab from "@/components/pathways/MonthlyNarrativeReportTab";
 
 const COMPASS_URL = 'https://csscm.alberta.ca/home';
 
@@ -365,6 +366,14 @@ export default function PathwaysWorkerDashboard() {
               )}
             </button>
           )}
+          <button
+            onClick={() => setActiveTab("narrative")}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "narrative" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" /> Monthly Narrative Report
+          </button>
         </div>
 
         {/* Compass tab */}
@@ -388,6 +397,11 @@ export default function PathwaysWorkerDashboard() {
         {/* Purchase Requests tab (managers/admins only) */}
         {activeTab === "purchases" && isManagerOrAdmin && (
           <PurchaseRequestsTab requests={purchaseRequests} currentUser={user} />
+        )}
+
+        {/* Monthly Narrative Report tab */}
+        {activeTab === "narrative" && (
+          <MonthlyNarrativeReportTab currentUser={user} />
         )}
 
         {/* Clients tab */}

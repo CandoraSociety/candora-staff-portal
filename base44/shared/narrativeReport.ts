@@ -138,3 +138,73 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
     startSerial, endSerial
   };
 }
+
+// Write the given narrative summaries (in order) into the Narrative Report
+// sheet's Category (C) + Summary (D) columns for the workbook's month. Each
+// data row (10+) gets the workbook month's Reporting Period dates (A/B) and
+// either a summary's category/text or blanks. Rows beyond the summary count
+// are cleared (C/D) but keep their dates so the sheet stays dated for the month.
+// If there are more summaries than existing data rows, the range is extended
+// to fit them. Returns a small status object.
+export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook, summaries) {
+  const wbKey = narrativeMonthFromFileName(workbook.name);
+  if (!wbKey) {
+    return { status: 'no_month', message: 'Could not parse month from filename: ' + workbook.name };
+  }
+  const monthStart = new Date(Date.UTC(wbKey.year, wbKey.month, 1));
+  const monthEnd = new Date(Date.UTC(wbKey.year, wbKey.month + 1, 0));
+  const startSerial = excelSerial(monthStart);
+  const endSerial = excelSerial(monthEnd);
+
+  const usedRes = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${NARRATIVE_SHEET}')/usedRange(valuesOnly=true)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  if (!usedRes.ok) {
+    return { status: 'read_failed', error: await usedRes.text() };
+  }
+  const used = await usedRes.json();
+  const values = used.values || [];
+
+  // Find the last row (from row 10 onward) that has any content in A–D.
+  let lastDataIdx = DATA_START_ROW - 2; // 0-based; -1 means none
+  for (let i = values.length - 1; i >= DATA_START_ROW - 1; i--) {
+    const row = values[i] || [];
+    let hasContent = false;
+    for (let c = 0; c < NUM_COLS; c++) {
+      const v = row[c];
+      if (v !== null && v !== undefined && String(v).trim() !== '') { hasContent = true; break; }
+    }
+    if (hasContent) { lastDataIdx = i; break; }
+  }
+
+  // Ensure enough rows to cover all summaries (extend past the used range if needed).
+  const endIdx = Math.max(lastDataIdx, DATA_START_ROW - 1 + Math.max(summaries.length, 1) - 1);
+  const outRows = [];
+  for (let i = 0; i <= endIdx - (DATA_START_ROW - 1); i++) {
+    const s = summaries[i];
+    outRows.push([startSerial, endSerial, s ? (s.category || '') : '', s ? (s.summary || '') : '']);
+  }
+
+  const endRow1 = endIdx + 1; // 1-based
+  const rangeAddress = `A${DATA_START_ROW}:D${endRow1}`;
+  const patchRes = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${NARRATIVE_SHEET}')/range(address='${rangeAddress}')`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values: outRows })
+    }
+  );
+  if (!patchRes.ok) {
+    return { status: 'write_failed', error: await patchRes.text() };
+  }
+
+  return {
+    status: 'success',
+    month: `${wbKey.year}-${String(wbKey.month + 1).padStart(2, '0')}`,
+    written: summaries.length,
+    rows: outRows.length,
+    startSerial, endSerial
+  };
+}
