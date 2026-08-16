@@ -31,17 +31,6 @@ export default function CRT({ clients = [] }) {
     },
   });
 
-  // Embed URL for a user-selected (non-active) file. When viewFileId is null
-  // the active workbook's embed (from status) is used directly.
-  const { data: previewData, isLoading: previewLoading } = useQuery({
-    queryKey: ['crt-file-preview', viewFileId],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getCrtFilePreview', { fileId: viewFileId });
-      return res.data;
-    },
-    enabled: !!viewFileId,
-  });
-
   // When the user selects a month to view, also align that workbook's
   // Narrative Report sheet to its own month (so the preview shows the
   // correct reporting-period dates + that month's narrative, not the
@@ -59,6 +48,19 @@ export default function CRT({ clients = [] }) {
       .finally(() => { if (!cancelled) setNarrativeSyncing(false); });
     return () => { cancelled = true; };
   }, [viewFileId]);
+
+  // Embed URL for a user-selected (non-active) file. When viewFileId is null
+  // the active workbook's embed (from status) is used directly. The query is
+  // gated on the narrative sync finishing so the iframe never renders a
+  // pre-sync (stale) snapshot of the Narrative Report sheet.
+  const { data: previewData, isLoading: previewLoading } = useQuery({
+    queryKey: ['crt-file-preview', viewFileId],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getCrtFilePreview', { fileId: viewFileId });
+      return res.data;
+    },
+    enabled: !!viewFileId && !narrativeSyncing,
+  });
 
   const handleSync = async () => {
     setSyncing(true);
@@ -180,7 +182,7 @@ export default function CRT({ clients = [] }) {
   const activeEmbedUrl = wb?.embedUrl;
   const viewedFile = viewFileId ? status?.allFiles?.find(f => f.id === viewFileId) : wb;
   const effectiveEmbedUrl = viewFileId ? (previewData?.embedUrl || null) : activeEmbedUrl;
-  const showPreviewLoading = !!viewFileId && previewLoading;
+  const showPreviewLoading = !!viewFileId && (previewLoading || narrativeSyncing);
   const isViewingArchive = !!viewFileId && viewFileId !== wb?.id;
 
   return (
