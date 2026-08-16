@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
-  DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
-  getGraphToken, getActiveCrtWorkbook, listCrtFiles, mapClientToCrtRow, parseCrtDate
+  getGraphToken, getActiveCrtWorkbook, mapClientToCrtRow, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 
@@ -61,6 +60,18 @@ function buildCrossRefRow(cf, day90Date) {
   for (const [k, c] of Object.entries(FIELD_TO_COL)) row[c] = String(cf[k] ?? '').trim();
   row[15] = String(day90Date || ''); // P: 90 Day Outcome Date — calculated, never from cross-ref
   return row;
+}
+
+function parseName(full) {
+  const s = String(full || '').trim();
+  if (!s) return { first_name: '', last_name: '' };
+  if (s.includes(',')) {
+    const [last, ...rest] = s.split(',').map(x => x.trim());
+    return { first_name: rest.join(' ').trim(), last_name: last };
+  }
+  const parts = s.split(/\s+/);
+  if (parts.length === 1) return { first_name: parts[0], last_name: '' };
+  return { first_name: parts[0], last_name: parts.slice(1).join(' ') };
 }
 
 function buildNoteText(cf, day90Date) {
@@ -199,98 +210,57 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // A matched client's file was updated (e.g. DEA start date, EDA completion,
-    // 90-day outcome). The Invoice Tracker's billing-summary tallies — CEIS
-    // (DEA) Starters, WD Complete, WD Placement, CEIS (DEA) 90 Day, WD 90 Day,
-    // Service Navigation Fee — are derived from those same client fields, so
-    // refresh them on the active workbook's Invoice Tracker now so the push
-    // flows through to the tallies immediately instead of waiting for the
-    // monthly advance. (The CRT row itself is re-synced by the "CRT Sync on
-    // Client Update" entity automation that already fired on the update above.)
+    // Non-portal clients: create a Client entity record assigned to Olena so
+    // they appear in the master list, and let the normal "CRT Sync on Client
+    // Update" automation (which fires on create) add them to the live CRT. The
+    // 90-day date and all derived CRT fields are then calculated by the sync,
+    // not copied from the cross-ref.
+    let anyClientCreated = false;
+    if (nonPortal.length) {
+      const ASSIGNED_EMAIL = 'olena@candorasociety.com';
+      const ASSIGNED_NAME = 'Olena';
+      for (const { idx, cf } of nonPortal) {
+        const { first_name, last_name } = parseName(cf.participant_name);
+        if (!first_name && !last_name) {
+          results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: false, error: 'No name to create' };
+          continue;
+        }
+        const entityUpdates = applyCrossRefToClient({ compass_hsid: '', eda_completion_date: '' }, cf);
+        const payload = {
+          first_name,
+          last_name,
+          ...entityUpdates,
+          assigned_worker: ASSIGNED_EMAIL,
+          assigned_worker_name: ASSIGNED_NAME,
+          status: 'active',
+        };
+        try {
+          const created = await base44.asServiceRole.entities.Client.create(payload);
+          anyClientCreated = true;
+          results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: true, client_id: created.id };
+        } catch (e) {
+          results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: false, error: e.message };
+        }
+      }
+    }
+
+    // A client file was updated or created (e.g. DEA start date, EDA completion,
+    // 90-day outcome, or a brand-new client assigned to Olena). The Invoice
+    // Tracker's billing-summary tallies — CEIS (DEA) Starters, WD Complete,
+    // WD Placement, CEIS (DEA) 90 Day, WD 90 Day, Service Navigation Fee — are
+    // derived from those same client fields, so refresh them on the active
+    // workbook's Invoice Tracker now so the push flows through to the tallies
+    // immediately instead of waiting for the monthly advance. (The CRT row
+    // itself is re-synced by the "CRT Sync on Client Update" entity automation
+    // that already fired on the update/create above.)
     let billingCounts = null;
-    if (anyClientUpdated) {
+    if (anyClientUpdated || anyClientCreated) {
       try {
         const token = await getGraphToken();
         const active = await getActiveCrtWorkbook(token);
         if (active) billingCounts = await refreshBillingCounts(base44, token, active);
       } catch (e) {
         billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
-      }
-    }
-
-    // Non-portal clients: write directly to the live CRT (new row, or update a
-    // row matched by HSID/name). No entity → no 90-day date calculation.
-    if (nonPortal.length) {
-      const accessToken = await getGraphToken();
-      const files = await listCrtFiles(accessToken);
-      let closedNames = new Set();
-      try {
-        const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
-        closedNames = new Set(closed.map(r => r.file_name));
-      } catch { /* default: nothing closed */ }
-
-      for (const { idx, cf } of nonPortal) {
-        const row = buildCrossRefRow(cf, '');
-        const fileStatuses = [];
-        for (const f of files) {
-          if (closedNames.has(f.name)) { fileStatuses.push({ file: f.name, status: 'skipped_closed' }); continue; }
-          try {
-            const rangeRes = await fetch(
-              `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
-              { headers: { Authorization: `Bearer ${accessToken}` } }
-            );
-            if (!rangeRes.ok) { fileStatuses.push({ file: f.name, status: 'error', error: 'read failed' }); continue; }
-            const rangeData = await rangeRes.json();
-            const allValues = (rangeData.values || []).map(r => {
-              const p = [...r];
-              while (p.length < NUM_COLUMNS) p.push('');
-              return p.slice(0, NUM_COLUMNS);
-            });
-
-            const hsid = String(cf.hsid || '').trim();
-            let rowIdx = -1;
-            if (hsid) {
-              for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
-                const rr = allValues[i];
-                if (rr && String(rr[1] || '').trim() === hsid) { rowIdx = i; break; }
-              }
-            }
-            if (rowIdx < 0) {
-              const nk = NORM(cf.participant_name || '');
-              for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
-                const rr = allValues[i];
-                if (!rr) continue;
-                const rh = String(rr[1] || '').trim();
-                if (!rh && String(rr[0] || '').trim() && NORM(rr[0]) === nk) { rowIdx = i; break; }
-              }
-            }
-
-            let targetRow1, rowToWrite;
-            if (rowIdx >= 0) {
-              targetRow1 = rowIdx + 1;
-              const existing = allValues[rowIdx] || [];
-              rowToWrite = row.map((v, c) => (PRESERVE_COLS.has(c) ? (existing[c] ?? '') : v));
-            } else {
-              let last = CLIENT_DATA_START_ROW - 2;
-              for (let i = allValues.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
-                if (allValues[i] && allValues[i].some(v => v !== '' && v !== null && v !== undefined)) { last = i; break; }
-              }
-              targetRow1 = last + 2;
-              rowToWrite = row;
-            }
-
-            const rangeAddress = `A${targetRow1}:Y${targetRow1}`;
-            const patchRes = await fetch(
-              `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='${rangeAddress}')`,
-              { method: 'PATCH', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values: [rowToWrite] }) }
-            );
-            fileStatuses.push({ file: f.name, status: patchRes.ok ? (rowIdx >= 0 ? 'updated' : 'added') : 'error', row: targetRow1 });
-          } catch (e) {
-            fileStatuses.push({ file: f.name, status: 'error', error: e.message });
-          }
-        }
-        results[idx].added_to_crt = fileStatuses.some(s => s.status === 'updated' || s.status === 'added');
-        results[idx].files = fileStatuses;
       }
     }
 
