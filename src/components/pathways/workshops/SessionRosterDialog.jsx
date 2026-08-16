@@ -124,6 +124,7 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
         delivResult = await base44.functions.invoke('syncWorkshopDeliverablesToCrt', { sessionDate, attendedCount });
       } catch (_) {}
       onChanged?.();
+      onClose?.();
       const bits = ['Attendance recorded.'];
       if (syncResult?.updated) bits.push(`${syncResult.updated} EDA(s) marked complete.`);
       const dv = delivResult?.data;
