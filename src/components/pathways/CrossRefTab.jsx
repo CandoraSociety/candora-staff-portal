@@ -353,7 +353,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-slate-300">
           {list.map((r) => {
             const matched = isMatch(r);
             const flag = flagFor(r);
