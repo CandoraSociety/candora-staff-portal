@@ -42,7 +42,7 @@ function Section({ title, items, navy }) {
 const PROGRAM_OVERRIDE = 'Pathways Employment Program';
 const PO_NUMBER = '9000158238';
 
-export default function InvoiceDocument({ data, status }) {
+export default function InvoiceDocument({ data, status, adjustmentNotes = [] }) {
   const { invoiceLogoUrl, primaryColor, secondaryColor, accentColor } = useOrgSettings();
   if (!data) return null;
   const {
@@ -58,9 +58,6 @@ export default function InvoiceDocument({ data, status }) {
   const deliverables = lineItems.filter((i) => i.section === 'deliverable');
   const directCosts = lineItems.filter((i) => i.section === 'direct_cost');
   const otherServices = lineItems.filter((i) => i.section === 'other_services');
-  const subtotalFixed = fixed.reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const subtotalOtherServices = otherServices.reduce((s, i) => s + (Number(i.amount) || 0), 0);
-
   const monthLabel = billingMonth ? format(monthFirst(billingMonth), 'MMMM yyyy') : '';
   const issued = format(new Date(), 'MMMM d, yyyy');
   const footerLines = brandFooterLines();
@@ -166,35 +163,33 @@ export default function InvoiceDocument({ data, status }) {
           </tbody>
         </table>
 
-        {/* Totals */}
+        {/* Total */}
         <div className="mt-4 flex justify-end">
-          <div className="w-64 space-y-1.5 text-sm">
-            {subtotalFixed > 0 && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Subtotal — Fixed Fee</span>
-                <span className="tabular-nums font-medium">{money(subtotalFixed)}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span className="text-slate-500">Subtotal — Deliverables</span>
-              <span className="tabular-nums font-medium">{money(subtotalDeliverables)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Subtotal — Direct Costs</span>
-              <span className="tabular-nums font-medium">{money(subtotalDirectCosts)}</span>
-            </div>
-            {subtotalOtherServices > 0 && (
-              <div className="flex justify-between">
-                <span className="text-slate-500">Subtotal — Other Services</span>
-                <span className="tabular-nums font-medium">{money(subtotalOtherServices)}</span>
-              </div>
-            )}
-            <div className="flex justify-between px-3 py-2 mt-1 text-base" style={{ background: navy, borderTop: `3px solid ${gold}` }}>
+          <div className="w-64 text-sm">
+            <div className="flex justify-between px-3 py-2 text-base" style={{ background: navy, borderTop: `3px solid ${gold}` }}>
               <span className="font-bold" style={{ color: gold }}>Total Due</span>
               <span className="tabular-nums font-bold text-white">{money(total)}</span>
             </div>
           </div>
         </div>
+
+        {adjustmentNotes.length > 0 && (
+          <div className="mt-6">
+            <p className="text-[11px] uppercase tracking-wide mb-2" style={{ color: navy }}>Adjustment Notes</p>
+            <div className="space-y-1.5 border-t border-slate-100 pt-2">
+              {adjustmentNotes.map((n, i) => (
+                <div key={i} className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-medium text-slate-700">{n.cell_label}</span>{' '}
+                  <span className="text-slate-400">({n.cell_letter})</span>:{' '}
+                  <span className="line-through text-slate-400">{n.old_value || '—'}</span>{' '}
+                  → <span className="font-semibold text-slate-800">{n.new_value || '—'}</span>
+                  {n.client_name ? ` — ${n.client_name}` : ''}
+                  {n.comment ? ` — ${n.comment}` : ''}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

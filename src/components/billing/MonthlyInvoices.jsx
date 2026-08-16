@@ -92,6 +92,21 @@ export default function MonthlyInvoices() {
     refetchOnWindowFocus: true,
   });
 
+  // Adjustment notes logged against this month's Invoice Package(s) — shown at
+  // the bottom of the invoice so manual tracker edits are auditable on the doc.
+  const { data: adjustmentNotes = [] } = useQuery({
+    queryKey: ['invoice-adjustment-notes', effectiveMonth],
+    queryFn: async () => {
+      const pkgs = await base44.entities.InvoicePackage.filter({ billing_month: effectiveMonth });
+      const notes = [];
+      (pkgs || []).forEach((p) => {
+        (p.adjustment_notes || []).forEach((n) => notes.push(n));
+      });
+      return notes;
+    },
+    enabled: !!effectiveMonth,
+  });
+
   const closeOffMutation = useMutation({
     mutationFn: async () => {
       if (!selected || !live || live.status !== 'success') {
@@ -199,7 +214,7 @@ export default function MonthlyInvoices() {
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
           ) : renderData ? (
-            <InvoiceDocument data={renderData} status={isFinalized ? 'Finalized' : 'Draft'} />
+            <InvoiceDocument data={renderData} status={isFinalized ? 'Finalized' : 'Draft'} adjustmentNotes={adjustmentNotes} />
           ) : (
             <div className="text-center py-16">
               <AlertCircle className="h-10 w-10 mx-auto mb-3 text-amber-500" />
