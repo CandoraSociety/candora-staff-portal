@@ -411,7 +411,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 </td>
                 {CRT_COLUMNS.map((c, i) => {
                   const val = r.crt ? (r.crt[c.key] || '') : '';
-                  const missingOnCrt = r.crt && !val;
+                  const missingOnCrt = r.crt && !val && !r.is_new;
                   return (
                     <td
                       key={c.key}
