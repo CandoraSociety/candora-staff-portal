@@ -59,7 +59,7 @@ export default function PathwaysWorkshops() {
     setPreset({
       title: 'Job Club',
       description: 'Weekly group job-search support session — resume help, applications, and employer outreach.',
-      color: '#0891b2',
+      color: '#2563eb',
       recurrence_pattern: 'weekly',
       start_time: '13:00',
       end_time: '14:30',
