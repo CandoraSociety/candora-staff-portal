@@ -411,13 +411,21 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 </td>
                 {CRT_COLUMNS.map((c, i) => {
                   const val = r.crt ? (r.crt[c.key] || '') : '';
+                  const missingOnCrt = r.crt && !val;
                   return (
                     <td
                       key={c.key}
-                      className={`px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${c.key === 'comments' ? 'max-w-[260px] truncate' : ''}`}
+                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${c.key === 'comments' ? 'max-w-[260px] truncate' : ''}`}
                       title={c.key === 'comments' ? val : undefined}
                     >
                       {val || <span className="text-slate-300">—</span>}
+                      {missingOnCrt && (
+                        <span
+                          title="Listed on cross-reference but not filled in on the CRT"
+                          className="absolute top-0 right-0 pointer-events-none"
+                          style={{ width: '12px', height: '12px', background: 'linear-gradient(225deg, #dc2626 50%, transparent 50%)' }}
+                        />
+                      )}
                     </td>
                   );
                 })}
