@@ -121,7 +121,7 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
       // Record on the CRT Deliverables sheet: +1 Workshops Delivered, +attended Clients Attended.
       let delivResult = null;
       try {
-        delivResult = await base44.functions.invoke('syncWorkshopDeliverablesToCrt', { sessionDate, attendedCount });
+        delivResult = await base44.functions.invoke('syncWorkshopDeliverablesToCrt', { sessionDate, attendedCount, workshopTitle: workshop?.title });
       } catch (_) {}
       onChanged?.();
       onClose?.();

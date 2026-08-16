@@ -7,6 +7,12 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const DELIVERABLES_SHEET = 'Deliverables';
 const WORKSHOPS_DELIVERED_ROW = 14;   // "Workshops - Delivered"
 const WORKSHOPS_ATTENDED_ROW = 15;   // "Workshops - # of Clients Attended"
+const JOB_CLUB_DELIVERED_ROW = 19;   // "Job Club Services - Delivered"
+const JOB_CLUB_ATTENDED_ROW = 20;   // "Job Club Workshops - # of Clients Attended"
+
+function isJobClubTitle(title: any): boolean {
+  return typeof title === 'string' && title.trim().toLowerCase().startsWith('job club');
+}
 
 // 0-based column index → Excel column letter(s)
 function colLetter(idx0: number): string {
@@ -32,13 +38,17 @@ export default async function(req: Request): Promise<Response> {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* no body */ }
-    const { sessionDate, attendedCount, deliveredDelta, attendedDelta } = body || {};
+    const { sessionDate, attendedCount, deliveredDelta, attendedDelta, workshopTitle } = body || {};
     if (!sessionDate) return Response.json({ error: 'sessionDate is required' }, { status: 400 });
     // Deltas default to +1 delivered / +attendedCount attended (a completed
     // session). Pass negative deltas to undo a recorded session (e.g. deleting a
     // test workshop). Counts are clamped at 0 so a decrement can't go negative.
     const dDelivered = deliveredDelta != null ? Number(deliveredDelta) : 1;
     const dAttended = attendedDelta != null ? Number(attendedDelta) : (Number(attendedCount) || 0);
+    // Job Club sessions record on rows 19/20; all other workshops record on rows 14/15.
+    const jobClub = isJobClubTitle(workshopTitle);
+    const deliveredRow = jobClub ? JOB_CLUB_DELIVERED_ROW : WORKSHOPS_DELIVERED_ROW;
+    const attendedRow = jobClub ? JOB_CLUB_ATTENDED_ROW : WORKSHOPS_ATTENDED_ROW;
 
     const iso = String(sessionDate).slice(0, 10);
     const d = new Date(iso.length === 10 ? iso + 'T12:00:00' : iso);
@@ -89,18 +99,21 @@ export default async function(req: Request): Promise<Response> {
       return isNaN(n) ? 0 : n;
     };
 
-    const newDelivered = Math.max(0, readNum(WORKSHOPS_DELIVERED_ROW) + dDelivered);
-    const newAttended = Math.max(0, readNum(WORKSHOPS_ATTENDED_ROW) + dAttended);
+    const newDelivered = Math.max(0, readNum(deliveredRow) + dDelivered);
+    const newAttended = Math.max(0, readNum(attendedRow) + dAttended);
 
     await patchProtectedSheet(accessToken, file.id, DELIVERABLES_SHEET, [
-      { cell: `${colL}${WORKSHOPS_DELIVERED_ROW}`, value: newDelivered },
-      { cell: `${colL}${WORKSHOPS_ATTENDED_ROW}`, value: newAttended },
+      { cell: `${colL}${deliveredRow}`, value: newDelivered },
+      { cell: `${colL}${attendedRow}`, value: newAttended },
     ]);
 
     return Response.json({
       status: 'success',
       workbook: file.name,
       column: colL,
+      jobClub,
+      deliveredRow,
+      attendedRow,
       workshopsDelivered: newDelivered,
       clientsAttended: newAttended,
     });
