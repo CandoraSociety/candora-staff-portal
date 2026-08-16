@@ -4,6 +4,11 @@ import {
   findInvoiceTrackerSheet, readInvoiceTracker, trackerMonthFromPayload, writeMonthlyRunningTotal
 } from '../../shared/invoiceTracker.ts';
 import { computeMonthExposureCourseTotals } from '../../shared/crtBillingCounts.ts';
+import { writeDeliverablesMonthlyCells } from '../../shared/deliverablesSheet.ts';
+
+// Deliverables-sheet row that holds the exposure-course COSTS for a month —
+// kept equal to the sum of Invoice-Tracker CF + CG (the dea + wd totals below).
+const EXPOSURE_COURSE_COSTS_ROW = 17;
 
 // Writes the cumulative running dollar total of all exposure-course
 // purchases for a given billing month into the Invoice Tracker sheet inside
@@ -50,6 +55,16 @@ export default async function(req: Request): Promise<Response> {
     const cfRes = await writeMonthlyRunningTotal(accessToken, workbook.id, sheetName, values, startRow, COL_CF, year, month0, dea);
     const cgRes = await writeMonthlyRunningTotal(accessToken, workbook.id, sheetName, values, startRow, COL_CG, year, month0, wd);
 
+    // Refresh Deliverables row 17 (Exposure Courses - Costs) = CF + CG for this month.
+    let costRow17: any = null;
+    try {
+      costRow17 = await writeDeliverablesMonthlyCells(accessToken, workbook.id, year, month0, [
+        { row: EXPOSURE_COURSE_COSTS_ROW, value: dea + wd },
+      ]);
+    } catch (e) {
+      costRow17 = { error: String(e.message || e) };
+    }
+
     return Response.json({
       status: cfRes.rowFound < 0 && cgRes.rowFound < 0 ? 'no_row' : 'success',
       workbook: workbook.name,
@@ -57,6 +72,7 @@ export default async function(req: Request): Promise<Response> {
       billingMonth,
       dea, wd,
       cf: cfRes, cg: cgRes,
+      costRow17,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
