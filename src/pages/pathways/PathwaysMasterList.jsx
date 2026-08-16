@@ -13,6 +13,7 @@ import PlacementSections from "@/components/pathways/PlacementSections";
 import EmployersListTab from "@/components/pathways/EmployersListTab";
 import CrossRefTab from "@/components/pathways/CrossRefTab";
 import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
+import CrossRefTriageSection from "@/components/pathways/CrossRefTriageSection";
 import { Switch } from "@/components/ui/switch";
 import SwitchToWDDialog from "@/components/pathways/SwitchToWDDialog";
 import ClientSubSectionTable from "@/components/pathways/ClientSubSectionTable";
@@ -105,11 +106,12 @@ export default function PathwaysMasterList() {
     });
   }, []);
 
-  const assignedClients = clients.filter(c => c.assigned_worker);
+  const triageClients = clients.filter(c => c.crossref_pending_triage && !c.file_closed);
+  const assignedClients = clients.filter(c => c.assigned_worker && !c.crossref_pending_triage);
   const activeClients = assignedClients.filter(c => !c.file_closed);
   const activeDeaWdCount = activeClients.filter(c => c.service_type === 'direct_to_employment' || c.service_type === 'pathways').length;
   const extraActiveClients = clients.filter(c =>
-    !c.assigned_worker && !c.file_closed &&
+    !c.assigned_worker && !c.file_closed && !c.crossref_pending_triage &&
     (c.service_type === 'casual' || c.service_type === 'not_eligible')
   );
   const sourceList = [...activeClients, ...extraActiveClients];
@@ -202,6 +204,11 @@ export default function PathwaysMasterList() {
 
       {/* Content */}
       <div className="px-6 py-4">
+        <CrossRefTriageSection
+          clients={triageClients}
+          staff={staff}
+          onUpdated={(updated) => setClients(prev => prev.map(c => c.id === updated.id ? updated : c))}
+        />
         <div className="flex items-center justify-between gap-2 mb-4 border-b border-slate-200">
           {!viewAll ? (
             <div className="flex gap-1">

@@ -210,15 +210,18 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // Non-portal clients: create a Client entity record assigned to Olena so
-    // they appear in the master list, and let the normal "CRT Sync on Client
-    // Update" automation (which fires on create) add them to the live CRT. The
-    // 90-day date and all derived CRT fields are then calculated by the sync,
-    // not copied from the cross-ref.
+    // Non-portal clients: create a Client entity record held in a triage
+    // section ("New clients from Cross-Reference List") of the Master List.
+    // The record is created with NO assigned counsellor and a pending-triage
+    // flag so it stays out of the normal active lists and counsellor dashboards
+    // until a manager assigns a counsellor, program stream, and program status
+    // from the triage dropdowns — at which point the flag is cleared and the
+    // client moves into the normal sections. The same cross-ref progress note
+    // that matched clients get is attached on creation. The normal "CRT Sync on
+    // Client Update" automation (which fires on create) adds them to the live
+    // CRT; the 90-day date and derived CRT fields are calculated by the sync.
     let anyClientCreated = false;
     if (nonPortal.length) {
-      const ASSIGNED_EMAIL = 'olena@candorasociety.com';
-      const ASSIGNED_NAME = 'Olena';
       for (const { idx, cf } of nonPortal) {
         const { first_name, last_name } = parseName(cf.participant_name);
         if (!first_name && !last_name) {
@@ -226,13 +229,24 @@ export default async function(req: Request): Promise<Response> {
           continue;
         }
         const entityUpdates = applyCrossRefToClient({ compass_hsid: '', eda_completion_date: '' }, cf);
+        const entry = {
+          id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          date: new Date().toISOString().split('T')[0],
+          event_type: 'manual',
+          item_label: 'CRT Cross-Reference Update',
+          item_key: 'crt_crossref_update',
+          note: buildNoteText(cf, ''),
+          logged_by: user?.email || '',
+          logged_by_name: user?.full_name || '',
+          compass_entered: false,
+        };
         const payload = {
           first_name,
           last_name,
           ...entityUpdates,
-          assigned_worker: ASSIGNED_EMAIL,
-          assigned_worker_name: ASSIGNED_NAME,
-          status: 'active',
+          status: 'new',
+          crossref_pending_triage: true,
+          roadmap_progress_notes: [entry],
         };
         try {
           const created = await base44.asServiceRole.entities.Client.create(payload);
@@ -245,7 +259,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // A client file was updated or created (e.g. DEA start date, EDA completion,
-    // 90-day outcome, or a brand-new client assigned to Olena). The Invoice
+    // 90-day outcome, or a brand-new client added to the cross-ref triage list). The Invoice
     // Tracker's billing-summary tallies — CEIS (DEA) Starters, WD Complete,
     // WD Placement, CEIS (DEA) 90 Day, WD 90 Day, Service Navigation Fee — are
     // derived from those same client fields, so refresh them on the active
