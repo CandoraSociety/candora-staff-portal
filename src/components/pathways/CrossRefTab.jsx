@@ -120,6 +120,7 @@ const UPDATED_KEY = 'crossRefUpdated';
 const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
 const PHASE_CHANGE_KEY = 'crossRefPhaseChange';
 const COMMENTS_KEY = 'crossRefComments';
+const CELL_EDITS_KEY = 'crossRefCellEdits';
 
 // Stable per-client storage key: HSID when present, otherwise a canonical
 // "lastname firstname" key derived from the name (comma-aware) so the same
@@ -178,17 +179,23 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [comments, setComments] = useState(() => {
     try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '{}'); } catch { return {}; }
   });
-  const [cellEdits, setCellEdits] = useState({});
+  const [cellEdits, setCellEdits] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(CELL_EDITS_KEY) || '{}'); } catch { return {}; }
+  });
+  useEffect(() => {
+    localStorage.setItem(CELL_EDITS_KEY, JSON.stringify(cellEdits));
+  }, [cellEdits]);
   const getEdit = (row, key, fallback) => {
-    const e = cellEdits[row.id];
+    const e = cellEdits[rowStorageKey(row)];
     if (e && e[key] !== undefined) return e[key];
     return fallback ?? '';
   };
   const setEdit = (row, key, value) => {
+    const sk = rowStorageKey(row);
     setCellEdits(prev => {
       const n = { ...prev };
-      if (!n[row.id]) n[row.id] = {};
-      n[row.id][key] = value;
+      if (!n[sk]) n[sk] = {};
+      n[sk][key] = value;
       return n;
     });
   };
