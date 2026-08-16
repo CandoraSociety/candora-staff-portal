@@ -277,6 +277,53 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
   }, [comments]);
 
+  // ----- Server-side durability -----
+  // localStorage in the preview sandbox can be wiped on restart, so mirror
+  // ALL persisted cross-ref state to the logged-in user's account. On mount we
+  // hydrate from the server (merging — localStorage wins where it has data,
+  // server fills the gaps), then debounce-save every change back. This makes
+  // Done / Updated / Phase Change / Comments / field edits survive restarts
+  // and device switches.
+  const SNAPSHOT_KEY = 'cross_ref_state';
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await base44.auth.me();
+        const s = me?.[SNAPSHOT_KEY];
+        if (s && !cancelled) {
+          setCompleted(prev => prev.size ? prev : new Set(s.completed || []));
+          setUpdated(prev => prev.size ? prev : new Set(s.updated || []));
+          setYellowResolved(prev => prev.size ? prev : new Set(s.yellowResolved || []));
+          setPhaseChange(prev => prev.size ? prev : new Set(s.phaseChange || []));
+          setComments(prev => ({ ...(s.comments || {}), ...prev }));
+          setCellEdits(prev => ({ ...(s.cellEdits || {}), ...prev }));
+        }
+      } catch { /* not logged in or no snapshot — fall back to localStorage */ }
+      finally { if (!cancelled) hydratedRef.current = true; }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const saveTimerRef = useRef(null);
+  useEffect(() => {
+    if (!hydratedRef.current) return; // don't overwrite server before we've read it
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const snapshot = {
+        completed: [...completed],
+        updated: [...updated],
+        yellowResolved: [...yellowResolved],
+        phaseChange: [...phaseChange],
+        comments,
+        cellEdits,
+      };
+      base44.auth.updateMe({ [SNAPSHOT_KEY]: snapshot }).catch(() => {});
+    }, 800);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [completed, updated, yellowResolved, phaseChange, comments, cellEdits]);
+
   const loadStatus = async (file_url, label) => {
     setLoading(true);
     try {
