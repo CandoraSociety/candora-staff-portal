@@ -1,8 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
-  getGraphToken, listCrtFiles, mapClientToCrtRow, parseCrtDate
+  getGraphToken, getActiveCrtWorkbook, listCrtFiles, mapClientToCrtRow, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
+import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 
 // Push "Updated" cross-reference rows into the live CRT.
 //
@@ -160,6 +161,7 @@ export default async function(req: Request): Promise<Response> {
 
     const results = [];
     const nonPortal = [];
+    let anyClientUpdated = false;
 
     for (let i = 0; i < updates.length; i++) {
       const u = updates[i];
@@ -190,9 +192,29 @@ export default async function(req: Request): Promise<Response> {
           ...entityUpdates,
           roadmap_progress_notes: [entry, ...notes],
         });
+        anyClientUpdated = true;
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: true, day90_date: day90Date };
       } catch (e) {
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: false, error: e.message };
+      }
+    }
+
+    // A matched client's file was updated (e.g. DEA start date, EDA completion,
+    // 90-day outcome). The Invoice Tracker's billing-summary tallies — CEIS
+    // (DEA) Starters, WD Complete, WD Placement, CEIS (DEA) 90 Day, WD 90 Day,
+    // Service Navigation Fee — are derived from those same client fields, so
+    // refresh them on the active workbook's Invoice Tracker now so the push
+    // flows through to the tallies immediately instead of waiting for the
+    // monthly advance. (The CRT row itself is re-synced by the "CRT Sync on
+    // Client Update" entity automation that already fired on the update above.)
+    let billingCounts = null;
+    if (anyClientUpdated) {
+      try {
+        const token = await getGraphToken();
+        const active = await getActiveCrtWorkbook(token);
+        if (active) billingCounts = await refreshBillingCounts(base44, token, active);
+      } catch (e) {
+        billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
       }
     }
 
@@ -272,7 +294,7 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    return Response.json({ status: 'success', results });
+    return Response.json({ status: 'success', results, billingCounts });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

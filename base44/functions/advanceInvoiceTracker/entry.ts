@@ -3,7 +3,7 @@ import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell
 } from '../../shared/invoiceTracker.ts';
-import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from '../../shared/crtBillingCounts.ts';
+import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 
 // Advances the monthly columns of the Invoice Tracker sheet inside the active
 // CRT workbook up to and including the current reporting month:
@@ -16,16 +16,14 @@ import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from '../../
 //     before that are left alone — the two early empty months and the already-
 //     completed months).
 //
-//   • Billing-summary quantity columns — the six per-month quantities that
-//     mirror the "Billing Summary" tiles on the CRT page, written under the
-//     matching headings. Each heading has TWO columns beneath it: the LEFT
-//     (the heading column itself) holds the quantity we write; the RIGHT
-//     (next column) holds a pre-built formula that computes the dollar amount
-//     from the quantity — so we only ever write the left/quantity column.
-//     Headings: CEIS (DEA) Starters (L), WD Complete (X), WD Placement (EDA
-//     Completion) (AN), CEIS (DEA) 90 Day (BH), WD 90 Day (BL), Service
-//     Navigation Fee (CD). Computed from current portal client data for every
-//     month from June 2025 through the current month.
+//   • Billing-summary quantity columns — delegated to refreshBillingCounts
+//     (shared/invoiceTrackerCounts.ts), which recomputes the six per-month
+//     quantities (CEIS (DEA) Starters, WD Complete, WD Placement (EDA
+//     Completion), CEIS (DEA) 90 Day, WD 90 Day, Service Navigation Fee) plus
+//     the paid-work-exposure dollar total from current portal client data for
+//     every month from April 2026 through the current month. The same helper
+//     is invoked by syncCrossRefUpdatesToCrt so cross-reference pushes refresh
+//     these tallies immediately instead of waiting for this monthly run.
 //
 // All writes are idempotent: cells already holding the correct value are
 // skipped, so re-running is safe. Triggered manually (SDK, {}) or by the
@@ -36,25 +34,6 @@ const B_START = { year: 2025, month: 5 };      // June 2025  — invoice #1 / co
 const COL_B = 'B';
 const COL_D = 'D';
 
-// Quantity columns (the LEFT column under each heading — the heading column
-// itself). The RIGHT column (next letter) holds the dollar-amount formula.
-const COUNT_COLUMNS = {
-  deaStarters: 'L',             // CEIS (DEA) Starters          (formula in M)
-  wdComplete: 'X',              // WD Complete                   (formula in Y)
-  wdPlacementCompletion: 'AN',  // WD Placement (EDA Completion)  (formula in AO)
-  dea90Day: 'BH',               // CEIS (DEA) 90 Day             (formula in BI)
-  wd90Day: 'BL',                // WD 90 Day                     (formula in BM)
-  serviceNavFee: 'CD',          // Service Navigation Fee        (formula in CE)
-};
-
-// Dollar-value columns (written directly — no separate formula column).
-const DOLLAR_COLUMNS = {
-  paidWorkExposure: 'CJ',          // Paid Work Exposure (running $ total)
-};
-const DOLLAR_INDICES = Object.fromEntries(
-  Object.entries(DOLLAR_COLUMNS).map(([k, c]) => [k, colIndex(c)])
-);
-
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
     timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric'
@@ -64,16 +43,6 @@ function currentMonthEdmonton() {
 }
 
 function rank(k) { return k.year * 12 + k.month; }
-
-function colIndex(letter) {
-  let n = 0;
-  for (let i = 0; i < letter.length; i++) n = n * 26 + (letter.charCodeAt(i) - 64);
-  return n - 1; // 0-based
-}
-
-const COUNT_INDICES = Object.fromEntries(
-  Object.entries(COUNT_COLUMNS).map(([k, c]) => [k, colIndex(c)])
-);
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -93,26 +62,11 @@ export default async function(req: Request): Promise<Response> {
     const currentRank = rank(current);
     const bStartRank = rank(B_START);
 
-    // Fetch all clients (DEA + WD) for billing-count computation.
-    const base44 = createClientFromRequest(req);
-    let clients = [];
-    try { clients = await base44.asServiceRole.entities.Client.list('-created_date', 5000) || []; }
-    catch { clients = []; }
-
-    let financialRecords = [];
-    try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; }
-    catch { financialRecords = []; }
-
     const dFilled = [];
     const bFilled = [];
-    const countFilled = [];
-    const countErrors = [];
-    const dollarFilled = [];
-    let dollarSkipped = 0;
     let invoiceNumber = 0;
     let dSkipped = 0;
     let bSkipped = 0;
-    let countSkipped = 0;
 
     for (let r = 0; r < (values || []).length; r++) {
       const row = values[r];
@@ -145,44 +99,17 @@ export default async function(req: Request): Promise<Response> {
           await writeTrackerCell(accessToken, workbook.id, sheetName, COL_B, excelRow, invoiceNumber);
           bFilled.push({ row: excelRow, month: monthLabel, invoiceNumber });
         }
-
-        // Billing-summary quantities — only for months from April 2026 onward.
-        // Earlier months are already completed and must not be touched.
-        if (kRank >= dStartRank) {
-          const counts = computeMonthBillingCounts(clients, key.year, key.month);
-          for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
-            const expected = counts[ck];
-            const existing = row[COUNT_INDICES[ck]];
-            const existingNum = (existing == null || existing === '') ? 0 : Number(existing);
-            if (existingNum === expected) { countSkipped++; continue; }
-            try {
-              await writeTrackerCell(accessToken, workbook.id, sheetName, col, excelRow, expected);
-              countFilled.push({ row: excelRow, month: monthLabel, column: col, key: ck, value: expected });
-            } catch (e) {
-              countErrors.push({ row: excelRow, month: monthLabel, column: col, key: ck, error: String(e.message || e).slice(0, 120) });
-            }
-          }
-        }
-
-        // Dollar-value columns (CJ — paid work exposure running total) — only
-        // for months from April 2026 onward (earlier months left untouched).
-        if (kRank >= dStartRank) {
-          for (const [dk, col] of Object.entries(DOLLAR_COLUMNS)) {
-            const dollarExpected = dk === 'paidWorkExposure'
-              ? computeMonthWorkExposureTotal(financialRecords, key.year, key.month)
-              : 0;
-            const dollarExisting = row[DOLLAR_INDICES[dk]];
-            const dollarExistingNum = (dollarExisting == null || dollarExisting === '') ? 0 : Number(dollarExisting);
-            if (dollarExistingNum === dollarExpected) { dollarSkipped++; continue; }
-            try {
-              await writeTrackerCell(accessToken, workbook.id, sheetName, col, excelRow, dollarExpected);
-              dollarFilled.push({ row: excelRow, month: monthLabel, column: col, key: dk, value: dollarExpected });
-            } catch (e) {
-              countErrors.push({ row: excelRow, month: monthLabel, column: col, key: dk, error: String(e.message || e).slice(0, 120) });
-            }
-          }
-        }
       }
+    }
+
+    // Billing-summary counts + paid-work-exposure dollar total for Apr 2026 ..
+    // current. Recomputed from current client data so this monthly run and any
+    // cross-reference push between runs produce identical tallies.
+    let billingCounts = null;
+    try {
+      billingCounts = await refreshBillingCounts(createClientFromRequest(req), accessToken, workbook, { values, startRow, sheetName });
+    } catch (e) {
+      billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
     }
 
     return Response.json({
@@ -190,11 +117,9 @@ export default async function(req: Request): Promise<Response> {
       workbook: workbook.name,
       sheet: sheetName,
       currentMonth: `${current.year}-${String(current.month + 1).padStart(2, '0')}`,
-      clientsConsidered: clients.length,
       columnD: { filledCount: dFilled.length, filled: dFilled, skippedAlreadyFilled: dSkipped },
       columnB: { filledCount: bFilled.length, filled: bFilled, skippedAlreadyFilled: bSkipped, lastInvoiceNumber: invoiceNumber },
-      billingCounts: { filledCount: countFilled.length, filled: countFilled, skippedAlreadyFilled: countSkipped, errors: countErrors },
-      dollarColumns: { filledCount: dollarFilled.length, filled: dollarFilled, skippedAlreadyFilled: dollarSkipped }
+      billingCounts,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
