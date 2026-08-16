@@ -84,7 +84,7 @@ const COMPLETED_KEY = 'crossRefCompleted';
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+    <div className="rounded-lg border border-slate-200 bg-white overflow-clip">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors"
@@ -330,9 +330,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   }, [activeRows, matchedCount, unmatchedCount, onCountsChange]);
 
   const renderTable = (list, { actionable, restorable }) => (
-    <div className="overflow-auto max-h-[70vh]">
+    <div className="overflow-x-auto overflow-y-clip">
       <table className="w-full text-sm border-collapse">
-        <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <thead className="bg-slate-50 border-b border-slate-200 sticky top-[92px] z-30 shadow-sm">
           <tr>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Source Sheet</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
