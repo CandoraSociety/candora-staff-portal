@@ -500,6 +500,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   // column — it has no live-CRT counterpart.
                   const liveVal = liveRow ? (liveRow[c.key] || '') : '';
                   const showDogEar = r.crt && c.key !== 'source_sheet' && val && !liveVal;
+                  const showDiffEar = r.crt && c.key !== 'source_sheet'
+                    && val && liveVal && String(val).trim() !== String(liveVal).trim();
                   const editable = EDITABLE_CRT_KEYS.includes(c.key);
                   return (
                     <td
@@ -529,6 +531,13 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                           title="Filled in on the cross-reference sheet but blank on the live CRT Client Data sheet"
                           className="absolute top-0 right-0 pointer-events-none"
                           style={{ width: '12px', height: '12px', background: '#dc2626', clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
+                        />
+                      )}
+                      {showDiffEar && (
+                        <span
+                          title={`Differs from live CRT (Billing → CRT tab): cross-ref "${val}" vs live "${liveVal}"`}
+                          className="absolute top-0 left-0 pointer-events-none"
+                          style={{ width: '12px', height: '12px', background: '#2563eb', clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
                         />
                       )}
                     </td>
@@ -633,6 +642,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         Use <span className="font-semibold">Done</span> to move a client to the Completed section at the bottom.
         A <span className="font-semibold text-green-700">green flag</span> marks clients who completed the full program flow (90 Day Outcome filled with a real outcome) and a <span className="font-semibold text-red-700">red flag</span> marks clients cancelled from the program — both as of the March 2026 CRT.
         A <span className="font-semibold text-red-700">red dog-ear</span> on a CRT field marks a value that is filled in on the uploaded cross-reference sheet but blank on the live CRT Client Data sheet (Billing tab → CRT tab) — i.e. a sync gap to follow up.
+        A <span className="font-semibold text-blue-700">blue dog-ear</span> marks a field whose value differs from the live CRT Client Data sheet (Billing tab → CRT tab).
       </div>
 
       {loading || crtLoading || marchLoading || liveLoading ? (
