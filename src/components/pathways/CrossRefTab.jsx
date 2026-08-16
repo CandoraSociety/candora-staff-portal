@@ -448,13 +448,14 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
 
   const toggleCompleted = (r) => {
     const keys = rowKeys(r);
+    const wasDone = keys.some(k => completed.has(k));
     setCompleted(prev => {
       const n = new Set(prev);
-      const anyDone = keys.some(k => n.has(k));
-      if (anyDone) keys.forEach(k => n.delete(k));
+      if (wasDone) keys.forEach(k => n.delete(k));
       else keys.forEach(k => n.add(k));
       return n;
     });
+    if (!wasDone) pushCrossRefUpdate(r);
   };
 
   const isUpdatedRow = (r) => rowKeys(r).some(k => updated.has(k));
@@ -481,19 +482,19 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     }
   };
 
-  const pushAllUpdated = async () => {
-    if (!updatedRows.length) { toast.message('No updated clients to push'); return; }
+  const pushAll = async (rows, label) => {
+    if (!rows.length) { toast.message(`No ${label.toLowerCase()} clients to push`); return; }
     setPushing(true);
     try {
-      const updates = updatedRows.map(r => ({
+      const updates = rows.map(r => ({
         hsid: r.hsid || '',
         client_name: r.client_name || '',
         crt_fields: assembleCrtFields(r),
       }));
       await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
-      toast.success(`Pushed ${updates.length} client(s) to the live CRT`);
+      toast.success(`Pushed ${updates.length} ${label.toLowerCase()} client(s) to the live CRT`);
     } catch (e) {
-      toast.error('Failed to push updates to the live CRT');
+      toast.error(`Failed to push ${label.toLowerCase()} updates to the live CRT`);
     } finally {
       setPushing(false);
     }
@@ -859,9 +860,15 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         </div>
         <div className="flex items-center gap-2">
           {updatedRows.length > 0 && (
-            <Button variant="default" size="sm" onClick={pushAllUpdated} disabled={pushing} className="gap-1">
+            <Button variant="default" size="sm" onClick={() => pushAll(updatedRows, 'Updated')} disabled={pushing} className="gap-1">
               {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               Push Updated → CRT ({updatedRows.length})
+            </Button>
+          )}
+          {completedRows.length > 0 && (
+            <Button variant="default" size="sm" onClick={() => pushAll(completedRows, 'Completed')} disabled={pushing} className="gap-1">
+              {pushing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              Push Completed → CRT ({completedRows.length})
             </Button>
           )}
           <input ref={crtFileInput} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleCrtUpload} />
