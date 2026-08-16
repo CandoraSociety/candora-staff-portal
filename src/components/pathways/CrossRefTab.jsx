@@ -74,6 +74,11 @@ const DATE_COLUMNS = [
   { key: 'eda_completion_date', label: 'EDA Completion Date' },
 ];
 
+const DATE_KEYS = new Set(DATE_COLUMNS.map(c => c.key));
+// The live CRT is the March 2026 workbook — dates March 2026 or earlier should
+// already be reflected there. Red dog-ears on such date cells are real sync gaps.
+const MARCH_2026_END = new Date(2026, 2, 31, 23, 59, 59);
+
 // Parse CRT date strings (typically MM/DD/YY) into a Date for sorting/filtering.
 const parseCrtDate = (s) => {
   if (!s) return null;
@@ -503,10 +508,12 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   const showDiffEar = r.crt && c.key !== 'source_sheet'
                     && val && liveVal && String(val).trim() !== String(liveVal).trim();
                   const editable = EDITABLE_CRT_KEYS.includes(c.key);
+                  const cellDate = DATE_KEYS.has(c.key) ? parseCrtDate(val) : null;
+                  const highlightYellow = showDogEar && cellDate && cellDate <= MARCH_2026_END;
                   return (
                     <td
                       key={c.key}
-                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''}`}
+                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${highlightYellow ? 'bg-yellow-200' : ''}`}
                     >
                       {editable ? (
                         <input
@@ -521,7 +528,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                             }
                           }}
                           placeholder="—"
-                          className="w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
+                          className={`w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 ${highlightYellow ? 'bg-yellow-200' : 'bg-white'}`}
                         />
                       ) : (
                         val || <span className="text-slate-300">—</span>
