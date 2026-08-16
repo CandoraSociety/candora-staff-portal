@@ -29,6 +29,7 @@ const FIELDS = [
   ['wage_subsidy', 'wage subsidy'],
   ['employed_ftpt', 'employed'],
   ['service_nav_support', 'service navigation support'],
+  ['service_nav_billing_month', 'billing month'],
 ];
 
 export default async function(req) {

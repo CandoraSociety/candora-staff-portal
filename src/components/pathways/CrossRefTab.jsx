@@ -3,6 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
 const DEFAULT_FILE_NAME = 'EmploymentprogramClientStatusV3.xlsx';
@@ -53,6 +57,7 @@ const CRT_COLUMNS = [
   { key: 'wage_subsidy', label: 'Wage Subsidy Y/N' },
   { key: 'employed_ftpt', label: 'Employed FT/PT' },
   { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
+  { key: 'service_nav_billing_month', label: 'Service Nav Billing Month MM/DD/YY' },
 ];
 
 // CRT fields to the right of the COMPASS HSID # column — editable inline.
@@ -129,6 +134,17 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       n[row.id][key] = value;
       return n;
     });
+  };
+  const focusValueRef = useRef({});
+  const justConfirmedRef = useRef(false);
+  const [pendingEdit, setPendingEdit] = useState(null);
+  const handleEditDialogChange = (open) => {
+    if (open) return;
+    if (!justConfirmedRef.current && pendingEdit) {
+      setEdit(pendingEdit.row, pendingEdit.key, pendingEdit.original);
+    }
+    justConfirmedRef.current = false;
+    setPendingEdit(null);
   };
   const [filter, setFilter] = useState('all');
   const [dateColumn, setDateColumn] = useState('');
@@ -494,7 +510,14 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                         <input
                           type="text"
                           value={val}
+                          onFocus={() => { focusValueRef.current[`${r.id}:${c.key}`] = val; }}
                           onChange={(e) => setEdit(r, c.key, e.target.value)}
+                          onBlur={() => {
+                            const orig = focusValueRef.current[`${r.id}:${c.key}`];
+                            if (orig !== undefined && orig !== val) {
+                              setPendingEdit({ row: r, key: c.key, label: c.label, original: orig, value: val });
+                            }
+                          }}
                           placeholder="—"
                           className="w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 bg-white"
                         />
@@ -638,6 +661,26 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           </CollapsibleSection>
         </div>
       )}
+
+      <AlertDialog open={!!pendingEdit} onOpenChange={handleEditDialogChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm field change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Change <span className="font-semibold text-slate-700">{pendingEdit?.label}</span> for{" "}
+              <span className="font-semibold text-slate-700">{pendingEdit?.row?.client_name || 'this client'}</span> from{" "}
+              <span className="font-semibold text-slate-700">"{pendingEdit?.original || '—'}"</span> to{" "}
+              <span className="font-semibold text-slate-700">"{pendingEdit?.value || '—'}"</span>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { justConfirmedRef.current = true; }}>
+              Confirm change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
