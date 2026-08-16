@@ -108,6 +108,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [crtLoading, setCrtLoading] = useState(false);
   const [marchCrt, setMarchCrt] = useState([]);
   const [marchLoading, setMarchLoading] = useState(false);
+  const [liveCrt, setLiveCrt] = useState([]);
+  const [liveLoading, setLiveLoading] = useState(false);
   const [fileName, setFileName] = useState(DEFAULT_FILE_NAME);
   const [crtFileName, setCrtFileName] = useState(DEFAULT_CRT_NAME);
   const [comments, setComments] = useState({});
@@ -166,10 +168,26 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     }
   };
 
+  // Load the LIVE CRT Client Data sheet (the active workbook shown in the
+  // Billing tab's CRT tab). The dog-ear compares the uploaded cross-reference
+  // CRT against this: filled in cross-ref but blank in live CRT → red dog-ear.
+  const loadLiveCrt = async () => {
+    setLiveLoading(true);
+    try {
+      const res = await base44.functions.invoke('getCrtWorkbookRows', {});
+      setLiveCrt(res.data?.rows || []);
+    } catch {
+      // dog-ears just won't show if the live CRT can't be read
+    } finally {
+      setLiveLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadStatus(DEFAULT_FILE_URL, DEFAULT_FILE_NAME);
     loadCrt(DEFAULT_CRT_URL, DEFAULT_CRT_NAME);
     loadMarchCrt();
+    loadLiveCrt();
   }, []);
 
   const handleUpload = async (e) => {
@@ -279,6 +297,26 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return m;
   }, [marchCrt]);
 
+  // Live CRT (active workbook) keyed by HSID + name aliases, mirroring marchMap.
+  const liveMap = useMemo(() => {
+    const m = new Map();
+    liveCrt.forEach(r => {
+      const h = normHsid(r.hsid);
+      if (h) m.set(`h:${h}`, r);
+      rowNameKeys(r.participant_name).forEach(k => { if (!m.has(`n:${k}`)) m.set(`n:${k}`, r); });
+    });
+    return m;
+  }, [liveCrt]);
+
+  const findLiveMatch = (row) => {
+    const rh = normHsid(row.hsid);
+    if (rh && liveMap.has(`h:${rh}`)) return liveMap.get(`h:${rh}`);
+    for (const k of rowNameKeys(row.client_name)) {
+      if (liveMap.has(`n:${k}`)) return liveMap.get(`n:${k}`);
+    }
+    return null;
+  };
+
   // Green flag = completed full program flow (90 Day Outcome filled with a real
   // outcome, not the projected 'P'). Red flag = cancelled from the program
   // (Service Outcome = "Cancelled"). Both read from the March 2026 CRT.
@@ -357,6 +395,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           {list.map((r) => {
             const matched = isMatch(r);
             const flag = flagFor(r);
+            const liveRow = findLiveMatch(r);
             const rowBg = r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50');
             return (
               <tr key={r.id} className={rowBg}>
@@ -421,7 +460,12 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 </td>
                 {CRT_COLUMNS.map((c, i) => {
                   const val = r.crt ? (r.crt[c.key] || '') : '';
-                  const missingOnCrt = r.crt && !val && !r.is_new;
+                  // Red dog-ear: this CRT field IS filled in on the uploaded
+                  // cross-reference sheet, but blank in the live CRT Client
+                  // Data sheet (Billing tab → CRT tab). Skip the Source Sheet
+                  // column — it has no live-CRT counterpart.
+                  const liveVal = liveRow ? (liveRow[c.key] || '') : '';
+                  const showDogEar = r.crt && c.key !== 'source_sheet' && val && !liveVal;
                   return (
                     <td
                       key={c.key}
@@ -429,9 +473,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       title={c.key === 'comments' ? val : undefined}
                     >
                       {val || <span className="text-slate-300">—</span>}
-                      {missingOnCrt && (
+                      {showDogEar && (
                         <span
-                          title="Listed on cross-reference but not filled in on the CRT"
+                          title="Filled in on the cross-reference sheet but blank on the live CRT Client Data sheet"
                           className="absolute top-0 right-0 pointer-events-none"
                           style={{ width: '12px', height: '12px', background: '#dc2626', clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}
                         />
@@ -537,9 +581,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         Rows marked <span className="font-semibold text-amber-700">Newly Added</span> appear in the CRT workbook but not in the uploaded status workbook.
         Use <span className="font-semibold">Done</span> to move a client to the Completed section at the bottom.
         A <span className="font-semibold text-green-700">green flag</span> marks clients who completed the full program flow (90 Day Outcome filled with a real outcome) and a <span className="font-semibold text-red-700">red flag</span> marks clients cancelled from the program — both as of the March 2026 CRT.
+        A <span className="font-semibold text-red-700">red dog-ear</span> on a CRT field marks a value that is filled in on the uploaded cross-reference sheet but blank on the live CRT Client Data sheet (Billing tab → CRT tab) — i.e. a sync gap to follow up.
       </div>
 
-      {loading || crtLoading || marchLoading ? (
+      {loading || crtLoading || marchLoading || liveLoading ? (
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
         </div>
