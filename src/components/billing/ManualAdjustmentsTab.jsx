@@ -279,8 +279,7 @@ export default function ManualAdjustmentsTab({ pkg }) {
                   {pendingNotes.map((n, idx) => (
                     <div key={idx} className="rounded-md border border-blue-200 bg-white p-3 space-y-2">
                       <div className="text-sm">
-                        <span className="font-medium text-slate-700">{n.cellLabel}</span>{' '}
-                        <span className="text-slate-500">({n.cellLetter})</span>:{' '}
+                        <span className="font-medium text-slate-700">{n.cellLabel}</span>:{' '}
                         <span className="line-through text-slate-400">{n.oldValue || '—'}</span>{' '}
                         <ArrowRight className="inline w-3 h-3" />{' '}
                         <span className="font-semibold text-slate-800">{n.newValue || '—'}</span>
