@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, RefreshCw, Users, MapPin, User, Calendar, Clock, 
 import WorkshopDialog from '@/components/pathways/workshops/WorkshopDialog';
 import WorkshopSchedule from '@/components/pathways/workshops/WorkshopSchedule';
 import SessionRosterDialog from '@/components/pathways/workshops/SessionRosterDialog';
+import CompletedWorkshopsTab from '@/components/pathways/workshops/CompletedWorkshopsTab';
 import { generateOccurrences, nextOccurrence, formatDateLong, formatDateShort } from '@/lib/workshopSchedule';
 import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
 
@@ -84,6 +85,9 @@ export default function PathwaysWorkshops() {
 
   const rosterCount = (w, date) => signups.filter(s => s.workshop_id === w.id && s.session_date === date && (s.status === 'registered' || s.status === 'attended')).length;
 
+  const activeWorkshops = workshops.filter(w => w.status !== 'completed');
+  const completedWorkshops = workshops.filter(w => w.status === 'completed');
+
   return (
     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-6">
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
@@ -100,13 +104,14 @@ export default function PathwaysWorkshops() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="workshops">All Workshops</TabsTrigger>
+          <TabsTrigger value="completed">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workshops" className="mt-4">
           {loading ? (
             <p className="text-center text-sm text-slate-400 py-10">Loading…</p>
-          ) : workshops.length === 0 ? (
+          ) : activeWorkshops.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-10 h-10 mx-auto text-slate-300 mb-3" />
               <p className="text-sm text-slate-500 mb-3">No workshops yet.</p>
@@ -114,7 +119,7 @@ export default function PathwaysWorkshops() {
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {workshops.map(w => {
+              {activeWorkshops.map(w => {
                 const next = nextOccurrence(w);
                 const count = next ? rosterCount(w, next) : 0;
                 return (
@@ -154,6 +159,10 @@ export default function PathwaysWorkshops() {
               })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="completed" className="mt-4">
+          <CompletedWorkshopsTab workshops={completedWorkshops} signups={signups} clients={clients} />
         </TabsContent>
 
         <TabsContent value="schedule" className="mt-4">
