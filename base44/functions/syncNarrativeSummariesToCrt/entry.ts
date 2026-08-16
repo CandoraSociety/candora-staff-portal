@@ -68,7 +68,8 @@ export default async function(req: Request): Promise<Response> {
       return new Date(a.submitted_date || 0).getTime() - new Date(b.submitted_date || 0).getTime();
     });
 
-    if (summaries.length === 0) {
+    const clearIfEmpty = payload?.clearIfEmpty === true;
+    if (summaries.length === 0 && !clearIfEmpty) {
       return Response.json({
         status: 'no_selection',
         message: `No narrative summaries are checked for ${reportMonth}. Select at least one summary to push to the CRT.`,
@@ -81,6 +82,9 @@ export default async function(req: Request): Promise<Response> {
       summary: s.summary || '',
     }));
 
+    // When clearIfEmpty is true (called after a summary is deleted), an empty
+    // mapped set clears the sheet's data rows so removed summaries disappear
+    // from the CRT Narrative Report, including when none remain.
     const result = await writeNarrativeSummariesIntoWorkbook(accessToken, workbook, mapped);
 
     return Response.json({
@@ -88,6 +92,7 @@ export default async function(req: Request): Promise<Response> {
       reportMonth,
       workbook: workbook.name,
       checkedCount: summaries.length,
+      cleared: summaries.length === 0,
       result,
     });
   } catch (error) {

@@ -77,10 +77,26 @@ export default function StaffMonthlyReports() {
 
   const handleDelete = async (item) => {
     setDeletingId(item.id);
+    const wasFlagged = !!item.include_in_crt;
     try {
       await base44.entities.NarrativeSummary.delete(item.id);
       await refetchSummaries();
-      toast.success("Summary removed.");
+      if (wasFlagged) {
+        // Reconcile the CRT Narrative Report for this month: rewrites only the
+        // remaining flagged summaries, clearing the deleted one (and clearing
+        // the whole sheet if none remain).
+        try {
+          await base44.functions.invoke('syncNarrativeSummariesToCrt', {
+            reportMonth: item.report_month,
+            clearIfEmpty: true,
+          });
+          toast.success("Summary removed and CRT updated.");
+        } catch (syncErr) {
+          toast.error("Removed from app, but CRT sync failed: " + (syncErr.message || "Unknown error"));
+        }
+      } else {
+        toast.success("Summary removed.");
+      }
     } catch (e) {
       toast.error("Failed to delete: " + (e.message || "Unknown error"));
     } finally {
