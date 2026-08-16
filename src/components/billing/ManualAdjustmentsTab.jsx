@@ -51,8 +51,14 @@ export default function ManualAdjustmentsTab({ pkg }) {
     return v == null ? '' : String(v);
   };
 
+  const displayValue = (c) => {
+    if (c.colLetter === 'A') return format(parseBillingMonth(pkg.billing_month), 'MMM yy');
+    const v = rowValues[c.colLetter];
+    return v == null ? '' : String(v);
+  };
+
   const changed = columns.filter(c =>
-    c.colLetter !== 'A' &&
+    !c.readOnly &&
     Object.prototype.hasOwnProperty.call(edits, c.colLetter) &&
     String(edits[c.colLetter]).trim() !== String(rowValues[c.colLetter] ?? '').trim()
   );
@@ -116,24 +122,56 @@ export default function ManualAdjustmentsTab({ pkg }) {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto pb-2 -mx-1 px-1">
-                <div className="flex gap-2 min-w-max">
-                  {columns.map(c => (
-                    <div key={c.colLetter} className="flex-shrink-0 w-28 rounded-md border border-slate-200 overflow-hidden bg-white">
-                      <div className="px-2 py-1 bg-slate-100 border-b border-slate-200">
-                        <div className="text-xs font-bold text-slate-700 leading-tight">{c.colLetter}</div>
-                        <div className="text-[10px] text-slate-500 truncate leading-tight" title={c.label}>{c.short || c.label}</div>
-                      </div>
-                      <input
-                        value={cellValue(c.colLetter)}
-                        onChange={(e) => setEdits(prev => ({ ...prev, [c.colLetter]: e.target.value }))}
-                        disabled={c.colLetter === 'A' || applying}
-                        placeholder={c.colLetter === 'A' ? '' : '—'}
-                        className="w-full px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 disabled:bg-slate-50 disabled:text-slate-500"
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="overflow-x-auto pb-2">
+                <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
+                  <colgroup>
+                    {columns.map(c => <col key={c.colLetter} style={{ width: 112 }} />)}
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      {columns.map(c => (
+                        <th key={c.colLetter} className="h-6 text-xs font-semibold text-slate-500 text-center border border-slate-300 bg-slate-200">{c.colLetter}</th>
+                      ))}
+                    </tr>
+                    <tr>
+                      {columns.map((c) => {
+                        if (!c.groupLabel) return null;
+                        return (
+                          <th key={c.colLetter} colSpan={c.span || 1} className="px-2 py-1 text-[11px] font-semibold text-white text-center border border-slate-300" style={{ background: 'hsl(231,64%,20%)' }} title={c.label}>
+                            {c.groupLabel}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                    <tr>
+                      {columns.map(c => (
+                        <th key={c.colLetter} className="px-2 py-1 text-[10px] text-slate-500 text-center border border-slate-300 bg-slate-100" title={c.label}>{c.short}</th>
+                      ))}
+                    </tr>
+                    <tr>
+                      {columns.map(c => {
+                        if (c.readOnly) {
+                          return (
+                            <td key={c.colLetter} className="px-2 py-1.5 text-sm text-slate-600 text-center border border-slate-300 bg-slate-50" title={c.label}>
+                              {displayValue(c)}
+                            </td>
+                          );
+                        }
+                        return (
+                          <td key={c.colLetter} className="p-0 border border-slate-300 bg-white">
+                            <input
+                              value={cellValue(c.colLetter)}
+                              onChange={(e) => setEdits(prev => ({ ...prev, [c.colLetter]: e.target.value }))}
+                              disabled={applying}
+                              placeholder="—"
+                              className="w-full px-2 py-1.5 text-sm text-center bg-transparent focus:outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-400"
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               <div className="flex items-center gap-2">
