@@ -4,6 +4,7 @@ import {
   getGraphToken, getActiveCrtWorkbook, getPathwaysFolder, formatDateForCrt
 } from '../../shared/crtWorkbook.ts';
 import { excelSerial, patchWithRetry, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
+import { syncNarrativeReportIntoWorkbook } from '../../shared/narrativeReport.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -118,7 +119,17 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // 5. Get embed URL for the new file
+    // 5. Sync the Narrative Report sheet to the new month — clear the stale
+    //    narrative text carried over from the source month and set each data
+    //    row's Reporting Period (Start/End) to the new month's first/last day.
+    let narrativeResult = null;
+    try {
+      narrativeResult = await syncNarrativeReportIntoWorkbook(accessToken, newFile);
+    } catch (e) {
+      narrativeResult = { status: 'error', error: e.message };
+    }
+
+    // 6. Get embed URL for the new file
     let embedUrl = null;
     try {
       const previewRes = await fetch(
@@ -147,6 +158,7 @@ export default async function(req: Request): Promise<Response> {
         embedUrl,
       },
       submissionRange: { start: startDateStr, end: endDateStr },
+      narrativeReport: narrativeResult,
       rangeErrors: rangeErrors.length ? rangeErrors : undefined,
     });
   } catch (error) {

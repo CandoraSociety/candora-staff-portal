@@ -2,6 +2,7 @@ import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
   mapClientToCrtRow, crtMonthEnd, listCrtFiles
 } from './crtWorkbook.ts';
+import { syncNarrativeReportIntoWorkbook } from './narrativeReport.ts';
 
 // Sync a single workbook's Client Data sheet with the given portal clients,
 // month-bound: only clients whose service_start_date is on or before the
@@ -223,7 +224,13 @@ export async function syncAllOpenWorkbooks(base44, accessToken) {
     if (closedNames.has(f.name)) { results.push({ file: f.name, status: 'skipped_closed' }); continue; }
     try {
       const r = await syncClientsIntoWorkbook(accessToken, f, allClients);
-      results.push({ file: f.name, status: 'synced', ...r });
+      // Also keep the Narrative Report sheet aligned with this workbook's
+      // month (Reporting Period dates + this-month-only narrative text).
+      // Non-fatal: a narrative error doesn't fail the client-data sync.
+      let narrative = null;
+      try { narrative = await syncNarrativeReportIntoWorkbook(accessToken, f); }
+      catch (e) { narrative = { status: 'error', error: e.message }; }
+      results.push({ file: f.name, status: 'synced', ...r, narrative });
     } catch (e) { results.push({ file: f.name, status: 'error', error: e.message }); }
   }
   return { files: results, totalSynced: results.filter(r => r.status === 'synced').length };
