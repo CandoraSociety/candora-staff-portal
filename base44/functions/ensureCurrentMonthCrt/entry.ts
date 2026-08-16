@@ -128,6 +128,21 @@ export default async function(req: Request): Promise<Response> {
           }
         } catch (e) { /* date range best-effort */ }
       }
+
+      // 5b. Unhide the 26/27 fiscal-year month columns (Q:AB = Apr 2026 – Mar 2027)
+      //     on the Deliverables sheet. The template ships these hidden (width 0);
+      //     new monthly workbooks need them visible so staff can enter 26/27 deliverables.
+      try {
+        await fetch(
+          `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('Deliverables')/range(address='Q:AB')/format`,
+          {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ columnWidth: 60.75 })
+          }
+        );
+      } catch (e) { /* unhide best-effort */ }
+
       created = true;
     }
 

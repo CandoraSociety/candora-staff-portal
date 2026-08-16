@@ -129,7 +129,25 @@ export default async function(req: Request): Promise<Response> {
       narrativeResult = { status: 'error', error: e.message };
     }
 
-    // 6. Get embed URL for the new file
+    // 6. Unhide the 26/27 fiscal-year month columns (Q:AB = Apr 2026 – Mar 2027)
+    //    on the Deliverables sheet. The template ships these hidden (width 0);
+    //    new monthly workbooks need them visible so staff can enter 26/27 deliverables.
+    let deliverablesUnhide = null;
+    try {
+      const unhideRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${newFile.id}/workbook/worksheets('Deliverables')/range(address='Q:AB')/format`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ columnWidth: 60.75 })
+        }
+      );
+      deliverablesUnhide = unhideRes.ok ? 'ok' : `failed:${unhideRes.status}`;
+    } catch (e) {
+      deliverablesUnhide = `error:${e.message}`;
+    }
+
+    // 7. Get embed URL for the new file
     let embedUrl = null;
     try {
       const previewRes = await fetch(
