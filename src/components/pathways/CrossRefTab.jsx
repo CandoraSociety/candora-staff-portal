@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag, ArrowRightCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
@@ -118,6 +118,7 @@ const parseCrtDate = (s) => {
 const COMPLETED_KEY = 'crossRefCompleted';
 const UPDATED_KEY = 'crossRefUpdated';
 const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
+const PHASE_CHANGE_KEY = 'crossRefPhaseChange';
 
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -203,6 +204,23 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     });
   };
   const isYellowResolved = (rowId, key) => yellowResolved.has(`${rowId}:${key}`);
+  // "Phase Change" marker — flags a client as needing to move from the 90-Day
+  // follow-up phase back to work-search phase. Persisted by HSID + name aliases
+  // (same multi-key scheme as Done/Updated) so it survives workbook re-uploads.
+  const [phaseChange, setPhaseChange] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(PHASE_CHANGE_KEY) || '[]')); } catch { return new Set(); }
+  });
+  const togglePhaseChange = (r) => {
+    const keys = rowKeys(r);
+    setPhaseChange(prev => {
+      const n = new Set(prev);
+      const any = keys.some(k => n.has(k));
+      if (any) keys.forEach(k => n.delete(k));
+      else keys.forEach(k => n.add(k));
+      return n;
+    });
+  };
+  const isPhaseChangeRow = (r) => rowKeys(r).some(k => phaseChange.has(k));
   const fileInput = useRef(null);
   const crtFileInput = useRef(null);
 
@@ -217,6 +235,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   useEffect(() => {
     localStorage.setItem(YELLOW_RESOLVED_KEY, JSON.stringify([...yellowResolved]));
   }, [yellowResolved]);
+
+  useEffect(() => {
+    localStorage.setItem(PHASE_CHANGE_KEY, JSON.stringify([...phaseChange]));
+  }, [phaseChange]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -482,6 +504,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             <th className="text-left px-3 py-3 font-semibold text-slate-600">EDAS Completed</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Extra Notes</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap">Phase Change</th>
             <th className="px-3 py-3" />
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Action</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap border-l-[3px] border-black">Updated</th>
@@ -531,6 +554,15 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     placeholder="Add comment..."
                     className="w-full max-w-[200px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
                   />
+                </td>
+                <td className="px-3 py-2.5">
+                  <button
+                    onClick={() => togglePhaseChange(r)}
+                    title="Flag this client to be moved from the 90-Day Follow-up phase back to the Work Search phase"
+                    className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border whitespace-nowrap transition-colors ${isPhaseChangeRow(r) ? 'border-orange-500 text-orange-700 bg-orange-200 hover:bg-orange-300' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <ArrowRightCircle className="w-3.5 h-3.5" /> {isPhaseChangeRow(r) ? '→ Work Search' : 'Flag Phase'}
+                  </button>
                 </td>
                 <td className="px-3 py-2.5">
                   {matched && <CheckCircle2 className="w-4 h-4 text-green-600" />}
@@ -641,7 +673,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             );
           })}
           {list.length === 0 && (
-            <tr><td colSpan={10 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
+            <tr><td colSpan={11 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
           )}
         </tbody>
       </table>
