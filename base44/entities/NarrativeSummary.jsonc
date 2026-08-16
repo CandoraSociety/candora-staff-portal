@@ -9,15 +9,12 @@
     "category": {
       "type": "string",
       "enum": [
-        "trends",
-        "marketing_activities",
-        "success_stories",
-        "employer_engagements",
-        "challenges",
-        "goals_next_month",
-        "additional_notes"
+        "client_issues_trends",
+        "employer_engagement_activities",
+        "program_marketing_activities",
+        "labour_market_observations"
       ],
-      "description": "Narrative category \u2014 mirrors the Narrative Report sheet's Category column and the StaffMonthlyReport field keys."
+      "description": "Narrative category \u2014 mirrors the CRT Narrative Report sheet's Category column exactly."
     },
     "summary": {
       "type": "string",

@@ -11,18 +11,15 @@ import { toast } from "sonner";
 // Category keys mirror the StaffMonthlyReport fields and populate the CRT
 // Narrative Report sheet's Category column (C).
 export const NARRATIVE_CATEGORIES = [
-  { value: "trends", label: "Trends Observed" },
-  { value: "marketing_activities", label: "Marketing & Outreach Activities" },
-  { value: "success_stories", label: "Success Stories" },
-  { value: "employer_engagements", label: "Employer Engagements" },
-  { value: "challenges", label: "Challenges" },
-  { value: "goals_next_month", label: "Goals for Next Month" },
-  { value: "additional_notes", label: "Additional Notes" },
+  { value: "client_issues_trends", label: "Client Issues / Trends" },
+  { value: "employer_engagement_activities", label: "Employer Engagement Activities" },
+  { value: "program_marketing_activities", label: "Program Marketing Activities" },
+  { value: "labour_market_observations", label: "Labour Market Observations" },
 ];
 
 export default function MonthlyNarrativeReportTab({ currentUser }) {
   const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [category, setCategory] = useState("trends");
+  const [category, setCategory] = useState("client_issues_trends");
   const [summary, setSummary] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [recent, setRecent] = useState([]);

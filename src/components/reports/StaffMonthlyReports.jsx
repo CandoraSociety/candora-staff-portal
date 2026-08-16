@@ -18,7 +18,7 @@ export default function StaffMonthlyReports() {
 
   // Inline "Add Narrative Summary" form state
   const [reportMonth, setReportMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [category, setCategory] = useState("trends");
+  const [category, setCategory] = useState("client_issues_trends");
   const [summary, setSummary] = useState("");
   const [submitting, setSubmitting] = useState(false);
 

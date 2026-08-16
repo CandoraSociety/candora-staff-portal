@@ -5,16 +5,13 @@ import { writeNarrativeSummariesIntoWorkbook } from '../../shared/narrativeRepor
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  trends: 'Trends Observed',
-  marketing_activities: 'Marketing & Outreach Activities',
-  success_stories: 'Success Stories',
-  employer_engagements: 'Employer Engagements',
-  challenges: 'Challenges',
-  goals_next_month: 'Goals for Next Month',
-  additional_notes: 'Additional Notes',
+  client_issues_trends: 'Client Issues / Trends',
+  employer_engagement_activities: 'Employer Engagement Activities',
+  program_marketing_activities: 'Program Marketing Activities',
+  labour_market_observations: 'Labour Market Observations',
 };
 
-const CATEGORY_ORDER = ['trends','marketing_activities','success_stories','employer_engagements','challenges','goals_next_month','additional_notes'];
+const CATEGORY_ORDER = ['client_issues_trends','employer_engagement_activities','program_marketing_activities','labour_market_observations'];
 
 // Push the narrative summaries a staff member has flagged (include_in_crt=true)
 // for a given reporting month into the matching monthly CRT workbook's
