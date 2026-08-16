@@ -26,6 +26,7 @@ export default function PathwaysWorkshops() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [preset, setPreset] = useState(null);
   const [roster, setRoster] = useState(null); // { workshop, date }
 
   const load = useCallback(async () => {
@@ -52,8 +53,21 @@ export default function PathwaysWorkshops() {
     setSignups(await base44.entities.WorkshopSignup.list('-created_date'));
   };
 
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const openEdit = (w) => { setEditing(w); setDialogOpen(true); };
+  const openNew = () => { setEditing(null); setPreset(null); setDialogOpen(true); };
+  const openJobClub = () => {
+    setEditing(null);
+    setPreset({
+      title: 'Job Club',
+      description: 'Weekly group job-search support session — resume help, applications, and employer outreach.',
+      color: '#0891b2',
+      recurrence_pattern: 'weekly',
+      start_time: '13:00',
+      end_time: '14:30',
+      capacity: 20,
+    });
+    setDialogOpen(true);
+  };
+  const openEdit = (w) => { setEditing(w); setPreset(null); setDialogOpen(true); };
 
   const handleDelete = async (w) => {
     if (!confirm(`Delete "${w.title}" and all its sign-ups?`)) return;
@@ -97,6 +111,7 @@ export default function PathwaysWorkshops() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></Button>
+          <Button variant="outline" onClick={openJobClub} size="sm"><Plus className="w-4 h-4" /> New Job Club Session</Button>
           <Button onClick={openNew} size="sm"><Plus className="w-4 h-4" /> New Workshop</Button>
         </div>
       </div>
@@ -183,6 +198,7 @@ export default function PathwaysWorkshops() {
         onClose={() => setDialogOpen(false)}
         onSaved={load}
         workshop={editing}
+        preset={preset}
         user={user}
       />
 

@@ -21,17 +21,17 @@ const EMPTY = {
   category: 'none',
 };
 
-export default function WorkshopDialog({ open, onClose, onSaved, workshop, user }) {
+export default function WorkshopDialog({ open, onClose, onSaved, workshop, preset, user }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
     if (open) {
-      setForm(workshop ? { ...EMPTY, ...workshop } : { ...EMPTY });
+      setForm(workshop ? { ...EMPTY, ...workshop } : { ...EMPTY, ...preset });
       setErr('');
     }
-  }, [open, workshop]);
+  }, [open, workshop, preset]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -85,7 +85,7 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, user 
     <Dialog open={open} onOpenChange={v => !v && onClose?.()}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{workshop ? 'Edit Workshop' : 'New Workshop'}</DialogTitle>
+          <DialogTitle>{workshop ? 'Edit Workshop' : (preset?.title ? `New ${preset.title}` : 'New Workshop')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3 py-1">
@@ -198,7 +198,7 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, user 
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? 'Saving…' : (workshop ? 'Save changes' : 'Create workshop')}</Button>
+          <Button onClick={submit} disabled={saving}>{saving ? 'Saving…' : (workshop ? 'Save changes' : (preset?.title ? `Create ${preset.title}` : 'Create workshop'))}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
