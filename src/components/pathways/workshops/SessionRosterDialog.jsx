@@ -137,11 +137,6 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     }
   };
 
-  const clientOptions = (clients || [])
-    .filter(c => c.first_name || c.last_name)
-    .map(c => `${c.first_name} ${c.last_name}`.trim())
-    .sort();
-
   const hasPending = sessionSignups.some(s => s.status === 'registered');
 
   return (
@@ -232,15 +227,11 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
             <div>
               <Label className="text-xs">Name</Label>
               <Input
-                list="ws-client-list"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Attendee name"
+                placeholder="Type any attendee name"
                 disabled={full || adding}
               />
-              <datalist id="ws-client-list">
-                {clientOptions.map((n, i) => <option key={i} value={n} />)}
-              </datalist>
             </div>
             <div>
               <Label className="text-xs">Email (optional)</Label>
