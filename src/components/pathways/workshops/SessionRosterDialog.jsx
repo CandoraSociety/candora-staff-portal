@@ -5,11 +5,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { base44 } from '@/api/base44Client';
 import { todayISO, formatDateLong } from '@/lib/workshopSchedule';
-import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
-import { Check, X, UserMinus, UserPlus, Users } from 'lucide-react';
+import { syncSessionCompletionToRoadmap } from '@/lib/workshopCompletion';
+import { UserMinus, UserPlus, Users, ClipboardCheck } from 'lucide-react';
 
 const STATUS_META = {
   registered: { label: 'Registered', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -18,10 +18,18 @@ const STATUS_META = {
   no_show: { label: 'No-show', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
 };
 
+// Present (arrival) is a separate concept from the final 'attended' outcome.
+// While still 'registered', a checked present box shows as "Present".
+function badgeFor(s) {
+  if (s.present && s.status === 'registered') return { label: 'Present', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
+  return STATUS_META[s.status] || STATUS_META.registered;
+}
+
 export default function SessionRosterDialog({ open, onClose, workshop, sessionDate, signups, clients, onChanged }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [adding, setAdding] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   const sessionSignups = useMemo(
     () => (signups || []).filter(s => s.workshop_id === workshop?.id && s.session_date === sessionDate),
@@ -40,7 +48,6 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     if (full) return;
     setAdding(true);
     try {
-      // match a client by name if typed exactly
       const matched = (clients || []).find(c =>
         `${c.first_name} ${c.last_name}`.toLowerCase() === name.trim().toLowerCase()
       );
@@ -52,6 +59,7 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
         attendee_email: email.trim() || matched?.email || '',
         signup_date: todayISO(),
         status: 'registered',
+        present: false,
       });
       reset();
       onChanged?.();
@@ -62,12 +70,18 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     }
   };
 
+  const togglePresent = async (signup) => {
+    try {
+      await base44.entities.WorkshopSignup.update(signup.id, { present: !signup.present });
+      onChanged?.();
+    } catch (err) {
+      alert('Could not update: ' + (err.message || 'Unknown error'));
+    }
+  };
+
   const setStatus = async (signup, status) => {
     try {
       await base44.entities.WorkshopSignup.update(signup.id, { status });
-      if (status === 'attended' && workshop?.id) {
-        try { await syncWorkshopCompletionToRoadmap(workshop.id); } catch (_) {}
-      }
       onChanged?.();
     } catch (err) {
       alert('Could not update: ' + (err.message || 'Unknown error'));
@@ -84,10 +98,43 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     }
   };
 
+  // Complete Session — the facilitator clicks this once the class concludes:
+  //   present → 'attended', registered-not-present → 'no_show',
+  //   then WD/DEA clients who attended get the matching EDA marked complete.
+  const completeSession = async () => {
+    const pending = sessionSignups.filter(s => s.status === 'registered');
+    if (pending.length === 0) { alert('No registered attendees to record.'); return; }
+    const presentCount = pending.filter(s => s.present).length;
+    if (!confirm(
+      `Record attendance for this session?\n\n` +
+      `• ${presentCount} checked-in → Attended\n` +
+      `• ${pending.length - presentCount} not checked → No-show\n` +
+      `WD/DEA clients who attended will have the matching EDA marked complete in their progress tab and action plan.`
+    )) return;
+    setCompleting(true);
+    try {
+      const updates = pending.map(s => ({ id: s.id, status: s.present ? 'attended' : 'no_show' }));
+      await base44.entities.WorkshopSignup.bulkUpdate(updates);
+      let syncResult = null;
+      try { syncResult = await syncSessionCompletionToRoadmap(workshop.id, sessionDate); } catch (_) {}
+      onChanged?.();
+      const msg = syncResult?.updated
+        ? `Attendance recorded. ${syncResult.updated} EDA(s) marked complete.`
+        : 'Attendance recorded.';
+      alert(msg);
+    } catch (e) {
+      alert('Could not complete session: ' + (e.message || 'Unknown error'));
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   const clientOptions = (clients || [])
     .filter(c => c.first_name || c.last_name)
     .map(c => `${c.first_name} ${c.last_name}`.trim())
     .sort();
+
+  const hasPending = sessionSignups.some(s => s.status === 'registered');
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose?.()}>
@@ -106,6 +153,10 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
           {full && <span className="text-red-600 font-medium">Full</span>}
         </div>
 
+        <p className="text-[11px] text-muted-foreground -mt-1">
+          Check the box beside each name as clients arrive. When the class concludes, click <span className="font-semibold text-emerald-700">Complete Session</span> to record attendance.
+        </p>
+
         <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
           {(() => {
             const clientsById = {};
@@ -119,10 +170,17 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
             const others = sessionSignups.filter(s => !isPathways(s));
             if (sessionSignups.length === 0) return <p className="text-center text-sm text-muted-foreground py-6">No sign-ups yet for this session.</p>;
             const renderRow = (s) => {
-              const meta = STATUS_META[s.status] || STATUS_META.registered;
+              const badge = badgeFor(s);
               const c = s.client_id ? clientsById[s.client_id] : null;
+              const locked = s.status === 'attended' || s.status === 'no_show' || s.status === 'cancelled';
               return (
                 <div key={s.id} className="flex items-center gap-2 rounded-md border border-border px-2.5 py-2">
+                  <Checkbox
+                    checked={!!s.present || s.status === 'attended'}
+                    disabled={locked}
+                    onCheckedChange={() => togglePresent(s)}
+                    className="data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate flex items-center gap-1.5">
                       {s.attendee_name}
@@ -131,12 +189,8 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
                     </p>
                     {s.attendee_email && <p className="text-xs text-muted-foreground truncate">{s.attendee_email}</p>}
                   </div>
-                  <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${meta.cls}`}>{meta.label}</span>
+                  <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${badge.cls}`}>{badge.label}</span>
                   <div className="flex items-center gap-0.5">
-                    <button title="Mark attended" onClick={() => setStatus(s, 'attended')}
-                      className="p-1 rounded hover:bg-emerald-50 text-emerald-600"><Check className="w-3.5 h-3.5" /></button>
-                    <button title="Mark no-show" onClick={() => setStatus(s, 'no_show')}
-                      className="p-1 rounded hover:bg-amber-50 text-amber-600"><X className="w-3.5 h-3.5" /></button>
                     <button title="Cancel registration" onClick={() => setStatus(s, 'cancelled')}
                       className="p-1 rounded hover:bg-slate-100 text-slate-500"><UserMinus className="w-3.5 h-3.5" /></button>
                     <button title="Remove" onClick={() => remove(s)}
@@ -190,7 +244,15 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
           </Button>
         </form>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button
+            onClick={completeSession}
+            disabled={completing || !hasPending}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <ClipboardCheck className="w-4 h-4" />
+            {completing ? 'Recording…' : 'Complete Session'}
+          </Button>
           <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>

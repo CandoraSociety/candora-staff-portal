@@ -37,7 +37,12 @@
         "no_show"
       ],
       "default": "registered",
-      "description": "Attendance status for this session"
+      "description": "Final attendance outcome. 'attended' is recorded by the facilitator's Complete-Session action (not by a single checkmark)."
+    },
+    "present": {
+      "type": "boolean",
+      "default": false,
+      "description": "Attendance-at-arrival marker. Facilitator checks this when the client arrives (taking attendance); the Complete-Session action then records those checked as 'attended'."
     },
     "notes": {
       "type": "string"
