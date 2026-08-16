@@ -541,11 +541,16 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
 
   const activeRows = merged.filter(r => !isCompletedRow(r));
   const completedRows = merged.filter(r => isCompletedRow(r));
+  // Clients marked "Updated" are pulled out of the main active list into their
+  // own section, mirroring how Done moves clients to Completed. Done takes
+  // precedence (a completed client never appears in Updated).
+  const updatedRows = activeRows.filter(isUpdatedRow);
+  const mainActiveRows = activeRows.filter(r => !isUpdatedRow(r));
 
-  const matchedCount = activeRows.filter(isMatch).length;
-  const unmatchedCount = activeRows.length - matchedCount;
+  const matchedCount = mainActiveRows.filter(isMatch).length;
+  const unmatchedCount = mainActiveRows.length - matchedCount;
   const newCount = activeRows.filter(r => r.is_new).length;
-  const masterFiltered = filter === 'all' ? activeRows : activeRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
+  const masterFiltered = filter === 'all' ? mainActiveRows : mainActiveRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
   const filteredActive = useMemo(() => {
     let list = masterFiltered;
     if (dateColumn) {
@@ -774,7 +779,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
             {[
-              { id: 'all', label: 'All', count: activeRows.length },
+              { id: 'all', label: 'All', count: mainActiveRows.length },
               { id: 'matched', label: 'In Master List', count: matchedCount },
               { id: 'unmatched', label: 'Not in Master List', count: unmatchedCount },
             ].map(f => (
@@ -863,11 +868,21 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         <div className="space-y-4">
           <CollapsibleSection
             title="Cross-Reference Clients"
-            count={activeRows.length}
+            count={mainActiveRows.length}
             badgeClass="bg-blue-100 text-blue-700"
             subtitle={`${filteredActive.length} shown`}
           >
             {renderTable(filteredActive, { actionable: true })}
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Updated"
+            count={updatedRows.length}
+            badgeClass="bg-blue-200 text-blue-800"
+            subtitle="Marked as updated"
+            defaultOpen={false}
+          >
+            {renderTable(updatedRows, { actionable: true })}
           </CollapsibleSection>
 
           <CollapsibleSection
