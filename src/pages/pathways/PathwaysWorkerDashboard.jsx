@@ -562,7 +562,7 @@ export default function PathwaysWorkerDashboard() {
                 variant="worker"
               />
 
-              <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} />
+              <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} activeSearch={search} />
 
               {/* Service Navigation section — below DEA/WD with a visible divider */}
               {isServiceNavigator && (
@@ -578,6 +578,7 @@ export default function PathwaysWorkerDashboard() {
                     accentColor="#0f766e"
                     variant="main"
                     defaultOpen
+                    forceOpen={!!search && search.trim().length > 0}
                   >
                     {snDisplayed.length > 0
                       ? renderClientTable(snDisplayed, 'wd', 'all')

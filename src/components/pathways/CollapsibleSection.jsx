@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
-export default function CollapsibleSection({ title, count = 0, defaultOpen = false, accentColor, variant = 'sub', children }) {
+export default function CollapsibleSection({ title, count = 0, defaultOpen = false, accentColor, variant = 'sub', forceOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen);
 
   const isMain = variant === 'main';
+  // forceOpen (e.g. while a search is active) keeps the section expanded so
+  // matching rows are always visible, regardless of the user's toggle state.
+  const isOpen = forceOpen || open;
 
   const headerStyle = isMain
     ? { background: accentColor || 'hsl(231,64%,20%)' }
@@ -26,7 +29,7 @@ export default function CollapsibleSection({ title, count = 0, defaultOpen = fal
         className="w-full flex items-center gap-2 px-4 py-2.5 transition-colors hover:brightness-95"
         style={headerStyle}
       >
-        {open
+        {isOpen
           ? <ChevronDown className="w-4 h-4 shrink-0" style={{ color: titleColor }} />
           : <ChevronRight className="w-4 h-4 shrink-0" style={{ color: titleColor }} />}
         <span className={`font-semibold ${isMain ? 'text-base' : 'text-sm'}`} style={{ color: titleColor }}>{title}</span>
@@ -37,7 +40,7 @@ export default function CollapsibleSection({ title, count = 0, defaultOpen = fal
           {count}
         </span>
       </button>
-      {open && <div className="p-3 bg-white">{children}</div>}
+      {isOpen && <div className="p-3 bg-white">{children}</div>}
     </div>
   );
 }

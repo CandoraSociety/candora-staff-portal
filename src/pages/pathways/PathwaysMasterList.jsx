@@ -284,7 +284,7 @@ export default function PathwaysMasterList() {
               sortKey={sortKey} onSort={setSortKey}
               workers={workers}
             />
-            <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} alwaysShowExtras />
+            <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} alwaysShowExtras activeSearch={search} />
             {snClients.length > 0 && (
               <>
                 <div className="flex items-center gap-3 my-5">
@@ -292,7 +292,7 @@ export default function PathwaysMasterList() {
                   <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Service Navigation</span>
                   <div className="flex-1 h-px bg-slate-300" />
                 </div>
-                <ServiceNavigationSections clients={snClients} renderTable={renderSnTable} />
+                <ServiceNavigationSections clients={snClients} renderTable={renderSnTable} activeSearch={search} />
               </>
             )}
           </>
