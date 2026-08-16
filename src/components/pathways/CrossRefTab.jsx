@@ -94,6 +94,7 @@ const parseCrtDate = (s) => {
 
 const COMPLETED_KEY = 'crossRefCompleted';
 const UPDATED_KEY = 'crossRefUpdated';
+const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
 
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -163,6 +164,22 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [updated, setUpdated] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(UPDATED_KEY) || '[]')); } catch { return new Set(); }
   });
+  // Per-cell "resolved" set for yellow-highlighted date cells. Keyed by
+  // `${rowId}:${columnKey}`. When resolved, the yellow highlight is suppressed
+  // for that cell (even though the underlying sync gap still applies).
+  const [yellowResolved, setYellowResolved] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(YELLOW_RESOLVED_KEY) || '[]')); } catch { return new Set(); }
+  });
+  const toggleYellowResolved = (rowId, key) => {
+    const cellKey = `${rowId}:${key}`;
+    setYellowResolved(prev => {
+      const n = new Set(prev);
+      if (n.has(cellKey)) n.delete(cellKey);
+      else n.add(cellKey);
+      return n;
+    });
+  };
+  const isYellowResolved = (rowId, key) => yellowResolved.has(`${rowId}:${key}`);
   const fileInput = useRef(null);
   const crtFileInput = useRef(null);
 
@@ -173,6 +190,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   useEffect(() => {
     localStorage.setItem(UPDATED_KEY, JSON.stringify([...updated]));
   }, [updated]);
+
+  useEffect(() => {
+    localStorage.setItem(YELLOW_RESOLVED_KEY, JSON.stringify([...yellowResolved]));
+  }, [yellowResolved]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -540,12 +561,14 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     && val && liveVal && String(val).trim() !== String(liveVal).trim();
                   const editable = EDITABLE_CRT_KEYS.includes(c.key);
                   const cellDate = DATE_KEYS.has(c.key) ? parseCrtDate(val) : null;
-                  const highlightYellow = showDogEar && cellDate && cellDate <= MARCH_2026_END;
+                  const isYellow = showDogEar && cellDate && cellDate <= MARCH_2026_END;
+                  const highlightYellow = isYellow && !isYellowResolved(r.id, c.key);
                   return (
                     <td
                       key={c.key}
                       className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : '')}`}
                     >
+                      <div className="flex items-center gap-1">
                       {editable ? (
                         <input
                           type="text"
@@ -564,6 +587,16 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       ) : (
                         val || <span className="text-slate-300">—</span>
                       )}
+                      {isYellow && (
+                        <button
+                          onClick={() => toggleYellowResolved(r.id, c.key)}
+                          title="Mark this sync gap as resolved — hides the yellow highlight"
+                          className={`shrink-0 inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md border transition-colors ${highlightYellow ? 'border-yellow-500 text-yellow-800 bg-yellow-300 hover:bg-yellow-400' : 'border-slate-300 text-slate-500 hover:bg-slate-50'}`}
+                        >
+                          <Check className="w-2.5 h-2.5" /> Resolved
+                        </button>
+                      )}
+                      </div>
                       {showDogEar && (
                         <span
                           title="Filled in on the cross-reference sheet but blank on the live CRT Client Data sheet"
