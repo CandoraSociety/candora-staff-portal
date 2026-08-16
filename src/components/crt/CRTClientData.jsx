@@ -94,12 +94,24 @@ export default function CRTClientData({ clients }) {
     );
   }
 
+  // Order by the applicable start date: DEA Start Date for DEA clients, Service
+  // Start Date for WD clients — both stored as service_start_date on the Client.
+  // Clients without a start date sort to the bottom.
+  const sortedClients = [...clients].sort((a, b) => {
+    const da = a.service_start_date ? new Date(a.service_start_date).getTime() : null;
+    const db = b.service_start_date ? new Date(b.service_start_date).getTime() : null;
+    if (da === null && db === null) return 0;
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
+
   return (
     <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
       {/* Info Bar */}
       <div className="bg-slate-50 border-b border-slate-200 px-4 py-2">
         <p className="text-xs text-slate-500">
-          Click any cell to select its text for copy/paste. Use Ctrl+C / Cmd+C after selecting.
+          Click any cell to select its text for copy/paste. Use Ctrl+C / Cmd+C after selecting. Ordered by start date (DEA Start Date for DEA clients, Service Start Date for WD clients).
         </p>
       </div>
 
@@ -119,7 +131,7 @@ export default function CRTClientData({ clients }) {
             </tr>
           </thead>
           <tbody>
-            {clients.map((client, rowIdx) => (
+            {sortedClients.map((client, rowIdx) => (
               <tr
                 key={client.id}
                 className={rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}
