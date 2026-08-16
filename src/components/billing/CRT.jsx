@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -41,6 +41,24 @@ export default function CRT({ clients = [] }) {
     },
     enabled: !!viewFileId,
   });
+
+  // When the user selects a month to view, also align that workbook's
+  // Narrative Report sheet to its own month (so the preview shows the
+  // correct reporting-period dates + that month's narrative, not the
+  // active month's). Closed (frozen) months are skipped by the function.
+  const [narrativeSyncing, setNarrativeSyncing] = useState(false);
+  useEffect(() => {
+    if (!viewFileId) return;
+    const file = status?.allFiles?.find(f => f.id === viewFileId);
+    if (!file?.name) return;
+    let cancelled = false;
+    setNarrativeSyncing(true);
+    base44.functions.invoke('syncNarrativeReportToMonth', { workbookName: file.name })
+      .then(() => { if (!cancelled) refetch(); })
+      .catch(() => { /* non-fatal — preview still loads */ })
+      .finally(() => { if (!cancelled) setNarrativeSyncing(false); });
+    return () => { cancelled = true; };
+  }, [viewFileId]);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -285,6 +303,12 @@ export default function CRT({ clients = [] }) {
                 {isViewingArchive && (
                   <CardDescription className="mt-1 text-amber-600">
                     Viewing an archived month — not the active workbook.
+                  </CardDescription>
+                )}
+                {narrativeSyncing && (
+                  <CardDescription className="mt-1 text-slate-500 flex items-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Aligning Narrative Report to this month…
                   </CardDescription>
                 )}
               </div>
