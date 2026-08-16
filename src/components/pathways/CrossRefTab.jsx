@@ -93,6 +93,7 @@ const parseCrtDate = (s) => {
 };
 
 const COMPLETED_KEY = 'crossRefCompleted';
+const UPDATED_KEY = 'crossRefUpdated';
 
 function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -159,12 +160,19 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [completed, setCompleted] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(COMPLETED_KEY) || '[]')); } catch { return new Set(); }
   });
+  const [updated, setUpdated] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(UPDATED_KEY) || '[]')); } catch { return new Set(); }
+  });
   const fileInput = useRef(null);
   const crtFileInput = useRef(null);
 
   useEffect(() => {
     localStorage.setItem(COMPLETED_KEY, JSON.stringify([...completed]));
   }, [completed]);
+
+  useEffect(() => {
+    localStorage.setItem(UPDATED_KEY, JSON.stringify([...updated]));
+  }, [updated]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -285,6 +293,19 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       const n = new Set(prev);
       const anyDone = keys.some(k => n.has(k));
       if (anyDone) keys.forEach(k => n.delete(k));
+      else keys.forEach(k => n.add(k));
+      return n;
+    });
+  };
+
+  const isUpdatedRow = (r) => rowKeys(r).some(k => updated.has(k));
+
+  const toggleUpdated = (r) => {
+    const keys = rowKeys(r);
+    setUpdated(prev => {
+      const n = new Set(prev);
+      const any = keys.some(k => n.has(k));
+      if (any) keys.forEach(k => n.delete(k));
       else keys.forEach(k => n.add(k));
       return n;
     });
@@ -419,10 +440,11 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
             <th className="px-3 py-3" />
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Action</th>
-            {CRT_COLUMNS.map((c, i) => (
+            <th className="text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap border-l-[3px] border-black">Updated</th>
+            {CRT_COLUMNS.map((c) => (
               <th
                 key={c.key}
-                className={`text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''}`}
+                className="text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap"
               >
                 {c.label}
               </th>
@@ -434,7 +456,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             const matched = isMatch(r);
             const flag = flagFor(r);
             const liveRow = findLiveMatch(r);
-            const rowBg = r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50');
+            const updatedRow = isUpdatedRow(r);
+            const rowBg = updatedRow ? 'bg-blue-100' : (r.is_new ? 'bg-amber-50' : (matched ? 'bg-green-50' : 'hover:bg-slate-50'));
             return (
               <tr key={r.id} className={rowBg}>
                 <td className="px-3 py-2.5">
@@ -496,7 +519,15 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     )}
                   </div>
                 </td>
-                {CRT_COLUMNS.map((c, i) => {
+                <td className={`px-3 py-2.5 border-l-[3px] border-black ${updatedRow ? 'bg-blue-100' : ''}`}>
+                  <button
+                    onClick={() => toggleUpdated(r)}
+                    className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border transition-colors ${updatedRow ? 'border-blue-400 text-blue-700 bg-blue-200' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    <Check className="w-3.5 h-3.5" /> {updatedRow ? 'Updated' : 'Mark'}
+                  </button>
+                </td>
+                {CRT_COLUMNS.map((c) => {
                   const fallback = r.crt ? (r.crt[c.key] || '') : '';
                   const val = getEdit(r, c.key, fallback);
                   // Red dog-ear: this CRT field IS filled in on the uploaded
@@ -513,7 +544,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   return (
                     <td
                       key={c.key}
-                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${i === 0 ? 'border-l-[3px] border-black' : ''} ${highlightYellow ? 'bg-yellow-200' : ''}`}
+                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : '')}`}
                     >
                       {editable ? (
                         <input
@@ -528,7 +559,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                             }
                           }}
                           placeholder="—"
-                          className={`w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 ${highlightYellow ? 'bg-yellow-200' : 'bg-white'}`}
+                          className={`w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : 'bg-white')}`}
                         />
                       ) : (
                         val || <span className="text-slate-300">—</span>
@@ -554,7 +585,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             );
           })}
           {list.length === 0 && (
-            <tr><td colSpan={9 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
+            <tr><td colSpan={10 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
           )}
         </tbody>
       </table>
