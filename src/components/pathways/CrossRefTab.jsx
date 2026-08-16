@@ -16,15 +16,38 @@ const DEFAULT_CRT_NAME = 'UPDATEDCommonReportingToolCRT-CareerCounsellors.xlsx';
 const normName = (s) => (s || '').toLowerCase().replace(/[,.\s]+/g, ' ').trim();
 const normHsid = (s) => (s || '').replace(/[^0-9a-z]/gi, '').toLowerCase();
 
+// Build a robust set of name keys for matching "Done" state across workbook
+// re-uploads. Always includes the raw normalized name (so existing done-keys
+// still match), plus a CANONICAL first-name/last-name key in both orders that
+// ignores middle names/initials — this is what makes Done sticky when the
+// same client comes back as "Smith, John A." in one upload and "John Smith"
+// in another. Without this, clients marked Done would reappear in the active
+// list whenever the name format drifted between uploads.
 const rowNameKeys = (name) => {
   const n = normName(name);
   if (!n) return [];
+  const keys = new Set([n]);
   if (name.includes(',')) {
     const [last, ...rest] = name.split(',').map(s => s.trim());
     const first = rest.join(' ');
-    return [n, normName(`${last} ${first}`), normName(`${first} ${last}`)].filter(Boolean);
+    keys.add(normName(`${last} ${first}`));
+    keys.add(normName(`${first} ${last}`));
+    const firstTok = normName(first.split(/\s+/)[0] || '');
+    const lastTok = normName((last || '').split(/\s+/)[0] || '');
+    if (firstTok && lastTok) {
+      keys.add(`${firstTok} ${lastTok}`);
+      keys.add(`${lastTok} ${firstTok}`);
+    }
+  } else {
+    const tokens = n.split(' ').filter(Boolean);
+    if (tokens.length >= 2) {
+      const firstTok = tokens[0];
+      const lastTok = tokens[tokens.length - 1];
+      keys.add(`${firstTok} ${lastTok}`);
+      keys.add(`${lastTok} ${firstTok}`);
+    }
   }
-  return [n];
+  return [...keys];
 };
 
 const buildClientNameKeys = (c) => {
