@@ -32,9 +32,13 @@ export default async function(req: Request): Promise<Response> {
 
     let body: any = {};
     try { body = await req.json(); } catch { /* no body */ }
-    const { sessionDate, attendedCount } = body || {};
+    const { sessionDate, attendedCount, deliveredDelta, attendedDelta } = body || {};
     if (!sessionDate) return Response.json({ error: 'sessionDate is required' }, { status: 400 });
-    const cnt = Number(attendedCount) || 0;
+    // Deltas default to +1 delivered / +attendedCount attended (a completed
+    // session). Pass negative deltas to undo a recorded session (e.g. deleting a
+    // test workshop). Counts are clamped at 0 so a decrement can't go negative.
+    const dDelivered = deliveredDelta != null ? Number(deliveredDelta) : 1;
+    const dAttended = attendedDelta != null ? Number(attendedDelta) : (Number(attendedCount) || 0);
 
     const iso = String(sessionDate).slice(0, 10);
     const d = new Date(iso.length === 10 ? iso + 'T12:00:00' : iso);
@@ -85,8 +89,8 @@ export default async function(req: Request): Promise<Response> {
       return isNaN(n) ? 0 : n;
     };
 
-    const newDelivered = readNum(WORKSHOPS_DELIVERED_ROW) + 1;
-    const newAttended = readNum(WORKSHOPS_ATTENDED_ROW) + cnt;
+    const newDelivered = Math.max(0, readNum(WORKSHOPS_DELIVERED_ROW) + dDelivered);
+    const newAttended = Math.max(0, readNum(WORKSHOPS_ATTENDED_ROW) + dAttended);
 
     await patchProtectedSheet(accessToken, file.id, DELIVERABLES_SHEET, [
       { cell: `${colL}${WORKSHOPS_DELIVERED_ROW}`, value: newDelivered },
