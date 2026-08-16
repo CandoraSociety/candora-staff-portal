@@ -330,9 +330,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   }, [activeRows, matchedCount, unmatchedCount, onCountsChange]);
 
   const renderTable = (list, { actionable, restorable }) => (
-    <div className="overflow-x-auto overflow-y-clip">
+    <div className="overflow-auto max-h-[70vh]">
       <table className="w-full text-sm border-collapse">
-        <thead className="bg-slate-50 border-b border-slate-200 sticky top-[92px] z-30 shadow-sm">
+        <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-30 shadow-sm">
           <tr>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Source Sheet</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
