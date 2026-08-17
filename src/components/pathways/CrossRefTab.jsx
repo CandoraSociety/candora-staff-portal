@@ -115,6 +115,18 @@ const parseCrtDate = (s) => {
   return isNaN(d) ? null : d;
 };
 
+// Format CRT comment text for readability: insert a line break before each
+// date (MM/DD/YY or MM/DD/YYYY) so each dated entry sits on its own line.
+// Idempotent — won't double-break a date already preceded by a newline.
+const withDateBreaks = (s) => {
+  if (!s) return '';
+  const out = String(s).replace(/(\d{1,2}\/\d{1,2}\/\d{2,4})/g, (m, _g, offset, full) => {
+    const before = offset > 0 ? full[offset - 1] : '';
+    return before === '\n' ? m : '\n' + m;
+  });
+  return out.startsWith('\n') ? out.slice(1) : out;
+};
+
 const CROSSREF_PUSH_KEYS = [
   'participant_name','hsid','ceis_dea','dea_start_date','service_element',
   'service_start_date','service_outcome','service_outcome_date',
@@ -751,25 +763,43 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                   </button>
                 </td>
                 {CRT_COLUMNS.map((c) => {
+                  const isComment = c.key === 'comments';
                   const fallback = r.crt ? (r.crt[c.key] || '') : '';
-                  const val = getEdit(r, c.key, fallback);
+                  const rawVal = getEdit(r, c.key, fallback);
+                  const val = isComment ? withDateBreaks(rawVal) : rawVal;
                   // Red dog-ear: this CRT field IS filled in on the uploaded
                   // cross-reference sheet, but blank in the live CRT Client
                   // Data sheet (Billing tab → CRT tab). Skip the Source Sheet
                   // column — it has no live-CRT counterpart.
                   const liveVal = liveRow ? (liveRow[c.key] || '') : '';
-                  const showDogEar = r.crt && c.key !== 'source_sheet' && val && !liveVal;
+                  const showDogEar = r.crt && c.key !== 'source_sheet' && rawVal && !liveVal;
                   const showDiffEar = r.crt && c.key !== 'source_sheet'
-                    && val && liveVal && String(val).trim() !== String(liveVal).trim();
+                    && rawVal && liveVal && String(rawVal).trim() !== String(liveVal).trim();
                   const editable = EDITABLE_CRT_KEYS.includes(c.key);
-                  const cellDate = DATE_KEYS.has(c.key) ? parseCrtDate(val) : null;
+                  const cellDate = DATE_KEYS.has(c.key) ? parseCrtDate(rawVal) : null;
                   const isYellow = showDogEar && cellDate && cellDate <= MARCH_2026_END;
                   const highlightYellow = isYellow && !isYellowResolved(r, c.key);
                   return (
                     <td
                       key={c.key}
-                      className={`relative px-3 py-2.5 text-slate-600 whitespace-nowrap ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : '')}`}
+                      className={`relative px-3 py-2.5 text-slate-600 ${isComment ? 'whitespace-normal align-top' : 'whitespace-nowrap'} ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : '')}`}
                     >
+                      {isComment ? (
+                        <textarea
+                          value={val}
+                          onFocus={() => { focusValueRef.current[`${r.id}:${c.key}`] = val; }}
+                          onChange={(e) => setEdit(r, c.key, e.target.value)}
+                          onBlur={() => {
+                            const orig = focusValueRef.current[`${r.id}:${c.key}`];
+                            if (orig !== undefined && orig !== val) {
+                              setPendingEdit({ row: r, key: c.key, label: c.label, original: orig, value: val });
+                            }
+                          }}
+                          placeholder="—"
+                          rows={Math.max(3, (val.match(/\n/g) || []).length + 1)}
+                          className="w-full min-w-[300px] text-xs rounded-md border border-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-y whitespace-pre-wrap break-words bg-white leading-relaxed"
+                        />
+                      ) : (
                       <div className="flex items-center gap-1">
                       {editable ? (
                         <input
@@ -799,6 +829,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                         </button>
                       )}
                       </div>
+                      )}
                       {showDogEar && (
                         <span
                           title="Filled in on the cross-reference sheet but blank on the live CRT Client Data sheet"
@@ -808,7 +839,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       )}
                       {showDiffEar && (
                         <span
-                          title={`Differs from live CRT (Billing → CRT tab): cross-ref "${val}" vs live "${liveVal}"`}
+                          title={`Differs from live CRT (Billing → CRT tab): cross-ref "${rawVal}" vs live "${liveVal}"`}
                           className="absolute top-0 left-0 pointer-events-none"
                           style={{ width: '12px', height: '12px', background: '#2563eb', clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
                         />
