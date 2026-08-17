@@ -122,20 +122,30 @@ export default function CrtOutcomesTab() {
     const placementRows = scoped.filter(
       (r) => r.placement_outcome && r.placement_outcome !== "P" && inRange(r.placement_outcome_date)
     );
-    const day90Rows = scoped.filter(
-      (r) => r.day90_outcome && r.day90_outcome !== "P" && inRange(r.day90_outcome_date)
+    // 90-day outcomes split by program: DEA (CEIS) vs WD.
+    const wdDay90Rows = scoped.filter(
+      (r) => isWd(r) && r.day90_outcome && r.day90_outcome !== "P" && inRange(r.day90_outcome_date)
+    );
+    const ceisDay90Rows = scoped.filter(
+      (r) => isCeis(r) && r.day90_outcome && r.day90_outcome !== "P" && inRange(r.day90_outcome_date)
     );
     const serviceNavRows = scoped.filter(
       (r) => isYes(r.service_nav_support) && inRange(r.service_nav_billing_month)
     );
 
     const placementEmployed = placementRows.filter((r) => EMPLOYED.includes(r.placement_outcome)).length;
-    const day90Employed = day90Rows.filter((r) => EMPLOYED.includes(r.day90_outcome)).length;
+    const wdDay90Employed = wdDay90Rows.filter((r) => EMPLOYED.includes(r.day90_outcome)).length;
+    const ceisDay90Employed = ceisDay90Rows.filter((r) => EMPLOYED.includes(r.day90_outcome)).length;
+
+    // WD EDA Completion — WD (Pathways) clients whose EDA completion date falls in range.
+    const wdEdaCompletion = scoped.filter((r) => isWd(r) && inRange(r.eda_completion_date)).length;
 
     const placementBreakdown = {};
     placementRows.forEach((r) => { const k = r.placement_outcome; placementBreakdown[k] = (placementBreakdown[k] || 0) + 1; });
-    const day90Breakdown = {};
-    day90Rows.forEach((r) => { const k = r.day90_outcome; day90Breakdown[k] = (day90Breakdown[k] || 0) + 1; });
+    const wdDay90Breakdown = {};
+    wdDay90Rows.forEach((r) => { const k = r.day90_outcome; wdDay90Breakdown[k] = (wdDay90Breakdown[k] || 0) + 1; });
+    const ceisDay90Breakdown = {};
+    ceisDay90Rows.forEach((r) => { const k = r.day90_outcome; ceisDay90Breakdown[k] = (ceisDay90Breakdown[k] || 0) + 1; });
 
     const byElement = {
       WD: scoped.filter(isWd).length,
@@ -145,7 +155,9 @@ export default function CrtOutcomesTab() {
 
     return {
       wdStarters, ceisStarters, wdComplete, ceisComplete, cancelled,
-      placementEmployed, day90Employed, placementBreakdown, day90Breakdown,
+      placementEmployed, placementBreakdown,
+      wdDay90Employed, ceisDay90Employed, wdDay90Breakdown, ceisDay90Breakdown,
+      wdEdaCompletion,
       serviceNav: serviceNavRows.length, byElement, totalClients: scoped.length,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -331,12 +343,12 @@ export default function CrtOutcomesTab() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">90-Day Outcomes (Employed)</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">WD EDA Completion</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{outcomes.day90Employed}</div>
-            <p className="text-xs text-muted-foreground mt-1">E-RF / E-UF / SE at 90 days in {dateRange.label}</p>
+            <div className="text-3xl font-bold">{outcomes.wdEdaCompletion}</div>
+            <p className="text-xs text-muted-foreground mt-1">WD clients with EDA completion in {dateRange.label}</p>
           </CardContent>
         </Card>
         <Card>
@@ -377,7 +389,7 @@ export default function CrtOutcomesTab() {
         </CardContent>
       </Card>
 
-      {/* 90-day outcome breakdown */}
+      {/* 90-day outcome breakdown — separated by DEA (CEIS) vs WD */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -385,20 +397,48 @@ export default function CrtOutcomesTab() {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <CardTitle>90-Day Follow-up Outcome Breakdown</CardTitle>
             </div>
-            <Badge variant="outline">{Object.values(outcomes.day90Breakdown).reduce((a, b) => a + b, 0)} recorded</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">DEA: {Object.values(outcomes.ceisDay90Breakdown).reduce((a, b) => a + b, 0)}</Badge>
+              <Badge variant="outline">WD: {Object.values(outcomes.wdDay90Breakdown).reduce((a, b) => a + b, 0)}</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(outcomes.day90Breakdown).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-sm font-medium text-slate-700">{OUTCOME_LABELS[status] || status}</span>
-                <Badge variant="outline">{count}</Badge>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* DEA (CEIS) */}
+            <div>
+              <div className="mb-3">
+                <span className="text-sm font-semibold text-slate-700">DEA (CEIS) — {outcomes.ceisDay90Employed} employed</span>
               </div>
-            ))}
-            {Object.keys(outcomes.day90Breakdown).length === 0 && (
-              <p className="text-sm text-muted-foreground col-span-full">No 90-day follow-up outcomes recorded for this period.</p>
-            )}
+              <div className="grid gap-2">
+                {Object.entries(outcomes.ceisDay90Breakdown).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                    <span className="text-sm font-medium text-slate-700">{OUTCOME_LABELS[status] || status}</span>
+                    <Badge variant="outline">{count}</Badge>
+                  </div>
+                ))}
+                {Object.keys(outcomes.ceisDay90Breakdown).length === 0 && (
+                  <p className="text-sm text-muted-foreground">No DEA 90-day outcomes recorded for this period.</p>
+                )}
+              </div>
+            </div>
+            {/* WD (Pathways) */}
+            <div>
+              <div className="mb-3">
+                <span className="text-sm font-semibold text-slate-700">WD (Pathways) — {outcomes.wdDay90Employed} employed</span>
+              </div>
+              <div className="grid gap-2">
+                {Object.entries(outcomes.wdDay90Breakdown).map(([status, count]) => (
+                  <div key={status} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg">
+                    <span className="text-sm font-medium text-slate-700">{OUTCOME_LABELS[status] || status}</span>
+                    <Badge variant="outline">{count}</Badge>
+                  </div>
+                ))}
+                {Object.keys(outcomes.wdDay90Breakdown).length === 0 && (
+                  <p className="text-sm text-muted-foreground">No WD 90-day outcomes recorded for this period.</p>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
