@@ -548,9 +548,21 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
     }
   } else if (!client?.action_plan_submitted || !hasItems) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
-        <Map className="w-10 h-10 opacity-30" />
-        <p className="text-sm">No action plan submitted yet. Complete Step 3 to generate the roadmap.</p>
+      <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
+          <Map className="w-10 h-10 opacity-30" />
+          <p className="text-sm">No action plan submitted yet. Complete Step 3 to generate the roadmap.</p>
+        </div>
+        {(client?.roadmap_progress_notes || []).length > 0 && (
+          <RoadmapProgressNotes
+            notes={client.roadmap_progress_notes}
+            clientId={client.id}
+            onNotesUpdate={async (notes) => {
+              const updated = await base44.entities.Client.update(client.id, { roadmap_progress_notes: notes });
+              onClientUpdate?.(updated);
+            }}
+          />
+        )}
       </div>
     );
   }
