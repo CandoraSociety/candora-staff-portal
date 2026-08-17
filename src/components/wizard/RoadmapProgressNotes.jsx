@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -20,8 +20,46 @@ export default function RoadmapProgressNotes({ notes, clientId, onNotesUpdate })
   const [newNote,   setNewNote]       = useState('');
   const [saving,    setSaving]        = useState(false);
   const [confirmId, setConfirmId]     = useState(null);
+  const [noteTab, setNoteTab]         = useState('progress');
 
   const needsCompass = notes.filter(n => !n.compass_entered).length;
+
+  // Split notes: regular progress notes vs CRT cross-reference update notes
+  // (auto-created when a client is pushed from the Cross-Reference list).
+  const regularNotes = notes.filter(n => n.item_key !== 'crt_crossref_update');
+  const crossRefNotesRaw = notes.filter(n => n.item_key === 'crt_crossref_update');
+  // De-duplicate cross-ref notes by date+content — repeated pushes (toggling
+  // Updated, or the bulk "Push Updated → CRT" button) create near-identical
+  // notes. Keep the most recent of each distinct snapshot.
+  const crossRefNotes = (() => {
+    const seen = new Set();
+    const s = [...crossRefNotesRaw].sort((a, b) => new Date(b.date) - new Date(a.date));
+    return s.filter(n => {
+      const key = `${n.date}|${(n.note || '').trim()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
+  const regularSorted = [...regularNotes].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Auto-select the cross-ref tab when that's the only notes available.
+  useEffect(() => {
+    if (noteTab === 'progress' && regularNotes.length === 0 && crossRefNotes.length > 0) {
+      setNoteTab('crossref');
+    }
+  }, [noteTab, regularNotes.length, crossRefNotes.length]);
+
+  // Parse a cross-ref note's pipe-delimited "Label: value | Label: value" body
+  // into a readable field list for the dedicated sub-tab.
+  const parseCrossRefFields = (text) => {
+    if (!text) return [];
+    return text.split(' | ').map(part => {
+      const idx = part.indexOf(': ');
+      if (idx < 0) return { label: '', value: part };
+      return { label: part.slice(0, idx), value: part.slice(idx + 2) };
+    });
+  };
 
   const handleMarkCompass = async (id) => {
     if (confirmId !== id) { setConfirmId(id); return; }
@@ -69,8 +107,6 @@ export default function RoadmapProgressNotes({ notes, clientId, onNotesUpdate })
     toast.success('Copied to clipboard');
   };
 
-  const sorted = [...notes].sort((a, b) => new Date(b.date) - new Date(a.date));
-
   return (
     <div className="rounded-lg overflow-hidden border border-slate-200 mt-4">
       {/* Header */}
@@ -105,57 +141,124 @@ export default function RoadmapProgressNotes({ notes, clientId, onNotesUpdate })
 
       {!collapsed && (
         <div className="bg-white">
-          {/* Add manual note */}
-          {showAdd && (
-            <div className="p-3 border-b border-slate-200 space-y-2">
-              <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={2} placeholder="Add a manual progress note..." className="text-sm" />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleAddManual} disabled={saving || !newNote.trim()}>Add</Button>
-                <Button size="sm" variant="outline" onClick={() => { setShowAdd(false); setNewNote(''); }}>Cancel</Button>
-              </div>
+          {/* Sub-tab toggle: only show when cross-ref notes exist */}
+          {crossRefNotes.length > 0 && (
+            <div className="flex border-b border-slate-200">
+              <button
+                className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${noteTab === 'progress' ? 'border-blue-500 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setNoteTab('progress')}
+              >
+                Progress Notes ({regularNotes.length})
+              </button>
+              <button
+                className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${noteTab === 'crossref' ? 'border-amber-500 text-amber-700' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                onClick={() => setNoteTab('crossref')}
+              >
+                CRT Cross-Reference Updates ({crossRefNotes.length})
+              </button>
             </div>
           )}
 
-          {sorted.length === 0 ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">No progress notes yet.</div>
-          ) : (
-            <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-              {sorted.map(note => {
-                const cfg = NOTE_CONFIG[note.event_type] || NOTE_CONFIG.manual;
-                const Icon = cfg.icon;
-                return (
-                  <div key={note.id} className={`p-3 border-l-4 ${cfg.card}`} style={{ borderLeftColor: undefined }}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {Icon && <Icon className={`w-3.5 h-3.5 shrink-0 ${cfg.iconClass}`} />}
-                        <span className="text-xs font-medium text-slate-700 truncate">{note.item_label}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">{note.date}</span>
-                        {note.logged_by_name && <span className="text-xs text-muted-foreground shrink-0">— {note.logged_by_name}</span>}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        {/* Compass badge */}
-                        {note.compass_entered ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">In Compass</span>
-                        ) : (
-                          <button
-                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${confirmId === note.id ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
-                            onClick={() => handleMarkCompass(note.id)}
-                          >
-                            {confirmId === note.id ? 'Confirm?' : 'Enter in Compass'}
-                          </button>
-                        )}
-                        {note.event_type === 'manual' && (
-                          <button className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(note.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {note.note && <p className="text-xs text-slate-600 mt-1 ml-5">{note.note}</p>}
+          {noteTab === 'progress' ? (
+            <>
+              {/* Add manual note */}
+              {showAdd && (
+                <div className="p-3 border-b border-slate-200 space-y-2">
+                  <Textarea value={newNote} onChange={e => setNewNote(e.target.value)} rows={2} placeholder="Add a manual progress note..." className="text-sm" />
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleAddManual} disabled={saving || !newNote.trim()}>Add</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setShowAdd(false); setNewNote(''); }}>Cancel</Button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              )}
+
+              {regularSorted.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">No progress notes yet.</div>
+              ) : (
+                <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                  {regularSorted.map(note => {
+                    const cfg = NOTE_CONFIG[note.event_type] || NOTE_CONFIG.manual;
+                    const Icon = cfg.icon;
+                    return (
+                      <div key={note.id} className={`p-3 border-l-4 ${cfg.card}`} style={{ borderLeftColor: undefined }}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {Icon && <Icon className={`w-3.5 h-3.5 shrink-0 ${cfg.iconClass}`} />}
+                            <span className="text-xs font-medium text-slate-700 truncate">{note.item_label}</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{note.date}</span>
+                            {note.logged_by_name && <span className="text-xs text-muted-foreground shrink-0">— {note.logged_by_name}</span>}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {/* Compass badge */}
+                            {note.compass_entered ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">In Compass</span>
+                            ) : (
+                              <button
+                                className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${confirmId === note.id ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                onClick={() => handleMarkCompass(note.id)}
+                              >
+                                {confirmId === note.id ? 'Confirm?' : 'Enter in Compass'}
+                              </button>
+                            )}
+                            {note.event_type === 'manual' && (
+                              <button className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(note.id)}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {note.note && <p className="text-xs text-slate-600 mt-1 ml-5">{note.note}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {crossRefNotes.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">No cross-reference updates yet.</div>
+              ) : (
+                <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                  {crossRefNotes.map(note => {
+                    const fields = parseCrossRefFields(note.note);
+                    return (
+                      <div key={note.id} className="p-3 border-l-4 border-amber-300 bg-amber-50">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-semibold text-amber-800 truncate">CRT Cross-Reference Update</span>
+                            <span className="text-xs text-muted-foreground shrink-0">{note.date}</span>
+                            {note.logged_by_name && <span className="text-xs text-muted-foreground shrink-0">— {note.logged_by_name}</span>}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {note.compass_entered ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700">In Compass</span>
+                            ) : (
+                              <button
+                                className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium transition-colors ${confirmId === note.id ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                                onClick={() => handleMarkCompass(note.id)}
+                              >
+                                {confirmId === note.id ? 'Confirm?' : 'Enter in Compass'}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {fields.length > 0 && (
+                          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 text-xs">
+                            {fields.map((f, i) => (
+                              <div key={i} className="contents">
+                                <dt className="text-slate-500 font-medium whitespace-nowrap">{f.label}</dt>
+                                <dd className="text-slate-700">{f.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
