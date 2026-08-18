@@ -183,7 +183,10 @@ export default function CRT({ clients = [] }) {
   const viewedFile = viewFileId ? status?.allFiles?.find(f => f.id === viewFileId) : wb;
   const effectiveEmbedUrl = viewFileId ? (previewData?.embedUrl || null) : activeEmbedUrl;
   const showPreviewLoading = !!viewFileId && (previewLoading || narrativeSyncing);
-  const isViewingArchive = !!viewFileId && viewFileId !== wb?.id;
+  const isViewingNonActive = !!viewFileId && viewFileId !== wb?.id;
+  // "Archived" = truly frozen (Mark Complete was clicked). A prior month that's
+  // still open is NOT archived — it continues to sync with the portal.
+  const isViewingArchive = isViewingNonActive && viewedFile?.crtStatus === 'closed';
 
   return (
     <div className="space-y-4">
@@ -302,9 +305,11 @@ export default function CRT({ clients = [] }) {
                   <FileSpreadsheet className="h-4 w-4 text-green-600" />
                   {viewedFile?.name || 'CRT Workbook'}
                 </CardTitle>
-                {isViewingArchive && (
-                  <CardDescription className="mt-1 text-amber-600">
-                    Viewing an archived month — not the active workbook.
+                {isViewingNonActive && (
+                  <CardDescription className={`mt-1 ${isViewingArchive ? 'text-slate-500' : 'text-blue-600'}`}>
+                    {isViewingArchive
+                      ? 'Viewing a completed (archived) month — frozen, no longer syncing.'
+                      : 'Viewing a prior month — still open and syncing with the portal.'}
                   </CardDescription>
                 )}
                 {narrativeSyncing && (
@@ -315,7 +320,7 @@ export default function CRT({ clients = [] }) {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {isViewingArchive && (
+                {isViewingNonActive && (
                   <Button onClick={() => setViewFileId(null)} variant="outline" size="sm">
                     Show Active Workbook
                   </Button>
