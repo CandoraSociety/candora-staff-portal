@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag, ArrowRightCircle } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag, ArrowRightCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
@@ -135,6 +135,7 @@ const CROSSREF_PUSH_KEYS = [
   'service_nav_support','service_nav_billing_month',
 ];
 
+const HIDDEN_KEY = 'crossRefHidden';
 const COMPLETED_KEY = 'crossRefCompleted';
 const UPDATED_KEY = 'crossRefUpdated';
 const YELLOW_RESOLVED_KEY = 'crossRefYellowResolved';
@@ -241,6 +242,20 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [updated, setUpdated] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(UPDATED_KEY) || '[]')); } catch { return new Set(); }
   });
+  const [hidden, setHidden] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]')); } catch { return new Set(); }
+  });
+  const isHiddenRow = (r) => rowKeys(r).some(k => hidden.has(k));
+  const toggleHidden = (r) => {
+    const keys = rowKeys(r);
+    setHidden(prev => {
+      const n = new Set(prev);
+      const any = keys.some(k => n.has(k));
+      if (any) keys.forEach(k => n.delete(k));
+      else keys.forEach(k => n.add(k));
+      return n;
+    });
+  };
   const [pushing, setPushing] = useState(false);
   // Per-cell "resolved" set for yellow-highlighted date cells. Keyed by
   // `${rowId}:${columnKey}`. When resolved, the yellow highlight is suppressed
@@ -277,6 +292,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const isPhaseChangeRow = (r) => rowKeys(r).some(k => phaseChange.has(k));
   const fileInput = useRef(null);
   const crtFileInput = useRef(null);
+
+  useEffect(() => {
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hidden]));
+  }, [hidden]);
 
   useEffect(() => {
     localStorage.setItem(COMPLETED_KEY, JSON.stringify([...completed]));
@@ -323,6 +342,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           // merged set back, re-seeding the server.
           setCompleted(prev => new Set([...prev, ...(s.completed || [])]));
           setUpdated(prev => new Set([...prev, ...(s.updated || [])]));
+          setHidden(prev => new Set([...prev, ...(s.hidden || [])]));
           setYellowResolved(prev => new Set([...prev, ...(s.yellowResolved || [])]));
           setPhaseChange(prev => new Set([...prev, ...(s.phaseChange || [])]));
           setComments(prev => ({ ...(s.comments || {}), ...prev }));
@@ -342,6 +362,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       const snapshot = {
         completed: [...completed],
         updated: [...updated],
+        hidden: [...hidden],
         yellowResolved: [...yellowResolved],
         phaseChange: [...phaseChange],
         comments,
@@ -350,7 +371,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       base44.auth.updateMe({ [SNAPSHOT_KEY]: snapshot }).catch(() => {});
     }, 800);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [completed, updated, yellowResolved, phaseChange, comments, cellEdits]);
+  }, [completed, updated, hidden, yellowResolved, phaseChange, comments, cellEdits]);
 
   const loadStatus = async (file_url, label) => {
     setLoading(true);
@@ -609,14 +630,16 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return null;
   };
 
-  const activeRows = merged.filter(r => !isCompletedRow(r));
-  const completedRows = merged.filter(r => isCompletedRow(r));
+  const visibleRows = merged.filter(r => !isHiddenRow(r));
+  const activeRows = visibleRows.filter(r => !isCompletedRow(r));
+  const completedRows = visibleRows.filter(r => isCompletedRow(r));
   // Clients marked "Updated" are pulled out of the main active list into their
   // own section, mirroring how Done moves clients to Completed. Done takes
   // precedence (a completed client never appears in Updated).
   const updatedRows = activeRows.filter(isUpdatedRow);
   const mainActiveRows = activeRows.filter(r => !isUpdatedRow(r));
 
+  const removedRows = merged.filter(isHiddenRow);
   const matchedCount = mainActiveRows.filter(isMatch).length;
   const unmatchedCount = mainActiveRows.length - matchedCount;
   const newCount = activeRows.filter(r => r.is_new).length;
@@ -752,6 +775,13 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                         <RotateCcw className="w-3.5 h-3.5" /> Undo
                       </button>
                     )}
+                    <button
+                      onClick={() => toggleHidden(r)}
+                      title="Remove this client from the cross-reference list"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </td>
                 <td className={`px-3 py-2.5 border-l-[3px] border-black ${updatedRow ? 'bg-blue-100' : ''}`}>
@@ -997,6 +1027,30 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           >
             {renderTable(completedRows, { restorable: true })}
           </CollapsibleSection>
+
+          {removedRows.length > 0 && (
+            <CollapsibleSection
+              title="Removed"
+              count={removedRows.length}
+              badgeClass="bg-slate-200 text-slate-700"
+              subtitle="Hidden from the active list — click restore to bring back"
+              defaultOpen={false}
+            >
+              <div className="p-4 space-y-2">
+                {removedRows.map((r) => (
+                  <div key={r.id} className="flex items-center justify-between p-2 bg-slate-50 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-700">{r.client_name || '—'}</span>
+                      <span className="text-xs text-slate-400">{r.hsid || ''}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toggleHidden(r)} className="gap-1 h-7">
+                      <RotateCcw className="w-3.5 h-3.5" /> Restore
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+          )}
         </div>
       )}
 
