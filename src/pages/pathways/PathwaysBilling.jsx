@@ -13,6 +13,7 @@ import CRT from '@/components/billing/CRT';
 import MonthlyInvoices from '@/components/billing/MonthlyInvoices';
 import SupportingDocuments from '@/components/billing/SupportingDocuments';
 import PayablesTab from '@/components/billing/PayablesTab';
+import ManualReimbursementEntry from '@/components/billing/ManualReimbursementEntry';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 
 export default function PathwaysBilling() {
@@ -95,11 +96,12 @@ export default function PathwaysBilling() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="packages">Invoice Packages</TabsTrigger>
           <TabsTrigger value="payables">Payables</TabsTrigger>
           <TabsTrigger value="crt">CRT</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="manual-entry">Manual Entry</TabsTrigger>
           <TabsTrigger value="supporting-docs">Supporting Documents</TabsTrigger>
         </TabsList>
 
@@ -129,6 +131,10 @@ export default function PathwaysBilling() {
 
         <TabsContent value="invoices" className="space-y-4">
           <MonthlyInvoices key={currentMonth} />
+        </TabsContent>
+
+        <TabsContent value="manual-entry" className="space-y-4">
+          <ManualReimbursementEntry />
         </TabsContent>
 
         <TabsContent value="supporting-docs" className="space-y-4">
