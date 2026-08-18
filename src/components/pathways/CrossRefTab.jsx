@@ -222,6 +222,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   };
   const focusValueRef = useRef({});
   const justConfirmedRef = useRef(false);
+  const [pendingHide, setPendingHide] = useState(null);
   const [pendingEdit, setPendingEdit] = useState(null);
   const handleEditDialogChange = (open) => {
     if (open) return;
@@ -776,7 +777,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                       </button>
                     )}
                     <button
-                      onClick={() => toggleHidden(r)}
+                      onClick={() => setPendingHide(r)}
                       title="Remove this client from the cross-reference list"
                       className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-1 rounded-md border border-red-300 text-red-600 hover:bg-red-50 transition-colors"
                     >
@@ -1053,6 +1054,24 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           )}
         </div>
       )}
+
+      <AlertDialog open={!!pendingHide} onOpenChange={(open) => { if (!open) setPendingHide(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove client from list?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove <span className="font-semibold text-slate-700">{pendingHide?.client_name || 'this client'}</span> from the cross-reference list.
+              You can restore them later from the Removed section.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (pendingHide) toggleHidden(pendingHide); setPendingHide(null); }}>
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!pendingEdit} onOpenChange={handleEditDialogChange}>
         <AlertDialogContent>
