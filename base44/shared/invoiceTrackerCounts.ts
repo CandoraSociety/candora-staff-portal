@@ -65,7 +65,7 @@ function currentMonthEdmonton() {
 // `preRead` ({ values, startRow }) optionally supplies already-read Invoice
 // Tracker values so callers that read the sheet for other purposes (e.g.
 // advanceInvoiceTracker fills columns B + D) avoid a second read.
-export async function refreshBillingCounts(base44, accessToken, workbook, preRead?) {
+export async function refreshBillingCounts(base44, accessToken, workbook, preRead?, preFetched?) {
   const sheetName = preRead?.sheetName || await findInvoiceTrackerSheet(accessToken, workbook.id);
   if (!sheetName) return { status: 'no_sheet', workbook: workbook.name };
   let values, startRow;
@@ -78,10 +78,18 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     startRow = read.startRow;
   }
 
-  let clients = [];
-  try { clients = await base44.asServiceRole.entities.Client.list('-created_date', 5000) || []; } catch { /* empty */ }
-  let financialRecords = [];
-  try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; } catch { /* empty */ }
+  // Use pre-fetched entity lists when provided (avoids re-fetching ALL clients
+  // + financial records on every workbook when refreshing multiple months).
+  let clients = preFetched?.clients;
+  if (!clients) {
+    clients = [];
+    try { clients = await base44.asServiceRole.entities.Client.list('-created_date', 5000) || []; } catch { /* empty */ }
+  }
+  let financialRecords = preFetched?.financialRecords;
+  if (!financialRecords) {
+    financialRecords = [];
+    try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; } catch { /* empty */ }
+  }
 
   const current = currentMonthEdmonton();
   const dStartRank = rank(D_START);

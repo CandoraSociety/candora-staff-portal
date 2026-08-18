@@ -284,10 +284,20 @@ export default async function(req: Request): Promise<Response> {
           closedNames = new Set(closed.map(r => r.file_name));
         } catch { /* default: nothing closed */ }
         const openFiles = files.filter(f => !closedNames.has(f.name));
+        // Fetch ALL clients + financial records ONCE and reuse across every
+        // workbook's Invoice Tracker refresh. Without this, each workbook
+        // re-fetches up to 5000 clients + 5000 financial records — for 5 open
+        // months that's 10 massive list calls and a 2+ minute runtime that
+        // times out the frontend request.
+        let allClients = [];
+        try { allClients = await base44.asServiceRole.entities.Client.list('-created_date', 5000) || []; } catch { /* empty */ }
+        let allFinancialRecords = [];
+        try { allFinancialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; } catch { /* empty */ }
+        const preFetched = { clients: allClients, financialRecords: allFinancialRecords };
         const perWorkbook = [];
         for (const f of openFiles) {
           try {
-            const r = await refreshBillingCounts(base44, token, f);
+            const r = await refreshBillingCounts(base44, token, f, undefined, preFetched);
             perWorkbook.push({ workbook: f.name, status: r.status, countFilled: r.countFilled?.length || 0, countErrors: r.countErrors?.length || 0 });
           } catch (e) {
             perWorkbook.push({ workbook: f.name, status: 'error', error: String(e.message || e).slice(0, 200) });
