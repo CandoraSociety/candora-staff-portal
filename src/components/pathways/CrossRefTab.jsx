@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag, ArrowRightCircle, Trash2 } from 'lucide-react';
+import { Upload, Loader2, CheckCircle2, Sparkles, ChevronDown, Check, RotateCcw, Flag, ArrowRightCircle, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
@@ -223,7 +223,47 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const focusValueRef = useRef({});
   const justConfirmedRef = useRef(false);
   const [pendingHide, setPendingHide] = useState(null);
+  const [sendingId, setSendingId] = useState(null);
   const [pendingEdit, setPendingEdit] = useState(null);
+
+  // Parse "Last, First" (or "First Last") into first/last name for intake.
+  const parseName = (name) => {
+    if (!name) return { first_name: '', last_name: '' };
+    if (name.includes(',')) {
+      const [last, ...rest] = name.split(',').map(s => s.trim());
+      return { first_name: rest.join(' ').trim(), last_name: last };
+    }
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return { first_name: parts[0], last_name: '' };
+    return { first_name: parts[0], last_name: parts[parts.length - 1] };
+  };
+
+  // Creates a new Client intake record (status "new" → Awaiting Assessment)
+  // WITHOUT pushing anything to the CRT, then hides the row from the active
+  // cross-reference list since it's been dealt with.
+  const sendToIntake = async (r) => {
+    setSendingId(r.id);
+    try {
+      const { first_name, last_name } = parseName(r.client_name);
+      await base44.entities.Client.create({
+        first_name: first_name || 'Unknown',
+        last_name: last_name || '',
+        compass_hsid: r.hsid || '',
+        status: 'new',
+        self_registered: false,
+        intake_date: new Date().toISOString().slice(0, 10),
+      });
+      // Remove from the active cross-ref list (no confirmation — the send
+      // action itself is the intent).
+      const keys = rowKeys(r);
+      setHidden(prev => { const n = new Set(prev); keys.forEach(k => n.add(k)); return n; });
+      toast.success(`${r.client_name || 'Client'} sent to Awaiting Assessment`);
+    } catch (e) {
+      toast.error('Failed to send to intake');
+    } finally {
+      setSendingId(null);
+    }
+  };
   const handleEditDialogChange = (open) => {
     if (open) return;
     if (!justConfirmedRef.current && pendingEdit) {
@@ -783,6 +823,14 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                         <RotateCcw className="w-3.5 h-3.5" /> Undo
                       </button>
                     )}
+                    <button
+                      onClick={() => sendToIntake(r)}
+                      disabled={sendingId === r.id}
+                      title="Create an intake record for this client (Awaiting Assessment) without touching the CRT"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-1.5 py-1 rounded-md border border-indigo-300 text-indigo-700 hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                    >
+                      {sendingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+                    </button>
                     <button
                       onClick={() => setPendingHide(r)}
                       title="Remove this client from the cross-reference list"
