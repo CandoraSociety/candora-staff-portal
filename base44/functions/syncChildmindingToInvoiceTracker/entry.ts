@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
+import { getGraphToken, listCrtFiles } from '../../shared/crtWorkbook.ts';
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow,
   billingMonthToKey, cellToMonthKey, writeTrackerCell
@@ -54,50 +54,59 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const accessToken = await getGraphToken();
-    const workbook = await getActiveCrtWorkbook(accessToken);
-    if (!workbook) {
-      return Response.json({ status: 'no_workbook', message: 'No active CRT workbook found in SharePoint.' });
+    const files = await listCrtFiles(accessToken);
+    if (!files || files.length === 0) {
+      return Response.json({ status: 'no_workbook', message: 'No CRT workbooks found in SharePoint.' });
     }
-    const sheetName = await findInvoiceTrackerSheet(accessToken, workbook.id);
-    if (!sheetName) {
-      return Response.json({ status: 'no_sheet', message: 'No Invoice Tracker sheet found in the active CRT workbook.', workbook: workbook.name });
-    }
-    const { values, startRow } = await readInvoiceTracker(accessToken, workbook.id, sheetName);
+    // Exclude closed/frozen workbooks so we only sync open months.
+    let closedNames = new Set();
+    try {
+      const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+      closedNames = new Set(closed.map(r => r.file_name));
+    } catch { /* default: nothing closed */ }
+    const openFiles = files.filter(f => !closedNames.has(f.name));
 
-    // Manual sync-all with no remaining records: cover every month row in the
-    // tracker so months whose records were deleted get zeroed out instead of
-    // left holding a stale total. (Explicit billingMonth/event paths already
-    // populated `months` above.)
-    if (months.length === 0 && !payload?.event) {
-      for (const row of (values || [])) {
-        if (!row) continue;
-        const key = cellToMonthKey(row[0]);
-        if (!key) continue;
-        months.push(`${key.year}-${String(key.month + 1).padStart(2, '0')}`);
-      }
-      months.sort();
-    }
     if (months.length === 0) {
       return Response.json({ status: 'no_months', message: 'No childminding billing months to sync.' });
     }
 
-    const results = [];
-    for (const bm of months) {
-      const key = billingMonthToKey(bm);
-      if (!key) { results.push({ month: bm, status: 'invalid_month' }); continue; }
-      const row = findMonthRow(values, key, startRow);
-      if (!row) { results.push({ month: bm, status: 'row_not_found' }); continue; }
-      const total = Math.round((totals[bm] || 0) * 100) / 100;
-      await writeTrackerCell(accessToken, workbook.id, sheetName, CHILDMINDING_COLUMN, row, total);
-      results.push({ month: bm, status: 'synced', row, column: CHILDMINDING_COLUMN, total });
+    // Each open workbook has its own Invoice Tracker sheet. Push the matching
+    // month's childminding total into every open workbook so prior months
+    // (April, May, ...) stay in sync — not just the active (latest) one.
+    const workbooks = [];
+    for (const workbook of openFiles) {
+      let sheetName: string;
+      try {
+        sheetName = await findInvoiceTrackerSheet(accessToken, workbook.id);
+      } catch { continue; }
+      if (!sheetName) { workbooks.push({ workbook: workbook.name, status: 'no_sheet' }); continue; }
+      let read: any;
+      try {
+        read = await readInvoiceTracker(accessToken, workbook.id, sheetName);
+      } catch (e) {
+        workbooks.push({ workbook: workbook.name, status: 'read_error', error: String(e.message || e).slice(0, 200) });
+        continue;
+      }
+      const { values, startRow } = read;
+
+      const results = [];
+      for (const bm of months) {
+        const key = billingMonthToKey(bm);
+        if (!key) { results.push({ month: bm, status: 'invalid_month' }); continue; }
+        const row = findMonthRow(values, key, startRow);
+        if (!row) { results.push({ month: bm, status: 'row_not_found' }); continue; }
+        const total = Math.round((totals[bm] || 0) * 100) / 100;
+        try {
+          await writeTrackerCell(accessToken, workbook.id, sheetName, CHILDMINDING_COLUMN, row, total);
+          results.push({ month: bm, status: 'synced', row, column: CHILDMINDING_COLUMN, total });
+        } catch (e) {
+          results.push({ month: bm, status: 'write_error', error: String(e.message || e).slice(0, 200) });
+        }
+      }
+      workbooks.push({ workbook: workbook.name, sheet: sheetName, results });
     }
 
-    return Response.json({
-      status: 'success',
-      workbook: workbook.name,
-      sheet: sheetName,
-      results
-    });
+    return Response.json({ status: 'success', workbooks });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
