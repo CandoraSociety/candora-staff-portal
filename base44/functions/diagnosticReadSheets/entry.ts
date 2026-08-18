@@ -83,16 +83,22 @@ export default async function(req: Request): Promise<Response> {
         const v8 = (r.values || [])[7]?.[c];
         if (v8 != null && v8 !== '') row8Vals[cl] = v8;
       }
+      // Return formulas + values for billing columns that count from Client Data
+      const keyCols = ['X', 'AN', 'BL', 'CD'];
+      const colToIdx = (s) => { let n = 0; for (const ch of s) n = n * 26 + (ch.charCodeAt(0) - 64); return n - 1; };
+      const keyFormulas = {};
+      const keyValues = {};
+      for (const cl of keyCols) {
+        const ci = colToIdx(cl);
+        if (f10[ci]) keyFormulas[cl] = f10[ci];
+        if (v10[ci] != null && v10[ci] !== '') keyValues[cl] = v10[ci];
+      }
       result.invoiceTracker = {
         sheet: itSheet,
         B8: (r.values || [])[7]?.[1],
         B9: (r.values || [])[8]?.[1],
-        row10NoDateRange: noDateRange,
-        row10Values: row10Vals,
-        row9Values: row9Vals,
-        row8Values: row8Vals,
-        row10FormulaCount: Object.keys(row10All).length,
-        row10NoDateRangeCount: Object.keys(noDateRange).length,
+        keyFormulas,
+        keyValues,
       };
     }
 
