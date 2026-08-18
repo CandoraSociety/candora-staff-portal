@@ -70,7 +70,12 @@ function mapClientLite(client, monthEnd) {
     (gate(client.followup_90day_date) && client.followup_90day_status) || (followupTriggered ? 'P' : '');
 
   let day90Date = '';
-  if (followupTriggered) {
+  // Column P (90 Day Outcome Date): use the recorded follow-up date whenever a
+  // 90-day outcome has been entered (status + date), independent of
+  // employment_start_date (see crtWorkbook.ts for full rationale).
+  if (client.followup_90day_status && client.followup_90day_date && gate(client.followup_90day_date)) {
+    day90Date = toISO(client.followup_90day_date);
+  } else if (followupTriggered) {
     if (isDea) {
       const sod = mostRecentEdaDate || client.eda_completion_date;
       if (sod) {
@@ -78,8 +83,6 @@ function mapClientLite(client, monthEnd) {
         projected.setDate(projected.getDate() + 90);
         day90Date = toISO(projected);
       }
-    } else if (client.followup_90day_date) {
-      day90Date = toISO(client.followup_90day_date);
     }
   }
 

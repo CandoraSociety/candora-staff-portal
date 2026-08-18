@@ -241,7 +241,15 @@ export function mapClientToCrtRow(client, monthEnd) {
   // 90 Day Outcome Date — for DEA clients, 90 days after the Service Outcome Date
   // (most recent EDA activity date). For WD clients, the recorded follow-up date.
   let day90DateForCrt = '';
-  if (followupTriggered) {
+  // Column P (90 Day Outcome Date): use the recorded follow-up date whenever a
+  // 90-day outcome has been entered (status + date), independent of
+  // employment_start_date. Previously this was gated on followupTriggered
+  // (which requires employment_start_date for WD), so clients with a recorded
+  // 90-day outcome but no employment_start_date got a blank P — and thus never
+  // counted toward the BH/BL 90-day billing tallies.
+  if (client.followup_90day_status && client.followup_90day_date && gate(client.followup_90day_date)) {
+    day90DateForCrt = formatDateForCrt(client.followup_90day_date);
+  } else if (followupTriggered) {
     if (isDea) {
       const sod = mostRecentEdaDate || client.eda_completion_date;
       if (sod) {
@@ -249,8 +257,6 @@ export function mapClientToCrtRow(client, monthEnd) {
         projected.setDate(projected.getDate() + 90);
         day90DateForCrt = formatDateForCrt(projected);
       }
-    } else if (client.followup_90day_date) {
-      day90DateForCrt = formatDateForCrt(client.followup_90day_date);
     }
   }
 
