@@ -52,21 +52,47 @@ export default async function(req: Request): Promise<Response> {
         return s;
       };
       const row10All = {};
-      const broader = {};  // formulas NOT scoped to B8:B9
+      const noDateRange = {};  // formulas that DON'T reference B8/B9 at all
       for (let c = 0; c < f10.length; c++) {
         if (f10[c]) {
           row10All[colLetter(c)] = f10[c];
-          // Flag formulas that don't use BOTH $B$8 and $B9 (broader/different date range)
-          if (!f10[c].includes('$B$8') || !f10[c].includes('$B9')) {
-            broader[colLetter(c)] = f10[c];
+          // Flag formulas that don't filter by BOTH B8 (month start) and B9 (month end).
+          // Formulas use either $B$9 (absolute) or $B9 (mixed) — accept both.
+          const usesB8 = f10[c].includes('$B$8');
+          const usesB9 = f10[c].includes('$B$9') || f10[c].includes('$B9');
+          if (!usesB8 || !usesB9) {
+            noDateRange[colLetter(c)] = f10[c];
           }
         }
+      }
+      // Row 8/9 headers + row 9 formulas (the month summary row above row 10)
+      const row9All = {};
+      const f9 = (r.formulas || [])[8] || [];
+      for (let c = 0; c < f9.length; c++) {
+        if (f9[c]) row9All[colLetter(c)] = f9[c];
+      }
+      // Row 8 labels + row 9/10 values (computed results) for context
+      const row8Vals = {};
+      const row9Vals = {};
+      const row10Vals = {};
+      for (let c = 0; c < (v10.length || 0); c++) {
+        const cl = colLetter(c);
+        if (v10[c] != null && v10[c] !== '') row10Vals[cl] = v10[c];
+        const v9 = (r.values || [])[8]?.[c];
+        if (v9 != null && v9 !== '') row9Vals[cl] = v9[c];
+        const v8 = (r.values || [])[7]?.[c];
+        if (v8 != null && v8 !== '') row8Vals[cl] = v8;
       }
       result.invoiceTracker = {
         sheet: itSheet,
         B8: (r.values || [])[7]?.[1],
         B9: (r.values || [])[8]?.[1],
-        broaderRange: broader,
+        row10NoDateRange: noDateRange,
+        row10Values: row10Vals,
+        row9Values: row9Vals,
+        row8Values: row8Vals,
+        row10FormulaCount: Object.keys(row10All).length,
+        row10NoDateRangeCount: Object.keys(noDateRange).length,
       };
     }
 
