@@ -176,8 +176,7 @@ export function mapClientToCrtRow(client, monthEnd) {
   // clients) — never both.
   const startDateForCrt = gate(client.service_start_date) ? formatDateForCrt(client.service_start_date) : '';
 
-  // EDA completion date, month-bound (Service Outcome Date + WD EDA Completion column)
-  const edaDateForCrt = gate(client.eda_completion_date) ? formatDateForCrt(client.eda_completion_date) : '';
+
 
   // Most recently completed EDA activity date (DEA clients) — the actual last
   // activity completion date from the dea_activities log. Used as the Service
@@ -460,7 +459,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     comments,                                          // S: Comments
-    isWd ? edaDateForCrt : '',                          // T: EDA Completion Date (WD only)
+    (isWd && ['E-RF','E-UF','SE'].includes(day90Outcome)) ? day90DateForCrt : '',  // T: 90 Day Employment Date (WD; mirrors P when O is employed)
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
