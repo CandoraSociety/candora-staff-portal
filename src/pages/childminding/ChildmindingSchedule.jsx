@@ -74,6 +74,9 @@ export default function ChildmindingSchedule() {
 
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
         <Card>
+          <div className="px-4 py-3 border-b border-border">
+            <h2 className="text-lg font-heading font-semibold text-foreground text-center">{MONTH_NAMES[month]} {year}</h2>
+          </div>
           <div className="grid grid-cols-7 gap-px bg-border">
             {weekdays.map((d) => <div key={d} className="bg-muted/50 p-2 text-center text-xs font-medium text-muted-foreground">{d}</div>)}
             {Array.from({ length: startWeekday }).map((_, i) => <div key={`empty-${i}`} className="bg-card min-h-[110px]" />)}

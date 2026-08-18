@@ -3,13 +3,20 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Baby, Plus, Clock, MapPin } from 'lucide-react';
+import { Baby, Plus, Clock, MapPin, Pencil } from 'lucide-react';
 import ChildmindingDialog from '@/components/childminding/ChildmindingDialog';
+import ChildmindingSessionDialog from '@/components/childminding/ChildmindingSessionDialog';
 import { PROGRAM_COLORS, getProgramLabel, calculateBilling } from '@/lib/childmindingConstants';
 
 export default function ChildmindingSessionDetail({ session, open, onOpenChange }) {
   const queryClient = useQueryClient();
   const [intakeOpen, setIntakeOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['childminding-records'] });
+    queryClient.invalidateQueries({ queryKey: ['childminding-sessions'] });
+  };
 
   const { data: records = [] } = useQuery({
     queryKey: ['childminding-records', 'session', session?.id],
@@ -24,16 +31,17 @@ export default function ChildmindingSessionDetail({ session, open, onOpenChange 
     .filter((r) => r.program === 'pathways')
     .reduce((s, r) => s + (r.billing_amount || calculateBilling(r.program, r.hours)), 0);
 
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['childminding-records'] });
-  };
-
   return (
     <>
-      <Dialog open={open && !intakeOpen} onOpenChange={(o) => { if (!o) onOpenChange(false); }}>
+      <Dialog open={open && !intakeOpen && !editOpen} onOpenChange={(o) => { if (!o) onOpenChange(false); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{session.title || 'Childminding Session'}</DialogTitle>
+            <div className="flex items-start justify-between gap-2">
+              <DialogTitle>{session.title || 'Childminding Session'}</DialogTitle>
+              <Button size="sm" variant="outline" onClick={() => setEditOpen(true)} className="gap-1 shrink-0">
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Button>
+            </div>
           </DialogHeader>
           <div className="flex items-center gap-3 text-xs text-muted-foreground -mt-1 flex-wrap">
             <span>{new Date(session.date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
@@ -100,6 +108,13 @@ export default function ChildmindingSessionDetail({ session, open, onOpenChange 
         sessionId={session.id}
         presetDate={session.date}
         onSaved={() => { setIntakeOpen(false); refresh(); }}
+      />
+
+      <ChildmindingSessionDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        session={session}
+        onSaved={refresh}
       />
     </>
   );
