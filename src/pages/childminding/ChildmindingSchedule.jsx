@@ -24,22 +24,27 @@ export default function ChildmindingSchedule() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const startWeekday = firstDay.getDay();
 
+  // Parse a YYYY-MM-DD date string as local noon so timezone shifts don't
+  // push it to the previous day (new Date("2026-08-18") is UTC midnight →
+  // Aug 17 in Mountain time).
+  const localDate = (dateStr) => new Date(dateStr + 'T12:00:00');
+
   // Records shown on the calendar are only those NOT tied to a session
   // (linked records are visible inside their session detail).
   const monthRecords = records.filter((r) => {
     if (!r.date) return false;
-    const d = new Date(r.date);
+    const d = localDate(r.date);
     return d.getMonth() === month && d.getFullYear() === year && !r.session_id;
   });
   const monthSessions = sessions.filter((s) => {
     if (!s.date) return false;
-    const d = new Date(s.date);
+    const d = localDate(s.date);
     return d.getMonth() === month && d.getFullYear() === year;
   });
 
   const byDay = {};
-  monthRecords.forEach((r) => { const day = new Date(r.date).getDate(); (byDay[day] = byDay[day] || { records: [], sessions: [] }).records.push(r); });
-  monthSessions.forEach((s) => { const day = new Date(s.date).getDate(); (byDay[day] = byDay[day] || { records: [], sessions: [] }).sessions.push(s); });
+  monthRecords.forEach((r) => { const day = localDate(r.date).getDate(); (byDay[day] = byDay[day] || { records: [], sessions: [] }).records.push(r); });
+  monthSessions.forEach((s) => { const day = localDate(s.date).getDate(); (byDay[day] = byDay[day] || { records: [], sessions: [] }).sessions.push(s); });
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
