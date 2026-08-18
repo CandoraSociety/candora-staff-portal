@@ -22,6 +22,27 @@ import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell, colIndex
 } from './invoiceTracker.ts';
 import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from './crtBillingCounts.ts';
+import { crtMonthEnd } from './crtWorkbook.ts';
+
+// Retry a Graph API call that may hit a transient 504 (gateway timeout).
+// Microsoft Graph occasionally times out on worksheet operations; a short
+// back-off + retry usually succeeds.
+async function withGraphRetry(fn, retries = 2) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try { return await fn(); }
+    catch (e) {
+      lastErr = e;
+      const msg = String(e.message || e);
+      if (i < retries && (msg.includes('504') || msg.includes('502') || msg.includes('503'))) {
+        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastErr;
+}
 
 const D_START = { year: 2026, month: 3 }; // April 2026 — first month to fill counts
 
@@ -74,14 +95,14 @@ function currentMonthEdmonton() {
 // Tracker values so callers that read the sheet for other purposes (e.g.
 // advanceInvoiceTracker fills columns B + D) avoid a second read.
 export async function refreshBillingCounts(base44, accessToken, workbook, preRead?, preFetched?) {
-  const sheetName = preRead?.sheetName || await findInvoiceTrackerSheet(accessToken, workbook.id);
+  const sheetName = preRead?.sheetName || await withGraphRetry(() => findInvoiceTrackerSheet(accessToken, workbook.id));
   if (!sheetName) return { status: 'no_sheet', workbook: workbook.name };
   let values, startRow;
   if (preRead && preRead.values) {
     values = preRead.values;
     startRow = preRead.startRow ?? 1;
   } else {
-    const read = await readInvoiceTracker(accessToken, workbook.id, sheetName);
+    const read = await withGraphRetry(() => readInvoiceTracker(accessToken, workbook.id, sheetName));
     values = read.values;
     startRow = read.startRow;
   }
@@ -99,9 +120,18 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; } catch { /* empty */ }
   }
 
+  // Cap the upper bound at this workbook's own month so a prior-month workbook
+  // only contains data through that month — not future months' data. The active
+  // (current) month's workbook falls back to the current Edmonton month.
   const current = currentMonthEdmonton();
   const dStartRank = rank(D_START);
-  const currentRank = rank(current);
+  const wbMonthEnd = crtMonthEnd(workbook.name);
+  let maxKey = current;
+  if (wbMonthEnd) {
+    const wbKey = { year: wbMonthEnd.getUTCFullYear(), month: wbMonthEnd.getUTCMonth() };
+    if (rank(wbKey) < rank(current)) maxKey = wbKey;
+  }
+  const currentRank = rank(maxKey);
 
   const countFilled = [];
   const countErrors = [];
