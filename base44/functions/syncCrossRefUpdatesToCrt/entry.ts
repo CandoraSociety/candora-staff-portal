@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
-  getGraphToken, getActiveCrtWorkbook, mapClientToCrtRow, parseCrtDate
+  getGraphToken, listCrtFiles, mapClientToCrtRow, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 
@@ -267,12 +267,33 @@ export default async function(req: Request): Promise<Response> {
     // immediately instead of waiting for the monthly advance. (The CRT row
     // itself is re-synced by the "CRT Sync on Client Update" entity automation
     // that already fired on the update/create above.)
+    // Refresh Invoice Tracker billing tallies on EVERY open workbook — not
+    // just the active one. Each monthly CRT has its own Invoice Tracker sheet,
+    // so a cross-ref field change (DEA start, EDA completion, 90-day outcome,
+    // etc.) must flow through to all open months' tallies immediately, the
+    // same way the CRT Client Data sync already writes to all open months.
+    // Closed/frozen months are skipped.
     let billingCounts = null;
     if (anyClientUpdated || anyClientCreated) {
       try {
         const token = await getGraphToken();
-        const active = await getActiveCrtWorkbook(token);
-        if (active) billingCounts = await refreshBillingCounts(base44, token, active);
+        const files = await listCrtFiles(token);
+        let closedNames = new Set();
+        try {
+          const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+          closedNames = new Set(closed.map(r => r.file_name));
+        } catch { /* default: nothing closed */ }
+        const openFiles = files.filter(f => !closedNames.has(f.name));
+        const perWorkbook = [];
+        for (const f of openFiles) {
+          try {
+            const r = await refreshBillingCounts(base44, token, f);
+            perWorkbook.push({ workbook: f.name, status: r.status, countFilled: r.countFilled?.length || 0, countErrors: r.countErrors?.length || 0 });
+          } catch (e) {
+            perWorkbook.push({ workbook: f.name, status: 'error', error: String(e.message || e).slice(0, 200) });
+          }
+        }
+        billingCounts = { status: 'success', workbooks: perWorkbook };
       } catch (e) {
         billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
       }
