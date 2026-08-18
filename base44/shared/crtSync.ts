@@ -128,12 +128,16 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
         // Columns D (3) and F (5) are the stream-specific start dates. A client
         // is only in one stream, so always write both — this clears a stale date
         // left in the opposite column (e.g. a DEA date after a switch to WD).
+        // Column H (7, Service Outcome Date) is fully portal-derived (from
+        // eda_completion_date or completion_date). Force-write it so a stale
+        // date clears when a client's completion shifts out of this month
+        // (e.g. eda_completion_date moved past the workbook's month-end).
         // Column T (19) mirrors J when I is employed — fully portal-derived, so
         // always write it (incl. empty) to clear stale EDA-completion dates.
         // Column Y (24, Service Nav Billing Month) only populates when X is
         // "Yes" — force-write it so a stale date clears when X changes to
         // "N", "No", or blank.
-        const force = (col === 3 || col === 5 || col === 19 || col === 24);
+        const force = (col === 3 || col === 5 || col === 7 || col === 19 || col === 24);
         if (force || (portalRow[col] !== '' && portalRow[col] !== null && portalRow[col] !== undefined)) {
           // Column S (18, Comments) can include an "Action Plan completed (...)"
           // line that depends on eda_completion_date. The SDK read can return
@@ -334,7 +338,7 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
         // overwritten to clear stale values on stream switches.
         const existing = allValues[rowIdx] || [];
         rowToWrite = portalRow.map((val, col) => {
-          if (col === 3 || col === 5 || col === 19 || col === 24) return val;
+          if (col === 3 || col === 5 || col === 7 || col === 19 || col === 24) return val;
           // Column S (18, Comments) is fully portal-composed from current
           // client state (intake notes + resolved barrier notes + EDA/action-plan
           // completions). Always overwrite it with the recomposed value — even
