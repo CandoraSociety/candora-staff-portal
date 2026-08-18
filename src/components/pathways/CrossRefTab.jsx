@@ -557,11 +557,18 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     const used = new Set();
     const findCrtMatch = (row) => {
       const rh = normHsid(row.hsid);
-      if (rh) {
-        const byHsid = crtRows.findIndex(c => normHsid(c.hsid) === rh);
-        if (byHsid >= 0) return byHsid;
-      }
       const rKeys = rowNameKeys(row.client_name);
+      if (rh) {
+        // Match on HSID ONLY when the name also matches. A shared HSID (data-
+        // entry collision in the CRT — e.g. two clients keyed to the same #)
+        // would otherwise pair the status row to the wrong CRT client, leaving
+        // the real CRT row to be appended as a phantom duplicate.
+        const byHsidAndName = crtRows.findIndex(c =>
+          normHsid(c.hsid) === rh &&
+          rowNameKeys(c.participant_name).some(k => rKeys.includes(k))
+        );
+        if (byHsidAndName >= 0) return byHsidAndName;
+      }
       return crtRows.findIndex(c => {
         if (!c.participant_name) return false;
         return rowNameKeys(c.participant_name).some(k => rKeys.includes(k));
