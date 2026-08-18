@@ -459,7 +459,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     comments,                                          // S: Comments
-    (isWd && ['E-RF','E-UF','SE'].includes(day90Outcome)) ? day90DateForCrt : '',  // T: 90 Day Employment Date (WD; mirrors P when O is employed)
+    (isWd && ['E-RF','E-UF','SE'].includes(placementOutcome)) ? formatDateForCrt(client.post_completion_employment_date) : '',  // T: Placement Outcome Date (WD; mirrors J when I is employed)
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT

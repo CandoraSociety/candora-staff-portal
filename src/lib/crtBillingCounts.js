@@ -172,8 +172,8 @@ export function computeCrtBillingCounts(clients, fileName) {
     if (row.isDea && inMonth(row.D, startISO, endISO)) deaStarters++;
     // 2. WD Complete — Service Outcome (G) Complete + Service Outcome Date (H) in viewing month
     if (row.isWd && row.G === 'Complete' && inMonth(row.H, startISO, endISO)) wdComplete++;
-    // 3. WD Placement (EDA Completion) — 90 Day Outcome (O) in E-RF/E-UF/SE + 90 Day Outcome Date (P) in viewing month (T mirrors P when O is employed)
-    if (row.isWd && EMPLOYED.includes(row.O) && inMonth(row.P, startISO, endISO)) wdPlacementCompletion++;
+    // 3. WD Placement (EDA Completion) — Placement Outcome (I) in E-RF/E-UF/SE + Placement Outcome Date (J) in viewing month (T mirrors J when I is employed)
+    if (row.isWd && EMPLOYED.includes(row.I) && inMonth(row.J, startISO, endISO)) wdPlacementCompletion++;
     // 4. CEIS (DEA) 90 Day — 90 Day Outcome (O) in E-RF/E-UF/SE + 90 Day Outcome Date (P) in viewing month
     if (row.isDea && EMPLOYED.includes(row.O) && inMonth(row.P, startISO, endISO)) dea90Day++;
     // 5. WD 90 Day — 90 Day Outcome (O) in E-RF/E-UF/SE + 90 Day Outcome Date (P) in viewing month

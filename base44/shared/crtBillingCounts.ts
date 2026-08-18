@@ -140,9 +140,9 @@ export function computeMonthBillingCounts(clients, year, month0) {
     if (r.isDea && inMonth(r.D, startISO, endISO)) deaStarters++;
     // X (wdComplete) — WD clients with G="Complete" and Service Outcome Date (H) in month
     if (r.isWd && r.G === 'Complete' && inMonth(r.H, startISO, endISO)) wdComplete++;
-    // AN (wdPlacementCompletion) — WD clients with 90-day employment date (T) in month.
-    // T mirrors P when O is employed (E-RF/E-UF/SE); blank otherwise.
-    if (r.isWd && EMPLOYED.includes(r.O) && inMonth(r.P, startISO, endISO)) wdPlacementCompletion++;
+    // AN (wdPlacementCompletion) — WD clients with placement employment date (T) in month.
+    // T mirrors J when I is employed (E-RF/E-UF/SE); blank otherwise.
+    if (r.isWd && EMPLOYED.includes(r.I) && inMonth(r.J, startISO, endISO)) wdPlacementCompletion++;
     if (r.isDea && EMPLOYED.includes(r.O) && inMonth(r.P, startISO, endISO)) dea90Day++;
     if (r.isWd && EMPLOYED.includes(r.O) && inMonth(r.P, startISO, endISO)) wd90Day++;
     if ((r.X === 'Yes' || r.X === 'Y') && inMonth(r.Y, startISO, endISO)) serviceNavFee++;
