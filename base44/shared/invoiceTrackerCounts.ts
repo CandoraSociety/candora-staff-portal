@@ -123,15 +123,15 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
   // Cap the upper bound at this workbook's own month so a prior-month workbook
   // only contains data through that month — not future months' data. The active
   // (current) month's workbook falls back to the current Edmonton month.
-  const current = currentMonthEdmonton();
+  const globalCurrent = currentMonthEdmonton();
   const dStartRank = rank(D_START);
+  const globalCurrentRank = rank(globalCurrent);
   const wbMonthEnd = crtMonthEnd(workbook.name);
-  let maxKey = current;
+  let wbRank = globalCurrentRank;
   if (wbMonthEnd) {
     const wbKey = { year: wbMonthEnd.getUTCFullYear(), month: wbMonthEnd.getUTCMonth() };
-    if (rank(wbKey) < rank(current)) maxKey = wbKey;
+    if (rank(wbKey) < globalCurrentRank) wbRank = rank(wbKey);
   }
-  const currentRank = rank(maxKey);
 
   const countFilled = [];
   const countErrors = [];
@@ -147,26 +147,42 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     const key = cellToMonthKey(row[0]);
     if (!key) continue;
     const kRank = rank(key);
-    if (kRank < dStartRank || kRank > currentRank) continue;
+    if (kRank < dStartRank || kRank > globalCurrentRank) continue;
     const excelRow = startRow + r;
     const monthLabel = `${key.year}-${String(key.month + 1).padStart(2, '0')}`;
+    // Months beyond this workbook's own month-end snapshot get zeroed so a
+    // prior-month workbook (e.g. April) doesn't show future months' figures.
+    const isFuture = kRank > wbRank;
 
-    // Column D — fixed monthly fee marker (1 per month Apr 2026 .. current).
+    // Column D — fixed monthly fee marker (1 per month Apr 2026 .. workbook month).
+    // Future months on a prior-month workbook are cleared.
     const dExisting = row[D_INDEX];
-    if (dExisting === 1 || dExisting === '1' || dExisting === '1.0') {
-      dSkipped++;
-    } else {
+    const dHasMarker = dExisting === 1 || dExisting === '1' || dExisting === '1.0';
+    if (!isFuture) {
+      if (dHasMarker) {
+        dSkipped++;
+      } else {
+        try {
+          await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, 1);
+          dFilled.push({ row: excelRow, month: monthLabel });
+        } catch (e) {
+          countErrors.push({ row: excelRow, month: monthLabel, column: COL_D, key: 'fixedFee', error: String(e.message || e).slice(0, 120) });
+        }
+      }
+    } else if (dHasMarker) {
       try {
-        await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, 1);
-        dFilled.push({ row: excelRow, month: monthLabel });
+        await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, null);
+        dFilled.push({ row: excelRow, month: monthLabel, cleared: true });
       } catch (e) {
         countErrors.push({ row: excelRow, month: monthLabel, column: COL_D, key: 'fixedFee', error: String(e.message || e).slice(0, 120) });
       }
+    } else {
+      dSkipped++;
     }
 
-    const counts = computeMonthBillingCounts(clients, key.year, key.month);
+    const counts = isFuture ? null : computeMonthBillingCounts(clients, key.year, key.month);
     for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
-      const expected = counts[ck];
+      const expected = isFuture ? 0 : counts[ck];
       const existing = row[COUNT_INDICES[ck]];
       const existingNum = (existing == null || existing === '') ? 0 : Number(existing);
       if (existingNum === expected) { countSkipped++; continue; }
@@ -179,9 +195,9 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     }
 
     for (const [dk, col] of Object.entries(DOLLAR_COLUMNS)) {
-      const dollarExpected = dk === 'paidWorkExposure'
+      const dollarExpected = isFuture ? 0 : (dk === 'paidWorkExposure'
         ? computeMonthWorkExposureTotal(financialRecords, key.year, key.month)
-        : 0;
+        : 0);
       const dollarExisting = row[DOLLAR_INDICES[dk]];
       const dollarExistingNum = (dollarExisting == null || dollarExisting === '') ? 0 : Number(dollarExisting);
       if (dollarExistingNum === dollarExpected) { dollarSkipped++; continue; }

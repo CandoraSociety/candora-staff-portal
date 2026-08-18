@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, listCrtFiles } from '../../shared/crtWorkbook.ts';
+import { getGraphToken, listCrtFiles, crtMonthEnd } from '../../shared/crtWorkbook.ts';
+
+function rank(k) { return k.year * 12 + k.month; }
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow,
   billingMonthToKey, cellToMonthKey, writeTrackerCell
@@ -89,16 +91,27 @@ export default async function(req: Request): Promise<Response> {
       }
       const { values, startRow } = read;
 
+      // Cap at this workbook's own month — a prior-month workbook (e.g. April)
+      // must only show childminding figures through its month. Months after the
+      // workbook's month are written as 0 to clear stale future data.
+      const wbEnd = crtMonthEnd(workbook.name);
+      let wbRank = Infinity;
+      if (wbEnd) {
+        const wbKey = { year: wbEnd.getUTCFullYear(), month: wbEnd.getUTCMonth() };
+        wbRank = rank(wbKey);
+      }
+
       const results = [];
       for (const bm of months) {
         const key = billingMonthToKey(bm);
         if (!key) { results.push({ month: bm, status: 'invalid_month' }); continue; }
         const row = findMonthRow(values, key, startRow);
         if (!row) { results.push({ month: bm, status: 'row_not_found' }); continue; }
-        const total = Math.round((totals[bm] || 0) * 100) / 100;
+        const isFuture = rank(key) > wbRank;
+        const total = isFuture ? 0 : Math.round((totals[bm] || 0) * 100) / 100;
         try {
           await writeTrackerCell(accessToken, workbook.id, sheetName, CHILDMINDING_COLUMN, row, total);
-          results.push({ month: bm, status: 'synced', row, column: CHILDMINDING_COLUMN, total });
+          results.push({ month: bm, status: isFuture ? 'cleared' : 'synced', row, column: CHILDMINDING_COLUMN, total });
         } catch (e) {
           results.push({ month: bm, status: 'write_error', error: String(e.message || e).slice(0, 200) });
         }
