@@ -298,7 +298,7 @@ export default async function(req: Request): Promise<Response> {
         for (const f of openFiles) {
           try {
             const r = await refreshBillingCounts(base44, token, f, undefined, preFetched);
-            perWorkbook.push({ workbook: f.name, status: r.status, countFilled: r.countFilled?.length || 0, countErrors: r.countErrors?.length || 0 });
+            perWorkbook.push({ workbook: f.name, status: r.status, countFilled: r.countFilled?.length || 0, dFilled: r.dFilled?.length || 0, countErrors: r.countErrors?.length || 0 });
           } catch (e) {
             perWorkbook.push({ workbook: f.name, status: 'error', error: String(e.message || e).slice(0, 200) });
           }

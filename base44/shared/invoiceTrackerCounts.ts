@@ -25,6 +25,14 @@ import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from './crtB
 
 const D_START = { year: 2026, month: 3 }; // April 2026 — first month to fill counts
 
+// Column D — fixed monthly fee quantity marker. A "1" is written for every
+// month from April 2026 through the current reporting month to indicate that
+// month's fixed-fee report is filed. Filled by advanceInvoiceTracker on the
+// active workbook AND by refreshBillingCounts (below) on every open workbook,
+// so prior months' column D is kept in sync after a cross-reference push.
+const COL_D = 'D';
+const D_INDEX = 3;
+
 // Quantity columns (the LEFT column under each heading — the heading column
 // itself). The RIGHT column (next letter) holds the dollar-amount formula.
 const COUNT_COLUMNS = {
@@ -98,8 +106,10 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
   const countFilled = [];
   const countErrors = [];
   const dollarFilled = [];
+  const dFilled = [];
   let countSkipped = 0;
   let dollarSkipped = 0;
+  let dSkipped = 0;
 
   for (let r = 0; r < (values || []).length; r++) {
     const row = values[r];
@@ -110,6 +120,19 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     if (kRank < dStartRank || kRank > currentRank) continue;
     const excelRow = startRow + r;
     const monthLabel = `${key.year}-${String(key.month + 1).padStart(2, '0')}`;
+
+    // Column D — fixed monthly fee marker (1 per month Apr 2026 .. current).
+    const dExisting = row[D_INDEX];
+    if (dExisting === 1 || dExisting === '1' || dExisting === '1.0') {
+      dSkipped++;
+    } else {
+      try {
+        await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, 1);
+        dFilled.push({ row: excelRow, month: monthLabel });
+      } catch (e) {
+        countErrors.push({ row: excelRow, month: monthLabel, column: COL_D, key: 'fixedFee', error: String(e.message || e).slice(0, 120) });
+      }
+    }
 
     const counts = computeMonthBillingCounts(clients, key.year, key.month);
     for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
@@ -150,5 +173,7 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     countErrors,
     dollarFilled,
     dollarSkipped,
+    dFilled,
+    dSkipped,
   };
 }
