@@ -120,6 +120,15 @@
   .invoice-viewer-card { border: none !important; border-radius: 0 !important; }
   .invoice-viewer-content { padding: 0 !important; }
   .invoice-document { width: 100% !important; max-width: 100% !important; border: none !important; border-radius: 0 !important; margin: 0 !important; }
+  /* Shrink the letterhead logo to fit inside the navy band so no part is
+     clipped on print (the on-screen version uses a 200px image with negative
+     margins that crops top/bottom). Keep the screen-blend visibility trick. */
+  .invoice-document img {
+    height: 96px !important;
+    margin: 0 !important;
+    max-width: 45% !important;
+    object-fit: contain !important;
+  }
   .print-break { page-break-before: always !important; }
   /* Hide app layout chrome */
   .app-sidebar, .app-sidebar-mobile, .app-topbar,

@@ -1,12 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle } from 'lucide-react';
+import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
@@ -26,14 +28,18 @@ export default function MonthlyInvoices() {
   // default view always lands on the correct month regardless of the
   // browser/device timezone.
   const currentMonth = currentBillingMonth();
-  // The viewed month lives in the URL (?month=YYYY-MM) so a clean visit to the
-  // Billing page always lands on the current billing month — there's no
-  // component state for the keep-alive portal to preserve and get "stuck" on a
-  // prior month across navigations or refreshes.
+  // The viewed month lives in the URL (?month=YYYY-MM or ?id=…) so a clean
+  // visit to the Billing page always lands on the current billing month —
+  // there's no component state for the keep-alive portal to preserve and get
+  // "stuck" on a prior month across navigations or refreshes.
   const [searchParams, setSearchParams] = useSearchParams();
   const pickedMonth = searchParams.get('month');
+  const pickedId = searchParams.get('id');
   const selectedMonth = pickedMonth || currentMonth;
   const ensuredRef = useRef(new Set());
+  const [showMultiMonth, setShowMultiMonth] = useState(false);
+  const [rangeStart, setRangeStart] = useState(currentMonth);
+  const [rangeEnd, setRangeEnd] = useState(currentMonth);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -46,6 +52,37 @@ export default function MonthlyInvoices() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invoices'] }),
     onError: (e) => toast.error('Could not start this month invoice: ' + (e.message || '')),
   });
+
+  // Create a multi-month invoice (cumulative range). The CRT end-month row
+  // holds the running totals, so the invoice is stamped with both the start
+  // and end month and reads the end month's data.
+  const createMultiMonthMutation = useMutation({
+    mutationFn: async ({ start, end }) =>
+      base44.entities.Invoice.create({
+        billing_month: start,
+        billing_month_end: end,
+        status: 'draft',
+      }),
+    onSuccess: (inv) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      setSearchParams({ id: inv.id });
+      setShowMultiMonth(false);
+      toast.success('Multi-month invoice created');
+    },
+    onError: (e) => toast.error('Could not create multi-month invoice: ' + (e.message || '')),
+  });
+
+  const handleCreateMultiMonth = () => {
+    if (!rangeStart || !rangeEnd) {
+      toast.error('Select both a start and end month');
+      return;
+    }
+    if (rangeEnd < rangeStart) {
+      toast.error('End month must be the same as or after the start month');
+      return;
+    }
+    createMultiMonthMutation.mutate({ start: rangeStart, end: rangeEnd });
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -66,10 +103,19 @@ export default function MonthlyInvoices() {
   // Each invoice shows its OWN month's data: the current (open) month reads
   // live from the CRT workbook and keeps adjusting until closed off; a past
   // month shows its own row (or its frozen snapshot once finalized). Default
-  // view (no ?month= param) always lands on the current billing month.
-  const selected = invoices.find((i) => i.billing_month === selectedMonth) || null;
+  // view (no ?month= / ?id= param) always lands on the current billing month.
+  // A multi-month invoice (billing_month_end set) reads the END month's
+  // cumulative CRT row and is labeled with the full range.
+  const selected = pickedId
+    ? invoices.find((i) => i.id === pickedId) || null
+    : invoices.find((i) => i.billing_month === selectedMonth) || null;
   const isFinalized = selected?.status === 'finalized';
-  const effectiveMonth = selectedMonth;
+  const isRange = !!selected?.billing_month_end && selected.billing_month_end !== selected.billing_month;
+  const effectiveMonth = selected
+    ? (selected.billing_month_end || selected.billing_month)
+    : selectedMonth;
+  const selStart = selected?.billing_month;
+  const selEnd = selected?.billing_month_end;
 
   // Always show the current (in-progress) month in the list even if its draft
   // record hasn't been created yet, so the user can always see up to the
@@ -115,11 +161,13 @@ export default function MonthlyInvoices() {
       return base44.entities.Invoice.update(selected.id, {
         status: 'finalized',
         finalized_date: format(new Date(), 'yyyy-MM-dd'),
-        // Always stamp the record with the ACTUAL month of the row the data
-        // came from (column A), not the month the user happened to have
-        // selected — so a finalized invoice's label can never drift from its
-        // frozen figures.
-        billing_month: live.billingMonth || selected.billing_month,
+        // For a single-month invoice, stamp the record with the ACTUAL month of
+        // the row the data came from (column A), not the month the user happened
+        // to have selected — so a finalized invoice's label can never drift from
+        // its frozen figures. For a multi-month (range) invoice, keep the start
+        // month as billing_month and billing_month_end as-is so the range label
+        // survives close-off (the data still came from the end month's row).
+        billing_month: isRange ? selected.billing_month : (live.billingMonth || selected.billing_month),
         invoice_number: live.invoiceNumber != null ? String(live.invoiceNumber) : (selected.invoice_number || ''),
         header_info: live.header,
         line_items: live.lineItems,
@@ -160,8 +208,12 @@ export default function MonthlyInvoices() {
       ? live
       : null;
 
-  // The heading reflects the month actually being shown.
-  const monthLabel = format(monthFirst(effectiveMonth), 'MMMM yyyy');
+  // The heading reflects the month (or range) actually being shown.
+  const monthLabel = isRange
+    ? (monthFirst(selStart).getFullYear() === monthFirst(selEnd).getFullYear()
+        ? `${format(monthFirst(selStart), 'MMMM')} – ${format(monthFirst(selEnd), 'MMMM yyyy')}`
+        : `${format(monthFirst(selStart), 'MMMM yyyy')} – ${format(monthFirst(selEnd), 'MMMM yyyy')}`)
+    : format(monthFirst(effectiveMonth), 'MMMM yyyy');
 
   return (
     <div className="space-y-4">
@@ -179,7 +231,17 @@ export default function MonthlyInvoices() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {selectedMonth !== currentMonth && (
+              <Button onClick={() => setShowMultiMonth((v) => !v)} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Multi-Month Invoice
+              </Button>
+              {selectedMonth !== currentMonth && !pickedId && (
+                <Button onClick={() => setSearchParams({})} variant="outline" size="sm">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Back to {format(monthFirst(currentMonth), 'MMMM yyyy')}
+                </Button>
+              )}
+              {pickedId && (
                 <Button onClick={() => setSearchParams({})} variant="outline" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
                   Back to {format(monthFirst(currentMonth), 'MMMM yyyy')}
@@ -204,6 +266,41 @@ export default function MonthlyInvoices() {
             </div>
           </div>
         </CardHeader>
+        {showMultiMonth && (
+          <CardContent className="border-t pt-4">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="range-start" className="text-xs">Start month</Label>
+                <Input
+                  id="range-start"
+                  type="month"
+                  value={rangeStart}
+                  onChange={(e) => setRangeStart(e.target.value)}
+                  className="w-44"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="range-end" className="text-xs">Through (end month)</Label>
+                <Input
+                  id="range-end"
+                  type="month"
+                  min={rangeStart || undefined}
+                  value={rangeEnd}
+                  onChange={(e) => setRangeEnd(e.target.value)}
+                  className="w-44"
+                />
+              </div>
+              <Button onClick={handleCreateMultiMonth} disabled={createMultiMonthMutation.isPending} size="sm">
+                {createMultiMonthMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                Create
+              </Button>
+              <Button onClick={() => setShowMultiMonth(false)} variant="ghost" size="sm">Cancel</Button>
+              <p className="text-xs text-slate-500 w-full">
+                A multi-month invoice reads the end month&rsquo;s cumulative CRT row (which holds the running totals through that month) and is labeled with the full range.
+              </p>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* Viewer */}
@@ -214,7 +311,12 @@ export default function MonthlyInvoices() {
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
           ) : renderData ? (
-            <InvoiceDocument data={renderData} status={isFinalized ? 'Finalized' : 'Draft'} adjustmentNotes={adjustmentNotes} />
+            <InvoiceDocument
+              data={renderData}
+              status={isFinalized ? 'Finalized' : 'Draft'}
+              adjustmentNotes={adjustmentNotes}
+              billingMonthEnd={isRange ? selEnd : null}
+            />
           ) : (
             <div className="text-center py-16">
               <AlertCircle className="h-10 w-10 mx-auto mb-3 text-amber-500" />
@@ -249,12 +351,18 @@ export default function MonthlyInvoices() {
           ) : (
             <div className="space-y-1">
               {displayInvoices.map((inv) => {
-                const isViewing = inv.billing_month === effectiveMonth;
+                const invIsRange = !!inv.billing_month_end && inv.billing_month_end !== inv.billing_month;
+                const isViewing = selected?.id === inv.id || (!selected && inv.billing_month === effectiveMonth && !invIsRange);
                 const fin = inv.status === 'finalized';
+                const invLabel = invIsRange
+                  ? (monthFirst(inv.billing_month).getFullYear() === monthFirst(inv.billing_month_end).getFullYear()
+                      ? `${format(monthFirst(inv.billing_month), 'MMM')} – ${format(monthFirst(inv.billing_month_end), 'MMM yyyy')}`
+                      : `${format(monthFirst(inv.billing_month), 'MMM yyyy')} – ${format(monthFirst(inv.billing_month_end), 'MMM yyyy')}`)
+                  : format(monthFirst(inv.billing_month), 'MMMM yyyy');
                 return (
                   <div
                     key={inv.id}
-                    onClick={() => setSearchParams({ month: inv.billing_month })}
+                    onClick={() => invIsRange ? setSearchParams({ id: inv.id }) : setSearchParams({ month: inv.billing_month })}
                     className={`flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer transition-colors ${
                       isViewing ? 'bg-amber-50 ring-1 ring-amber-200' : 'hover:bg-slate-50'
                     }`}
@@ -263,7 +371,8 @@ export default function MonthlyInvoices() {
                       <FileText className="h-4 w-4 text-accent" />
                       <div>
                         <p className="text-sm font-medium">
-                          {format(monthFirst(inv.billing_month), 'MMMM yyyy')}
+                          {invLabel}
+                          {invIsRange && <span className="ml-2 text-[10px] uppercase tracking-wide text-accent">Range</span>}
                           {inv.invoice_number ? ` · #${inv.invoice_number}` : ''}
                         </p>
                         <p className="text-xs text-slate-500">

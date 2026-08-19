@@ -7,7 +7,11 @@
     },
     "billing_month": {
       "type": "string",
-      "description": "YYYY-MM \u2014 the month this invoice covers"
+      "description": "YYYY-MM \u2014 the first month this invoice covers"
+    },
+    "billing_month_end": {
+      "type": "string",
+      "description": "YYYY-MM \u2014 the last month this invoice covers (inclusive). When blank or equal to billing_month, the invoice covers a single month. When set to a later month, the invoice represents the cumulative range (the CRT end-month row holds the running totals) and is labeled with the full range."
     },
     "config_id": {
       "type": "string"
