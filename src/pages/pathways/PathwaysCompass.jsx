@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import CompassTaskList from '@/components/compass/CompassTaskList';
-import CompassTallyList from '@/components/compass/CompassTallyList';
+import CompassEntryChecklist from '@/components/compass/CompassEntryChecklist';
 
 import { Clock, ExternalLink, RotateCcw, User } from 'lucide-react';
 
@@ -108,12 +108,12 @@ export default function PathwaysCompass() {
           onClick={() => setPageTab('tally')}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${pageTab === 'tally' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          Invoice Tracker Tally
+          Compass Entry Checklist
         </button>
       </div>
 
       {pageTab === 'tally' ? (
-        <CompassTallyList currentUser={currentUser} />
+        <CompassEntryChecklist />
       ) : (
         <>
           {/* Loading */}
