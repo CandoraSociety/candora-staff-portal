@@ -10,7 +10,23 @@ import { RATE_PER_HOUR, MONTH_NAMES } from '@/lib/childmindingConstants';
 const NAVY = '#172554';
 const GOLD = '#f5c116';
 
-export default function ChildmindingBillingSheet({ billingMonth }) {
+const monthLabelFor = (ym) => {
+  if (!ym) return '';
+  const [y, m] = ym.split('-').map(Number);
+  return `${MONTH_NAMES[m - 1]} ${y}`;
+};
+
+// Human-readable range label. Single month → "April 2026". Multi-month →
+// "April 2026 – July 2026" (same year collapses to "April – July 2026").
+const rangeLabel = (start, end) => {
+  if (!end || end === start) return monthLabelFor(start);
+  const [ys, ms] = start.split('-').map(Number);
+  const [ye, me] = end.split('-').map(Number);
+  if (ys === ye) return `${MONTH_NAMES[ms - 1]} – ${MONTH_NAMES[me - 1]} ${ys}`;
+  return `${monthLabelFor(start)} – ${monthLabelFor(end)}`;
+};
+
+export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd }) {
   const sheetRef = useRef(null);
   const { logoUrl } = useOrgSettings();
 
@@ -19,22 +35,29 @@ export default function ChildmindingBillingSheet({ billingMonth }) {
     queryFn: () => base44.entities.ChildmindingRecord.list('-date', 2000),
   });
 
+  // Effective range: start = billingMonth, end = billingMonthEnd (or start).
+  const start = billingMonth;
+  const end = billingMonthEnd && billingMonthEnd >= billingMonth ? billingMonthEnd : billingMonth;
+
   const monthRecords = useMemo(() => {
     return records
-      .filter(r => r.program === 'pathways' && r.date && r.date.startsWith(billingMonth))
+      .filter(r => {
+        if (r.program !== 'pathways' || !r.date) return false;
+        const ym = r.date.slice(0, 7); // "YYYY-MM"
+        return ym >= start && ym <= end;
+      })
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  }, [records, billingMonth]);
+  }, [records, start, end]);
 
   const totalHours = monthRecords.reduce((s, r) => s + (r.hours || 0), 0);
   const totalAmount = monthRecords.reduce((s, r) => s + (r.billing_amount || (r.hours || 0) * RATE_PER_HOUR), 0);
 
-  const [year, monIdx] = billingMonth.split('-');
-  const monthLabel = `${MONTH_NAMES[parseInt(monIdx) - 1]} ${year}`;
+  const label = rangeLabel(start, end);
 
   const handlePrint = () => {
     const win = window.open('', '_blank');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>Pathways Childminding Services - ${monthLabel}</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>Pathways Childminding Services - ${label}</title>
       <style>
         @page { size: letter; margin: 0.6in; }
         body { font-family: Inter, Arial, sans-serif; color: #1a1a2e; margin: 0; }
@@ -63,7 +86,7 @@ export default function ChildmindingBillingSheet({ billingMonth }) {
           <img src={logoUrl} alt="Candora" style={{ height: 56, width: 'auto', background: '#fff', borderRadius: 8, padding: 4 }} />
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0, fontSize: 20, color: GOLD, letterSpacing: '0.04em' }}>Pathways Childminding Services</h1>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#fff' }}>{monthLabel} Invoice</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#fff' }}>{label} Invoice</p>
           </div>
         </div>
 
@@ -76,7 +99,7 @@ export default function ChildmindingBillingSheet({ billingMonth }) {
             <p style={{ textAlign: 'center', color: '#64748b', padding: 24 }}>Loading...</p>
           ) : monthRecords.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#64748b', padding: 24 }}>
-              No Pathways childminding sessions recorded for {monthLabel}.
+              No Pathways childminding sessions recorded for {label}.
             </p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>

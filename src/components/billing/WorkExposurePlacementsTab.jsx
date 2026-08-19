@@ -7,14 +7,15 @@ import { Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseBillingMonth } from './billingMonth';
 
-export default function WorkExposurePlacementsTab({ billingMonth }) {
+export default function WorkExposurePlacementsTab({ billingMonth, billingMonthEnd }) {
   const [expanded, setExpanded] = useState({});
+  const end = billingMonthEnd && billingMonthEnd >= billingMonth ? billingMonthEnd : billingMonth;
 
   const { data: records = [], isLoading } = useQuery({
-    queryKey: ['we-placements', billingMonth],
+    queryKey: ['we-placements', billingMonth, end],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
     select: (recs) => (recs || [])
-      .filter((r) => r.billing_month === billingMonth && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0)
+      .filter((r) => r.billing_month && r.billing_month >= billingMonth && r.billing_month <= end && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0)
       .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
   });
 
@@ -31,7 +32,11 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
 
   const totalAmount = records.reduce((sum, r) => sum + (r.total || r.amount || 0), 0);
   const totalHours = records.reduce((sum, r) => sum + (Number(r.hours_worked) || 0), 0);
-  const monthLabel = billingMonth ? format(parseBillingMonth(billingMonth), 'MMMM yyyy') : '';
+  const monthLabel = billingMonth
+    ? (end !== billingMonth
+        ? `${format(parseBillingMonth(billingMonth), 'MMM yyyy')} – ${format(parseBillingMonth(end), 'MMM yyyy')}`
+        : format(parseBillingMonth(billingMonth), 'MMMM yyyy'))
+    : '';
 
   const toggle = (key) => setExpanded((p) => ({ ...p, [key]: !p[key] }));
 
@@ -44,7 +49,7 @@ export default function WorkExposurePlacementsTab({ billingMonth }) {
             Work Exposure Placements
           </CardTitle>
           <div className="text-right">
-            <p className="text-xs text-slate-500">Billing month</p>
+            <p className="text-xs text-slate-500">Billing period</p>
             <p className="text-sm font-semibold">{monthLabel}</p>
           </div>
         </div>

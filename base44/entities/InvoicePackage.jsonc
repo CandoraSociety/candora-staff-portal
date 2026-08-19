@@ -6,7 +6,12 @@
       "type": "string"
     },
     "billing_month": {
-      "type": "string"
+      "type": "string",
+      "description": "YYYY-MM \u2014 the first month of this package's submission range."
+    },
+    "billing_month_end": {
+      "type": "string",
+      "description": "YYYY-MM \u2014 the last month of this package's submission range (inclusive). When blank or equal to billing_month, the package covers a single month. When set to a later month, childminding and other month-filtered tabs span the full range."
     },
     "prepared_by": {
       "type": "string"

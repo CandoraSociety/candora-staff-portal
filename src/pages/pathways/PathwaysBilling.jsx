@@ -62,10 +62,16 @@ export default function PathwaysBilling() {
   const handleCreatePackage = async (packageData) => {
     const currentUser = await base44.auth.me();
     const today = format(new Date(), 'yyyy-MM-dd');
-    const packageNumber = `PKG-${packageData.billing_month.replace('-', '')}`;
-    
+    const end = packageData.billing_month_end && packageData.billing_month_end !== packageData.billing_month
+      ? packageData.billing_month_end
+      : null;
+    const packageNumber = end
+      ? `PKG-${packageData.billing_month.replace('-', '')}_${end.replace('-', '')}`
+      : `PKG-${packageData.billing_month.replace('-', '')}`;
+
     createPackageMutation.mutate({
       ...packageData,
+      billing_month_end: end,
       package_number: packageNumber,
       prepared_by: currentUser.email,
       prepared_by_name: currentUser.full_name,

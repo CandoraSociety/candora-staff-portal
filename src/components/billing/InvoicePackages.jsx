@@ -33,6 +33,7 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
   
   const [formData, setFormData] = useState({
     billing_month: format(new Date(), 'yyyy-MM'),
+    billing_month_end: '',
     config_id: configs[0]?.id || '',
     crt_included: true,
     notes: '',
@@ -44,11 +45,17 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
       toast.error('Please select a billing month');
       return;
     }
+    // Normalise the end month: blank → single-month package (end = start).
+    const end = formData.billing_month_end && formData.billing_month_end >= formData.billing_month
+      ? formData.billing_month_end
+      : formData.billing_month;
 
-    onCreatePackage(formData);
+    onCreatePackage({ ...formData, billing_month_end: end });
+
     setShowGenerator(false);
     setFormData({
       billing_month: format(new Date(), 'yyyy-MM'),
+      billing_month_end: '',
       config_id: configs[0]?.id || '',
       crt_included: true,
       notes: '',
@@ -101,6 +108,21 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
                 value={formData.billing_month}
                 onChange={(e) => setFormData({ ...formData, billing_month: e.target.value })}
               />
+              <p className="text-xs text-slate-500">First month of the submission range.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="billing_month_end">Through (end month) — optional</Label>
+              <Input
+                id="billing_month_end"
+                type="month"
+                min={formData.billing_month || undefined}
+                value={formData.billing_month_end}
+                onChange={(e) => setFormData({ ...formData, billing_month_end: e.target.value })}
+              />
+              <p className="text-xs text-slate-500">
+                Leave blank for a single month. Set a later month to include childminding
+                across the full range (e.g. Apr – Jul).
+              </p>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -213,7 +235,11 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
               <CardContent className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-slate-600">
                   <span>📅</span>
-                  <span>{format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}</span>
+                  <span>
+                    {pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
+                      ? `${format(parseBillingMonth(pkg.billing_month), 'MMM yyyy')} – ${format(parseBillingMonth(pkg.billing_month_end), 'MMM yyyy')}`
+                      : format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600">
                   <span>👤</span>

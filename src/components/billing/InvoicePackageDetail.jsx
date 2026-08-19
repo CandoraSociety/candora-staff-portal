@@ -85,7 +85,9 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         <div>
           <h2 className="text-xl font-bold">{pkg.package_number}</h2>
           <p className="text-sm text-slate-600">
-            {format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')} Billing Package
+            {pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
+              ? `${format(parseBillingMonth(pkg.billing_month), 'MMM yyyy')} – ${format(parseBillingMonth(pkg.billing_month_end), 'MMM yyyy')} Billing Package`
+              : `${format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')} Billing Package`}
           </p>
         </div>
         <Badge
@@ -325,11 +327,17 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         </TabsContent>
 
         <TabsContent value="placements" className="space-y-4">
-          <WorkExposurePlacementsTab billingMonth={pkg.billing_month} />
+          <WorkExposurePlacementsTab
+            billingMonth={pkg.billing_month}
+            billingMonthEnd={pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month ? pkg.billing_month_end : null}
+          />
         </TabsContent>
 
         <TabsContent value="childminding" className="space-y-4">
-          <ChildmindingBillingSheet billingMonth={pkg.billing_month} />
+          <ChildmindingBillingSheet
+            billingMonth={pkg.billing_month}
+            billingMonthEnd={pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month ? pkg.billing_month_end : null}
+          />
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
