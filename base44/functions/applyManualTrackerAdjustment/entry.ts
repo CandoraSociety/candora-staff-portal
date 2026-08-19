@@ -29,15 +29,6 @@ function parseValue(v: any): number | string {
   return s;
 }
 
-// Find the CRT workbook whose filename month matches the billing month key.
-function findMonthWorkbook(files: any[], key: { year: number; month: number }) {
-  for (const f of files) {
-    const me = crtMonthEnd(f.name);
-    if (me && me.getUTCFullYear() === key.year && me.getUTCMonth() === key.month) return f;
-  }
-  return null;
-}
-
 async function recalc(accessToken: string, workbookId: string) {
   try {
     await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbookId}/workbook/application/calculate`, {
@@ -90,14 +81,22 @@ export default async function(req: Request): Promise<Response> {
     if (!active) return Response.json({ status: 'no_workbook' });
 
     const files = await listCrtFiles(accessToken);
-    const monthWb = findMonthWorkbook(files, key);
 
-    const targets: any[] = [];
-    // Always write to the active workbook (drives the live portal invoice).
-    targets.push(active);
-    // Also write to the month's own workbook when it's a different file (so the
-    // value lands in the CRT submitted for that month).
-    if (monthWb && monthWb.id !== active.id) targets.push(monthWb);
+    // The billing month's row (e.g. April, row 47) exists in the Invoice Tracker
+    // of EVERY workbook whose month is on or after the billing month — each
+    // monthly CRT carries cumulative rows for all prior months. So a manual
+    // entry must be written to all of those workbooks so it shows up
+    // consistently on the billing month's own CRT and every subsequent CRT.
+    const targets = files.filter(f => {
+      const me = crtMonthEnd(f.name);
+      if (!me) return false;
+      return (me.getUTCFullYear() > key.year) ||
+             (me.getUTCFullYear() === key.year && me.getUTCMonth() >= key.month);
+    }).sort((a, b) => crtMonthEnd(a.name).getTime() - crtMonthEnd(b.name).getTime());
+
+    // Always include the active workbook even if it somehow wasn't listed (it
+    // drives the live portal invoice).
+    if (!targets.some(t => t.id === active.id)) targets.push(active);
 
     const results = [];
     let primary = null;
