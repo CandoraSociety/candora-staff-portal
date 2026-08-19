@@ -12,6 +12,7 @@ import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus } from 'lu
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
+import { monthsInRange, snapshotToData, aggregateMonthData } from './aggregateInvoiceData';
 
 // Parse a "YYYY-MM" billing month into a LOCAL Date on the 1st of that month.
 // `new Date('2026-04-01')` is parsed as UTC midnight, which in Edmonton (UTC-6)
@@ -125,18 +126,58 @@ export default function MonthlyInvoices() {
     : [{ id: '__current__', billing_month: currentMonth, status: 'draft' }, ...invoices];
 
   // Live read from the active CRT workbook for the open (non-finalized) month.
+  // Disabled for range invoices — those sum each month separately below.
   const { data: live, isLoading: liveLoading, refetch } = useQuery({
     queryKey: ['monthly-invoice-data', effectiveMonth],
     queryFn: async () => {
       const res = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: effectiveMonth });
       return res.data;
     },
-    enabled: !!effectiveMonth && !isFinalized,
+    enabled: !!effectiveMonth && !isRange && !isFinalized,
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+
+  // Multi-month (range) invoice: fetch each month in the range — finalized
+  // months use their frozen snapshot, open months read live from the tracker —
+  // then sum every section so quantities/amounts add across months and the
+  // Fixed Monthly Fee carries a quantity equal to the number of months.
+  const finalizedKey = (invoices || [])
+    .filter((i) => !i.billing_month_end && i.status === 'finalized')
+    .map((i) => i.billing_month)
+    .sort()
+    .join(',');
+  const { data: rangeData, isLoading: rangeLoading, refetch: refetchRange } = useQuery({
+    queryKey: ['range-invoice-data', selStart, selEnd, finalizedKey],
+    queryFn: async () => {
+      const months = monthsInRange(selStart, selEnd);
+      const perMonth = await Promise.all(
+        months.map(async (bm) => {
+          const inv = invoices.find((i) => i.billing_month === bm && !i.billing_month_end);
+          if (inv && inv.status === 'finalized') return snapshotToData(inv);
+          try {
+            const res = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: bm });
+            return res.data;
+          } catch {
+            return { status: 'error' };
+          }
+        })
+      );
+      return aggregateMonthData(perMonth);
+    },
+    enabled: isRange && !!selStart && !!selEnd && !isFinalized,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // The active data source for the current selection: aggregated range data for
+  // a range invoice, the single-month live read otherwise.
+  const activeData = isRange ? rangeData : live;
+  const activeLoading = isRange ? rangeLoading : liveLoading;
 
   // Adjustment notes logged against this month's Invoice Package(s) — shown at
   // the bottom of the invoice so manual tracker edits are auditable on the doc.
@@ -155,7 +196,7 @@ export default function MonthlyInvoices() {
 
   const closeOffMutation = useMutation({
     mutationFn: async () => {
-      if (!selected || !live || live.status !== 'success') {
+      if (!selected || !activeData || activeData.status !== 'success') {
         throw new Error('No live invoice data to snapshot.');
       }
       return base44.entities.Invoice.update(selected.id, {
@@ -166,14 +207,14 @@ export default function MonthlyInvoices() {
         // to have selected — so a finalized invoice's label can never drift from
         // its frozen figures. For a multi-month (range) invoice, keep the start
         // month as billing_month and billing_month_end as-is so the range label
-        // survives close-off (the data still came from the end month's row).
-        billing_month: isRange ? selected.billing_month : (live.billingMonth || selected.billing_month),
-        invoice_number: live.invoiceNumber != null ? String(live.invoiceNumber) : (selected.invoice_number || ''),
-        header_info: live.header,
-        line_items: live.lineItems,
-        subtotal_deliverables: live.subtotalDeliverables,
-        subtotal_direct_costs: live.subtotalDirectCosts,
-        total_amount: live.total,
+        // survives close-off (the snapshot holds the summed-across-months data).
+        billing_month: isRange ? selected.billing_month : (activeData.billingMonth || selected.billing_month),
+        invoice_number: activeData.invoiceNumber != null ? String(activeData.invoiceNumber) : (selected.invoice_number || ''),
+        header_info: activeData.header,
+        line_items: activeData.lineItems,
+        subtotal_deliverables: activeData.subtotalDeliverables,
+        subtotal_direct_costs: activeData.subtotalDirectCosts,
+        total_amount: activeData.total,
       });
     },
     onSuccess: () => {
@@ -188,12 +229,13 @@ export default function MonthlyInvoices() {
     onSuccess: () => {
       toast.info('Invoice reopened — re-reading live data.');
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      refetch();
+      if (isRange) refetchRange(); else refetch();
     },
     onError: (e) => toast.error('Reopen failed: ' + (e.message || '')),
   });
 
-  // Data to render: finalized → snapshot on the record; open → live read.
+  // Data to render: finalized → snapshot on the record; open → active read
+  // (aggregated range data for a multi-month invoice, single-month live otherwise).
   const renderData = isFinalized && selected
     ? {
         invoiceNumber: selected.invoice_number ? Number(selected.invoice_number) : null,
@@ -204,8 +246,8 @@ export default function MonthlyInvoices() {
         subtotalDirectCosts: selected.subtotal_direct_costs || 0,
         total: selected.total_amount || 0,
       }
-    : live && live.status === 'success'
-      ? live
+    : activeData && activeData.status === 'success'
+      ? activeData
       : null;
 
   // The heading reflects the month (or range) actually being shown.
@@ -306,7 +348,7 @@ export default function MonthlyInvoices() {
       {/* Viewer */}
       <Card className="invoice-viewer-card">
         <CardContent className="invoice-viewer-content pt-6">
-          {liveLoading && !renderData ? (
+          {activeLoading && !renderData ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>

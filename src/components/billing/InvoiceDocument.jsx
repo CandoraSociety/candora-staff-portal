@@ -167,8 +167,8 @@ export default function InvoiceDocument({ data, status, adjustmentNotes = [], bi
             {fixed.map((it) => (
               <tr key={it.key} className="border-b border-slate-100" style={{ background: navy + '0a' }}>
                 <td className="py-2 px-3 text-sm font-medium text-slate-800">{it.label}</td>
-                <td className="py-2 px-3 text-sm text-center text-slate-400">—</td>
-                <td className="py-2 px-3 text-sm text-right text-slate-400">—</td>
+                <td className="py-2 px-3 text-sm text-center text-slate-700 tabular-nums">{qty(it.quantity)}</td>
+                <td className="py-2 px-3 text-sm text-right text-slate-700 tabular-nums">{it.unitPrice == null ? '—' : money(it.unitPrice)}</td>
                 <td className="py-2 px-3 text-sm text-right font-medium text-slate-900 tabular-nums">{money(it.amount)}</td>
               </tr>
             ))}
