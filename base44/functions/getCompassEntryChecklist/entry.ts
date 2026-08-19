@@ -5,10 +5,12 @@ import {
 } from '../../shared/crtWorkbook.ts';
 
 // Reads the CRT Client Data sheet for the selected billing month(s) and returns
-// every client who had activity in that month — recognized by ANY date column
-// in their row falling within the month. For each active client the filled
-// fields (columns A–R, plus S = Comments) are returned as a checklist of what
-// should be reflected in Compass.
+// every client who had activity in any selected month — recognized by ANY date
+// column in their row falling within that month. Results are de-duplicated: a
+// client active in multiple months appears once, with the months they were
+// active listed and their fields taken from the latest active month's snapshot
+// (most current). Filled fields (columns A–R, plus S = Comments) are returned
+// as a checklist of what should be reflected in Compass.
 //
 // Columns T–Y (Placement Outcome Date mirror, Work Exposure, Wage Subsidy,
 // Employed FT/PT, Service Navigation, Service Nav Billing Month) are excluded
@@ -51,6 +53,9 @@ function findWorkbookForMonth(files, billingMonth) {
   return (files || []).find((f) => f.name === target) || null;
 }
 
+// Token-sort normalized name for HSID-less de-dup.
+const normName = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -59,12 +64,10 @@ export default async function(req: Request): Promise<Response> {
 
     let payload: any = {};
     try { payload = await req.json(); } catch { /* no body */ }
-    // Accept either `months` (array) or `billingMonth` (single, back-compat).
     let months: string[] = [];
     if (Array.isArray(payload?.months)) months = payload.months.map(String).filter(Boolean);
     else if (payload?.billingMonth) months = [String(payload.billingMonth)];
     if (months.length === 0) months = [currentMonthEdmonton()];
-    // De-dupe + sort ascending.
     months = Array.from(new Set(months)).sort();
 
     const accessToken = await getGraphToken();
@@ -79,26 +82,27 @@ export default async function(req: Request): Promise<Response> {
       }
     } catch { /* lookup is optional */ }
 
-    const monthResults: any[] = [];
+    // Per-month counts (how many clients had activity that month — before de-dup).
+    const monthCounts: { month: string; count: number }[] = [];
+    // De-dup map: key (hsid or norm name) → merged entry.
+    const byKey: Record<string, any> = {};
+
     for (const bm of months) {
       let workbook = findWorkbookForMonth(files, bm);
       if (!workbook) {
         try { workbook = await getActiveCrtWorkbook(accessToken); } catch { workbook = null; }
       }
-      if (!workbook) { monthResults.push({ month: bm, status: 'no_workbook', count: 0, items: [] }); continue; }
+      if (!workbook) { monthCounts.push({ month: bm, count: 0 }); continue; }
 
       const rangeRes = await fetch(
         `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      if (!rangeRes.ok) {
-        monthResults.push({ month: bm, status: 'read_error', workbook: workbook.name, count: 0, items: [] });
-        continue;
-      }
+      if (!rangeRes.ok) { monthCounts.push({ month: bm, count: 0 }); continue; }
       const rangeData = await rangeRes.json();
       const values = rangeData.values || [];
 
-      const items: any[] = [];
+      let monthActive = 0;
       for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
         const row = values[i];
         if (!row) continue;
@@ -112,8 +116,11 @@ export default async function(req: Request): Promise<Response> {
           if (d && d.slice(0, 7) === bm) { active = true; break; }
         }
         if (!active) continue;
+        monthActive++;
 
         const hsid = String(row[1] || '').trim();
+        const key = hsid || normName(name);
+
         const fields: any[] = [];
         for (const c of COLUMNS) {
           const raw = row[c.idx];
@@ -123,19 +130,38 @@ export default async function(req: Request): Promise<Response> {
           fields.push({ label: c.label, value: display });
         }
         const linked = hsid ? hsidToClient[hsid] : null;
-        items.push({
-          client_name: name,
-          hsid,
-          row_number: i + 1,
-          client_id: linked?.id || null,
-          assigned_worker_name: linked?.assigned_worker_name || '',
-          fields,
-        });
+
+        const existing = byKey[key];
+        if (existing) {
+          // Track the month; overwrite fields with the latest month's snapshot
+          // (months iterate ascending, so the last write is the most recent).
+          if (!existing.active_months.includes(bm)) existing.active_months.push(bm);
+          existing.fields = fields;
+          existing.month = bm;
+          existing.row_number = i + 1;
+          existing.workbook = workbook.name;
+        } else {
+          byKey[key] = {
+            client_name: name,
+            hsid,
+            row_number: i + 1,
+            client_id: linked?.id || null,
+            assigned_worker_name: linked?.assigned_worker_name || '',
+            active_months: [bm],
+            month: bm,
+            workbook: workbook.name,
+            fields,
+          };
+        }
       }
-      monthResults.push({ month: bm, status: 'success', workbook: workbook.name, count: items.length, items });
+      monthCounts.push({ month: bm, count: monthActive });
     }
 
-    return Response.json({ status: 'success', months: monthResults });
+    const items = Object.values(byKey).sort((a, b) =>
+      (a.client_name || '').localeCompare(b.client_name || '')
+    );
+
+    return Response.json({ status: 'success', items, month_counts: monthCounts });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
