@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus } from 'lucide-react';
+import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
@@ -287,6 +287,12 @@ export default function MonthlyInvoices() {
                 <Button onClick={() => setSearchParams({})} variant="outline" size="sm">
                   <Calendar className="h-4 w-4 mr-2" />
                   Back to {format(monthFirst(currentMonth), 'MMMM yyyy')}
+                </Button>
+              )}
+              {renderData && (
+                <Button onClick={() => window.print()} variant="outline" size="sm">
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print / Save PDF
                 </Button>
               )}
               {selected && (
