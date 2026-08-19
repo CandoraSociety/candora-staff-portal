@@ -14,6 +14,7 @@ import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 import WorkExposurePlacementsTab from './WorkExposurePlacementsTab';
 import PackageContents from './PackageContents';
 import ManualAdjustmentsTab from './ManualAdjustmentsTab';
+import PackageInvoiceTab from './PackageInvoiceTab';
 import { parseBillingMonth } from './billingMonth';
 
 const NOTE_TYPES = [
@@ -290,40 +291,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         </TabsContent>
 
         <TabsContent value="invoice" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Invoice Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pkg.invoice_id ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-green-600" />
-                  <h3 className="text-lg font-semibold text-slate-700">
-                    Invoice has been generated for this package
-                  </h3>
-                  <p className="text-sm text-slate-600 mt-2">
-                    Invoice ID: <span className="font-mono font-medium">{pkg.invoice_id}</span>
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-slate-400" />
-                  <h3 className="text-lg font-semibold text-slate-700">
-                    No invoice generated yet
-                  </h3>
-                  <p className="text-sm text-slate-600 mt-2 mb-4">
-                    Generate an invoice for this billing package
-                  </p>
-                  <Button>
-                    Generate Invoice
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PackageInvoiceTab pkg={pkg} />
         </TabsContent>
 
         <TabsContent value="placements" className="space-y-4">

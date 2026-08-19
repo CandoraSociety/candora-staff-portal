@@ -42,7 +42,20 @@ function Section({ title, items, navy }) {
 const PROGRAM_OVERRIDE = 'Pathways Employment Program';
 const PO_NUMBER = '9000158238';
 
-export default function InvoiceDocument({ data, status, adjustmentNotes = [] }) {
+// Human-readable range label for the "Billing Month" field. Single month →
+// "April 2026". Multi-month (same year) → "April – July 2026".
+const rangeLabelFor = (start, end) => {
+  if (!start) return '';
+  if (!end || end === start) return format(monthFirst(start), 'MMMM yyyy');
+  const s = monthFirst(start);
+  const e = monthFirst(end);
+  if (s.getFullYear() === e.getFullYear()) {
+    return `${format(s, 'MMMM')} – ${format(e, 'MMMM yyyy')}`;
+  }
+  return `${format(s, 'MMMM yyyy')} – ${format(e, 'MMMM yyyy')}`;
+};
+
+export default function InvoiceDocument({ data, status, adjustmentNotes = [], billingMonthEnd }) {
   const { invoiceLogoUrl, primaryColor, secondaryColor, accentColor } = useOrgSettings();
   if (!data) return null;
   const {
@@ -58,7 +71,7 @@ export default function InvoiceDocument({ data, status, adjustmentNotes = [] }) 
   const deliverables = lineItems.filter((i) => i.section === 'deliverable');
   const directCosts = lineItems.filter((i) => i.section === 'direct_cost');
   const otherServices = lineItems.filter((i) => i.section === 'other_services');
-  const monthLabel = billingMonth ? format(monthFirst(billingMonth), 'MMMM yyyy') : '';
+  const monthLabel = rangeLabelFor(billingMonth, billingMonthEnd);
   const issued = format(new Date(), 'MMMM d, yyyy');
   const footerLines = brandFooterLines();
 
@@ -101,7 +114,9 @@ export default function InvoiceDocument({ data, status, adjustmentNotes = [] }) 
       {/* Invoice meta — navy-tinted band */}
       <div className="grid grid-cols-3 gap-4 px-8 py-4 border-b border-slate-100 text-sm" style={{ background: navy + '0d' }}>
         <div>
-          <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>Billing Month</p>
+          <p className="text-[11px] uppercase tracking-wide" style={{ color: navy }}>
+            {billingMonthEnd && billingMonthEnd !== billingMonth ? 'Billing Period' : 'Billing Month'}
+          </p>
           <p className="font-medium mt-0.5">{monthLabel}</p>
         </div>
         <div>
