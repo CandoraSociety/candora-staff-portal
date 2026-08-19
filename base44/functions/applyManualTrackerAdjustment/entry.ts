@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, getActiveCrtWorkbook, listCrtFiles, crtMonthEnd, DRIVE_ID } from '../../shared/crtWorkbook.ts';
+import { getGraphToken, getActiveCrtWorkbook, listCrtFiles, crtMonthEnd } from '../../shared/crtWorkbook.ts';
 import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonthToKey, writeTrackerCell } from '../../shared/invoiceTracker.ts';
+import { parseValue, recalc } from '../../shared/manualEntryHelpers.ts';
 
 // Manually writes one or more Invoice Tracker cells for the row whose month
 // matches the package's billing month. Writes to BOTH:
@@ -16,28 +17,6 @@ import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonth
 // Accepts { billingMonth, adjustments: [{ colLetter, value }, ...] } (batch)
 // or the legacy single { billingMonth, colLetter, value }. Numeric input is
 // parsed to a number; everything else is written as text.
-
-function parseValue(v: any): number | string {
-  if (v == null) return '';
-  const s = String(v).trim();
-  if (s === '') return '';
-  const cleaned = s.replace(/[$,]/g, '');
-  if (/^-?\d*\.?\d+$/.test(cleaned)) {
-    const n = Number(cleaned);
-    if (!isNaN(n)) return n;
-  }
-  return s;
-}
-
-async function recalc(accessToken: string, workbookId: string) {
-  try {
-    await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbookId}/workbook/application/calculate`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ calculationType: 'Full' })
-    });
-  } catch { /* recalc best-effort */ }
-}
 
 // Write a list of adjustments to one workbook's Invoice Tracker month row.
 async function writeToWorkbook(accessToken: string, wb: any, key: { year: number; month: number }, list: any[]) {

@@ -14,6 +14,7 @@ import MonthlyInvoices from '@/components/billing/MonthlyInvoices';
 import SupportingDocuments from '@/components/billing/SupportingDocuments';
 import PayablesTab from '@/components/billing/PayablesTab';
 import ManualReimbursementEntry from '@/components/billing/ManualReimbursementEntry';
+import ManualDeliverablesEntry from '@/components/billing/ManualDeliverablesEntry';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 
 export default function PathwaysBilling() {
@@ -135,6 +136,7 @@ export default function PathwaysBilling() {
 
         <TabsContent value="manual-entry" className="space-y-4">
           <ManualReimbursementEntry />
+          <ManualDeliverablesEntry />
         </TabsContent>
 
         <TabsContent value="supporting-docs" className="space-y-4">
