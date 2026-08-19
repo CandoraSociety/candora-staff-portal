@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import CompassTaskList from '@/components/compass/CompassTaskList';
+import CompassTallyList from '@/components/compass/CompassTallyList';
 
 import { Clock, ExternalLink, RotateCcw, User } from 'lucide-react';
 
@@ -52,6 +53,7 @@ export default function PathwaysCompass() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [pageTab, setPageTab] = useState('queue');
 
   useEffect(() => {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
@@ -94,43 +96,65 @@ export default function PathwaysCompass() {
         </div>
       </div>
 
-      {/* Loading */}
-      {loading && groups.length === 0 && (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
-        </div>
-      )}
+      {/* Page tabs */}
+      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setPageTab('queue')}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${pageTab === 'queue' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Task Queue
+        </button>
+        <button
+          onClick={() => setPageTab('tally')}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${pageTab === 'tally' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          Invoice Tracker Tally
+        </button>
+      </div>
 
-      {/* Empty */}
-      {!loading && groups.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Clock className="w-12 h-12 text-slate-300 mb-3" />
-          <p className="text-slate-500 font-medium">No Compass tasks yet.</p>
-        </div>
-      )}
-
-      {/* Counsellor Groups */}
-      {groups.map(({ name, tasks: groupTasks }) => (
-        <div key={name} className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ background: 'hsl(231,64%,20%)', color: 'white' }}
-            >
-              <User className="w-3.5 h-3.5" />
-              {name}
+      {pageTab === 'tally' ? (
+        <CompassTallyList currentUser={currentUser} />
+      ) : (
+        <>
+          {/* Loading */}
+          {loading && groups.length === 0 && (
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-4 rounded-full animate-spin candora-spin" />
             </div>
-            <span className="text-xs text-slate-400">
-              {groupTasks.filter(t => t.status === 'pending').length} pending
-            </span>
-          </div>
-          <CompassTaskList
-            tasks={groupTasks}
-            currentUser={currentUser}
-            onRefresh={loadTasks}
-          />
-        </div>
-      ))}
+          )}
+
+          {/* Empty */}
+          {!loading && groups.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Clock className="w-12 h-12 text-slate-300 mb-3" />
+              <p className="text-slate-500 font-medium">No Compass tasks yet.</p>
+            </div>
+          )}
+
+          {/* Counsellor Groups */}
+          {groups.map(({ name, tasks: groupTasks }) => (
+            <div key={name} className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
+                  style={{ background: 'hsl(231,64%,20%)', color: 'white' }}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  {name}
+                </div>
+                <span className="text-xs text-slate-400">
+                  {groupTasks.filter(t => t.status === 'pending').length} pending
+                </span>
+              </div>
+              <CompassTaskList
+                tasks={groupTasks}
+                currentUser={currentUser}
+                onRefresh={loadTasks}
+              />
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 }
