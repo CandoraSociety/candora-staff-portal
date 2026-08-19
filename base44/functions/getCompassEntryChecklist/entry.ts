@@ -4,16 +4,15 @@ import {
   getGraphToken, getActiveCrtWorkbook, listCrtFiles, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
 
-// Reads the CRT Client Data sheet for the selected billing month and returns
+// Reads the CRT Client Data sheet for the selected billing month(s) and returns
 // every client who had activity in that month — recognized by ANY date column
-// in their row falling within the selected month. For each active client the
-// filled fields (columns A–R) are returned as a checklist of what should be
-// reflected in Compass.
+// in their row falling within the month. For each active client the filled
+// fields (columns A–R, plus S = Comments) are returned as a checklist of what
+// should be reflected in Compass.
 //
-// Columns S–Y (Comments + the trailing derived flags: Placement Outcome Date
-// mirror, Work Exposure, Wage Subsidy, Employed FT/PT, Service Navigation,
-// Service Nav Billing Month) are excluded — they're free-text or auto-derived,
-// not Compass entry fields.
+// Columns T–Y (Placement Outcome Date mirror, Work Exposure, Wage Subsidy,
+// Employed FT/PT, Service Navigation, Service Nav Billing Month) are excluded
+// — they're auto-derived flags, not Compass entry fields.
 
 const COLUMNS = [
   { idx: 0, label: 'Client Legal Name' },
@@ -34,6 +33,7 @@ const COLUMNS = [
   { idx: 15, label: '90 Day Outcome Date', date: true },
   { idx: 16, label: '180 Day Outcome' },
   { idx: 17, label: '180 Day Outcome Date', date: true },
+  { idx: 18, label: 'Comments' },
 ];
 const DATE_COL_INDICES = COLUMNS.filter((c) => c.date).map((c) => c.idx);
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -59,23 +59,18 @@ export default async function(req: Request): Promise<Response> {
 
     let payload: any = {};
     try { payload = await req.json(); } catch { /* no body */ }
-    const billingMonth = payload?.billingMonth || currentMonthEdmonton();
+    // Accept either `months` (array) or `billingMonth` (single, back-compat).
+    let months: string[] = [];
+    if (Array.isArray(payload?.months)) months = payload.months.map(String).filter(Boolean);
+    else if (payload?.billingMonth) months = [String(payload.billingMonth)];
+    if (months.length === 0) months = [currentMonthEdmonton()];
+    // De-dupe + sort ascending.
+    months = Array.from(new Set(months)).sort();
 
     const accessToken = await getGraphToken();
-    let workbook = findWorkbookForMonth(await listCrtFiles(accessToken), billingMonth);
-    if (!workbook) workbook = await getActiveCrtWorkbook(accessToken);
-    if (!workbook) return Response.json({ status: 'no_workbook', billingMonth });
+    const files = await listCrtFiles(accessToken);
 
-    // Read the Client Data sheet used range.
-    const rangeRes = await fetch(
-      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    if (!rangeRes.ok) return Response.json({ status: 'read_error', billingMonth, workbook: workbook.name, error: await rangeRes.text() });
-    const rangeData = await rangeRes.json();
-    const values = rangeData.values || [];
-
-    // HSID → portal client lookup (for the optional "View Client" link).
+    // HSID → portal client lookup (shared across all months).
     let hsidToClient: Record<string, any> = {};
     try {
       const clients = (await base44.asServiceRole.entities.Client.list('-created_date', 3000)) || [];
@@ -84,42 +79,63 @@ export default async function(req: Request): Promise<Response> {
       }
     } catch { /* lookup is optional */ }
 
-    const items: any[] = [];
-    for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
-      const row = values[i];
-      if (!row) continue;
-      const name = String(row[0] || '').trim();
-      if (!name) continue;
-
-      // Activity in the selected month = any date column parses to a date in billingMonth.
-      let active = false;
-      for (const di of DATE_COL_INDICES) {
-        const d = parseCrtDate(row[di]);
-        if (d && d.slice(0, 7) === billingMonth) { active = true; break; }
+    const monthResults: any[] = [];
+    for (const bm of months) {
+      let workbook = findWorkbookForMonth(files, bm);
+      if (!workbook) {
+        try { workbook = await getActiveCrtWorkbook(accessToken); } catch { workbook = null; }
       }
-      if (!active) continue;
+      if (!workbook) { monthResults.push({ month: bm, status: 'no_workbook', count: 0, items: [] }); continue; }
 
-      const hsid = String(row[1] || '').trim();
-      const fields: any[] = [];
-      for (const c of COLUMNS) {
-        const raw = row[c.idx];
-        const val = (raw == null ? '' : String(raw).trim());
-        if (!val) continue;
-        const display = c.date ? (parseCrtDate(val) || val) : val;
-        fields.push({ label: c.label, value: display });
+      const rangeRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbook.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (!rangeRes.ok) {
+        monthResults.push({ month: bm, status: 'read_error', workbook: workbook.name, count: 0, items: [] });
+        continue;
       }
-      const linked = hsid ? hsidToClient[hsid] : null;
-      items.push({
-        client_name: name,
-        hsid,
-        row_number: i + 1,
-        client_id: linked?.id || null,
-        assigned_worker_name: linked?.assigned_worker_name || '',
-        fields,
-      });
+      const rangeData = await rangeRes.json();
+      const values = rangeData.values || [];
+
+      const items: any[] = [];
+      for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
+        const row = values[i];
+        if (!row) continue;
+        const name = String(row[0] || '').trim();
+        if (!name) continue;
+
+        // Activity in this month = any date column parses to a date in `bm`.
+        let active = false;
+        for (const di of DATE_COL_INDICES) {
+          const d = parseCrtDate(row[di]);
+          if (d && d.slice(0, 7) === bm) { active = true; break; }
+        }
+        if (!active) continue;
+
+        const hsid = String(row[1] || '').trim();
+        const fields: any[] = [];
+        for (const c of COLUMNS) {
+          const raw = row[c.idx];
+          const val = (raw == null ? '' : String(raw).trim());
+          if (!val) continue;
+          const display = c.date ? (parseCrtDate(val) || val) : val;
+          fields.push({ label: c.label, value: display });
+        }
+        const linked = hsid ? hsidToClient[hsid] : null;
+        items.push({
+          client_name: name,
+          hsid,
+          row_number: i + 1,
+          client_id: linked?.id || null,
+          assigned_worker_name: linked?.assigned_worker_name || '',
+          fields,
+        });
+      }
+      monthResults.push({ month: bm, status: 'success', workbook: workbook.name, count: items.length, items });
     }
 
-    return Response.json({ status: 'success', billingMonth, workbook: workbook.name, count: items.length, items });
+    return Response.json({ status: 'success', months: monthResults });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
