@@ -114,7 +114,7 @@ export default function ManualDeliverablesEntry() {
         ) : grid ? (
           <div className="overflow-x-auto rounded-md border border-slate-200">
             <table className="text-xs">
-              <thead className="bg-slate-50 sticky top-0">
+              <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left font-semibold text-slate-600 px-2 py-1.5 min-w-[180px] max-w-[220px]">
                     Deliverable
