@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
+import { fieldDescription } from '@/lib/compassChecklistDescriptions';
 
 // Outcome + date fields are the actionable Compass entries — highlight them.
 const OUTCOME_FIELDS = new Set([
@@ -105,6 +106,7 @@ export default function CompassEntryChecklist() {
             const comments = item.fields.find((f) => f.label === 'Comments');
             const coreFields = item.fields.filter((f) => f.label !== 'Comments');
             const activeMonths = (item.active_months || []).slice().sort();
+            const serviceElement = item.fields.find((f) => f.label === 'Service Element')?.value || '';
             return (
               <Card key={idx} className="border-slate-300 shadow-sm">
                 <CardContent className="p-4 space-y-3">
@@ -132,14 +134,25 @@ export default function CompassEntryChecklist() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-                    {coreFields.map((f, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${OUTCOME_FIELDS.has(f.label) ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>
-                          {f.label}
-                        </span>
-                        <span className="text-slate-800 break-words min-w-0">{f.value}</span>
-                      </div>
-                    ))}
+                    {coreFields.map((f, i) => {
+                      const desc = fieldDescription(f.label, f.value, serviceElement);
+                      return (
+                        <div key={i} className="text-sm">
+                          <div className="flex items-start gap-2">
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 ${OUTCOME_FIELDS.has(f.label) ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>
+                              {f.label}
+                            </span>
+                            <span className="text-slate-800 break-words min-w-0">{f.value}</span>
+                          </div>
+                          {desc && (
+                            <p className="mt-0.5 ml-1 text-xs text-slate-400 flex gap-1.5 leading-snug">
+                              <span className="shrink-0">•</span>
+                              <span className="min-w-0">{desc}</span>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   {comments && comments.value && (
                     <details className="group border-t border-slate-100 pt-2">
@@ -149,7 +162,11 @@ export default function CompassEntryChecklist() {
                         <span className="text-slate-400 group-open:hidden">· show</span>
                         <span className="text-slate-400 hidden group-open:inline">· hide</span>
                       </summary>
-                      <p className="mt-2 text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-md p-3 border border-slate-100">
+                      <p className="mt-1 mb-1 text-xs text-slate-400 flex gap-1.5 leading-snug">
+                        <span className="shrink-0">•</span>
+                        <span className="min-w-0">{fieldDescription('Comments', comments.value, serviceElement)}</span>
+                      </p>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-md p-3 border border-slate-100">
                         {comments.value}
                       </p>
                     </details>
