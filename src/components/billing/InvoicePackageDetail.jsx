@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -52,6 +53,9 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [statusPending, setStatusPending] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deletePin, setDeletePin] = useState('');
+  // Submitted/approved packages are locked — deleting them requires the 5011 pin.
+  const locked = pkg.status === 'submitted' || pkg.status === 'approved';
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
 
@@ -72,12 +76,17 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   };
 
   const handleDelete = async () => {
+    if (locked && deletePin !== '5011') {
+      toast.error('Incorrect pin — submitted packages require the 5011 pin to delete.');
+      return;
+    }
     setDeleting(true);
     try {
       await base44.entities.InvoicePackage.delete(pkg.id);
       queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
       toast.success('Invoice package deleted');
       setDeleteOpen(false);
+      setDeletePin('');
       onBack();
     } catch (e) {
       toast.error('Could not delete package: ' + (e.message || ''));
@@ -380,19 +389,39 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
         </TabsContent>
       </Tabs>
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <AlertDialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeletePin(''); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this invoice package?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently deletes <span className="font-semibold">{pkg.package_number}</span> and cannot be undone.
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  This permanently deletes <span className="font-semibold">{pkg.package_number}</span> and cannot be undone.
+                </p>
+                {locked && (
+                  <div className="pt-1">
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      This package is <span className="capitalize font-semibold">{STATUS_LABEL[pkg.status]}</span> — enter the 5011 pin to confirm deletion
+                    </label>
+                    <Input
+                      type="password"
+                      inputMode="numeric"
+                      value={deletePin}
+                      onChange={(e) => setDeletePin(e.target.value)}
+                      placeholder="Pin"
+                      className="text-sm"
+                      autoFocus
+                    />
+                  </div>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting} onClick={() => setDeletePin('')}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleting || (locked && deletePin !== '5011')}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
