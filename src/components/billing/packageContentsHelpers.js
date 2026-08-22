@@ -237,13 +237,13 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
   }
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(26);
+  doc.setFontSize(16);
   doc.setTextColor(...gold);
-  doc.text('INVOICE', W - 40, lhTop + 48, { align: 'right' });
+  doc.text(`Pathways ${monthLabel} Childminding List`, W - 40, lhTop + 48, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(255, 255, 255);
-  doc.text('Pathways Childminding Services', W - 40, lhTop + 70, { align: 'right' });
+  doc.text('Candora Society', W - 40, lhTop + 70, { align: 'right' });
 
   // Meta band
   const metaTop = lhTop + lhH;
@@ -256,7 +256,7 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
   doc.setTextColor(...navy);
   doc.text('BILLING MONTH', 40, metaY);
   doc.text('DATE ISSUED', 240, metaY);
-  doc.text('SESSIONS', 440, metaY);
+  doc.text('# PARTICIPANTS', 440, metaY);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(40, 40, 40);
@@ -348,7 +348,7 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
     doc.setFontSize(10);
     doc.setTextColor(...navy);
     doc.text(
-      `TOTAL (${records.length} sessions)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+      `TOTAL (${records.length} participants)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
       left,
       y
     );

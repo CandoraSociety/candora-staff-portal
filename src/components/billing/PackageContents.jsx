@@ -245,7 +245,7 @@ export default function PackageContents({ pkg }) {
                   Childminding Sheet — {monthLabel}
                 </td>
                 <td className="py-2 px-3">
-                  <Badge variant="outline">{cmRecords.length} sessions</Badge>
+                  <Badge variant="outline">{cmRecords.length} participants</Badge>
                 </td>
                 <td className="text-right py-2 px-3">
                   <Button

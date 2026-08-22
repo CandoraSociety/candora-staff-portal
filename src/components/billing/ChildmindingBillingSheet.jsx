@@ -130,7 +130,7 @@ export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd
             <p style={{ margin: '2px 0 0', fontWeight: 500 }}>{issued}</p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: navy }}>Sessions</p>
+            <p style={{ margin: 0, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: navy }}># Participants</p>
             <p style={{ margin: '2px 0 0', fontWeight: 500 }}>{monthRecords.length}</p>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd
               <tfoot>
                 <tr style={{ background: '#f1f5f9', borderTop: `2px solid ${navy}` }}>
                   <td colSpan={4} style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: navy }}>
-                    TOTAL ({monthRecords.length} sessions):
+                    TOTAL ({monthRecords.length} participants):
                   </td>
                   <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 'bold', color: navy }}>{totalHours.toFixed(1)}</td>
                   <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: navy, fontSize: 14 }}>${totalAmount.toFixed(2)}</td>
