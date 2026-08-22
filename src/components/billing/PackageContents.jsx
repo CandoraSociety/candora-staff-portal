@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,10 +14,12 @@ import {
   findCrtFileForMonth,
   buildChildmindingPdfBlob,
   buildWorkExposurePdfBlob,
+  buildInvoicePdfFromNode,
   downloadBlob,
   downloadUrl,
   extFromUrl,
 } from './packageContentsHelpers';
+import InvoiceDocument from './InvoiceDocument';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const sanitize = (s) => String(s || '').replace(/[^a-z0-9_-]+/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
@@ -82,6 +84,47 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     return files;
   }, [supportRecords]);
 
+  // Invoice data for the month — finalized snapshot from the linked Invoice
+  // record, otherwise a live read from the CRT tracker. Mirrors PackageInvoiceTab
+  // so the ZIP bundles the same invoice shown on the Invoice tab.
+  const start = pkg.billing_month;
+  const end = pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
+    ? pkg.billing_month_end
+    : null;
+  const dataMonth = end || start;
+
+  const { data: linkedInvoice } = useQuery({
+    queryKey: ['linked-invoice', pkg.invoice_id],
+    queryFn: () => base44.entities.Invoice.get(pkg.invoice_id),
+    enabled: !!pkg.invoice_id,
+    staleTime: 0,
+  });
+  const useSnapshot = linkedInvoice && linkedInvoice.status === 'finalized';
+  const { data: liveInvoice } = useQuery({
+    queryKey: ['package-invoice-data', pkg.id, dataMonth],
+    queryFn: async () => (await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: dataMonth })).data,
+    enabled: !useSnapshot,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+  });
+
+  const invoiceData = useSnapshot
+    ? {
+        invoiceNumber: linkedInvoice.invoice_number ? Number(linkedInvoice.invoice_number) : null,
+        billingMonth: linkedInvoice.billing_month,
+        header: linkedInvoice.header_info || [],
+        lineItems: linkedInvoice.line_items || [],
+        subtotalDeliverables: linkedInvoice.subtotal_deliverables || 0,
+        subtotalDirectCosts: linkedInvoice.subtotal_direct_costs || 0,
+        total: linkedInvoice.total_amount || 0,
+      }
+    : liveInvoice && liveInvoice.status === 'success'
+      ? liveInvoice
+      : null;
+
+  const invoiceWrapRef = useRef(null);
+
   const handleChildmindingPdf = async () => {
     if (!cmRecords.length) {
       toast.info(`No childminding sessions for ${monthLabel}`);
@@ -105,6 +148,21 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       const { default: JSZip } = await import('jszip');
       const zip = new JSZip();
       let bundled = 0;
+
+      // Invoice — render the on-screen InvoiceDocument to a PDF so the archive
+      // contains the real invoice, not a placeholder README.
+      if (invoiceData && invoiceWrapRef.current) {
+        const node = invoiceWrapRef.current.querySelector('.invoice-document');
+        if (node) {
+          try {
+            const invoiceBlob = await buildInvoicePdfFromNode(node);
+            zip.file(`Invoice_${billingMonth}.pdf`, invoiceBlob);
+            bundled++;
+          } catch {
+            toast.error('Could not render the invoice PDF — it will be skipped from the ZIP.');
+          }
+        }
+      }
 
       if (cmRecords.length) {
         zip.file(`Childminding_${billingMonth}.pdf`, await buildChildmindingPdfBlob(cmRecords, billingMonth, brand));
@@ -150,7 +208,6 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       zip.file(
         'README.txt',
         `Invoice Package ${pkg.package_number} — ${monthLabel}\n` +
-          `Invoice: to be generated in the Invoices tab.\n` +
           `${bundled} document(s) bundled.`
       );
 
@@ -322,6 +379,18 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                 {String(i + 1).padStart(2, '0')}. {f.label}
               </a>
             ))}
+          </div>
+        )}
+
+        {/* Off-screen render of the invoice so the ZIP can capture a real PDF. */}
+        {invoiceData && (
+          <div ref={invoiceWrapRef} aria-hidden style={{ position: 'absolute', left: '-10000px', top: 0, width: 850 }}>
+            <InvoiceDocument
+              data={invoiceData}
+              status={useSnapshot ? 'Finalized' : (pkg.status === 'approved' ? 'Approved' : 'Draft')}
+              adjustmentNotes={pkg.adjustment_notes || []}
+              billingMonthEnd={end}
+            />
           </div>
         )}
       </CardContent>

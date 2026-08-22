@@ -374,6 +374,47 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
   return doc.output('blob');
 };
 
+/**
+ * Render an already-mounted InvoiceDocument DOM node into a letter-size PDF
+ * blob (multi-page slicing when the invoice is taller than one page). Used to
+ * bundle the month's invoice into the package ZIP so the archive contains the
+ * real invoice PDF instead of a README placeholder.
+ */
+export const buildInvoicePdfFromNode = async (node) => {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+  const canvas = await html2canvas(node, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    useCORS: true,
+    logging: false,
+  });
+  const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const usableW = pageW;
+  const fullImgH = (canvas.height / canvas.width) * usableW;
+  if (fullImgH <= pageH) {
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, usableW, fullImgH);
+  } else {
+    const pxPerPg = Math.floor((canvas.width / usableW) * pageH);
+    let pos = 0;
+    while (pos < canvas.height) {
+      const sliceH = Math.min(pxPerPg, canvas.height - pos);
+      const slice = document.createElement('canvas');
+      slice.width = canvas.width;
+      slice.height = sliceH;
+      slice.getContext('2d').drawImage(canvas, 0, pos, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      if (pos > 0) pdf.addPage();
+      pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, usableW, (sliceH / canvas.width) * usableW);
+      pos += sliceH;
+    }
+  }
+  return pdf.output('blob');
+};
+
 export const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
