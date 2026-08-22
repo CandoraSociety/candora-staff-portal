@@ -3,10 +3,11 @@ import { DRIVE_ID, getGraphToken } from '../../shared/crtWorkbook.ts';
 
 /**
  * Streams the raw CRT workbook (.xlsx) binary for a given SharePoint drive
- * item id. The frontend uses base44.functions.fetch() (not invoke) to get the
- * native Response and read .blob() — needed because the SharePoint webUrl is
- * auth-gated and CORS-blocked from the browser, so the ZIP can't fetch it
- * directly.
+ * item id. SharePoint's webUrl is auth-gated and CORS-blocked from the browser,
+ * so the ZIP can't fetch it directly. This function runs server-side, fetches
+ * the binary via Graph, and returns it as base64 inside JSON so the frontend
+ * can decode and bundle it into the ZIP via the standard functions.invoke path
+ * (functions.fetch uses a different URL path that isn't routed for this app).
  */
 export default async function(req: Request): Promise<Response> {
   try {
@@ -31,18 +32,26 @@ export default async function(req: Request): Promise<Response> {
       );
     }
 
-    const blob = await contentRes.blob();
+    const arrayBuffer = await contentRes.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+    // Binary → base64
+    let binary = '';
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    const base64 = btoa(binary);
+
     // Determine a safe filename from the Content-Disposition header if present.
     const cd = contentRes.headers.get('Content-Disposition') || '';
     const nameMatch = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
     const fileName = nameMatch ? decodeURIComponent(nameMatch[1]) : `CRT_${itemId}.xlsx`;
 
-    return new Response(blob, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-      },
+    return Response.json({
+      ok: true,
+      file_name: fileName,
+      content_type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      base64,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

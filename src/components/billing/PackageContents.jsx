@@ -233,18 +233,17 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         bundled++;
       });
 
-      // CRT workbook — SharePoint webUrl is auth-gated and CORS-blocked from the
-      // browser, so stream the real .xlsx binary through a backend function
-      // (functions.fetch returns a native Response we can read as a blob).
+      // CRT workbook — SharePoint's webUrl is auth-gated and CORS-blocked from the
+      // browser, so the backend function fetches the .xlsx via Graph and returns
+      // it as base64. We decode it back to bytes and bundle the real workbook.
       if (crtFile?.id) {
         try {
-          const res = await base44.functions.fetch('/getCrtWorkbookFile', {
-            method: 'POST',
-            body: JSON.stringify({ file_id: crtFile.id }),
-            headers: { 'Content-Type': 'application/json' },
-          });
-          if (res.ok) {
-            zip.file(crtFile.name, await res.blob());
+          const { data } = await base44.functions.invoke('getCrtWorkbookFile', { file_id: crtFile.id });
+          if (data?.ok && data.base64) {
+            const bin = atob(data.base64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            zip.file(crtFile.name, bytes);
             bundled++;
           } else {
             zip.file('CRT_download_link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
