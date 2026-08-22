@@ -145,7 +145,7 @@ export default function MonthlyInvoices() {
   // cumulative CRT row and is labeled with the full range.
   const selected = pickedId
     ? invoices.find((i) => i.id === pickedId) || null
-    : invoices.find((i) => i.billing_month === selectedMonth) || null;
+    : invoices.find((i) => i.billing_month === selectedMonth && (!i.billing_month_end || i.billing_month_end === i.billing_month)) || null;
   const isFinalized = selected?.status === 'finalized';
   const isRange = !!selected?.billing_month_end && selected.billing_month_end !== selected.billing_month;
   const effectiveMonth = selected
