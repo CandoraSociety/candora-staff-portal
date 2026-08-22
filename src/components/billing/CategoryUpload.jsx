@@ -42,7 +42,7 @@ export default function CategoryUpload({ category, uploads, onUpload, onRemove, 
         onClick={() => inputRef.current?.click()}
       >
         {busy ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
-        Upload backup
+        Manual upload
       </Button>
       {catUploads.map((u) => (
         <span

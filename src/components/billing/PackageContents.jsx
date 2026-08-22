@@ -326,21 +326,19 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                     <Badge variant="outline" className="text-amber-600">Not found for this month</Badge>
                   )}
                 </td>
-                <td className="text-right py-2 px-3">
-                  {crtFile?.webUrl ? (
-                    <Button asChild variant="outline" size="sm">
-                      <a href={crtFile.webUrl} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> Download
-                      </a>
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-slate-400">Create it in the CRT tab</span>
-                  )}
-                </td>
-              </tr>
-              <tr className="bg-slate-50/50">
-                <td colSpan={3} className="py-2 px-3">
-                  <CategoryUpload category="crt" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {crtFile?.webUrl ? (
+                      <Button asChild variant="outline" size="sm">
+                        <a href={crtFile.webUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-3.5 w-3.5 mr-1" /> Download
+                        </a>
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Create it in the CRT tab</span>
+                    )}
+                    <CategoryUpload category="crt" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                  </div>
                 </td>
               </tr>
 
@@ -357,19 +355,17 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                     <Badge variant="outline" className="text-slate-500">Pending</Badge>
                   )}
                 </td>
-                <td className="text-right py-2 px-3">
-                  {pkg.invoice_id ? (
-                    <Button variant="outline" size="sm" onClick={onViewInvoice}>
-                      <ExternalLink className="h-3.5 w-3.5 mr-1" /> View / Print PDF
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-slate-500">Generate in the Invoices tab</span>
-                  )}
-                </td>
-              </tr>
-              <tr className="bg-slate-50/50">
-                <td colSpan={3} className="py-2 px-3">
-                  <CategoryUpload category="invoice" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {pkg.invoice_id ? (
+                      <Button variant="outline" size="sm" onClick={onViewInvoice}>
+                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> View / Print PDF
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-500">Generate in the Invoices tab</span>
+                    )}
+                    <CategoryUpload category="invoice" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                  </div>
                 </td>
               </tr>
 
@@ -382,20 +378,18 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                 <td className="py-2 px-3">
                   <Badge variant="outline">{cmRecords.length} participants</Badge>
                 </td>
-                <td className="text-right py-2 px-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleChildmindingPdf}
-                    disabled={!cmRecords.length}
-                  >
-                    <Download className="h-3.5 w-3.5 mr-1" /> PDF
-                  </Button>
-                </td>
-              </tr>
-              <tr className="bg-slate-50/50">
-                <td colSpan={3} className="py-2 px-3">
-                  <CategoryUpload category="childminding" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleChildmindingPdf}
+                      disabled={!cmRecords.length}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1" /> PDF
+                    </Button>
+                    <CategoryUpload category="childminding" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                  </div>
                 </td>
               </tr>
 
@@ -408,20 +402,18 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                 <td className="py-2 px-3">
                   <Badge variant="outline">{weRecords.length} placements</Badge>
                 </td>
-                <td className="text-right py-2 px-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleWorkExposureCsv}
-                    disabled={!weRecords.length}
-                  >
-                    <Download className="h-3.5 w-3.5 mr-1" /> PDF
-                  </Button>
-                </td>
-              </tr>
-              <tr className="bg-slate-50/50">
-                <td colSpan={3} className="py-2 px-3">
-                  <CategoryUpload category="work_exposure" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleWorkExposureCsv}
+                      disabled={!weRecords.length}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1" /> PDF
+                    </Button>
+                    <CategoryUpload category="work_exposure" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                  </div>
                 </td>
               </tr>
 
@@ -434,17 +426,15 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                 <td className="py-2 px-3">
                   <Badge variant="outline">{supportingFiles.length} files</Badge>
                 </td>
-                <td className="text-right py-2 px-3">
-                  {supportingFiles.length ? (
-                    <span className="text-xs text-slate-500">Listed below · in ZIP</span>
-                  ) : (
-                    <span className="text-xs text-slate-400">None for this month</span>
-                  )}
-                </td>
-              </tr>
-              <tr className="bg-slate-50/50">
-                <td colSpan={3} className="py-2 px-3">
-                  <CategoryUpload category="supporting" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {supportingFiles.length ? (
+                      <span className="text-xs text-slate-500">Listed below · in ZIP</span>
+                    ) : (
+                      <span className="text-xs text-slate-400">None for this month</span>
+                    )}
+                    <CategoryUpload category="supporting" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                  </div>
                 </td>
               </tr>
             </tbody>
