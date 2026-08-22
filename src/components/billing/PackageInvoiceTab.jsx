@@ -4,6 +4,7 @@ import { Loader2, AlertCircle, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InvoiceDocument from './InvoiceDocument';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const monthFirst = (ym) => {
   const [y, m] = String(ym || '').split('-').map(Number);
@@ -51,7 +52,36 @@ export default function PackageInvoiceTab({ pkg }) {
   });
 
   const adjustmentNotes = pkg.adjustment_notes || [];
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const node = document.querySelector('.invoice-document');
+    if (!node) {
+      toast.error('Invoice is still loading — try again in a moment.');
+      return;
+    }
+    const printWin = window.open('', '_blank', 'width=900,height=1100');
+    if (!printWin) {
+      toast.error('Pop-up blocked — allow pop-ups to download the invoice.');
+      return;
+    }
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((el) => el.outerHTML)
+      .join('\n');
+    printWin.document.write(
+      `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice</title>\n${styles}\n` +
+      `<style>\n` +
+      `@page { size: letter; margin: 0.75in; }\n` +
+      `html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }\n` +
+      `.invoice-document { width: 100% !important; max-width: 100% !important; margin: 0 !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }\n` +
+      `.invoice-document img { height: 96px !important; margin: 0 !important; max-width: 45% !important; object-fit: contain !important; }\n` +
+      `* { box-shadow: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }\n` +
+      `p, h1, h2, h3, h4, table, tr, img { break-inside: avoid !important; }\n` +
+      `</style></head><body>${node.outerHTML}</body></html>`
+    );
+    printWin.document.close();
+    printWin.focus();
+    printWin.onload = () => setTimeout(() => printWin.print(), 250);
+    setTimeout(() => { if (!printWin.closed) printWin.print(); }, 800);
+  };
 
   if (useSnapshot) {
     const snap = {
