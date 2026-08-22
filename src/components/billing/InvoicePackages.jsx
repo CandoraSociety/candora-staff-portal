@@ -20,10 +20,10 @@ const parseBillingMonth = (ym) => {
 };
 
 const STATUS_BADGES = {
-  draft: { variant: 'secondary', color: 'text-slate-600' },
-  ready_for_review: { variant: 'default', color: 'text-blue-600' },
-  submitted: { variant: 'default', color: 'text-purple-600' },
-  approved: { variant: 'outline', color: 'text-green-600' },
+  draft: { variant: 'secondary', color: 'text-slate-600', label: 'Draft' },
+  ready_for_review: { variant: 'default', color: 'text-blue-600', label: 'Finalized' },
+  submitted: { variant: 'default', color: 'text-purple-600', label: 'Submitted' },
+  approved: { variant: 'outline', color: 'text-green-600', label: 'Approved' },
 };
 
 export default function InvoicePackages({ packages, configs, onCreatePackage, isLoading }) {
@@ -228,7 +228,7 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
                     variant={STATUS_BADGES[pkg.status]?.variant || 'secondary'}
                     className={STATUS_BADGES[pkg.status]?.color}
                   >
-                    {pkg.status.replace('_', ' ')}
+                    {STATUS_BADGES[pkg.status]?.label || pkg.status.replace('_', ' ')}
                   </Badge>
                 </div>
               </CardHeader>

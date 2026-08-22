@@ -5,11 +5,25 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { ArrowLeft, Pencil, Save, X, Upload, FileText, Plus, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Pencil, Save, X, Upload, FileText, Plus, Loader2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import SupportingDocuments from './SupportingDocuments';
+
+const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'ready_for_review', label: 'Finalized' },
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'approved', label: 'Approved' },
+];
+const STATUS_LABEL = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s.label]));
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
 import WorkExposurePlacementsTab from './WorkExposurePlacementsTab';
 import PackageContents from './PackageContents';
@@ -25,6 +39,7 @@ const NOTE_TYPES = [
 ];
 
 export default function InvoicePackageDetail({ pkg, configs, onBack }) {
+  const queryClient = useQueryClient();
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(pkg.notes || '');
   const [activeSubTab, setActiveSubTab] = useState('overview');
@@ -33,8 +48,42 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [newNoteText, setNewNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [status, setStatus] = useState(pkg.status);
+  const [statusPending, setStatusPending] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
+
+  const handleStatusChange = async (val) => {
+    const prev = status;
+    setStatus(val);
+    setStatusPending(true);
+    try {
+      await base44.entities.InvoicePackage.update(pkg.id, { status: val });
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      toast.success('Package status updated');
+    } catch (e) {
+      setStatus(prev);
+      toast.error('Could not update status: ' + (e.message || ''));
+    } finally {
+      setStatusPending(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await base44.entities.InvoicePackage.delete(pkg.id);
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      toast.success('Invoice package deleted');
+      setDeleteOpen(false);
+      onBack();
+    } catch (e) {
+      toast.error('Could not delete package: ' + (e.message || ''));
+      setDeleting(false);
+    }
+  };
 
   const persistNotes = async (entries) => {
     setSavingNote(true);
@@ -91,12 +140,26 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
               : `${format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')} Billing Package`}
           </p>
         </div>
-        <Badge
-          variant={pkg.status === 'approved' ? 'outline' : 'default'}
-          className="ml-auto"
-        >
-          {pkg.status.replace('_', ' ')}
-        </Badge>
+        <div className="ml-auto flex items-center gap-2">
+          <Select value={status} onValueChange={handleStatusChange} disabled={statusPending}>
+            <SelectTrigger className="w-[170px] h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
@@ -316,6 +379,28 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
           <ManualAdjustmentsTab pkg={pkg} />
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this invoice package?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes <span className="font-semibold">{pkg.package_number}</span> and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Delete package
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
