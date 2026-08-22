@@ -69,6 +69,15 @@ export default function PathwaysBilling() {
       ? `PKG-${packageData.billing_month.replace('-', '')}_${end.replace('-', '')}`
       : `PKG-${packageData.billing_month.replace('-', '')}`;
 
+    // Auto-link the Invoice record for this month/range from the Invoices tab
+    // so the package's Invoice tab pulls that invoice (frozen snapshot once
+    // closed off, live data while still open).
+    const matchingInvoice = invoices.find((inv) =>
+      end
+        ? inv.billing_month === packageData.billing_month && inv.billing_month_end === end
+        : inv.billing_month === packageData.billing_month && (!inv.billing_month_end || inv.billing_month_end === inv.billing_month)
+    );
+
     createPackageMutation.mutate({
       ...packageData,
       billing_month_end: end,
@@ -78,6 +87,7 @@ export default function PathwaysBilling() {
       prepared_date: today,
       status: 'draft',
       crt_included: packageData.crt_included ?? true,
+      invoice_id: matchingInvoice?.id || null,
       supporting_documents: [],
       paid_placements: [],
       auto_populated_items: [],
