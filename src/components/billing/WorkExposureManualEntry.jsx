@@ -42,8 +42,11 @@ export default function WorkExposureManualEntry({ clients }) {
     return map;
   }, [clients]);
 
+  // Dedicated query key — sharing ['financial-records'] with PathwaysBilling
+  // (which uses list()) caused React Query to dedupe by key and serve stale
+  // data here after adds, so only the first entry showed.
   const { data: allRecords = [], isLoading } = useQuery({
-    queryKey: ['financial-records'],
+    queryKey: ['financial-records', 'paid_external_placement'],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
   });
 
@@ -94,6 +97,7 @@ export default function WorkExposureManualEntry({ clients }) {
         completion_status: 'completed',
         notes: 'Manual entry',
       });
+      queryClient.invalidateQueries({ queryKey: ['financial-records', 'paid_external_placement'] });
       queryClient.invalidateQueries({ queryKey: ['financial-records'] });
       toast.success('Work exposure entry added.');
       resetForm();
@@ -109,6 +113,7 @@ export default function WorkExposureManualEntry({ clients }) {
     if (!confirm('Delete this manual entry?')) return;
     try {
       await base44.entities.FinancialRecord.delete(record.id);
+      queryClient.invalidateQueries({ queryKey: ['financial-records', 'paid_external_placement'] });
       queryClient.invalidateQueries({ queryKey: ['financial-records'] });
       toast.success('Entry deleted.');
     } catch (e) {
