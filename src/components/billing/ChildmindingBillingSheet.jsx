@@ -102,18 +102,18 @@ export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd
         {/* Top gold accent strip — matches the standard invoice letterhead */}
         <div style={{ height: 6, background: gold }} />
 
-        {/* Letterhead — fixed-height navy band; logo zoomed via negative margins
-            so the transparent padding around the mark is cropped (overflow hidden),
-            the same treatment used on the official invoice. */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', height: 120, background: navy, overflow: 'hidden' }}>
-          <img
-            src={invoiceLogoUrl}
-            alt="Candora"
-            style={{ height: 300, width: 'auto', marginTop: -90, marginBottom: -90, mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)', objectFit: 'contain' }}
-          />
-          <div style={{ textAlign: 'right' }}>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '0.06em', color: gold, lineHeight: 1.1 }}>Pathways {label} Childminding List</h1>
-            <p style={{ margin: '6px 0 0', fontSize: 13, fontWeight: 600, color: '#fff' }}>Candora Society</p>
+        {/* Letterhead — navy band; logo scaled to cover the left portion so the
+            mark fills the header (transparent padding cropped), title on the right. */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', height: 140, background: navy, overflow: 'hidden' }}>
+          <div style={{ width: '58%', height: '100%', overflow: 'hidden' }}>
+            <img
+              src={invoiceLogoUrl}
+              alt="Candora"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left center', mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)' }}
+            />
+          </div>
+          <div style={{ textAlign: 'right', width: '40%' }}>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, letterSpacing: '0.06em', color: gold, lineHeight: 1.15 }}>Pathways {label} Childminding List</h1>
           </div>
         </div>
 

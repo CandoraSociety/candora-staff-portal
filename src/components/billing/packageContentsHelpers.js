@@ -217,12 +217,16 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
   doc.rect(0, lhTop, W, lhH, 'F');
 
   if (logo) {
-    const logoH = 70;
-    const logoW = Math.min(180, logoH * (logo.w / logo.h));
-    const logoX = 40;
-    const logoY = lhTop + (lhH - logoH) / 2;
+    // Fill the navy letterhead band with the logo so the mark reads large.
+    const boxW = 300;
+    const boxH = lhH;
+    const boxX = 24;
+    const scale = Math.min(boxW / logo.w, boxH / logo.h);
+    const drawW = logo.w * scale;
+    const drawH = logo.h * scale;
+    const drawY = lhTop + (boxH - drawH) / 2;
     try {
-      doc.addImage(logo.dataUrl, 'PNG', logoX, logoY, logoW, logoH);
+      doc.addImage(logo.dataUrl, 'PNG', boxX, drawY, drawW, drawH);
     } catch {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(22);
@@ -237,13 +241,9 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
   }
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
+  doc.setFontSize(14);
   doc.setTextColor(...gold);
-  doc.text(`Pathways ${monthLabel} Childminding List`, W - 40, lhTop + 48, { align: 'right' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(255, 255, 255);
-  doc.text('Candora Society', W - 40, lhTop + 70, { align: 'right' });
+  doc.text(`Pathways ${monthLabel} Childminding List`, W - 40, lhTop + (lhH / 2) + 4, { align: 'right' });
 
   // Meta band
   const metaTop = lhTop + lhH;
