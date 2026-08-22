@@ -18,6 +18,7 @@ import {
   downloadUrl,
   extFromUrl,
 } from './packageContentsHelpers';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const sanitize = (s) => String(s || '').replace(/[^a-z0-9_-]+/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
@@ -25,6 +26,8 @@ export default function PackageContents({ pkg }) {
   const billingMonth = pkg.billing_month;
   const monthLabel = monthLabelFromBillingMonth(billingMonth);
   const [zipping, setZipping] = useState(false);
+  const { invoiceLogoUrl, primaryColor, secondaryColor } = useOrgSettings();
+  const brand = { logoUrl: invoiceLogoUrl, navy: secondaryColor, gold: primaryColor };
 
   // CRT workbook status (shared query key with CRT tab)
   const { data: crtStatus } = useQuery({
@@ -79,12 +82,13 @@ export default function PackageContents({ pkg }) {
     return files;
   }, [supportRecords]);
 
-  const handleChildmindingPdf = () => {
+  const handleChildmindingPdf = async () => {
     if (!cmRecords.length) {
       toast.info(`No childminding sessions for ${monthLabel}`);
       return;
     }
-    downloadBlob(buildChildmindingPdfBlob(cmRecords, billingMonth), `Childminding_${billingMonth}.pdf`);
+    const blob = await buildChildmindingPdfBlob(cmRecords, billingMonth, brand);
+    downloadBlob(blob, `Childminding_${billingMonth}.pdf`);
   };
 
   const handleWorkExposureCsv = () => {
@@ -103,7 +107,7 @@ export default function PackageContents({ pkg }) {
       let bundled = 0;
 
       if (cmRecords.length) {
-        zip.file(`Childminding_${billingMonth}.pdf`, buildChildmindingPdfBlob(cmRecords, billingMonth));
+        zip.file(`Childminding_${billingMonth}.pdf`, await buildChildmindingPdfBlob(cmRecords, billingMonth, brand));
         bundled++;
       }
       if (weRecords.length) {

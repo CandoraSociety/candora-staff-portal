@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import { RATE_PER_HOUR } from '@/lib/childmindingConstants';
 import { parseBillingMonth } from './billingMonth';
+import { brandFooterLines } from '@/lib/candoraBrand';
 
 export const monthLabelFromBillingMonth = (ym) =>
   format(parseBillingMonth(ym), 'MMMM yyyy');
@@ -156,40 +157,137 @@ export const buildWorkExposurePdfBlob = (records, billingMonth) => {
   return doc.output('blob');
 };
 
+const hexToRgb = (hex) => {
+  const m = String(hex || '').replace('#', '').match(/.{2}/g);
+  if (!m || m.length < 3) return null;
+  return m.slice(0, 3).map((h) => parseInt(h, 16));
+};
+
+// Fetch the logo and convert it to a data URL jsPDF can embed. Best-effort —
+// if CORS/fetch blocks it we fall back to a text wordmark so the doc still brands.
+async function loadLogo(url) {
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const dim = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+    if (!dim) return null;
+    return { dataUrl, ...dim };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Build a clean, branded PDF of the month's Pathways childminding sessions.
- * Returns a Blob (used both for the standalone download and the ZIP bundle).
+ * Build a Candora-branded PDF of the month's Pathways childminding sessions —
+ * matches the official invoice letterhead (gold strip, navy band, no-anniversary
+ * logo) and includes the "Billed at $20/hr per child" rate statement + brand
+ * footer. Returns a Promise<Blob>.
  */
-export const buildChildmindingPdfBlob = (records, billingMonth) => {
+export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const monthLabel = monthLabelFromBillingMonth(billingMonth);
-  const NAVY = [23, 37, 84];
-  const widths = [24, 70, 150, 120, 50, 70];
+  const W = 612;
+  const navy = hexToRgb(brand.navy) || [15, 31, 107];
+  const gold = hexToRgb(brand.gold) || [245, 193, 22];
+  const navyTint = [235, 238, 243];
+  const goldTint = [252, 244, 214];
+
+  const logo = brand.logoUrl ? await loadLogo(brand.logoUrl) : null;
+
+  // Gold top accent strip
+  doc.setFillColor(...gold);
+  doc.rect(0, 0, W, 6, 'F');
+
+  // Navy letterhead band
+  const lhTop = 6;
+  const lhH = 110;
+  doc.setFillColor(...navy);
+  doc.rect(0, lhTop, W, lhH, 'F');
+
+  if (logo) {
+    const logoH = 70;
+    const logoW = Math.min(180, logoH * (logo.w / logo.h));
+    const logoX = 40;
+    const logoY = lhTop + (lhH - logoH) / 2;
+    try {
+      doc.addImage(logo.dataUrl, 'PNG', logoX, logoY, logoW, logoH);
+    } catch {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(...gold);
+      doc.text('Candora', 40, lhTop + 62);
+    }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...gold);
+    doc.text('Candora', 40, lhTop + 62);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(26);
+  doc.setTextColor(...gold);
+  doc.text('INVOICE', W - 40, lhTop + 48, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Pathways Childminding Services', W - 40, lhTop + 70, { align: 'right' });
+
+  // Meta band
+  const metaTop = lhTop + lhH;
+  const metaH = 46;
+  doc.setFillColor(...navyTint);
+  doc.rect(0, metaTop, W, metaH, 'F');
+  const metaY = metaTop + 18;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...navy);
+  doc.text('BILLING MONTH', 40, metaY);
+  doc.text('DATE ISSUED', 240, metaY);
+  doc.text('SESSIONS', 440, metaY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+  doc.text(monthLabel, 40, metaY + 14);
+  doc.text(format(new Date(), 'MMMM d, yyyy'), 240, metaY + 14);
+  doc.text(String(records.length), 440, metaY + 14);
+
+  // Rate statement
+  const rateTop = metaTop + metaH;
+  const rateH = 24;
+  doc.setFillColor(...goldTint);
+  doc.rect(0, rateTop, W, rateH, 'F');
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(1.5);
+  doc.line(0, rateTop + rateH, W, rateTop + rateH);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...navy);
+  doc.text(`Billed at $${RATE_PER_HOUR}/hr per child`, 40, rateTop + 16);
+
+  // Table
+  const widths = [24, 80, 180, 150, 48, 50];
   const tableW = widths.reduce((a, b) => a + b, 0);
   const left = 40;
   const right = left + tableW;
+  let y = rateTop + rateH + 18;
 
-  let y = 44;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...NAVY);
-  doc.text('Pathways Childminding Services', left, y);
-  y += 18;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(70, 70, 70);
-  doc.text(`${monthLabel} — Billing Sheet`, left, y);
-  y += 8;
-  doc.setDrawColor(...NAVY);
-  doc.setLineWidth(1);
-  doc.line(left, y, right, y);
-  y += 18;
-
-  // Header row
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(...NAVY);
+  doc.setTextColor(...gold);
+  doc.setFillColor(...navy);
   doc.rect(left, y - 12, tableW, 16, 'F');
   let x = left;
   ['#', 'Date', 'Parent/Guardian', 'Child', 'Hours', 'Amount'].forEach((c, i) => {
@@ -203,11 +301,10 @@ export const buildChildmindingPdfBlob = (records, billingMonth) => {
 
   if (!records.length) {
     doc.text(`No Pathways childminding sessions recorded for ${monthLabel}.`, left, y + 6);
-    return doc.output('blob');
   }
 
   records.forEach((r, i) => {
-    if (y > 740) {
+    if (y > 730) {
       doc.addPage();
       y = 44;
     }
@@ -236,23 +333,43 @@ export const buildChildmindingPdfBlob = (records, billingMonth) => {
     y += 14;
   });
 
-  const totalHours = records.reduce((s, r) => s + (r.hours || 0), 0);
-  const totalAmount = records.reduce(
-    (s, r) => s + (r.billing_amount || (r.hours || 0) * RATE_PER_HOUR),
-    0
-  );
-  y += 6;
-  doc.setDrawColor(...NAVY);
-  doc.setLineWidth(1);
-  doc.line(left, y - 4, right, y - 4);
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text(
-    `TOTAL (${records.length} sessions)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
-    left,
-    y
-  );
+  if (records.length) {
+    const totalHours = records.reduce((s, r) => s + (r.hours || 0), 0);
+    const totalAmount = records.reduce(
+      (s, r) => s + (r.billing_amount || (r.hours || 0) * RATE_PER_HOUR),
+      0
+    );
+    y += 6;
+    doc.setDrawColor(...navy);
+    doc.setLineWidth(1);
+    doc.line(left, y - 4, right, y - 4);
+    y += 12;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...navy);
+    doc.text(
+      `TOTAL (${records.length} sessions)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+      left,
+      y
+    );
+  }
+
+  // Brand footer on every page
+  const footerLines = brandFooterLines();
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...navy);
+    doc.rect(0, 742, W, 50, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    let fy = 758;
+    footerLines.forEach((l, i) => {
+      doc.setTextColor(...(i === 0 ? gold : [226, 232, 240]));
+      doc.text(l, W / 2, fy, { align: 'center' });
+      fy += 10;
+    });
+  }
 
   return doc.output('blob');
 };
