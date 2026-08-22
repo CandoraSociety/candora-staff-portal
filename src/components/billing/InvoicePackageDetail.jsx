@@ -23,6 +23,7 @@ const STATUS_OPTIONS = [
   { value: 'ready_for_review', label: 'Finalized' },
   { value: 'submitted', label: 'Submitted' },
   { value: 'approved', label: 'Approved' },
+  { value: 'paid', label: 'Paid' },
 ];
 const STATUS_LABEL = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s.label]));
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
@@ -54,8 +55,8 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deletePin, setDeletePin] = useState('');
-  // Submitted/approved packages are locked — deleting them requires the 5011 pin.
-  const locked = pkg.status === 'submitted' || pkg.status === 'approved';
+  // Submitted/approved/paid packages are locked — deleting them requires the 5011 pin.
+  const locked = pkg.status === 'submitted' || pkg.status === 'approved' || pkg.status === 'paid';
   const [statusChangeOpen, setStatusChangeOpen] = useState(false);
   const [statusChangeTarget, setStatusChangeTarget] = useState(null);
   const [statusChangePin, setStatusChangePin] = useState('');

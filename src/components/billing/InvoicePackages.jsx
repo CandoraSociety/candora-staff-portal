@@ -24,6 +24,7 @@ const STATUS_BADGES = {
   ready_for_review: { variant: 'default', color: 'text-blue-600', label: 'Finalized' },
   submitted: { variant: 'default', color: 'text-purple-600', label: 'Submitted' },
   approved: { variant: 'outline', color: 'text-green-600', label: 'Approved' },
+  paid: { variant: 'default', color: 'text-emerald-700', label: 'Paid' },
 };
 
 export default function InvoicePackages({ packages, configs, onCreatePackage, isLoading }) {

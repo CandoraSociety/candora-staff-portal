@@ -32,7 +32,8 @@
         "draft",
         "ready_for_review",
         "submitted",
-        "approved"
+        "approved",
+        "paid"
       ],
       "default": "draft"
     },
