@@ -60,7 +60,7 @@ export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd
   const handlePrint = () => {
     const win = window.open('', '_blank');
     if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head><title>Pathways Childminding Services - ${label}</title>
+    win.document.write(`<!DOCTYPE html><html><head><title>Pathways ${label} Childminding List</title>
       <style>
         @page { size: letter; margin: 0.6in; }
         body { font-family: Inter, Arial, sans-serif; color: #1a1a2e; margin: 0; }
@@ -109,11 +109,11 @@ export default function ChildmindingBillingSheet({ billingMonth, billingMonthEnd
           <img
             src={invoiceLogoUrl}
             alt="Candora"
-            style={{ height: 200, width: 'auto', marginTop: -40, marginBottom: -40, mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)', objectFit: 'contain' }}
+            style={{ height: 300, width: 'auto', marginTop: -90, marginBottom: -90, mixBlendMode: 'screen', filter: 'brightness(1.05) contrast(1.05)', objectFit: 'contain' }}
           />
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '0.12em', color: gold }}>INVOICE</h1>
-            <p style={{ margin: '6px 0 0', fontSize: 13, fontWeight: 600, color: '#fff' }}>Pathways Childminding Services</p>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: '0.06em', color: gold, lineHeight: 1.1 }}>Pathways {label} Childminding List</h1>
+            <p style={{ margin: '6px 0 0', fontSize: 13, fontWeight: 600, color: '#fff' }}>Candora Society</p>
           </div>
         </div>
 
