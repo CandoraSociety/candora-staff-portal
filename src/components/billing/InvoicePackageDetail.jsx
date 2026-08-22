@@ -339,7 +339,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
             </Card>
           </div>
 
-          <PackageContents pkg={pkg} />
+          <PackageContents pkg={pkg} onViewInvoice={() => setActiveSubTab('invoice')} />
 
           {/* Auto-Populated Items */}
           <Card>

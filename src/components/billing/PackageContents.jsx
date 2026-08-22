@@ -22,7 +22,7 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const sanitize = (s) => String(s || '').replace(/[^a-z0-9_-]+/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
-export default function PackageContents({ pkg }) {
+export default function PackageContents({ pkg, onViewInvoice }) {
   const billingMonth = pkg.billing_month;
   const monthLabel = monthLabelFromBillingMonth(billingMonth);
   const [zipping, setZipping] = useState(false);
@@ -234,7 +234,13 @@ export default function PackageContents({ pkg }) {
                   )}
                 </td>
                 <td className="text-right py-2 px-3">
-                  <span className="text-xs text-slate-500">Generate in the Invoices tab</span>
+                  {pkg.invoice_id ? (
+                    <Button variant="outline" size="sm" onClick={onViewInvoice}>
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" /> View / Print PDF
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-slate-500">Generate in the Invoices tab</span>
+                  )}
                 </td>
               </tr>
 
