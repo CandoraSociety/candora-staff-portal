@@ -56,12 +56,45 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [deletePin, setDeletePin] = useState('');
   // Submitted/approved packages are locked — deleting them requires the 5011 pin.
   const locked = pkg.status === 'submitted' || pkg.status === 'approved';
+  const [statusChangeOpen, setStatusChangeOpen] = useState(false);
+  const [statusChangeTarget, setStatusChangeTarget] = useState(null);
+  const [statusChangePin, setStatusChangePin] = useState('');
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
 
   const handleStatusChange = async (val) => {
+    // Changing status away from a locked (submitted/approved) state requires the 5011 pin.
+    if (locked && val !== pkg.status) {
+      setStatusChangeTarget(val);
+      setStatusChangePin('');
+      setStatusChangeOpen(true);
+      return;
+    }
     const prev = status;
     setStatus(val);
+    setStatusPending(true);
+    try {
+      await base44.entities.InvoicePackage.update(pkg.id, { status: val });
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      toast.success('Package status updated');
+    } catch (e) {
+      setStatus(prev);
+      toast.error('Could not update status: ' + (e.message || ''));
+    } finally {
+      setStatusPending(false);
+    }
+  };
+
+  const confirmStatusChange = async () => {
+    if (statusChangePin !== '5011') {
+      toast.error('Incorrect pin — changing a submitted/approved package requires the 5011 pin.');
+      return;
+    }
+    const val = statusChangeTarget;
+    const prev = status;
+    setStatus(val);
+    setStatusChangeOpen(false);
+    setStatusChangePin('');
     setStatusPending(true);
     try {
       await base44.entities.InvoicePackage.update(pkg.id, { status: val });
@@ -426,6 +459,46 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
             >
               {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
               Delete package
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Status change away from submitted/approved — requires the 5011 pin */}
+      <AlertDialog open={statusChangeOpen} onOpenChange={(o) => { setStatusChangeOpen(o); if (!o) { setStatusChangePin(''); setStatusChangeTarget(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change status of {STATUS_LABEL[pkg.status]} package?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  This package is currently <span className="font-semibold capitalize">{STATUS_LABEL[pkg.status]}</span>. Changing it to{' '}
+                  <span className="font-semibold capitalize">{STATUS_LABEL[statusChangeTarget]}</span> requires the 5011 pin.
+                </p>
+                <div className="pt-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Enter pin to confirm</label>
+                  <Input
+                    type="password"
+                    inputMode="numeric"
+                    value={statusChangePin}
+                    onChange={(e) => setStatusChangePin(e.target.value)}
+                    placeholder="Pin"
+                    className="text-sm"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={statusPending} onClick={() => { setStatusChangePin(''); setStatusChangeTarget(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmStatusChange(); }}
+              disabled={statusPending || statusChangePin !== '5011'}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {statusPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Confirm change
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
