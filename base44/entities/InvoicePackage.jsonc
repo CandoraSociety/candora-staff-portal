@@ -132,6 +132,41 @@
       "items": {
         "type": "object"
       }
+    },
+    "manual_uploads": {
+      "type": "array",
+      "description": "Staff-uploaded backup documents attached to this package, grouped by category (crt, invoice, childminding, work_exposure, supporting). Used as a fallback when the auto-gathered document for a category is missing or incorrect; included in the package ZIP under the matching category folder.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "crt",
+              "invoice",
+              "childminding",
+              "work_exposure",
+              "supporting"
+            ]
+          },
+          "file_url": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "uploaded_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "uploaded_by_name": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "required": [

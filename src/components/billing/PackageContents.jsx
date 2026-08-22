@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import {
   Download, FileText, FileSpreadsheet, Briefcase, Baby, Paperclip,
   Loader2, Package, ExternalLink,
@@ -20,7 +21,18 @@ import {
   extFromUrl,
 } from './packageContentsHelpers';
 import InvoiceDocument from './InvoiceDocument';
+import CategoryUpload from './CategoryUpload';
 import { useOrgSettings } from '@/lib/useOrgSettings';
+
+const UPLOAD_FOLDERS = {
+  crt: 'CRT',
+  invoice: 'Invoice',
+  childminding: 'Childminding',
+  work_exposure: 'WorkExposure',
+  supporting: 'SupportingDocs',
+};
+const sanitizeFileName = (s) =>
+  String(s || 'file').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '');
 
 const sanitize = (s) => String(s || '').replace(/[^a-z0-9_-]+/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 
@@ -30,6 +42,37 @@ export default function PackageContents({ pkg, onViewInvoice }) {
   const [zipping, setZipping] = useState(false);
   const { invoiceLogoUrl, primaryColor, secondaryColor } = useOrgSettings();
   const brand = { logoUrl: invoiceLogoUrl, navy: secondaryColor, gold: primaryColor };
+
+  const queryClient = useQueryClient();
+  const [manualUploads, setManualUploads] = useState(pkg.manual_uploads || []);
+  const [currentUser, setCurrentUser] = useState(null);
+  // Lock removal of manual uploads once the package has been submitted/approved/paid.
+  const locked = pkg.status === 'submitted' || pkg.status === 'approved' || pkg.status === 'paid';
+
+  useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
+
+  const persistUploads = async (next) => {
+    setManualUploads(next);
+    try {
+      await base44.entities.InvoicePackage.update(pkg.id, { manual_uploads: next });
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+    } catch {
+      toast.error('Could not save the uploaded file to the package.');
+    }
+  };
+  const handleUpload = async ({ category, file_url, file_name }) => {
+    const entry = {
+      id: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()),
+      category,
+      file_url,
+      file_name,
+      uploaded_date: format(new Date(), 'yyyy-MM-dd'),
+      uploaded_by_name: currentUser?.full_name || '',
+    };
+    await persistUploads([...manualUploads, entry]);
+    toast.success('Backup document attached.');
+  };
+  const handleRemoveUpload = (u) => persistUploads(manualUploads.filter((x) => x.id !== u.id));
 
   // CRT workbook status (shared query key with CRT tab)
   const { data: crtStatus } = useQuery({
@@ -205,6 +248,25 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         }
       }
 
+      // Manually uploaded backup documents — best-effort fetch, filed under the
+      // matching category folder so they land alongside the auto-gathered docs.
+      const uploaded = await Promise.all(
+        manualUploads.map(async (u) => {
+          try {
+            const res = await fetch(u.file_url);
+            if (!res.ok) return null;
+            const folder = UPLOAD_FOLDERS[u.category] || 'ManualUploads';
+            return { name: `${folder}/${sanitizeFileName(u.file_name)}`, blob: await res.blob() };
+          } catch {
+            return null;
+          }
+        })
+      );
+      uploaded.filter(Boolean).forEach((f) => {
+        zip.file(f.name, f.blob);
+        bundled++;
+      });
+
       zip.file(
         'README.txt',
         `Invoice Package ${pkg.package_number} — ${monthLabel}\n` +
@@ -276,6 +338,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   )}
                 </td>
               </tr>
+              <tr className="bg-slate-50/50">
+                <td colSpan={3} className="py-2 px-3">
+                  <CategoryUpload category="crt" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                </td>
+              </tr>
 
               {/* Invoice */}
               <tr className="border-b">
@@ -300,6 +367,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   )}
                 </td>
               </tr>
+              <tr className="bg-slate-50/50">
+                <td colSpan={3} className="py-2 px-3">
+                  <CategoryUpload category="invoice" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                </td>
+              </tr>
 
               {/* Childminding */}
               <tr className="border-b">
@@ -319,6 +391,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   >
                     <Download className="h-3.5 w-3.5 mr-1" /> PDF
                   </Button>
+                </td>
+              </tr>
+              <tr className="bg-slate-50/50">
+                <td colSpan={3} className="py-2 px-3">
+                  <CategoryUpload category="childminding" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                 </td>
               </tr>
 
@@ -342,6 +419,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   </Button>
                 </td>
               </tr>
+              <tr className="bg-slate-50/50">
+                <td colSpan={3} className="py-2 px-3">
+                  <CategoryUpload category="work_exposure" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
+                </td>
+              </tr>
 
               {/* Supporting Documents */}
               <tr>
@@ -358,6 +440,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   ) : (
                     <span className="text-xs text-slate-400">None for this month</span>
                   )}
+                </td>
+              </tr>
+              <tr className="bg-slate-50/50">
+                <td colSpan={3} className="py-2 px-3">
+                  <CategoryUpload category="supporting" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                 </td>
               </tr>
             </tbody>
