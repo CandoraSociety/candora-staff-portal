@@ -22,6 +22,7 @@ import {
   extFromUrl,
   cleanFileName,
   compressImageBlob,
+  buildImagesPdf,
 } from './packageContentsHelpers';
 import {
   generateWorkExposurePdf,
@@ -309,22 +310,35 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         entries.push({ name: cleanFileName(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`), blob: reBlob, essential: true });
       }
 
-      // Supporting docs — best-effort fetch (CORS may block some hosts)
-      const fetched = await Promise.all(
+      // Supporting docs — best-effort fetch (CORS may block some hosts).
+      // Image receipts are combined into a single multi-page PDF; non-image
+      // docs (e.g. existing PDFs) are bundled as separate files.
+      const imgItems = [];
+      const otherEntries = [];
+      await Promise.all(
         supportingFiles.map(async (f, i) => {
           try {
             const res = await fetch(f.url);
-            if (!res.ok) return null;
+            if (!res.ok) return;
             const raw = await res.blob();
             const { blob: outBlob, ext: newExt } = await compressImageBlob(raw);
-            const ext = newExt || extFromUrl(f.url);
-            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${ext}`)}`, blob: outBlob };
+            if (outBlob.type.startsWith('image/')) {
+              imgItems.push({ blob: outBlob, label: f.label, index: i });
+            } else {
+              const ext = newExt || extFromUrl(f.url);
+              otherEntries.push({ name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${ext}`)}`, blob: outBlob });
+            }
           } catch {
-            return null;
+            /* skip a doc that fails to fetch */
           }
         })
       );
-      fetched.filter(Boolean).forEach((e) => entries.push(e));
+      imgItems.sort((a, b) => a.index - b.index);
+      if (imgItems.length) {
+        const combined = await buildImagesPdf(imgItems);
+        if (combined) entries.push({ name: 'SupportingDocs/Supporting Documents.pdf', blob: combined });
+      }
+      otherEntries.forEach((e) => entries.push(e));
 
       // CRT workbook — SharePoint's webUrl is auth-gated and CORS-blocked from the
       // browser, so the backend function fetches the .xlsx via Graph and returns

@@ -783,6 +783,58 @@ export const compressImageBlob = async (blob, maxDim = 1500, quality = 0.7) => {
   }
 };
 
+const blobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+const imageDimensions = (dataUrl) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ w: 0, h: 0 });
+    img.src = dataUrl;
+  });
+
+/**
+ * Combine multiple image blobs (receipts / completion records) into a single
+ * multi-page PDF — one image per page, fit within a letter page with margins.
+ * Returns a Blob, or null if no images could be rendered.
+ */
+export const buildImagesPdf = async (items) => {
+  if (!items?.length) return null;
+  const pdf = new jsPDF({ unit: 'pt', format: 'letter' });
+  let first = true;
+  let added = 0;
+  for (const it of items) {
+    try {
+      const dataUrl = await blobToDataUrl(it.blob);
+      const { w, h } = await imageDimensions(dataUrl);
+      if (!w || !h) continue;
+      if (!first) pdf.addPage();
+      first = false;
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const scale = Math.min((pageW - margin * 2) / w, (pageH - margin * 2) / h, 1);
+      const drawW = w * scale;
+      const drawH = h * scale;
+      const x = (pageW - drawW) / 2;
+      const y = (pageH - drawH) / 2;
+      const fmt = it.blob.type === 'image/png' ? 'PNG' : 'JPEG';
+      pdf.addImage(dataUrl, fmt, x, y, drawW, drawH, undefined, 'FAST');
+      added += 1;
+    } catch {
+      /* skip an image that fails to render */
+    }
+  }
+  if (!added) return null;
+  return pdf.output('blob');
+};
+
 export const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
