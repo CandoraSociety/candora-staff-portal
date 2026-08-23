@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus, Printer } from 'lucide-react';
+import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus, Printer, StickyNote } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
+import ManualInvoiceNoteDialog from './ManualInvoiceNoteDialog';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { monthsInRange, snapshotToData, aggregateMonthData } from './aggregateInvoiceData';
 
@@ -41,6 +42,7 @@ export default function MonthlyInvoices() {
   const [showMultiMonth, setShowMultiMonth] = useState(false);
   const [rangeStart, setRangeStart] = useState(currentMonth);
   const [rangeEnd, setRangeEnd] = useState(currentMonth);
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -331,6 +333,10 @@ export default function MonthlyInvoices() {
                   Print / Save PDF
                 </Button>
               )}
+              <Button onClick={() => setShowNoteDialog(true)} variant="outline" size="sm" disabled={!effectiveMonth}>
+                <StickyNote className="h-4 w-4 mr-2" />
+                Add Note
+              </Button>
               {selected && (
                 <Badge variant={isFinalized ? 'outline' : 'default'} className={isFinalized ? 'border-slate-400 text-slate-600' : ''}>
                   {isFinalized ? 'Closed Off' : 'Open — Live'}
@@ -477,6 +483,12 @@ export default function MonthlyInvoices() {
           )}
         </CardContent>
       </Card>
+      <ManualInvoiceNoteDialog
+        open={showNoteDialog}
+        onOpenChange={setShowNoteDialog}
+        billingMonth={effectiveMonth}
+        monthLabel={monthLabel}
+      />
     </div>
   );
 }
