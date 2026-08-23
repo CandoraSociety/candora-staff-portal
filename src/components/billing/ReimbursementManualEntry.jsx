@@ -16,6 +16,7 @@ import { Plus, Trash2, Pencil, Loader2, Upload, ExternalLink } from 'lucide-reac
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { buildBillingDocName } from '@/lib/billingDocName';
+import { currentBillingMonth, parseBillingMonth } from '@/components/billing/billingMonth';
 
 const CONFIG = {
   exposure_course: {
@@ -43,9 +44,10 @@ function streamForClient(client) {
   return '';
 }
 
-export default function ReimbursementManualEntry({ recordType, records, clients, periodLabel }) {
+export default function ReimbursementManualEntry({ recordType, records, clients }) {
   const cfg = CONFIG[recordType];
   const qc = useQueryClient();
+  const [billingMonth, setBillingMonth] = useState(currentBillingMonth());
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -75,8 +77,10 @@ export default function ReimbursementManualEntry({ recordType, records, clients,
   const stream = selectedClient ? streamForClient(selectedClient) : '';
 
   const monthRecords = useMemo(
-    () => (records || []).slice().sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
-    [records]
+    () => (records || [])
+      .filter((r) => r.billing_month === billingMonth)
+      .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
+    [records, billingMonth]
   );
 
   const reimbursableTotal = monthRecords.reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -207,91 +211,22 @@ export default function ReimbursementManualEntry({ recordType, records, clients,
         <div className="flex justify-between items-center flex-wrap gap-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Badge className={cfg.badgeClass}>{cfg.title}</Badge>
-            <span className="text-xs text-slate-500 font-normal">— {periodLabel}</span>
+            <span className="text-xs text-slate-500 font-normal">— {monthLabel}</span>
           </CardTitle>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" /> Add Manual Entry</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingId ? `Edit ${cfg.title} Entry` : `Add ${cfg.title} Entry`}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div className="space-y-1.5">
-                  <Label>Client</Label>
-                  <Select value={clientId} onValueChange={setClientId}>
-                    <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
-                    <SelectContent>
-                      {(clients || []).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.first_name} {c.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {cfg.showStream && clientId && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-xs text-slate-500">Stream:</span>
-                      {stream ? (
-                        <Badge variant="outline" className={stream === 'DEA' ? 'text-blue-700' : 'text-purple-700'}>{stream}</Badge>
-                      ) : (
-                        <span className="text-xs text-slate-400">Not set (no DEA/WD on client file)</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Vendor name</Label>
-                  <Input value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="Vendor / provider" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{cfg.detailLabel}</Label>
-                  <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder={cfg.detailLabel} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label>Cost (without GST)</Label>
-                    <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Date of payment</Label>
-                    <Input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Receipt</Label>
-                  <div className="flex items-center gap-3">
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
-                      {receiptFile ? <Upload className="h-4 w-4" /> : <Upload className="h-4 w-4" />}
-                      {receiptFile ? receiptFile.name : (editingId ? 'Replace receipt' : 'Upload receipt')}
-                      <input
-                        ref={fileRef}
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-                      />
-                    </label>
-                    {editingId && !receiptFile && (() => {
-                      const rec = monthRecords.find((r) => r.id === editingId);
-                      return rec?.receipt_urls?.length > 0 ? (
-                        <span className="text-xs text-slate-500 flex items-center gap-1">
-                          <ExternalLink className="h-3 w-3" /> {rec.receipt_urls.length} attached
-                        </span>
-                      ) : null;
-                    })()}
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); resetForm(); }}>Cancel</Button>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                  {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add Entry'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-slate-500">Billing month</Label>
+              <Input
+                type="month"
+                value={billingMonth}
+                onChange={(e) => setBillingMonth(e.target.value)}
+                className="w-[150px] h-8 text-sm"
+              />
+            </div>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
+...
+            </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
