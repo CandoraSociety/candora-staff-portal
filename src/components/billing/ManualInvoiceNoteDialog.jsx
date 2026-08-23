@@ -27,16 +27,15 @@ const edmontonToday = () => {
 };
 
 /**
- * Add / Edit invoice notes from the Invoices tab. Notes are stored on the
- * month's Invoice Package as `adjustment_notes` — the same field the invoice
- * document renders in its "Adjustment Notes" section — so a note added here
- * appears on the invoice and can be edited or removed here.
+ * Add / Edit invoice notes from the Invoices tab. Notes are stored directly on
+ * the Invoice record being viewed (`adjustment_notes`) — the same field the
+ * invoice document renders in its "Adjustment Notes" section — so a note added
+ * here appears on that invoice and can be edited or removed here.
  */
-export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMonth, monthLabel }) {
+export default function ManualInvoiceNoteDialog({ open, onOpenChange, invoiceId, monthLabel, billingMonth }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [clients, setClients] = useState([]);
-  const [pkg, setPkg] = useState(null);
   const [existingNotes, setExistingNotes] = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
   const [label, setLabel] = useState('');
@@ -46,22 +45,11 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const loadPackage = async () => {
-    if (!billingMonth) return null;
-    let pkgs = await base44.entities.InvoicePackage.filter({ billing_month: billingMonth });
-    let p = (pkgs || [])[0];
-    if (!p) {
-      p = await base44.entities.InvoicePackage.create({
-        billing_month: billingMonth,
-        prepared_by: user?.email || 'manual-note',
-        prepared_by_name: user?.full_name || '',
-        prepared_date: edmontonToday(),
-        status: 'draft',
-      });
-    }
-    setPkg(p);
-    setExistingNotes(p.adjustment_notes || []);
-    return p;
+  const loadInvoice = async () => {
+    if (!invoiceId) return null;
+    const inv = await base44.entities.Invoice.get(invoiceId);
+    setExistingNotes(inv.adjustment_notes || []);
+    return inv;
   };
 
   useEffect(() => {
@@ -75,10 +63,10 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
           .map((c) => ({ id: c.id, name: `${c.first_name || ''} ${c.last_name || ''}`.trim() }))
           .filter((c) => c.name)
       );
-      await loadPackage();
+      await loadInvoice();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, billingMonth]);
+  }, [open, invoiceId]);
 
   const resetForm = () => {
     setLabel('');
@@ -90,8 +78,7 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
   };
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['invoice-adjustment-notes'] });
-    queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
   };
 
   const startEdit = (idx) => {
@@ -118,22 +105,23 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
       comment: comment.trim(),
       created_by_name: editing?.created_by_name || user?.full_name || user?.email || '',
       created_date: editing?.created_date || edmontonToday(),
-      billing_month: billingMonth,
+      billing_month: billingMonth || '',
     };
   };
 
   const persist = async (entries) => {
-    let p = pkg;
-    if (!p) p = await loadPackage();
-    const updated = await base44.entities.InvoicePackage.update(p.id, { adjustment_notes: entries });
-    setPkg(updated);
+    if (!invoiceId) {
+      toast.error('No invoice selected');
+      throw new Error('no invoice');
+    }
+    const updated = await base44.entities.Invoice.update(invoiceId, { adjustment_notes: entries });
     setExistingNotes(updated.adjustment_notes || entries);
     invalidate();
   };
 
   const handleSave = async () => {
-    if (!billingMonth) {
-      toast.error('No month selected');
+    if (!invoiceId) {
+      toast.error('Open an invoice first, then add a note.');
       return;
     }
     if (!label.trim()) {
@@ -192,7 +180,7 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
         <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Existing Notes</p>
           {existingNotes.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-1">No notes yet for this month — add one below.</p>
+            <p className="text-xs text-slate-400 italic py-1">No notes yet for this invoice — add one below.</p>
           ) : (
             existingNotes.map((n, idx) => (
               <div key={idx} className={`rounded-md border p-2 ${editingIdx === idx ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>

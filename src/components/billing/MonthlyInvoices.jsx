@@ -217,20 +217,9 @@ export default function MonthlyInvoices() {
   const activeData = isRange ? rangeData : live;
   const activeLoading = isRange ? rangeLoading : liveLoading;
 
-  // Adjustment notes logged against this month's Invoice Package(s) — shown at
-  // the bottom of the invoice so manual tracker edits are auditable on the doc.
-  const { data: adjustmentNotes = [] } = useQuery({
-    queryKey: ['invoice-adjustment-notes', effectiveMonth],
-    queryFn: async () => {
-      const pkgs = await base44.entities.InvoicePackage.filter({ billing_month: effectiveMonth });
-      const notes = [];
-      (pkgs || []).forEach((p) => {
-        (p.adjustment_notes || []).forEach((n) => notes.push(n));
-      });
-      return notes;
-    },
-    enabled: !!effectiveMonth,
-  });
+  // Adjustment notes saved directly on this invoice record — shown at the
+  // bottom of the invoice so manual edits are auditable on the doc.
+  const adjustmentNotes = selected?.adjustment_notes || [];
 
   // Live totals for every OPEN single-month invoice so the list shows the
   // current tracker figure (not a stale close-off snapshot) for each open
@@ -541,6 +530,7 @@ export default function MonthlyInvoices() {
       <ManualInvoiceNoteDialog
         open={showNoteDialog}
         onOpenChange={setShowNoteDialog}
+        invoiceId={selected?.id}
         billingMonth={effectiveMonth}
         monthLabel={monthLabel}
       />

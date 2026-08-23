@@ -62,6 +62,46 @@
     "notes": {
       "type": "string"
     },
+    "adjustment_notes": {
+      "type": "array",
+      "description": "Manual notes attached directly to this invoice, shown in the invoice's Adjustment Notes section. Added/edited from the Invoices tab's Add/Edit Note dialog.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cell_letter": {
+            "type": "string"
+          },
+          "cell_label": {
+            "type": "string"
+          },
+          "old_value": {
+            "type": "string"
+          },
+          "new_value": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "created_by_name": {
+            "type": "string"
+          },
+          "created_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "billing_month": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "generated_by": {
       "type": "string"
     },
