@@ -194,9 +194,11 @@ export default function InvoiceDocument({ data, status, adjustmentNotes = [], bi
             <div className="space-y-1.5 border-t border-slate-100 pt-2">
               {adjustmentNotes.map((n, i) => (
                 <div key={i} className="text-xs text-slate-600 leading-relaxed">
-                  <span className="font-medium text-slate-700">{n.cell_label}</span>:{' '}
-                  <span className="line-through text-slate-400">{n.old_value || '—'}</span>{' '}
-                  → <span className="font-semibold text-slate-800">{n.new_value || '—'}</span>
+                  <span className="font-medium text-slate-700">{i + 1}. {n.cell_label}</span>
+                  {n.old_value || n.new_value ? ': ' : ''}
+                  {n.old_value ? <span className="line-through text-slate-400">{n.old_value}</span> : null}
+                  {n.old_value && n.new_value ? ' → ' : ''}
+                  {n.new_value ? <span className="font-semibold text-slate-800">{n.new_value}</span> : null}
                   {n.client_name ? ` — ${n.client_name}` : ''}
                   {n.comment ? ` — ${n.comment}` : ''}
                 </div>
