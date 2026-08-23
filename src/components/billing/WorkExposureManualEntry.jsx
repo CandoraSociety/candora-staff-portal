@@ -70,6 +70,32 @@ export default function WorkExposureManualEntry({ clients }) {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [allRecords]);
 
+  // Most recent employer name previously entered for a given client
+  // (used to autofill the employer field when a client is selected).
+  const lastEmployerForClient = useMemo(() => {
+    const map = {};
+    (allRecords || [])
+      .slice()
+      .sort((a, b) => (b.work_end_date || b.date || '').localeCompare(a.work_end_date || a.date || ''))
+      .forEach((r) => {
+        if (r.client_id && !map[r.client_id]) {
+          const name = (r.vendor || r.business_name || '').trim();
+          if (name) map[r.client_id] = name;
+        }
+      });
+    return map;
+  }, [allRecords]);
+
+  const handleClientChange = (id) => {
+    setClientId(id);
+    // Autofill the employer from the client's most recent entry (add mode only),
+    // but only if the employer field is currently empty so we don't clobber edits.
+    if (!editingId) {
+      const last = lastEmployerForClient[id];
+      setEmployer((prev) => (prev ? prev : (last || '')));
+    }
+  };
+
   const totalHours = monthRecords.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
   const totalAmount = monthRecords.reduce((s, r) => s + (Number(r.total || r.amount) || 0), 0);
 
@@ -189,7 +215,7 @@ export default function WorkExposureManualEntry({ clients }) {
                 <div className="space-y-4 py-2">
                   <div className="space-y-1.5">
                     <Label>Client</Label>
-                    <Select value={clientId} onValueChange={setClientId}>
+                    <Select value={clientId} onValueChange={handleClientChange}>
                       <SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger>
                       <SelectContent>
                         {(clients || []).map((c) => (
