@@ -136,6 +136,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
     try {
       await base44.entities.InvoicePackage.update(pkg.id, { note_entries: entries });
       setNoteEntries(entries);
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
     } catch {
       toast.error('Failed to save note');
     } finally {
@@ -180,6 +181,7 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const handleSaveNotes = async () => {
     try {
       await base44.entities.InvoicePackage.update(pkg.id, { notes });
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
       toast.success('Notes updated');
       setIsEditingNotes(false);
     } catch (error) {
