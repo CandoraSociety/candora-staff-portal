@@ -63,7 +63,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   const [monthValue, setMonthValue] = useState(currentBillingMonth());
   const [contractYear, setContractYear] = useState(() => {
     const now = new Date();
-    return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+    return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   });
 
   const clientMap = useMemo(() => {
@@ -111,18 +111,18 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     if (!monthStr) return false;
     if (periodMode === 'all_time') return true;
     if (periodMode === 'month') return monthStr === monthValue;
-    // contract_ytd: June of contractYear through current month
-    // (or through May of next year if the contract term hasn't started yet).
-    const startMonth = `${contractYear}-06`;
+    // fiscal_ytd: April of contractYear through current month
+    // (or through March of next year if the fiscal year hasn't started yet).
+    const startMonth = `${contractYear}-04`;
     let endMonth = currentBillingMonth();
-    if (endMonth < startMonth) endMonth = `${contractYear + 1}-05`;
+    if (endMonth < startMonth) endMonth = `${contractYear + 1}-03`;
     return monthStr >= startMonth && monthStr <= endMonth;
   };
 
   const periodLabel = useMemo(() => {
     if (periodMode === 'all_time') return 'All Time';
     if (periodMode === 'month') return format(parseBillingMonth(monthValue), 'MMMM yyyy');
-    return `Contract Term YTD (from June ${contractYear})`;
+    return `Fiscal YTD (from April ${contractYear})`;
   }, [periodMode, monthValue, contractYear]);
 
   const filteredFinancialRecords = useMemo(() => {
@@ -341,7 +341,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="month">Billing Month</SelectItem>
-            <SelectItem value="contract_ytd">Contract Term YTD</SelectItem>
+            <SelectItem value="contract_ytd">Fiscal YTD</SelectItem>
             <SelectItem value="all_time">All Time</SelectItem>
           </SelectContent>
         </Select>
@@ -355,7 +355,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
         )}
         {periodMode === 'contract_ytd' && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500">from June</span>
+            <span className="text-xs text-slate-500">from April</span>
             <Input
               type="number"
               value={contractYear}
