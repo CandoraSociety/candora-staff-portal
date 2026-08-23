@@ -4,6 +4,11 @@ import { generateOccurrences, formatDateLong, toISODate } from '@/lib/workshopSc
 import { Calendar, Clock, MapPin, Users, User, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// WD & DEA Exclusive sessions render in a distinct violet so staff can spot
+// restricted sessions at a glance in the schedule.
+const EXCLUSIVE_COLOR = '#7c3aed';
+const sessionColor = (w) => (w?.audience === 'wd_dea_exclusive' ? EXCLUSIVE_COLOR : (w?.color || '#2563eb'));
+
 export default function WorkshopSchedule({ workshops, signups, onOpenRoster, rangeDays = 120 }) {
   const today = toISODate(new Date());
   const [view, setView] = useState('list');
@@ -77,7 +82,7 @@ export default function WorkshopSchedule({ workshops, signups, onOpenRoster, ran
                         className="w-full text-left rounded-lg border border-slate-200 bg-white shadow-sm hover:shadow hover:border-slate-300 transition overflow-hidden"
                       >
                         <div className="flex">
-                          <div className="w-1.5 shrink-0" style={{ background: s.workshop.color || '#2563eb' }} />
+                          <div className="w-1.5 shrink-0" style={{ background: sessionColor(s.workshop) }} />
                           <div className="flex-1 p-3 flex items-center gap-3">
                             <Clock className="w-4 h-4 text-slate-400 shrink-0" />
                             <div className="flex-1 min-w-0">
@@ -158,7 +163,7 @@ function CalendarView({ month, setMonth, byDate, today, onOpenRoster }) {
                   key={`${s.workshop.id}-${iso}-${i}`}
                   onClick={() => onOpenRoster(s.workshop, s.date)}
                   className="text-left text-[10px] leading-tight rounded px-1 py-0.5 truncate hover:opacity-80 transition"
-                  style={{ backgroundColor: (s.workshop.color || '#2563eb') + '22', color: s.workshop.color || '#2563eb', borderLeft: `2px solid ${s.workshop.color || '#2563eb'}` }}
+                  style={{ backgroundColor: sessionColor(s.workshop) + '22', color: sessionColor(s.workshop), borderLeft: `2px solid ${sessionColor(s.workshop)}` }}
                   title={`${s.workshop.title} · ${s.workshop.start_time || ''} · ${s.rosterCount}${s.workshop.capacity ? `/${s.workshop.capacity}` : ''} signed up`}
                 >
                   {s.workshop.start_time && <span className="font-medium">{s.workshop.start_time.replace(/^0/, '')} </span>}
