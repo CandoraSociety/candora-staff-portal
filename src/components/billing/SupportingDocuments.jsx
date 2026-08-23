@@ -243,7 +243,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
             </CardTitle>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Service month</span>
+                <span className="text-xs text-slate-500">Billing month</span>
                 <Input
                   type="month"
                   value={cmMonth}
