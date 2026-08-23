@@ -205,6 +205,8 @@ export default function ReimbursementManualEntry({ recordType, records, clients 
 
   const isManual = (r) => r.notes === 'Manual entry';
 
+  const monthLabel = format(parseBillingMonth(billingMonth), 'MMMM yyyy');
+
   return (
     <Card>
       <CardHeader>
