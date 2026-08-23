@@ -622,15 +622,16 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
     });
     // Section subtotal
     const subtotal = sectionRecords.reduce((s, r) => s + Number(r.amount || 0), 0);
-    y += 4;
+    y += 6;
     doc.setDrawColor(...navy);
     doc.setLineWidth(0.75);
-    doc.line(left + tableW * 0.55, y - 4, right, y - 4);
+    doc.line(left + tableW * 0.55, y, right, y);
+    y += 12;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
     doc.setTextColor(...navy);
     doc.text(`${title} Subtotal   $${subtotal.toFixed(2)}`, right, y, { align: 'right' });
-    y += 14;
+    y += 6;
   };
 
   const supportsRecords = records.filter((r) => r.record_type !== 'exposure_course');
