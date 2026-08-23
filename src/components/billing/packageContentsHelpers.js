@@ -54,39 +54,100 @@ export const buildWorkExposureCsvBlob = (records) =>
   new Blob([buildWorkExposureCsv(records)], { type: 'text/csv;charset=utf-8;' });
 
 /**
- * Build a Candora-branded PDF of the month's Work Exposure Payments.
- * Returns a Blob (used both for the standalone download and the ZIP bundle).
+ * Build a Candora-branded PDF of the month's Work Exposure Payments list —
+ * matches the official invoice letterhead (gold strip, navy band, no-anniversary
+ * logo, meta band, brand footer) so it reads like the childminding list.
+ * Returns a Promise<Blob>.
  */
-export const buildWorkExposurePdfBlob = (records, billingMonth) => {
+export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const monthLabel = monthLabelFromBillingMonth(billingMonth);
-  const NAVY = [23, 37, 84];
-  const GOLD = [212, 175, 55];
-  const widths = [24, 140, 110, 70, 50, 50, 50];
+  const W = 612;
+  const navy = hexToRgb(brand.navy) || [15, 31, 107];
+  const gold = hexToRgb(brand.gold) || [245, 193, 22];
+  const navyTint = [235, 238, 243];
+  const goldTint = [252, 244, 214];
+  const logo = brand.logoUrl ? await loadLogo(brand.logoUrl) : null;
+
+  // Gold top accent strip
+  doc.setFillColor(...gold);
+  doc.rect(0, 0, W, 6, 'F');
+
+  // Navy letterhead band
+  const lhTop = 6;
+  const lhH = 110;
+  doc.setFillColor(...navy);
+  doc.rect(0, lhTop, W, lhH, 'F');
+
+  if (logo) {
+    const boxW = 300, boxH = lhH, boxX = 24;
+    const scale = Math.min(boxW / logo.w, boxH / logo.h);
+    const drawW = logo.w * scale;
+    const drawH = logo.h * scale;
+    const drawY = lhTop + (boxH - drawH) / 2;
+    try {
+      doc.addImage(logo.dataUrl, 'PNG', boxX, drawY, drawW, drawH);
+    } catch {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(...gold);
+      doc.text('Candora', 40, lhTop + 62);
+    }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...gold);
+    doc.text('Candora', 40, lhTop + 62);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...gold);
+  doc.text(`Pathways ${monthLabel} Work Exposure List`, W - 40, lhTop + (lhH / 2) + 4, { align: 'right' });
+
+  // Meta band
+  const metaTop = lhTop + lhH;
+  const metaH = 46;
+  doc.setFillColor(...navyTint);
+  doc.rect(0, metaTop, W, metaH, 'F');
+  const metaY = metaTop + 18;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...navy);
+  doc.text('BILLING MONTH', 40, metaY);
+  doc.text('DATE ISSUED', 240, metaY);
+  doc.text('# PLACEMENTS', 440, metaY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+  doc.text(monthLabel, 40, metaY + 14);
+  doc.text(format(new Date(), 'MMMM d, yyyy'), 240, metaY + 14);
+  doc.text(String(records.length), 440, metaY + 14);
+
+  // Rate statement band
+  const rateTop = metaTop + metaH;
+  const rateH = 24;
+  doc.setFillColor(...goldTint);
+  doc.rect(0, rateTop, W, rateH, 'F');
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(1.5);
+  doc.line(0, rateTop + rateH, W, rateTop + rateH);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...navy);
+  doc.text('Work Exposure Wage Reimbursement', 40, rateTop + 16);
+
+  // Table
+  const widths = [22, 120, 134, 72, 46, 50, 54];
   const tableW = widths.reduce((a, b) => a + b, 0);
   const left = 40;
   const right = left + tableW;
-
-  let y = 44;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...NAVY);
-  doc.text('Candora', left, y);
-  y += 18;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.setTextColor(70, 70, 70);
-  doc.text(`Work Exposure Payments — ${monthLabel}`, left, y);
-  y += 8;
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(1.5);
-  doc.line(left, y, right, y);
-  y += 18;
+  let y = rateTop + rateH + 18;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  doc.setFillColor(...NAVY);
+  doc.setTextColor(...gold);
+  doc.setFillColor(...navy);
   doc.rect(left, y - 12, tableW, 16, 'F');
   let x = left;
   ['#', 'Client', 'Employer / Vendor', 'Work End', 'Hours', 'Rate', 'Amount'].forEach((c, i) => {
@@ -100,17 +161,17 @@ export const buildWorkExposurePdfBlob = (records, billingMonth) => {
 
   if (!records.length) {
     doc.text(`No work exposure placements recorded for ${monthLabel}.`, left, y + 6);
-    return doc.output('blob');
   }
 
+  const tableTop = rateTop + rateH + 18;
   records.forEach((r, i) => {
     const amount = Number(r.total || r.amount || 0);
     const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[1] - 6);
     const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[2] - 6);
     const rowH = Math.max(14, Math.max(clientLines.length, vendorLines.length) * 10 + 4);
-    if (y + rowH > 760) {
+    if (y + rowH > 730) {
       doc.addPage();
-      y = 44;
+      y = tableTop;
     }
     if (i % 2 === 1) {
       doc.setFillColor(245, 247, 250);
@@ -139,20 +200,40 @@ export const buildWorkExposurePdfBlob = (records, billingMonth) => {
     y += rowH;
   });
 
-  const totalHours = records.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
-  const totalAmount = records.reduce((s, r) => s + Number(r.total || r.amount || 0), 0);
-  y += 6;
-  doc.setDrawColor(...NAVY);
-  doc.setLineWidth(1);
-  doc.line(left, y - 4, right, y - 4);
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text(
-    `TOTAL (${records.length} placements)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
-    left,
-    y
-  );
+  if (records.length) {
+    const totalHours = records.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
+    const totalAmount = records.reduce((s, r) => s + Number(r.total || r.amount || 0), 0);
+    y += 6;
+    doc.setDrawColor(...navy);
+    doc.setLineWidth(1);
+    doc.line(left, y - 4, right, y - 4);
+    y += 12;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...navy);
+    doc.text(
+      `TOTAL (${records.length} placements)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+      left,
+      y
+    );
+  }
+
+  // Brand footer on every page
+  const footerLines = brandFooterLines();
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...navy);
+    doc.rect(0, 742, W, 50, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    let fy = 758;
+    footerLines.forEach((l, i) => {
+      doc.setTextColor(...(i === 0 ? gold : [226, 232, 240]));
+      doc.text(l, W / 2, fy, { align: 'center' });
+      fy += 10;
+    });
+  }
 
   return doc.output('blob');
 };
@@ -352,6 +433,192 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
       left,
       y
     );
+  }
+
+  // Brand footer on every page
+  const footerLines = brandFooterLines();
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...navy);
+    doc.rect(0, 742, W, 50, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    let fy = 758;
+    footerLines.forEach((l, i) => {
+      doc.setTextColor(...(i === 0 ? gold : [226, 232, 240]));
+      doc.text(l, W / 2, fy, { align: 'center' });
+      fy += 10;
+    });
+  }
+
+  return doc.output('blob');
+};
+
+/**
+ * Build a Candora-branded combined PDF of the month's Employment Supports and
+ * Exposure Courses lists — mirrors the childminding letterhead (gold strip,
+ * navy band, no-anniversary logo, meta band, brand footer). Records should be
+ * the FinancialRecord entries for the month whose record_type is
+ * 'employment_supports' or 'exposure_course'. Returns a Promise<Blob>.
+ */
+export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {}) => {
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const monthLabel = monthLabelFromBillingMonth(billingMonth);
+  const W = 612;
+  const navy = hexToRgb(brand.navy) || [15, 31, 107];
+  const gold = hexToRgb(brand.gold) || [245, 193, 22];
+  const navyTint = [235, 238, 243];
+  const goldTint = [252, 244, 214];
+  const logo = brand.logoUrl ? await loadLogo(brand.logoUrl) : null;
+
+  // Gold top accent strip
+  doc.setFillColor(...gold);
+  doc.rect(0, 0, W, 6, 'F');
+
+  // Navy letterhead band
+  const lhTop = 6;
+  const lhH = 110;
+  doc.setFillColor(...navy);
+  doc.rect(0, lhTop, W, lhH, 'F');
+
+  if (logo) {
+    const boxW = 300, boxH = lhH, boxX = 24;
+    const scale = Math.min(boxW / logo.w, boxH / logo.h);
+    const drawW = logo.w * scale;
+    const drawH = logo.h * scale;
+    const drawY = lhTop + (boxH - drawH) / 2;
+    try {
+      doc.addImage(logo.dataUrl, 'PNG', boxX, drawY, drawW, drawH);
+    } catch {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor(...gold);
+      doc.text('Candora', 40, lhTop + 62);
+    }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...gold);
+    doc.text('Candora', 40, lhTop + 62);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...gold);
+  doc.text(`Pathways ${monthLabel} Reimbursement List`, W - 40, lhTop + (lhH / 2) + 4, { align: 'right' });
+
+  // Meta band
+  const metaTop = lhTop + lhH;
+  const metaH = 46;
+  doc.setFillColor(...navyTint);
+  doc.rect(0, metaTop, W, metaH, 'F');
+  const metaY = metaTop + 18;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...navy);
+  doc.text('BILLING MONTH', 40, metaY);
+  doc.text('DATE ISSUED', 240, metaY);
+  doc.text('# ENTRIES', 440, metaY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(40, 40, 40);
+  doc.text(monthLabel, 40, metaY + 14);
+  doc.text(format(new Date(), 'MMMM d, yyyy'), 240, metaY + 14);
+  doc.text(String(records.length), 440, metaY + 14);
+
+  // Statement band
+  const rateTop = metaTop + metaH;
+  const rateH = 24;
+  doc.setFillColor(...goldTint);
+  doc.rect(0, rateTop, W, rateH, 'F');
+  doc.setDrawColor(...gold);
+  doc.setLineWidth(1.5);
+  doc.line(0, rateTop + rateH, W, rateTop + rateH);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...navy);
+  doc.text('Employment Supports & Exposure Courses (Reimbursable — excluding tax)', 40, rateTop + 16);
+
+  // Table
+  const widths = [20, 60, 92, 70, 150, 80, 50];
+  const tableW = widths.reduce((a, b) => a + b, 0);
+  const left = 40;
+  const right = left + tableW;
+  const tableTop = rateTop + rateH + 18;
+  let y = tableTop;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...gold);
+  doc.setFillColor(...navy);
+  doc.rect(left, y - 12, tableW, 16, 'F');
+  let x = left;
+  ['#', 'Date', 'Client', 'Category', 'Description', 'Vendor', 'Amount'].forEach((c, i) => {
+    doc.text(c, x + 3, y);
+    x += widths[i];
+  });
+  y += 16;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(30, 30, 30);
+
+  if (!records.length) {
+    doc.text(`No employment supports or exposure courses recorded for ${monthLabel}.`, left, y + 6);
+  }
+
+  const catLabel = (r) => (r.record_type === 'exposure_course' ? 'Exposure Course' : 'Employment Support');
+
+  records.forEach((r, i) => {
+    const amount = Number(r.amount || 0);
+    const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[2] - 6);
+    const descLines = doc.splitTextToSize(String(r.description || '-'), widths[4] - 6);
+    const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[5] - 6);
+    const rowH = Math.max(14, Math.max(clientLines.length, descLines.length, vendorLines.length) * 10 + 4);
+    if (y + rowH > 730) {
+      doc.addPage();
+      y = tableTop;
+    }
+    if (i % 2 === 1) {
+      doc.setFillColor(245, 247, 250);
+      doc.rect(left, y - 12, tableW, rowH, 'F');
+    }
+    const vals = [
+      String(i + 1),
+      r.date ? format(new Date(r.date + 'T00:00:00'), 'MMM d, yyyy') : '-',
+      null,
+      catLabel(r),
+      null,
+      null,
+      `$${amount.toFixed(2)}`,
+    ];
+    let xx = left;
+    vals.forEach((v, j) => {
+      if (j === 2) {
+        clientLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+      } else if (j === 4) {
+        descLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+      } else if (j === 5) {
+        vendorLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+      } else {
+        doc.text(String(v), xx + 3, y);
+      }
+      xx += widths[j];
+    });
+    y += rowH;
+  });
+
+  if (records.length) {
+    const totalAmount = records.reduce((s, r) => s + Number(r.amount || 0), 0);
+    y += 6;
+    doc.setDrawColor(...navy);
+    doc.setLineWidth(1);
+    doc.line(left, y - 4, right, y - 4);
+    y += 12;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...navy);
+    doc.text(`TOTAL (${records.length} entries)   $${totalAmount.toFixed(2)}`, left, y);
   }
 
   // Brand footer on every page

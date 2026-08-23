@@ -167,6 +167,22 @@
           }
         }
       }
+    },
+    "work_exposure_pdf_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Auto-generated Candora-branded PDF of the month's Work Exposure Payments list, produced when the package is created."
+    },
+    "work_exposure_pdf_name": {
+      "type": "string"
+    },
+    "reimbursement_pdf_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Auto-generated Candora-branded combined PDF of the month's Employment Supports and Exposure Courses lists, produced when the package is created."
+    },
+    "reimbursement_pdf_name": {
+      "type": "string"
     }
   },
   "required": [
