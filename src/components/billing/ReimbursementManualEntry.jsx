@@ -226,7 +226,97 @@ export default function ReimbursementManualEntry({ recordType, records, clients 
               />
             </div>
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
-...
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={openAdd}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Add {cfg.title.replace(/s$/, '')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[480px]">
+                <DialogHeader>
+                  <DialogTitle>{editingId ? 'Edit' : 'Add'} {cfg.title.replace(/s$/, '')}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">Client</Label>
+                    <Select value={clientId} onValueChange={setClientId}>
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Select client…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(clients || []).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.first_name} {c.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {cfg.showStream && stream && (
+                      <p className="text-[11px] text-slate-500 mt-1">Stream: {stream}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs">{cfg.detailLabel}</Label>
+                    <Input
+                      value={detail}
+                      onChange={(e) => setDetail(e.target.value)}
+                      placeholder={recordType === 'exposure_course' ? 'e.g. H2S Alive' : 'e.g. Work boots'}
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Vendor</Label>
+                    <Input
+                      value={vendor}
+                      onChange={(e) => setVendor(e.target.value)}
+                      placeholder="Where it was purchased"
+                      className="h-9 text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Cost (excl. GST) ($)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Payment Date</Label>
+                      <Input
+                        type="date"
+                        value={payDate}
+                        onChange={(e) => setPayDate(e.target.value)}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Receipt</Label>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*,application/pdf"
+                      onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                      className="text-xs"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave} disabled={saving}>
+                    {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                    {editingId ? 'Save Changes' : 'Add Entry'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
