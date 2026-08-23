@@ -34,6 +34,7 @@ const UPLOAD_FOLDERS = {
   invoice: 'Invoice',
   childminding: 'Childminding',
   work_exposure: 'WorkExposure',
+  reimbursement: 'Reimbursement',
   supporting: 'SupportingDocs',
 };
 const sanitizeFileName = (s) =>
@@ -563,6 +564,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                         <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
                       </Button>
                     )}
+                    <CategoryUpload category="reimbursement" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>
               </tr>

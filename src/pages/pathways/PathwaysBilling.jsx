@@ -120,10 +120,8 @@ export default function PathwaysBilling() {
           r.billing_month === month &&
           (r.record_type === 'employment_supports' || r.record_type === 'exposure_course')
       );
-      if (weRecords.length || reimbRecords.length) {
-        await generateAndStorePackagePdfs(createdPkg, { weRecords, reimbRecords, brand });
-        queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
-      }
+      await generateAndStorePackagePdfs(createdPkg, { weRecords, reimbRecords, brand });
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
     } catch (err) {
       console.error('Package PDF generation failed', err);
     }

@@ -15,7 +15,6 @@ export async function uploadPdfBlob(blob, filename) {
  * and persist its URL on the InvoicePackage record.
  */
 export async function generateWorkExposurePdf(pkg, weRecords, brand) {
-  if (!weRecords?.length) return null;
   const bm = pkg.billing_month;
   const blob = await buildWorkExposurePdfBlob(weRecords, bm, brand);
   const file_url = await uploadPdfBlob(blob, `WorkExposure_${bm}.pdf`);
@@ -29,7 +28,6 @@ export async function generateWorkExposurePdf(pkg, weRecords, brand) {
  * PDF for a package's month and persist its URL on the InvoicePackage record.
  */
 export async function generateReimbursementPdf(pkg, reimbRecords, brand) {
-  if (!reimbRecords?.length) return null;
   const bm = pkg.billing_month;
   const blob = await buildReimbursementPdfBlob(reimbRecords, bm, brand);
   const file_url = await uploadPdfBlob(blob, `EmploymentSupports_ExposureCourses_${bm}.pdf`);

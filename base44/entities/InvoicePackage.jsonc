@@ -135,7 +135,7 @@
     },
     "manual_uploads": {
       "type": "array",
-      "description": "Staff-uploaded backup documents attached to this package, grouped by category (crt, invoice, childminding, work_exposure, supporting). Used as a fallback when the auto-gathered document for a category is missing or incorrect; included in the package ZIP under the matching category folder.",
+      "description": "Staff-uploaded backup documents attached to this package, grouped by category (crt, invoice, childminding, work_exposure, reimbursement, supporting). Used as a fallback when the auto-gathered document for a category is missing or incorrect; included in the package ZIP under the matching category folder.",
       "items": {
         "type": "object",
         "properties": {
@@ -149,6 +149,7 @@
               "invoice",
               "childminding",
               "work_exposure",
+              "reimbursement",
               "supporting"
             ]
           },
