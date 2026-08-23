@@ -444,6 +444,11 @@ export default function MonthlyInvoices() {
                 const invIsRange = !!inv.billing_month_end && inv.billing_month_end !== inv.billing_month;
                 const isViewing = selected?.id === inv.id || (!selected && inv.billing_month === effectiveMonth && !invIsRange);
                 const fin = inv.status === 'finalized';
+                // For the month currently being viewed, show the LIVE total from the
+                // rendered invoice above (which re-reads the tracker every time) so the
+                // list number always matches the actual invoice. Other rows fall back
+                // to the stored total (frozen snapshot for closed-off months).
+                const displayTotal = isViewing && renderData ? renderData.total : inv.total_amount;
                 const invLabel = invIsRange
                   ? (monthFirst(inv.billing_month).getFullYear() === monthFirst(inv.billing_month_end).getFullYear()
                       ? `${format(monthFirst(inv.billing_month), 'MMM')} – ${format(monthFirst(inv.billing_month_end), 'MMM yyyy')}`
@@ -467,7 +472,7 @@ export default function MonthlyInvoices() {
                         </p>
                         <p className="text-xs text-slate-500">
                           {fin ? `Closed off ${inv.finalized_date ? format(new Date(inv.finalized_date), 'MMM d, yyyy') : ''}` : 'Open — live'}
-                          {inv.total_amount != null ? ` · $${Number(inv.total_amount).toFixed(2)}` : ''}
+                          {displayTotal != null ? ` · $${Number(displayTotal).toFixed(2)}` : ''}
                         </p>
                       </div>
                     </div>
