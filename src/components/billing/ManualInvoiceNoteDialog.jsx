@@ -4,27 +4,49 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, StickyNote } from 'lucide-react';
+import { Loader2, StickyNote, Pencil, Trash2, Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 
 /**
- * Manual note added straight from the Invoices tab. The note is stored as an
- * adjustment_note on the month's Invoice Package so it renders in the same
+ * Add / Edit notes straight from the Invoices tab. Notes are stored as
+ * adjustment_notes on the month's Invoice Package so they render in the same
  * "Adjustment Notes" section on the invoice document as the auto-generated
- * tracker-edit notes.
+ * tracker-edit notes. Existing notes can be edited or removed inline.
  */
 export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMonth, monthLabel }) {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [clients, setClients] = useState([]);
+  const [pkg, setPkg] = useState(null);
+  const [existingNotes, setExistingNotes] = useState([]);
+  const [editingIdx, setEditingIdx] = useState(null);
   const [label, setLabel] = useState('');
   const [oldValue, setOldValue] = useState('');
   const [newValue, setNewValue] = useState('');
   const [clientId, setClientId] = useState('');
   const [comment, setComment] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const loadPackage = async () => {
+    if (!billingMonth) return null;
+    let pkgs = await base44.entities.InvoicePackage.filter({ billing_month: billingMonth });
+    let p = (pkgs || [])[0];
+    if (!p) {
+      p = await base44.entities.InvoicePackage.create({
+        billing_month: billingMonth,
+        prepared_by: user?.email || 'manual-note',
+        prepared_by_name: user?.full_name || '',
+        prepared_date: new Date().toISOString().slice(0, 10),
+        status: 'draft',
+      });
+    }
+    setPkg(p);
+    setExistingNotes(p.adjustment_notes || []);
+    return p;
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -37,15 +59,51 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
           .map((c) => ({ id: c.id, name: `${c.first_name || ''} ${c.last_name || ''}`.trim() }))
           .filter((c) => c.name)
       );
+      await loadPackage();
     })();
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, billingMonth]);
 
-  const reset = () => {
+  const resetForm = () => {
     setLabel('');
     setOldValue('');
     setNewValue('');
     setClientId('');
     setComment('');
+    setEditingIdx(null);
+  };
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['invoice-adjustment-notes'] });
+    queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+  };
+
+  const startEdit = (idx) => {
+    const n = existingNotes[idx];
+    if (!n) return;
+    setEditingIdx(idx);
+    setLabel(n.cell_label || '');
+    setOldValue(n.old_value || '');
+    setNewValue(n.new_value || '');
+    setClientId(n.client_id || '');
+    setComment(n.comment || '');
+  };
+
+  const buildEntry = () => {
+    const client = clients.find((c) => c.id === clientId);
+    const editing = editingIdx != null ? existingNotes[editingIdx] : null;
+    return {
+      cell_letter: '',
+      cell_label: label.trim(),
+      old_value: oldValue.trim(),
+      new_value: newValue.trim(),
+      client_id: clientId || '',
+      client_name: client?.name || '',
+      comment: comment.trim(),
+      created_by_name: editing?.created_by_name || user?.full_name || user?.email || '',
+      created_date: editing?.created_date || new Date().toISOString().slice(0, 10),
+      billing_month: billingMonth,
+    };
   };
 
   const handleSave = async () => {
@@ -59,39 +117,21 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
     }
     setSaving(true);
     try {
-      // Find (or create) a package for this month to hold the note.
-      let pkgs = await base44.entities.InvoicePackage.filter({ billing_month: billingMonth });
-      let pkg = (pkgs || [])[0];
-      if (!pkg) {
-        pkg = await base44.entities.InvoicePackage.create({
-          billing_month: billingMonth,
-          prepared_by: user?.email || 'manual-note',
-          prepared_by_name: user?.full_name || '',
-          prepared_date: new Date().toISOString().slice(0, 10),
-          status: 'draft',
-        });
+      let p = pkg;
+      if (!p) p = await loadPackage();
+      const entry = buildEntry();
+      let next;
+      if (editingIdx != null) {
+        next = (p.adjustment_notes || []).map((n, i) => (i === editingIdx ? entry : n));
+      } else {
+        next = [...(p.adjustment_notes || []), entry];
       }
-      const client = clients.find((c) => c.id === clientId);
-      const entry = {
-        cell_letter: '',
-        cell_label: label.trim(),
-        old_value: oldValue.trim(),
-        new_value: newValue.trim(),
-        client_id: clientId || '',
-        client_name: client?.name || '',
-        comment: comment.trim(),
-        created_by_name: user?.full_name || user?.email || '',
-        created_date: new Date().toISOString().slice(0, 10),
-        billing_month: billingMonth,
-      };
-      await base44.entities.InvoicePackage.update(pkg.id, {
-        adjustment_notes: [...(pkg.adjustment_notes || []), entry],
-      });
-      queryClient.invalidateQueries({ queryKey: ['invoice-adjustment-notes'] });
-      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
-      toast.success('Note added to the invoice');
-      reset();
-      onOpenChange(false);
+      const updated = await base44.entities.InvoicePackage.update(p.id, { adjustment_notes: next });
+      setPkg(updated);
+      setExistingNotes(updated.adjustment_notes || next);
+      invalidate();
+      toast.success(editingIdx != null ? 'Note updated' : 'Note added to the invoice');
+      resetForm();
     } catch (e) {
       toast.error('Could not save the note: ' + (e?.message || 'error'));
     } finally {
@@ -99,19 +139,80 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
     }
   };
 
+  const handleDelete = async (idx) => {
+    setSaving(true);
+    try {
+      let p = pkg;
+      if (!p) p = await loadPackage();
+      const next = (p.adjustment_notes || []).filter((_, i) => i !== idx);
+      const updated = await base44.entities.InvoicePackage.update(p.id, { adjustment_notes: next });
+      setPkg(updated);
+      setExistingNotes(updated.adjustment_notes || next);
+      invalidate();
+      if (editingIdx === idx) {
+        resetForm();
+      } else if (editingIdx != null && editingIdx > idx) {
+        setEditingIdx(editingIdx - 1);
+      }
+      toast.success('Note removed');
+    } catch (e) {
+      toast.error('Could not delete the note: ' + (e?.message || 'error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isEditing = editingIdx != null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) resetForm(); onOpenChange(o); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <StickyNote className="h-4 w-4 text-amber-500" />
-            Add Note to Invoice — {monthLabel}
+            {isEditing ? 'Edit Note' : 'Add Note'} — {monthLabel}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 py-2">
-          <p className="text-xs text-slate-500">
-            This note appears in the Adjustment Notes section on the invoice, in the same format as the auto-generated tracker-edit notes.
-          </p>
+
+        {existingNotes.length > 0 && (
+          <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Existing Notes</p>
+            {existingNotes.map((n, idx) => (
+              <div key={idx} className={`rounded-md border p-2 ${editingIdx === idx ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-700 truncate">{n.cell_label}</p>
+                    <p className="text-xs text-slate-500">
+                      {n.old_value || n.new_value ? `${n.old_value || '—'} → ${n.new_value || '—'}` : ''}
+                      {n.client_name ? ` · ${n.client_name}` : ''}
+                    </p>
+                    {n.comment && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{n.comment}</p>}
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {n.created_by_name ? `${n.created_by_name} · ` : ''}
+                      {n.created_date ? format(new Date(n.created_date), 'MMM d, yyyy') : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(idx)} disabled={saving}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:text-red-600" onClick={() => handleDelete(idx)} disabled={saving}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="space-y-3 py-1 border-t pt-3">
+          {isEditing && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-amber-700 font-medium">Editing existing note #{editingIdx + 1}</span>
+              <button onClick={resetForm} className="text-slate-500 hover:text-accent underline">Cancel edit</button>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label className="text-xs">Label (what this note is about) <span className="text-destructive">*</span></Label>
             <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. Billing correction" />
@@ -145,10 +246,10 @@ export default function ManualInvoiceNoteDialog({ open, onOpenChange, billingMon
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }} disabled={saving}>Close</Button>
           <Button onClick={handleSave} disabled={saving || !label.trim()}>
-            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <StickyNote className="h-4 w-4 mr-2" />}
-            Add Note
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : isEditing ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {isEditing ? 'Save Changes' : 'Add Note'}
           </Button>
         </DialogFooter>
       </DialogContent>

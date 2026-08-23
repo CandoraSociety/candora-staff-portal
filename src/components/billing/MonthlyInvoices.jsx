@@ -380,7 +380,7 @@ export default function MonthlyInvoices() {
               )}
               <Button onClick={() => setShowNoteDialog(true)} variant="outline" size="sm" disabled={!effectiveMonth}>
                 <StickyNote className="h-4 w-4 mr-2" />
-                Add Note
+                Add/Edit Note
               </Button>
               {selected && (
                 <Badge variant={isFinalized ? 'outline' : 'default'} className={isFinalized ? 'border-slate-400 text-slate-600' : ''}>
