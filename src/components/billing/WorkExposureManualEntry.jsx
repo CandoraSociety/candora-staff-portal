@@ -12,7 +12,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Briefcase, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { currentBillingMonth, parseBillingMonth } from './billingMonth';
@@ -29,6 +29,7 @@ export default function WorkExposureManualEntry({ clients }) {
   const [billingMonth, setBillingMonth] = useState(currentBillingMonth());
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   // Form state
   const [clientId, setClientId] = useState('');
@@ -69,7 +70,22 @@ export default function WorkExposureManualEntry({ clients }) {
     setPayPeriodEnd('');
   };
 
-  const handleAdd = async () => {
+  const startEdit = (r) => {
+    setEditingId(r.id);
+    setClientId(r.client_id || '');
+    setEmployer(r.vendor || '');
+    setHours(r.hours_worked != null ? String(r.hours_worked) : '');
+    setPayPeriodEnd(r.work_end_date || '');
+    setOpen(true);
+  };
+
+  const openAdd = () => {
+    setEditingId(null);
+    resetForm();
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!clientId) { toast.error('Select a client.'); return; }
     if (!employer.trim()) { toast.error('Enter the employer name.'); return; }
     const hrs = Number(hours);
@@ -80,27 +96,36 @@ export default function WorkExposureManualEntry({ clients }) {
     try {
       const clientName = clientMap[clientId] || '';
       const total = hrs * RATE;
-      await base44.entities.FinancialRecord.create({
+      const payload = {
         client_id: clientId,
         client_name: clientName,
-        record_type: 'paid_external_placement',
         vendor: employer.trim(),
         hours_worked: hrs,
         hourly_rate: RATE,
         amount: total,
         total,
-        tax: 0,
         work_end_date: payPeriodEnd,
         date: payPeriodEnd,
         billing_month: billingMonthFromDate(payPeriodEnd) || billingMonth,
-        registration_status: 'not_registered',
-        completion_status: 'completed',
-        notes: 'Manual entry',
-      });
+      };
+      if (editingId) {
+        await base44.entities.FinancialRecord.update(editingId, payload);
+        toast.success('Work exposure entry updated.');
+      } else {
+        await base44.entities.FinancialRecord.create({
+          ...payload,
+          tax: 0,
+          record_type: 'paid_external_placement',
+          registration_status: 'not_registered',
+          completion_status: 'completed',
+          notes: 'Manual entry',
+        });
+        toast.success('Work exposure entry added.');
+      }
       queryClient.invalidateQueries({ queryKey: ['financial-records', 'paid_external_placement'] });
       queryClient.invalidateQueries({ queryKey: ['financial-records'] });
-      toast.success('Work exposure entry added.');
       resetForm();
+      setEditingId(null);
       setOpen(false);
     } catch (e) {
       toast.error(e?.message || 'Could not save the entry.');
@@ -141,13 +166,13 @@ export default function WorkExposureManualEntry({ clients }) {
                 className="w-[150px] h-8 text-sm"
               />
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
               <DialogTrigger asChild>
-                <Button size="sm"><Plus className="h-4 w-4 mr-1.5" /> Add Manual Entry</Button>
+                <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" /> Add Manual Entry</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Work Exposure Entry — {monthLabel}</DialogTitle>
+                  <DialogTitle>{editingId ? 'Edit Work Exposure Entry' : `Add Work Exposure Entry — ${monthLabel}`}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
                   <div className="space-y-1.5">
@@ -189,10 +214,10 @@ export default function WorkExposureManualEntry({ clients }) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                  <Button onClick={handleAdd} disabled={saving}>
+                  <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); resetForm(); }}>Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving}>
                     {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                    {saving ? 'Saving…' : 'Add Entry'}
+                    {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add Entry'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -250,9 +275,14 @@ export default function WorkExposureManualEntry({ clients }) {
                     </td>
                     <td className="text-center py-2 px-3">
                       {r.notes === 'Manual entry' && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(r)}>
-                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                        </Button>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(r)} title="Edit">
+                            <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(r)} title="Delete">
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </Button>
+                        </div>
                       )}
                     </td>
                   </tr>
