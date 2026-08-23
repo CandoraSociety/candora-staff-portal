@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Users, MapPin, User, Clock, Repeat, Calendar, CheckCircle2, Sparkles } from 'lucide-react';
 import {
   generateOccurrences, todayISO, formatDateLong, toISODate,
-  WORKSHOP_CATEGORIES, WORKSHOP_CATEGORY_KEYS,
+  WORKSHOP_CATEGORIES, WORKSHOP_CATEGORY_KEYS, isWdDeaClient,
+  WORKSHOP_AUDIENCE_BADGE, WORKSHOP_AUDIENCE_LABELS,
 } from '@/lib/workshopSchedule';
 
 const CATEGORY_LABELS = Object.fromEntries(WORKSHOP_CATEGORIES.map(c => [c.value, c.label]));
@@ -122,8 +123,13 @@ export default function WorkshopsClientTab({ client }) {
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: w.color || '#2563eb' }} />
                       {w.title}
                     </h4>
-                    {matched && <Badge className="text-[10px] bg-violet-100 text-violet-700 border border-violet-200 shrink-0"><Sparkles className="w-2.5 h-2.5 mr-0.5" />Action plan</Badge>}
-                    {done && <Badge className="text-[10px] bg-emerald-100 text-emerald-700 shrink-0"><CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />Completed</Badge>}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {w.audience && w.audience !== 'public' && (
+                        <Badge className={`text-[10px] ${WORKSHOP_AUDIENCE_BADGE[w.audience] || ''}`}>{WORKSHOP_AUDIENCE_LABELS[w.audience] || w.audience}</Badge>
+                      )}
+                      {matched && <Badge className="text-[10px] bg-violet-100 text-violet-700 border border-violet-200"><Sparkles className="w-2.5 h-2.5 mr-0.5" />Action plan</Badge>}
+                      {done && <Badge className="text-[10px] bg-emerald-100 text-emerald-700"><CheckCircle2 className="w-2.5 h-2.5 mr-0.5" />Completed</Badge>}
+                    </div>
                   </div>
                   {w.category && w.category !== 'none' && (
                     <p className="text-[11px] text-slate-500 mt-0.5">{CATEGORY_LABELS[w.category]}</p>
@@ -156,6 +162,10 @@ export default function WorkshopsClientTab({ client }) {
 
                   {w.status === 'cancelled' ? (
                     <p className="text-xs text-red-500 mt-2">This workshop is cancelled.</p>
+                  ) : w.audience === 'wd_dea_exclusive' && !isWdDeaClient(client) ? (
+                    <p className="text-xs text-violet-700 bg-violet-50 border border-violet-200 rounded px-2 py-1.5 mt-2">
+                      WD & DEA Exclusive — only Workforce Development and Direct Employment Assistance clients can register.
+                    </p>
                   ) : dates.length === 0 ? (
                     <p className="text-xs text-slate-400 mt-2">No upcoming sessions scheduled.</p>
                   ) : (

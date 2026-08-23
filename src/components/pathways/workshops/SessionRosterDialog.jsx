@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { base44 } from '@/api/base44Client';
-import { todayISO, formatDateLong } from '@/lib/workshopSchedule';
+import { todayISO, formatDateLong, isWdDeaClient } from '@/lib/workshopSchedule';
 import { syncSessionCompletionToRoadmap } from '@/lib/workshopCompletion';
 import { UserMinus, UserPlus, Users, ClipboardCheck } from 'lucide-react';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 const STATUS_META = {
   registered: { label: 'Registered', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
@@ -143,6 +146,14 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
     .map(c => `${c.first_name} ${c.last_name}`.trim())
     .sort();
 
+  // WD & DEA Exclusive sessions can only register Workforce Development
+  // (pathways) and Direct Employment Assistance clients — casual clients
+  // and walk-in public attendees are blocked from these sessions.
+  const isExclusive = workshop?.audience === 'wd_dea_exclusive';
+  const eligibleClients = (clients || [])
+    .filter(c => isWdDeaClient(c) && (c.first_name || c.last_name))
+    .sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
+
   const hasPending = sessionSignups.some(s => s.status === 'registered');
 
   return (
@@ -229,28 +240,63 @@ export default function SessionRosterDialog({ open, onClose, workshop, sessionDa
 
         <form onSubmit={addAttendee} className="space-y-2 border-t border-border pt-3 mt-1">
           <p className="text-sm font-semibold flex items-center gap-1.5"><UserPlus className="w-4 h-4" /> Add to roster</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs">Name</Label>
-              <Input
-                list="ws-client-list"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Attendee name"
-                disabled={full || adding}
-              />
-              <datalist id="ws-client-list">
-                {clientOptions.map((n, i) => <option key={i} value={n} />)}
-              </datalist>
-            </div>
-            <div>
-              <Label className="text-xs">Email (optional)</Label>
-              <Input type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={full || adding} />
-            </div>
-          </div>
-          <Button type="submit" size="sm" disabled={full || adding || !name.trim()} className="w-full">
-            {adding ? 'Adding…' : 'Add attendee'}
-          </Button>
+          {isExclusive ? (
+            <>
+              <p className="text-[11px] text-violet-700 bg-violet-50 border border-violet-200 rounded px-2 py-1">
+                WD & DEA Exclusive — only Workforce Development (pathways) and Direct Employment Assistance clients can be registered.
+              </p>
+              <div>
+                <Label className="text-xs">Client</Label>
+                <Select
+                  value={name}
+                  onValueChange={(v) => {
+                    const c = eligibleClients.find(c => `${c.first_name} ${c.last_name}`.trim() === v);
+                    setName(v);
+                    setEmail(c?.email || '');
+                  }}
+                  disabled={full || adding || eligibleClients.length === 0}
+                >
+                  <SelectTrigger className="w-full h-9 text-sm">
+                    <SelectValue placeholder={eligibleClients.length === 0 ? 'No WD/DEA clients available' : 'Select a WD/DEA client…'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eligibleClients.map(c => {
+                      const n = `${c.first_name} ${c.last_name}`.trim();
+                      return <SelectItem key={c.id} value={n}>{n}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" size="sm" disabled={full || adding || !name.trim()} className="w-full">
+                {adding ? 'Adding…' : 'Add attendee'}
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    list="ws-client-list"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Attendee name"
+                    disabled={full || adding}
+                  />
+                  <datalist id="ws-client-list">
+                    {clientOptions.map((n, i) => <option key={i} value={n} />)}
+                  </datalist>
+                </div>
+                <div>
+                  <Label className="text-xs">Email (optional)</Label>
+                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} disabled={full || adding} />
+                </div>
+              </div>
+              <Button type="submit" size="sm" disabled={full || adding || !name.trim()} className="w-full">
+                {adding ? 'Adding…' : 'Add attendee'}
+              </Button>
+            </>
+          )}
         </form>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">

@@ -24,6 +24,16 @@
       "default": "none",
       "description": "Links this workshop to a client's action-plan workshop item so it can be highlighted in the client file and auto-completed on attendance."
     },
+    "audience": {
+      "type": "string",
+      "enum": [
+        "public",
+        "casual",
+        "wd_dea_exclusive"
+      ],
+      "default": "public",
+      "description": "Who may register. 'wd_dea_exclusive' = only Workforce Development (pathways) and Direct Employment Assistance clients may be registered. 'casual' = casual clients and the public. 'public' = open to everyone."
+    },
     "facilitator_name": {
       "type": "string",
       "description": "Facilitator full name"

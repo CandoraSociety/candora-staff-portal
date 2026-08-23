@@ -7,8 +7,9 @@ import WorkshopDialog from '@/components/pathways/workshops/WorkshopDialog';
 import WorkshopSchedule from '@/components/pathways/workshops/WorkshopSchedule';
 import SessionRosterDialog from '@/components/pathways/workshops/SessionRosterDialog';
 import CompletedWorkshopsTab from '@/components/pathways/workshops/CompletedWorkshopsTab';
-import { generateOccurrences, nextOccurrence, formatDateLong, formatDateShort } from '@/lib/workshopSchedule';
+import { generateOccurrences, nextOccurrence, formatDateLong, formatDateShort, WORKSHOP_AUDIENCE_BADGE, WORKSHOP_AUDIENCE_LABELS } from '@/lib/workshopSchedule';
 import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
+import { Badge } from '@/components/ui/badge';
 
 const RECURRENCE_LABEL = { none: 'One-off', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
 const STATUS_CLS = {
@@ -143,7 +144,12 @@ export default function PathwaysWorkshops() {
                     <div className="p-4">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-slate-800 leading-tight">{w.title}</h3>
-                        <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 shrink-0 ${STATUS_CLS[w.status] || ''}`}>{w.status}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {w.audience && w.audience !== 'public' && (
+                            <Badge className={`text-[10px] ${WORKSHOP_AUDIENCE_BADGE[w.audience] || ''}`}>{WORKSHOP_AUDIENCE_LABELS[w.audience] || w.audience}</Badge>
+                          )}
+                          <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${STATUS_CLS[w.status] || ''}`}>{w.status}</span>
+                        </div>
                       </div>
                       {w.description && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{w.description}</p>}
 

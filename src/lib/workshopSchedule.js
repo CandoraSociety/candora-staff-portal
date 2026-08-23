@@ -107,3 +107,28 @@ export const WORKSHOP_CATEGORIES = [
 ];
 
 export const WORKSHOP_CATEGORY_KEYS = WORKSHOP_CATEGORIES.map(c => c.value).filter(v => v !== 'none');
+
+// Who may register for a workshop / job club session.
+export const WORKSHOP_AUDIENCES = [
+  { value: 'public', label: 'Public' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'wd_dea_exclusive', label: 'WD & DEA Exclusive' },
+];
+
+export const WORKSHOP_AUDIENCE_LABELS = {
+  public: 'Public',
+  casual: 'Casual',
+  wd_dea_exclusive: 'WD & DEA Exclusive',
+};
+
+export const WORKSHOP_AUDIENCE_BADGE = {
+  public: 'bg-slate-100 text-slate-600',
+  casual: 'bg-amber-100 text-amber-700',
+  wd_dea_exclusive: 'bg-violet-100 text-violet-700',
+};
+
+// A client may register for a WD & DEA Exclusive session only if they are in
+// the Workforce Development (pathways) or Direct Employment Assistance stream.
+export function isWdDeaClient(client) {
+  return client?.service_type === 'pathways' || client?.service_type === 'direct_to_employment';
+}

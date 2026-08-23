@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { X, Calendar, Clock, MapPin, User, Repeat, CheckCircle2, UserX, CalendarClock } from 'lucide-react';
-import { generateOccurrences, formatDateLong, toISODate, WORKSHOP_CATEGORIES } from '@/lib/workshopSchedule';
+import { generateOccurrences, formatDateLong, toISODate, WORKSHOP_CATEGORIES, isWdDeaClient } from '@/lib/workshopSchedule';
 import { syncWorkshopCompletionToRoadmap } from '@/lib/workshopCompletion';
 
 const CATEGORY_LABELS = Object.fromEntries(WORKSHOP_CATEGORIES.map(c => [c.value, c.label]));
@@ -131,15 +131,21 @@ export default function WorkshopRoadmapPanel({ client, item, workshops, signups,
                 </div>
 
                 {wSignups.length === 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-slate-500">Not registered yet.</span>
-                    {dates.length > 0 ? (
-                      <select disabled={busy} value="" onChange={e => register(w, e.target.value)} className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs">
-                        <option value="">Register for a session…</option>
-                        {dates.map(d => <option key={d} value={d}>{formatDateLong(d)}{w.start_time ? ` · ${w.start_time}` : ''}</option>)}
-                      </select>
-                    ) : <span className="text-xs text-slate-400">No upcoming sessions.</span>}
-                  </div>
+                  w.audience === 'wd_dea_exclusive' && !isWdDeaClient(client) ? (
+                    <p className="text-xs text-violet-700 bg-violet-50 border border-violet-200 rounded px-2 py-1">
+                      WD & DEA Exclusive — this client is not in a Workforce Development or Direct Employment Assistance stream.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-slate-500">Not registered yet.</span>
+                      {dates.length > 0 ? (
+                        <select disabled={busy} value="" onChange={e => register(w, e.target.value)} className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs">
+                          <option value="">Register for a session…</option>
+                          {dates.map(d => <option key={d} value={d}>{formatDateLong(d)}{w.start_time ? ` · ${w.start_time}` : ''}</option>)}
+                        </select>
+                      ) : <span className="text-xs text-slate-400">No upcoming sessions.</span>}
+                    </div>
+                  )
                 ) : (
                   wSignups.map(s => (
                     <div key={s.id} className="rounded-md bg-slate-50 border border-slate-200 p-2 space-y-2">

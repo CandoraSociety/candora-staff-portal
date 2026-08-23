@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
-import { todayISO, WORKSHOP_CATEGORIES } from '@/lib/workshopSchedule';
+import { todayISO, WORKSHOP_CATEGORIES, WORKSHOP_AUDIENCES } from '@/lib/workshopSchedule';
 
 const COLOR_CHOICES = ['#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2'];
 const JOB_CLUB_BLUE = '#2563eb';
@@ -21,6 +21,7 @@ const EMPTY = {
   recurrence_pattern: 'none', recurrence_end_date: '',
   status: 'scheduled', color: '#2563eb',
   category: 'none',
+  audience: 'public',
 };
 
 export default function WorkshopDialog({ open, onClose, onSaved, workshop, preset, user }) {
@@ -64,6 +65,7 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, prese
         status: form.status,
         color: isJobClub ? JOB_CLUB_BLUE : form.color,
         category: isJobClub ? 'none' : (form.category || 'none'),
+        audience: form.audience || 'public',
       };
       if (workshop) {
         await base44.entities.Workshop.update(workshop.id, payload);
@@ -99,6 +101,19 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, prese
           <div>
             <Label>Description</Label>
             <Textarea value={form.description} onChange={e => set('description', e.target.value)} rows={2} className={fieldCls} />
+          </div>
+          <div>
+            <Label>Audience</Label>
+            <select
+              value={form.audience}
+              onChange={e => set('audience', e.target.value)}
+              className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+            >
+              {WORKSHOP_AUDIENCES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+            </select>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              'WD & DEA Exclusive' sessions can only register Workforce Development (pathways) and Direct Employment Assistance clients — casual clients and the public cannot be added.
+            </p>
           </div>
           {!isJobClub && (
             <div>
