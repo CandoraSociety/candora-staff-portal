@@ -114,15 +114,18 @@ export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(...navy);
+  const uniqueClients = new Set(records.map((r) => r.client_id).filter(Boolean)).size;
   doc.text('BILLING MONTH', 40, metaY);
-  doc.text('DATE ISSUED', 240, metaY);
-  doc.text('# PLACEMENTS', 440, metaY);
+  doc.text('DATE ISSUED', 220, metaY);
+  doc.text('# PLACEMENTS', 380, metaY);
+  doc.text('# SUBMISSIONS', 500, metaY);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(40, 40, 40);
   doc.text(monthLabel, 40, metaY + 14);
-  doc.text(format(new Date(), 'MMMM d, yyyy'), 240, metaY + 14);
-  doc.text(String(records.length), 440, metaY + 14);
+  doc.text(format(new Date(), 'MMMM d, yyyy'), 220, metaY + 14);
+  doc.text(String(uniqueClients), 380, metaY + 14);
+  doc.text(String(records.length), 500, metaY + 14);
 
   // Rate statement band
   const rateTop = metaTop + metaH;
@@ -212,7 +215,7 @@ export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}
     doc.setFontSize(10);
     doc.setTextColor(...navy);
     doc.text(
-      `TOTAL (${records.length} placements)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+      `TOTAL (${uniqueClients} placements, ${records.length} submissions)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
       left,
       y
     );
