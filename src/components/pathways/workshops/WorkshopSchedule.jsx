@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths } from 'date-fns';
-import { generateOccurrences, formatDateLong, toISODate } from '@/lib/workshopSchedule';
+import { generateOccurrences, formatDateLong, toISODate, WORKSHOP_AUDIENCE_LABELS } from '@/lib/workshopSchedule';
 import { Calendar, Clock, MapPin, Users, User, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -86,7 +86,10 @@ export default function WorkshopSchedule({ workshops, signups, onOpenRoster, ran
                           <div className="flex-1 p-3 flex items-center gap-3">
                             <Clock className="w-4 h-4 text-slate-400 shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-800 truncate">{s.workshop.title}</p>
+                              <p className="text-sm font-medium text-slate-800 truncate flex items-center gap-1.5">
+                                {s.workshop.title}
+                                {s.workshop.audience === 'wd_dea_exclusive' && <span className="text-[10px] font-semibold text-violet-700 bg-violet-100 border border-violet-200 rounded px-1.5 py-0.5">WD/DEA Exclusive</span>}
+                              </p>
                               <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500 mt-0.5">
                                 <span>{s.workshop.start_time}{s.workshop.end_time ? `–${s.workshop.end_time}` : ''}</span>
                                 {s.workshop.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{s.workshop.location}</span>}
@@ -167,7 +170,7 @@ function CalendarView({ month, setMonth, byDate, today, onOpenRoster }) {
                   title={`${s.workshop.title} · ${s.workshop.start_time || ''} · ${s.rosterCount}${s.workshop.capacity ? `/${s.workshop.capacity}` : ''} signed up`}
                 >
                   {s.workshop.start_time && <span className="font-medium">{s.workshop.start_time.replace(/^0/, '')} </span>}
-                  {s.workshop.title}
+                  {s.workshop.title}{s.workshop.audience === 'wd_dea_exclusive' ? ' · WD/DEA' : ''}
                 </button>
               ))}
               {items.length > 3 && (
