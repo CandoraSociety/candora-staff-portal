@@ -51,7 +51,9 @@ export default function PackageInvoiceTab({ pkg }) {
     refetchOnMount: true,
   });
 
-  const adjustmentNotes = pkg.adjustment_notes || [];
+  // Notes are saved on the linked Invoice record (Invoices tab) — use those so
+  // the package invoice is an exact duplicate of the Invoices-tab invoice.
+  const adjustmentNotes = linkedInvoice?.adjustment_notes || [];
   const handlePrint = () => {
     const node = document.querySelector('.invoice-document');
     if (!node) {
