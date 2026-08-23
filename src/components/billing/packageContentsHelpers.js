@@ -739,6 +739,12 @@ export const buildInvoicePdfFromNode = async (node) => {
   return pdf.output('blob');
 };
 
+// Some downstream systems reject underscores and hyphens in downloaded file
+// names. Replace both with a space, collapse runs, and trim. Keep the file
+// extension (dots are untouched).
+export const cleanFileName = (s) =>
+  String(s || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+
 export const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

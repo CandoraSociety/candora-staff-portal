@@ -20,6 +20,7 @@ import {
   downloadBlob,
   downloadUrl,
   extFromUrl,
+  cleanFileName,
 } from './packageContentsHelpers';
 import {
   generateWorkExposurePdf,
@@ -197,7 +198,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       return;
     }
     const blob = await buildChildmindingPdfBlob(cmRecords, billingMonth, brand);
-    downloadBlob(blob, `Childminding_${billingMonth}.pdf`);
+    downloadBlob(blob, cleanFileName(`Childminding_${billingMonth}.pdf`));
   };
 
   const refreshPackageQueries = () =>
@@ -222,7 +223,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
       setRegenerating(null);
     }
-    if (url) downloadUrl(url, pkg.work_exposure_pdf_name || `WorkExposure_${billingMonth}.pdf`);
+    if (url) downloadUrl(url, cleanFileName(pkg.work_exposure_pdf_name || `WorkExposure_${billingMonth}.pdf`));
   };
 
   const handleReimbursementPdf = async () => {
@@ -244,7 +245,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
       setRegenerating(null);
     }
-    if (url) downloadUrl(url, pkg.reimbursement_pdf_name || `EmploymentSupports_ExposureCourses_${billingMonth}.pdf`);
+    if (url) downloadUrl(url, cleanFileName(pkg.reimbursement_pdf_name || `EmploymentSupports_ExposureCourses_${billingMonth}.pdf`));
   };
 
   const handleRegenerate = async (which) => {
@@ -280,7 +281,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         if (node) {
           try {
             const invoiceBlob = await buildInvoicePdfFromNode(node);
-            zip.file(`Invoice_${billingMonth}.pdf`, invoiceBlob);
+            zip.file(cleanFileName(`Invoice_${billingMonth}.pdf`), invoiceBlob);
             bundled++;
           } catch {
             toast.error('Could not render the invoice PDF — it will be skipped from the ZIP.');
@@ -289,7 +290,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
 
       if (cmRecords.length) {
-        zip.file(`Childminding_${billingMonth}.pdf`, await buildChildmindingPdfBlob(cmRecords, billingMonth, brand));
+        zip.file(cleanFileName(`Childminding_${billingMonth}.pdf`), await buildChildmindingPdfBlob(cmRecords, billingMonth, brand));
         bundled++;
       }
       if (weRecords.length) {
@@ -298,7 +299,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
           weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null;
         } catch { weBlob = null; }
         if (!weBlob) weBlob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand);
-        zip.file(`WorkExposure_${billingMonth}.pdf`, weBlob);
+        zip.file(cleanFileName(`WorkExposure_${billingMonth}.pdf`), weBlob);
         bundled++;
       }
       if (reimbRecords.length) {
@@ -307,7 +308,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
           reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null;
         } catch { reBlob = null; }
         if (!reBlob) reBlob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand);
-        zip.file(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`, reBlob);
+        zip.file(cleanFileName(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`), reBlob);
         bundled++;
       }
 
@@ -317,7 +318,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
           try {
             const res = await fetch(f.url);
             if (!res.ok) return null;
-            return { name: `SupportingDocs/${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${extFromUrl(f.url)}`, blob: await res.blob() };
+            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${extFromUrl(f.url)}`)}`, blob: await res.blob() };
           } catch {
             return null;
           }
@@ -338,10 +339,10 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             const bin = atob(data.base64);
             const bytes = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-            zip.file(crtFile.name, bytes);
+            zip.file(cleanFileName(crtFile.name), bytes);
             bundled++;
           } else {
-            zip.file('CRT_download_link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
+            zip.file('CRT download link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
           }
         } catch {
           zip.file('CRT_download_link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
@@ -356,7 +357,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             const res = await fetch(u.file_url);
             if (!res.ok) return null;
             const folder = UPLOAD_FOLDERS[u.category] || 'ManualUploads';
-            return { name: `${folder}/${sanitizeFileName(u.file_name)}`, blob: await res.blob() };
+            return { name: `${folder}/${cleanFileName(sanitizeFileName(u.file_name))}`, blob: await res.blob() };
           } catch {
             return null;
           }
@@ -374,7 +375,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       );
 
       const blob = await zip.generateAsync({ type: 'blob' });
-      downloadBlob(blob, `${pkg.package_number}_${billingMonth}.zip`);
+      downloadBlob(blob, cleanFileName(`${pkg.package_number}_${billingMonth}.zip`));
       toast.success(`Package bundle downloaded (${bundled} documents)`);
     } catch (err) {
       toast.error('Could not build bundle: ' + (err?.message || 'error'));

@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { buildWorkExposurePdfBlob, buildReimbursementPdfBlob } from './packageContentsHelpers';
+import { buildWorkExposurePdfBlob, buildReimbursementPdfBlob, cleanFileName } from './packageContentsHelpers';
 
 /**
  * Upload a generated PDF Blob to the app's file storage and return its URL.
@@ -17,8 +17,9 @@ export async function uploadPdfBlob(blob, filename) {
 export async function generateWorkExposurePdf(pkg, weRecords, brand) {
   const bm = pkg.billing_month;
   const blob = await buildWorkExposurePdfBlob(weRecords, bm, brand);
-  const file_url = await uploadPdfBlob(blob, `WorkExposure_${bm}.pdf`);
-  const updates = { work_exposure_pdf_url: file_url, work_exposure_pdf_name: `WorkExposure_${bm}.pdf` };
+  const weName = cleanFileName(`WorkExposure_${bm}.pdf`);
+  const file_url = await uploadPdfBlob(blob, weName);
+  const updates = { work_exposure_pdf_url: file_url, work_exposure_pdf_name: weName };
   await base44.entities.InvoicePackage.update(pkg.id, updates);
   return updates;
 }
@@ -30,8 +31,9 @@ export async function generateWorkExposurePdf(pkg, weRecords, brand) {
 export async function generateReimbursementPdf(pkg, reimbRecords, brand) {
   const bm = pkg.billing_month;
   const blob = await buildReimbursementPdfBlob(reimbRecords, bm, brand);
-  const file_url = await uploadPdfBlob(blob, `EmploymentSupports_ExposureCourses_${bm}.pdf`);
-  const updates = { reimbursement_pdf_url: file_url, reimbursement_pdf_name: `EmploymentSupports_ExposureCourses_${bm}.pdf` };
+  const reName = cleanFileName(`EmploymentSupports_ExposureCourses_${bm}.pdf`);
+  const file_url = await uploadPdfBlob(blob, reName);
+  const updates = { reimbursement_pdf_url: file_url, reimbursement_pdf_name: reName };
   await base44.entities.InvoicePackage.update(pkg.id, updates);
   return updates;
 }
