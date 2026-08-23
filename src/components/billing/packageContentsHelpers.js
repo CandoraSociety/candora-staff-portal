@@ -745,6 +745,44 @@ export const buildInvoicePdfFromNode = async (node) => {
 export const cleanFileName = (s) =>
   String(s || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
+/**
+ * Downscale + re-encode an image blob (JPEG) so receipt photos don't bloat the
+ * invoice package ZIP. Non-image blobs are returned untouched. If the
+ * re-encoded result isn't smaller, the original is kept. Returns { blob, ext }
+ * where ext is 'jpg' when converted (so the filename can be updated) or null.
+ */
+export const compressImageBlob = async (blob, maxDim = 1500, quality = 0.7) => {
+  if (!blob || !blob.type || !blob.type.startsWith('image/')) return { blob, ext: null };
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = dataUrl;
+    });
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * scale);
+    const h = Math.round(img.naturalHeight * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    const out = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/jpeg', quality)
+    );
+    if (out && out.size < blob.size) return { blob: out, ext: 'jpg' };
+    return { blob, ext: null };
+  } catch {
+    return { blob, ext: null };
+  }
+};
+
 export const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

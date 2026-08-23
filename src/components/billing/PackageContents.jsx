@@ -21,6 +21,7 @@ import {
   downloadUrl,
   extFromUrl,
   cleanFileName,
+  compressImageBlob,
 } from './packageContentsHelpers';
 import {
   generateWorkExposurePdf,
@@ -314,7 +315,10 @@ export default function PackageContents({ pkg, onViewInvoice }) {
           try {
             const res = await fetch(f.url);
             if (!res.ok) return null;
-            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${extFromUrl(f.url)}`)}`, blob: await res.blob(), essential: false };
+            const raw = await res.blob();
+            const { blob: outBlob, ext: newExt } = await compressImageBlob(raw);
+            const ext = newExt || extFromUrl(f.url);
+            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${ext}`)}`, blob: outBlob };
           } catch {
             return null;
           }
@@ -347,7 +351,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             const res = await fetch(u.file_url);
             if (!res.ok) return null;
             const folder = UPLOAD_FOLDERS[u.category] || 'ManualUploads';
-            return { name: `${folder}/${cleanFileName(sanitizeFileName(u.file_name))}`, blob: await res.blob(), essential: false };
+            const raw = await res.blob();
+            const { blob: outBlob, ext: newExt } = await compressImageBlob(raw);
+            let baseName = cleanFileName(sanitizeFileName(u.file_name));
+            if (newExt) baseName = baseName.replace(/\.\w+$/, '') + '.jpg';
+            return { name: `${folder}/${baseName}`, blob: outBlob };
           } catch {
             return null;
           }
