@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,10 +63,26 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [statusChangeOpen, setStatusChangeOpen] = useState(false);
   const [statusChangeTarget, setStatusChangeTarget] = useState(null);
   const [statusChangePin, setStatusChangePin] = useState('');
+  // Moving a package to "submitted" requires uploading the SAP Ariba
+  // submission confirmation document first.
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitUrl, setSubmitUrl] = useState(null);
+  const [submitFileName, setSubmitFileName] = useState('');
+  const [submitUploading, setSubmitUploading] = useState(false);
+  const [submitPending, setSubmitPending] = useState(false);
+  const submitInputRef = useRef(null);
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
 
   const handleStatusChange = async (val) => {
+    // Moving to Submitted requires the SAP Ariba submission confirmation upload.
+    if (val === 'submitted' && pkg.status !== 'submitted') {
+      setSubmitUrl(null);
+      setSubmitFileName('');
+      setStatusChangeTarget('submitted');
+      setSubmitOpen(true);
+      return;
+    }
     // Changing status away from a locked (submitted/approved) state requires the 5011 pin.
     if (locked && val !== pkg.status) {
       setStatusChangeTarget(val);
@@ -109,6 +125,49 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
       toast.error('Could not update status: ' + (e.message || ''));
     } finally {
       setStatusPending(false);
+    }
+  };
+
+  const handleSubmissionFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSubmitUploading(true);
+    try {
+      const res = await base44.integrations.Core.UploadFile({ file });
+      setSubmitUrl(res.file_url);
+      setSubmitFileName(file.name);
+    } catch (err) {
+      toast.error('Upload failed: ' + (err?.message || 'error'));
+    } finally {
+      setSubmitUploading(false);
+      if (submitInputRef.current) submitInputRef.current.value = '';
+    }
+  };
+
+  const confirmSubmit = async () => {
+    if (!submitUrl) {
+      toast.error('Upload the SAP Ariba submission confirmation document to continue.');
+      return;
+    }
+    setSubmitPending(true);
+    try {
+      await base44.entities.InvoicePackage.update(pkg.id, {
+        status: 'submitted',
+        ariba_submission_url: submitUrl,
+        ariba_submission_name: submitFileName,
+        ariba_submission_date: new Date().toISOString().slice(0, 10),
+        ariba_submission_by_name: currentUser?.full_name || pkg.prepared_by_name || '',
+      });
+      setStatus('submitted');
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      toast.success('Package marked Submitted');
+      setSubmitOpen(false);
+      setSubmitUrl(null);
+      setSubmitFileName('');
+    } catch (e) {
+      toast.error('Could not update status: ' + (e.message || ''));
+    } finally {
+      setSubmitPending(false);
     }
   };
 
@@ -256,6 +315,21 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
                   <span className="text-slate-500">CRT included:</span>
                   <span className="font-medium">{pkg.crt_included ? 'Yes' : 'No'}</span>
                 </div>
+                {pkg.ariba_submission_url && (
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-slate-500 shrink-0">Ariba confirmation:</span>
+                    <a
+                      href={pkg.ariba_submission_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 hover:underline truncate inline-flex items-center gap-1"
+                      title={pkg.ariba_submission_name}
+                    >
+                      <FileText className="h-3.5 w-3.5 shrink-0" />
+                      {pkg.ariba_submission_name || 'Submission confirmation'}
+                    </a>
+                  </div>
+                )}
                 {config && (
                   <div className="flex justify-between">
                     <span className="text-slate-500">Configuration:</span>
@@ -554,6 +628,59 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
             >
               {statusPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Confirm change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark as Submitted — requires the SAP Ariba submission confirmation upload */}
+      <AlertDialog open={submitOpen} onOpenChange={(o) => { setSubmitOpen(o); if (!o) { setSubmitUrl(null); setSubmitFileName(''); setStatusChangeTarget(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark {pkg.package_number} as Submitted?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Upload the <span className="font-semibold">SAP Ariba submission confirmation</span> document
+                  to confirm this package was submitted to Ariba.
+                </p>
+                <input ref={submitInputRef} type="file" className="hidden" onChange={handleSubmissionFile} />
+                {submitUrl ? (
+                  <div className="rounded-md border border-green-200 bg-green-50 p-2.5 flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-green-700 shrink-0" />
+                    <span className="text-sm text-green-800 truncate">{submitFileName || 'Document uploaded'}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setSubmitUrl(null); setSubmitFileName(''); }}
+                      className="ml-auto text-slate-400 hover:text-red-500 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={submitUploading}
+                    onClick={() => submitInputRef.current?.click()}
+                  >
+                    {submitUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                    {submitUploading ? 'Uploading…' : 'Upload Ariba confirmation'}
+                  </Button>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitPending} onClick={() => { setSubmitUrl(null); setSubmitFileName(''); setStatusChangeTarget(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmSubmit(); }}
+              disabled={submitPending || !submitUrl}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              {submitPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Confirm submission
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

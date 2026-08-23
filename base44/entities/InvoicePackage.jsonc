@@ -184,6 +184,24 @@
     },
     "reimbursement_pdf_name": {
       "type": "string"
+    },
+    "ariba_submission_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "SAP Ariba submission confirmation document uploaded when the package is marked Submitted."
+    },
+    "ariba_submission_name": {
+      "type": "string",
+      "description": "File name of the SAP Ariba submission confirmation document."
+    },
+    "ariba_submission_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the SAP Ariba submission confirmation was uploaded."
+    },
+    "ariba_submission_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who uploaded the SAP Ariba submission confirmation."
     }
   },
   "required": [
