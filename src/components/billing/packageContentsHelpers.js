@@ -543,77 +543,113 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
   doc.setTextColor(...navy);
   doc.text('Employment Supports & Exposure Courses (Reimbursable — excluding tax)', 40, rateTop + 16);
 
-  // Table
-  const widths = [20, 60, 92, 70, 150, 80, 50];
+  // Table — two sections (Employment Supports, Exposure Courses) with subheaders.
+  const widths = [20, 64, 116, 184, 90, 52];
   const tableW = widths.reduce((a, b) => a + b, 0);
   const left = 40;
   const right = left + tableW;
   const tableTop = rateTop + rateH + 18;
   let y = tableTop;
+  const pageBottom = 730;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...gold);
-  doc.setFillColor(...navy);
-  doc.rect(left, y - 12, tableW, 16, 'F');
-  let x = left;
-  ['#', 'Date', 'Client', 'Category', 'Description', 'Vendor', 'Amount'].forEach((c, i) => {
-    doc.text(c, x + 3, y);
-    x += widths[i];
-  });
-  y += 16;
+  const renderColHeader = () => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...gold);
+    doc.setFillColor(...navy);
+    doc.rect(left, y - 12, tableW, 16, 'F');
+    let x = left;
+    ['#', 'Date', 'Client', 'Description', 'Vendor', 'Amount'].forEach((c, i) => {
+      doc.text(c, x + 3, y);
+      x += widths[i];
+    });
+    y += 16;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+  };
 
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(30, 30, 30);
-
-  if (!records.length) {
-    doc.text(`No employment supports or exposure courses recorded for ${monthLabel}.`, left, y + 6);
-  }
-
-  const catLabel = (r) => (r.record_type === 'exposure_course' ? 'Exposure Course' : 'Employment Support');
-
-  records.forEach((r, i) => {
-    const amount = Number(r.amount || 0);
-    const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[2] - 6);
-    const descLines = doc.splitTextToSize(String(r.description || '-'), widths[4] - 6);
-    const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[5] - 6);
-    const rowH = Math.max(14, Math.max(clientLines.length, descLines.length, vendorLines.length) * 10 + 4);
-    if (y + rowH > 730) {
+  const renderSection = (title, sectionRecords) => {
+    if (!sectionRecords.length) return;
+    // Section subheader band
+    if (y + 24 > pageBottom) {
       doc.addPage();
       y = tableTop;
     }
-    if (i % 2 === 1) {
-      doc.setFillColor(245, 247, 250);
-      doc.rect(left, y - 12, tableW, rowH, 'F');
-    }
-    const vals = [
-      String(i + 1),
-      r.date ? format(new Date(r.date + 'T00:00:00'), 'MMM d, yyyy') : '-',
-      null,
-      catLabel(r),
-      null,
-      null,
-      `$${amount.toFixed(2)}`,
-    ];
-    let xx = left;
-    vals.forEach((v, j) => {
-      if (j === 2) {
-        clientLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
-      } else if (j === 4) {
-        descLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
-      } else if (j === 5) {
-        vendorLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
-      } else {
-        doc.text(String(v), xx + 3, y);
+    doc.setFillColor(...goldTint);
+    doc.rect(left, y - 10, tableW, 18, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...navy);
+    doc.text(`${title} (${sectionRecords.length})`, left + 6, y + 2);
+    y += 22;
+    renderColHeader();
+    sectionRecords.forEach((r, i) => {
+      const amount = Number(r.amount || 0);
+      const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[2] - 6);
+      const descLines = doc.splitTextToSize(String(r.description || '-'), widths[3] - 6);
+      const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[4] - 6);
+      const rowH = Math.max(14, Math.max(clientLines.length, descLines.length, vendorLines.length) * 10 + 4);
+      if (y + rowH > pageBottom) {
+        doc.addPage();
+        y = tableTop;
       }
-      xx += widths[j];
+      if (i % 2 === 1) {
+        doc.setFillColor(245, 247, 250);
+        doc.rect(left, y - 12, tableW, rowH, 'F');
+      }
+      const vals = [
+        String(i + 1),
+        r.date ? format(new Date(r.date + 'T00:00:00'), 'MMM d, yyyy') : '-',
+        null,
+        null,
+        null,
+        `$${amount.toFixed(2)}`,
+      ];
+      let xx = left;
+      vals.forEach((v, j) => {
+        if (j === 2) {
+          clientLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+        } else if (j === 3) {
+          descLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+        } else if (j === 4) {
+          vendorLines.forEach((line, li) => doc.text(line, xx + 3, y + li * 10));
+        } else {
+          doc.text(String(v), xx + 3, y);
+        }
+        xx += widths[j];
+      });
+      y += rowH;
     });
-    y += rowH;
-  });
+    // Section subtotal
+    const subtotal = sectionRecords.reduce((s, r) => s + Number(r.amount || 0), 0);
+    y += 4;
+    doc.setDrawColor(...navy);
+    doc.setLineWidth(0.75);
+    doc.line(left + tableW * 0.55, y - 4, right, y - 4);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...navy);
+    doc.text(`${title} Subtotal   $${subtotal.toFixed(2)}`, right, y, { align: 'right' });
+    y += 14;
+  };
 
-  if (records.length) {
+  const supportsRecords = records.filter((r) => r.record_type !== 'exposure_course');
+  const courseRecords = records.filter((r) => r.record_type === 'exposure_course');
+
+  if (!records.length) {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(30, 30, 30);
+    doc.text(`No employment supports or exposure courses recorded for ${monthLabel}.`, left, y + 6);
+  } else {
+    renderSection('Employment Supports', supportsRecords);
+    renderSection('Exposure Courses', courseRecords);
+
     const totalAmount = records.reduce((s, r) => s + Number(r.amount || 0), 0);
-    y += 6;
+    y += 4;
+    if (y + 16 > pageBottom) {
+      doc.addPage();
+      y = tableTop;
+    }
     doc.setDrawColor(...navy);
     doc.setLineWidth(1);
     doc.line(left, y - 4, right, y - 4);
