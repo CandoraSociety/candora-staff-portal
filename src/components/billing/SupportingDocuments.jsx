@@ -62,6 +62,8 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   const [syncing, setSyncing] = useState(false);
   const [periodMode, setPeriodMode] = useState('month');
   const [monthValue, setMonthValue] = useState(currentBillingMonth());
+  // Childminding section has its own billing-month selector (like Work Exposure).
+  const [cmBillingMonth, setCmBillingMonth] = useState(currentBillingMonth());
   const [contractYear, setContractYear] = useState(() => {
     const now = new Date();
     return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
@@ -262,8 +264,11 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   const renderChildmindingSection = () => {
     // Sort by date of service (ascending) rather than by entry/creation order.
-    const records = [...filteredChildminding].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const records = [...pathwaysChildminding]
+      .filter((r) => (r.date || '').slice(0, 7) === cmBillingMonth)
+      .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     const subtotal = records.reduce((s, r) => s + (r.billing_amount || 0), 0);
+    const cmMonthLabel = format(parseBillingMonth(cmBillingMonth), 'MMMM yyyy');
 
     return (
       <Card>
@@ -271,23 +276,34 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Badge className={TYPE_COLORS.childminding}>{TYPE_LABELS.childminding}</Badge>
-              <span className="text-xs text-slate-500 font-normal">— {periodLabel}</span>
+              <span className="text-xs text-slate-500 font-normal">— {cmMonthLabel}</span>
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncChildminding}
-              disabled={syncing || records.length === 0}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Billing month</span>
+                <Input
+                  type="month"
+                  value={cmBillingMonth}
+                  onChange={(e) => setCmBillingMonth(e.target.value)}
+                  className="w-[150px] h-8 text-sm"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncChildminding}
+                disabled={syncing || records.length === 0}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
-              No childminding records for {periodLabel}
+              No childminding records for {cmMonthLabel}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -408,15 +424,13 @@ export default function SupportingDocuments({ financialRecords, clients }) {
         <WorkExposureManualEntry clients={clients} />
         <ReimbursementManualEntry
           recordType="exposure_course"
-          records={filteredFinancialRecords.filter(r => r.record_type === 'exposure_course')}
+          records={(financialRecords || []).filter(r => r.record_type === 'exposure_course')}
           clients={clients}
-          periodLabel={periodLabel}
         />
         <ReimbursementManualEntry
           recordType="employment_supports"
-          records={filteredFinancialRecords.filter(r => r.record_type === 'employment_supports')}
+          records={(financialRecords || []).filter(r => r.record_type === 'employment_supports')}
           clients={clients}
-          periodLabel={periodLabel}
         />
         {renderChildmindingSection()}
       </div>

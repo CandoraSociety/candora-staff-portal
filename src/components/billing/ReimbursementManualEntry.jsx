@@ -232,7 +232,7 @@ export default function ReimbursementManualEntry({ recordType, records, clients 
       <CardContent>
         {monthRecords.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-6">
-            No {cfg.title.toLowerCase()} records for {periodLabel}
+            No {cfg.title.toLowerCase()} records for {monthLabel}
           </p>
         ) : (
           <div className="overflow-x-auto">
