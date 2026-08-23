@@ -648,7 +648,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             <InvoiceDocument
               data={invoiceData}
               status={useSnapshot ? 'Finalized' : (pkg.status === 'approved' ? 'Approved' : 'Draft')}
-              adjustmentNotes={pkg.adjustment_notes || []}
+              adjustmentNotes={linkedInvoice?.adjustment_notes || pkg.adjustment_notes || []}
               billingMonthEnd={end}
             />
           </div>
