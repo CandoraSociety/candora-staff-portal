@@ -282,14 +282,16 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
               </a>
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDeleteOpen(true)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-          >
-            <Trash2 className="h-4 w-4 mr-1" /> Delete
-          </Button>
+          {!locked && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </Button>
+          )}
         </div>
       </div>
 
