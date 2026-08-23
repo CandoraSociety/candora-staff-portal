@@ -16,10 +16,14 @@ import PayablesTab from '@/components/billing/PayablesTab';
 import ManualReimbursementEntry from '@/components/billing/ManualReimbursementEntry';
 import ManualDeliverablesEntry from '@/components/billing/ManualDeliverablesEntry';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
+import { useOrgSettings } from '@/lib/useOrgSettings';
+import { generateAndStorePackagePdfs } from '@/components/billing/packagePdfGeneration';
 
 export default function PathwaysBilling() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("packages");
+  const { invoiceLogoUrl, primaryColor, secondaryColor } = useOrgSettings();
+  const brand = { logoUrl: invoiceLogoUrl, navy: secondaryColor, gold: primaryColor };
   // Current billing month in the org's timezone. Used as a `key` on the
   // Invoices tab so it fully remounts (fresh state) when the billing month
   // advances — a kept-alive Invoices instance from a prior month can never
@@ -78,20 +82,51 @@ export default function PathwaysBilling() {
         : inv.billing_month === packageData.billing_month && (!inv.billing_month_end || inv.billing_month_end === inv.billing_month)
     );
 
-    createPackageMutation.mutate({
-      ...packageData,
-      billing_month_end: end,
-      package_number: packageNumber,
-      prepared_by: currentUser.email,
-      prepared_by_name: currentUser.full_name,
-      prepared_date: today,
-      status: 'draft',
-      crt_included: packageData.crt_included ?? true,
-      invoice_id: matchingInvoice?.id || null,
-      supporting_documents: [],
-      paid_placements: [],
-      auto_populated_items: [],
-    });
+    let createdPkg;
+    try {
+      createdPkg = await createPackageMutation.mutateAsync({
+        ...packageData,
+        billing_month_end: end,
+        package_number: packageNumber,
+        prepared_by: currentUser.email,
+        prepared_by_name: currentUser.full_name,
+        prepared_date: today,
+        status: 'draft',
+        crt_included: packageData.crt_included ?? true,
+        invoice_id: matchingInvoice?.id || null,
+        supporting_documents: [],
+        paid_placements: [],
+        auto_populated_items: [],
+      });
+    } catch (err) {
+      toast.error('Could not create the invoice package: ' + (err?.message || 'error'));
+      return;
+    }
+
+    // Produce the month's branded list PDFs (Work Exposure list + combined
+    // Employment Supports/Exposure Courses list) and attach them to the
+    // package. Best-effort — a failure here does not block the package.
+    try {
+      const month = packageData.billing_month;
+      const [weAll, allFin] = await Promise.all([
+        base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
+        base44.entities.FinancialRecord.list('-date', 500),
+      ]);
+      const weRecords = (weAll || []).filter(
+        (r) => r.billing_month === month && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0
+      );
+      const reimbRecords = (allFin || []).filter(
+        (r) =>
+          r.billing_month === month &&
+          (r.record_type === 'employment_supports' || r.record_type === 'exposure_course')
+      );
+      if (weRecords.length || reimbRecords.length) {
+        await generateAndStorePackagePdfs(createdPkg, { weRecords, reimbRecords, brand });
+        queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      }
+    } catch (err) {
+      console.error('Package PDF generation failed', err);
+    }
   };
 
   return (

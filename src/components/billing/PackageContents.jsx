@@ -8,18 +8,23 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   Download, FileText, FileSpreadsheet, Briefcase, Baby, Paperclip,
-  Loader2, Package, ExternalLink,
+  Loader2, Package, ExternalLink, Receipt, RefreshCw,
 } from 'lucide-react';
 import {
   monthLabelFromBillingMonth,
   findCrtFileForMonth,
   buildChildmindingPdfBlob,
   buildWorkExposurePdfBlob,
+  buildReimbursementPdfBlob,
   buildInvoicePdfFromNode,
   downloadBlob,
   downloadUrl,
   extFromUrl,
 } from './packageContentsHelpers';
+import {
+  generateWorkExposurePdf,
+  generateReimbursementPdf,
+} from './packagePdfGeneration';
 import InvoiceDocument from './InvoiceDocument';
 import CategoryUpload from './CategoryUpload';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -45,6 +50,9 @@ export default function PackageContents({ pkg, onViewInvoice }) {
 
   const queryClient = useQueryClient();
   const [manualUploads, setManualUploads] = useState(pkg.manual_uploads || []);
+  const [regenerating, setRegenerating] = useState(null); // 'work_exposure' | 'reimbursement' | null
+  const [wePdfUrl, setWePdfUrl] = useState(pkg.work_exposure_pdf_url || null);
+  const [reimbPdfUrl, setReimbPdfUrl] = useState(pkg.reimbursement_pdf_url || null);
   const [currentUser, setCurrentUser] = useState(null);
   // Lock removal of manual uploads once the package has been submitted/approved/paid.
   const locked = pkg.status === 'submitted' || pkg.status === 'approved' || pkg.status === 'paid';
@@ -101,7 +109,20 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     select: (recs) => (recs || []).filter((r) => r.billing_month === billingMonth && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0),
   });
 
-  // Supporting documents: financial records for the month with uploaded receipts / completion docs
+  // Employment supports + exposure courses for the month (combined reimbursement list)
+  const { data: reimbRecords = [] } = useQuery({
+    queryKey: ['reimb-records', billingMonth],
+    queryFn: () => base44.entities.FinancialRecord.list('-date', 500),
+    select: (recs) =>
+      (recs || []).filter(
+        (r) =>
+          r.billing_month === billingMonth &&
+          (r.record_type === 'employment_supports' || r.record_type === 'exposure_course')
+      ),
+  });
+
+  // Supporting documents: receipts/completion docs uploaded to the Employment
+  // Supports and Exposure Courses lists for the month.
   const { data: supportRecords = [] } = useQuery({
     queryKey: ['support-records', billingMonth],
     queryFn: () => base44.entities.FinancialRecord.list('-date', 500),
@@ -109,6 +130,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       (recs || []).filter(
         (r) =>
           r.billing_month === billingMonth &&
+          (r.record_type === 'employment_supports' || r.record_type === 'exposure_course') &&
           ((r.receipt_urls && r.receipt_urls.length) ||
             (r.completion_record_urls && r.completion_record_urls.length))
       ),
@@ -177,12 +199,70 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     downloadBlob(blob, `Childminding_${billingMonth}.pdf`);
   };
 
-  const handleWorkExposureCsv = () => {
+  const refreshPackageQueries = () =>
+    queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+
+  const handleWorkExposurePdf = async () => {
     if (!weRecords.length) {
       toast.info(`No work exposure placements for ${monthLabel}`);
       return;
     }
-    downloadBlob(buildWorkExposurePdfBlob(weRecords, billingMonth), `Work_Exposure_Payments_${billingMonth}.pdf`);
+    let url = wePdfUrl;
+    if (!url) {
+      setRegenerating('work_exposure');
+      try {
+        const updates = await generateWorkExposurePdf(pkg, weRecords, brand);
+        url = updates?.work_exposure_pdf_url || null;
+        if (url) setWePdfUrl(url);
+      } catch {
+        toast.error('Could not generate the Work Exposure PDF');
+        setRegenerating(null);
+        return;
+      }
+      setRegenerating(null);
+    }
+    if (url) downloadUrl(url, pkg.work_exposure_pdf_name || `WorkExposure_${billingMonth}.pdf`);
+  };
+
+  const handleReimbursementPdf = async () => {
+    if (!reimbRecords.length) {
+      toast.info(`No employment supports or exposure courses for ${monthLabel}`);
+      return;
+    }
+    let url = reimbPdfUrl;
+    if (!url) {
+      setRegenerating('reimbursement');
+      try {
+        const updates = await generateReimbursementPdf(pkg, reimbRecords, brand);
+        url = updates?.reimbursement_pdf_url || null;
+        if (url) setReimbPdfUrl(url);
+      } catch {
+        toast.error('Could not generate the Reimbursement PDF');
+        setRegenerating(null);
+        return;
+      }
+      setRegenerating(null);
+    }
+    if (url) downloadUrl(url, pkg.reimbursement_pdf_name || `EmploymentSupports_ExposureCourses_${billingMonth}.pdf`);
+  };
+
+  const handleRegenerate = async (which) => {
+    setRegenerating(which);
+    try {
+      if (which === 'work_exposure') {
+        const updates = await generateWorkExposurePdf(pkg, weRecords, brand);
+        if (updates?.work_exposure_pdf_url) setWePdfUrl(updates.work_exposure_pdf_url);
+      } else {
+        const updates = await generateReimbursementPdf(pkg, reimbRecords, brand);
+        if (updates?.reimbursement_pdf_url) setReimbPdfUrl(updates.reimbursement_pdf_url);
+      }
+      refreshPackageQueries();
+      toast.success('PDF regenerated');
+    } catch {
+      toast.error('Could not regenerate the PDF');
+    } finally {
+      setRegenerating(null);
+    }
   };
 
   const handleDownloadAll = async () => {
@@ -212,7 +292,21 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         bundled++;
       }
       if (weRecords.length) {
-        zip.file(`Work_Exposure_Payments_${billingMonth}.pdf`, buildWorkExposurePdfBlob(weRecords, billingMonth));
+        let weBlob;
+        try {
+          weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null;
+        } catch { weBlob = null; }
+        if (!weBlob) weBlob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand);
+        zip.file(`WorkExposure_${billingMonth}.pdf`, weBlob);
+        bundled++;
+      }
+      if (reimbRecords.length) {
+        let reBlob;
+        try {
+          reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null;
+        } catch { reBlob = null; }
+        if (!reBlob) reBlob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand);
+        zip.file(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`, reBlob);
         bundled++;
       }
 
@@ -398,11 +492,11 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                 </td>
               </tr>
 
-              {/* Work Exposure */}
+              {/* Work Exposure List */}
               <tr className="border-b">
                 <td className="py-2 px-3 flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-blue-600" />
-                  Work Exposure Payments — {monthLabel}
+                  Work Exposure List — {monthLabel}
                 </td>
                 <td className="py-2 px-3">
                   <Badge variant="outline">{weRecords.length} placements</Badge>
@@ -412,21 +506,72 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleWorkExposureCsv}
-                      disabled={!weRecords.length}
+                      onClick={handleWorkExposurePdf}
+                      disabled={!weRecords.length || regenerating === 'work_exposure'}
                     >
-                      <Download className="h-3.5 w-3.5 mr-1" /> PDF
+                      {regenerating === 'work_exposure'
+                        ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        : <Download className="h-3.5 w-3.5 mr-1" />}
+                      {wePdfUrl ? 'Download PDF' : 'Generate PDF'}
                     </Button>
+                    {wePdfUrl && weRecords.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRegenerate('work_exposure')}
+                        disabled={regenerating === 'work_exposure'}
+                        title="Regenerate the Work Exposure list PDF"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
+                      </Button>
+                    )}
                     <CategoryUpload category="work_exposure" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>
               </tr>
 
-              {/* Supporting Documents */}
+              {/* Employment Supports & Exposure Courses List */}
+              <tr className="border-b">
+                <td className="py-2 px-3 flex items-center gap-2">
+                  <Receipt className="h-4 w-4 text-green-600" />
+                  Employment Supports &amp; Exposure Courses — {monthLabel}
+                </td>
+                <td className="py-2 px-3">
+                  <Badge variant="outline">{reimbRecords.length} entries</Badge>
+                </td>
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReimbursementPdf}
+                      disabled={!reimbRecords.length || regenerating === 'reimbursement'}
+                    >
+                      {regenerating === 'reimbursement'
+                        ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        : <Download className="h-3.5 w-3.5 mr-1" />}
+                      {reimbPdfUrl ? 'Download PDF' : 'Generate PDF'}
+                    </Button>
+                    {reimbPdfUrl && reimbRecords.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRegenerate('reimbursement')}
+                        disabled={regenerating === 'reimbursement'}
+                        title="Regenerate the combined Reimbursement list PDF"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+
+              {/* Receipts and Supporting Docs */}
               <tr>
                 <td className="py-2 px-3 flex items-center gap-2">
                   <Paperclip className="h-4 w-4 text-slate-600" />
-                  Supporting Documents — {monthLabel}
+                  Receipts and Supporting Docs — {monthLabel}
                 </td>
                 <td className="py-2 px-3">
                   <Badge variant="outline">{supportingFiles.length} files</Badge>
