@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -232,6 +232,51 @@ export default function MonthlyInvoices() {
     enabled: !!effectiveMonth,
   });
 
+  // Live totals for every OPEN single-month invoice so the list shows the
+  // current tracker figure (not a stale close-off snapshot) for each open
+  // month — not just the one being viewed. Finalized months keep their frozen
+  // stored total; range invoices keep their stored (aggregated) total.
+  const openSingleMonths = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [
+            ...(invoices || [])
+              .filter(
+                (i) =>
+                  i.status !== 'finalized' &&
+                  (!i.billing_month_end || i.billing_month_end === i.billing_month)
+              )
+              .map((i) => i.billing_month),
+            currentMonth,
+          ].filter(Boolean)
+        )
+      ),
+    [invoices, currentMonth]
+  );
+  const openMonthsKey = openSingleMonths.join(',');
+  const { data: liveTotals = {} } = useQuery({
+    queryKey: ['invoice-live-totals', openMonthsKey],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        openSingleMonths.map(async (bm) => {
+          try {
+            const res = await base44.functions.invoke('getMonthlyInvoiceData', { billingMonth: bm });
+            return [bm, res.data?.status === 'success' ? res.data.total : null];
+          } catch {
+            return [bm, null];
+          }
+        })
+      );
+      return Object.fromEntries(entries);
+    },
+    enabled: openSingleMonths.length > 0,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
   const closeOffMutation = useMutation({
     mutationFn: async () => {
       if (!selected || !activeData || activeData.status !== 'success') {
@@ -448,7 +493,12 @@ export default function MonthlyInvoices() {
                 // rendered invoice above (which re-reads the tracker every time) so the
                 // list number always matches the actual invoice. Other rows fall back
                 // to the stored total (frozen snapshot for closed-off months).
-                const displayTotal = isViewing && renderData ? renderData.total : inv.total_amount;
+                const liveTotal = !invIsRange ? liveTotals[inv.billing_month] : null;
+                const displayTotal = isViewing && renderData
+                  ? renderData.total
+                  : fin
+                    ? inv.total_amount
+                    : (liveTotal != null ? liveTotal : inv.total_amount);
                 const invLabel = invIsRange
                   ? (monthFirst(inv.billing_month).getFullYear() === monthFirst(inv.billing_month_end).getFullYear()
                       ? `${format(monthFirst(inv.billing_month), 'MMM')} – ${format(monthFirst(inv.billing_month_end), 'MMM yyyy')}`
