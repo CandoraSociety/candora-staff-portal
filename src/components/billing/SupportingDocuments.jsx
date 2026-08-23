@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExternalLink, FileText, DollarSign, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -58,7 +59,12 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   // Work Exposure section now has its own monthly manual-entry component.
   // The other sections below still use the shared financialRecords listing.
   const [syncing, setSyncing] = useState(false);
-  const [cmMonth, setCmMonth] = useState(currentBillingMonth());
+  const [periodMode, setPeriodMode] = useState('month');
+  const [monthValue, setMonthValue] = useState(currentBillingMonth());
+  const [contractYear, setContractYear] = useState(() => {
+    const now = new Date();
+    return now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+  });
 
   const clientMap = useMemo(() => {
     const map = {};
@@ -101,14 +107,40 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     [childmindingRecords]
   );
 
-  const monthChildminding = useMemo(
-    () => pathwaysChildminding.filter(r => r.date && r.date.startsWith(cmMonth)),
-    [pathwaysChildminding, cmMonth]
-  );
+  const inPeriod = (monthStr) => {
+    if (!monthStr) return false;
+    if (periodMode === 'all_time') return true;
+    if (periodMode === 'month') return monthStr === monthValue;
+    // contract_ytd: June of contractYear through current month
+    // (or through May of next year if the contract term hasn't started yet).
+    const startMonth = `${contractYear}-06`;
+    let endMonth = currentBillingMonth();
+    if (endMonth < startMonth) endMonth = `${contractYear + 1}-05`;
+    return monthStr >= startMonth && monthStr <= endMonth;
+  };
+
+  const periodLabel = useMemo(() => {
+    if (periodMode === 'all_time') return 'All Time';
+    if (periodMode === 'month') return format(parseBillingMonth(monthValue), 'MMMM yyyy');
+    return `Contract Term YTD (from June ${contractYear})`;
+  }, [periodMode, monthValue, contractYear]);
+
+  const filteredFinancialRecords = useMemo(() => {
+    const all = financialRecords || [];
+    if (periodMode === 'all_time') return all;
+    return all.filter(r => inPeriod(r.billing_month || (r.date ? r.date.slice(0, 7) : null)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [financialRecords, periodMode, monthValue, contractYear]);
+
+  const filteredChildminding = useMemo(() => {
+    if (periodMode === 'all_time') return pathwaysChildminding;
+    return pathwaysChildminding.filter(r => inPeriod(r.date ? r.date.slice(0, 7) : null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathwaysChildminding, periodMode, monthValue, contractYear]);
 
   const stats = useMemo(() => {
-    const records = financialRecords || [];
-    const cmRecords = monthChildminding;
+    const records = filteredFinancialRecords;
+    const cmRecords = filteredChildminding;
     const byType = {
       paid_external_placement: { total: 0, count: 0 },
       exposure_course: { total: 0, count: 0 },
@@ -127,10 +159,10 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     });
     const total = records.reduce((s, r) => s + ((r.record_type === 'employment_supports' || r.record_type === 'exposure_course') ? (r.amount || 0) : (r.total || 0)), 0) + byType.childminding.total;
     return { total, byType };
-  }, [financialRecords, monthChildminding]);
+  }, [filteredFinancialRecords, filteredChildminding]);
 
   const renderRecordsByType = (type) => {
-    const records = (financialRecords || []).filter(r => r.record_type === type);
+    const records = filteredFinancialRecords.filter(r => r.record_type === type);
     const colSpanBefore = 5;
     const reimbursableTotal = records.reduce((sum, r) => sum + (r.amount || 0), 0);
     const taxTotal = records.reduce((sum, r) => sum + (r.tax || 0), 0);
@@ -229,9 +261,8 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   const renderChildmindingSection = () => {
     // Sort by date of service (ascending) rather than by entry/creation order.
-    const records = [...monthChildminding].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const records = [...filteredChildminding].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     const subtotal = records.reduce((s, r) => s + (r.billing_amount || 0), 0);
-    const cmMonthLabel = format(parseBillingMonth(cmMonth), 'MMMM yyyy');
 
     return (
       <Card>
@@ -239,34 +270,23 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Badge className={TYPE_COLORS.childminding}>{TYPE_LABELS.childminding}</Badge>
-              <span className="text-xs text-slate-500 font-normal">— {cmMonthLabel}</span>
+              <span className="text-xs text-slate-500 font-normal">— {periodLabel}</span>
             </CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Billing month</span>
-                <Input
-                  type="month"
-                  value={cmMonth}
-                  onChange={(e) => setCmMonth(e.target.value)}
-                  className="w-[150px] h-8 text-sm"
-                />
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSyncChildminding}
-                disabled={syncing || records.length === 0}
-              >
-                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncChildminding}
+              disabled={syncing || records.length === 0}
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-6">
-              No childminding records for {cmMonthLabel}
+              No childminding records for {periodLabel}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -312,6 +332,41 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   return (
     <div className="space-y-4">
+      {/* Period selector — drives the stats and every section below */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-sm font-medium text-slate-700">Period:</span>
+        <Select value={periodMode} onValueChange={setPeriodMode}>
+          <SelectTrigger className="w-[180px] h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="month">Billing Month</SelectItem>
+            <SelectItem value="contract_ytd">Contract Term YTD</SelectItem>
+            <SelectItem value="all_time">All Time</SelectItem>
+          </SelectContent>
+        </Select>
+        {periodMode === 'month' && (
+          <Input
+            type="month"
+            value={monthValue}
+            onChange={(e) => setMonthValue(e.target.value)}
+            className="w-[150px] h-8 text-sm"
+          />
+        )}
+        {periodMode === 'contract_ytd' && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">from June</span>
+            <Input
+              type="number"
+              value={contractYear}
+              onChange={(e) => setContractYear(parseInt(e.target.value) || new Date().getFullYear())}
+              className="w-[90px] h-8 text-sm"
+            />
+          </div>
+        )}
+        <span className="text-xs text-slate-500 ml-auto">{periodLabel}</span>
+      </div>
+
       {/* Summary Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <Card>
@@ -324,7 +379,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           <CardContent>
             <p className="text-2xl font-bold">${stats.total.toFixed(2)}</p>
             <p className="text-xs text-slate-600 mt-1">
-              {(financialRecords?.length || 0) + pathwaysChildminding.length} records
+              {filteredFinancialRecords.length + filteredChildminding.length} records
             </p>
           </CardContent>
         </Card>
