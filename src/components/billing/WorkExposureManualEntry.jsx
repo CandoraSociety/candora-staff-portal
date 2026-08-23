@@ -16,6 +16,7 @@ import { Briefcase, Plus, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { currentBillingMonth, parseBillingMonth } from './billingMonth';
+import EmployerAutocomplete from './EmployerAutocomplete';
 
 const RATE = 15;
 
@@ -57,6 +58,17 @@ export default function WorkExposureManualEntry({ clients }) {
       .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
     [allRecords, billingMonth]
   );
+
+  // Unique employer names previously entered across all manual entries,
+  // used for the employer-name autocomplete.
+  const employerNames = useMemo(() => {
+    const set = new Set();
+    (allRecords || []).forEach((r) => {
+      const name = (r.vendor || r.business_name || '').trim();
+      if (name) set.add(name);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allRecords]);
 
   const totalHours = monthRecords.reduce((s, r) => s + (Number(r.hours_worked) || 0), 0);
   const totalAmount = monthRecords.reduce((s, r) => s + (Number(r.total || r.amount) || 0), 0);
@@ -190,7 +202,12 @@ export default function WorkExposureManualEntry({ clients }) {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Employer name</Label>
-                    <Input value={employer} onChange={(e) => setEmployer(e.target.value)} placeholder="Business / employer" />
+                    <EmployerAutocomplete
+                      value={employer}
+                      onChange={setEmployer}
+                      suggestions={employerNames}
+                      placeholder="Business / employer"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
