@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { RATE_PER_HOUR } from '@/lib/childmindingConstants';
 import { parseBillingMonth } from './billingMonth';
 import { brandFooterLines } from '@/lib/candoraBrand';
+import { base44 } from '@/api/base44Client';
 
 export const monthLabelFromBillingMonth = (ym) =>
   format(parseBillingMonth(ym), 'MMMM yyyy');
@@ -568,7 +569,7 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
     doc.setTextColor(30, 30, 30);
   };
 
-  const renderSection = (title, sectionRecords) => {
+  const renderSection = (title, sectionRecords, tagClients = false) => {
     if (!sectionRecords.length) return;
     // Section subheader band
     if (y + 24 > pageBottom) {
@@ -585,7 +586,10 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
     renderColHeader();
     sectionRecords.forEach((r, i) => {
       const amount = Number(r.amount || 0);
-      const clientLines = doc.splitTextToSize(String(r.client_name || '-'), widths[2] - 6);
+      const baseClient = String(r.client_name || '-');
+      const tag = tagClients && r.client_id ? programTagFor(clientServiceMap[r.client_id]) : '';
+      const clientText = tag ? `${baseClient} (${tag})` : baseClient;
+      const clientLines = doc.splitTextToSize(clientText, widths[2] - 6);
       const descLines = doc.splitTextToSize(String(r.description || '-'), widths[3] - 6);
       const vendorLines = doc.splitTextToSize(String(r.vendor || '-'), widths[4] - 6);
       const rowH = Math.max(14, Math.max(clientLines.length, descLines.length, vendorLines.length) * 10 + 4);
@@ -631,11 +635,24 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
     doc.setFontSize(9);
     doc.setTextColor(...navy);
     doc.text(`${title} Subtotal   $${subtotal.toFixed(2)}`, right, y, { align: 'right' });
-    y += 6;
+    y += 16;
   };
 
   const supportsRecords = records.filter((r) => r.record_type !== 'exposure_course');
   const courseRecords = records.filter((r) => r.record_type === 'exposure_course');
+
+  // For exposure courses, identify each client's program stream (WD vs DEA)
+  // from the Client record so it shows next to the client name in that section.
+  const courseClientIds = [...new Set(courseRecords.map((r) => r.client_id).filter(Boolean))];
+  const clientServiceMap = {};
+  if (courseClientIds.length) {
+    const clients = await Promise.all(
+      courseClientIds.map((id) => base44.entities.Client.get(id).catch(() => null))
+    );
+    clients.forEach((c) => { if (c && c.id) clientServiceMap[c.id] = c.service_type; });
+  }
+  const programTagFor = (serviceType) =>
+    serviceType === 'pathways' ? 'WD' : serviceType === 'direct_to_employment' ? 'DEA' : '';
 
   if (!records.length) {
     doc.setFont('helvetica', 'normal');
@@ -643,7 +660,7 @@ export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {
     doc.text(`No employment supports or exposure courses recorded for ${monthLabel}.`, left, y + 6);
   } else {
     renderSection('Employment Supports', supportsRecords);
-    renderSection('Exposure Courses', courseRecords);
+    renderSection('Exposure Courses', courseRecords, true);
 
     const totalAmount = records.reduce((s, r) => s + Number(r.amount || 0), 0);
     y += 4;
