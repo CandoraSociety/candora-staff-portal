@@ -272,12 +272,12 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     try {
       const { default: JSZip } = await import('jszip');
       // 10MB cap on the final ZIP. PDFs and .xlsx are already deflated, so ZIP
-      // compression barely shrinks them — we enforce the cap by dropping
-      // non-essential files (supporting docs, manual uploads) largest-first.
+      // compression barely shrinks them. We compress with max DEFLATE; if the
+      // result still exceeds 10MB we warn with a size breakdown rather than
+      // silently dropping any billing documents.
       const MAX_ZIP_BYTES = 10 * 1024 * 1024;
 
-      const entries = []; // { name, blob, essential }
-      const excluded = [];
+      const entries = []; // { name, blob }
 
       // Invoice — render the on-screen InvoiceDocument to a PDF so the archive
       // contains the real invoice, not a placeholder README.
@@ -355,33 +355,14 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       );
       uploaded.filter(Boolean).forEach((e) => entries.push(e));
 
-      // Assemble. Always include essential billing docs; add non-essential files
-      // largest-first only while the running total stays under the cap.
+      // Assemble — every document in the package is part of the billing
+      // submission, so all are included.
       const zip = new JSZip();
-      let running = 0;
-      const included = [];
-      const essentialEntries = entries.filter((e) => e.essential);
-      const nonEssential = entries.filter((e) => !e.essential).sort((a, b) => b.blob.size - a.blob.size);
-
-      for (const e of essentialEntries) {
-        zip.file(e.name, e.blob);
-        running += e.blob.size;
-        included.push(e.name);
-      }
-      for (const e of nonEssential) {
-        if (running + e.blob.size > MAX_ZIP_BYTES) {
-          excluded.push(`${e.name} (${(e.blob.size / 1024 / 1024).toFixed(1)}MB)`);
-          continue;
-        }
-        zip.file(e.name, e.blob);
-        running += e.blob.size;
-        included.push(e.name);
-      }
+      entries.forEach((e) => zip.file(e.name, e.blob));
 
       zip.file(
         'README.txt',
-        `Invoice Package ${pkg.package_number} — ${monthLabel}\n${included.length} document(s) bundled.` +
-          (excluded.length ? `\nExcluded to stay under 10MB:\n${excluded.map((x) => `- ${x}`).join('\n')}` : '')
+        `Invoice Package ${pkg.package_number} — ${monthLabel}\n${entries.length} document(s) bundled.`
       );
 
       const blob = await zip.generateAsync({
@@ -391,13 +372,18 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       });
 
       if (blob.size > MAX_ZIP_BYTES) {
-        toast.warning(`Package bundle is ${(blob.size / 1024 / 1024).toFixed(1)}MB — over the 10MB limit. Remove large attachments and try again.`);
+        const biggest = [...entries]
+          .sort((a, b) => b.blob.size - a.blob.size)
+          .slice(0, 5)
+          .map((e) => `${e.name} (${(e.blob.size / 1024 / 1024).toFixed(1)}MB)`)
+          .join('\n');
+        toast.warning(
+          `Bundle is ${(blob.size / 1024 / 1024).toFixed(1)}MB — over the 10MB limit. Largest files:\n${biggest}`,
+          { duration: 10000 }
+        );
       } else {
         downloadBlob(blob, cleanFileName(`${pkg.package_number}_${billingMonth}.zip`));
-        toast.success(
-          `Package bundle downloaded (${included.length} documents, ${(blob.size / 1024 / 1024).toFixed(1)}MB)`,
-          excluded.length ? { description: `Excluded to fit 10MB: ${excluded.length} file(s)` } : undefined
-        );
+        toast.success(`Package bundle downloaded (${entries.length} documents, ${(blob.size / 1024 / 1024).toFixed(1)}MB)`);
       }
     } catch (err) {
       toast.error('Could not build bundle: ' + (err?.message || 'error'));
