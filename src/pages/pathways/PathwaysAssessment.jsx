@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, CheckCircle2, ClipboardCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ClipboardCheck, AlertTriangle, Upload, FileText, X, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import IntakeForm from '@/components/intake/IntakeForm';
 import CentralDatabaseMatcher from '@/components/intake/CentralDatabaseMatcher';
@@ -24,6 +24,8 @@ export default function PathwaysAssessment() {
   const [needsBarrierRemoval, setNeedsBarrierRemoval] = useState('');
   const [selectedNavigator, setSelectedNavigator] = useState('');
   const [eraCompassCompleted, setEraCompassCompleted] = useState(false);
+  const [eraUploading, setEraUploading] = useState(false);
+  const eraFileInput = useRef(null);
   const [step, setStep] = useState('landing');
 
   useEffect(() => {
@@ -68,6 +70,30 @@ export default function PathwaysAssessment() {
     await base44.entities.Client.update(id, { linked_rc_client_id: rcClientId || null });
     setClient(prev => ({ ...prev, linked_rc_client_id: rcClientId || null }));
     toast.success(rcClientId ? 'Linked to existing Central Database record' : 'Unlinked from Central Database record');
+  };
+
+  const handleEraUpload = async (file) => {
+    if (!file) return;
+    setEraUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await base44.entities.Client.update(id, { era_file_url: file_url, era_file_name: file.name });
+      setClient(prev => ({ ...prev, era_file_url: file_url, era_file_name: file.name }));
+      toast.success('ERA document uploaded');
+    } catch (err) {
+      toast.error('Failed to upload ERA document');
+    }
+    setEraUploading(false);
+  };
+
+  const handleEraRemove = async () => {
+    try {
+      await base44.entities.Client.update(id, { era_file_url: null, era_file_name: null });
+      setClient(prev => ({ ...prev, era_file_url: null, era_file_name: null }));
+      toast.success('ERA document removed');
+    } catch {
+      toast.error('Failed to remove ERA document');
+    }
   };
 
   const handleCompleteAssessment = async () => {
@@ -266,6 +292,40 @@ export default function PathwaysAssessment() {
                 ERA Completed in Compass
               </Label>
             </div>
+
+            {/* ERA document upload */}
+            <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <p className="text-sm font-medium text-slate-700">ERA Document</p>
+                  <p className="text-xs text-slate-500">Upload the completed Employment Readiness Assessment form.</p>
+                </div>
+                <input
+                  ref={eraFileInput}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleEraUpload(f); e.target.value = ''; }}
+                />
+                <Button variant="outline" size="sm" disabled={eraUploading} onClick={() => eraFileInput.current?.click()} className="gap-2">
+                  <Upload className="w-4 h-4" />
+                  {eraUploading ? 'Uploading…' : client.era_file_url ? 'Replace ERA' : 'Upload ERA'}
+                </Button>
+              </div>
+              {client.era_file_url && (
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                  <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                  <a href={client.era_file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline truncate flex items-center gap-1 flex-1 min-w-0">
+                    {client.era_file_name || 'ERA document'}
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                  <button onClick={handleEraRemove} className="text-slate-400 hover:text-red-500 shrink-0" title="Remove">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div>
               <Label className="mb-1 block text-sm font-medium text-slate-700">Assessment Notes &amp; Determination</Label>
               <Textarea

@@ -252,6 +252,22 @@
       "type": "boolean",
       "description": "Whether the ERA has been completed in Compass"
     },
+    "era_file_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Uploaded Employment Readiness Assessment (ERA) document file URL"
+    },
+    "era_file_name": {
+      "type": "string",
+      "description": "File name of the uploaded ERA document"
+    },
+    "era_compass_completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "era_compass_completed_by": {
+      "type": "string"
+    },
     "bit_review_dates": {
       "type": "array",
       "items": {
