@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Pencil, Save, X, Upload, FileText, Plus, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Save, X, Upload, FileText, Plus, Loader2, Trash2, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -275,6 +275,13 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
               ))}
             </SelectContent>
           </Select>
+          {pkg.ariba_submission_url && (
+            <Button asChild variant="outline" size="sm" title={pkg.ariba_submission_name || 'Ariba submission confirmation'}>
+              <a href={pkg.ariba_submission_url} target="_blank" rel="noopener noreferrer" download={pkg.ariba_submission_name || undefined}>
+                <Download className="h-4 w-4 mr-1" /> Ariba confirmation
+              </a>
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

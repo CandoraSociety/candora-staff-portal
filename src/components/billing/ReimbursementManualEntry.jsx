@@ -44,10 +44,10 @@ function streamForClient(client) {
   return '';
 }
 
-export default function ReimbursementManualEntry({ recordType, records, clients }) {
+export default function ReimbursementManualEntry({ recordType, records, clients, lockedMonth }) {
   const cfg = CONFIG[recordType];
   const qc = useQueryClient();
-  const [billingMonth, setBillingMonth] = useState(currentBillingMonth());
+  const [billingMonth, setBillingMonth] = useState(lockedMonth || currentBillingMonth());
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -80,7 +80,7 @@ export default function ReimbursementManualEntry({ recordType, records, clients 
     () => (records || [])
       .filter((r) => r.billing_month === billingMonth)
       .sort((a, b) => (a.client_name || '').localeCompare(b.client_name || '')),
-    [records, billingMonth]
+    [records, billingMonth, lockedMonth]
   );
 
   const reimbursableTotal = monthRecords.reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -216,15 +216,17 @@ export default function ReimbursementManualEntry({ recordType, records, clients 
             <span className="text-xs text-slate-500 font-normal">— {monthLabel}</span>
           </CardTitle>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-slate-500">Billing month</Label>
-              <Input
-                type="month"
-                value={billingMonth}
-                onChange={(e) => setBillingMonth(e.target.value)}
-                className="w-[150px] h-8 text-sm"
-              />
-            </div>
+            {!lockedMonth && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500">Billing month</Label>
+                <Input
+                  type="month"
+                  value={billingMonth}
+                  onChange={(e) => setBillingMonth(e.target.value)}
+                  className="w-[150px] h-8 text-sm"
+                />
+              </div>
+            )}
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
               <DialogTrigger asChild>
                 <Button size="sm" onClick={openAdd}>

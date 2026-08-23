@@ -25,9 +25,9 @@ function billingMonthFromDate(dateStr) {
   return String(dateStr).slice(0, 7); // YYYY-MM
 }
 
-export default function WorkExposureManualEntry({ clients }) {
+export default function WorkExposureManualEntry({ clients, lockedMonth }) {
   const queryClient = useQueryClient();
-  const [billingMonth, setBillingMonth] = useState(currentBillingMonth());
+  const [billingMonth, setBillingMonth] = useState(lockedMonth || currentBillingMonth());
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -195,15 +195,17 @@ export default function WorkExposureManualEntry({ clients }) {
             Work Exposure Placements
           </CardTitle>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs text-slate-500">Billing month</Label>
-              <Input
-                type="month"
-                value={billingMonth}
-                onChange={(e) => setBillingMonth(e.target.value)}
-                className="w-[150px] h-8 text-sm"
-              />
-            </div>
+            {!lockedMonth && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-500">Billing month</Label>
+                <Input
+                  type="month"
+                  value={billingMonth}
+                  onChange={(e) => setBillingMonth(e.target.value)}
+                  className="w-[150px] h-8 text-sm"
+                />
+              </div>
+            )}
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
               <DialogTrigger asChild>
                 <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" /> Add Manual Entry</Button>

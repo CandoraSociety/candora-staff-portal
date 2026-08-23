@@ -56,18 +56,33 @@ const COMPLETION_STATUS_COLORS = {
   did_not_complete: 'bg-red-100 text-red-700',
 };
 
-export default function SupportingDocuments({ financialRecords, clients }) {
-  // Work Exposure section now has its own monthly manual-entry component.
-  // The other sections below still use the shared financialRecords listing.
+export default function SupportingDocuments({ financialRecords: propRecords, clients: propClients, billingMonth: lockedMonth }) {
+  // When rendered inside an invoice package, the Documents tab is locked to
+  // that package's billing month — no period/month selection is offered and
+  // the records/clients are fetched here rather than passed in.
+  const locked = !!lockedMonth;
   const [syncing, setSyncing] = useState(false);
   const [periodMode, setPeriodMode] = useState('month');
-  const [monthValue, setMonthValue] = useState(currentBillingMonth());
+  const [monthValue, setMonthValue] = useState(locked ? lockedMonth : currentBillingMonth());
   // Childminding section has its own billing-month selector (like Work Exposure).
-  const [cmBillingMonth, setCmBillingMonth] = useState(currentBillingMonth());
+  const [cmBillingMonth, setCmBillingMonth] = useState(locked ? lockedMonth : currentBillingMonth());
   const [contractYear, setContractYear] = useState(() => {
     const now = new Date();
     return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   });
+
+  const { data: fetchedRecords = [] } = useQuery({
+    queryKey: ['financial-records'],
+    queryFn: () => base44.entities.FinancialRecord.list('-date', 200),
+    enabled: locked,
+  });
+  const { data: fetchedClients = [] } = useQuery({
+    queryKey: ['clients-billing'],
+    queryFn: () => base44.entities.Client.list('-created_date', 1000),
+    enabled: locked,
+  });
+  const financialRecords = locked ? fetchedRecords : propRecords;
+  const clients = locked ? fetchedClients : propClients;
 
   const clientMap = useMemo(() => {
     const map = {};
@@ -279,15 +294,17 @@ export default function SupportingDocuments({ financialRecords, clients }) {
               <span className="text-xs text-slate-500 font-normal">— {cmMonthLabel}</span>
             </CardTitle>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Billing month</span>
-                <Input
-                  type="month"
-                  value={cmBillingMonth}
-                  onChange={(e) => setCmBillingMonth(e.target.value)}
-                  className="w-[150px] h-8 text-sm"
-                />
-              </div>
+              {!locked && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Billing month</span>
+                  <Input
+                    type="month"
+                    value={cmBillingMonth}
+                    onChange={(e) => setCmBillingMonth(e.target.value)}
+                    className="w-[150px] h-8 text-sm"
+                  />
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -349,8 +366,8 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
   return (
     <div className="space-y-4">
-      {/* Period selector — drives the stats and every section below */}
-      <div className="flex items-center gap-3 flex-wrap">
+      {/* Period selector — drives the stats and every section below (hidden when locked to a package month) */}
+      {!locked && (<div className="flex items-center gap-3 flex-wrap">
         <span className="text-sm font-medium text-slate-700">Period:</span>
         <Select value={periodMode} onValueChange={setPeriodMode}>
           <SelectTrigger className="w-[180px] h-8 text-sm">
@@ -382,7 +399,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
           </div>
         )}
         <span className="text-xs text-slate-500 ml-auto">{periodLabel}</span>
-      </div>
+      </div>)}
 
       {/* Summary Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -421,16 +438,18 @@ export default function SupportingDocuments({ financialRecords, clients }) {
 
       {/* Records by Type — all sections always visible */}
       <div className="space-y-4">
-        <WorkExposureManualEntry clients={clients} />
+        <WorkExposureManualEntry clients={clients} lockedMonth={locked ? lockedMonth : null} />
         <ReimbursementManualEntry
           recordType="exposure_course"
           records={(financialRecords || []).filter(r => r.record_type === 'exposure_course')}
           clients={clients}
+          lockedMonth={locked ? lockedMonth : null}
         />
         <ReimbursementManualEntry
           recordType="employment_supports"
           records={(financialRecords || []).filter(r => r.record_type === 'employment_supports')}
           clients={clients}
+          lockedMonth={locked ? lockedMonth : null}
         />
         {renderChildmindingSection()}
       </div>
