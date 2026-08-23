@@ -49,6 +49,9 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [newNoteType, setNewNoteType] = useState('invoice_adjustment');
   const [newNoteText, setNewNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editType, setEditType] = useState('invoice_adjustment');
+  const [editText, setEditText] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [status, setStatus] = useState(pkg.status);
   const [statusPending, setStatusPending] = useState(false);
@@ -155,6 +158,23 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
 
   const deleteNote = async (idx) => {
     await persistNotes(noteEntries.filter((_, i) => i !== idx));
+    if (editingIdx === idx) setEditingIdx(null);
+  };
+
+  const startEditNote = (idx) => {
+    setEditingIdx(idx);
+    setEditType(noteEntries[idx]?.type || 'general');
+    setEditText(noteEntries[idx]?.text || '');
+  };
+
+  const saveEditNote = async () => {
+    if (editingIdx == null || !editText.trim()) return;
+    const next = noteEntries.map((n, i) =>
+      i === editingIdx ? { ...n, type: editType, text: editText.trim() } : n
+    );
+    await persistNotes(next);
+    setEditingIdx(null);
+    toast.success('Note updated');
   };
 
   const handleSaveNotes = async () => {
@@ -293,19 +313,51 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
                     )}
                     {noteEntries.map((n, idx) => {
                       const t = NOTE_TYPES.find(t => t.value === n.type) || NOTE_TYPES[1];
+                      const isEditing = editingIdx === idx;
                       return (
                         <div key={idx} className="rounded-md border border-slate-200 bg-slate-50 p-2.5">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.badge}`}>{t.label}</span>
-                            <button onClick={() => deleteNote(idx)} className="text-slate-400 hover:text-red-500 text-xs">
-                              Remove
-                            </button>
-                          </div>
-                          <p className="text-sm text-slate-700 whitespace-pre-wrap">{n.text}</p>
-                          <p className="text-[11px] text-slate-400 mt-1">
-                            {n.created_by_name ? `${n.created_by_name} · ` : ''}
-                            {n.created_date ? format(new Date(n.created_date), 'MMM d, yyyy') : ''}
-                          </p>
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Select value={editType} onValueChange={setEditType}>
+                                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {NOTE_TYPES.map(t => (
+                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={3} autoFocus />
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={saveEditNote} disabled={savingNote || !editText.trim()}>
+                                  {savingNote ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                                  Save
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => setEditingIdx(null)}>
+                                  <X className="h-4 w-4 mr-2" />
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.badge}`}>{t.label}</span>
+                                <div className="flex items-center gap-3">
+                                  <button onClick={() => startEditNote(idx)} className="text-slate-400 hover:text-accent text-xs">
+                                    Edit
+                                  </button>
+                                  <button onClick={() => deleteNote(idx)} className="text-slate-400 hover:text-red-500 text-xs">
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-sm text-slate-700 whitespace-pre-wrap">{n.text}</p>
+                              <p className="text-[11px] text-slate-400 mt-1">
+                                {n.created_by_name ? `${n.created_by_name} · ` : ''}
+                                {n.created_date ? format(new Date(n.created_date), 'MMM d, yyyy') : ''}
+                              </p>
+                            </>
+                          )}
                         </div>
                       );
                     })}
