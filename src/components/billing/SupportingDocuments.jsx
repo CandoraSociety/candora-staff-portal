@@ -4,10 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ExternalLink, FileText, DollarSign, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import SupportingDocUpload from '@/components/billing/SupportingDocUpload';
 import WorkExposureManualEntry from '@/components/billing/WorkExposureManualEntry';
+import { currentBillingMonth, parseBillingMonth } from '@/components/billing/billingMonth';
 
 const TYPE_LABELS = {
   paid_external_placement: 'Work Exposure Placements',
@@ -55,6 +58,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   // Work Exposure section now has its own monthly manual-entry component.
   // The other sections below still use the shared financialRecords listing.
   const [syncing, setSyncing] = useState(false);
+  const [cmMonth, setCmMonth] = useState(currentBillingMonth());
 
   const clientMap = useMemo(() => {
     const map = {};
@@ -97,9 +101,14 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     [childmindingRecords]
   );
 
+  const monthChildminding = useMemo(
+    () => pathwaysChildminding.filter(r => r.date && r.date.startsWith(cmMonth)),
+    [pathwaysChildminding, cmMonth]
+  );
+
   const stats = useMemo(() => {
     const records = financialRecords || [];
-    const cmRecords = pathwaysChildminding;
+    const cmRecords = monthChildminding;
     const byType = {
       paid_external_placement: { total: 0, count: 0 },
       exposure_course: { total: 0, count: 0 },
@@ -118,7 +127,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
     });
     const total = records.reduce((s, r) => s + ((r.record_type === 'employment_supports' || r.record_type === 'exposure_course') ? (r.amount || 0) : (r.total || 0)), 0) + byType.childminding.total;
     return { total, byType };
-  }, [financialRecords, pathwaysChildminding]);
+  }, [financialRecords, monthChildminding]);
 
   const renderRecordsByType = (type) => {
     const records = (financialRecords || []).filter(r => r.record_type === type);
@@ -219,30 +228,46 @@ export default function SupportingDocuments({ financialRecords, clients }) {
   };
 
   const renderChildmindingSection = () => {
-    const records = pathwaysChildminding;
+    // Sort by date of service (ascending) rather than by entry/creation order.
+    const records = [...monthChildminding].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
     const subtotal = records.reduce((s, r) => s + (r.billing_amount || 0), 0);
+    const cmMonthLabel = format(parseBillingMonth(cmMonth), 'MMMM yyyy');
 
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Badge className={TYPE_COLORS.childminding}>{TYPE_LABELS.childminding}</Badge>
+              <span className="text-xs text-slate-500 font-normal">— {cmMonthLabel}</span>
             </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncChildminding}
-              disabled={syncing || records.length === 0}
-            >
-              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Service month</span>
+                <Input
+                  type="month"
+                  value={cmMonth}
+                  onChange={(e) => setCmMonth(e.target.value)}
+                  className="w-[150px] h-8 text-sm"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncChildminding}
+                disabled={syncing || records.length === 0}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing…' : 'Sync to Invoice Tracker'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-6">No childminding records yet</p>
+            <p className="text-sm text-slate-500 text-center py-6">
+              No childminding records for {cmMonthLabel}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
@@ -263,7 +288,7 @@ export default function SupportingDocuments({ financialRecords, clients }) {
                     <tr key={r.id} className={`border-b last:border-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
                       <td className="py-2 px-2 font-medium whitespace-nowrap">{r.child_first_name || '-'}</td>
                       <td className="py-2 px-2 whitespace-nowrap">{r.parent_name || `${r.parent_first_name || ''} ${r.parent_last_name || ''}`.trim() || '-'}</td>
-                      <td className="py-2 px-2 whitespace-nowrap">{r.date || '-'}</td>
+                      <td className="py-2 px-2 whitespace-nowrap">{r.date ? format(new Date(r.date + 'T00:00:00'), 'MMM d, yyyy') : '-'}</td>
                       <td className="py-2 px-2 whitespace-nowrap">{r.check_in_time || '-'}</td>
                       <td className="py-2 px-2 whitespace-nowrap">{r.check_out_time || '-'}</td>
                       <td className="text-center py-2 px-2">{r.hours || 0}</td>
