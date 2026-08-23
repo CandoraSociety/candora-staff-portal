@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import SupportingDocUpload from '@/components/billing/SupportingDocUpload';
 import WorkExposureManualEntry from '@/components/billing/WorkExposureManualEntry';
+import ReimbursementManualEntry from '@/components/billing/ReimbursementManualEntry';
 import { currentBillingMonth, parseBillingMonth } from '@/components/billing/billingMonth';
 
 const TYPE_LABELS = {
@@ -405,8 +406,18 @@ export default function SupportingDocuments({ financialRecords, clients }) {
       {/* Records by Type — all sections always visible */}
       <div className="space-y-4">
         <WorkExposureManualEntry clients={clients} />
-        {renderRecordsByType('exposure_course')}
-        {renderRecordsByType('employment_supports')}
+        <ReimbursementManualEntry
+          recordType="exposure_course"
+          records={filteredFinancialRecords.filter(r => r.record_type === 'exposure_course')}
+          clients={clients}
+          periodLabel={periodLabel}
+        />
+        <ReimbursementManualEntry
+          recordType="employment_supports"
+          records={filteredFinancialRecords.filter(r => r.record_type === 'employment_supports')}
+          clients={clients}
+          periodLabel={periodLabel}
+        />
         {renderChildmindingSection()}
       </div>
     </div>
