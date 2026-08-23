@@ -271,8 +271,13 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     setZipping(true);
     try {
       const { default: JSZip } = await import('jszip');
-      const zip = new JSZip();
-      let bundled = 0;
+      // 10MB cap on the final ZIP. PDFs and .xlsx are already deflated, so ZIP
+      // compression barely shrinks them — we enforce the cap by dropping
+      // non-essential files (supporting docs, manual uploads) largest-first.
+      const MAX_ZIP_BYTES = 10 * 1024 * 1024;
+
+      const entries = []; // { name, blob, essential }
+      const excluded = [];
 
       // Invoice — render the on-screen InvoiceDocument to a PDF so the archive
       // contains the real invoice, not a placeholder README.
@@ -280,9 +285,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         const node = invoiceWrapRef.current.querySelector('.invoice-document');
         if (node) {
           try {
-            const invoiceBlob = await buildInvoicePdfFromNode(node);
-            zip.file(cleanFileName(`Invoice_${billingMonth}.pdf`), invoiceBlob);
-            bundled++;
+            entries.push({ name: cleanFileName(`Invoice_${billingMonth}.pdf`), blob: await buildInvoicePdfFromNode(node), essential: true });
           } catch {
             toast.error('Could not render the invoice PDF — it will be skipped from the ZIP.');
           }
@@ -290,26 +293,19 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
 
       if (cmRecords.length) {
-        zip.file(cleanFileName(`Childminding_${billingMonth}.pdf`), await buildChildmindingPdfBlob(cmRecords, billingMonth, brand));
-        bundled++;
+        entries.push({ name: cleanFileName(`Childminding_${billingMonth}.pdf`), blob: await buildChildmindingPdfBlob(cmRecords, billingMonth, brand), essential: true });
       }
       if (weRecords.length) {
         let weBlob;
-        try {
-          weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null;
-        } catch { weBlob = null; }
+        try { weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null; } catch { weBlob = null; }
         if (!weBlob) weBlob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand);
-        zip.file(cleanFileName(`WorkExposure_${billingMonth}.pdf`), weBlob);
-        bundled++;
+        entries.push({ name: cleanFileName(`WorkExposure_${billingMonth}.pdf`), blob: weBlob, essential: true });
       }
       if (reimbRecords.length) {
         let reBlob;
-        try {
-          reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null;
-        } catch { reBlob = null; }
+        try { reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null; } catch { reBlob = null; }
         if (!reBlob) reBlob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand);
-        zip.file(cleanFileName(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`), reBlob);
-        bundled++;
+        entries.push({ name: cleanFileName(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`), blob: reBlob, essential: true });
       }
 
       // Supporting docs — best-effort fetch (CORS may block some hosts)
@@ -318,16 +314,13 @@ export default function PackageContents({ pkg, onViewInvoice }) {
           try {
             const res = await fetch(f.url);
             if (!res.ok) return null;
-            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${extFromUrl(f.url)}`)}`, blob: await res.blob() };
+            return { name: `SupportingDocs/${cleanFileName(`${String(i + 1).padStart(2, '0')}_${sanitize(f.label)}.${extFromUrl(f.url)}`)}`, blob: await res.blob(), essential: false };
           } catch {
             return null;
           }
         })
       );
-      fetched.filter(Boolean).forEach((f) => {
-        zip.file(f.name, f.blob);
-        bundled++;
-      });
+      fetched.filter(Boolean).forEach((e) => entries.push(e));
 
       // CRT workbook — SharePoint's webUrl is auth-gated and CORS-blocked from the
       // browser, so the backend function fetches the .xlsx via Graph and returns
@@ -339,13 +332,10 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             const bin = atob(data.base64);
             const bytes = new Uint8Array(bin.length);
             for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-            zip.file(cleanFileName(crtFile.name), bytes);
-            bundled++;
-          } else {
-            zip.file('CRT download link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
+            entries.push({ name: cleanFileName(crtFile.name), blob: new Blob([bytes]), essential: true });
           }
         } catch {
-          zip.file('CRT_download_link.txt', `Open the CRT workbook for ${monthLabel}:\n${crtFile.webUrl || ''}`);
+          /* CRT fetch failed — left out of the bundle */
         }
       }
 
@@ -357,26 +347,58 @@ export default function PackageContents({ pkg, onViewInvoice }) {
             const res = await fetch(u.file_url);
             if (!res.ok) return null;
             const folder = UPLOAD_FOLDERS[u.category] || 'ManualUploads';
-            return { name: `${folder}/${cleanFileName(sanitizeFileName(u.file_name))}`, blob: await res.blob() };
+            return { name: `${folder}/${cleanFileName(sanitizeFileName(u.file_name))}`, blob: await res.blob(), essential: false };
           } catch {
             return null;
           }
         })
       );
-      uploaded.filter(Boolean).forEach((f) => {
-        zip.file(f.name, f.blob);
-        bundled++;
-      });
+      uploaded.filter(Boolean).forEach((e) => entries.push(e));
+
+      // Assemble. Always include essential billing docs; add non-essential files
+      // largest-first only while the running total stays under the cap.
+      const zip = new JSZip();
+      let running = 0;
+      const included = [];
+      const essentialEntries = entries.filter((e) => e.essential);
+      const nonEssential = entries.filter((e) => !e.essential).sort((a, b) => b.blob.size - a.blob.size);
+
+      for (const e of essentialEntries) {
+        zip.file(e.name, e.blob);
+        running += e.blob.size;
+        included.push(e.name);
+      }
+      for (const e of nonEssential) {
+        if (running + e.blob.size > MAX_ZIP_BYTES) {
+          excluded.push(`${e.name} (${(e.blob.size / 1024 / 1024).toFixed(1)}MB)`);
+          continue;
+        }
+        zip.file(e.name, e.blob);
+        running += e.blob.size;
+        included.push(e.name);
+      }
 
       zip.file(
         'README.txt',
-        `Invoice Package ${pkg.package_number} — ${monthLabel}\n` +
-          `${bundled} document(s) bundled.`
+        `Invoice Package ${pkg.package_number} — ${monthLabel}\n${included.length} document(s) bundled.` +
+          (excluded.length ? `\nExcluded to stay under 10MB:\n${excluded.map((x) => `- ${x}`).join('\n')}` : '')
       );
 
-      const blob = await zip.generateAsync({ type: 'blob' });
-      downloadBlob(blob, cleanFileName(`${pkg.package_number}_${billingMonth}.zip`));
-      toast.success(`Package bundle downloaded (${bundled} documents)`);
+      const blob = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 9 },
+      });
+
+      if (blob.size > MAX_ZIP_BYTES) {
+        toast.warning(`Package bundle is ${(blob.size / 1024 / 1024).toFixed(1)}MB — over the 10MB limit. Remove large attachments and try again.`);
+      } else {
+        downloadBlob(blob, cleanFileName(`${pkg.package_number}_${billingMonth}.zip`));
+        toast.success(
+          `Package bundle downloaded (${included.length} documents, ${(blob.size / 1024 / 1024).toFixed(1)}MB)`,
+          excluded.length ? { description: `Excluded to fit 10MB: ${excluded.length} file(s)` } : undefined
+        );
+      }
     } catch (err) {
       toast.error('Could not build bundle: ' + (err?.message || 'error'));
     } finally {
