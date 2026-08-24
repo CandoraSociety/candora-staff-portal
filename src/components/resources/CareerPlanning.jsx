@@ -52,18 +52,23 @@ export default function CareerPlanning() {
 
   const setField = (key, value) => setBackground((b) => ({ ...b, [key]: value }));
 
-  const generate = async () => {
-    if (!jobType.trim()) return;
+  const resumeUrls = (selectedClient?.resume_urls || []).filter(Boolean);
+  const hasResume = resumeUrls.length > 0;
+
+  const generate = async (targetJob) => {
+    const job = (targetJob || jobType).trim();
+    if (!job) return;
     setLoading(true);
     setError(null);
     try {
       const clientName = selectedClient
         ? `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim()
         : '';
-      const prompt = buildPrompt(background, jobType.trim(), location, !!selectedClient, clientName);
+      const prompt = buildPrompt(background, job, location, !!selectedClient, clientName, hasResume);
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: CAREER_PLAN_SCHEMA,
+        ...(hasResume ? { file_urls: resumeUrls } : {}),
       });
       setResult(res);
     } catch (e) {
@@ -71,6 +76,15 @@ export default function CareerPlanning() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Refine the search by clicking a suggested job title — sets it as the new
+  // target and re-runs the plan with the same client/background.
+  const refineJob = (title) => {
+    if (!title || loading) return;
+    setJobType(title);
+    generate(title);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const reset = () => {
@@ -139,6 +153,11 @@ export default function CareerPlanning() {
               to run the gap analysis manually.
             </p>
           )}
+          {hasResume && (
+            <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+              {resumeUrls.length} resume(s) on file — the client's resume will be read and assessed as part of the gap analysis.
+            </p>
+          )}
           <div>
             <label className="text-sm font-medium text-slate-700 block mb-1">Education</label>
             <Textarea
@@ -200,17 +219,19 @@ export default function CareerPlanning() {
         )}
       </div>
 
-      {loading && !result && (
+      {loading && (
         <div className="flex items-center justify-center py-12 text-sm text-slate-400 gap-2">
           <Loader2 className="w-5 h-5 animate-spin" /> Building the career plan…
         </div>
       )}
 
-      {result && (
+      {result && !loading && (
         <CareerPlanResults
           result={result}
           jobType={jobType}
           clientName={selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}`.trim() : null}
+          hasResume={hasResume}
+          onRefineJob={refineJob}
         />
       )}
     </div>

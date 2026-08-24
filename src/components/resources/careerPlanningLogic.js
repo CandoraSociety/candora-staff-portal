@@ -99,16 +99,19 @@ export function buildBackgroundText(b) {
     .join('\n') || 'No background information provided.';
 }
 
-export function buildPrompt(background, jobType, location, hasClient, clientName) {
+export function buildPrompt(background, jobType, location, hasClient, clientName, hasResume) {
   const bg = buildBackgroundText(background);
   const who = hasClient
     ? `for the client ${clientName}`
     : 'for a client (manual entry — no specific client record attached)';
+  const resumeLine = hasResume
+    ? `\nThe client's resume is attached as a file. Read it carefully and use it as the authoritative source for their actual education, work history, skills, and certifications. Incorporate details from the resume into the background, the gap analysis, and the action plan (note when a strength or gap comes from the resume).\n`
+    : '';
   return `You are a Canadian career counsellor supporting newcomers and job seekers in Alberta, Canada.
 
 Client background:
 ${bg}
-
+${resumeLine}
 Target career / job type: "${jobType}" in ${location}.
 
 Produce a detailed, practical career plan ${who}. The plan must cover ALL of the following:

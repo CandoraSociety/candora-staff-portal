@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks } from 'lucide-react';
 
-function ResultCard({ title, icon, children }) {
+function ResultCard({ title, icon, subtitle, children }) {
   return (
     <Card>
       <CardHeader className="pb-2 pt-4 px-4">
@@ -9,6 +9,7 @@ function ResultCard({ title, icon, children }) {
           {icon}
           {title}
         </CardTitle>
+        {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
       </CardHeader>
       <CardContent className="px-4 pb-4">{children}</CardContent>
     </Card>
@@ -28,7 +29,7 @@ function BulletList({ items = [] }) {
   );
 }
 
-export default function CareerPlanResults({ result, jobType, clientName }) {
+export default function CareerPlanResults({ result, jobType, clientName, hasResume, onRefineJob }) {
   const r = result || {};
   return (
     <div className="space-y-4">
@@ -36,12 +37,31 @@ export default function CareerPlanResults({ result, jobType, clientName }) {
         <div>
           <h3 className="font-semibold text-lg">Career Plan: {jobType}</h3>
           {clientName && <p className="text-sm text-muted-foreground">Prepared for {clientName}</p>}
+          {hasResume && (
+            <p className="text-xs text-emerald-600 mt-0.5">Includes assessment of the client's uploaded resume</p>
+          )}
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <ResultCard title="Job Titles in This Field">
-          <BulletList items={r.job_titles} />
+        <ResultCard title="Job Titles in This Field" subtitle={onRefineJob ? 'Click any title to refine the plan for that role' : undefined}>
+          <ul className="space-y-1">
+            {(r.job_titles || []).map((item, i) => (
+              <li key={i} className="text-sm flex gap-2">
+                <span className="text-slate-400 mt-0.5">•</span>
+                {onRefineJob ? (
+                  <button
+                    onClick={() => onRefineJob(item)}
+                    className="text-left text-blue-700 hover:text-blue-900 hover:underline"
+                  >
+                    {item}
+                  </button>
+                ) : (
+                  <span className="text-slate-600">{item}</span>
+                )}
+              </li>
+            ))}
+          </ul>
         </ResultCard>
 
         <ResultCard title="Wage Range (Alberta)">
