@@ -1,5 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText, Building2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText, Building2, GraduationCap, ClipboardList } from 'lucide-react';
+
+const FIT_STYLES = {
+  strong: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  moderate: 'bg-amber-50 text-amber-700 border-amber-200',
+  weak: 'bg-slate-50 text-slate-500 border-slate-200',
+};
 
 function ResultCard({ title, icon, subtitle, children }) {
   return (
@@ -284,6 +290,117 @@ export default function CareerPlanResults({ result, jobType, clientName, hasResu
             </div>
           );
         })()}
+      </ResultCard>
+
+      {/* Counsellor Aptitude Guide */}
+      <ResultCard
+        title="Counsellor Aptitude & Suitability Guide"
+        icon={<ClipboardList className="w-4 h-4 text-indigo-500" />}
+        subtitle="For the career counsellor — how to assess this client's fit for the path"
+      >
+        {(() => {
+          const g = r.counsellor_aptitude_guide || {};
+          const hasAny = g.aptitudes_to_probe?.length || g.assessment_questions?.length || g.red_flags?.length || g.positive_indicators_from_background?.length || g.suitability_summary;
+          if (!hasAny) {
+            return <p className="text-sm text-slate-500">No aptitude guidance generated.</p>;
+          }
+          return (
+            <div className="space-y-4">
+              {g.aptitudes_to_probe?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Aptitudes & Traits to Probe</p>
+                  <BulletList items={g.aptitudes_to_probe} />
+                </div>
+              )}
+              {g.assessment_questions?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Assessment Questions to Ask</p>
+                  <ul className="space-y-1">
+                    {g.assessment_questions.map((q, i) => (
+                      <li key={i} className="text-sm text-slate-600 flex gap-2 italic">
+                        <span className="text-slate-400 mt-0.5">?</span>
+                        <span>"{q}"</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {g.positive_indicators_from_background?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-emerald-700 mb-1">Positive Indicators from Their Background</p>
+                  <ul className="space-y-1">
+                    {g.positive_indicators_from_background.map((s, i) => (
+                      <li key={i} className="text-sm text-slate-600 flex gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {g.red_flags?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-amber-700 mb-1">Red Flags to Watch For</p>
+                  <ul className="space-y-1">
+                    {g.red_flags.map((f, i) => (
+                      <li key={i} className="text-sm text-slate-600 flex gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {g.suitability_summary && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-indigo-700 mb-0.5">Suitability Summary</p>
+                  <p className="text-sm text-slate-700">{g.suitability_summary}</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </ResultCard>
+
+      {/* Internal Training Match */}
+      <ResultCard
+        title="Recommended Candora Internal Training"
+        icon={<GraduationCap className="w-4 h-4 text-slate-500" />}
+        subtitle="In-house placements that build transferable skills for this path"
+      >
+        {(r.internal_training_match || []).length === 0 ? (
+          <p className="text-sm text-slate-500">No internal training recommendations generated.</p>
+        ) : (
+          <div className="space-y-3">
+            {r.internal_training_match.map((m, i) => {
+              const fit = (m.fit_rating || 'moderate').toLowerCase();
+              const style = FIT_STYLES[fit] || FIT_STYLES.moderate;
+              return (
+                <div key={i} className="border border-slate-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-sm font-semibold text-slate-800">{m.placement}</p>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${style}`}>
+                      {fit} fit
+                    </span>
+                  </div>
+                  {m.why && <p className="text-sm text-slate-600">{m.why}</p>}
+                  {m.skills_gained?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {m.skills_gained.map((s, j) => (
+                        <span key={j} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  {m.resume_positioning && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      <span className="font-medium text-slate-600">Resume tip:</span> {m.resume_positioning}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </ResultCard>
     </div>
   );

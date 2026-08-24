@@ -147,6 +147,20 @@ Produce a detailed, practical career plan ${who}. The plan must cover ALL of the
    - What to emphasize in a cover letter for this role (a hook, a value statement, and a specific example to highlight)
    - Any credentials or certifications to make prominent
 
+8. COUNSELLOR APTITUDE GUIDE: guidance to help the career counsellor assess whether this client is suited to this career path. Cover:
+   - Key aptitudes and traits to look for or probe for in conversation (e.g. attention to detail, physical stamina, comfort with repetitive tasks, customer orientation, manual dexterity, ability to work alone/with others)
+   - Suggested assessment questions or discussion prompts to draw out relevant strengths and concerns from the client
+   - Red flags or indicators that this path may be a poor fit (and what to watch for)
+   - Transferable indicators from the client's background (above) that already suggest aptitude
+   - A short suitability summary: how to weigh the client's existing background against the role's demands
+
+9. INTERNAL TRAINING MATCH (Candora): Candora currently offers the following in-house internal training/placement experiences:
+   - Reception & admin internal training/placement
+   - Food services (front end, back end, production)
+   - Security training
+   - Program facilitation assistant
+   Recommend which of these (if any) would best help prepare this client for the target career path. For each relevant option, explain WHY it builds directly transferable skills for the target role (be specific about the overlap), what the client would gain, and how to position it on their resume. If none are a strong fit, say so and suggest the closest option. Output this as a list of recommended placements with a fit_rating of "strong", "moderate", or "weak".
+
 Be specific to the Alberta labour market. Be practical, concrete, and encouraging. Avoid generic advice — tailor everything to this client's background and the target role.`;
 }
 
@@ -232,6 +246,29 @@ export const CAREER_PLAN_SCHEMA = {
         transferable_experience_framing: { type: 'string' },
         cover_letter_focus: { type: 'string' },
         credentials_to_emphasize: { type: 'array', items: { type: 'string' } },
+      },
+    },
+    counsellor_aptitude_guide: {
+      type: 'object',
+      properties: {
+        aptitudes_to_probe: { type: 'array', items: { type: 'string' } },
+        assessment_questions: { type: 'array', items: { type: 'string' } },
+        red_flags: { type: 'array', items: { type: 'string' } },
+        positive_indicators_from_background: { type: 'array', items: { type: 'string' } },
+        suitability_summary: { type: 'string' },
+      },
+    },
+    internal_training_match: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          placement: { type: 'string' },
+          fit_rating: { type: 'string', enum: ['strong', 'moderate', 'weak'] },
+          why: { type: 'string' },
+          skills_gained: { type: 'array', items: { type: 'string' } },
+          resume_positioning: { type: 'string' },
+        },
       },
     },
   },
