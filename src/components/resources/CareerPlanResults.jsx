@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText } from 'lucide-react';
 
 function ResultCard({ title, icon, subtitle, children }) {
   return (
@@ -179,6 +179,86 @@ export default function CareerPlanResults({ result, jobType, clientName, hasResu
             ))}
           </ol>
         )}
+      </ResultCard>
+
+      {/* Jobsite Expectations */}
+      <ResultCard
+        title="What to Expect on the Jobsite"
+        icon={<HardHat className="w-4 h-4 text-amber-600" />}
+      >
+        {(() => {
+          const j = r.jobsite_expectations || {};
+          const rows = [
+            ['Work Environment & Conditions', j.work_environment],
+            ['Safety & Onboarding', j.safety_and_onboarding],
+            ['Workplace Culture', j.workplace_culture],
+            ['First-Month Realities', j.first_month_realities],
+          ].filter(([, v]) => v);
+          return rows.length === 0 ? (
+            <p className="text-sm text-slate-500">No jobsite guidance generated.</p>
+          ) : (
+            <div className="space-y-3">
+              {rows.map(([label, val], i) => (
+                <div key={i}>
+                  <p className="text-sm font-semibold text-slate-700">{label}</p>
+                  <p className="text-sm text-slate-600 mt-0.5">{val}</p>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </ResultCard>
+
+      {/* Resume & Cover Letter Tailoring */}
+      <ResultCard
+        title="Resume & Cover Letter Tailoring"
+        icon={<FileText className="w-4 h-4 text-blue-600" />}
+      >
+        {(() => {
+          const t = r.resume_tailoring || {};
+          const hasAny = t.highlight_on_resume?.length || t.ats_keywords?.length || t.credentials_to_emphasize?.length || t.transferable_experience_framing || t.cover_letter_focus;
+          if (!hasAny) {
+            return <p className="text-sm text-slate-500">No resume tailoring guidance generated.</p>;
+          }
+          return (
+            <div className="space-y-4">
+              {t.highlight_on_resume?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Highlight at the Top of the Resume</p>
+                  <BulletList items={t.highlight_on_resume} />
+                </div>
+              )}
+              {t.ats_keywords?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">ATS Keywords to Include</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.ats_keywords.map((kw, i) => (
+                      <span key={i} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">{kw}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {t.transferable_experience_framing && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Framing Transferable Experience</p>
+                  <p className="text-sm text-slate-600 mt-0.5">{t.transferable_experience_framing}</p>
+                </div>
+              )}
+              {t.cover_letter_focus && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Cover Letter Focus</p>
+                  <p className="text-sm text-slate-600 mt-0.5">{t.cover_letter_focus}</p>
+                </div>
+              )}
+              {t.credentials_to_emphasize?.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">Credentials to Make Prominent</p>
+                  <BulletList items={t.credentials_to_emphasize} />
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </ResultCard>
     </div>
   );

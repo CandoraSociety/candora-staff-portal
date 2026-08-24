@@ -132,6 +132,19 @@ Produce a detailed, practical career plan ${who}. The plan must cover ALL of the
 
 4. ACTION PLAN: an ordered, step-by-step plan to close the gaps so the client qualifies for the target role. For each step, state which gap it addresses and an estimated duration.
 
+5. JOBSITE EXPECTATIONS: what the client should realistically expect day-to-day working in this role in Alberta.
+   - Typical work environment and conditions (indoor/outdoor, physical demands, shift patterns, travel)
+   - Common safety considerations and orientation/onboarding they will go through
+   - Workplace culture and supervisor/teammate dynamics typical for this trade/field
+   - First-week and first-month realities (what surprises newcomers, common adjustments)
+
+6. RESUME & COVER LETTER TAILORING: concrete, specific guidance for positioning this client's resume and cover letter toward this role.
+   - Which skills, experiences, and accomplishments to HIGHLIGHT at the top of the resume (drawn from their background/resume where possible)
+   - Keywords and phrases from this field to include for applicant tracking systems (ATS)
+   - How to frame transferable experience (especially for newcomers whose credentials are from outside Canada)
+   - What to emphasize in a cover letter for this role (a hook, a value statement, and a specific example to highlight)
+   - Any credentials or certifications to make prominent
+
 Be specific to the Alberta labour market. Be practical, concrete, and encouraging. Avoid generic advice — tailor everything to this client's background and the target role.`;
 }
 
@@ -187,6 +200,25 @@ export const CAREER_PLAN_SCHEMA = {
           closes_gap: { type: 'string' },
           duration: { type: 'string' },
         },
+      },
+    },
+    jobsite_expectations: {
+      type: 'object',
+      properties: {
+        work_environment: { type: 'string' },
+        safety_and_onboarding: { type: 'string' },
+        workplace_culture: { type: 'string' },
+        first_month_realities: { type: 'string' },
+      },
+    },
+    resume_tailoring: {
+      type: 'object',
+      properties: {
+        highlight_on_resume: { type: 'array', items: { type: 'string' } },
+        ats_keywords: { type: 'array', items: { type: 'string' } },
+        transferable_experience_framing: { type: 'string' },
+        cover_letter_focus: { type: 'string' },
+        credentials_to_emphasize: { type: 'array', items: { type: 'string' } },
       },
     },
   },
