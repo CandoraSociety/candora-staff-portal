@@ -138,7 +138,9 @@ Produce a detailed, practical career plan ${who}. The plan must cover ALL of the
    - Workplace culture and supervisor/teammate dynamics typical for this trade/field
    - First-week and first-month realities (what surprises newcomers, common adjustments)
 
-6. RESUME & COVER LETTER TAILORING: concrete, specific guidance for positioning this client's resume and cover letter toward this role.
+6. ENTRY-LEVEL EMPLOYERS: a list of real companies and employers in Alberta that frequently hire for entry-level positions in this field. For each, give the company name, a one-line note on the types of entry-level roles they hire for / what they're known for, and the region (e.g. Edmonton, Calgary, province-wide) where they mainly operate. Prioritize well-known, verifiable employers a newcomer could realistically apply to (large employers, franchises, staffing agencies, public-sector employers). Do not invent companies that don't exist.
+
+7. RESUME & COVER LETTER TAILORING: concrete, specific guidance for positioning this client's resume and cover letter toward this role.
    - Which skills, experiences, and accomplishments to HIGHLIGHT at the top of the resume (drawn from their background/resume where possible)
    - Keywords and phrases from this field to include for applicant tracking systems (ATS)
    - How to frame transferable experience (especially for newcomers whose credentials are from outside Canada)
@@ -209,6 +211,17 @@ export const CAREER_PLAN_SCHEMA = {
         safety_and_onboarding: { type: 'string' },
         workplace_culture: { type: 'string' },
         first_month_realities: { type: 'string' },
+      },
+    },
+    entry_level_employers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          hires_for: { type: 'string' },
+          region: { type: 'string' },
+        },
       },
     },
     resume_tailoring: {

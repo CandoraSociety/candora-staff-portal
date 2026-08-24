@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText, Building2 } from 'lucide-react';
 
 function ResultCard({ title, icon, subtitle, children }) {
   return (
@@ -178,6 +178,31 @@ export default function CareerPlanResults({ result, jobType, clientName, hasResu
               </li>
             ))}
           </ol>
+        )}
+      </ResultCard>
+
+      {/* Entry-Level Employers */}
+      <ResultCard
+        title="Companies That Frequently Hire Entry-Level"
+        icon={<Building2 className="w-4 h-4 text-slate-500" />}
+      >
+        {(r.entry_level_employers || []).length === 0 ? (
+          <p className="text-sm text-slate-500">No employer suggestions generated.</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-2">
+            {r.entry_level_employers.map((emp, i) => (
+              <div key={i} className="border border-slate-200 rounded-lg p-2.5">
+                <p className="text-sm font-semibold text-slate-800">{emp.name}</p>
+                {emp.hires_for && <p className="text-xs text-slate-600 mt-0.5">{emp.hires_for}</p>}
+                {emp.region && (
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-400" />
+                    {emp.region}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </ResultCard>
 
