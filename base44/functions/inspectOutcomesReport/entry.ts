@@ -25,28 +25,52 @@ export default async function(req: Request): Promise<Response> {
     const values: any[][] = used.values || [];
     const formulas: any[][] = used.formulas || [];
 
-    // Deliverables row 16 — every column's formula (to see how P16/AC16/... are built)
-    const dRes = await fetch(
-      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${wb.id}/workbook/worksheets('Deliverables')/usedRange`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
-    let deliverablesRow16 = null;
-    if (dRes.ok) {
-      const d = await dRes.json();
-      const dv: any[][] = d.values || [];
-      const df: any[][] = d.formulas || [];
-      const r16 = dv[15] || [];
-      const f16 = df[15] || [];
-      const cells = [];
-      for (let c = 0; c < r16.length; c++) {
-        if (r16[c] !== '' && r16[c] != null || (f16[c] && String(f16[c]).startsWith('='))) {
-          cells.push({ col: colLetter(c), value: r16[c] ?? '', formula: String(f16[c] ?? '') });
-        }
-      }
-      deliverablesRow16 = cells;
+    // Column T = index 19. Rows 16-31 (0-indexed 15-30) and row 56 (0-indexed 55).
+    // Also grab a label column (B, index 1) so we know what each row represents.
+    const targetRows = [];
+    for (const r of [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,55]) {
+      const rowVals = values[r] || [];
+      const rowForm = formulas[r] || [];
+      targetRows.push({
+        row: r + 1,
+        label_A: rowVals[0] ?? '',
+        label_B: rowVals[1] ?? '',
+        label_C: rowVals[2] ?? '',
+        T_value: rowVals[19] ?? '',
+        T_formula: String(rowForm[19] ?? ''),
+        // Also grab a few neighbouring columns for context (S/U)
+        S_value: rowVals[18] ?? '',
+        S_formula: String(rowForm[18] ?? ''),
+        U_value: rowVals[20] ?? '',
+        U_formula: String(rowForm[20] ?? ''),
+      });
     }
 
-    return Response.json({ workbook: wb.name, sheet, deliverablesRow16 });
+    // Full row labels for rows 13-31 and 55-57 so we can see section structure
+    const sectionLabels = [];
+    for (const r of [12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,54,55,56,57]) {
+      const rv = values[r] || [];
+      sectionLabels.push({
+        row: r + 1,
+        A: rv[0] ?? '',
+        B: rv[1] ?? '',
+        C: rv[2] ?? '',
+        D: rv[3] ?? '',
+        E: rv[4] ?? '',
+      });
+    }
+
+    // Collect every non-empty formula in column T (all rows) for completeness
+    const allT = [];
+    for (let r = 0; r < formulas.length; r++) {
+      const f = formulas[r]?.[19];
+      const v = values[r]?.[19];
+      if ((f && String(f).startsWith('=')) || (v !== '' && v != null && v !== 0)) {
+        allT.push({ row: r + 1, value: v ?? '', formula: String(f ?? '') });
+      }
+    }
+
+    return Response.json({ workbook: wb.name, sheet, allT, sectionLabels });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
