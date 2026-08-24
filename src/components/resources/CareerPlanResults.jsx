@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText, Building2, GraduationCap, ClipboardList } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertTriangle, ListChecks, HardHat, FileText, Building2, GraduationCap, ClipboardList, ExternalLink } from 'lucide-react';
 
 const FIT_STYLES = {
   strong: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -394,6 +394,57 @@ export default function CareerPlanResults({ result, jobType, clientName, hasResu
                   {m.resume_positioning && (
                     <p className="text-xs text-slate-500 mt-2">
                       <span className="font-medium text-slate-600">Resume tip:</span> {m.resume_positioning}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </ResultCard>
+
+      {/* External Training Vendors */}
+      <ResultCard
+        title="External Training Providers (Alberta)"
+        icon={<GraduationCap className="w-4 h-4 text-emerald-600" />}
+        subtitle="Real third-party providers offering relevant programs — click through to enrol"
+      >
+        {(r.external_training_vendors || []).length === 0 ? (
+          <p className="text-sm text-slate-500">No external training vendors generated.</p>
+        ) : (
+          <div className="space-y-3">
+            {r.external_training_vendors.map((v, i) => {
+              const fit = (v.fit_rating || 'moderate').toLowerCase();
+              const style = FIT_STYLES[fit] || FIT_STYLES.moderate;
+              const url = v.url && /^(https?:)?\/\//i.test(v.url) ? v.url : null;
+              return (
+                <div key={i} className="border border-slate-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-sm font-semibold text-slate-800">
+                      {url ? (
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:underline inline-flex items-center gap-1">
+                          {v.name} <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        v.name
+                      )}
+                    </p>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${style}`}>
+                      {fit} fit
+                    </span>
+                  </div>
+                  {v.programs_offered && <p className="text-sm text-slate-600">{v.programs_offered}</p>}
+                  <div className="flex flex-wrap gap-1.5 mt-2 text-xs">
+                    {v.format && (
+                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{v.format}</span>
+                    )}
+                    {v.region && (
+                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{v.region}</span>
+                    )}
+                  </div>
+                  {v.cost_note && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      <span className="font-medium text-slate-600">Cost:</span> {v.cost_note}
                     </p>
                   )}
                 </div>

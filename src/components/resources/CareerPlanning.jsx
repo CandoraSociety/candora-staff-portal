@@ -69,6 +69,8 @@ export default function CareerPlanning() {
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: CAREER_PLAN_SCHEMA,
+        add_context_from_internet: true,
+        model: 'gemini_3_1_pro',
         ...(hasResume ? { file_urls: resumeUrls } : {}),
       });
       setResult(res);

@@ -109,6 +109,13 @@ export function buildPrompt(background, jobType, location, hasClient, clientName
     : '';
   return `You are a Canadian career counsellor supporting newcomers and job seekers in Alberta, Canada.
 
+IMPORTANT — RESEARCH SOURCES:
+Use your web search to ground every section in real, current Alberta information. You MUST draw on (not exclusively, but as primary references):
+- **ALIS (alis.alberta.ca)** — the Government of Alberta's official career, education, and labour-market site. Use it for occupation profiles, certification/registration requirements, wage information, and education/training program listings. When alis.alberta.ca covers the target occupation, prefer its figures and requirements over generic sources.
+- **Live job postings** — search current Alberta job postings for the target role (indeed.ca, LinkedIn Jobs, alis.alberta.ca job bank, Job Bank Canada). Use real, active postings to inform the required skills, certifications, and wage range, and to cite realistic entry-level employers (see section 6).
+- Other credible Alberta labour-market sources (Government of Alberta, Statistics Canada, professional regulatory bodies, reputable Alberta training providers) as appropriate.
+Cite figures and requirements back to these sources where possible. Do not invent companies, wages, or certifications that you cannot ground in real information.
+
 Client background:
 ${bg}
 ${resumeLine}
@@ -160,6 +167,16 @@ Produce a detailed, practical career plan ${who}. The plan must cover ALL of the
    - Security training
    - Program facilitation assistant
    Recommend which of these (if any) would best help prepare this client for the target career path. For each relevant option, explain WHY it builds directly transferable skills for the target role (be specific about the overlap), what the client would gain, and how to position it on their resume. If none are a strong fit, say so and suggest the closest option. Output this as a list of recommended placements with a fit_rating of "strong", "moderate", or "weak".
+
+10. EXTERNAL TRAINING VENDORS: a list of real, reputable third-party training providers/vendors in Alberta (or that serve Alberta learners online) that offer training, certification, or courses directly relevant to the target career path — the kind the client could enrol in to close a gap from section 3. Use your web search to find REAL providers; do not invent vendors. Prioritize well-known, verifiable Alberta providers (public post-secondary continuing education, recognized industry training bodies, regulated certification providers) and credible online providers. For each vendor include:
+    - name: the vendor/provider name
+    - url: a real, clickable URL to the provider's website or the specific program page (prefer the program/course page when one exists). MUST start with http:// or https://
+    - programs_offered: a short description of the relevant program(s)/course(s) they offer for this career path
+    - format: one of "in-person", "online", or "hybrid"
+    - region: the city/region they serve (e.g. Edmonton, Calgary, Alberta-wide, online)
+    - cost_note: a short note on cost where known (e.g. tuition range, funding eligibility, free) — leave blank if not available
+    - fit_rating: "strong", "moderate", or "weak" relevance to the target role
+    Include at least 3 vendors when the field has established training pathways in Alberta. If no specific external training is relevant, say so and still list the closest general skills-upgrade providers.
 
 Be specific to the Alberta labour market. Be practical, concrete, and encouraging. Avoid generic advice — tailor everything to this client's background and the target role.`;
 }
@@ -268,6 +285,21 @@ export const CAREER_PLAN_SCHEMA = {
           why: { type: 'string' },
           skills_gained: { type: 'array', items: { type: 'string' } },
           resume_positioning: { type: 'string' },
+        },
+      },
+    },
+    external_training_vendors: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          url: { type: 'string' },
+          programs_offered: { type: 'string' },
+          format: { type: 'string', enum: ['in-person', 'online', 'hybrid'] },
+          region: { type: 'string' },
+          cost_note: { type: 'string' },
+          fit_rating: { type: 'string', enum: ['strong', 'moderate', 'weak'] },
         },
       },
     },
