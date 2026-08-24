@@ -46,21 +46,24 @@ export default function CareerPlanResults({ result, jobType, clientName, hasResu
       <div className="grid md:grid-cols-2 gap-4">
         <ResultCard title="Job Titles in This Field" subtitle={onRefineJob ? 'Click any title to refine the plan for that role' : undefined}>
           <ul className="space-y-1">
-            {(r.job_titles || []).map((item, i) => (
-              <li key={i} className="text-sm flex gap-2">
-                <span className="text-slate-400 mt-0.5">•</span>
-                {onRefineJob ? (
-                  <button
-                    onClick={() => onRefineJob(item)}
-                    className="text-left text-blue-700 hover:text-blue-900 hover:underline"
-                  >
-                    {item}
-                  </button>
-                ) : (
-                  <span className="text-slate-600">{item}</span>
-                )}
-              </li>
-            ))}
+            {(r.job_titles || []).map((item, i) => {
+              const label = typeof item === 'string' ? item : (String(item?.title || item?.name || item || ''));
+              return (
+                <li key={i} className="text-sm flex gap-2">
+                  <span className="text-slate-400 mt-0.5">•</span>
+                  {onRefineJob ? (
+                    <button
+                      onClick={() => onRefineJob(label)}
+                      className="text-left text-blue-700 hover:text-blue-900 hover:underline"
+                    >
+                      {label}
+                    </button>
+                  ) : (
+                    <span className="text-slate-600">{label}</span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </ResultCard>
 

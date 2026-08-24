@@ -56,7 +56,8 @@ export default function CareerPlanning() {
   const hasResume = resumeUrls.length > 0;
 
   const generate = async (targetJob) => {
-    const job = (targetJob || jobType).trim();
+    const rawJob = targetJob || jobType;
+    const job = (rawJob && typeof rawJob === 'string' ? rawJob : String(rawJob || '')).trim();
     if (!job) return;
     setLoading(true);
     setError(null);
@@ -82,8 +83,10 @@ export default function CareerPlanning() {
   // target and re-runs the plan with the same client/background.
   const refineJob = (title) => {
     if (!title || loading) return;
-    setJobType(title);
-    generate(title);
+    const t = typeof title === 'string' ? title : (String(title?.title || title?.name || title || ''));
+    if (!t.trim()) return;
+    setJobType(t);
+    generate(t);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
