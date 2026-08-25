@@ -76,8 +76,8 @@ export default function CareerPlanning() {
   const hasResume = resumeUrls.length > 0;
 
   const generate = async (targetJob) => {
-    const rawJob = targetJob || jobType;
-    const job = (rawJob && typeof rawJob === 'string' ? rawJob : String(rawJob || '')).trim();
+    const rawJob = typeof targetJob === 'string' && targetJob.trim() ? targetJob : jobType;
+    const job = String(rawJob || '').trim();
     if (!job) return;
     setLoading(true);
     setError(null);
