@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { fieldDescription } from '@/lib/compassChecklistDescriptions';
@@ -34,6 +34,7 @@ export default function CompassEntryChecklist() {
   const navigate = useNavigate();
   const [months, setMonths] = useState([currentBillingMonth()]);
   const [draftMonth, setDraftMonth] = useState('');
+  const [noteDrafts, setNoteDrafts] = useState({});
 
   const monthsKey = useMemo(() => [...months].sort().join(','), [months]);
 
@@ -68,6 +69,30 @@ export default function CompassEntryChecklist() {
         return base44.entities.CompassBillingVerification.update(existing.id, payload);
       }
       return base44.entities.CompassBillingVerification.create(payload);
+    },
+    onSuccess: () => refetchVerifications(),
+  });
+
+  const notesMutation = useMutation({
+    mutationFn: async ({ clientId, clientName, notes }) => {
+      const existing = verifications.find((v) => v.client_id === clientId);
+      const today = new Date().toISOString().slice(0, 10);
+      const byName = currentUser?.full_name || currentUser?.email || '';
+      if (existing) {
+        return base44.entities.CompassBillingVerification.update(existing.id, {
+          notes,
+          notes_updated_date: today,
+          notes_updated_by_name: byName,
+        });
+      }
+      return base44.entities.CompassBillingVerification.create({
+        client_id: clientId,
+        client_name: clientName,
+        notes,
+        notes_updated_date: today,
+        notes_updated_by_name: byName,
+        billing_months: [...months].sort(),
+      });
     },
     onSuccess: () => refetchVerifications(),
   });
@@ -218,6 +243,41 @@ export default function CompassEntryChecklist() {
                         {comments.value}
                       </p>
                     </details>
+                  )}
+                  {item.client_id && (
+                    <div className="border border-emerald-300 bg-emerald-50 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="text-xs font-semibold text-emerald-800 uppercase tracking-wide flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5" /> Compass notes
+                        </label>
+                        {verification?.notes_updated_date && (
+                          <span className="text-xs text-emerald-700">
+                            Updated {verification.notes_updated_date}{verification.notes_updated_by_name ? ` by ${verification.notes_updated_by_name}` : ''}
+                          </span>
+                        )}
+                      </div>
+                      <textarea
+                        value={(item.client_id in noteDrafts) ? noteDrafts[item.client_id] : (verification?.notes || '')}
+                        onChange={(e) => setNoteDrafts((prev) => ({ ...prev, [item.client_id]: e.target.value }))}
+                        placeholder="Add notes about keeping this client up to date in Compass…"
+                        className="w-full min-h-[70px] text-sm text-emerald-900 bg-white/70 border border-emerald-200 rounded-md p-2 focus:outline-none focus:ring-1 focus:ring-emerald-400 resize-y"
+                      />
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={notesMutation.isPending}
+                          onClick={() => notesMutation.mutate({
+                            clientId: item.client_id,
+                            clientName: item.client_name,
+                            notes: (item.client_id in noteDrafts) ? noteDrafts[item.client_id] : (verification?.notes || ''),
+                          })}
+                          className="gap-1 text-xs border-emerald-400 text-emerald-800 hover:bg-emerald-100"
+                        >
+                          <Save className="w-3.5 h-3.5" /> Save notes
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </CardContent>
               </Card>

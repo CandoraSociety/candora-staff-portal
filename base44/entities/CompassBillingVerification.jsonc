@@ -29,10 +29,22 @@
         "type": "string"
       },
       "description": "YYYY-MM billing months covered by this verification"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes about keeping this client's Compass entries up to date"
+    },
+    "notes_updated_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the notes were last updated"
+    },
+    "notes_updated_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who last updated the notes"
     }
   },
   "required": [
-    "client_id",
-    "verified_date"
+    "client_id"
   ]
 }
