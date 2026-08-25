@@ -13,7 +13,7 @@ import { Sparkles, Loader2, Download, Save, Upload, Wand2, X, ImageIcon } from '
 import { toast } from 'sonner';
 
 const STYLES = [
-  { value: '', label: 'No style preset' },
+  { value: '__none__', label: 'No style preset' },
   { value: 'photorealistic, professional photography, high detail', label: 'Photorealistic' },
   { value: 'flat vector illustration, clean lines, minimal, brand-style', label: 'Vector illustration' },
   { value: 'modern flat design, soft gradients, marketing graphic', label: 'Flat marketing graphic' },
@@ -32,7 +32,7 @@ const ASPECT_PRESETS = [
 export default function AiImageCreator() {
   const qc = useQueryClient();
   const [prompt, setPrompt] = useState('');
-  const [style, setStyle] = useState('');
+  const [style, setStyle] = useState('__none__');
   const [aspect, setAspect] = useState(ASPECT_PRESETS[0].label);
   const [refImageUrl, setRefImageUrl] = useState('');
   const [refName, setRefName] = useState('');
@@ -56,7 +56,8 @@ export default function AiImageCreator() {
 
   const generate = useMutation({
     mutationFn: async () => {
-      const fullPrompt = `${prompt.trim()}${style ? `, ${style}` : ''}${
+      const styleSuffix = style && style !== '__none__' ? `, ${style}` : '';
+      const fullPrompt = `${prompt.trim()}${styleSuffix}${
         ASPECT_PRESETS.find((a) => a.label === aspect)?.suffix || ''
       }`;
       const params = { prompt: fullPrompt };
