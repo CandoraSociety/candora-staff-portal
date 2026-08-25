@@ -122,7 +122,7 @@ Use your web search to ground every section in real, current Alberta information
 - **ALIS (alis.alberta.ca)** — the Government of Alberta's official career, education, and labour-market site. Use it for occupation profiles, certification/registration requirements, wage information, and education/training program listings. When alis.alberta.ca covers the target occupation, prefer its figures and requirements over generic sources. Look up the target occupation by name on ALIS first.
 - **Live job postings** — search current Alberta job postings for the target role and its close synonyms (indeed.ca, LinkedIn Jobs, alis.alberta.ca job bank, Job Bank Canada). Search the LITERAL target job title, not a pivot role. Use real, active postings to inform the required skills, certifications, and wage range, and to cite realistic entry-level employers (see section 6).
 - Other credible Alberta labour-market sources (Government of Alberta, Statistics Canada, professional regulatory bodies, reputable Alberta training providers) as appropriate.
-Cite figures and requirements back to these sources where possible. Do not invent companies, wages, or certifications that you cannot ground in real information.
+Use these sources to research and ground your answers internally. Do NOT cite them in the output — the client does not need to see source references; just present the accurate, current Alberta information. Do not invent companies, wages, or certifications that you cannot ground in real information.
 
 Client background:
 ${bg}
