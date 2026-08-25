@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles, User } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ClientPicker from './ClientPicker';
 import CareerPlanResults from './CareerPlanResults';
 import {
@@ -16,9 +17,28 @@ import {
 
 const EMPTY_BG = { education: '', experience: '', skills: '', training: '', objective: '' };
 
+const JOB_TYPE_OPTIONS = [
+  'Dental Assistant',
+  'Early Childhood Educator',
+  'Healthcare Aide / Personal Care Attendant',
+  'Warehouse Worker',
+  'Production / Manufacturing Worker',
+  'Construction Labourer',
+  'Food Service Worker',
+  'Retail Associate',
+  'Receptionist / Office Administrator',
+  'Accounting / Bookkeeping Clerk',
+  'Customer Service Representative',
+  'Cleaning / Janitorial Worker',
+  'Childcare Worker',
+  'Truck Driver / Delivery Driver',
+];
+const OTHER_SENTINEL = '__other__';
+
 export default function CareerPlanning() {
   const [clientId, setClientId] = useState(null);
   const [jobType, setJobType] = useState('');
+  const [jobTypeOther, setJobTypeOther] = useState(false);
   const [location, setLocation] = useState('Alberta, Canada');
   const [background, setBackground] = useState(EMPTY_BG);
   const [loading, setLoading] = useState(false);
@@ -131,11 +151,36 @@ export default function CareerPlanning() {
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-1">Job Type / Career Goal</label>
-              <Input
-                value={jobType}
-                onChange={(e) => setJobType(e.target.value)}
-                placeholder="e.g. Dental Assistant, Warehouse Worker, Early Childhood Educator"
-              />
+              <Select
+                value={JOB_TYPE_OPTIONS.includes(jobType) ? jobType : OTHER_SENTINEL}
+                onValueChange={(v) => {
+                  if (v === OTHER_SENTINEL) {
+                    setJobTypeOther(true);
+                    setJobType('');
+                  } else {
+                    setJobTypeOther(false);
+                    setJobType(v);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a job type…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_TYPE_OPTIONS.map((j) => (
+                    <SelectItem key={j} value={j}>{j}</SelectItem>
+                  ))}
+                  <SelectItem value={OTHER_SENTINEL}>Other…</SelectItem>
+                </SelectContent>
+              </Select>
+              {(jobTypeOther || (jobType && !JOB_TYPE_OPTIONS.includes(jobType))) && (
+                <Input
+                  value={jobType}
+                  onChange={(e) => setJobType(e.target.value)}
+                  placeholder="Type the job title"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-1">Location</label>
