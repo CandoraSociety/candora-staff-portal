@@ -108,7 +108,7 @@ export default function PathwaysCompass() {
           onClick={() => setPageTab('tally')}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${pageTab === 'tally' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          Compass Entry Checklist
+          Billing - Compass Client Up-to-date Verification
         </button>
       </div>
 

@@ -1,0 +1,38 @@
+{
+  "name": "CompassBillingVerification",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Linked Client ID"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "verified_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the client was marked as verified up to date in Compass"
+    },
+    "verified_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who marked the client verified"
+    },
+    "verified_by_email": {
+      "type": "string",
+      "description": "Email of the staff member who marked the client verified"
+    },
+    "billing_months": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "YYYY-MM billing months covered by this verification"
+    }
+  },
+  "required": [
+    "client_id",
+    "verified_date"
+  ]
+}

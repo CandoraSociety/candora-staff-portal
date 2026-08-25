@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare } from 'lucide-react';
+import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { fieldDescription } from '@/lib/compassChecklistDescriptions';
@@ -40,6 +40,36 @@ export default function CompassEntryChecklist() {
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['compass-entry-checklist-multi', monthsKey],
     queryFn: async () => (await base44.functions.invoke('getCompassEntryChecklist', { months })).data,
+  });
+
+  const { data: verifications = [], refetch: refetchVerifications } = useQuery({
+    queryKey: ['compass-billing-verifications'],
+    queryFn: async () => base44.entities.CompassBillingVerification.list('-verified_date', 500),
+  });
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['compass-checklist-current-user'],
+    queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async ({ clientId, clientName }) => {
+      const existing = verifications.find((v) => v.client_id === clientId);
+      const today = new Date().toISOString().slice(0, 10);
+      const payload = {
+        client_id: clientId,
+        client_name: clientName,
+        verified_date: today,
+        verified_by_name: currentUser?.full_name || currentUser?.email || '',
+        verified_by_email: currentUser?.email || '',
+        billing_months: [...months].sort(),
+      };
+      if (existing) {
+        return base44.entities.CompassBillingVerification.update(existing.id, payload);
+      }
+      return base44.entities.CompassBillingVerification.create(payload);
+    },
+    onSuccess: () => refetchVerifications(),
   });
 
   const addMonth = () => {
@@ -107,6 +137,7 @@ export default function CompassEntryChecklist() {
             const coreFields = item.fields.filter((f) => f.label !== 'Comments');
             const activeMonths = (item.active_months || []).slice().sort();
             const serviceElement = item.fields.find((f) => f.label === 'Service Element')?.value || '';
+            const verification = item.client_id ? verifications.find((v) => v.client_id === item.client_id) : null;
             return (
               <Card key={idx} className="border-slate-300 shadow-sm">
                 <CardContent className="p-4 space-y-3">
@@ -124,8 +155,25 @@ export default function CompassEntryChecklist() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <span className="text-xs text-slate-400">Row {item.row_number}</span>
+                      {verification && (
+                        <Badge className="bg-emerald-100 text-emerald-700 gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Verified {verification.verified_date}
+                        </Badge>
+                      )}
+                      {item.client_id && (
+                        <Button
+                          variant={verification ? 'outline' : 'default'}
+                          size="sm"
+                          disabled={verifyMutation.isPending}
+                          onClick={() => verifyMutation.mutate({ clientId: item.client_id, clientName: item.client_name })}
+                          className="gap-1 text-xs"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          {verification ? 'Re-verify' : 'Mark as verified up to date'}
+                        </Button>
+                      )}
                       {item.client_id && (
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/pathways/client/${item.client_id}`)} className="text-slate-500 gap-1 text-xs">
                           <ExternalLink className="w-3.5 h-3.5" /> View Client
