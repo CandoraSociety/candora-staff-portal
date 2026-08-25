@@ -1,16 +1,20 @@
 import { useState, useRef } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Sparkles, Loader2, Download, Save, Upload, Wand2, X, ImageIcon } from 'lucide-react';
+import { Sparkles, Loader2, Download, Save, Upload, Wand2, X, ImageIcon, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+
+const BRANDING_PREFIX =
+  'Use the attached Candora logo / brand reference image(s) as the authoritative brand identity: match its colour palette, typography style, and overall visual look, and incorporate the Candora logo where it fits naturally. ';
 
 const STYLES = [
   { value: '__none__', label: 'No style preset' },
@@ -39,7 +43,27 @@ export default function AiImageCreator() {
   const [uploadingRef, setUploadingRef] = useState(false);
   const [history, setHistory] = useState([]); // {id, url, prompt, ref}
   const [savingId, setSavingId] = useState(null);
+  const [includeBranding, setIncludeBranding] = useState(true);
   const fileRef = useRef(null);
+
+  // Pull Candora brand logos from Brand Assets so they can be passed to the
+  // image model as reference images (the model can only incorporate branding it
+  // can actually see).
+  const { data: brandAssets } = useQuery({
+    queryKey: ['mkt-brand-logos'],
+    queryFn: () => base44.entities.MarketingAsset.filter({ asset_type: 'logo', is_active: true }),
+  });
+  const brandLogoUrls = (brandAssets || [])
+    .map((a) => a.file_url)
+    .filter((u) => !!u && /\.(png|jpe?g|webp|svg)$/i.test(u));
+
+  const buildRefs = (extra = []) => {
+    const refs = [];
+    if (includeBranding) refs.push(...brandLogoUrls);
+    if (refImageUrl) refs.push(refImageUrl);
+    refs.push(...extra);
+    return refs;
+  };
 
   const uploadRef = async (file) => {
     setUploadingRef(true);
@@ -55,29 +79,47 @@ export default function AiImageCreator() {
   };
 
   const generate = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ text, refs }) => {
       const styleSuffix = style && style !== '__none__' ? `, ${style}` : '';
-      const fullPrompt = `${prompt.trim()}${styleSuffix}${
+      const fullPrompt = `${text}${styleSuffix}${
         ASPECT_PRESETS.find((a) => a.label === aspect)?.suffix || ''
       }`;
       const params = { prompt: fullPrompt };
-      if (refImageUrl) params.existing_image_urls = [refImageUrl];
+      const allRefs = buildRefs(refs || []);
+      if (allRefs.length) params.existing_image_urls = allRefs;
       return base44.integrations.Core.GenerateImage(params);
     },
-    onSuccess: (res) => {
+    onSuccess: (res, variables) => {
       const url = res?.url;
       if (!url) {
         toast.error('No image returned');
         return;
       }
       setHistory((h) => [
-        { id: Date.now(), url, prompt: prompt.trim(), ref: refImageUrl },
+        { id: Date.now(), url, prompt: variables.text, refined: !!(variables.refs && variables.refs.length) },
         ...h,
       ]);
       toast.success('Image generated');
     },
     onError: (e) => toast.error(e?.message || 'Generation failed'),
   });
+
+  const handleGenerate = () => {
+    const text = (includeBranding ? BRANDING_PREFIX : '') + prompt.trim();
+    generate.mutate({ text, refs: [] });
+  };
+
+  const handleRefine = (item) => {
+    const instruction = (item.refinePrompt || '').trim();
+    if (!instruction) return;
+    const text = (includeBranding ? BRANDING_PREFIX : '') + instruction;
+    generate.mutate({ text, refs: [item.url] });
+    setHistory((h) => h.map((it) => (it.id === item.id ? { ...it, refinePrompt: '' } : it)));
+  };
+
+  const setItemRefine = (id, refinePrompt) => {
+    setHistory((h) => h.map((it) => (it.id === id ? { ...it, refinePrompt } : it)));
+  };
 
   const saveToAssets = useMutation({
     mutationFn: async ({ item, name }) => {
@@ -176,6 +218,25 @@ export default function AiImageCreator() {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 bg-amber-50/40">
+              <Checkbox
+                id="include-branding"
+                checked={includeBranding}
+                onCheckedChange={(v) => setIncludeBranding(!!v)}
+                className="mt-0.5"
+              />
+              <div className="space-y-0.5">
+                <label htmlFor="include-branding" className="text-sm font-medium text-slate-800 cursor-pointer">
+                  Incorporate Candora branding
+                </label>
+                <p className="text-xs text-slate-500">
+                  {brandLogoUrls.length
+                    ? `Passes ${brandLogoUrls.length} Candora brand logo${brandLogoUrls.length > 1 ? 's' : ''} from Brand Assets as reference images so the model can match colours, style and logo.`
+                    : 'No brand logos found in Brand Assets yet — add logos (asset type "logo") to use this.'}
+                </p>
+              </div>
+            </div>
+
             <div>
               <Label>Reference image (optional — for editing / restyling)</Label>
               <label className="flex items-center gap-2 border-2 border-dashed border-slate-200 rounded-lg p-3 cursor-pointer hover:border-pink-300 transition-colors">
@@ -207,7 +268,7 @@ export default function AiImageCreator() {
 
             <Button
               className="w-full"
-              onClick={() => generate.mutate()}
+              onClick={handleGenerate}
               disabled={!prompt.trim() || generate.isPending}
             >
               {generate.isPending ? (
@@ -243,7 +304,10 @@ export default function AiImageCreator() {
                       <img src={item.url} alt={item.prompt} className="max-h-80 object-contain" />
                     </div>
                     <div className="p-3 space-y-2">
-                      <p className="text-xs text-slate-500 line-clamp-2">{item.prompt}</p>
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {item.refined ? <span className="text-pink-600 font-medium">Refined: </span> : null}
+                        {item.prompt}
+                      </p>
                       <div className="flex flex-wrap items-center gap-2">
                         <a href={item.url} download target="_blank" rel="noreferrer">
                           <Button size="sm" variant="outline"><Download className="w-3.5 h-3.5 mr-1" /> Download</Button>
@@ -270,6 +334,28 @@ export default function AiImageCreator() {
                             )}
                           </Button>
                         )}
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                        <Input
+                          placeholder="Follow-up prompt — refine, edit, or restyle this image…"
+                          value={item.refinePrompt || ''}
+                          onChange={(e) => setItemRefine(item.id, e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleRefine(item); }}
+                          className="h-8 flex-1 text-xs"
+                        />
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleRefine(item)}
+                          disabled={!item.refinePrompt?.trim() || generate.isPending}
+                        >
+                          {generate.isPending ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                          )}
+                          Refine
+                        </Button>
                       </div>
                     </div>
                   </div>
