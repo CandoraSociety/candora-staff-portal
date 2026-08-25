@@ -39,7 +39,6 @@ export default function AiImageCreator() {
   const [uploadingRef, setUploadingRef] = useState(false);
   const [history, setHistory] = useState([]); // {id, url, prompt, ref}
   const [savingId, setSavingId] = useState(null);
-  const [assetName, setAssetName] = useState('');
   const fileRef = useRef(null);
 
   const uploadRef = async (file) => {
@@ -82,7 +81,7 @@ export default function AiImageCreator() {
   const saveToAssets = useMutation({
     mutationFn: async ({ item, name }) => {
       return base44.entities.MarketingAsset.create({
-        name: name || prompt.slice(0, 60) || 'AI generated image',
+        name: name || item.prompt?.slice(0, 60) || 'AI generated image',
         asset_type: 'photo',
         category: 'social_media',
         file_url: item.url,
@@ -90,13 +89,12 @@ export default function AiImageCreator() {
         tags: ['ai-generated'],
       });
     },
-    onMutate: (_, ctx) => setSavingId(ctx?.meta?.id),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries(['mkt-assets-all']);
       qc.invalidateQueries(['mkt-assets']);
       toast.success('Saved to Brand Assets');
       setSavingId(null);
-      setAssetName('');
+      setHistory((h) => h.map((it) => (it.id === variables.item.id ? { ...it, saved: true } : it)));
     },
     onError: (e) => {
       toast.error(e?.message || 'Save failed');
@@ -105,7 +103,12 @@ export default function AiImageCreator() {
   });
 
   const handleSave = (item) => {
-    saveToAssets.mutate({ item, name: assetName });
+    setSavingId(item.id);
+    saveToAssets.mutate({ item, name: item.name || '' });
+  };
+
+  const setItemName = (id, name) => {
+    setHistory((h) => h.map((it) => (it.id === id ? { ...it, name } : it)));
   };
 
   const onPickRef = (e) => {
@@ -246,21 +249,26 @@ export default function AiImageCreator() {
                         </a>
                         <Input
                           placeholder="Asset name (defaults to prompt)"
-                          value={item.id === savingId ? assetName : ''}
-                          onChange={(e) => setAssetName(e.target.value)}
+                          value={item.name || ''}
+                          onChange={(e) => setItemName(item.id, e.target.value)}
                           className="h-8 flex-1 min-w-[140px] text-xs"
+                          disabled={item.saved}
                         />
-                        <Button
-                          size="sm"
-                          onClick={() => handleSave(item)}
-                          disabled={item.id === savingId && saveToAssets.isPending}
-                        >
-                          {item.id === savingId && saveToAssets.isPending ? (
-                            <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Saving…</>
-                          ) : (
-                            <><Save className="w-3.5 h-3.5 mr-1" /> Save to Assets</>
-                          )}
-                        </Button>
+                        {item.saved ? (
+                          <span className="text-xs text-emerald-600 font-medium px-2">✓ Saved</span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleSave(item)}
+                            disabled={item.id === savingId && saveToAssets.isPending}
+                          >
+                            {item.id === savingId && saveToAssets.isPending ? (
+                              <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Saving…</>
+                            ) : (
+                              <><Save className="w-3.5 h-3.5 mr-1" /> Save to Assets</>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
