@@ -207,6 +207,7 @@ import EventsMgrResources from '@/pages/eventsmgr/EventsMgrResources';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 import MarketingHome from '@/pages/marketing/MarketingHome';
 import MarketingAssets from '@/pages/marketing/MarketingAssets';
+import MarketingAiImage from '@/pages/marketing/MarketingAiImage';
 import MarketingEmail from '@/pages/marketing/MarketingEmail';
 import MarketingSocial from '@/pages/marketing/MarketingSocial';
 import MarketingCampaigns from '@/pages/marketing/MarketingCampaigns';
@@ -556,6 +557,7 @@ const AuthenticatedApp = () => {
         <Route element={<MarketingLayout />}>
           <Route path="/marketing" element={<MarketingHome />} />
           <Route path="/marketing/assets" element={<MarketingAssets />} />
+          <Route path="/marketing/ai-image" element={<MarketingAiImage />} />
           <Route path="/marketing/email" element={<MarketingEmail />} />
           <Route path="/marketing/social" element={<MarketingSocial />} />
           <Route path="/marketing/campaigns" element={<MarketingCampaigns />} />

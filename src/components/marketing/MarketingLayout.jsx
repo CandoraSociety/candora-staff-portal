@@ -7,12 +7,13 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Image, Mail, Megaphone, Calendar, Globe,
   Search, BookOpen, Share2, ChevronLeft,
-  ChevronRight, LogOut, Inbox, Heart, Newspaper, FileText, LinkIcon
+  ChevronRight, LogOut, Inbox, Heart, Newspaper, FileText, LinkIcon, Wand2
 } from 'lucide-react';
 
 const navItems = [
   { path: '/marketing', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/marketing/assets', label: 'Brand Assets', icon: Image },
+  { path: '/marketing/ai-image', label: 'AI Image Creator', icon: Wand2 },
   { path: '/marketing/email', label: 'Email Campaigns', icon: Mail },
   { path: '/marketing/social', label: 'Social Media', icon: Share2 },
   { path: '/marketing/campaigns', label: 'Campaigns', icon: Megaphone },
