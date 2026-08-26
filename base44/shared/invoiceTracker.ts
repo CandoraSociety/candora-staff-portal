@@ -104,12 +104,17 @@ export function findMonthRow(values, targetKey, startRow = 1) {
 }
 
 // Write a single value to a column-letter + row cell (e.g. colLetter='CH', row=47).
-export async function writeTrackerCell(accessToken, workbookId, sheetName, colLetter, rowNumber, value) {
+// Optional `numberFormat` (e.g. 'General', '@') sets the cell's number format in
+// the same PATCH — used for the ".1" invoice-number cells so they display the
+// fractional value instead of being rounded by an integer column format.
+export async function writeTrackerCell(accessToken, workbookId, sheetName, colLetter, rowNumber, value, numberFormat) {
   const address = `${colLetter}${rowNumber}`;
+  const body = { values: [[value]] };
+  if (numberFormat) body.numberFormat = [[numberFormat]];
   const res = await fetch(`https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${workbookId}/workbook/worksheets('${sheetName}')/range(address='${address}')`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: [[value]] })
+    body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error(`Failed to write ${address}: ` + await res.text());
   return true;

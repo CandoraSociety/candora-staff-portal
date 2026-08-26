@@ -100,13 +100,17 @@ export default async function(req: Request): Promise<Response> {
         if (kRank >= bStartRank && kRank <= currentRank) {
           const seq = kRank - bStartRank + 1;
           if (seq > lastInvoiceNumber) lastInvoiceNumber = seq;
-          const desired = SUFFIX_MONTHS_2026.has(monthLabel) ? `${seq}.1` : seq;
+          const isSuffix = SUFFIX_MONTHS_2026.has(monthLabel);
+          const desired = isSuffix ? `${seq}.1` : seq;
           const existing = row[1];
           const existingStr = existing == null ? '' : String(existing);
-          if (existingStr === String(desired)) {
+          // Suffix cells are always re-written (with General format) so Excel
+          // displays "11.1" instead of rounding under an integer column format;
+          // plain integer cells skip when already correct (idempotent).
+          if (!isSuffix && existingStr === String(desired)) {
             wbBSkipped++;
           } else {
-            await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, desired);
+            await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, desired, isSuffix ? 'General' : undefined);
             bFilled.push({ row: excelRow, month: monthLabel, value: desired });
           }
         }
