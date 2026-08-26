@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
+import { getGraphToken, listCrtFiles } from '../../shared/crtWorkbook.ts';
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell
 } from '../../shared/invoiceTracker.ts';
@@ -10,6 +10,9 @@ import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 //
 //   • Column B — sequential Invoice Number, starting at 1 for June 2025 and
 //     incrementing by 1 for each reported month through the current month.
+//     April–July 2026 carry a one-time ".1" suffix (11.1, 12.1, 13.1, 14.1).
+//     Written to EVERY month's workbook (not just the active one) so each
+//     archived workbook bundled into its invoice package carries its number.
 //
 //   • Column D — a "1" marker for each month whose fixed-fee report is filed,
 //     filled for every month from April 2026 through the current month (months
@@ -34,6 +37,10 @@ const B_START = { year: 2025, month: 5 };      // June 2025  — invoice #1 / co
 const COL_B = 'B';
 const COL_D = 'D';
 
+// One-time, 2026 only: April–July invoice numbers carry a ".1" suffix
+// (April 11.1, May 12.1, June 13.1, July 14.1) on the Invoice Tracker sheet.
+const SUFFIX_MONTHS_2026 = new Set(['2026-04', '2026-05', '2026-06', '2026-07']);
+
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
     timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric'
@@ -47,78 +54,98 @@ function rank(k) { return k.year * 12 + k.month; }
 export default async function(req: Request): Promise<Response> {
   try {
     const accessToken = await getGraphToken();
-    const workbook = await getActiveCrtWorkbook(accessToken);
-    if (!workbook) {
-      return Response.json({ status: 'no_workbook', message: 'No active CRT workbook found in SharePoint.' });
+    const allFiles = await listCrtFiles(accessToken);
+    if (!allFiles || allFiles.length === 0) {
+      return Response.json({ status: 'no_workbook', message: 'No CRT workbook found in SharePoint.' });
     }
-    const sheetName = await findInvoiceTrackerSheet(accessToken, workbook.id);
-    if (!sheetName) {
-      return Response.json({ status: 'no_sheet', message: 'No Invoice Tracker sheet found.', workbook: workbook.name });
-    }
-    const { values, startRow } = await readInvoiceTracker(accessToken, workbook.id, sheetName);
+    const active = allFiles[0]; // listCrtFiles returns newest-first
 
     const current = currentMonthEdmonton();
     const dStartRank = rank(D_START);
     const currentRank = rank(current);
     const bStartRank = rank(B_START);
 
+    const perWorkbook = [];
     const dFilled = [];
-    const bFilled = [];
-    let invoiceNumber = 0;
     let dSkipped = 0;
-    let bSkipped = 0;
-
-    for (let r = 0; r < (values || []).length; r++) {
-      const row = values[r];
-      if (!row) continue;
-      const key = cellToMonthKey(row[0]); // column A = month date serial
-      if (!key) continue;
-      const kRank = rank(key);
-      const excelRow = startRow + r;
-      const monthLabel = `${key.year}-${String(key.month + 1).padStart(2, '0')}`;
-      const withinReported = kRank >= bStartRank && kRank <= currentRank;
-
-      // Column D — fill 1 for months in [Apr 2026 .. current] not already 1.
-      if (kRank >= dStartRank && kRank <= currentRank) {
-        const d = row[3];
-        if (d === 1 || d === '1' || d === '1.0') {
-          dSkipped++;
-        } else {
-          await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, 1);
-          dFilled.push({ row: excelRow, month: monthLabel });
-        }
-      }
-
-      // Column B — sequential invoice number for every reported month.
-      if (withinReported) {
-        invoiceNumber++;
-        const b = row[1];
-        if (b === invoiceNumber) {
-          bSkipped++;
-        } else {
-          await writeTrackerCell(accessToken, workbook.id, sheetName, COL_B, excelRow, invoiceNumber);
-          bFilled.push({ row: excelRow, month: monthLabel, invoiceNumber });
-        }
-      }
-    }
-
-    // Billing-summary counts + paid-work-exposure dollar total for Apr 2026 ..
-    // current. Recomputed from current client data so this monthly run and any
-    // cross-reference push between runs produce identical tallies.
+    let lastInvoiceNumber = 0;
     let billingCounts = null;
-    try {
-      billingCounts = await refreshBillingCounts(createClientFromRequest(req), accessToken, workbook, { values, startRow, sheetName });
-    } catch (e) {
-      billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
+
+    // Write Column B (invoice number) to EVERY workbook's Invoice Tracker — not
+    // just the active one — so each month's own archived workbook (the one
+    // bundled into its invoice package) carries the number too. Column D and
+    // the billing-count refresh only touch the active workbook, matching the
+    // previous behaviour. All writes are idempotent.
+    for (const file of allFiles) {
+      const sheetName = await findInvoiceTrackerSheet(accessToken, file.id);
+      if (!sheetName) {
+        perWorkbook.push({ workbook: file.name, status: 'no_sheet' });
+        continue;
+      }
+      const { values, startRow } = await readInvoiceTracker(accessToken, file.id, sheetName);
+      const bFilled = [];
+      let wbBSkipped = 0;
+
+      for (let r = 0; r < (values || []).length; r++) {
+        const row = values[r];
+        if (!row) continue;
+        const key = cellToMonthKey(row[0]); // column A = month date serial
+        if (!key) continue;
+        const kRank = rank(key);
+        const excelRow = startRow + r;
+        const monthLabel = `${key.year}-${String(key.month + 1).padStart(2, '0')}`;
+
+        // Column B — sequential invoice number for every reported month, with a
+        // one-time ".1" suffix for April–July 2026.
+        if (kRank >= bStartRank && kRank <= currentRank) {
+          const seq = kRank - bStartRank + 1;
+          if (seq > lastInvoiceNumber) lastInvoiceNumber = seq;
+          const desired = SUFFIX_MONTHS_2026.has(monthLabel) ? `${seq}.1` : seq;
+          const existing = row[1];
+          const existingStr = existing == null ? '' : String(existing);
+          if (existingStr === String(desired)) {
+            wbBSkipped++;
+          } else {
+            await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, desired);
+            bFilled.push({ row: excelRow, month: monthLabel, value: desired });
+          }
+        }
+
+        // Column D — "1" marker for months [Apr 2026 .. current], active workbook only.
+        if (file.id === active.id && kRank >= dStartRank && kRank <= currentRank) {
+          const d = row[3];
+          if (d === 1 || d === '1' || d === '1.0') {
+            dSkipped++;
+          } else {
+            await writeTrackerCell(accessToken, file.id, sheetName, COL_D, excelRow, 1);
+            dFilled.push({ row: excelRow, month: monthLabel });
+          }
+        }
+      }
+
+      perWorkbook.push({
+        workbook: file.name,
+        active: file.id === active.id,
+        columnB: { filledCount: bFilled.length, filled: bFilled, skippedAlreadyFilled: wbBSkipped },
+      });
+
+      // Billing-summary counts + paid-work-exposure dollar total — active only.
+      if (file.id === active.id) {
+        try {
+          billingCounts = await refreshBillingCounts(createClientFromRequest(req), accessToken, file, { values, startRow, sheetName });
+        } catch (e) {
+          billingCounts = { status: 'error', error: String(e.message || e).slice(0, 200) };
+        }
+      }
     }
 
     return Response.json({
       status: 'success',
-      workbook: workbook.name,
-      sheet: sheetName,
+      activeWorkbook: active.name,
       currentMonth: `${current.year}-${String(current.month + 1).padStart(2, '0')}`,
+      workbooks: perWorkbook,
       columnD: { filledCount: dFilled.length, filled: dFilled, skippedAlreadyFilled: dSkipped },
-      columnB: { filledCount: bFilled.length, filled: bFilled, skippedAlreadyFilled: bSkipped, lastInvoiceNumber: invoiceNumber },
+      lastInvoiceNumber,
       billingCounts,
     });
   } catch (error) {
