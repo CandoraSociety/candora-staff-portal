@@ -51,6 +51,16 @@ function currentMonthEdmonton() {
 
 function rank(k) { return k.year * 12 + k.month; }
 
+const MONTH_NAMES = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+// Parse "CRT_<Month>_<Year>.xlsx" → { year, month (0-indexed) }.
+function parseWorkbookMonth(fileName) {
+  const m = String(fileName || '').match(/CRT_([A-Za-z]+)_(\d{4})\.xlsx/i);
+  if (!m) return null;
+  const monthIdx = MONTH_NAMES.indexOf(m[1].toLowerCase());
+  if (monthIdx < 0) return null;
+  return { year: parseInt(m[2], 10), month: monthIdx };
+}
+
 export default async function(req: Request): Promise<Response> {
   try {
     const accessToken = await getGraphToken();
@@ -83,7 +93,14 @@ export default async function(req: Request): Promise<Response> {
         continue;
       }
       const { values, startRow } = await readInvoiceTracker(accessToken, file.id, sheetName);
+      // Only write invoice numbers up to THIS workbook's own month — a month's
+      // archived workbook (the one bundled into its invoice package) must only
+      // carry numbers up to that month, not future months. The active workbook
+      // (newest) carries up to the current month.
+      const wbMonth = parseWorkbookMonth(file.name);
+      const wbRank = wbMonth ? rank(wbMonth) : currentRank;
       const bFilled = [];
+      const bCleared = [];
       let wbBSkipped = 0;
 
       for (let r = 0; r < (values || []).length; r++) {
@@ -104,14 +121,26 @@ export default async function(req: Request): Promise<Response> {
           const desired = isSuffix ? `${seq}.1` : seq;
           const existing = row[1];
           const existingStr = existing == null ? '' : String(existing);
-          // Suffix cells are always re-written (with General format) so Excel
-          // displays "11.1" instead of rounding under an integer column format;
-          // plain integer cells skip when already correct (idempotent).
-          if (!isSuffix && existingStr === String(desired)) {
-            wbBSkipped++;
+
+          if (kRank <= wbRank) {
+            // On or before this workbook's month — write the invoice number.
+            // Suffix cells are always re-written (with General format) so Excel
+            // displays "11.1" instead of rounding under an integer column format;
+            // plain integer cells skip when already correct (idempotent).
+            if (!isSuffix && existingStr === String(desired)) {
+              wbBSkipped++;
+            } else {
+              await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, desired, isSuffix ? 'General' : undefined);
+              bFilled.push({ row: excelRow, month: monthLabel, value: desired });
+            }
           } else {
-            await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, desired, isSuffix ? 'General' : undefined);
-            bFilled.push({ row: excelRow, month: monthLabel, value: desired });
+            // Future month relative to this workbook — clear any number written
+            // by an earlier run so the archived workbook doesn't leak future
+            // invoice numbers into its invoice package.
+            if (existingStr !== '') {
+              await writeTrackerCell(accessToken, file.id, sheetName, COL_B, excelRow, '');
+              bCleared.push({ row: excelRow, month: monthLabel, oldValue: existingStr });
+            }
           }
         }
 
@@ -130,7 +159,7 @@ export default async function(req: Request): Promise<Response> {
       perWorkbook.push({
         workbook: file.name,
         active: file.id === active.id,
-        columnB: { filledCount: bFilled.length, filled: bFilled, skippedAlreadyFilled: wbBSkipped },
+        columnB: { filledCount: bFilled.length, filled: bFilled, clearedCount: bCleared.length, cleared: bCleared, skippedAlreadyFilled: wbBSkipped },
       });
 
       // Billing-summary counts + paid-work-exposure dollar total — active only.

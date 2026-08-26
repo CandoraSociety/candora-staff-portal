@@ -60,33 +60,47 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Aborted — client only appears once, cannot confirm duplicate', occurrences }, { status: 409 });
     }
 
-    const target = occurrences.find((o) => o.row === row);
-    if (!target) {
+    // Blank the target row in EVERY workbook where the duplicate appears at that
+    // row — the invoice package bundles a month-specific archived workbook, so the
+    // duplicate must be removed from each one, not just the active workbook.
+    const targets = occurrences.filter((o) => o.row === row);
+    if (!targets.length) {
       return Response.json({ error: `Client not found at row ${row} in any scanned workbook`, occurrences }, { status: 404 });
     }
 
-    // Blank the entire target row across its full column width via PATCH.
     const colLetter = (n) => { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
-    const cols = colCountByFile[target.file] || 25;
-    const endCol = colLetter(cols);
-    const emptyRow = new Array(cols).fill('');
-    const clrRes = await fetch(
-      `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${target.fileId}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='A${row}:${endCol}${row}')`,
-      {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ values: [emptyRow] })
+    const cleared = [];
+    const clearErrors = [];
+    for (const target of targets) {
+      const cols = colCountByFile[target.file] || 25;
+      const endCol = colLetter(cols);
+      const emptyRow = new Array(cols).fill('');
+      const clrRes = await fetch(
+        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${target.fileId}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='A${row}:${endCol}${row}')`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ values: [emptyRow] })
+        }
+      );
+      if (clrRes.ok) {
+        cleared.push({ file: target.file, row: target.row, columns: cols });
+      } else {
+        const errText = await clrRes.text().catch(() => '');
+        clearErrors.push({ file: target.file, row: target.row, status: clrRes.status, text: errText.slice(0, 300) });
       }
-    );
-    if (!clrRes.ok) {
-      const errText = await clrRes.text().catch(() => '');
-      return Response.json({ error: 'Row clear failed', details: errText.slice(0, 300), occurrences }, { status: 502 });
     }
 
+    if (!cleared.length) {
+      return Response.json({ error: 'Row clear failed in all workbooks', clearErrors, occurrences }, { status: 502 });
+    }
+
+    const clearedFiles = new Set(cleared.map((c) => c.file));
     return Response.json({
       status: 'success',
-      cleared: { file: target.file, row: target.row, columns: cols, clientName },
-      remaining: occurrences.filter((o) => !(o.file === target.file && o.row === target.row)),
+      cleared,
+      clearErrors,
+      remaining: occurrences.filter((o) => !(o.row === row && clearedFiles.has(o.file))),
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
