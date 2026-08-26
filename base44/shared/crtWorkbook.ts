@@ -451,7 +451,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     ceis,                                              // C: CEIS (DEA)
     isDea ? startDateForCrt : '',                      // D: DEA Start Date (DEA only)
     serviceElement,                                    // E: Service Element
-    isWd ? startDateForCrt : '',                        // F: Service Start Date (WD only)
+    (isWd || isDea) ? startDateForCrt : '',              // F: Service Start Date (WD; DEA mirrors DEA Start Date — no other DEA auto-population keys off this column)
     serviceOutcome,                                    // G: Service Outcome
     serviceOutcomeDate,                                 // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome
