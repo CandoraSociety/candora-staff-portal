@@ -60,9 +60,9 @@ export const buildWorkExposureCsvBlob = (records) =>
  * logo, meta band, brand footer) so it reads like the childminding list.
  * Returns a Promise<Blob>.
  */
-export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}) => {
+export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}, displayLabel) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const monthLabel = monthLabelFromBillingMonth(billingMonth);
+  const monthLabel = displayLabel || monthLabelFromBillingMonth(billingMonth);
   const W = 612;
   const navy = hexToRgb(brand.navy) || [15, 31, 107];
   const gold = hexToRgb(brand.gold) || [245, 193, 22];
@@ -280,9 +280,9 @@ async function loadLogo(url) {
  * logo) and includes the "Billed at $20/hr per child" rate statement + brand
  * footer. Returns a Promise<Blob>.
  */
-export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}) => {
+export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}, displayLabel) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const monthLabel = monthLabelFromBillingMonth(billingMonth);
+  const monthLabel = displayLabel || monthLabelFromBillingMonth(billingMonth);
   const W = 612;
   const navy = hexToRgb(brand.navy) || [15, 31, 107];
   const gold = hexToRgb(brand.gold) || [245, 193, 22];
@@ -466,9 +466,9 @@ export const buildChildmindingPdfBlob = async (records, billingMonth, brand = {}
  * the FinancialRecord entries for the month whose record_type is
  * 'employment_supports' or 'exposure_course'. Returns a Promise<Blob>.
  */
-export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {}) => {
+export const buildReimbursementPdfBlob = async (records, billingMonth, brand = {}, displayLabel) => {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const monthLabel = monthLabelFromBillingMonth(billingMonth);
+  const monthLabel = displayLabel || monthLabelFromBillingMonth(billingMonth);
   const W = 612;
   const navy = hexToRgb(brand.navy) || [15, 31, 107];
   const gold = hexToRgb(brand.gold) || [245, 193, 22];

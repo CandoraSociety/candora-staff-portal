@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import {
   Download, FileText, FileSpreadsheet, Briefcase, Baby, Paperclip,
-  Loader2, Package, ExternalLink, Receipt, RefreshCw,
+  Loader2, Package, ExternalLink, Receipt,
 } from 'lucide-react';
 import {
   monthLabelFromBillingMonth,
@@ -30,6 +30,7 @@ import {
 } from './packagePdfGeneration';
 import InvoiceDocument from './InvoiceDocument';
 import CategoryUpload from './CategoryUpload';
+import AddMonthButton from './AddMonthButton';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
 const UPLOAD_FOLDERS = {
@@ -60,6 +61,22 @@ export default function PackageContents({ pkg, onViewInvoice }) {
   const [currentUser, setCurrentUser] = useState(null);
   // Lock removal of manual uploads once the package has been submitted/approved/paid.
   const locked = pkg.status === 'submitted' || pkg.status === 'approved' || pkg.status === 'paid';
+
+  // Additional months included on each auto-gathered document. Selecting a
+  // month regenerates that document with the combined data.
+  const [addedMonths, setAddedMonths] = useState({
+    childminding: [],
+    work_exposure: [],
+    reimbursement: [],
+    supporting: [],
+  });
+  const docMonths = (type) => Array.from(new Set([billingMonth, ...addedMonths[type]])).sort();
+  const labelForMonths = (ms) => {
+    const sorted = [...ms].sort();
+    if (sorted.length <= 1) return monthLabel;
+    return sorted.map((m) => monthLabelFromBillingMonth(m)).join(' + ');
+  };
+  const combinedLabel = (type) => labelForMonths(docMonths(type));
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
 
@@ -96,49 +113,63 @@ export default function PackageContents({ pkg, onViewInvoice }) {
     [crtStatus, billingMonth]
   );
 
-  // Childminding records for the month (Pathways only)
-  const { data: cmRecords = [] } = useQuery({
+  // Fetch all records once; each document filters to its included months
+  // (base billing month + any added months) below.
+  const { data: allCmRecords = [] } = useQuery({
     queryKey: ['childminding-records'],
     queryFn: () => base44.entities.ChildmindingRecord.list('-date', 2000),
-    select: (recs) =>
-      (recs || []).filter(
-        (r) => r.program === 'pathways' && r.date && r.date.startsWith(billingMonth)
-      ),
   });
-
-  // Work exposure placement payables for the month
-  const { data: weRecords = [] } = useQuery({
-    queryKey: ['we-placements', billingMonth],
+  const { data: allWeRecords = [] } = useQuery({
+    queryKey: ['we-placements-all'],
     queryFn: () => base44.entities.FinancialRecord.filter({ record_type: 'paid_external_placement' }),
-    select: (recs) => (recs || []).filter((r) => r.billing_month === billingMonth && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0),
+  });
+  const { data: allFinancialRecords = [] } = useQuery({
+    queryKey: ['financial-records-all'],
+    queryFn: () => base44.entities.FinancialRecord.list('-date', 500),
   });
 
-  // Employment supports + exposure courses for the month (combined reimbursement list)
-  const { data: reimbRecords = [] } = useQuery({
-    queryKey: ['reimb-records', billingMonth],
-    queryFn: () => base44.entities.FinancialRecord.list('-date', 500),
-    select: (recs) =>
-      (recs || []).filter(
+  const recordsForType = (type, months) => {
+    if (type === 'childminding')
+      return (allCmRecords || []).filter(
+        (r) => r.program === 'pathways' && r.date && months.some((m) => r.date.startsWith(m))
+      );
+    if (type === 'work_exposure')
+      return (allWeRecords || []).filter(
+        (r) => months.includes(r.billing_month) && r.invoiced !== true && (Number(r.total || r.amount) || 0) > 0
+      );
+    if (type === 'reimbursement')
+      return (allFinancialRecords || []).filter(
         (r) =>
-          r.billing_month === billingMonth &&
+          months.includes(r.billing_month) &&
           (r.record_type === 'employment_supports' || r.record_type === 'exposure_course')
-      ),
-  });
-
-  // Supporting documents: receipts/completion docs uploaded to the Employment
-  // Supports and Exposure Courses lists for the month.
-  const { data: supportRecords = [] } = useQuery({
-    queryKey: ['support-records', billingMonth],
-    queryFn: () => base44.entities.FinancialRecord.list('-date', 500),
-    select: (recs) =>
-      (recs || []).filter(
+      );
+    if (type === 'supporting')
+      return (allFinancialRecords || []).filter(
         (r) =>
-          r.billing_month === billingMonth &&
+          months.includes(r.billing_month) &&
           (r.record_type === 'employment_supports' || r.record_type === 'exposure_course') &&
           ((r.receipt_urls && r.receipt_urls.length) ||
             (r.completion_record_urls && r.completion_record_urls.length))
-      ),
-  });
+      );
+    return [];
+  };
+
+  const cmRecords = useMemo(
+    () => recordsForType('childminding', docMonths('childminding')),
+    [allCmRecords, addedMonths.childminding, billingMonth]
+  );
+  const weRecords = useMemo(
+    () => recordsForType('work_exposure', docMonths('work_exposure')),
+    [allWeRecords, addedMonths.work_exposure, billingMonth]
+  );
+  const reimbRecords = useMemo(
+    () => recordsForType('reimbursement', docMonths('reimbursement')),
+    [allFinancialRecords, addedMonths.reimbursement, billingMonth]
+  );
+  const supportRecords = useMemo(
+    () => recordsForType('supporting', docMonths('supporting')),
+    [allFinancialRecords, addedMonths.supporting, billingMonth]
+  );
 
   const supportingFiles = useMemo(() => {
     const files = [];
@@ -194,21 +225,39 @@ export default function PackageContents({ pkg, onViewInvoice }) {
 
   const invoiceWrapRef = useRef(null);
 
-  const handleChildmindingPdf = async () => {
-    if (!cmRecords.length) {
-      toast.info(`No childminding sessions for ${monthLabel}`);
-      return;
-    }
-    const blob = await buildChildmindingPdfBlob(cmRecords, billingMonth, brand);
-    downloadBlob(blob, cleanFileName(`Childminding_${billingMonth}.pdf`));
-  };
-
   const refreshPackageQueries = () =>
     queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
 
+  const handleChildmindingPdf = async () => {
+    const label = combinedLabel('childminding');
+    if (!cmRecords.length) {
+      toast.info(`No childminding sessions for ${label}`);
+      return;
+    }
+    const blob = await buildChildmindingPdfBlob(cmRecords, billingMonth, brand, label);
+    downloadBlob(blob, cleanFileName(`Childminding ${label}.pdf`));
+  };
+
   const handleWorkExposurePdf = async () => {
+    const label = combinedLabel('work_exposure');
     if (!weRecords.length) {
-      toast.info(`No work exposure placements for ${monthLabel}`);
+      toast.info(`No work exposure placements for ${label}`);
+      return;
+    }
+    // Extra months included — rebuild the combined PDF fresh (and persist it so
+    // the ZIP bundles the same combined document).
+    if (addedMonths.work_exposure.length) {
+      setRegenerating('work_exposure');
+      try {
+        const blob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand, label);
+        downloadBlob(blob, cleanFileName(`WorkExposure ${label}.pdf`));
+        const updates = await generateWorkExposurePdf(pkg, weRecords, brand, label, docMonths('work_exposure').join('+'));
+        if (updates?.work_exposure_pdf_url) setWePdfUrl(updates.work_exposure_pdf_url);
+      } catch {
+        toast.error('Could not generate the Work Exposure PDF');
+      } finally {
+        setRegenerating(null);
+      }
       return;
     }
     let url = wePdfUrl;
@@ -225,12 +274,27 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
       setRegenerating(null);
     }
-    if (url) downloadUrl(url, cleanFileName(pkg.work_exposure_pdf_name || `WorkExposure_${billingMonth}.pdf`));
+    if (url) downloadUrl(url, cleanFileName(pkg.work_exposure_pdf_name || `WorkExposure ${label}.pdf`));
   };
 
   const handleReimbursementPdf = async () => {
+    const label = combinedLabel('reimbursement');
     if (!reimbRecords.length) {
-      toast.info(`No employment supports or exposure courses for ${monthLabel}`);
+      toast.info(`No employment supports or exposure courses for ${label}`);
+      return;
+    }
+    if (addedMonths.reimbursement.length) {
+      setRegenerating('reimbursement');
+      try {
+        const blob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand, label);
+        downloadBlob(blob, cleanFileName(`EmploymentSupports ExposureCourses ${label}.pdf`));
+        const updates = await generateReimbursementPdf(pkg, reimbRecords, brand, label, docMonths('reimbursement').join('+'));
+        if (updates?.reimbursement_pdf_url) setReimbPdfUrl(updates.reimbursement_pdf_url);
+      } catch {
+        toast.error('Could not generate the Reimbursement PDF');
+      } finally {
+        setRegenerating(null);
+      }
       return;
     }
     let url = reimbPdfUrl;
@@ -247,27 +311,55 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
       setRegenerating(null);
     }
-    if (url) downloadUrl(url, cleanFileName(pkg.reimbursement_pdf_name || `EmploymentSupports_ExposureCourses_${billingMonth}.pdf`));
+    if (url) downloadUrl(url, cleanFileName(pkg.reimbursement_pdf_name || `EmploymentSupports ExposureCourses ${label}.pdf`));
   };
 
-  const handleRegenerate = async (which) => {
-    setRegenerating(which);
-    try {
-      if (which === 'work_exposure') {
-        const updates = await generateWorkExposurePdf(pkg, weRecords, brand);
+  // Include an additional month on a document and regenerate it with the
+  // combined data. For Childminding / Work Exposure / Reimbursement the
+  // combined PDF is downloaded (and persisted for WE/Reimbursement); for
+  // Receipts and Supporting Docs the added month is picked up by the next ZIP.
+  const handleAddMonth = async (type, month) => {
+    if (month === billingMonth || addedMonths[type].includes(month)) {
+      toast.info(`${monthLabelFromBillingMonth(month)} is already included.`);
+      return;
+    }
+    const newMonths = docMonths(type).concat(month).sort();
+    setAddedMonths((prev) => ({ ...prev, [type]: [...prev[type], month].sort() }));
+    const label = labelForMonths(newMonths);
+    const recs = recordsForType(type, newMonths);
+    if (type === 'childminding') {
+      if (!recs.length) { toast.info(`No childminding sessions for ${label}`); return; }
+      try {
+        const blob = await buildChildmindingPdfBlob(recs, billingMonth, brand, label);
+        downloadBlob(blob, cleanFileName(`Childminding ${label}.pdf`));
+      } catch { toast.error('Could not generate the Childminding PDF'); }
+    } else if (type === 'work_exposure') {
+      if (!recs.length) { toast.info(`No work exposure placements for ${label}`); return; }
+      setRegenerating('work_exposure');
+      try {
+        const blob = await buildWorkExposurePdfBlob(recs, billingMonth, brand, label);
+        downloadBlob(blob, cleanFileName(`WorkExposure ${label}.pdf`));
+        const updates = await generateWorkExposurePdf(pkg, recs, brand, label, newMonths.join('+'));
         if (updates?.work_exposure_pdf_url) setWePdfUrl(updates.work_exposure_pdf_url);
-      } else {
-        const updates = await generateReimbursementPdf(pkg, reimbRecords, brand);
+      } catch { toast.error('Could not generate the Work Exposure PDF'); }
+      finally { setRegenerating(null); }
+    } else if (type === 'reimbursement') {
+      if (!recs.length) { toast.info(`No employment supports or exposure courses for ${label}`); return; }
+      setRegenerating('reimbursement');
+      try {
+        const blob = await buildReimbursementPdfBlob(recs, billingMonth, brand, label);
+        downloadBlob(blob, cleanFileName(`EmploymentSupports ExposureCourses ${label}.pdf`));
+        const updates = await generateReimbursementPdf(pkg, recs, brand, label, newMonths.join('+'));
         if (updates?.reimbursement_pdf_url) setReimbPdfUrl(updates.reimbursement_pdf_url);
-      }
-      refreshPackageQueries();
-      toast.success('PDF regenerated');
-    } catch {
-      toast.error('Could not regenerate the PDF');
-    } finally {
-      setRegenerating(null);
+      } catch { toast.error('Could not generate the Reimbursement PDF'); }
+      finally { setRegenerating(null); }
+    } else if (type === 'supporting') {
+      toast.success(`Added ${monthLabelFromBillingMonth(month)} — included in the next ZIP download.`);
     }
   };
+
+  const handleRemoveMonth = (type, month) =>
+    setAddedMonths((prev) => ({ ...prev, [type]: prev[type].filter((m) => m !== month) }));
 
   const handleDownloadAll = async () => {
     setZipping(true);
@@ -295,19 +387,26 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       }
 
       if (cmRecords.length) {
-        entries.push({ name: cleanFileName(`Childminding_${billingMonth}.pdf`), blob: await buildChildmindingPdfBlob(cmRecords, billingMonth, brand), essential: true });
+        const cmLabel = combinedLabel('childminding');
+        entries.push({ name: cleanFileName(`Childminding ${cmLabel}.pdf`), blob: await buildChildmindingPdfBlob(cmRecords, billingMonth, brand, cmLabel), essential: true });
       }
       if (weRecords.length) {
+        const weLabel = combinedLabel('work_exposure');
         let weBlob;
-        try { weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null; } catch { weBlob = null; }
-        if (!weBlob) weBlob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand);
-        entries.push({ name: cleanFileName(`WorkExposure_${billingMonth}.pdf`), blob: weBlob, essential: true });
+        if (!addedMonths.work_exposure.length) {
+          try { weBlob = wePdfUrl ? await (await fetch(wePdfUrl)).blob() : null; } catch { weBlob = null; }
+        }
+        if (!weBlob) weBlob = await buildWorkExposurePdfBlob(weRecords, billingMonth, brand, weLabel);
+        entries.push({ name: cleanFileName(`WorkExposure ${weLabel}.pdf`), blob: weBlob, essential: true });
       }
       if (reimbRecords.length) {
+        const reLabel = combinedLabel('reimbursement');
         let reBlob;
-        try { reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null; } catch { reBlob = null; }
-        if (!reBlob) reBlob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand);
-        entries.push({ name: cleanFileName(`EmploymentSupports_ExposureCourses_${billingMonth}.pdf`), blob: reBlob, essential: true });
+        if (!addedMonths.reimbursement.length) {
+          try { reBlob = reimbPdfUrl ? await (await fetch(reimbPdfUrl)).blob() : null; } catch { reBlob = null; }
+        }
+        if (!reBlob) reBlob = await buildReimbursementPdfBlob(reimbRecords, billingMonth, brand, reLabel);
+        entries.push({ name: cleanFileName(`EmploymentSupports ExposureCourses ${reLabel}.pdf`), blob: reBlob, essential: true });
       }
 
       // Supporting docs — best-effort fetch (CORS may block some hosts).
@@ -519,6 +618,12 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                     >
                       <Download className="h-3.5 w-3.5 mr-1" /> PDF
                     </Button>
+                    <AddMonthButton
+                      months={addedMonths.childminding}
+                      onAdd={(m) => handleAddMonth('childminding', m)}
+                      onRemove={(m) => handleRemoveMonth('childminding', m)}
+                      disabled={locked}
+                    />
                     <CategoryUpload category="childminding" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>
@@ -544,19 +649,14 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                       {regenerating === 'work_exposure'
                         ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
                         : <Download className="h-3.5 w-3.5 mr-1" />}
-                      {wePdfUrl ? 'Download PDF' : 'Generate PDF'}
+                      {wePdfUrl || addedMonths.work_exposure.length ? 'Download PDF' : 'Generate PDF'}
                     </Button>
-                    {wePdfUrl && weRecords.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRegenerate('work_exposure')}
-                        disabled={regenerating === 'work_exposure'}
-                        title="Regenerate the Work Exposure list PDF"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
-                      </Button>
-                    )}
+                    <AddMonthButton
+                      months={addedMonths.work_exposure}
+                      onAdd={(m) => handleAddMonth('work_exposure', m)}
+                      onRemove={(m) => handleRemoveMonth('work_exposure', m)}
+                      disabled={locked || regenerating === 'work_exposure'}
+                    />
                     <CategoryUpload category="work_exposure" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>
@@ -582,19 +682,14 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                       {regenerating === 'reimbursement'
                         ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
                         : <Download className="h-3.5 w-3.5 mr-1" />}
-                      {reimbPdfUrl ? 'Download PDF' : 'Generate PDF'}
+                      {reimbPdfUrl || addedMonths.reimbursement.length ? 'Download PDF' : 'Generate PDF'}
                     </Button>
-                    {reimbPdfUrl && reimbRecords.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRegenerate('reimbursement')}
-                        disabled={regenerating === 'reimbursement'}
-                        title="Regenerate the combined Reimbursement list PDF"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
-                      </Button>
-                    )}
+                    <AddMonthButton
+                      months={addedMonths.reimbursement}
+                      onAdd={(m) => handleAddMonth('reimbursement', m)}
+                      onRemove={(m) => handleRemoveMonth('reimbursement', m)}
+                      disabled={locked || regenerating === 'reimbursement'}
+                    />
                     <CategoryUpload category="reimbursement" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>
@@ -616,6 +711,12 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                     ) : (
                       <span className="text-xs text-slate-400">None for this month</span>
                     )}
+                    <AddMonthButton
+                      months={addedMonths.supporting}
+                      onAdd={(m) => handleAddMonth('supporting', m)}
+                      onRemove={(m) => handleRemoveMonth('supporting', m)}
+                      disabled={locked}
+                    />
                     <CategoryUpload category="supporting" uploads={manualUploads} onUpload={handleUpload} onRemove={handleRemoveUpload} locked={locked} />
                   </div>
                 </td>

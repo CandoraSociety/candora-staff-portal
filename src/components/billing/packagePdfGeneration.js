@@ -14,10 +14,10 @@ export async function uploadPdfBlob(blob, filename) {
  * Build + upload the Work Exposure Payments list PDF for a package's month
  * and persist its URL on the InvoicePackage record.
  */
-export async function generateWorkExposurePdf(pkg, weRecords, brand) {
+export async function generateWorkExposurePdf(pkg, weRecords, brand, displayLabel, monthsKey) {
   const bm = pkg.billing_month;
-  const blob = await buildWorkExposurePdfBlob(weRecords, bm, brand);
-  const weName = cleanFileName(`WorkExposure_${bm}.pdf`);
+  const blob = await buildWorkExposurePdfBlob(weRecords, bm, brand, displayLabel);
+  const weName = cleanFileName(`WorkExposure_${monthsKey || bm}.pdf`);
   const file_url = await uploadPdfBlob(blob, weName);
   const updates = { work_exposure_pdf_url: file_url, work_exposure_pdf_name: weName };
   await base44.entities.InvoicePackage.update(pkg.id, updates);
@@ -28,10 +28,10 @@ export async function generateWorkExposurePdf(pkg, weRecords, brand) {
  * Build + upload the combined Employment Supports & Exposure Courses list
  * PDF for a package's month and persist its URL on the InvoicePackage record.
  */
-export async function generateReimbursementPdf(pkg, reimbRecords, brand) {
+export async function generateReimbursementPdf(pkg, reimbRecords, brand, displayLabel, monthsKey) {
   const bm = pkg.billing_month;
-  const blob = await buildReimbursementPdfBlob(reimbRecords, bm, brand);
-  const reName = cleanFileName(`EmploymentSupports_ExposureCourses_${bm}.pdf`);
+  const blob = await buildReimbursementPdfBlob(reimbRecords, bm, brand, displayLabel);
+  const reName = cleanFileName(`EmploymentSupports_ExposureCourses_${monthsKey || bm}.pdf`);
   const file_url = await uploadPdfBlob(blob, reName);
   const updates = { reimbursement_pdf_url: file_url, reimbursement_pdf_name: reName };
   await base44.entities.InvoicePackage.update(pkg.id, updates);
