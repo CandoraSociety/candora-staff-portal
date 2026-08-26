@@ -75,6 +75,9 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
     setSelectedPackage(null);
   };
 
+  const rejectedPackages = packages.filter((p) => p.status === 'rejected');
+  const activePackages = packages.filter((p) => p.status !== 'rejected');
+
   if (view === 'detail' && selectedPackage) {
     return (
       <InvoicePackageDetail
@@ -217,59 +220,117 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {packages.map((pkg) => (
-            <Card
-              key={pkg.id}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => handlePackageClick(pkg)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-base font-semibold">{pkg.package_number}</CardTitle>
-                  <Badge
-                    variant={STATUS_BADGES[pkg.status]?.variant || 'secondary'}
-                    className={STATUS_BADGES[pkg.status]?.color}
-                  >
-                    {STATUS_BADGES[pkg.status]?.label || pkg.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span>📅</span>
-                  <span>
-                    {pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
-                      ? `${format(parseBillingMonth(pkg.billing_month), 'MMM yyyy')} – ${format(parseBillingMonth(pkg.billing_month_end), 'MMM yyyy')}`
-                      : format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span>👤</span>
-                  <span>{pkg.prepared_by_name}</span>
-                </div>
-                <div className="border-t pt-2 mt-2 space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">CRT:</span>
-                    <span className="font-medium">{pkg.crt_included ? 'Included' : 'Not included'}</span>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activePackages.map((pkg) => (
+              <Card
+                key={pkg.id}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handlePackageClick(pkg)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-base font-semibold">{pkg.package_number}</CardTitle>
+                    <Badge
+                      variant={STATUS_BADGES[pkg.status]?.variant || 'secondary'}
+                      className={STATUS_BADGES[pkg.status]?.color}
+                    >
+                      {STATUS_BADGES[pkg.status]?.label || pkg.status.replace('_', ' ')}
+                    </Badge>
                   </div>
-                  {pkg.paid_placements?.length > 0 && (
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <span>📅</span>
+                    <span>
+                      {pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
+                        ? `${format(parseBillingMonth(pkg.billing_month), 'MMM yyyy')} – ${format(parseBillingMonth(pkg.billing_month_end), 'MMM yyyy')}`
+                        : format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <span>👤</span>
+                    <span>{pkg.prepared_by_name}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2 space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Placements:</span>
-                      <span className="font-medium">{pkg.paid_placements.length}</span>
+                      <span className="text-slate-500">CRT:</span>
+                      <span className="font-medium">{pkg.crt_included ? 'Included' : 'Not included'}</span>
                     </div>
-                  )}
-                  {pkg.supporting_documents?.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Documents:</span>
-                      <span className="font-medium">{pkg.supporting_documents.length}</span>
-                    </div>
-                  )}
+                    {pkg.paid_placements?.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Placements:</span>
+                        <span className="font-medium">{pkg.paid_placements.length}</span>
+                      </div>
+                    )}
+                    {pkg.supporting_documents?.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Documents:</span>
+                        <span className="font-medium">{pkg.supporting_documents.length}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {rejectedPackages.length > 0 && (
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setShowRejected((v) => !v)}
+                className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+              >
+                <ChevronDown className={`h-4 w-4 transition-transform ${showRejected ? 'rotate-180' : ''}`} />
+                Rejected Packages
+                <Badge variant="destructive" className="text-red-600">{rejectedPackages.length}</Badge>
+              </button>
+              {showRejected && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                  {rejectedPackages.map((pkg) => (
+                    <Card
+                      key={pkg.id}
+                      className="cursor-pointer hover:shadow-lg transition-shadow border-red-200"
+                      onClick={() => handlePackageClick(pkg)}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-base font-semibold">{pkg.package_number}</CardTitle>
+                          <Badge
+                            variant={STATUS_BADGES[pkg.status]?.variant || 'secondary'}
+                            className={STATUS_BADGES[pkg.status]?.color}
+                          >
+                            {STATUS_BADGES[pkg.status]?.label || pkg.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span>📅</span>
+                          <span>
+                            {pkg.billing_month_end && pkg.billing_month_end !== pkg.billing_month
+                              ? `${format(parseBillingMonth(pkg.billing_month), 'MMM yyyy')} – ${format(parseBillingMonth(pkg.billing_month_end), 'MMM yyyy')}`
+                              : format(parseBillingMonth(pkg.billing_month), 'MMMM yyyy')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span>👤</span>
+                          <span>{pkg.prepared_by_name}</span>
+                        </div>
+                        {pkg.rejected_reason && (
+                          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded p-2 line-clamp-3">
+                            {pkg.rejected_reason}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
