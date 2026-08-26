@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import InvoiceDocument from './InvoiceDocument';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { displayInvoiceNumber } from './invoiceNumber';
 
 const monthFirst = (ym) => {
   const [y, m] = String(ym || '').split('-').map(Number);
@@ -87,7 +88,7 @@ export default function PackageInvoiceTab({ pkg }) {
 
   if (useSnapshot) {
     const snap = {
-      invoiceNumber: linkedInvoice.invoice_number ? Number(linkedInvoice.invoice_number) : null,
+      invoiceNumber: displayInvoiceNumber(linkedInvoice.invoice_number, linkedInvoice.billing_month),
       billingMonth: linkedInvoice.billing_month,
       header: linkedInvoice.header_info || [],
       lineItems: linkedInvoice.line_items || [],
@@ -137,6 +138,17 @@ export default function PackageInvoiceTab({ pkg }) {
     );
   }
 
+  // Populate the invoice number: prefer the live tracker read, fall back to the
+  // linked Invoice record's stored number, then apply the 2026 April–July ".1"
+  // suffix. Guarantees the package invoice always carries its number.
+  let srcNumber = live?.invoiceNumber;
+  let srcMonth = live?.billingMonth;
+  if ((srcNumber == null || srcNumber === '') && linkedInvoice?.invoice_number) {
+    srcNumber = linkedInvoice.invoice_number;
+    srcMonth = linkedInvoice.billing_month;
+  }
+  const liveData = { ...live, invoiceNumber: displayInvoiceNumber(srcNumber, srcMonth) };
+
   return (
     <div className="space-y-3">
       <div className="flex justify-end no-print">
@@ -147,7 +159,7 @@ export default function PackageInvoiceTab({ pkg }) {
       <div className="invoice-viewer-card rounded-xl border bg-card shadow">
         <div className="invoice-viewer-content pt-6">
           <InvoiceDocument
-            data={live}
+            data={liveData}
             status={pkg.status === 'approved' ? 'Approved' : 'Draft'}
             adjustmentNotes={adjustmentNotes}
             billingMonthEnd={end}
