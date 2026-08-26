@@ -33,9 +33,23 @@
         "ready_for_review",
         "submitted",
         "approved",
-        "paid"
+        "paid",
+        "rejected"
       ],
       "default": "draft"
+    },
+    "rejected_reason": {
+      "type": "string",
+      "description": "Reason recorded when the package is marked Rejected. Required to move a package into the Rejected status."
+    },
+    "rejected_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who marked the package Rejected."
+    },
+    "rejected_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the package was marked Rejected."
     },
     "notes": {
       "type": "string"

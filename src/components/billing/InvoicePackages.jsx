@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { FileText, Plus, ArrowLeft, Pencil, Upload } from 'lucide-react';
+import { FileText, Plus, ArrowLeft, Pencil, Upload, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoicePackageDetail from './InvoicePackageDetail';
 import ContractConfigDialog from './ContractConfigDialog';
@@ -25,12 +25,14 @@ const STATUS_BADGES = {
   submitted: { variant: 'default', color: 'text-purple-600', label: 'Submitted' },
   approved: { variant: 'outline', color: 'text-green-600', label: 'Approved' },
   paid: { variant: 'default', color: 'text-emerald-700', label: 'Paid' },
+  rejected: { variant: 'destructive', color: 'text-red-600', label: 'Rejected' },
 };
 
 export default function InvoicePackages({ packages, configs, onCreatePackage, isLoading }) {
   const [view, setView] = useState('list'); // 'list' | 'generate' | 'detail'
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [showGenerator, setShowGenerator] = useState(false);
+  const [showRejected, setShowRejected] = useState(false);
   
   const [formData, setFormData] = useState({
     billing_month: format(new Date(), 'yyyy-MM'),

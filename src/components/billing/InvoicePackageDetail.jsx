@@ -24,6 +24,7 @@ const STATUS_OPTIONS = [
   { value: 'submitted', label: 'Submitted' },
   { value: 'approved', label: 'Approved' },
   { value: 'paid', label: 'Paid' },
+  { value: 'rejected', label: 'Rejected' },
 ];
 const STATUS_LABEL = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s.label]));
 import ChildmindingBillingSheet from './ChildmindingBillingSheet';
@@ -71,6 +72,11 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
   const [submitUploading, setSubmitUploading] = useState(false);
   const [submitPending, setSubmitPending] = useState(false);
   const submitInputRef = useRef(null);
+  // Rejecting a package requires a reason; locked packages also need the 5011 pin.
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectPin, setRejectPin] = useState('');
+  const [rejectPending, setRejectPending] = useState(false);
 
   useEffect(() => { base44.auth.me().then(setCurrentUser).catch(() => {}); }, []);
 
@@ -81,6 +87,14 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
       setSubmitFileName('');
       setStatusChangeTarget('submitted');
       setSubmitOpen(true);
+      return;
+    }
+    // Moving to Rejected requires a reason (and the pin when the package is locked).
+    if (val === 'rejected' && pkg.status !== 'rejected') {
+      setStatusChangeTarget('rejected');
+      setRejectReason('');
+      setRejectPin('');
+      setRejectOpen(true);
       return;
     }
     // Changing status away from a locked (submitted/approved) state requires the 5011 pin.
@@ -168,6 +182,36 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
       toast.error('Could not update status: ' + (e.message || ''));
     } finally {
       setSubmitPending(false);
+    }
+  };
+
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('Please enter a reason for rejection.');
+      return;
+    }
+    if (locked && rejectPin !== '5011') {
+      toast.error('Incorrect pin — rejecting a locked package requires the 5011 pin.');
+      return;
+    }
+    setRejectPending(true);
+    try {
+      await base44.entities.InvoicePackage.update(pkg.id, {
+        status: 'rejected',
+        rejected_reason: rejectReason.trim(),
+        rejected_by_name: currentUser?.full_name || pkg.prepared_by_name || '',
+        rejected_date: new Date().toISOString().slice(0, 10),
+      });
+      setStatus('rejected');
+      setRejectOpen(false);
+      setRejectReason('');
+      setRejectPin('');
+      queryClient.invalidateQueries({ queryKey: ['invoice-packages'] });
+      toast.success('Package marked Rejected');
+    } catch (e) {
+      toast.error('Could not update status: ' + (e.message || ''));
+    } finally {
+      setRejectPending(false);
     }
   };
 
@@ -347,6 +391,21 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
                 )}
               </CardContent>
             </Card>
+
+            {pkg.status === 'rejected' && (
+              <Card className="border-red-200 bg-red-50/40">
+                <CardHeader>
+                  <CardTitle className="text-base text-red-700">Rejection Reason</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm">
+                  <p className="text-slate-700 whitespace-pre-wrap">{pkg.rejected_reason || 'No reason recorded.'}</p>
+                  <p className="text-[11px] text-slate-400 pt-1">
+                    {pkg.rejected_by_name ? `${pkg.rejected_by_name} · ` : ''}
+                    {pkg.rejected_date ? format(new Date(pkg.rejected_date), 'MMM d, yyyy') : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardHeader>
@@ -690,6 +749,59 @@ export default function InvoicePackageDetail({ pkg, configs, onBack }) {
             >
               {submitPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Confirm submission
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark as Rejected — requires a reason (and the pin when the package is locked) */}
+      <AlertDialog open={rejectOpen} onOpenChange={(o) => { setRejectOpen(o); if (!o) { setRejectReason(''); setRejectPin(''); setStatusChangeTarget(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark {pkg.package_number} as Rejected?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Record a reason for rejecting this invoice package. The package will move into the
+                  Rejected section of the packages list.
+                </p>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Reason for rejection</label>
+                  <Textarea
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    rows={4}
+                    placeholder="Explain why this package is being rejected..."
+                    autoFocus
+                  />
+                </div>
+                {locked && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">
+                      This package is <span className="capitalize font-semibold">{STATUS_LABEL[pkg.status]}</span> — enter the 5011 pin to confirm
+                    </label>
+                    <Input
+                      type="password"
+                      inputMode="numeric"
+                      value={rejectPin}
+                      onChange={(e) => setRejectPin(e.target.value)}
+                      placeholder="Pin"
+                      className="text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rejectPending} onClick={() => { setRejectReason(''); setRejectPin(''); setStatusChangeTarget(null); }}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmReject(); }}
+              disabled={rejectPending || !rejectReason.trim() || (locked && rejectPin !== '5011')}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {rejectPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Reject package
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
