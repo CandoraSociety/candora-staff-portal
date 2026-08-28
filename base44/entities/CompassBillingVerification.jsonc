@@ -42,6 +42,24 @@
     "notes_updated_by_name": {
       "type": "string",
       "description": "Name of the staff member who last updated the notes"
+    },
+    "corrections_in_crt": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when this client has been flagged as needing corrections in the CRT. While set, the client is shown in the 'Corrections in CRT' section instead of the active or completed lists."
+    },
+    "corrections_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the client was flagged as needing CRT corrections"
+    },
+    "corrections_by_name": {
+      "type": "string",
+      "description": "Name of the staff member who flagged the client for CRT corrections"
+    },
+    "corrections_by_email": {
+      "type": "string",
+      "description": "Email of the staff member who flagged the client for CRT corrections"
     }
   },
   "required": [

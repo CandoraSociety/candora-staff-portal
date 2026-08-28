@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2, Save, Trash2 } from 'lucide-react';
+import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { fieldDescription } from '@/lib/compassChecklistDescriptions';
@@ -64,6 +64,10 @@ export default function CompassEntryChecklist() {
         verified_by_name: currentUser?.full_name || currentUser?.email || '',
         verified_by_email: currentUser?.email || '',
         billing_months: [...months].sort(),
+        corrections_in_crt: false,
+        corrections_date: null,
+        corrections_by_name: '',
+        corrections_by_email: '',
       };
       if (existing) {
         return base44.entities.CompassBillingVerification.update(existing.id, payload);
@@ -97,6 +101,34 @@ export default function CompassEntryChecklist() {
     onSuccess: () => refetchVerifications(),
   });
 
+  const correctionsMutation = useMutation({
+    mutationFn: async ({ clientId, clientName, corrections }) => {
+      const existing = verifications.find((v) => v.client_id === clientId);
+      const today = new Date().toISOString().slice(0, 10);
+      const byName = currentUser?.full_name || currentUser?.email || '';
+      const byEmail = currentUser?.email || '';
+      if (existing) {
+        return base44.entities.CompassBillingVerification.update(existing.id, {
+          corrections_in_crt: corrections,
+          corrections_date: corrections ? today : null,
+          corrections_by_name: corrections ? byName : '',
+          corrections_by_email: corrections ? byEmail : '',
+          verified_date: corrections ? null : existing.verified_date,
+        });
+      }
+      return base44.entities.CompassBillingVerification.create({
+        client_id: clientId,
+        client_name: clientName,
+        corrections_in_crt: corrections,
+        corrections_date: corrections ? today : null,
+        corrections_by_name: corrections ? byName : '',
+        corrections_by_email: corrections ? byEmail : '',
+        billing_months: [...months].sort(),
+      });
+    },
+    onSuccess: () => refetchVerifications(),
+  });
+
   const addMonth = () => {
     const m = draftMonth;
     if (!m) return;
@@ -106,16 +138,19 @@ export default function CompassEntryChecklist() {
   const removeMonth = (m) => setMonths((prev) => prev.filter((x) => x !== m));
 
   const items = data?.items || [];
-  const verifiedRecord = (it) => it.client_id ? verifications.find((v) => v.client_id === it.client_id && v.verified_date) : null;
-  const activeItems = items.filter((it) => !verifiedRecord(it));
-  const completedItems = items.filter((it) => verifiedRecord(it));
+  const verification = (it) => it.client_id ? verifications.find((v) => v.client_id === it.client_id) : null;
+  const isVerified = (it) => { const v = verification(it); return !!(v && v.verified_date && !v.corrections_in_crt); };
+  const isCorrections = (it) => { const v = verification(it); return !!(v && v.corrections_in_crt); };
+  const activeItems = items.filter((it) => !isVerified(it) && !isCorrections(it));
+  const correctionsItems = items.filter((it) => isCorrections(it));
+  const completedItems = items.filter((it) => isVerified(it));
 
   const deleteMutation = useMutation({
     mutationFn: async (verificationId) => base44.entities.CompassBillingVerification.delete(verificationId),
     onSuccess: () => refetchVerifications(),
   });
 
-  const renderCard = (item, idx, isCompleted) => {
+  const renderCard = (item, idx, section) => {
     const comments = item.fields.find((f) => f.label === 'Comments');
     const coreFields = item.fields.filter((f) => f.label !== 'Comments');
     const activeMonths = (item.active_months || []).slice().sort();
@@ -140,12 +175,17 @@ export default function CompassEntryChecklist() {
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-end">
               <span className="text-xs text-slate-400">Row {item.row_number}</span>
-              {verification && (
+              {section === 'completed' && verification && (
                 <Badge className="bg-emerald-100 text-emerald-700 gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Verified {verification.verified_date}
                 </Badge>
               )}
-              {item.client_id && !isCompleted && (
+              {section === 'corrections' && (
+                <Badge className="bg-amber-100 text-amber-800 gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Corrections in CRT
+                </Badge>
+              )}
+              {item.client_id && section === 'active' && (
                 <Button
                   variant="default"
                   size="sm"
@@ -157,7 +197,42 @@ export default function CompassEntryChecklist() {
                   Mark as verified up to date
                 </Button>
               )}
-              {isCompleted && verification && (
+              {item.client_id && section === 'active' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={correctionsMutation.isPending}
+                  onClick={() => correctionsMutation.mutate({ clientId: item.client_id, clientName: item.client_name, corrections: true })}
+                  className="gap-1 text-xs border-amber-400 text-amber-800 hover:bg-amber-50"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Corrections in CRT
+                </Button>
+              )}
+              {section === 'corrections' && item.client_id && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={verifyMutation.isPending}
+                  onClick={() => verifyMutation.mutate({ clientId: item.client_id, clientName: item.client_name })}
+                  className="gap-1 text-xs"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Mark as verified up to date
+                </Button>
+              )}
+              {section === 'corrections' && verification && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={correctionsMutation.isPending}
+                  onClick={() => correctionsMutation.mutate({ clientId: item.client_id, clientName: item.client_name, corrections: false })}
+                  className="gap-1 text-xs text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Remove
+                </Button>
+              )}
+              {section === 'completed' && verification && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -305,7 +380,17 @@ export default function CompassEntryChecklist() {
         <>
           {activeItems.length > 0 && (
             <div className="space-y-3">
-              {activeItems.map((item, idx) => renderCard(item, idx, false))}
+              {activeItems.map((item, idx) => renderCard(item, idx, 'active'))}
+            </div>
+          )}
+          {correctionsItems.length > 0 && (
+            <div className="space-y-3 pt-4">
+              <div className="flex items-center gap-2 pb-1 border-b border-amber-300">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <h3 className="text-sm font-semibold text-amber-800">Corrections in CRT ({correctionsItems.length})</h3>
+                <p className="text-xs text-amber-700">Flagged for CRT correction — verify once corrected.</p>
+              </div>
+              {correctionsItems.map((item, idx) => renderCard(item, idx, 'corrections'))}
             </div>
           )}
           {completedItems.length > 0 && (
@@ -315,7 +400,7 @@ export default function CompassEntryChecklist() {
                 <h3 className="text-sm font-semibold text-emerald-800">Completed ({completedItems.length})</h3>
                 <p className="text-xs text-emerald-700">Verified up to date — use Remove to clear from this list.</p>
               </div>
-              {completedItems.map((item, idx) => renderCard(item, idx, true))}
+              {completedItems.map((item, idx) => renderCard(item, idx, 'completed'))}
             </div>
           )}
         </>
