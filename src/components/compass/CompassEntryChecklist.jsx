@@ -367,6 +367,24 @@ export default function CompassEntryChecklist() {
         )}
       </div>
 
+      {/* Section counts */}
+      {!isLoading && items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 rounded-full px-3 py-1 font-medium">
+            Active: {activeItems.length}
+          </span>
+          <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 rounded-full px-3 py-1 font-medium">
+            <AlertTriangle className="w-3.5 h-3.5" /> Corrections in CRT: {correctionsItems.length}
+          </span>
+          <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 rounded-full px-3 py-1 font-medium">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Completed: {completedItems.length}
+          </span>
+          <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground rounded-full px-3 py-1 font-semibold">
+            Total unique clients: {items.length}
+          </span>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
