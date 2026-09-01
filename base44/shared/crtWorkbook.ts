@@ -234,29 +234,27 @@ export function mapClientToCrtRow(client, monthEnd) {
     ? (!!client.eda_completion_date && gate(client.eda_completion_date))
     : (!!client.employment_start_date && gate(client.employment_start_date));
 
-  // 90 Day Outcome — actual status if recorded & month-bound, else 'P' once triggered.
-  const day90Outcome = (gate(client.followup_90day_date) && client.followup_90day_status)
-    || (followupTriggered ? 'P' : '');
+  // 90 Day Outcome — actual status if recorded, else 'P' once triggered. NOT
+  // month-bound: a Pending ('P') entry and its scheduled date must remain
+  // visible in the CRT even when the 90-day date falls after the workbook's
+  // month-end, because 'P' means the 90-day follow-up is scheduled for that
+  // future date. (Other date columns stay gated; 90-day is intentionally
+  // forward-looking.)
+  const day90Outcome = client.followup_90day_status || (followupTriggered ? 'P' : '');
 
-  // 90 Day Outcome Date — for DEA clients, 90 days after the Service Outcome Date
-  // (most recent EDA activity date). For WD clients, the recorded follow-up date.
+  // 90 Day Outcome Date — the recorded follow-up date when a 90-day outcome
+  // has been entered (status + date), otherwise the projected/scheduled date
+  // (90 days after the trigger event: most recent EDA activity for DEA,
+  // employment_start_date for WD). Not month-bound — see day90Outcome above.
   let day90DateForCrt = '';
-  // Column P (90 Day Outcome Date): use the recorded follow-up date whenever a
-  // 90-day outcome has been entered (status + date), independent of
-  // employment_start_date. Previously this was gated on followupTriggered
-  // (which requires employment_start_date for WD), so clients with a recorded
-  // 90-day outcome but no employment_start_date got a blank P — and thus never
-  // counted toward the BH/BL 90-day billing tallies.
-  if (client.followup_90day_status && client.followup_90day_date && gate(client.followup_90day_date)) {
+  if (client.followup_90day_status && client.followup_90day_date) {
     day90DateForCrt = formatDateForCrt(client.followup_90day_date);
   } else if (followupTriggered) {
-    if (isDea) {
-      const sod = mostRecentEdaDate || client.eda_completion_date;
-      if (sod) {
-        const projected = new Date(sod + 'T12:00:00');
-        projected.setDate(projected.getDate() + 90);
-        day90DateForCrt = formatDateForCrt(projected);
-      }
+    const triggerDate = isDea ? (mostRecentEdaDate || client.eda_completion_date) : client.employment_start_date;
+    if (triggerDate) {
+      const projected = new Date(triggerDate + 'T12:00:00');
+      projected.setDate(projected.getDate() + 90);
+      day90DateForCrt = formatDateForCrt(projected);
     }
   }
 
@@ -465,7 +463,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     comments,                                          // S: Comments
-    (isWd && ['E-RF','E-UF','SE'].includes(placementOutcome)) ? formatDateForCrt(client.post_completion_employment_date) : '',  // T: Placement Outcome Date (WD; mirrors J when I is employed)
+    gate(client.eda_completion_date) ? formatDateForCrt(client.eda_completion_date) : '',  // T: EDA Completion Date
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
