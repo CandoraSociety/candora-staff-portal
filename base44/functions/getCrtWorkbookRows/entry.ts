@@ -64,7 +64,7 @@ export default async function(req: Request): Promise<Response> {
     for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
       const r = values[i];
       if (!r || !r[0] || !String(r[0]).trim()) continue;
-      const row = { source_sheet: CLIENT_DATA_SHEET };
+      const row = { source_sheet: CLIENT_DATA_SHEET, excel_row: i + 1 };
       for (let c = 0; c < COLUMNS.length; c++) {
         row[COLUMNS[c]] = cellToString(r[c]);
       }

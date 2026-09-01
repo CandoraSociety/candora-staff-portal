@@ -21,6 +21,8 @@ export default function CRT({ clients = [] }) {
   // This is a VIEW-ONLY toggle — it never changes which workbook is active
   // for sync or roll-forward.
   const [viewFileId, setViewFileId] = useState(null);
+  // 1-based Excel row to deep-link the embed to (find-a-client). null = no jump.
+  const [scrollToRow, setScrollToRow] = useState(null);
 
   // Fetch CRT workbook status
   const { data: status, isLoading, refetch } = useQuery({
@@ -61,6 +63,24 @@ export default function CRT({ clients = [] }) {
     },
     enabled: !!viewFileId && !narrativeSyncing,
   });
+
+  // Names in the currently-viewed workbook's Client Data sheet, for the
+  // find-a-client selector. Each row carries its 1-based Excel row so the
+  // embed can deep-link (activeCell) straight to that client.
+  const viewedFileName = viewFileId
+    ? (status?.allFiles?.find(f => f.id === viewFileId)?.name || '')
+    : (status?.activeWorkbook?.name || '');
+  const { data: crtRowsData } = useQuery({
+    queryKey: ['crt-rows-scroll', viewedFileName],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getCrtWorkbookRows', { file_name: viewedFileName });
+      return res.data;
+    },
+    enabled: !!viewedFileName,
+  });
+
+  // Reset the find-a-client jump when switching workbooks.
+  useEffect(() => { setScrollToRow(null); }, [viewFileId]);
 
   const handleSync = async () => {
     setSyncing(true);
@@ -187,6 +207,30 @@ export default function CRT({ clients = [] }) {
   // "Archived" = truly frozen (Mark Complete was clicked). A prior month that's
   // still open is NOT archived — it continues to sync with the portal.
   const isViewingArchive = isViewingNonActive && viewedFile?.crtStatus === 'closed';
+
+  // Alphabetical list of client names in the viewed workbook, each with its
+  // Excel row — drives the find-a-client selector.
+  const nameOptions = (() => {
+    const rows = crtRowsData?.rows || [];
+    return rows
+      .map((r) => ({ name: r.participant_name, row: r.excel_row }))
+      .filter((o) => o.name && o.row)
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+  })();
+
+  // Embed URL with an activeCell deep-link when a client is selected, so the
+  // embedded Excel sheet opens scrolled to (and focused on) that row.
+  const finalEmbedUrl = (() => {
+    if (!effectiveEmbedUrl) return null;
+    if (!scrollToRow) return effectiveEmbedUrl;
+    try {
+      const u = new URL(effectiveEmbedUrl);
+      u.searchParams.set('activeCell', `'Client Data'!A${scrollToRow}`);
+      return u.toString();
+    } catch {
+      return effectiveEmbedUrl;
+    }
+  })();
 
   return (
     <div className="space-y-4">
@@ -337,9 +381,30 @@ export default function CRT({ clients = [] }) {
             </div>
           </CardHeader>
           <CardContent>
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <label className="text-xs font-medium text-slate-600 whitespace-nowrap flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                Find client in sheet:
+              </label>
+              <select
+                value={scrollToRow ?? ''}
+                onChange={(e) => setScrollToRow(e.target.value ? Number(e.target.value) : null)}
+                className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-700 max-w-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+              >
+                <option value="">— Select a client (alphabetical) —</option>
+                {nameOptions.map((o) => (
+                  <option key={o.row} value={o.row}>{o.name}</option>
+                ))}
+              </select>
+              {scrollToRow && (
+                <Button variant="ghost" size="sm" onClick={() => setScrollToRow(null)} className="h-8 text-xs">
+                  Reset
+                </Button>
+              )}
+            </div>
             <div className="rounded-lg overflow-hidden border border-slate-200 h-[80vh] min-h-[700px]">
               <iframe
-                src={effectiveEmbedUrl}
+                src={finalEmbedUrl}
                 className="w-full h-full"
                 frameBorder="0"
                 title="CRT Workbook"
