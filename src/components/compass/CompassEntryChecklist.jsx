@@ -5,10 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2, Save, Trash2, AlertTriangle } from 'lucide-react';
+import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus, MessageSquare, CheckCircle2, Save, Trash2, AlertTriangle, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { fieldDescription } from '@/lib/compassChecklistDescriptions';
+import EditCrtDialog from '@/components/compass/EditCrtDialog';
 
 // Outcome + date fields are the actionable Compass entries — highlight them.
 const OUTCOME_FIELDS = new Set([
@@ -35,6 +36,7 @@ export default function CompassEntryChecklist() {
   const [months, setMonths] = useState([currentBillingMonth()]);
   const [draftMonth, setDraftMonth] = useState('');
   const [noteDrafts, setNoteDrafts] = useState({});
+  const [editCrtItem, setEditCrtItem] = useState(null);
 
   const monthsKey = useMemo(() => [...months].sort().join(','), [months]);
 
@@ -232,6 +234,16 @@ export default function CompassEntryChecklist() {
                   <Trash2 className="w-3.5 h-3.5" /> Remove
                 </Button>
               )}
+              {section === 'corrections' && item.client_id && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditCrtItem(item)}
+                  className="gap-1 text-xs border-amber-400 text-amber-800 hover:bg-amber-50"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Edit CRT
+                </Button>
+              )}
               {section === 'completed' && verification && (
                 <Button
                   variant="ghost"
@@ -423,6 +435,13 @@ export default function CompassEntryChecklist() {
           )}
         </>
       )}
+
+      <EditCrtDialog
+        item={editCrtItem}
+        open={!!editCrtItem}
+        onOpenChange={(o) => !o && setEditCrtItem(null)}
+        onSaved={() => refetch()}
+      />
     </div>
   );
 }
