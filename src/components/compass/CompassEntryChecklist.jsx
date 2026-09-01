@@ -157,19 +157,24 @@ export default function CompassEntryChecklist() {
     const verificationOnly = [];
     for (const v of verifications) {
       if (!v.client_id || crtClientIds.has(v.client_id)) continue;
+      // Show EVERY tracked verification client, regardless of whether the
+      // months they were verified for overlap the currently selected months.
+      // Previously, clients verified for a prior billing month (with no new
+      // CRT activity in the selected month) were filtered out — so
+      // "completed" clients disappeared from the list entirely. Their card's
+      // active_months reflects the months they were actually verified for.
       const vbMonths = Array.isArray(v.billing_months) ? v.billing_months : [];
-      const matching = months.filter((m) => vbMonths.includes(m));
-      if (matching.length === 0) continue;
-      const sortedMatching = [...matching].sort();
+      const sortedMonths = [...vbMonths].sort();
+      const latestMonth = sortedMonths[sortedMonths.length - 1] || '';
       verificationOnly.push({
         client_name: v.client_name || '',
         client_id: v.client_id,
         hsid: '',
         row_number: null,
         assigned_worker_name: '',
-        active_months: sortedMatching,
-        month: sortedMatching[sortedMatching.length - 1],
-        workbook: crtFileName(sortedMatching[sortedMatching.length - 1]),
+        active_months: sortedMonths,
+        month: latestMonth,
+        workbook: latestMonth ? crtFileName(latestMonth) : '',
         fields: [],
         verificationOnly: true,
       });
