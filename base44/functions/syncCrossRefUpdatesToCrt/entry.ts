@@ -3,6 +3,7 @@ import {
   getGraphToken, listCrtFiles, mapClientToCrtRow, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
+import { syncOneClientIntoAllOpenWorkbooks } from '../../shared/crtSync.ts';
 
 // Push "Updated" cross-reference rows into the live CRT.
 //
@@ -182,6 +183,13 @@ export default async function(req: Request): Promise<Response> {
     const nonPortal = [];
     let anyClientUpdated = false;
 
+    // Fetch the Graph token once — used to sync the CRT row directly into every
+    // open workbook right after each entity update (so the workbook reflects the
+    // edit before this function returns, eliminating the race where the frontend
+    // refetches before the async "CRT Sync on Client Update" automation fires).
+    let graphToken = null;
+    try { graphToken = await getGraphToken(); } catch { /* CRT sync skipped, automation still fires */ }
+
     for (let i = 0; i < updates.length; i++) {
       const u = updates[i];
       const cf = u.crt_fields || {};
@@ -212,6 +220,13 @@ export default async function(req: Request): Promise<Response> {
           roadmap_progress_notes: [entry, ...notes],
         });
         anyClientUpdated = true;
+        // Directly sync this client's CRT row into every open workbook now (don't
+        // wait for the async entity automation) so the 90-day outcome, dates, and
+        // all other fields land in the workbook before the frontend refetches.
+        if (graphToken) {
+          try { await syncOneClientIntoAllOpenWorkbooks(base44, graphToken, projected); }
+          catch { /* non-fatal — the entity automation will also fire */ }
+        }
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: true, day90_date: day90Date };
       } catch (e) {
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: false, error: e.message };
@@ -259,6 +274,10 @@ export default async function(req: Request): Promise<Response> {
         try {
           const created = await base44.asServiceRole.entities.Client.create(payload);
           anyClientCreated = true;
+          if (graphToken) {
+            try { await syncOneClientIntoAllOpenWorkbooks(base44, graphToken, created); }
+            catch { /* non-fatal — the entity automation will also fire */ }
+          }
           results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: true, client_id: created.id };
         } catch (e) {
           results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: false, error: e.message };
@@ -284,7 +303,7 @@ export default async function(req: Request): Promise<Response> {
     let billingCounts = null;
     if (anyClientUpdated || anyClientCreated) {
       try {
-        const token = await getGraphToken();
+        const token = graphToken || await getGraphToken();
         const files = await listCrtFiles(token);
         let closedNames = new Set();
         try {
