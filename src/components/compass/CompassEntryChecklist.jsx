@@ -276,12 +276,12 @@ export default function CompassEntryChecklist() {
                   <Trash2 className="w-3.5 h-3.5" /> Remove
                 </Button>
               )}
-              {section === 'corrections' && item.client_id && (
+              {(section === 'corrections' || section === 'completed') && item.client_id && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setEditCrtItem((prev) => (prev?.client_id === item.client_id ? null : item))}
-                  className="gap-1 text-xs border-amber-400 text-amber-800 hover:bg-amber-50"
+                  className={`gap-1 text-xs ${section === 'corrections' ? 'border-amber-400 text-amber-800 hover:bg-amber-50' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
                 >
                   <Pencil className="w-3.5 h-3.5" /> {editCrtItem?.client_id === item.client_id ? 'Hide CRT' : 'Edit CRT'}
                 </Button>
@@ -377,7 +377,7 @@ export default function CompassEntryChecklist() {
               </div>
             </div>
           )}
-          {section === 'corrections' && item.client_id && editCrtItem?.client_id === item.client_id && (
+          {(section === 'corrections' || section === 'completed') && item.client_id && editCrtItem?.client_id === item.client_id && (
             <EditCrtInline
               item={item}
               onSaved={() => refetch()}
