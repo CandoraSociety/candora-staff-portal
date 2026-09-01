@@ -30,6 +30,12 @@ const monthLabelLong = (ym) => {
   const [y, m] = String(ym).split('-').map(Number);
   return new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const crtFileName = (ym) => {
+  const [y, m] = String(ym).split('-').map(Number);
+  if (!y || !m) return '';
+  return `CRT_${MONTH_NAMES[m - 1]}_${y}.xlsx`;
+};
 
 export default function CompassEntryChecklist() {
   const navigate = useNavigate();
@@ -154,15 +160,16 @@ export default function CompassEntryChecklist() {
       const vbMonths = Array.isArray(v.billing_months) ? v.billing_months : [];
       const matching = months.filter((m) => vbMonths.includes(m));
       if (matching.length === 0) continue;
+      const sortedMatching = [...matching].sort();
       verificationOnly.push({
         client_name: v.client_name || '',
         client_id: v.client_id,
         hsid: '',
         row_number: null,
         assigned_worker_name: '',
-        active_months: [...matching].sort(),
-        month: [...matching].sort()[matching.length - 1],
-        workbook: '',
+        active_months: sortedMatching,
+        month: sortedMatching[sortedMatching.length - 1],
+        workbook: crtFileName(sortedMatching[sortedMatching.length - 1]),
         fields: [],
         verificationOnly: true,
       });

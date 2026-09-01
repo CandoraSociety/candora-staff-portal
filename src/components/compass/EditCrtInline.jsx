@@ -122,8 +122,19 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
           const ln = normName(item.client_name);
           row = rows.find((r) => normName(r.participant_name) === ln);
         }
-      } catch { /* fall back to checklist fields */ }
+      } catch { /* fall back below */ }
       if (cancelled) return;
+
+      // When the monthly workbook is archived/missing or has no row for this
+      // client, derive the current 25-column row from the live Client entity
+      // (the source of truth) so the editor always shows current values.
+      if (!row && item.client_id) {
+        try {
+          const er = await base44.functions.invoke('getClientCrtRow', { client_id: item.client_id });
+          if (er.data?.row) row = er.data.row;
+        } catch { /* ignore */ }
+        if (cancelled) return;
+      }
 
       const v = {};
       for (const c of SHEET_COLUMNS) v[c.key] = '';
