@@ -30,7 +30,7 @@ const SHEET_COLUMNS = [
   { key: 'placement_outcome', label: 'Placement Outcome', type: 'select', options: PLACEMENT_OUTCOME_CODES, optionLabel: outcomeLabel, width: 'w-44' },
   { key: 'placement_outcome_date', label: 'Placement Outcome Date', type: 'date', width: 'w-36' },
   { key: 'day90_outcome', label: '90 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
-  { key: 'day90_outcome_date', label: '90 Day Outcome Date', type: 'text', readonly: true, derived: true, width: 'w-36' },
+  { key: 'day90_outcome_date', label: '90 Day Outcome Date', type: 'date', width: 'w-36' },
   { key: 'comments', label: 'Comments', type: 'textarea', width: 'w-72' },
   { key: 'eda_completion_date', label: 'EDA Completion Date', type: 'date', width: 'w-36' },
   { key: 'work_exposure', label: 'Work Exposure Y/N', type: 'select', options: YES_NO, width: 'w-32' },
@@ -45,7 +45,7 @@ const SHEET_COLUMNS = [
 const ENTITY_KEYS = [
   'ceis_dea', 'dea_start_date', 'service_element', 'service_start_date',
   'service_outcome', 'service_outcome_date', 'placement_outcome', 'placement_outcome_date',
-  'day90_outcome', 'comments', 'eda_completion_date', 'work_exposure', 'wage_subsidy',
+  'day90_outcome', 'day90_outcome_date', 'comments', 'eda_completion_date', 'work_exposure', 'wage_subsidy',
   'employed_ftpt',
 ];
 // Columns with no corresponding Client entity field — they're auto-derived by

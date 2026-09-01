@@ -8,11 +8,12 @@ import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 //
 // For clients that match a portal Client record, the cross-reference CRT
 // field values are written BACK into the client file fields (service type,
-// start date, EDA completion, placement, 90-day outcome, etc.) so the normal
-// "CRT Sync on Client Update" automation re-derives the CRT row from the
-// (now cross-ref-matching) entity. The 90 Day Outcome Date is therefore
-// calculated the usual way — never taken from the cross-ref. A progress note
-// listing every cross-ref CRT field is appended to the client file.
+// start date, EDA completion, placement, 90-day outcome + date, etc.) so the
+// normal "CRT Sync on Client Update" automation re-derives the CRT row from
+// the (now cross-ref-matching) entity. When a 90-day outcome date is supplied
+// alongside a 90-day outcome (status), it's written to followup_90day_date and
+// the sync surfaces it in column P; otherwise column P is calculated the
+// usual way. A progress note listing every cross-ref CRT field is appended.
 //
 // For clients with NO portal record, the cross-ref row is written directly
 // into every open CRT workbook (new row appended, or matched row updated by
@@ -78,7 +79,7 @@ function buildNoteText(cf, day90Date) {
   const parts = [];
   for (const [k, label] of Object.entries(FIELD_LABELS)) {
     if (k === 'day90_outcome_date') {
-      if (day90Date) parts.push(`${label}: ${day90Date} (calculated)`);
+      if (day90Date) parts.push(`${label}: ${day90Date}`);
       continue;
     }
     const v = String(cf[k] ?? '').trim();
@@ -130,6 +131,13 @@ function applyCrossRefToClient(client, cf) {
 
   const d90 = String(cf.day90_outcome || '').trim();
   if (d90 && d90 !== 'P') u.followup_90day_status = d90;
+  // 90 Day Outcome Date — written back to the client file so the next CRT sync
+  // surfaces it in column P. Only applies when a 90-day outcome (status) is
+  // also set, since column P's derivation keys off followup_90day_status.
+  if (cf.day90_outcome_date) {
+    const iso = parseCrtDate(cf.day90_outcome_date);
+    if (iso) u.followup_90day_date = iso;
+  }
 
   if (cf.employed_ftpt) u.employed_ftpt = String(cf.employed_ftpt).trim();
   if (cf.wage_subsidy) u.wage_subsidy_accessed = String(cf.wage_subsidy).toLowerCase() === 'yes';
