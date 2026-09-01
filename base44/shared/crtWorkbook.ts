@@ -276,7 +276,10 @@ export function mapClientToCrtRow(client, monthEnd) {
   ).length;
   const inDeaFollowup = isDea && followupTriggered && !client.followup_90day_status;
   const SERVICENAV_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
-  const day90OutcomeEntered = !!(gate(client.followup_90day_date) && client.followup_90day_status);
+  // 'P' (Pending) is not a real follow-up outcome — treat it as "not yet
+  // entered" so Service Nav Support (col X) stays blank until an actual
+  // outcome (E-RF/E-UF/SE/etc.) is recorded, instead of flipping to "No".
+  const day90OutcomeEntered = !!(gate(client.followup_90day_date) && client.followup_90day_status && client.followup_90day_status !== 'P');
   let serviceNav = '';
   if (isWd) {
     if (day90OutcomeEntered) {

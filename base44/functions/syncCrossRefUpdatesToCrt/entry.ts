@@ -130,7 +130,12 @@ function applyCrossRefToClient(client, cf) {
   }
 
   const d90 = String(cf.day90_outcome || '').trim();
-  if (d90 && d90 !== 'P') u.followup_90day_status = d90;
+  // Persist the 90-day status exactly as entered — including 'P' (Pending).
+  // 'P' is only auto-derived when the 90-day follow-up is "triggered" (WD:
+  // employment_start_date set; DEA: EDA complete). When a staff member
+  // manually enters 'P' with a date for a client whose follow-up isn't
+  // auto-triggered, it must persist or CRT columns O/P stay blank.
+  if (d90) u.followup_90day_status = d90;
   // 90 Day Outcome Date — written back to the client file so the next CRT sync
   // surfaces it in column P. Only applies when a 90-day outcome (status) is
   // also set, since column P's derivation keys off followup_90day_status.

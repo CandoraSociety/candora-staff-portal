@@ -90,7 +90,9 @@ function mapClientLite(client, monthEnd) {
     (i) => client[`barrier_${i}`] && client[`barrier_${i}_status`] === 'resolved'
   ).length;
   const SERVICENAV_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
-  const day90OutcomeEntered = !!(gate(client.followup_90day_date) && client.followup_90day_status);
+  // 'P' (Pending) is not a real follow-up outcome — keep Service Nav blank
+  // until an actual outcome is recorded (mirrors crtWorkbook.ts).
+  const day90OutcomeEntered = !!(gate(client.followup_90day_date) && client.followup_90day_status && client.followup_90day_status !== 'P');
   let serviceNav = '';
   if (isWd) {
     if (day90OutcomeEntered) {
