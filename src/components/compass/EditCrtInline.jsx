@@ -158,7 +158,26 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
     return () => { cancelled = true; };
   }, [item]);
 
-  const handleChange = (key, val) => setValues((prev) => ({ ...prev, [key]: val }));
+  const handleChange = (key, val) => setValues((prev) => {
+    const next = { ...prev, [key]: val };
+    // Auto-populate derived fields, mirroring the actual CRT derivation
+    // (mapClientToCrtRow) so the saved row is correct without manual entry.
+    // When Service Outcome is marked Complete, the Service Outcome Date mirrors
+    // the EDA Completion Date. When marked Cancelled/Incomplete, both the date
+    // and EDA Completion clear (no completion to record).
+    if (key === 'service_outcome') {
+      if (val === 'Complete') {
+        if (next.eda_completion_date) next.service_outcome_date = next.eda_completion_date;
+      } else if (val === 'Cancelled' || val === 'Incomplete') {
+        next.service_outcome_date = '';
+        next.eda_completion_date = '';
+      }
+    }
+    if (key === 'eda_completion_date' && next.service_outcome === 'Complete') {
+      next.service_outcome_date = val;
+    }
+    return next;
+  });
 
   const handleSave = async () => {
     setSaving(true);
