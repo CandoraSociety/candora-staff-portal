@@ -220,16 +220,15 @@ export default function CRT({ clients = [] }) {
 
   // Embed URL with an activeCell deep-link when a client is selected, so the
   // embedded Excel sheet opens scrolled to (and focused on) that row.
+  // NOTE: we build the query string manually because URLSearchParams encodes
+  // spaces as "+" — Excel Online needs %20 (and %27 for the quoted sheet name),
+  // otherwise the activeCell parameter is ignored and the sheet opens at the top.
   const finalEmbedUrl = (() => {
     if (!effectiveEmbedUrl) return null;
     if (!scrollToRow) return effectiveEmbedUrl;
-    try {
-      const u = new URL(effectiveEmbedUrl);
-      u.searchParams.set('activeCell', `'Client Data'!A${scrollToRow}`);
-      return u.toString();
-    } catch {
-      return effectiveEmbedUrl;
-    }
+    const cell = encodeURIComponent(`'Client Data'!A${scrollToRow}`);
+    const sep = effectiveEmbedUrl.includes('?') ? '&' : '?';
+    return `${effectiveEmbedUrl}${sep}activeCell=${cell}`;
   })();
 
   return (
