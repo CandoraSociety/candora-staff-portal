@@ -9,7 +9,7 @@ import { Loader2, RefreshCw, ExternalLink, ClipboardList, CalendarDays, X, Plus,
 import { useNavigate } from 'react-router-dom';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { fieldDescription } from '@/lib/compassChecklistDescriptions';
-import EditCrtDialog from '@/components/compass/EditCrtDialog';
+import EditCrtInline from '@/components/compass/EditCrtInline';
 
 // Outcome + date fields are the actionable Compass entries — highlight them.
 const OUTCOME_FIELDS = new Set([
@@ -238,10 +238,10 @@ export default function CompassEntryChecklist() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setEditCrtItem(item)}
+                  onClick={() => setEditCrtItem((prev) => (prev?.client_id === item.client_id ? null : item))}
                   className="gap-1 text-xs border-amber-400 text-amber-800 hover:bg-amber-50"
                 >
-                  <Pencil className="w-3.5 h-3.5" /> Edit CRT
+                  <Pencil className="w-3.5 h-3.5" /> {editCrtItem?.client_id === item.client_id ? 'Hide CRT' : 'Edit CRT'}
                 </Button>
               )}
               {section === 'completed' && verification && (
@@ -334,6 +334,13 @@ export default function CompassEntryChecklist() {
                 </Button>
               </div>
             </div>
+          )}
+          {section === 'corrections' && item.client_id && editCrtItem?.client_id === item.client_id && (
+            <EditCrtInline
+              item={item}
+              onSaved={() => refetch()}
+              onClose={() => setEditCrtItem(null)}
+            />
           )}
         </CardContent>
       </Card>
@@ -435,13 +442,6 @@ export default function CompassEntryChecklist() {
           )}
         </>
       )}
-
-      <EditCrtDialog
-        item={editCrtItem}
-        open={!!editCrtItem}
-        onOpenChange={(o) => !o && setEditCrtItem(null)}
-        onSaved={() => refetch()}
-      />
     </div>
   );
 }
