@@ -37,6 +37,51 @@ const crtFileName = (ym) => {
   return `CRT_${MONTH_NAMES[m - 1]}_${y}.xlsx`;
 };
 
+// Field defs mirroring getCompassEntryChecklist's COLUMNS (A–S), keyed by the
+// getClientCrtRow row keys. Used to build a fields[] for verification-only
+// clients (corrections/completed with no workbook activity in the selected
+// month) so their cards show actual CRT values — including the Service
+// Outcome Date, which is the EDA completion date.
+const ENTITY_FIELD_DEFS = [
+  { key: 'participant_name', label: 'Client Legal Name' },
+  { key: 'hsid', label: 'COMPASS HSID #' },
+  { key: 'ceis_dea', label: 'CEIS (DEA)' },
+  { key: 'dea_start_date', label: 'DEA Start Date', date: true },
+  { key: 'service_element', label: 'Service Element' },
+  { key: 'service_start_date', label: 'Service Start Date', date: true },
+  { key: 'service_outcome', label: 'Service Outcome' },
+  { key: 'service_outcome_date', label: 'Service Outcome Date', date: true },
+  { key: 'placement_outcome', label: 'Placement Outcome' },
+  { key: 'placement_outcome_date', label: 'Placement Outcome Date', date: true },
+  { key: 'day30_outcome', label: '30 Day Outcome' },
+  { key: 'day30_outcome_date', label: '30 Day Outcome Date', date: true },
+  { key: 'day60_outcome', label: '60 Day Outcome' },
+  { key: 'day60_outcome_date', label: '60 Day Outcome Date', date: true },
+  { key: 'day90_outcome', label: '90 Day Outcome' },
+  { key: 'day90_outcome_date', label: '90 Day Outcome Date', date: true },
+  { key: 'day180_outcome', label: '180 Day Outcome' },
+  { key: 'day180_outcome_date', label: '180 Day Outcome Date', date: true },
+  { key: 'comments', label: 'Comments' },
+];
+const crtDateToIso = (s) => {
+  if (!s) return '';
+  const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) { let y = +m[3]; if (y < 100) y += 2000; return `${y}-${String(+m[1]).padStart(2, '0')}-${String(+m[2]).padStart(2, '0')}`; }
+  const iso = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[0];
+  return s;
+};
+const rowToFields = (row) => {
+  if (!row) return [];
+  const fields = [];
+  for (const def of ENTITY_FIELD_DEFS) {
+    const val = (row[def.key] == null ? '' : String(row[def.key]).trim());
+    if (!val) continue;
+    fields.push({ label: def.label, value: def.date ? (crtDateToIso(val) || val) : val });
+  }
+  return fields;
+};
+
 export default function CompassEntryChecklist() {
   const navigate = useNavigate();
   const [months, setMonths] = useState([currentBillingMonth()]);
@@ -59,6 +104,26 @@ export default function CompassEntryChecklist() {
   const { data: currentUser } = useQuery({
     queryKey: ['compass-checklist-current-user'],
     queryFn: async () => { try { return await base44.auth.me(); } catch { return null; } },
+  });
+
+  // Verification-only clients (corrections/completed with no workbook activity
+  // in the selected month) get an empty fields[] from the checklist scan. Fetch
+  // their entity-derived CRT rows so their cards display actual values.
+  const crtClientIds = useMemo(() => new Set((data?.items || []).filter((it) => it.client_id).map((it) => it.client_id)), [data]);
+  const verificationOnlyIds = useMemo(
+    () => verifications.filter((v) => v.client_id && !crtClientIds.has(v.client_id)).map((v) => v.client_id),
+    [verifications, crtClientIds],
+  );
+  const { data: entityRows = {} } = useQuery({
+    queryKey: ['compass-checklist-entity-rows', verificationOnlyIds.join(',')],
+    queryFn: async () => {
+      const map = {};
+      await Promise.all(verificationOnlyIds.map(async (id) => {
+        try { const r = await base44.functions.invoke('getClientCrtRow', { client_id: id }); if (r.data?.row) map[id] = r.data.row; } catch { /* skip */ }
+      }));
+      return map;
+    },
+    enabled: verificationOnlyIds.length > 0,
   });
 
   const verifyMutation = useMutation({
@@ -166,22 +231,23 @@ export default function CompassEntryChecklist() {
       const vbMonths = Array.isArray(v.billing_months) ? v.billing_months : [];
       const sortedMonths = [...vbMonths].sort();
       const latestMonth = sortedMonths[sortedMonths.length - 1] || '';
+      const erow = entityRows[v.client_id];
       verificationOnly.push({
         client_name: v.client_name || '',
         client_id: v.client_id,
-        hsid: '',
+        hsid: erow?.hsid || '',
         row_number: null,
         assigned_worker_name: '',
         active_months: sortedMonths,
         month: latestMonth,
         workbook: latestMonth ? crtFileName(latestMonth) : '',
-        fields: [],
+        fields: rowToFields(erow),
         verificationOnly: true,
       });
     }
     verificationOnly.sort((a, b) => (a.client_name || '').localeCompare(b.client_name || ''));
     return [...crtItems, ...verificationOnly];
-  }, [data, verifications, monthsKey]);
+  }, [data, verifications, monthsKey, entityRows]);
   const verification = (it) => it.client_id ? verifications.find((v) => v.client_id === it.client_id) : null;
   const isVerified = (it) => { const v = verification(it); return !!(v && v.verified_date && !v.corrections_in_crt); };
   const isCorrections = (it) => { const v = verification(it); return !!(v && v.corrections_in_crt); };
