@@ -139,7 +139,37 @@ export default function CompassEntryChecklist() {
   };
   const removeMonth = (m) => setMonths((prev) => prev.filter((x) => x !== m));
 
-  const items = data?.items || [];
+  // CRT-derived items + verification-only clients. A CompassBillingVerification
+  // record (notes / corrections / verified) is shown for any selected month it
+  // covers, even when the CRT workbook for that month is archived or has no
+  // activity — otherwise staff notes become invisible. The CRT workbook scan
+  // (getCompassEntryChecklist) is the source for the field checklist; the
+  // verification record is the source for the notes/status card.
+  const items = useMemo(() => {
+    const crtItems = data?.items || [];
+    const crtClientIds = new Set(crtItems.filter((it) => it.client_id).map((it) => it.client_id));
+    const verificationOnly = [];
+    for (const v of verifications) {
+      if (!v.client_id || crtClientIds.has(v.client_id)) continue;
+      const vbMonths = Array.isArray(v.billing_months) ? v.billing_months : [];
+      const matching = months.filter((m) => vbMonths.includes(m));
+      if (matching.length === 0) continue;
+      verificationOnly.push({
+        client_name: v.client_name || '',
+        client_id: v.client_id,
+        hsid: '',
+        row_number: null,
+        assigned_worker_name: '',
+        active_months: [...matching].sort(),
+        month: [...matching].sort()[matching.length - 1],
+        workbook: '',
+        fields: [],
+        verificationOnly: true,
+      });
+    }
+    verificationOnly.sort((a, b) => (a.client_name || '').localeCompare(b.client_name || ''));
+    return [...crtItems, ...verificationOnly];
+  }, [data, verifications, monthsKey]);
   const verification = (it) => it.client_id ? verifications.find((v) => v.client_id === it.client_id) : null;
   const isVerified = (it) => { const v = verification(it); return !!(v && v.verified_date && !v.corrections_in_crt); };
   const isCorrections = (it) => { const v = verification(it); return !!(v && v.corrections_in_crt); };
