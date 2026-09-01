@@ -29,14 +29,8 @@ const SHEET_COLUMNS = [
   { key: 'service_outcome_date', label: 'Service Outcome Date', type: 'date', width: 'w-36' },
   { key: 'placement_outcome', label: 'Placement Outcome', type: 'select', options: PLACEMENT_OUTCOME_CODES, optionLabel: outcomeLabel, width: 'w-44' },
   { key: 'placement_outcome_date', label: 'Placement Outcome Date', type: 'date', width: 'w-36' },
-  { key: 'day30_outcome', label: '30 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
-  { key: 'day30_outcome_date', label: '30 Day Outcome Date', type: 'date', width: 'w-36' },
-  { key: 'day60_outcome', label: '60 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
-  { key: 'day60_outcome_date', label: '60 Day Outcome Date', type: 'date', width: 'w-36' },
   { key: 'day90_outcome', label: '90 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
   { key: 'day90_outcome_date', label: '90 Day Outcome Date', type: 'text', readonly: true, derived: true, width: 'w-36' },
-  { key: 'day180_outcome', label: '180 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
-  { key: 'day180_outcome_date', label: '180 Day Outcome Date', type: 'date', width: 'w-36' },
   { key: 'comments', label: 'Comments', type: 'textarea', width: 'w-72' },
   { key: 'eda_completion_date', label: 'EDA Completion Date', type: 'date', width: 'w-36' },
   { key: 'work_exposure', label: 'Work Exposure Y/N', type: 'select', options: YES_NO, width: 'w-32' },
@@ -54,11 +48,9 @@ const ENTITY_KEYS = [
   'day90_outcome', 'comments', 'eda_completion_date', 'work_exposure', 'wage_subsidy',
   'employed_ftpt', 'service_nav_support', 'service_nav_billing_month',
 ];
-// Columns written directly to the CRT (no entity field, no automation).
-const DIRECT_KEYS = [
-  'day30_outcome', 'day30_outcome_date', 'day60_outcome', 'day60_outcome_date',
-  'day180_outcome', 'day180_outcome_date',
-];
+// 30/60/180-day follow-up columns are not shown in this editor; everything
+// here is entity-managed, so save goes through syncCrossRefUpdatesToCrt only.
+const DIRECT_KEYS = [];
 
 const normHsid = (s) => String(s || '').replace(/[^0-9a-z]/gi, '').toLowerCase();
 const normName = (s) => String(s || '').toLowerCase().replace(/[,.\s]+/g, ' ').trim();
