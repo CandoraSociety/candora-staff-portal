@@ -4,8 +4,7 @@ import {
   getGraphToken, getPathwaysFolder, getActiveCrtWorkbook
 } from '../../shared/crtWorkbook.ts';
 import { excelSerial, patchWithRetry, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
-import { syncClientsIntoWorkbook } from '../../shared/crtSync.ts';
-import { syncNarrativeReportIntoWorkbook } from '../../shared/narrativeReport.ts';
+import { syncAllOpenWorkbooks } from '../../shared/crtSync.ts';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -147,25 +146,8 @@ export default async function(req: Request): Promise<Response> {
       created = true;
     }
 
-    // 6. Sync ONLY the current month's workbook (month-bound) — populates the
-    // new file. Syncing just this one workbook (instead of all open months)
-    // keeps the rollover well under the function timeout. The other open
-    // months stay fresh via the "CRT Sync on Client Update" entity automation
-    // that fires on every client edit. If this run is re-invoked later (the
-    // daily check is idempotent), it re-syncs the current month — so a failed
-    // first pass self-heals on the next daily run instead of leaving the
-    // month empty.
-    let sync;
-    try {
-      const allClients = await base44.asServiceRole.entities.Client.list('-created_date', 5000);
-      const r = await syncClientsIntoWorkbook(accessToken, newFile, allClients);
-      let narrative = null;
-      try { narrative = await syncNarrativeReportIntoWorkbook(accessToken, newFile); }
-      catch (e) { narrative = { status: 'error', error: e.message }; }
-      sync = { files: [{ file: newFile.name, status: 'synced', ...r, narrative }], totalSynced: 1 };
-    } catch (e) {
-      sync = { files: [{ file: newFile.name, status: 'error', error: e.message }], totalSynced: 0 };
-    }
+    // 6. Sync ALL open workbooks (month-bound) — populates the new file + refreshes others
+    const sync = await syncAllOpenWorkbooks(base44, accessToken);
 
     return Response.json({
       status: 'success',
