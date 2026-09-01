@@ -154,6 +154,10 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
         if (item.client_name) v.participant_name = item.client_name;
         if (item.hsid) v.hsid = item.hsid;
       }
+      // EDA Completion Date (column T) only populates for WD clients — per the
+      // actual CRT convention, CEIS/DEA clients leave it blank. Force it empty
+      // when the service element is CEIS so the editor can't write it.
+      if (v.service_element === 'CEIS') v.eda_completion_date = '';
       if (!cancelled) {
         setValues(v);
         setLoading(false);
@@ -179,6 +183,11 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
     }
     if (key === 'eda_completion_date' && next.service_outcome === 'Complete') {
       next.service_outcome_date = val;
+    }
+    // EDA Completion Date only applies to WD clients. Clear it whenever the
+    // service element is set to CEIS, per the actual CRT convention.
+    if (key === 'service_element' && val === 'CEIS') {
+      next.eda_completion_date = '';
     }
     return next;
   });
@@ -219,7 +228,7 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
 
   const renderCell = (col) => {
     const val = values[col.key] || '';
-    const disabled = saving || col.readonly;
+    const disabled = saving || col.readonly || (col.key === 'eda_completion_date' && values.service_element === 'CEIS');
     const base = 'w-full bg-transparent text-xs px-1.5 py-1 outline-none border-0 focus:ring-1 focus:ring-blue-400 rounded-sm';
 
     if (col.readonly) {

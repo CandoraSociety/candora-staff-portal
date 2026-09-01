@@ -463,7 +463,7 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     comments,                                          // S: Comments
-    gate(client.eda_completion_date) ? formatDateForCrt(client.eda_completion_date) : '',  // T: EDA Completion Date
+    (isWd && gate(client.eda_completion_date)) ? formatDateForCrt(client.eda_completion_date) : '',  // T: EDA Completion Date (WD only — CEIS/DEA leaves this blank, per the actual CRT convention)
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
