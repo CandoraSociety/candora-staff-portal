@@ -130,7 +130,7 @@ function applyCrossRefToClient(client, cf) {
   }
 
   const d90 = String(cf.day90_outcome || '').trim();
-  if (d90 && d90 !== 'P') u.followup_90day_status = d90;
+  if (d90) u.followup_90day_status = d90;
   // 90 Day Outcome Date — written back to the client file so the next CRT sync
   // surfaces it in column P. Only applies when a 90-day outcome (status) is
   // also set, since column P's derivation keys off followup_90day_status.

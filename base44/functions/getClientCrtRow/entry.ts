@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { mapClientToCrtRow } from '../../shared/crtWorkbook.ts';
+import { mapClientToCrtRow, formatDateForCrt } from '../../shared/crtWorkbook.ts';
 
 // Returns the 25-column CRT Client Data row for a single client, derived from
 // the live Client entity (the source of truth) using the same mapping the CRT
@@ -33,6 +33,10 @@ export default async function(req: Request): Promise<Response> {
     const row = mapClientToCrtRow(client, null); // null monthEnd = no month gating
     const obj: Record<string, string> = {};
     KEYS.forEach((k, i) => { obj[k] = row[i] != null ? String(row[i]) : ''; });
+    // eda_completion_date is an entity field, not CRT column T (which is the
+    // WD placement outcome date). Override with the actual entity value so the
+    // inline editor's auto-populate uses the correct date.
+    obj.eda_completion_date = client.eda_completion_date ? formatDateForCrt(client.eda_completion_date) : '';
 
     return Response.json({ status: 'success', row: obj });
   } catch (error) {

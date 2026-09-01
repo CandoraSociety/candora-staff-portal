@@ -125,22 +125,26 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
       } catch { /* fall back below */ }
       if (cancelled) return;
 
-      // When the monthly workbook is archived/missing or has no row for this
-      // client, derive the current 25-column row from the live Client entity
-      // (the source of truth) so the editor always shows current values.
-      if (!row && item.client_id) {
+      // Always fetch the entity-derived row — it carries the correct
+      // eda_completion_date (an entity field, NOT CRT column T, which is the
+      // WD placement outcome date) so the auto-populate (service_outcome =
+      // Complete → service_outcome_date mirrors EDA completion) works.
+      let entityRow = null;
+      if (item.client_id) {
         try {
           const er = await base44.functions.invoke('getClientCrtRow', { client_id: item.client_id });
-          if (er.data?.row) row = er.data.row;
+          if (er.data?.row) entityRow = er.data.row;
         } catch { /* ignore */ }
         if (cancelled) return;
       }
+      if (!row && entityRow) row = entityRow;
 
       const v = {};
       for (const c of SHEET_COLUMNS) v[c.key] = '';
       if (row) {
         for (const c of SHEET_COLUMNS) {
-          v[c.key] = c.type === 'date' ? toDateInput(row[c.key] || '') : (row[c.key] || '');
+          const src = (c.key === 'eda_completion_date' && entityRow) ? entityRow : row;
+          v[c.key] = c.type === 'date' ? toDateInput(src[c.key] || '') : (src[c.key] || '');
         }
       } else {
         for (const f of (item.fields || [])) {
