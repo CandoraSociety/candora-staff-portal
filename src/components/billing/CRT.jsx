@@ -23,6 +23,8 @@ export default function CRT({ clients = [] }) {
   const [viewFileId, setViewFileId] = useState(null);
   // 1-based Excel row to deep-link the embed to (find-a-client). null = no jump.
   const [scrollToRow, setScrollToRow] = useState(null);
+  // Applying the frozen-pane (rows 1–13) to the viewed workbook's Client Data sheet.
+  const [freezePaneApplying, setFreezePaneApplying] = useState(false);
 
   // Fetch CRT workbook status
   const { data: status, isLoading, refetch } = useQuery({
@@ -55,7 +57,7 @@ export default function CRT({ clients = [] }) {
   // the active workbook's embed (from status) is used directly. The query is
   // gated on the narrative sync finishing so the iframe never renders a
   // pre-sync (stale) snapshot of the Narrative Report sheet.
-  const { data: previewData, isLoading: previewLoading } = useQuery({
+  const { data: previewData, isLoading: previewLoading, refetch: refetchPreview } = useQuery({
     queryKey: ['crt-file-preview', viewFileId],
     queryFn: async () => {
       const res = await base44.functions.invoke('getCrtFilePreview', { fileId: viewFileId });
@@ -207,6 +209,39 @@ export default function CRT({ clients = [] }) {
   // "Archived" = truly frozen (Mark Complete was clicked). A prior month that's
   // still open is NOT archived — it continues to sync with the portal.
   const isViewingArchive = isViewingNonActive && viewedFile?.crtStatus === 'closed';
+
+  // Apply a frozen pane (top 13 rows) to the viewed workbook's Client Data
+  // sheet so the column headers stay visible while scrolling clients. Writes
+  // directly into the worksheet XML and PUTs the file back (Graph has no
+  // freeze-pane endpoint), then refreshes the embed so the freeze renders.
+  const handleApplyFreezePanes = async () => {
+    if (!viewedFile?.id) return;
+    setFreezePaneApplying(true);
+    try {
+      const res = await base44.functions.invoke('setCrtFreezePanes', {
+        file_id: viewedFile.id,
+        file_name: viewedFile.name,
+        rows: 13,
+      });
+      const data = res.data;
+      if (data.status === 'success') {
+        const ok = (data.applied || []).length;
+        const errs = (data.errors || []).length;
+        if (errs) toast.error(`Freeze pane applied to ${ok} workbook(s), ${errs} failed`);
+        else toast.success(`Freeze pane applied to ${ok} workbook(s)`);
+        refetch();
+        refetchPreview();
+      } else if (data.status === 'no_workbook') {
+        toast.error('No CRT workbook found to update');
+      } else {
+        toast.error(data.error || 'Could not apply freeze pane');
+      }
+    } catch (err) {
+      toast.error('Freeze pane failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setFreezePaneApplying(false);
+    }
+  };
 
   // Alphabetical list of client names in the viewed workbook, each with its
   // Excel row — drives the find-a-client selector.
@@ -376,6 +411,18 @@ export default function CRT({ clients = [] }) {
                     </a>
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleApplyFreezePanes}
+                  disabled={freezePaneApplying || !viewedFile}
+                  title="Freeze rows 1–13 on the Client Data sheet so the headers stay visible while scrolling"
+                >
+                  {freezePaneApplying
+                    ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    : <Lock className="h-4 w-4 mr-2" />}
+                  Freeze rows 1–13
+                </Button>
               </div>
             </div>
           </CardHeader>
