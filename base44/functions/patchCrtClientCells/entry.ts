@@ -20,7 +20,13 @@ const CELL_COL = {
   day60_outcome_date: 13,
   day180_outcome: 16,
   day180_outcome_date: 17,
+  service_nav_support: 23,          // X: Service Navigation Support Y/N
+  service_nav_billing_month: 24,    // Y: Service Nav Billing Month (MM/DD/YY)
 };
+
+// Keys whose value is a date that must be formatted as MM/DD/YY for the CRT
+// (the *_date keys plus the billing-month column, which is a date, not text).
+const DATE_KEYS = new Set(['day30_outcome_date', 'day60_outcome_date', 'day180_outcome_date', 'service_nav_billing_month']);
 
 const NORM = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
@@ -41,7 +47,7 @@ export default async function(req: Request): Promise<Response> {
       const col = CELL_COL[key];
       if (col === undefined) continue;
       const v = String(raw ?? '').trim();
-      writeVals[col] = key.endsWith('_date') && v ? (formatDateForCrt(v) || v) : v;
+      writeVals[col] = (key.endsWith('_date') || DATE_KEYS.has(key)) && v ? (formatDateForCrt(v) || v) : v;
     }
 
     const accessToken = await getGraphToken();

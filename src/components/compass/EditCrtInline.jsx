@@ -46,11 +46,15 @@ const ENTITY_KEYS = [
   'ceis_dea', 'dea_start_date', 'service_element', 'service_start_date',
   'service_outcome', 'service_outcome_date', 'placement_outcome', 'placement_outcome_date',
   'day90_outcome', 'comments', 'eda_completion_date', 'work_exposure', 'wage_subsidy',
-  'employed_ftpt', 'service_nav_support', 'service_nav_billing_month',
+  'employed_ftpt',
 ];
-// 30/60/180-day follow-up columns are not shown in this editor; everything
-// here is entity-managed, so save goes through syncCrossRefUpdatesToCrt only.
-const DIRECT_KEYS = [];
+// Columns with no corresponding Client entity field — they're auto-derived by
+// the CRT sync, so the entity-flow reverse-map (applyCrossRefToClient) drops
+// them. Write them DIRECTLY to the CRT cell so a manual edit populates
+// immediately. Column X persists when the client's 90-day-derived value is
+// blank; column Y is force-written by the next portal sync, so edit-then-close
+// the month to freeze a manual Y.
+const DIRECT_KEYS = ['service_nav_support', 'service_nav_billing_month'];
 
 const normHsid = (s) => String(s || '').replace(/[^0-9a-z]/gi, '').toLowerCase();
 const normName = (s) => String(s || '').toLowerCase().replace(/[,.\s]+/g, ' ').trim();
