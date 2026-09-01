@@ -1,44 +1,49 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  PLACEMENT_OUTCOME_CODES, FOLLOWUP_90DAY_CODES, outcomeLabel,
+} from '@/lib/crtCodes';
 
-// All 25 CRT Client Data sheet columns in actual sheet order (A–Y). This is
-// the "actual CRT" form. Name + HSID are read-only identity; the 90 Day Outcome
-// DATE is auto-calculated by the CRT sync (read-only here). Everything else is
-// editable. On save, entity-managed columns go through syncCrossRefUpdatesToCrt
-// (updates the client file → re-runs the CRT sync + billing tally automations);
-// the 30/60/180-day outcome columns (no entity field, so no automation) are
-// written directly to the CRT via patchCrtClientCells.
+// All 25 CRT Client Data sheet columns in actual sheet order (A–Y), mirroring
+// the real workbook grid. Each column carries its input type and (where
+// applicable) the dropdown option set the real CRT enforces, so the inline
+// editor looks and behaves like editing the sheet directly. The form renders
+// as one horizontally-scrollable row so all columns stay on a single line.
+
+const YES_NO = ['Yes', 'No'];
+const SERVICE_ELEMENT_OPTIONS = ['CEIS', 'WD'];
+const SERVICE_OUTCOME_OPTIONS = ['In Progress', 'Complete', 'Cancelled', 'Incomplete'];
+const FTPT_OPTIONS = ['FT', 'PT'];
+
 const SHEET_COLUMNS = [
-  { key: 'participant_name', label: 'Client Legal Name', readonly: true },
-  { key: 'hsid', label: 'COMPASS HSID #', readonly: true },
-  { key: 'ceis_dea', label: 'CEIS (DEA)' },
-  { key: 'dea_start_date', label: 'DEA Start Date', date: true },
-  { key: 'service_element', label: 'Service Element' },
-  { key: 'service_start_date', label: 'Service Start Date', date: true },
-  { key: 'service_outcome', label: 'Service Outcome' },
-  { key: 'service_outcome_date', label: 'Service Outcome Date', date: true },
-  { key: 'placement_outcome', label: 'Placement Outcome' },
-  { key: 'placement_outcome_date', label: 'Placement Outcome Date', date: true },
-  { key: 'day30_outcome', label: '30 Day Outcome' },
-  { key: 'day30_outcome_date', label: '30 Day Outcome Date', date: true },
-  { key: 'day60_outcome', label: '60 Day Outcome' },
-  { key: 'day60_outcome_date', label: '60 Day Outcome Date', date: true },
-  { key: 'day90_outcome', label: '90 Day Outcome' },
-  { key: 'day90_outcome_date', label: '90 Day Outcome Date', readonly: true, derived: true },
-  { key: 'day180_outcome', label: '180 Day Outcome' },
-  { key: 'day180_outcome_date', label: '180 Day Outcome Date', date: true },
-  { key: 'comments', label: 'Comments', textarea: true },
-  { key: 'eda_completion_date', label: 'EDA Completion Date', date: true },
-  { key: 'work_exposure', label: 'Work Exposure Y/N' },
-  { key: 'wage_subsidy', label: 'Wage Subsidy Y/N' },
-  { key: 'employed_ftpt', label: 'Employed FT/PT' },
-  { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
-  { key: 'service_nav_billing_month', label: 'Service Nav Billing Month' },
+  { key: 'participant_name', label: 'Client Legal Name', type: 'text', readonly: true, sticky: true, width: 'w-44' },
+  { key: 'hsid', label: 'COMPASS HSID #', type: 'text', readonly: true, sticky: true, width: 'w-28' },
+  { key: 'ceis_dea', label: 'CEIS (DEA)', type: 'select', options: YES_NO, width: 'w-24' },
+  { key: 'dea_start_date', label: 'DEA Start Date', type: 'date', width: 'w-36' },
+  { key: 'service_element', label: 'Service Element', type: 'select', options: SERVICE_ELEMENT_OPTIONS, width: 'w-32' },
+  { key: 'service_start_date', label: 'Service Start Date', type: 'date', width: 'w-36' },
+  { key: 'service_outcome', label: 'Service Outcome', type: 'select', options: SERVICE_OUTCOME_OPTIONS, width: 'w-36' },
+  { key: 'service_outcome_date', label: 'Service Outcome Date', type: 'date', width: 'w-36' },
+  { key: 'placement_outcome', label: 'Placement Outcome', type: 'select', options: PLACEMENT_OUTCOME_CODES, optionLabel: outcomeLabel, width: 'w-44' },
+  { key: 'placement_outcome_date', label: 'Placement Outcome Date', type: 'date', width: 'w-36' },
+  { key: 'day30_outcome', label: '30 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
+  { key: 'day30_outcome_date', label: '30 Day Outcome Date', type: 'date', width: 'w-36' },
+  { key: 'day60_outcome', label: '60 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
+  { key: 'day60_outcome_date', label: '60 Day Outcome Date', type: 'date', width: 'w-36' },
+  { key: 'day90_outcome', label: '90 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
+  { key: 'day90_outcome_date', label: '90 Day Outcome Date', type: 'text', readonly: true, derived: true, width: 'w-36' },
+  { key: 'day180_outcome', label: '180 Day Outcome', type: 'select', options: FOLLOWUP_90DAY_CODES, optionLabel: outcomeLabel, width: 'w-44' },
+  { key: 'day180_outcome_date', label: '180 Day Outcome Date', type: 'date', width: 'w-36' },
+  { key: 'comments', label: 'Comments', type: 'textarea', width: 'w-72' },
+  { key: 'eda_completion_date', label: 'EDA Completion Date', type: 'date', width: 'w-36' },
+  { key: 'work_exposure', label: 'Work Exposure Y/N', type: 'select', options: YES_NO, width: 'w-32' },
+  { key: 'wage_subsidy', label: 'Wage Subsidy Y/N', type: 'select', options: YES_NO, width: 'w-32' },
+  { key: 'employed_ftpt', label: 'Employed FT/PT', type: 'select', options: FTPT_OPTIONS, width: 'w-28' },
+  { key: 'service_nav_support', label: 'Service Nav Support Y/N', type: 'select', options: YES_NO, width: 'w-36' },
+  { key: 'service_nav_billing_month', label: 'Service Nav Billing Month', type: 'month', width: 'w-36' },
 ];
 
 // Columns pushed through the entity flow (syncCrossRefUpdatesToCrt) — these
@@ -128,12 +133,12 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
       for (const c of SHEET_COLUMNS) v[c.key] = '';
       if (row) {
         for (const c of SHEET_COLUMNS) {
-          v[c.key] = c.date ? toDateInput(row[c.key] || '') : (row[c.key] || '');
+          v[c.key] = c.type === 'date' ? toDateInput(row[c.key] || '') : (row[c.key] || '');
         }
       } else {
         for (const f of (item.fields || [])) {
-        const key = CHECKLIST_LABEL_TO_KEY[f.label];
-        if (key) v[key] = f.label.toLowerCase().includes('date') ? toDateInput(f.value) : f.value;
+          const key = CHECKLIST_LABEL_TO_KEY[f.label];
+          if (key) v[key] = f.label.toLowerCase().includes('date') ? toDateInput(f.value) : f.value;
         }
         if (item.client_name) v.participant_name = item.client_name;
         if (item.hsid) v.hsid = item.hsid;
@@ -162,7 +167,6 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
       });
       if (syncRes.data?.error) throw new Error(syncRes.data.error);
 
-      // Only patch when there are direct (non-entity) values to write.
       const hasDirect = Object.values(cells).some((v) => v !== '');
       if (hasDirect) {
         const patchRes = await base44.functions.invoke('patchCrtClientCells', {
@@ -183,6 +187,63 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
     }
   };
 
+  const renderCell = (col) => {
+    const val = values[col.key] || '';
+    const disabled = saving || col.readonly;
+    const base = 'w-full bg-transparent text-xs px-1.5 py-1 outline-none border-0 focus:ring-1 focus:ring-blue-400 rounded-sm';
+
+    if (col.readonly) {
+      return (
+        <input
+          type="text"
+          value={val}
+          disabled
+          placeholder="—"
+          className="w-full bg-slate-100 text-slate-500 text-xs px-1.5 py-1 border-0 rounded-sm cursor-default"
+        />
+      );
+    }
+    if (col.type === 'select') {
+      return (
+        <select
+          value={val}
+          onChange={(e) => handleChange(col.key, e.target.value)}
+          disabled={disabled}
+          className={`${base} ${col.readonly ? 'bg-slate-100 text-slate-500' : 'bg-white'} cursor-pointer`}
+        >
+          <option value="">—</option>
+          {col.options.map((opt) => (
+            <option key={opt} value={opt}>
+              {col.optionLabel ? col.optionLabel(opt) : opt}
+            </option>
+          ))}
+        </select>
+      );
+    }
+    if (col.type === 'textarea') {
+      return (
+        <textarea
+          value={val}
+          onChange={(e) => handleChange(col.key, e.target.value)}
+          disabled={disabled}
+          rows={2}
+          placeholder="—"
+          className="w-full bg-white text-xs px-1.5 py-1 border-0 outline-none focus:ring-1 focus:ring-blue-400 rounded-sm resize-y min-w-[16rem]"
+        />
+      );
+    }
+    return (
+      <input
+        type={col.type === 'date' ? 'date' : col.type === 'month' ? 'month' : 'text'}
+        value={val}
+        onChange={(e) => handleChange(col.key, e.target.value)}
+        disabled={disabled}
+        placeholder="—"
+        className={`${base} bg-white`}
+      />
+    );
+  };
+
   return (
     <div className="border border-amber-300 bg-amber-50/60 rounded-lg p-3 space-y-3 mt-1">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -194,8 +255,9 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
         </Button>
       </div>
       <p className="text-xs text-amber-700">
-        Edit any field. Saving writes entity-managed columns back into the client file (re-runs the CRT sync + billing
-        tallies) and writes the 30/60/180-day follow-up columns directly to the CRT.
+        Edit any field — this row mirrors the actual CRT Client Data sheet. Entity-managed columns save back into the
+        client file (re-running the CRT sync + billing tallies); the 30/60/180-day follow-up columns write directly to
+        the CRT. Scroll horizontally to reach all 25 columns.
       </p>
 
       {loading ? (
@@ -204,46 +266,35 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-2.5">
-            {SHEET_COLUMNS.map((c) => {
-              const val = values[c.key] || '';
-              const isDate = c.date;
-              const displayVal = c.readonly && c.derived && val && !isDate ? val : val;
-              return (
-                <div key={c.key} className={`space-y-1 ${c.textarea ? 'sm:col-span-2 lg:col-span-3' : ''}`}>
-                  <label className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
-                    {c.label}
-                    {c.derived && <span className="text-slate-400 font-normal">(calculated)</span>}
-                  </label>
-                  {c.textarea ? (
-                    <Textarea
-                      value={displayVal}
-                      onChange={(e) => handleChange(c.key, e.target.value)}
-                      disabled={saving}
-                      rows={4}
-                      placeholder="—"
-                      className="text-sm resize-y bg-white"
-                    />
-                  ) : c.readonly ? (
-                    <Input
-                      value={displayVal}
-                      disabled
-                      placeholder="—"
-                      className="h-8 text-sm bg-slate-100 text-slate-500"
-                    />
-                  ) : (
-                    <Input
-                      type={isDate ? 'date' : 'text'}
-                      value={displayVal}
-                      onChange={(e) => handleChange(c.key, e.target.value)}
-                      disabled={saving}
-                      placeholder={isDate ? '' : '—'}
-                      className="h-8 text-sm bg-white"
-                    />
-                  )}
-                </div>
-              );
-            })}
+          <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
+            <div className="overflow-x-auto">
+              <table className="border-collapse">
+                <thead>
+                  <tr className="bg-slate-800 text-white">
+                    {SHEET_COLUMNS.map((c) => (
+                      <th
+                        key={c.key}
+                        className={`text-left py-1.5 px-2 font-semibold whitespace-nowrap text-[11px] uppercase tracking-wide border-r border-slate-700 ${c.width || ''} ${c.sticky ? 'sticky left-0 z-20 bg-slate-800' : ''}`}
+                      >
+                        {c.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-white">
+                    {SHEET_COLUMNS.map((c) => (
+                      <td
+                        key={c.key}
+                        className={`border-r border-slate-200 align-top px-0 py-0 ${c.width || ''} ${c.sticky ? 'sticky left-0 z-10 bg-white' : ''}`}
+                      >
+                        {renderCell(c)}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <div className="flex justify-end gap-2 pt-1">
             <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
