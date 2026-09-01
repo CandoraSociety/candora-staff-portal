@@ -5,12 +5,12 @@ import {
 } from '../../shared/crtWorkbook.ts';
 
 // Reads the CRT Client Data sheet for the selected billing month(s) and returns
-// every client who had activity in any selected month — recognized by ANY date
-// column in their row falling within that month. Results are de-duplicated: a
-// client active in multiple months appears once, with the months they were
-// active listed and their fields taken from the latest active month's snapshot
-// (most current). Filled fields (columns A–R, plus S = Comments) are returned
-// as a checklist of what should be reflected in Compass.
+// EVERY client present in that month's workbook — the full billing roster to
+// verify against Compass, not just clients with a dated change that month.
+// Results are de-duplicated: a client in multiple months appears once, with the
+// months they appear in listed and their fields taken from the latest month's
+// snapshot (most current). Filled fields (columns A–R, plus S = Comments) are
+// returned as a checklist of what should be reflected in Compass.
 //
 // Columns T–Y (Placement Outcome Date mirror, Work Exposure, Wage Subsidy,
 // Employed FT/PT, Service Navigation, Service Nav Billing Month) are excluded
@@ -109,13 +109,11 @@ export default async function(req: Request): Promise<Response> {
         const name = String(row[0] || '').trim();
         if (!name) continue;
 
-        // Activity in this month = any date column parses to a date in `bm`.
-        let active = false;
-        for (const di of DATE_COL_INDICES) {
-          const d = parseCrtDate(row[di]);
-          if (d && d.slice(0, 7) === bm) { active = true; break; }
-        }
-        if (!active) continue;
+        // Include EVERY client present in this month's CRT Client Data sheet.
+        // The verification checklist must cover the full billing roster for the
+        // month — not only clients with a dated change that month — so active
+        // clients whose service started in a prior month (and have no new dated
+        // event this month) are still surfaced for Compass verification.
         monthActive++;
 
         const hsid = String(row[1] || '').trim();

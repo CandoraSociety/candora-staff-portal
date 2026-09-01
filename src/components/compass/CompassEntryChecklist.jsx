@@ -408,7 +408,7 @@ export default function CompassEntryChecklist() {
           </Button>
         </div>
         <p className="text-xs text-slate-500 max-w-md">
-          Each card lists the filled Client Data fields for a client who had activity in any selected month — use it as a checklist for what to reflect in Compass. A client active in multiple months appears once.
+          Each card lists the filled Client Data fields for every client in the selected month's CRT workbook — use it as a checklist for what to reflect in Compass. A client in multiple months appears once.
         </p>
       </div>
 
