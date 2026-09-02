@@ -1,33 +1,27 @@
 import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS,
-  mapClientToCrtRow, crtMonthEnd, listCrtFiles, parseCrtDate
+  mapClientToCrtRow, listCrtFiles, parseCrtDate
 } from './crtWorkbook.ts';
 import { syncNarrativeReportIntoWorkbook } from './narrativeReport.ts';
 
-// Sync a single workbook's Client Data sheet with the given portal clients,
-// month-bound: only clients whose service_start_date is on or before the
-// workbook's month-end are included, and date fields dated after month-end are
-// blanked. Updates rows in place (does NOT clear) — callers must ensure the
-// file already holds the correct client set (creation clears first to avoid
-// carrying future-started clients over from the copied source).
+// Sync a single workbook's Client Data sheet with the given portal clients.
+// NOT month-bound: every open workbook contains ALL current client
+// information — clients are not filtered by their program start date relative
+// to the workbook's month, and date fields are never blanked for being dated
+// after the workbook's month (monthEnd is intentionally null). Updates rows in
+// place (does NOT clear) — callers must ensure the file already holds the
+// correct client set (creation clears first to avoid stale copied rows).
 export async function syncClientsIntoWorkbook(accessToken, workbook, allClients) {
-  const monthEnd = crtMonthEnd(workbook.name);
   // Eligibility: only clients assigned to a program stream (DEA or WD) with a
-  // program start date set appear on the CRT. They first appear on the month
-  // containing their program start date (service_start_date), then on every
-  // subsequent open month. Casual, rejected, and not-yet-assigned clients are
-  // excluded. Clients whose program start date falls AFTER this workbook's
-  // month are excluded.
+  // program start date set appear on the CRT — on every open month, regardless
+  // of when they started. Casual, rejected, and not-yet-assigned clients are
+  // excluded.
   const crtClients = allClients.filter(c => {
     // A COMPASS HSID is NOT required to appear on the CRT — the field stays
     // blank until entered in the portal, then the next sync writes it in.
     // Only a program stream (DEA/WD) + program start date are required.
     if (!((c.service_type === 'pathways' || c.service_type === 'direct_to_employment') &&
           c.service_start_date)) return false;
-    if (monthEnd) {
-      const sd = new Date(c.service_start_date);
-      if (!isNaN(sd.getTime()) && sd > monthEnd) return false;
-    }
     return true;
   });
 
@@ -112,7 +106,7 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
   const matchedRows = new Set();
   for (const client of crtClients) {
     const hsid = client.compass_hsid ? String(client.compass_hsid).trim() : '';
-    const portalRow = mapClientToCrtRow(client, monthEnd);
+    const portalRow = mapClientToCrtRow(client, null);
     let rowIdx = -1;
     if (hsid && hsidToRowIndex[hsid] !== undefined) {
       rowIdx = hsidToRowIndex[hsid];
@@ -284,14 +278,10 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
   const results = [];
   for (const f of files) {
     if (closedNames.has(f.name)) { results.push({ file: f.name, status: 'skipped_closed' }); continue; }
-    const monthEnd = crtMonthEnd(f.name);
-    // Eligibility — same as the batch sync
+    // Eligibility — same as the batch sync (NOT month-bound: all current info
+    // appears on every open workbook)
     if (!((client.service_type === 'pathways' || client.service_type === 'direct_to_employment') && client.service_start_date)) {
       results.push({ file: f.name, status: 'skipped_ineligible' }); continue;
-    }
-    if (monthEnd) {
-      const sd = new Date(client.service_start_date);
-      if (!isNaN(sd.getTime()) && sd > monthEnd) { results.push({ file: f.name, status: 'skipped_future_start' }); continue; }
     }
 
     try {
@@ -325,7 +315,7 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
         }
       }
 
-      const portalRow = mapClientToCrtRow(client, monthEnd);
+      const portalRow = mapClientToCrtRow(client, null);
       let rowToWrite = portalRow;
       let targetRow1;
       if (rowIdx >= 0) {
