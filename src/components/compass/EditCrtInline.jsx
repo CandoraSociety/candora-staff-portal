@@ -168,26 +168,26 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
 
   const handleChange = (key, val) => setValues((prev) => {
     const next = { ...prev, [key]: val };
-    // Auto-populate derived fields, mirroring the actual CRT derivation
-    // (mapClientToCrtRow) so the saved row is correct without manual entry.
-    // When Service Outcome is marked Complete, the Service Outcome Date mirrors
-    // the EDA Completion Date. When marked Cancelled/Incomplete, both the date
-    // and EDA Completion clear (no completion to record).
-    if (key === 'service_outcome') {
-      if (val === 'Complete') {
-        if (next.eda_completion_date) next.service_outcome_date = next.eda_completion_date;
-      } else if (val === 'Cancelled' || val === 'Incomplete') {
-        // Clear EDA completion (not applicable), but KEEP the Service Outcome
-        // Date — for Cancelled/Incomplete it's the exit/outcome date, stored to
-        // completion_date and shown in CRT column H.
+    const EMPLOYED = ['E-RF', 'E-UF', 'SE'];
+    // EDA Completion Date (Column T) mirrors the Placement Outcome Date when
+    // the placement outcome is employed (E-RF, E-UF, or SE) for WD clients.
+    if (key === 'placement_outcome') {
+      if (EMPLOYED.includes(val) && next.placement_outcome_date) {
+        next.eda_completion_date = next.placement_outcome_date;
+      } else {
         next.eda_completion_date = '';
       }
     }
-    if (key === 'eda_completion_date' && next.service_outcome === 'Complete') {
-      next.service_outcome_date = val;
+    if (key === 'placement_outcome_date' && EMPLOYED.includes(next.placement_outcome)) {
+      next.eda_completion_date = val;
+    }
+    // Clear EDA Completion when service outcome is Cancelled/Incomplete (no
+    // employed placement to mirror).
+    if (key === 'service_outcome' && (val === 'Cancelled' || val === 'Incomplete')) {
+      next.eda_completion_date = '';
     }
     // EDA Completion Date only applies to WD clients. Clear it whenever the
-    // service element is set to CEIS, per the actual CRT convention.
+    // service element is set to CEIS.
     if (key === 'service_element' && val === 'CEIS') {
       next.eda_completion_date = '';
     }

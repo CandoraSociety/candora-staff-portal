@@ -467,7 +467,9 @@ export function mapClientToCrtRow(client, monthEnd) {
     '',                                                // Q: 180 Day Outcome
     '',                                                // R: 180 Day Outcome Date
     comments,                                          // S: Comments
-    (isWd && gate(client.eda_completion_date)) ? formatDateForCrt(client.eda_completion_date) : '',  // T: EDA Completion Date (WD only — CEIS/DEA leaves this blank, per the actual CRT convention)
+    // Column T mirrors the Placement Outcome Date (column J) when the placement
+    // outcome is employed (E-RF, E-UF, or SE) for WD clients. Otherwise blank.
+    (isWd && EMPLOYED_OUTCOMES.includes(placementOutcome) && placementOK) ? formatDateForCrt(client.post_completion_employment_date) : '',  // T: EDA Completion Date
     workExposure,                                      // U: Work Exposure Y/N
     wageSubsidy,                                       // V: Wage subsidy accessed Y/N
     employedFtPt,                                      // W: Employed FT/PT
