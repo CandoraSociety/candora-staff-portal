@@ -21,7 +21,7 @@
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell, colIndex
 } from './invoiceTracker.ts';
-import { computeMonthBillingCounts, computeMonthWorkExposureTotal } from './crtBillingCounts.ts';
+import { computeMonthBillingCounts, computeMonthWorkExposureTotal, computeMonthEmploymentSupportsTotal } from './crtBillingCounts.ts';
 import { crtMonthEnd } from './crtWorkbook.ts';
 
 // Retry a Graph API call that may hit a transient 504 (gateway timeout).
@@ -67,7 +67,8 @@ const COUNT_COLUMNS = {
 
 // Dollar-value columns (written directly — no separate formula column).
 const DOLLAR_COLUMNS = {
-  paidWorkExposure: 'CJ', // Paid Work Exposure (running $ total)
+  paidWorkExposure: 'CJ',     // Paid Work Exposure (running $ total)
+  employmentSupports: 'CI',   // Employment Supports (running $ total — reimbursable amount, tax excluded)
 };
 
 const COUNT_INDICES = Object.fromEntries(
@@ -197,7 +198,9 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     for (const [dk, col] of Object.entries(DOLLAR_COLUMNS)) {
       const dollarExpected = isFuture ? 0 : (dk === 'paidWorkExposure'
         ? computeMonthWorkExposureTotal(financialRecords, key.year, key.month)
-        : 0);
+        : dk === 'employmentSupports'
+          ? computeMonthEmploymentSupportsTotal(financialRecords, key.year, key.month)
+          : 0);
       const dollarExisting = row[DOLLAR_INDICES[dk]];
       const dollarExistingNum = (dollarExisting == null || dollarExisting === '') ? 0 : Number(dollarExisting);
       if (dollarExistingNum === dollarExpected) { dollarSkipped++; continue; }
