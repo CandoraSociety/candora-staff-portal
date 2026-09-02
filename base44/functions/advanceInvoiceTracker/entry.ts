@@ -10,7 +10,9 @@ import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 //
 //   • Column B — sequential Invoice Number, starting at 1 for June 2025 and
 //     incrementing by 1 for each reported month through the current month.
-//     April–July 2026 carry a one-time ".1" suffix (11.1, 12.1, 13.1, 14.1).
+//     April–July 2026 carry a ".2" suffix (11.2, 12.2, 13.2, 14.2) — their
+//     resubmitted invoice numbers. A row's number only populates once the
+//     workbook's month reaches that row's month (future rows stay blank).
 //     Written to EVERY month's workbook (not just the active one) so each
 //     archived workbook bundled into its invoice package carries its number.
 //
@@ -37,8 +39,8 @@ const B_START = { year: 2025, month: 5 };      // June 2025  — invoice #1 / co
 const COL_B = 'B';
 const COL_D = 'D';
 
-// One-time, 2026 only: April–July invoice numbers carry a ".1" suffix
-// (April 11.1, May 12.1, June 13.1, July 14.1) on the Invoice Tracker sheet.
+// 2026 only: April–July invoice numbers carry a ".2" suffix
+// (April 11.2, May 12.2, June 13.2, July 14.2) on the Invoice Tracker sheet.
 const SUFFIX_MONTHS_2026 = new Set(['2026-04', '2026-05', '2026-06', '2026-07']);
 
 function currentMonthEdmonton() {
@@ -113,12 +115,12 @@ export default async function(req: Request): Promise<Response> {
         const monthLabel = `${key.year}-${String(key.month + 1).padStart(2, '0')}`;
 
         // Column B — sequential invoice number for every reported month, with a
-        // one-time ".1" suffix for April–July 2026.
+        // ".2" suffix for April–July 2026.
         if (kRank >= bStartRank && kRank <= currentRank) {
           const seq = kRank - bStartRank + 1;
           if (seq > lastInvoiceNumber) lastInvoiceNumber = seq;
           const isSuffix = SUFFIX_MONTHS_2026.has(monthLabel);
-          const desired = isSuffix ? `${seq}.1` : seq;
+          const desired = isSuffix ? `${seq}.2` : seq;
           const existing = row[1];
           const existingStr = existing == null ? '' : String(existing);
 
