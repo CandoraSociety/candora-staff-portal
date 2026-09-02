@@ -177,7 +177,9 @@ export default function EditCrtInline({ item, onSaved, onClose }) {
       if (val === 'Complete') {
         if (next.eda_completion_date) next.service_outcome_date = next.eda_completion_date;
       } else if (val === 'Cancelled' || val === 'Incomplete') {
-        next.service_outcome_date = '';
+        // Clear EDA completion (not applicable), but KEEP the Service Outcome
+        // Date — for Cancelled/Incomplete it's the exit/outcome date, stored to
+        // completion_date and shown in CRT column H.
         next.eda_completion_date = '';
       }
     }

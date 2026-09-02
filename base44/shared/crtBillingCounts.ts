@@ -52,8 +52,10 @@ function mapClientLite(client, monthEnd) {
     serviceOutcomeDate = gate(client.completion_date) ? toISO(client.completion_date) : '';
   } else if (client.program_status === 'cancelled') {
     serviceOutcome = 'Cancelled';
+    serviceOutcomeDate = gate(client.completion_date) ? toISO(client.completion_date) : '';
   } else if (client.program_status === 'incomplete') {
     serviceOutcome = 'Incomplete';
+    serviceOutcomeDate = gate(client.completion_date) ? toISO(client.completion_date) : '';
   }
 
   const placementOK = gate(client.post_completion_employment_date);

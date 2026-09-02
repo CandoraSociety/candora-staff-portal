@@ -118,9 +118,24 @@ function applyCrossRefToClient(client, cf) {
   } else if (so === 'Cancelled') {
     u.program_status = 'cancelled';
     if (client.eda_completion_date) u.eda_completion_date = '';
+    // Service Outcome Date for Cancelled = the date the client was marked
+    // cancelled (exit date). Stored to completion_date; CRT column H derives
+    // from it. Previously this date was silently dropped.
+    if (cf.service_outcome_date) {
+      const iso = parseCrtDate(cf.service_outcome_date);
+      if (iso) u.completion_date = iso;
+    } else if (client.completion_date) {
+      u.completion_date = '';
+    }
   } else if (so === 'Incomplete') {
     u.program_status = 'incomplete';
     if (client.eda_completion_date) u.eda_completion_date = '';
+    if (cf.service_outcome_date) {
+      const iso = parseCrtDate(cf.service_outcome_date);
+      if (iso) u.completion_date = iso;
+    } else if (client.completion_date) {
+      u.completion_date = '';
+    }
   }
 
   const po = String(cf.placement_outcome || '').trim();

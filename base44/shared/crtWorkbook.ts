@@ -213,8 +213,12 @@ export function mapClientToCrtRow(client, monthEnd) {
     serviceOutcomeDate = gate(client.completion_date) ? formatDateForCrt(client.completion_date) : '';
   } else if (client.program_status === 'cancelled') {
     serviceOutcome = 'Cancelled';
+    // Column H (Service Outcome Date) for Cancelled = the date the client was
+    // marked cancelled. Stored on completion_date (the exit/outcome date).
+    serviceOutcomeDate = gate(client.completion_date) ? formatDateForCrt(client.completion_date) : '';
   } else if (client.program_status === 'incomplete') {
     serviceOutcome = 'Incomplete';
+    serviceOutcomeDate = gate(client.completion_date) ? formatDateForCrt(client.completion_date) : '';
   }
 
   // Placement Outcome — WD only. Once the Service Outcome is "Complete", default
