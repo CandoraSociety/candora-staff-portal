@@ -114,7 +114,7 @@ export default function CompassEntryChecklist() {
     () => verifications.filter((v) => v.client_id && !crtClientIds.has(v.client_id)).map((v) => v.client_id),
     [verifications, crtClientIds],
   );
-  const { data: entityRows = {} } = useQuery({
+  const { data: entityRows = {}, refetch: refetchEntityRows } = useQuery({
     queryKey: ['compass-checklist-entity-rows', verificationOnlyIds.join(',')],
     queryFn: async () => {
       const map = {};
@@ -446,7 +446,7 @@ export default function CompassEntryChecklist() {
           {(section === 'corrections' || section === 'completed') && item.client_id && editCrtItem?.client_id === item.client_id && (
             <EditCrtInline
               item={item}
-              onSaved={() => refetch()}
+              onSaved={() => { refetch(); refetchEntityRows(); }}
               onClose={() => setEditCrtItem(null)}
             />
           )}
@@ -469,7 +469,7 @@ export default function CompassEntryChecklist() {
               <Plus className="w-3.5 h-3.5" /> Add
             </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+          <Button variant="outline" size="sm" onClick={() => { refetch(); refetchEntityRows(); }} className="gap-2">
             <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} /> Refresh
           </Button>
         </div>
