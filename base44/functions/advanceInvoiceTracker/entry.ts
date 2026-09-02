@@ -10,8 +10,8 @@ import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 //
 //   • Column B — sequential Invoice Number, starting at 1 for June 2025 and
 //     incrementing by 1 for each reported month through the current month.
-//     April–July 2026 carry a ".2" suffix (11.2, 12.2, 13.2, 14.2) — their
-//     resubmitted invoice numbers. A row's number only populates once the
+//     April–July 2026 carry resubmission suffixes (11.3, 12.2, 13.3, 14.3)
+//     as their invoice numbers. A row's number only populates once the
 //     workbook's month reaches that row's month (future rows stay blank).
 //     Written to EVERY month's workbook (not just the active one) so each
 //     archived workbook bundled into its invoice package carries its number.
@@ -39,9 +39,9 @@ const B_START = { year: 2025, month: 5 };      // June 2025  — invoice #1 / co
 const COL_B = 'B';
 const COL_D = 'D';
 
-// 2026 only: April–July invoice numbers carry a ".2" suffix
-// (April 11.2, May 12.2, June 13.2, July 14.2) on the Invoice Tracker sheet.
-const SUFFIX_MONTHS_2026 = new Set(['2026-04', '2026-05', '2026-06', '2026-07']);
+// 2026 only: April–July invoice numbers carry a resubmission suffix on the
+// Invoice Tracker sheet — April 11.3, May 12.2, June 13.3, July 14.3.
+const SUFFIXES_2026 = { '2026-04': 3, '2026-05': 2, '2026-06': 3, '2026-07': 3 };
 
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
@@ -119,8 +119,9 @@ export default async function(req: Request): Promise<Response> {
         if (kRank >= bStartRank && kRank <= currentRank) {
           const seq = kRank - bStartRank + 1;
           if (seq > lastInvoiceNumber) lastInvoiceNumber = seq;
-          const isSuffix = SUFFIX_MONTHS_2026.has(monthLabel);
-          const desired = isSuffix ? `${seq}.2` : seq;
+          const suffix = SUFFIXES_2026[monthLabel];
+          const isSuffix = suffix != null;
+          const desired = isSuffix ? `${seq}.${suffix}` : seq;
           const existing = row[1];
           const existingStr = existing == null ? '' : String(existing);
 
