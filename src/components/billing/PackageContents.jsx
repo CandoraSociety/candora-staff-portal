@@ -29,6 +29,7 @@ import {
   generateReimbursementPdf,
 } from './packagePdfGeneration';
 import InvoiceDocument from './InvoiceDocument';
+import { displayInvoiceNumber } from './invoiceNumber';
 import CategoryUpload from './CategoryUpload';
 import AddMonthButton from './AddMonthButton';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -211,7 +212,10 @@ export default function PackageContents({ pkg, onViewInvoice }) {
 
   const invoiceData = useSnapshot
     ? {
-        invoiceNumber: linkedInvoice.invoice_number ? Number(linkedInvoice.invoice_number) : null,
+        // Normalize through displayInvoiceNumber so the ZIP's invoice PDF always
+        // shows the month's current resubmission number (e.g. April 11.3), even
+        // when the finalized snapshot was frozen with an older suffix.
+        invoiceNumber: displayInvoiceNumber(linkedInvoice.invoice_number, linkedInvoice.billing_month),
         billingMonth: linkedInvoice.billing_month,
         header: linkedInvoice.header_info || [],
         lineItems: linkedInvoice.line_items || [],
@@ -220,7 +224,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
         total: linkedInvoice.total_amount || 0,
       }
     : liveInvoice && liveInvoice.status === 'success'
-      ? liveInvoice
+      ? { ...liveInvoice, invoiceNumber: displayInvoiceNumber(liveInvoice.invoiceNumber, liveInvoice.billingMonth) }
       : null;
 
   const invoiceWrapRef = useRef(null);
