@@ -102,7 +102,10 @@ function applyCrossRefToClient(client, cf) {
   if (se === 'CEIS') u.service_type = 'direct_to_employment';
   else if (se === 'WD') u.service_type = 'pathways';
 
-  const startDateRaw = se === 'CEIS' ? (cf.dea_start_date || '') : (cf.service_start_date || '');
+  // DEA start date now lives in column F (service_start_date) for CEIS clients.
+  // Read F first; fall back to D (dea_start_date) for backward compatibility with
+  // cross-ref rows staff filled before the column-D blanking change.
+  const startDateRaw = cf.service_start_date || cf.dea_start_date || '';
   if (startDateRaw) {
     const iso = parseCrtDate(startDateRaw);
     if (iso) u.service_start_date = iso;

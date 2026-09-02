@@ -451,9 +451,9 @@ export function mapClientToCrtRow(client, monthEnd) {
     fullName,                                          // A: Client Legal Name
     client.compass_hsid || '',                         // B: COMPASS HSID #
     ceis,                                              // C: CEIS (DEA)
-    isDea ? startDateForCrt : '',                      // D: DEA Start Date (DEA only)
+    '',                                                // D: DEA Start Date (intentionally blank — DEA start date lives in column F only; writing both D and F double-counts in the Invoice Tracker L10 SUMPRODUCT formula)
     serviceElement,                                    // E: Service Element
-    (isWd || isDea) ? startDateForCrt : '',              // F: Service Start Date (WD; DEA mirrors DEA Start Date — no other DEA auto-population keys off this column)
+    (isWd || isDea) ? startDateForCrt : '',              // F: Service Start Date (WD and DEA both use this column)
     serviceOutcome,                                    // G: Service Outcome
     serviceOutcomeDate,                                 // H: Service Outcome Date
     placementOutcome,                                  // I: Placement Outcome

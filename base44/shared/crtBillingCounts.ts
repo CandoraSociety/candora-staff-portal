@@ -108,7 +108,8 @@ function mapClientLite(client, monthEnd) {
 
   return {
     isDea, isWd,
-    D: isDea ? startDateGated : '',            // DEA Start Date
+    D: '',                                      // DEA Start Date (blank — date lives in F; writing both double-counts in L10)
+    F: (isWd || isDea) ? startDateGated : '',   // Service Start Date
     G: serviceOutcome,                         // Service Outcome
     H: serviceOutcomeDate,                     // Service Outcome Date
     I: placementOutcome,                        // Placement Outcome
@@ -142,7 +143,7 @@ export function computeMonthBillingCounts(clients, year, month0) {
 
   for (const client of (clients || [])) {
     const r = mapClientLite(client, monthEnd);
-    if (r.isDea && inMonth(r.D, startISO, endISO)) deaStarters++;
+    if (r.isDea && inMonth(r.F, startISO, endISO)) deaStarters++;
     // X (wdComplete) — WD clients with G="Complete" and Service Outcome Date (H) in month
     if (r.isWd && r.G === 'Complete' && inMonth(r.H, startISO, endISO)) wdComplete++;
     // AN (wdPlacementCompletion) — WD clients with placement employment date (T) in month.

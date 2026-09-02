@@ -122,7 +122,8 @@ function mapClientToCrtRowLite(client, monthEnd) {
   return {
     isDea,
     isWd,
-    D: isDea ? startDateGated : '', // DEA Start Date
+    D: '', // DEA Start Date (blank — date lives in F; writing both double-counts in L10)
+    F: (isWd || isDea) ? startDateGated : '', // Service Start Date
     G: serviceOutcome, // Service Outcome
     H: serviceOutcomeDate, // Service Outcome Date
     I: placementOutcome, // Placement Outcome
@@ -171,8 +172,8 @@ export function computeCrtBillingCounts(clients, fileName) {
 
   for (const client of clients) {
     const row = mapClientToCrtRowLite(client, monthEnd);
-    // 1. CEIS (DEA) Starters — DEA Start Date (D) in viewing month
-    if (row.isDea && inMonth(row.D, startISO, endISO)) deaStarters++;
+    // 1. CEIS (DEA) Starters — Service Start Date (F) in viewing month
+    if (row.isDea && inMonth(row.F, startISO, endISO)) deaStarters++;
     // 2. WD Complete — Service Outcome (G) Complete + Service Outcome Date (H) in viewing month
     if (row.isWd && row.G === 'Complete' && inMonth(row.H, startISO, endISO)) wdComplete++;
     // 3. WD Placement (EDA Completion) — Placement Outcome (I) in E-RF/E-UF/SE + Placement Outcome Date (J) in viewing month (T mirrors J when I is employed)
