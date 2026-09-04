@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { FileText, Plus, ArrowLeft, Pencil, Upload, ChevronDown } from 'lucide-react';
+import { FileText, Plus, ArrowLeft, Pencil, Upload, ChevronDown, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoicePackageDetail from './InvoicePackageDetail';
 import ContractConfigDialog from './ContractConfigDialog';
@@ -203,10 +203,22 @@ export default function InvoicePackages({ packages, configs, onCreatePackage, is
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Invoice Packages</h2>
-        <Button onClick={() => setShowGenerator(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Invoice Package
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a
+              href="https://service.ariba.com/Supplier.aw/109539052/aw?awh=r&awssk=v9JO5BQL&dard=1"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Invoice Submission (Ariba Login)
+            </a>
+          </Button>
+          <Button onClick={() => setShowGenerator(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Invoice Package
+          </Button>
+        </div>
       </div>
 
       {packages.length === 0 ? (
