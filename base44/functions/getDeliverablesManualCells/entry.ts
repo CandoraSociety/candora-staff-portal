@@ -4,12 +4,12 @@ import { DELIVERABLES_SHEET, colLetter } from '../../shared/deliverablesSheet.ts
 import { cellToMonthKey } from '../../shared/invoiceTracker.ts';
 
 // Reads the Deliverables sheet region rows 12-20, columns Q-AB (the manual-
-// entry region) from the active CRT workbook, returning row labels (col A),
+// entry region; P = Mar 2026, Q-AB = Apr 2026 - Mar 2027) from the active CRT workbook, returning row labels (col A),
 // each column's month header (scanned from the header rows above), and the
 // current cell values. Used by the Manual Deliverables Entry UI.
 
 const ROWS = [12, 13, 14, 15, 16, 17, 18, 19, 20];
-const COLS = ['Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB'];
+const COLS = ['P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB'];
 
 function colIdx(letter: string): number {
   let n = 0;
@@ -45,7 +45,10 @@ export default async function(req: Request): Promise<Response> {
         const key = cellToMonthKey(values[r]?.[ci]);
         if (key) { monthKey = key; break; }
       }
-      const month = monthKey ? `${monthKey.year}-${String(monthKey.month + 1).padStart(2, '0')}` : null;
+      let month = monthKey ? `${monthKey.year}-${String(monthKey.month + 1).padStart(2, '0')}` : null;
+      // Column P (Mar 2026) has no date in the sheet's header rows — its header
+      // cell is blank. Fall back to the known layout so the grid still labels it.
+      if (!month && cl === 'P') month = '2026-03';
       return { colLetter: cl, month, header: values[0]?.[ci] ?? '' };
     });
 

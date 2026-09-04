@@ -102,8 +102,8 @@ export default function ManualDeliverablesEntry() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-slate-600">
-          Manually enter Deliverables sheet values (rows 12–20, columns Q–AB). Columns are months
-          (Apr 2026 → Mar 2027); rows are deliverable metrics. Entries are written to every monthly CRT
+          Manually enter Deliverables sheet values (rows 12–20, columns P–AB). Columns are months
+          (Mar 2026 → Mar 2027); rows are deliverable metrics. Entries are written to every monthly CRT
           workbook so they stay consistent. A portal re-sync can overwrite these, so re-apply afterward if needed.
         </p>
 
