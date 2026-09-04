@@ -12,9 +12,14 @@ import { toast } from "sonner";
 // Narrative Report sheet's Category column (C).
 export const NARRATIVE_CATEGORIES = [
   { value: "client_issues_trends", label: "Client Issues / Trends" },
+  { value: "communication_collaboration_scss", label: "Communication / Collaboration with SCSS" },
   { value: "employer_engagement_activities", label: "Employer Engagement Activities" },
-  { value: "program_marketing_activities", label: "Program Marketing Activities" },
   { value: "labour_market_observations", label: "Labour Market Observations" },
+  { value: "program_marketing_activities", label: "Program Marketing Activities" },
+  { value: "program_delivery_activities", label: "Program Delivery Activities" },
+  { value: "risk_management_strategies", label: "Risk Management Strategies" },
+  { value: "staffing_updates", label: "Staffing Updates" },
+  { value: "other", label: "Other" },
 ];
 
 export default function MonthlyNarrativeReportTab({ currentUser }) {

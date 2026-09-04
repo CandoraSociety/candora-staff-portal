@@ -6,12 +6,17 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 const CATEGORY_LABELS: Record<string, string> = {
   client_issues_trends: 'Client Issues / Trends',
+  communication_collaboration_scss: 'Communication / Collaboration with SCSS',
   employer_engagement_activities: 'Employer Engagement Activities',
-  program_marketing_activities: 'Program Marketing Activities',
   labour_market_observations: 'Labour Market Observations',
+  program_marketing_activities: 'Program Marketing Activities',
+  program_delivery_activities: 'Program Delivery Activities',
+  risk_management_strategies: 'Risk Management Strategies',
+  staffing_updates: 'Staffing Updates',
+  other: 'Other',
 };
 
-const CATEGORY_ORDER = ['client_issues_trends','employer_engagement_activities','program_marketing_activities','labour_market_observations'];
+const CATEGORY_ORDER = ['client_issues_trends','communication_collaboration_scss','employer_engagement_activities','labour_market_observations','program_marketing_activities','program_delivery_activities','risk_management_strategies','staffing_updates','other'];
 
 // Push the narrative summaries a staff member has flagged (include_in_crt=true)
 // for a given reporting month into the matching monthly CRT workbook's

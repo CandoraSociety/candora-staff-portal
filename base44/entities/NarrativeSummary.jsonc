@@ -10,11 +10,16 @@
       "type": "string",
       "enum": [
         "client_issues_trends",
+        "communication_collaboration_scss",
         "employer_engagement_activities",
+        "labour_market_observations",
         "program_marketing_activities",
-        "labour_market_observations"
+        "program_delivery_activities",
+        "risk_management_strategies",
+        "staffing_updates",
+        "other"
       ],
-      "description": "Narrative category \u2014 mirrors the CRT Narrative Report sheet's Category column exactly."
+      "description": "Narrative category \u2014 mirrors the CRT Narrative Report sheet's dropdown list exactly."
     },
     "summary": {
       "type": "string",
