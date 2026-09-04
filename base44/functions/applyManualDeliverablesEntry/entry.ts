@@ -15,7 +15,7 @@ import { parseValue, recalc } from '../../shared/manualEntryHelpers.ts';
 // is written as text. After each workbook a full recalculation is requested.
 
 const ALLOWED_ROWS = new Set([12, 13, 14, 15, 16, 17, 18, 19, 20]);
-const ALLOWED_COLS = new Set(['P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB']);
+const ALLOWED_COLS = new Set(['O', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB']);
 
 async function writeToWorkbook(accessToken: string, wb: any, entries: any[]) {
   const patches = entries.map(e => ({ cell: `${e.colLetter}${e.row}`, value: parseValue(e.value) }));
@@ -47,7 +47,7 @@ export default async function(req: Request): Promise<Response> {
     }));
     for (const e of clean) {
       if (!ALLOWED_ROWS.has(e.row)) return Response.json({ error: `Row ${e.row} is out of range (12-20)` }, { status: 400 });
-      if (!ALLOWED_COLS.has(e.colLetter)) return Response.json({ error: `Column ${e.colLetter} is out of range (P-AB)` }, { status: 400 });
+      if (!ALLOWED_COLS.has(e.colLetter)) return Response.json({ error: `Column ${e.colLetter} is out of range (O, Q-AB)` }, { status: 400 });
     }
 
     const accessToken = await getGraphToken();
