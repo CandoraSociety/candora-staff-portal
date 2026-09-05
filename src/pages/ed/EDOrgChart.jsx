@@ -12,6 +12,7 @@ import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
 import OrgTreeLayout from "@/components/orgchart/OrgTreeLayout";
 import TeamsView from "@/components/orgchart/TeamsView";
 import SheetNotesDialog from "@/components/orgchart/SheetNotesDialog";
+import SheetNotesPanel from "@/components/orgchart/SheetNotesPanel";
 
 
 // PDF export: use browser print on the chart area
@@ -395,6 +396,15 @@ export default function EDOrgChart() {
           />
         ) : null}
       </div>}
+
+      {/* Saved notes for the current sheet — docked at the bottom of the page */}
+      {mode === "chart" && (
+        <SheetNotesPanel
+          sheetId={activeTab === 0 ? "original" : currentScenario?.id}
+          sheetName={activeTab === 0 ? "Original" : currentScenario?.name}
+          onEdit={() => setNotesDialogOpen(true)}
+        />
+      )}
 
       {/* New Sheet Dialog */}
       <Dialog open={newSheetDialog} onOpenChange={setNewSheetDialog}>
