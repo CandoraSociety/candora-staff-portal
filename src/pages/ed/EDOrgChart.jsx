@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users, Maximize2, Minimize2 } from "lucide-react";
+import { Plus, ChevronDown, GitCompare, FileDown, Eye, X, Pencil, Users, Maximize2, Minimize2, StickyNote } from "lucide-react";
 import OrgChartSheet from "@/components/orgchart/OrgChartSheet";
 import OrgChartCompare from "@/components/orgchart/OrgChartCompare";
 import OrgTreeLayout from "@/components/orgchart/OrgTreeLayout";
 import TeamsView from "@/components/orgchart/TeamsView";
+import SheetNotesDialog from "@/components/orgchart/SheetNotesDialog";
 
 
 // PDF export: use browser print on the chart area
@@ -69,6 +70,7 @@ export default function EDOrgChart() {
   const [newSheetSource, setNewSheetSource] = useState("original"); // "original" | scenario id | "blank"
   const [renameDialog, setRenameDialog] = useState(null); // scenario id
   const [renameName, setRenameName] = useState("");
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
 
   // Force refresh scenarios when switching tabs to ensure latest data
   useEffect(() => {
@@ -260,6 +262,13 @@ export default function EDOrgChart() {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Sheet notes — saved per chart version */}
+          {mode === "chart" && (
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setNotesDialogOpen(true)}>
+              <StickyNote className="w-4 h-4" /> Notes
+            </Button>
+          )}
 
           {/* Fullscreen */}
           <Button variant="outline" size="sm" className="gap-1" onClick={() => setFullscreen(true)}>
@@ -465,6 +474,14 @@ export default function EDOrgChart() {
           </div>
         </div>
       )}
+
+      {/* Sheet notes dialog — notes for the currently viewed chart version */}
+      <SheetNotesDialog
+        open={notesDialogOpen}
+        onOpenChange={setNotesDialogOpen}
+        sheetId={activeTab === 0 ? "original" : currentScenario?.id}
+        sheetName={activeTab === 0 ? "Original" : currentScenario?.name}
+      />
 
       {/* Compare overlay */}
       {compareMode && compareSheetsData.length >= 2 && (

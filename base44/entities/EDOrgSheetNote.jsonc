@@ -1,0 +1,21 @@
+{
+  "name": "EDOrgSheetNote",
+  "type": "object",
+  "properties": {
+    "sheet_id": {
+      "type": "string",
+      "description": "Sheet this note belongs to \u2014 'original' or an EDOrgScenario ID"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes for this org chart version"
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Name of the person who last saved the notes"
+    }
+  },
+  "required": [
+    "sheet_id"
+  ]
+}
