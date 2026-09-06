@@ -186,8 +186,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
         <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Monthly Victor Insurance Benefits</span>
           <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY * 2)}</p>
-          <p className="text-[10px] text-muted-foreground">
-            employer {fmt(BENEFITS_MONTHLY)} + employee {fmt(BENEFITS_MONTHLY)} · <span className="italic font-semibold text-amber-600">estimate</span>
+          <p className="text-[10px] text-muted-foreground whitespace-nowrap">
+            employer + employee contr. · <span className="italic font-semibold text-amber-600">estimate</span>
           </p>
         </div>
         {/* Bi-weekly Payworks Total — actual amount Payworks withdraws:
