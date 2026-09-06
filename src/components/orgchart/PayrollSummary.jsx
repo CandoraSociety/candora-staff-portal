@@ -40,9 +40,9 @@ const BENEFITS_MONTHLY = 1900;
 const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 
 // Alberta WCB (Workers' Compensation Board) premium — employer-paid, calculated as
-// insurable payroll × industry rate per $100. Placeholder rate; confirm against the
-// actual WCB-Alberta premium statement.
-const WCB_RATE_PER_100 = 0.35;
+// assessable payroll × rate per $100. Uses the 2026 average employer rate; confirm
+// against the actual WCB-Alberta premium statement.
+const WCB_RATE_PER_100 = 1.46;
 
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
@@ -174,26 +174,26 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           </div>
         </>
       )}
-      {/* Financial quick-reference boxes — docked bottom-right of the financials section */}
-      <div className="ml-auto flex flex-wrap items-stretch gap-2 shrink-0">
+      {/* Financial quick-reference boxes — wrap onto extra rows instead of overflowing */}
+      <div className="ml-auto flex flex-wrap justify-end items-stretch gap-2">
         {/* Annual WCB — employer-paid Workers' Compensation premium, estimated from payroll */}
-        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Annual WCB</span>
-          <p className="text-base font-bold text-foreground leading-tight">{fmt(wcbAnnual)}</p>
-          <p className="text-[10px] text-muted-foreground">
-            Workers' Compensation premium · <span className="italic font-semibold text-amber-600">estimate</span>
-          </p>
+          <p className="text-base font-bold text-foreground leading-tight">~{fmt(wcbAnnual)}</p>
+          <p className="text-[10px] text-muted-foreground"><span className="italic font-semibold text-amber-600">estimate</span></p>
         </div>
-        {/* Monthly Victor insurance benefits — estimate */}
-        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+        {/* Monthly Victor insurance benefits — employer + employee shares */}
+        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Monthly Victor Insurance Benefits</span>
-          <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY)}</p>
-          <p className="text-[10px] text-muted-foreground"><span className="italic font-semibold text-amber-600">estimate</span> — confirm with actual premium</p>
+          <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY * 2)}</p>
+          <p className="text-[10px] text-muted-foreground">
+            employer {fmt(BENEFITS_MONTHLY)} + employee {fmt(BENEFITS_MONTHLY)} · <span className="italic font-semibold text-amber-600">estimate</span>
+          </p>
         </div>
         {/* Bi-weekly Payworks Total — actual amount Payworks withdraws:
             gross wages + employer CPP/EI, minus the staff benefits deduction
             skimmed from wages and kept by Candora. */}
-        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
           <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
           <p className="text-[10px] text-muted-foreground">
