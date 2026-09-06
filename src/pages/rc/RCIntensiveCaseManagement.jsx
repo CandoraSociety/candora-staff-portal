@@ -138,16 +138,37 @@ export default function RCIntensiveCaseManagement() {
     return () => clearTimeout(t);
   }, [draft, dirty]);
 
-  const handleSidebarSelect = (key) => {
-    setSelectedStage(key);
-    setMainTab('workflow');
-  };
+  const handleSidebarSelect = (key) => setSelectedStage(key);
 
   const progress = (c) => {
     if (!c) return 0;
     const done = (c.stages || []).filter(s => s.status === 'complete').length;
     return CASE_STAGES.length ? Math.round((done / CASE_STAGES.length) * 100) : 0;
   };
+
+  // The sidebar stage IS the wizard — each stage shows its working form in the main area.
+  const stageWork = draft ? {
+    assessment: <CaseAssessmentTab assessments={draft.assessments || []} onChange={(list) => patchDraft(d => ({ ...d, assessments: list }))} meName={me?.full_name} />,
+    goal_setting: <CaseGoalsTab objectives={draft.objectives || []} onAdd={addObjective} onUpdate={updateObjective} onDelete={deleteObjective} meName={me?.full_name} />,
+    service_plan: <CaseServicePlanTab plan={draft.service_plan || {}} onChange={updateServicePlan} />,
+    active_case_management: <CaseActivityTab focus="contacts" contacts={draft.contacts || []} reviews={draft.reviews || []}
+      onAddContact={(r) => addRecord('contacts', r)} onUpdateContact={(id, p) => updateRecord('contacts', id, p)} onDeleteContact={(id) => deleteRecord('contacts', id)}
+      onAddReview={(r) => addRecord('reviews', r)} onUpdateReview={(id, p) => updateRecord('reviews', id, p)} onDeleteReview={(id) => deleteRecord('reviews', id)}
+      meName={me?.full_name} />,
+    review_reassessment: <CaseActivityTab focus="reviews" contacts={draft.contacts || []} reviews={draft.reviews || []}
+      onAddContact={(r) => addRecord('contacts', r)} onUpdateContact={(id, p) => updateRecord('contacts', id, p)} onDeleteContact={(id) => deleteRecord('contacts', id)}
+      onAddReview={(r) => addRecord('reviews', r)} onUpdateReview={(id, p) => updateRecord('reviews', id, p)} onDeleteReview={(id) => deleteRecord('reviews', id)}
+      meName={me?.full_name} />,
+    transition_planning: <CaseTransitionTab focus="plan" transition={draft.transition || {}} followups={draft.followups || []} onTransitionChange={updateTransition}
+      onAddFollowup={(r) => addRecord('followups', r)} onUpdateFollowup={(id, p) => updateRecord('followups', id, p)} onDeleteFollowup={(id) => deleteRecord('followups', id)}
+      meName={me?.full_name} />,
+    closure: <CaseTransitionTab focus="closure" transition={draft.transition || {}} followups={draft.followups || []} onTransitionChange={updateTransition}
+      onAddFollowup={(r) => addRecord('followups', r)} onUpdateFollowup={(id, p) => updateRecord('followups', id, p)} onDeleteFollowup={(id) => deleteRecord('followups', id)}
+      meName={me?.full_name} />,
+    post_service_followup: <CaseTransitionTab focus="followups" transition={draft.transition || {}} followups={draft.followups || []} onTransitionChange={updateTransition}
+      onAddFollowup={(r) => addRecord('followups', r)} onUpdateFollowup={(id, p) => updateRecord('followups', id, p)} onDeleteFollowup={(id) => deleteRecord('followups', id)}
+      meName={me?.full_name} />,
+  } : {};
 
   return (
     <div className="space-y-4">
@@ -199,90 +220,47 @@ export default function RCIntensiveCaseManagement() {
                 <p className="text-sm text-muted-foreground">{selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : 'This client'} has no case management workflow yet.</p>
                 <Button onClick={startCase}><ClipboardList className="h-4 w-4" /> Start Case Management</Button>
               </CardContent></Card>
+            ) : selectedStage !== 'main' ? (
+              <div className="space-y-4">
+                <StageToolsPanel
+                  stageKey={selectedStage}
+                  draft={draft}
+                  onUpdateStage={updateStageByKey}
+                  onAddTask={addTask}
+                  onUpdateTask={updateTask}
+                />
+                {stageWork[selectedStage]}
+              </div>
             ) : (
               <Tabs value={mainTab} onValueChange={setMainTab}>
                 <TabsList className="flex flex-wrap h-auto">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="workflow">Workflow</TabsTrigger>
-                  <TabsTrigger value="assessment">Assessment</TabsTrigger>
-                  <TabsTrigger value="goals">Goals &amp; Plan</TabsTrigger>
-                  <TabsTrigger value="activity">Activity &amp; Reviews</TabsTrigger>
+                  <TabsTrigger value="workflow">Workflow Overview</TabsTrigger>
+                  <TabsTrigger value="overview">Client Overview</TabsTrigger>
                   <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
-                  <TabsTrigger value="transition">Transition</TabsTrigger>
                   <TabsTrigger value="history">History Log</TabsTrigger>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="overview" className="mt-4">
-                  <CaseOverviewTab
-                    client={selectedClient}
-                    caseProgress={progress(draft)}
-                    currentStage={draft.current_stage}
-                  />
-                </TabsContent>
-
                 <TabsContent value="workflow" className="mt-4">
-                  {selectedStage === 'main' ? (
-                    <div className="space-y-4">
-                      <CaseDetailsCard draft={draft} onChange={(patch) => patchDraft(d => ({ ...d, ...patch }))} />
-                      <div>
-                        <p className="text-sm font-medium text-foreground mb-2">Workflow Stages</p>
-                        <StageTracker stages={draft.stages || []} currentStage={draft.current_stage} onChange={updateStage} />
-                      </div>
-                      <Tabs defaultValue="tasks">
-                        <TabsList>
-                          <TabsTrigger value="tasks">Tasks ({(draft.tasks || []).length})</TabsTrigger>
-                          <TabsTrigger value="risks">Risk Factors ({(draft.risk_factors || []).length})</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="tasks"><CaseTasksTab tasks={draft.tasks || []} onAdd={addTask} onUpdate={updateTask} onDelete={deleteTask} /></TabsContent>
-                        <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
-                      </Tabs>
-                    </div>
-                  ) : (
-                    <StageToolsPanel
-                      stageKey={selectedStage}
-                      draft={draft}
-                      onUpdateStage={updateStageByKey}
-                      onAddTask={addTask}
-                      onUpdateTask={updateTask}
-                      onOpenTab={setMainTab}
-                    />
-                  )}
-                </TabsContent>
-
-                <TabsContent value="assessment" className="mt-4">
-                  <CaseAssessmentTab
-                    assessments={draft.assessments || []}
-                    onChange={(list) => patchDraft(d => ({ ...d, assessments: list }))}
-                    meName={me?.full_name}
-                  />
-                </TabsContent>
-
-                <TabsContent value="goals" className="mt-4">
                   <div className="space-y-4">
-                    <CaseGoalsTab
-                      objectives={draft.objectives || []}
-                      onAdd={addObjective}
-                      onUpdate={updateObjective}
-                      onDelete={deleteObjective}
-                      meName={me?.full_name}
-                    />
-                    <CaseServicePlanTab plan={draft.service_plan || {}} onChange={updateServicePlan} />
+                    <CaseDetailsCard draft={draft} onChange={(patch) => patchDraft(d => ({ ...d, ...patch }))} />
+                    <div>
+                      <p className="text-sm font-medium text-foreground mb-2">Workflow Stages</p>
+                      <StageTracker stages={draft.stages || []} currentStage={draft.current_stage} onChange={updateStage} />
+                    </div>
+                    <Tabs defaultValue="tasks">
+                      <TabsList>
+                        <TabsTrigger value="tasks">Tasks ({(draft.tasks || []).length})</TabsTrigger>
+                        <TabsTrigger value="risks">Risk Factors ({(draft.risk_factors || []).length})</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="tasks"><CaseTasksTab tasks={draft.tasks || []} onAdd={addTask} onUpdate={updateTask} onDelete={deleteTask} /></TabsContent>
+                      <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
+                    </Tabs>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="activity" className="mt-4">
-                  <CaseActivityTab
-                    contacts={draft.contacts || []}
-                    reviews={draft.reviews || []}
-                    onAddContact={(r) => addRecord('contacts', r)}
-                    onUpdateContact={(id, p) => updateRecord('contacts', id, p)}
-                    onDeleteContact={(id) => deleteRecord('contacts', id)}
-                    onAddReview={(r) => addRecord('reviews', r)}
-                    onUpdateReview={(id, p) => updateRecord('reviews', id, p)}
-                    onDeleteReview={(id) => deleteRecord('reviews', id)}
-                    meName={me?.full_name}
-                  />
+                <TabsContent value="overview" className="mt-4">
+                  <CaseOverviewTab client={selectedClient} caseProgress={progress(draft)} currentStage={draft.current_stage} />
                 </TabsContent>
 
                 <TabsContent value="outcomes" className="mt-4">
@@ -291,18 +269,6 @@ export default function RCIntensiveCaseManagement() {
                     onAdd={(r) => addRecord('outcomes', r)}
                     onUpdate={(id, p) => updateRecord('outcomes', id, p)}
                     onDelete={(id) => deleteRecord('outcomes', id)}
-                    meName={me?.full_name}
-                  />
-                </TabsContent>
-
-                <TabsContent value="transition" className="mt-4">
-                  <CaseTransitionTab
-                    transition={draft.transition || {}}
-                    followups={draft.followups || []}
-                    onTransitionChange={updateTransition}
-                    onAddFollowup={(r) => addRecord('followups', r)}
-                    onUpdateFollowup={(id, p) => updateRecord('followups', id, p)}
-                    onDeleteFollowup={(id) => deleteRecord('followups', id)}
                     meName={me?.full_name}
                   />
                 </TabsContent>

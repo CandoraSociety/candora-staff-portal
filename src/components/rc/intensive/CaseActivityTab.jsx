@@ -33,36 +33,44 @@ const REVIEW_FIELDS = [
 ];
 
 // Ongoing case management: service activity log + formal service-plan reviews.
+// focus: 'all' | 'contacts' | 'reviews' — stages show the section they need.
 export default function CaseActivityTab({
-  contacts = [], reviews = [],
+  contacts = [], reviews = [], focus = 'all',
   onAddContact, onUpdateContact, onDeleteContact,
   onAddReview, onUpdateReview, onDeleteReview,
   meName,
 }) {
+  const showContacts = focus === 'all' || focus === 'contacts';
+  const showReviews = focus === 'all' || focus === 'reviews';
+
   return (
     <div className="space-y-4">
-      <CaseRecordSection
-        title="Service Activity Log"
-        description="One-to-one meetings, visits, calls, coaching, navigation, advocacy, coordination, warm referrals, accompaniment, consultations, contact attempts and crisis response."
-        fields={CONTACT_FIELDS}
-        records={contacts}
-        onAdd={onAddContact}
-        onUpdate={onUpdateContact}
-        onDelete={onDeleteContact}
-        defaults={{ date: today(), created_by_name: meName || '' }}
-        titleOf={(r) => `${r.date || '—'} — ${CONTACT_TYPE_LABELS[r.contact_type] || r.contact_type || 'Activity'}`}
-      />
-      <CaseRecordSection
-        title="Formal Reviews"
-        description="Formally review the service plan with the caregiver at least monthly during active intensive service."
-        fields={REVIEW_FIELDS}
-        records={reviews}
-        onAdd={onAddReview}
-        onUpdate={onUpdateReview}
-        onDelete={onDeleteReview}
-        defaults={{ date: today(), reviewed_by_name: meName || '' }}
-        titleOf={(r) => `Review — ${r.date || '—'}`}
-      />
+      {showContacts && (
+        <CaseRecordSection
+          title="Service Activity Log"
+          description="One-to-one meetings, visits, calls, coaching, navigation, advocacy, coordination, warm referrals, accompaniment, consultations, contact attempts and crisis response."
+          fields={CONTACT_FIELDS}
+          records={contacts}
+          onAdd={onAddContact}
+          onUpdate={onUpdateContact}
+          onDelete={onDeleteContact}
+          defaults={{ date: today(), created_by_name: meName || '' }}
+          titleOf={(r) => `${r.date || '—'} — ${CONTACT_TYPE_LABELS[r.contact_type] || r.contact_type || 'Activity'}`}
+        />
+      )}
+      {showReviews && (
+        <CaseRecordSection
+          title="Formal Reviews"
+          description="Formally review the service plan with the caregiver at least monthly during active intensive service."
+          fields={REVIEW_FIELDS}
+          records={reviews}
+          onAdd={onAddReview}
+          onUpdate={onUpdateReview}
+          onDelete={onDeleteReview}
+          defaults={{ date: today(), reviewed_by_name: meName || '' }}
+          titleOf={(r) => `Review — ${r.date || '—'}`}
+        />
+      )}
     </div>
   );
 }

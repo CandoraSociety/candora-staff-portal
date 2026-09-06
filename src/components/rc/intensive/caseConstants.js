@@ -95,7 +95,8 @@ export const STAGE_DETAILS = {
 };
 
 // Actionable tools per stage — one-click task creation (with optional due-date offsets),
-// in-app navigation links ({clientId} placeholder) and tab shortcuts.
+// in-app navigation links ({clientId} placeholder). The stage's working form
+// itself is rendered by the page below the tools panel.
 export const STAGE_ACTIONS = {
   referral_intake: [
     { type: 'link', label: 'Open client profile — referral details', url: '/rc/clients/{clientId}' },
@@ -104,7 +105,6 @@ export const STAGE_ACTIONS = {
     { type: 'task', label: 'Add task: Supervisor consult for complex referral', title: 'Supervisor consult for complex referral' },
   ],
   assessment: [
-    { type: 'tab', label: 'Open the comprehensive assessment form', tab: 'assessment' },
     { type: 'task_batch', label: 'Add intake & assessment checklist (5 tasks)', titles: [
       'Meet the family & build rapport',
       'Complete caregiver wellbeing screening',
@@ -115,40 +115,33 @@ export const STAGE_ACTIONS = {
     { type: 'task', label: 'Add task: Document risk factors identified (due in 7 days)', title: 'Document risk factors identified during assessment', due_days: 7 },
   ],
   goal_setting: [
-    { type: 'tab', label: 'Open collaborative goal setting', tab: 'goals' },
     { type: 'task', label: 'Add task: Schedule goal-setting conversation (due in 7 days)', title: 'Schedule goal-setting conversation with caregiver', due_days: 7 },
     { type: 'link', label: 'Open Appointments — book the conversation', url: '/rc/appointments' },
   ],
   service_plan: [
-    { type: 'tab', label: 'Open the individualized service plan', tab: 'goals' },
     { type: 'task', label: 'Add task: Draft service plan with caregiver (due in 14 days)', title: 'Draft service plan with caregiver', due_days: 14 },
     { type: 'task', label: 'Add task: Identify needed referrals (internal / community)', title: 'Identify needed referrals — internal programs & community partners', due_days: 14 },
     { type: 'link', label: 'Open client profile — External Referral action', url: '/rc/clients/{clientId}' },
   ],
   active_case_management: [
-    { type: 'tab', label: 'Log a contact / service activity', tab: 'activity' },
     { type: 'task', label: 'Add task: Set recurring caregiver check-ins (due in 7 days)', title: 'Set recurring caregiver check-ins', due_days: 7 },
     { type: 'link', label: 'Open Appointments — book next visit', url: '/rc/appointments' },
     { type: 'link', label: 'Open client profile — emergency supports (food, clothing, bus tickets)', url: '/rc/clients/{clientId}' },
   ],
   review_reassessment: [
-    { type: 'tab', label: 'Record a formal service plan review', tab: 'activity' },
     { type: 'task', label: 'Add task: Monthly review with caregiver (due in 30 days)', title: 'Monthly service plan review with caregiver', due_days: 30 },
     { type: 'task', label: 'Add task: Update risk factor statuses (due in 30 days)', title: 'Update risk factor statuses', due_days: 30 },
     { type: 'task', label: 'Add task: Book supervisor case review (due in 30 days)', title: 'Supervisor case review', due_days: 30 },
   ],
   transition_planning: [
-    { type: 'tab', label: 'Open transition planning & readiness review', tab: 'transition' },
     { type: 'task', label: 'Add task: Draft transition plan with caregiver (due in 14 days)', title: 'Draft transition plan with caregiver', due_days: 14 },
     { type: 'task', label: 'Add task: Confirm ongoing supports are in place', title: 'Confirm ongoing supports are in place before completion', due_days: 14 },
   ],
   closure: [
-    { type: 'tab', label: 'Complete closure documentation', tab: 'transition' },
     { type: 'task', label: 'Add task: Complete closure summary with caregiver', title: 'Complete closure summary with caregiver', due_days: 14 },
     { type: 'task', label: 'Add task: Obtain supervisor review of closure', title: 'Obtain supervisor review of closure rationale', due_days: 14 },
   ],
   post_service_followup: [
-    { type: 'tab', label: 'Record a post-service follow-up', tab: 'transition' },
     { type: 'task', label: 'Add task: 30-day post-service follow-up (due in 30 days)', title: '30-day post-service follow-up contact', due_days: 30 },
     { type: 'task', label: 'Add task: 90-day post-service follow-up (due in 90 days)', title: '90-day post-service follow-up contact', due_days: 90 },
   ],
