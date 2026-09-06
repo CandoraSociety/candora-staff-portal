@@ -41,10 +41,21 @@ export default async function syncPathwaysClientToRC(req: Request): Promise<Resp
         indicator = `Enrolled in the Pathways program. Anticipated completion: ${fmt(client.completion_date) || 'to be determined'}.`;
     }
 
+    // Structured details rendered as a single info row on the RC client profile
+    // (the indicator text above remains as a legacy fallback).
+    const details = {
+      start_date: client.service_start_date || null,
+      stream: client.service_type || null,
+      status: client.program_status || null,
+      outcome: client.post_completion_employment_status || null,
+      end_date: client.completion_date || client.eda_completion_date || client.closed_date || null,
+    };
+
     const result = await syncParticipantToCentralDb(base44, {
       program: 'pathways',
       linkedId: client.id,
       indicator,
+      details,
       funderCategory: 'pathways',
       linkedRcClientId: client.linked_rc_client_id || null,
       personal: {

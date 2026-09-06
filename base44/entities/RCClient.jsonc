@@ -122,6 +122,34 @@
           "updated_date": {
             "type": "string",
             "description": "ISO timestamp of the last sync"
+          },
+          "details": {
+            "type": "object",
+            "description": "Structured program details (currently Pathways): start date, stream, status, completion outcome, and completion/cancelled date",
+            "properties": {
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Program start date (YYYY-MM-DD)"
+              },
+              "stream": {
+                "type": "string",
+                "description": "Program stream (e.g. pathways = WD, direct_to_employment = DEA)"
+              },
+              "status": {
+                "type": "string",
+                "description": "Program status (in_progress, complete, incomplete, cancelled)"
+              },
+              "outcome": {
+                "type": "string",
+                "description": "Completion outcome code (E-RF, E-UF, SE, ...)"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Completion or cancelled date (YYYY-MM-DD)"
+              }
+            }
           }
         }
       }

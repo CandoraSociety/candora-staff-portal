@@ -14,6 +14,23 @@ import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMENT_STATUS_OPTIONS, REFERRAL_STATUS_OPTIONS, REFERRAL_DIRECTION_LABELS, IS_PHAC } from '@/lib/rcConstants';
+import { outcomeLabel } from '@/lib/crtCodes';
+
+const STREAM_LABELS = {
+  pathways: 'Workforce Development (WD)',
+  direct_to_employment: 'Direct Employment Assistance (DEA)',
+  casual: 'Casual',
+  external_referral: 'External Referral',
+  internal_referral: 'Internal Referral',
+  not_eligible: 'Not Eligible',
+};
+
+const PROGRAM_STATUS_LABELS = {
+  in_progress: 'In Progress',
+  complete: 'Completed',
+  incomplete: 'Incomplete',
+  cancelled: 'Cancelled',
+};
 
 const EMPTY_FORM = {};
 
@@ -104,10 +121,22 @@ export default function RCClientDetail() {
           </div>
           {(client.program_participations || []).map((pp, i) => {
             const meta = PROGRAM_META[pp.program] || { label: pp.program, color: '#64748b' };
+            const d = pp.details;
+            const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString() : '—';
             return (
-              <div key={i} className="mt-3 p-3 rounded-lg border" style={{ backgroundColor: meta.color + '15', borderColor: meta.color + '40' }}>
-                <p className="text-sm font-medium flex items-center gap-1.5" style={{ color: meta.color }}><Route className="h-4 w-4" /> {meta.label}</p>
-                <p className="text-xs mt-0.5" style={{ color: meta.color }}>{pp.indicator}</p>
+              <div key={i} className="mt-3 p-3 rounded-lg border flex flex-wrap items-center gap-x-5 gap-y-1" style={{ backgroundColor: meta.color + '15', borderColor: meta.color + '40' }}>
+                <p className="text-sm font-medium flex items-center gap-1.5 shrink-0" style={{ color: meta.color }}><Route className="h-4 w-4" /> {meta.label}</p>
+                {d ? (
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs">
+                    <span className="text-muted-foreground">Start: <span className="font-medium text-foreground">{fmtDate(d.start_date)}</span></span>
+                    <span className="text-muted-foreground">Stream: <span className="font-medium text-foreground">{STREAM_LABELS[d.stream] || d.stream || '—'}</span></span>
+                    <span className="text-muted-foreground">Status: <span className="font-medium text-foreground">{PROGRAM_STATUS_LABELS[d.status] || d.status || '—'}</span></span>
+                    <span className="text-muted-foreground">Outcome: <span className="font-medium text-foreground">{d.outcome ? outcomeLabel(d.outcome) : '—'}</span></span>
+                    <span className="text-muted-foreground">{d.status === 'cancelled' ? 'Cancelled' : 'Completed'}: <span className="font-medium text-foreground">{fmtDate(d.end_date)}</span></span>
+                  </div>
+                ) : (
+                  <p className="text-xs" style={{ color: meta.color }}>{pp.indicator}</p>
+                )}
               </div>
             );
           })}

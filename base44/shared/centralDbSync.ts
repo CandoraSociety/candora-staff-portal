@@ -36,6 +36,10 @@ export interface ParticipationInput {
   // holds the central RCClient record id to update — bypassing auto-match
   // and never creating a new record.
   linkedRcClientId?: string | null;
+  // Optional structured details stored alongside the indicator text (e.g.
+  // Pathways start date, stream, status, outcome and end date). Rendered by
+  // the RC client profile when present; the indicator stays as a fallback.
+  details?: Record<string, any> | null;
 }
 
 function findByIdentity(rc: any, personal: PersonalInput): Promise<any> {
@@ -70,7 +74,7 @@ export async function syncParticipantToCentralDb(base44: any, input: Participati
   }
   if (!linked) linked = await findLinked(rc, personal);
   const updatedDate = new Date().toISOString();
-  const entry = { program, linked_id: linkedId, indicator, updated_date: updatedDate };
+  const entry = { program, linked_id: linkedId, indicator, updated_date: updatedDate, ...(input.details ? { details: input.details } : {}) };
 
   if (linked) {
     const parts = Array.isArray(linked.program_participations) ? [...linked.program_participations] : [];
