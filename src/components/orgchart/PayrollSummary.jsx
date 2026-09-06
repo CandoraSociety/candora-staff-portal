@@ -74,7 +74,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   // The employee's 50% share of benefits is deducted from staff wages and kept
   // by Candora (it never leaves the account), so the actual Payworks withdrawal
   // per bi-weekly run is gross wages − benefits skim + employer CPP/EI.
-  const benefitsSkim = BENEFITS_ANNUAL / 26;
   const payworksBiweekly = (annual + totalEmployerContributions - BENEFITS_ANNUAL) / 26;
   // WCB estimate — insurable payroll × industry rate per $100
   const wcbAnnual = annual * (WCB_RATE_PER_100 / 100);
@@ -184,7 +183,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
         </div>
         {/* Monthly Victor insurance benefits — employer + employee shares */}
         <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
-          <span className="text-xs font-medium text-muted-foreground">Monthly Victor Insurance Benefits</span>
+          <span className="text-xs font-medium text-muted-foreground">Monthly Insurance Benefits</span>
           <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY * 2)}</p>
           <p className="text-[10px] text-muted-foreground whitespace-nowrap">
             employer + employee contr. · <span className="italic font-semibold text-amber-600">estimate</span>
@@ -196,9 +195,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
         <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
           <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
-          <p className="text-[10px] text-muted-foreground">
-            incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} employee contribution for benefits retained by Candora
-          </p>
         </div>
       </div>
     </div>
