@@ -1,41 +1,95 @@
 import React from 'react';
-import { LayoutGrid } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CASE_STAGES, STAGE_STATUS_COLORS } from '@/components/rc/intensive/caseConstants';
+import { cn } from '@/lib/utils';
+import { CASE_STAGES, COMPLEXITY_OPTIONS, STAGE_STATUS_COLORS, today } from './caseConstants';
 
-// Far-left workflow navigation: a "main" entry (all workflow cards) plus each stage.
-export default function StageDetailSidebar({ stages = [], currentStage, selectedKey, onSelect, taskCountFor }) {
+// Far-left workflow sidebar: case-level summary at a glance + stage navigation.
+// Stages are freely navigable (non-linear) — workers can return to any stage.
+export default function StageDetailSidebar({ stages = [], currentStage, selectedKey, onSelect, taskCountFor, caseData }) {
+  const todayStr = today();
+  const contacts = caseData?.contacts || [];
+  const lastContact = contacts.map(c => c.date).filter(Boolean).sort().pop();
+  const activeGoals = (caseData?.objectives || []).filter(o => (o.status || 'in_progress') === 'in_progress').length;
+  const overdueTasks = (caseData?.tasks || []).filter(t => t.status !== 'done' && t.due_date && t.due_date < todayStr).length;
+  const overdueReviews = (caseData?.next_review_due && caseData.next_review_due < todayStr)
+    || (caseData?.next_contact_due && caseData.next_contact_due < todayStr);
+
+  const info = [
+    { label: 'Assigned Worker', value: caseData?.assigned_worker },
+    { label: 'Service Start', value: caseData?.service_start_date },
+    { label: 'Complexity', value: caseData?.complexity_level ? COMPLEXITY_OPTIONS.find(c => c.value === caseData.complexity_level)?.label : null },
+    { label: 'Last Contact', value: lastContact },
+    { label: 'Next Contact Due', value: caseData?.next_contact_due, alert: caseData?.next_contact_due && caseData.next_contact_due < todayStr },
+    { label: 'Next Review Due', value: caseData?.next_review_due, alert: caseData?.next_review_due && caseData.next_review_due < todayStr },
+    { label: 'Active Goals', value: activeGoals ? String(activeGoals) : null },
+  ].filter(r => r.value);
+
+  const stageByKey = Object.fromEntries(stages.map(s => [s.key, s]));
+  const totalTasks = (caseData?.tasks || []).filter(t => t.status !== 'done').length;
+
   return (
-    <Card className="lg:sticky lg:top-4"><CardContent className="p-2">
-      <p className="px-2 pt-1.5 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Workflow Stages</p>
-      <button
-        onClick={() => onSelect('main')}
-        className={`w-full text-left p-2.5 rounded-md transition-colors ${selectedKey === 'main' ? 'bg-primary/10' : 'hover:bg-muted'}`}
-      >
-        <div className="flex items-center gap-2">
-          <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <p className="text-sm font-medium text-foreground">Workflow Overview</p>
+    <div className="space-y-3">
+      {caseData && (
+        <Card><CardContent className="p-3.5 space-y-2">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Case Snapshot</p>
+          <div className="space-y-1">
+            {info.length === 0 && <p className="text-xs text-muted-foreground">Set case details in the Workflow tab.</p>}
+            {info.map(r => (
+              <div key={r.label} className="flex items-center justify-between gap-2">
+                <span className="text-[10px] text-muted-foreground">{r.label}</span>
+                <span className={cn('text-[11px] font-medium text-right', r.alert ? 'text-red-600' : 'text-foreground')}>{r.value}{r.alert ? ' — overdue' : ''}</span>
+              </div>
+            ))}
+            {(overdueTasks > 0 || overdueReviews) && (
+              <div className="flex items-center gap-1.5 text-[11px] text-red-600 font-medium pt-1">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                {overdueTasks > 0 && <span>{overdueTasks} overdue task{overdueTasks > 1 ? 's' : ''}</span>}
+              </div>
+            )}
+          </div>
+        </CardContent></Card>
+      )}
+
+      <Card><CardContent className="p-2 space-y-1 sticky top-4">
+        <button
+          onClick={() => onSelect('main')}
+          className={cn(
+            'w-full text-left px-2.5 py-2 rounded-md text-sm font-medium transition-colors',
+            selectedKey === 'main' ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'
+          )}
+        >
+          Workflow Overview
+          <span className="block text-[10px] font-normal text-muted-foreground mt-0.5">
+            All stages — {totalTasks} open task{totalTasks === 1 ? '' : 's'}
+          </span>
+        </button>
+
+        <div className="pt-1 space-y-0.5">
+          {CASE_STAGES.map(s => {
+            const st = stageByKey[s.key] || {};
+            const color = STAGE_STATUS_COLORS[st.status] || '#94a3b8';
+            const openCount = taskCountFor(s.key);
+            return (
+              <button
+                key={s.key}
+                onClick={() => onSelect(s.key)}
+                className={cn(
+                  'w-full text-left px-2.5 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2',
+                  selectedKey === s.key ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'
+                )}
+              >
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{s.label}</span>
+                  {s.key === currentStage && <span className="block text-[9px] font-semibold uppercase opacity-70">Current</span>}
+                </span>
+                {openCount > 0 && <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">{openCount}</span>}
+              </button>
+            );
+          })}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1 pl-5">All stages, tasks &amp; risks</p>
-      </button>
-      <div className="h-px bg-border/60 my-1.5 mx-2" />
-      {CASE_STAGES.map((s) => {
-        const data = stages.find(st => st.key === s.key) || {};
-        const count = taskCountFor ? taskCountFor(s.key) : 0;
-        return (
-          <button key={s.key} onClick={() => onSelect(s.key)}
-            className={`w-full text-left p-2.5 rounded-md transition-colors ${selectedKey === s.key ? 'bg-primary/10' : 'hover:bg-muted'}`}>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full shrink-0" style={{ background: STAGE_STATUS_COLORS[data.status || 'not_started'] }} />
-              <p className="text-sm font-medium text-foreground truncate">{s.label}</p>
-            </div>
-            <div className="flex items-center gap-2 mt-1 pl-4">
-              {currentStage === s.key && <span className="text-[10px] font-medium text-primary">Current</span>}
-              {count > 0 && <span className="text-[10px] text-muted-foreground">{count} task{count !== 1 ? 's' : ''}</span>}
-            </div>
-          </button>
-        );
-      })}
-    </CardContent></Card>
+      </CardContent></Card>
+    </div>
   );
 }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,8 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RISK_CATEGORY_LABELS, RISK_CATEGORY_COLORS, RISK_SEVERITY_OPTIONS, RISK_SEVERITY_COLORS, RISK_STATUS_OPTIONS, uid, today } from './caseConstants';
 
-const EMPTY = { category: '', description: '', severity: 'medium', status: 'active', mitigation: '', date_identified: '', review_date: '' };
+const EMPTY = { category: 'family', description: '', severity: 'moderate', immediate_safety: false, status: 'active', mitigation: '', date_identified: '', review_date: '' };
 
+// Risk, complexity and priority factors — distinguishes immediate safety
+// concerns (requiring action) from broader risk/complexity factors.
 export default function CaseRisksTab({ risks = [], onAdd, onUpdate, onDelete }) {
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -18,7 +21,15 @@ export default function CaseRisksTab({ risks = [], onAdd, onUpdate, onDelete }) 
   const set = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
 
   const openNew = () => { setEditId(null); setForm({ ...EMPTY, date_identified: today() }); setOpen(true); };
-  const openEdit = (r) => { setEditId(r.id); setForm({ category: r.category || '', description: r.description || '', severity: r.severity || 'medium', status: r.status || 'active', mitigation: r.mitigation || '', date_identified: r.date_identified || '', review_date: r.review_date || '' }); setOpen(true); };
+  const openEdit = (r) => {
+    setEditId(r.id);
+    setForm({
+      category: r.category || 'family', description: r.description || '', severity: r.severity || 'moderate',
+      immediate_safety: !!r.immediate_safety, status: r.status || 'active', mitigation: r.mitigation || '',
+      date_identified: r.date_identified || '', review_date: r.review_date || '',
+    });
+    setOpen(true);
+  };
 
   const save = () => {
     if (!form.description.trim()) return;
@@ -27,19 +38,24 @@ export default function CaseRisksTab({ risks = [], onAdd, onUpdate, onDelete }) 
     setOpen(false);
   };
 
+  const sorted = [...risks].sort((a, b) => (b.immediate_safety ? 1 : 0) - (a.immediate_safety ? 1 : 0));
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Risk Factors</CardTitle><Button size="sm" onClick={openNew}><Plus className="h-4 w-4" /> Add Risk Factor</Button></CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Risk &amp; Complexity Factors</CardTitle><Button size="sm" onClick={openNew}><Plus className="h-4 w-4" /> Add Risk Factor</Button></CardHeader>
       <CardContent>
-        <p className="text-xs text-muted-foreground mb-3">Risks related to family, individual, or child stability or safety.</p>
-        {risks.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No risk factors recorded</p> : (
+        <p className="text-xs text-muted-foreground mb-3">
+          Categorize concerns by level with narrative explanation. Flag <span className="font-medium text-red-600">immediate safety</span> concerns separately — they require action, consultation and follow-up; broader factors inform the intensity and frequency of case management. This does not replace professional judgement or established emergency, child-protection and duty-to-report procedures.
+        </p>
+        {sorted.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No risk factors recorded</p> : (
           <div className="space-y-2">
-            {risks.map(r => (
-              <div key={r.id} className="p-3 rounded-md border border-border/50">
+            {sorted.map(r => (
+              <div key={r.id} className={`p-3 rounded-md border ${r.immediate_safety ? 'border-red-300 bg-red-50/50' : 'border-border/50'}`}>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <span className="text-[11px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: (RISK_CATEGORY_COLORS[r.category] || '#64748b') + '22', color: RISK_CATEGORY_COLORS[r.category] || '#64748b' }}>{RISK_CATEGORY_LABELS[r.category] || r.category}</span>
                     <span className="text-[11px] font-medium px-1.5 py-0.5 rounded" style={{ backgroundColor: (RISK_SEVERITY_COLORS[r.severity] || '#94a3b8') + '22', color: RISK_SEVERITY_COLORS[r.severity] || '#94a3b8' }}>{(RISK_SEVERITY_OPTIONS.find(s => s.value === r.severity) || {}).label || r.severity}</span>
+                    {r.immediate_safety && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-600 text-white flex items-center gap-1"><ShieldAlert className="h-3 w-3" /> Immediate Safety</span>}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Select value={r.status || 'active'} onValueChange={(v) => onUpdate(r.id, { status: v })}>
@@ -71,16 +87,20 @@ export default function CaseRisksTab({ risks = [], onAdd, onUpdate, onDelete }) 
                 <SelectContent><SelectItem value="family">Family</SelectItem><SelectItem value="individual">Individual</SelectItem><SelectItem value="child">Child</SelectItem></SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5"><Label>Severity</Label>
+            <div className="space-y-1.5"><Label>Level of concern</Label>
               <Select value={form.severity} onValueChange={(v) => set('severity', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{RISK_SEVERITY_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5 col-span-2"><Label>Description</Label><Textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
+            <div className="space-y-1.5 col-span-2"><Label>Description <span className="text-destructive">*</span></Label><Textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
             <div className="space-y-1.5"><Label>Date Identified</Label><Input type="date" value={form.date_identified} onChange={(e) => set('date_identified', e.target.value)} /></div>
             <div className="space-y-1.5"><Label>Review Date</Label><Input type="date" value={form.review_date} onChange={(e) => set('review_date', e.target.value)} /></div>
             <div className="space-y-1.5 col-span-2"><Label>Mitigation / Actions</Label><Textarea rows={2} value={form.mitigation} onChange={(e) => set('mitigation', e.target.value)} /></div>
+            <div className="col-span-2 flex items-center gap-2 p-2.5 rounded-md border border-red-200 bg-red-50/50">
+              <Checkbox id="immediate-safety" checked={form.immediate_safety} onCheckedChange={(v) => set('immediate_safety', !!v)} />
+              <Label htmlFor="immediate-safety" className="text-xs font-normal"><ShieldAlert className="h-3.5 w-3.5 inline text-red-600 mr-1" />Immediate safety concern — requires action, consultation and follow-up</Label>
+            </div>
           </div>
           <div className="flex justify-end gap-2 mt-2"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={save}>{editId ? 'Save' : 'Add'}</Button></div>
         </DialogContent>

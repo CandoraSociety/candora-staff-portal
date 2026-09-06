@@ -10,6 +10,35 @@
       "type": "string",
       "description": "Denormalized client full name"
     },
+    "assigned_worker": {
+      "type": "string",
+      "description": "Assigned intensive family support worker"
+    },
+    "service_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date intensive service commenced"
+    },
+    "complexity_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "moderate",
+        "high",
+        "very_complex"
+      ],
+      "description": "Caseworker-assessed case complexity"
+    },
+    "next_contact_due": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the next participant contact is required"
+    },
+    "next_review_due": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the next formal service-plan review is due"
+    },
     "current_stage": {
       "type": "string",
       "description": "Stage key currently active in the Building Resilient Caregivers workflow"
@@ -51,6 +80,496 @@
             "description": "Stage notes"
           }
         }
+      }
+    },
+    "assessments": {
+      "type": "array",
+      "description": "Comprehensive family assessments \u2014 full history preserved (do not overwrite; add new records). Each holds structured domain responses in `domains`.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Assessment date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "default": "draft",
+            "description": "Finalized assessments are read-only"
+          },
+          "completed_by_name": {
+            "type": "string",
+            "description": "Staff member who completed the assessment"
+          },
+          "domains": {
+            "type": "object",
+            "description": "Structured assessment responses \u2014 narrative fields { value } and level-rated concern domains { level, notes }"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    "objectives": {
+      "type": "array",
+      "description": "Collaboratively-set participant-centred goals with actions, indicators and preserved progress history",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "Goal in participant-centred language"
+          },
+          "why_it_matters": {
+            "type": "string",
+            "description": "Why the goal matters to the caregiver/family"
+          },
+          "related_need": {
+            "type": "string",
+            "description": "Related assessed need/barrier"
+          },
+          "strengths": {
+            "type": "string",
+            "description": "Existing strengths/resources that support achievement"
+          },
+          "participant_actions": {
+            "type": "string",
+            "description": "Actions the participant will take"
+          },
+          "worker_actions": {
+            "type": "string",
+            "description": "Actions/support the caseworker will provide"
+          },
+          "others_involved": {
+            "type": "string",
+            "description": "Other people/agencies involved"
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Target timeframe"
+          },
+          "indicators": {
+            "type": "string",
+            "description": "Indicators of progress/success"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "in_progress",
+              "achieved",
+              "revised",
+              "paused",
+              "dropped"
+            ],
+            "default": "in_progress"
+          },
+          "achieved_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "progress_notes": {
+            "type": "array",
+            "description": "Progress notes/history \u2014 appended, never overwritten",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "by_name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "note"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    "service_plan": {
+      "type": "object",
+      "description": "Individualized service plan developed collaboratively with the caregiver",
+      "properties": {
+        "developed_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "developed_with_participant": {
+          "type": "boolean",
+          "description": "Confirms the plan was developed collaboratively with the caregiver"
+        },
+        "priorities": {
+          "type": "string",
+          "description": "Participant/family priorities"
+        },
+        "strengths": {
+          "type": "string",
+          "description": "Identified strengths & protective factors"
+        },
+        "needs_barriers": {
+          "type": "string",
+          "description": "Primary needs/barriers being addressed"
+        },
+        "interventions": {
+          "type": "string",
+          "description": "Planned interventions/supports & intended outcomes"
+        },
+        "internal_supports": {
+          "type": "string",
+          "description": "Internal Candora supports"
+        },
+        "external_referrals": {
+          "type": "string",
+          "description": "External services/referrals"
+        },
+        "responsible_person": {
+          "type": "string",
+          "description": "Responsible person/provider for each action"
+        },
+        "frequency_intensity": {
+          "type": "string",
+          "description": "Anticipated frequency/intensity of support"
+        },
+        "target_review_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "risks_monitoring": {
+          "type": "string",
+          "description": "Risks requiring monitoring"
+        },
+        "contingency_actions": {
+          "type": "string",
+          "description": "Contingency/safety actions"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "description": "Ongoing case management / service activity log \u2014 one record per contact or activity (used for file activity, complexity and service-intensity reporting)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "contact_type": {
+            "type": "string",
+            "description": "Type of contact / activity"
+          },
+          "duration_minutes": {
+            "type": "number",
+            "description": "Duration in minutes"
+          },
+          "location": {
+            "type": "string",
+            "description": "Location / modality"
+          },
+          "people_involved": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "actions_taken": {
+            "type": "string"
+          },
+          "participant_response": {
+            "type": "string",
+            "description": "Participant response/progress"
+          },
+          "risk_changes": {
+            "type": "string",
+            "description": "Identified changes in risk or circumstances"
+          },
+          "referrals_completed": {
+            "type": "string",
+            "description": "Referrals/coordination completed"
+          },
+          "next_steps": {
+            "type": "string"
+          },
+          "created_by_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    "reviews": {
+      "type": "array",
+      "description": "Formal service-plan reviews with the caregiver (at least monthly during active service) \u2014 history preserved",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "goals_progress": {
+            "type": "string",
+            "description": "Progress toward each goal"
+          },
+          "circumstances_changes": {
+            "type": "string",
+            "description": "Changes in family circumstances"
+          },
+          "needs_changes": {
+            "type": "string",
+            "description": "New or resolved needs/barriers"
+          },
+          "risk_changes": {
+            "type": "string",
+            "description": "Changes in risk or protective factors"
+          },
+          "intensity_change": {
+            "type": "string",
+            "enum": [
+              "increase",
+              "decrease",
+              "maintain"
+            ],
+            "description": "Whether support intensity should change"
+          },
+          "referral_effectiveness": {
+            "type": "string",
+            "description": "Effectiveness of referrals/interventions"
+          },
+          "participant_feedback": {
+            "type": "string"
+          },
+          "plan_revision_needed": {
+            "type": "boolean"
+          },
+          "transition_considered": {
+            "type": "boolean",
+            "description": "Whether transition/closure should begin"
+          },
+          "next_review_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "reviewed_by_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    "outcomes": {
+      "type": "array",
+      "description": "Outcome measurements at baseline, review and closure \u2014 supports demonstrating progress over time",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "baseline",
+              "review",
+              "closure"
+            ],
+            "description": "When the outcome was measured"
+          },
+          "category": {
+            "type": "string",
+            "description": "Outcome category"
+          },
+          "description": {
+            "type": "string",
+            "description": "What was observed/measured"
+          },
+          "recorded_by_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    "transition": {
+      "type": "object",
+      "description": "Transition readiness, closure documentation and transition plan",
+      "properties": {
+        "readiness_indicators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Selected readiness-for-transition indicators"
+        },
+        "closure_reason": {
+          "type": "string",
+          "description": "Primary reason for closure"
+        },
+        "closure_rationale": {
+          "type": "string",
+          "description": "Documented rationale for closure"
+        },
+        "closure_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "supervisor_review_name": {
+          "type": "string",
+          "description": "Supervisor who reviewed the closure"
+        },
+        "supervisor_review_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "supervisor_approved": {
+          "type": "boolean"
+        },
+        "goals_achieved_summary": {
+          "type": "string",
+          "description": "Goals achieved and progress made"
+        },
+        "remaining_needs": {
+          "type": "string",
+          "description": "Remaining needs or goals"
+        },
+        "ongoing_services": {
+          "type": "string",
+          "description": "Ongoing supports/services"
+        },
+        "warm_referrals": {
+          "type": "string",
+          "description": "Warm referrals and connections completed"
+        },
+        "natural_supports": {
+          "type": "string",
+          "description": "Natural/community supports available"
+        },
+        "continued_candora_services": {
+          "type": "string",
+          "description": "Other Candora programs/services the participant may continue accessing"
+        },
+        "caregiver_strategies": {
+          "type": "string",
+          "description": "Strategies the caregiver intends to continue using"
+        },
+        "warning_signs": {
+          "type": "string",
+          "description": "Circumstances in which the caregiver should seek additional assistance"
+        },
+        "reconnection_info": {
+          "type": "string",
+          "description": "How/where to reconnect with Candora or the FRN if needs increase"
+        },
+        "followup_plan": {
+          "type": "string",
+          "description": "Planned post-service follow-up"
+        }
+      }
+    },
+    "followups": {
+      "type": "array",
+      "description": "Post-service follow-up contacts and their outcomes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "connected_to_services": {
+            "type": "string",
+            "enum": [
+              "yes",
+              "partially",
+              "no"
+            ],
+            "description": "Whether the participant remains connected to planned services/supports"
+          },
+          "referrals_accessed": {
+            "type": "string",
+            "description": "Whether referrals were successfully accessed"
+          },
+          "progress_sustained": {
+            "type": "string",
+            "description": "Whether progress has been sustained"
+          },
+          "new_barriers": {
+            "type": "string",
+            "description": "New or recurring barriers/risks"
+          },
+          "navigation_needed": {
+            "type": "boolean",
+            "description": "Whether additional navigation or warm referral is needed"
+          },
+          "reassessment_needed": {
+            "type": "boolean",
+            "description": "Whether circumstances suggest reassessment for additional services"
+          },
+          "participant_feedback": {
+            "type": "string",
+            "description": "Participant feedback on the service and transition"
+          },
+          "next_steps": {
+            "type": "string"
+          },
+          "completed_by_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
       }
     },
     "tasks": {
@@ -101,7 +620,7 @@
     },
     "risk_factors": {
       "type": "array",
-      "description": "Risks related to family, individual, or child stability or safety",
+      "description": "Risk/complexity factors and immediate safety concerns",
       "items": {
         "type": "object",
         "properties": {
@@ -122,10 +641,16 @@
           "severity": {
             "type": "string",
             "enum": [
+              "none",
               "low",
-              "medium",
-              "high"
+              "moderate",
+              "elevated",
+              "urgent"
             ]
+          },
+          "immediate_safety": {
+            "type": "boolean",
+            "description": "True for immediate safety concerns requiring action (vs. broader risk/complexity factors)"
           },
           "status": {
             "type": "string",
@@ -147,43 +672,6 @@
           "review_date": {
             "type": "string",
             "format": "date"
-          }
-        }
-      }
-    },
-    "objectives": {
-      "type": "array",
-      "description": "Case plan objectives for the client",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string",
-            "description": "Objective"
-          },
-          "target_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "in_progress",
-              "achieved",
-              "revised",
-              "dropped"
-            ],
-            "default": "in_progress"
-          },
-          "achieved_date": {
-            "type": "string",
-            "format": "date"
-          },
-          "notes": {
-            "type": "string"
           }
         }
       }

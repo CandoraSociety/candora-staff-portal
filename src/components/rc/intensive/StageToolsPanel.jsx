@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link2, ListPlus, Plus } from 'lucide-react';
+import { ExternalLink, Link2, ListPlus, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,7 +12,7 @@ const addDays = (n) => new Date(Date.now() + n * 86400000).toLocaleDateString('e
 
 // Shown when a specific workflow stage is selected in the far-left sidebar —
 // stage fields, actionable planning tools, and this stage's tasks.
-export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddTask, onUpdateTask }) {
+export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddTask, onUpdateTask, onOpenTab }) {
   const navigate = useNavigate();
   const [newTask, setNewTask] = useState('');
   const detail = STAGE_DETAILS[stageKey] || {};
@@ -44,6 +44,8 @@ export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddT
       onAddTask(makeTask(a.title, a.due_days));
     } else if (a.type === 'task_batch') {
       (a.titles || []).forEach(t => onAddTask(makeTask(t)));
+    } else if (a.type === 'tab') {
+      onOpenTab?.(a.tab);
     }
   };
 
@@ -89,6 +91,7 @@ export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddT
               <Button key={a.label} variant="outline" size="sm" className="justify-start h-auto py-2 text-left whitespace-normal"
                 onClick={() => runAction(a)}>
                 {a.type === 'link' ? <Link2 className="h-4 w-4 shrink-0 text-primary" />
+                  : a.type === 'tab' ? <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
                   : a.type === 'task_batch' ? <ListPlus className="h-4 w-4 shrink-0 text-primary" />
                   : <Plus className="h-4 w-4 shrink-0 text-primary" />}
                 <span className="text-xs font-normal">{a.label}</span>
