@@ -188,6 +188,67 @@
         }
       }
     },
+    "history_log": {
+      "type": "array",
+      "description": "Chronological history log entries for this case \u2014 contacts, decisions, reviews, and other significant events",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of the logged event"
+          },
+          "entry": {
+            "type": "string",
+            "description": "What happened"
+          },
+          "created_by_name": {
+            "type": "string",
+            "description": "Staff member who logged the entry"
+          }
+        },
+        "required": [
+          "id",
+          "entry"
+        ]
+      }
+    },
+    "documents": {
+      "type": "array",
+      "description": "Relevant documents uploaded to this case (assessment forms, support plans, consent forms, etc.)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Display name of the document"
+          },
+          "file_url": {
+            "type": "string",
+            "description": "Uploaded file URL"
+          },
+          "uploaded_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "uploaded_by_name": {
+            "type": "string",
+            "description": "Staff member who uploaded the document"
+          }
+        },
+        "required": [
+          "id",
+          "file_url"
+        ]
+      }
+    },
     "created_by_name": {
       "type": "string"
     }
