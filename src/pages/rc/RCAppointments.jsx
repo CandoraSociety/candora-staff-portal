@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, List, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
+import AppointmentsCalendar from '@/components/rc/AppointmentsCalendar';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { APPOINTMENT_STATUS_OPTIONS, LOCATION_TYPE_LABELS } from '@/lib/rcConstants';
 
@@ -14,6 +15,7 @@ export default function RCAppointments() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState('list');
   const queryClient = useQueryClient();
 
   const { data: appointments = [], isLoading } = useQuery({ queryKey: ['rc-appointments'], queryFn: () => base44.entities.RCAppointment.list('-appointment_date', 200) });
@@ -34,9 +36,14 @@ export default function RCAppointments() {
         <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by client or purpose..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
         <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{APPOINTMENT_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
       </div>
+      <div className="flex gap-1">
+        <Button variant={view === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setView('list')}><List className="h-4 w-4" /> List</Button>
+        <Button variant={view === 'calendar' ? 'default' : 'outline'} size="sm" onClick={() => setView('calendar')}><CalendarDays className="h-4 w-4" /> Calendar</Button>
+      </div>
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
        filtered.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{appointments.length === 0 ? 'No appointments yet.' : 'No appointments match your filters.'}</CardContent></Card> :
-      (
+       view === 'calendar' ? <AppointmentsCalendar appointments={filtered} /> :
+       (
         <div className="space-y-2">
           {filtered.map(a => (
             <Card key={a.id} className="hover:shadow-sm transition-shadow"><CardContent className="p-4 flex items-center justify-between gap-4">
