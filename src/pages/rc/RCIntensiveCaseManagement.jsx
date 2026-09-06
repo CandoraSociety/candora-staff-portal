@@ -187,6 +187,7 @@ export default function RCIntensiveCaseManagement() {
                     client={selectedClient}
                     caseProgress={progress(draft)}
                     currentStage={draft.current_stage}
+                    objectives={draft.objectives || []}
                   />
                 </TabsContent>
 
@@ -209,7 +210,11 @@ export default function RCIntensiveCaseManagement() {
                       </Tabs>
                     </div>
                   ) : (
-                    <StageToolsPanel stageKey={selectedStage} draft={draft} onUpdateStage={updateStageByKey} onAddTask={addTask} onUpdateTask={updateTask} />
+                    <StageToolsPanel stageKey={selectedStage} draft={draft} client={selectedClient} meName={me?.full_name}
+                      onUpdateStage={updateStageByKey} onAddTask={addTask} onUpdateTask={updateTask}
+                      onAddRisk={addRisk} onUpdateRisk={updateRisk}
+                      onAddObjective={addObjective} onUpdateObjective={updateObjective} onDeleteObjective={deleteObjective}
+                      onAddHistory={addHistoryEntry} />
                   )}
                 </TabsContent>
 
