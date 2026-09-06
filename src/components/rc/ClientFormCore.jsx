@@ -55,6 +55,14 @@ export default function ClientFormCore({ form, update }) {
             <Checkbox id="newcomer" checked={form.newcomer || false} onCheckedChange={(v) => update('newcomer', v)} />
             <label htmlFor="newcomer" className="text-sm cursor-pointer">Newcomer</label>
           </div>
+          <div className="flex items-center gap-1.5">
+            <Checkbox id="senior" checked={form.senior || false} onCheckedChange={(v) => update('senior', v)} />
+            <label htmlFor="senior" className="text-sm cursor-pointer">Senior</label>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Checkbox id="youth" checked={form.youth_under_25 || false} onCheckedChange={(v) => update('youth_under_25', v)} />
+            <label htmlFor="youth" className="text-sm cursor-pointer">Youth (Under 25)</label>
+          </div>
         </div>
       </div>
 

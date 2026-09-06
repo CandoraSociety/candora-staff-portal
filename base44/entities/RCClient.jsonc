@@ -62,6 +62,14 @@
       "type": "boolean",
       "description": "Demographics: client identifies as a newcomer to Canada"
     },
+    "senior": {
+      "type": "boolean",
+      "description": "Demographics: client identifies as a senior"
+    },
+    "youth_under_25": {
+      "type": "boolean",
+      "description": "Demographics: client is a youth under 25"
+    },
     "emergency_contact_name": {
       "type": "string"
     },
