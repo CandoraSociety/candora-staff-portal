@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { CASE_STATUS_OPTIONS } from '@/lib/rcConstants';
-import { STAGE_LABELS, OBJECTIVE_STATUS_OPTIONS } from '@/components/rc/intensive/caseConstants';
+import { STAGE_LABELS } from '@/components/rc/intensive/caseConstants';
 
 const REASON_LABELS = {
   program_registration: 'Program Registration',
@@ -20,7 +20,7 @@ const Field = ({ label, value }) => (
   </div>
 );
 
-export default function CaseOverviewTab({ client, caseProgress, currentStage, objectives = [] }) {
+export default function CaseOverviewTab({ client, caseProgress, currentStage }) {
   if (!client) return <p className="text-sm text-muted-foreground py-6">Select a client.</p>;
 
   const chips = [
@@ -53,25 +53,6 @@ export default function CaseOverviewTab({ client, caseProgress, currentStage, ob
           <p className="text-xs text-muted-foreground mt-2">Worker: {client.assigned_worker || '—'}</p>
         </CardContent></Card>
       </div>
-
-      <Card><CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Service Goals &amp; Objectives</p>
-          <span className="text-xs text-muted-foreground">{objectives.filter(o => o.status === 'achieved').length} of {objectives.length} achieved</span>
-        </div>
-        {objectives.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No service goals set yet — add them in the Support Plan Development stage.</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {objectives.map(o => (
-              <li key={o.id} className="flex items-center justify-between gap-3">
-                <p className={`text-sm min-w-0 ${o.status === 'achieved' ? 'text-green-700' : o.status === 'dropped' ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{o.text}</p>
-                <StatusBadge status={o.status || 'in_progress'} options={OBJECTIVE_STATUS_OPTIONS} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent></Card>
 
       <Card><CardContent className="p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Field label="Phone" value={client.phone} />
