@@ -106,28 +106,36 @@ export default function ClientFormCore({ form, update }) {
         </div>
       )}
 
-      <div className="col-span-2 mt-2"><p className="text-sm font-medium text-foreground mb-1">Case Management</p></div>
-      <div className="space-y-1.5"><Label>Assigned Worker</Label><Input value={form.assigned_worker || ''} onChange={(e) => update('assigned_worker', e.target.value)} /></div>
-      <div className="space-y-1.5"><Label>Case Status</Label>
-        <Select value={form.case_status || 'intake'} onValueChange={(v) => update('case_status', v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{CASE_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-        </Select>
+      <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
+        <div className="space-y-1.5">
+          <Label>Reason For Accessing Services</Label>
+          <Select value={form.reason_for_accessing || ''} onValueChange={(v) => update('reason_for_accessing', v)}>
+            <SelectTrigger><SelectValue placeholder="Select a reason" /></SelectTrigger>
+            <SelectContent>{REASON_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        {form.reason_for_accessing === 'other' && (
+          <div className="space-y-1.5"><Label>Other (specify)</Label><Input value={form.reason_for_accessing_other || ''} onChange={(e) => update('reason_for_accessing_other', e.target.value)} /></div>
+        )}
+        <div className="space-y-1.5"><Label>Identified Needs</Label><Textarea value={form.identified_needs || ''} onChange={(e) => update('identified_needs', e.target.value)} rows={2} /></div>
       </div>
-      <div className="space-y-1.5"><Label>Intake Date</Label><Input type="date" value={form.intake_date || ''} onChange={(e) => update('intake_date', e.target.value)} /></div>
-      <div className="space-y-1.5"><Label>Referral Source</Label><Input value={form.referral_source || ''} onChange={(e) => update('referral_source', e.target.value)} placeholder="How they came to Candora" /></div>
-      <div className="space-y-1.5 col-span-2">
-        <Label>Reason For Accessing Services</Label>
-        <Select value={form.reason_for_accessing || ''} onValueChange={(v) => update('reason_for_accessing', v)}>
-          <SelectTrigger><SelectValue placeholder="Select a reason" /></SelectTrigger>
-          <SelectContent>{REASON_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
+
+      <div className="col-span-2 mt-4 p-4 rounded-lg bg-muted border border-border/60">
+        <p className="text-sm font-medium text-foreground mb-2">Case Management</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5"><Label>Assigned Worker</Label><Input value={form.assigned_worker || ''} onChange={(e) => update('assigned_worker', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Case Status</Label>
+            <Select value={form.case_status || 'intake'} onValueChange={(v) => update('case_status', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{CASE_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5"><Label>Intake Date</Label><Input type="date" value={form.intake_date || ''} onChange={(e) => update('intake_date', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Referral Source</Label><Input value={form.referral_source || ''} onChange={(e) => update('referral_source', e.target.value)} placeholder="How they came to Candora" /></div>
+        </div>
       </div>
-      {form.reason_for_accessing === 'other' && (
-        <div className="space-y-1.5 col-span-2"><Label>Other (specify)</Label><Input value={form.reason_for_accessing_other || ''} onChange={(e) => update('reason_for_accessing_other', e.target.value)} /></div>
-      )}
-      <div className="space-y-1.5 col-span-2"><Label>Identified Needs</Label><Textarea value={form.identified_needs || ''} onChange={(e) => update('identified_needs', e.target.value)} rows={2} /></div>
-      <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
+
+      <div className="col-span-2 mt-4 pt-3 border-t border-border space-y-1.5"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
     </div>
   );
 }
