@@ -51,7 +51,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   // Always use the stored salary field as the source of truth (exclude practicums — always $0)
   const annual = paidPositions.reduce((s, p) => s + (p.salary || 0), 0);
   const monthly = annual / 12;
-  const biweekly = annual / 26;
   const fmt = (n) => "$" + Math.round(n).toLocaleString();
   const fmtDiff = (n) => (n >= 0 ? "▲ +" : "▼ ") + Math.round(Math.abs(n)).toLocaleString();
   const diffColor = (n) => n > 0 ? "text-green-600" : "text-red-600";
@@ -77,7 +76,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   let diffPositions = 0;
   let diffAnnual = 0;
   let diffMonthly = 0;
-  let diffBiweekly = 0;
   let diffEI = 0;
   let diffCPP = 0;
   let diffEmployerContributions = 0;
@@ -86,7 +84,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     const baseAnnual = basePaidPositions.reduce((s, p) => s + (p.salary || 0), 0);
     diffAnnual = annual - baseAnnual;
     diffMonthly = diffAnnual / 12;
-    diffBiweekly = diffAnnual / 26;
     
     // Calculate base employer contributions
     let baseEI = 0;
@@ -130,12 +127,6 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           <p className={`text-xs font-semibold italic ${diffColor(diffMonthly)}`}>{fmtDiff(diffMonthly)}</p>
         )}
       </div>
-      <div>
-        <span><span className="font-medium text-foreground">Bi-weekly:</span> {fmt(biweekly)}</span>
-        {hasDeltas && diffBiweekly !== 0 && (
-          <p className={`text-xs font-semibold italic ${diffColor(diffBiweekly)}`}>{fmtDiff(diffBiweekly)}</p>
-        )}
-      </div>
       {showSalary && (
         <>
           <span className="text-muted-foreground/40">|</span>
@@ -171,6 +162,14 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           </div>
         </>
       )}
+      {/* Bi-weekly Payworks Total — docked bottom-right of the financials section.
+          Wages + employer CPP/EI contributions, nothing else. */}
+      <div className="ml-auto rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm shrink-0">
+        <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
+        <p className="text-base font-bold text-foreground leading-tight">
+          {fmt((annual + totalEmployerContributions) / 26)}
+        </p>
+      </div>
     </div>
   );
 }
