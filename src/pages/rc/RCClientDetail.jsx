@@ -116,6 +116,17 @@ export default function RCClientDetail() {
             {client.email && <p className="text-muted-foreground flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {client.email}</p>}
             {client.address && <p className="text-muted-foreground flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {client.city || ''}</p>}
             {client.date_of_birth && <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {new Date(client.date_of_birth).toLocaleDateString()}</p>}
+            {(() => {
+              const visitDates = [
+                ...serviceLogs.map(s => s.service_date).filter(Boolean),
+                ...appointments.filter(a => a.appointment_date && new Date(a.appointment_date) <= new Date()).map(a => a.appointment_date),
+              ];
+              const lastVisit = visitDates.length ? new Date(Math.max(...visitDates.map(d => new Date(d).getTime()))).toLocaleDateString() : null;
+              return lastVisit
+                ? <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Last visit: {lastVisit}</p>
+                : <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Last visit: —</p>;
+            })()}
+            {client.created_date && <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Profile created: {new Date(client.created_date).toLocaleDateString()}</p>}
           </div>
           {(client.program_participations || []).map((pp, i) => {
             const meta = PROGRAM_META[pp.program] || { label: pp.program, color: '#64748b' };
