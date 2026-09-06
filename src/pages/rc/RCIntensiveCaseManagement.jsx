@@ -52,7 +52,9 @@ export default function RCIntensiveCaseManagement() {
   const selectedClient = clients.find(c => c.id === selectedId);
 
   useEffect(() => {
-    setDraft(selectedCase || null);
+    setDraft(selectedCase
+      ? { ...selectedCase, stages: selectedCase.stages?.length ? selectedCase.stages : buildDefaultStages() }
+      : null);
     setDirty(false);
     setSelectedStage('main');
     setMainTab('case-management');
@@ -65,10 +67,11 @@ export default function RCIntensiveCaseManagement() {
     stages[idx] = { ...stages[idx], ...patch };
     return { ...d, stages, current_stage: patch.status === 'in_progress' ? stages[idx].key : d.current_stage };
   });
-  const updateStageByKey = (key, patch) => {
-    const idx = (draft?.stages || []).findIndex(s => s.key === key);
-    if (idx >= 0) updateStage(idx, patch);
-  };
+  const updateStageByKey = (key, patch) => patchDraft(d => ({
+    ...d,
+    stages: (d.stages || []).map(s => s.key === key ? { ...s, ...patch } : s),
+    current_stage: patch.status === 'in_progress' ? key : d.current_stage,
+  }));
   const addTask = (task) => patchDraft(d => ({ ...d, tasks: [...(d.tasks || []), task] }));
   const updateTask = (id, patch) => patchDraft(d => ({ ...d, tasks: (d.tasks || []).map(t => t.id === id ? { ...t, ...patch } : t) }));
   const deleteTask = (id) => patchDraft(d => ({ ...d, tasks: (d.tasks || []).filter(t => t.id !== id) }));
@@ -206,7 +209,7 @@ export default function RCIntensiveCaseManagement() {
                       </Tabs>
                     </div>
                   ) : (
-                    <StageToolsPanel stageKey={selectedStage} draft={draft} onUpdateStage={updateStageByKey} onAddTask={addTask} />
+                    <StageToolsPanel stageKey={selectedStage} draft={draft} onUpdateStage={updateStageByKey} onAddTask={addTask} onUpdateTask={updateTask} />
                   )}
                 </TabsContent>
 

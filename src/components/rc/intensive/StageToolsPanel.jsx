@@ -1,28 +1,50 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Link2, ListPlus, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import StatusBadge from '@/components/rc/StatusBadge';
-import { STAGE_DETAILS, STAGE_LABELS, STAGE_STATUS_OPTIONS, TASK_STATUS_OPTIONS, uid, today } from '@/components/rc/intensive/caseConstants';
+import { STAGE_ACTIONS, STAGE_DETAILS, STAGE_LABELS, STAGE_STATUS_OPTIONS, TASK_STATUS_OPTIONS, uid, today } from '@/components/rc/intensive/caseConstants';
+
+const addDays = (n) => new Date(Date.now() + n * 86400000).toLocaleDateString('en-CA');
 
 // Shown when a specific workflow stage is selected in the far-left sidebar —
-// the tools, resources, stage fields, and stage tasks for that stage.
-export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddTask }) {
-  const detail = STAGE_DETAILS[stageKey] || {};
-  const stages = draft?.stages || [];
-  const idx = stages.findIndex(s => s.key === stageKey);
-  const stage = stages[idx] || { status: 'not_started', notes: '' };
-  const stageTasks = (draft?.tasks || []).filter(t => t.stage_key === stageKey);
+// stage fields, actionable planning tools, and this stage's tasks.
+export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddTask, onUpdateTask }) {
+  const navigate = useNavigate();
   const [newTask, setNewTask] = useState('');
+  const detail = STAGE_DETAILS[stageKey] || {};
+  const stage = (draft?.stages || []).find(s => s.key === stageKey) || { status: 'not_started', notes: '' };
+  const stageTasks = (draft?.tasks || []).filter(t => t.stage_key === stageKey);
+  const actions = STAGE_ACTIONS[stageKey] || [];
 
-  const patchStage = (patch) => idx >= 0 && onUpdateStage(idx, patch);
+  const patchStage = (patch) => onUpdateStage(stageKey, patch);
+
+  const makeTask = (title, dueDays) => ({
+    id: uid(),
+    title,
+    stage_key: stageKey,
+    status: 'todo',
+    due_date: dueDays ? addDays(dueDays) : null,
+    created_date: today(),
+  });
 
   const addStageTask = () => {
     if (!newTask.trim()) return;
-    onAddTask({ id: uid(), title: newTask.trim(), stage_key: stageKey, status: 'todo', created_date: today() });
+    onAddTask(makeTask(newTask.trim()));
     setNewTask('');
+  };
+
+  const runAction = (a) => {
+    if (a.type === 'link') {
+      navigate((a.url || '').replace('{clientId}', draft?.client_id || ''));
+    } else if (a.type === 'task') {
+      onAddTask(makeTask(a.title, a.due_days));
+    } else if (a.type === 'task_batch') {
+      (a.titles || []).forEach(t => onAddTask(makeTask(t)));
+    }
   };
 
   return (
@@ -45,11 +67,11 @@ export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddT
           </div>
           <div className="space-y-1.5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Start Date</p>
-            <Input type="date" value={stage.start_date || ''} onChange={(e) => patchStage({ start_date: e.target.value })} />
+            <Input type="date" value={stage.start_date || ''} onChange={(e) => patchStage({ start_date: e.target.value || null })} />
           </div>
           <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Completed Date</p>
-            <Input type="date" value={stage.completed_date || ''} onChange={(e) => patchStage({ completed_date: e.target.value })} />
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">End Date</p>
+            <Input type="date" value={stage.completed_date || ''} onChange={(e) => patchStage({ completed_date: e.target.value || null })} />
           </div>
         </div>
 
@@ -59,14 +81,20 @@ export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddT
         </div>
       </CardContent></Card>
 
-      {(detail.resources?.length) > 0 && (
+      {actions.length > 0 && (
         <Card><CardContent className="p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Tools &amp; Resources for this Stage</p>
-          <ul className="space-y-1.5">
-            {detail.resources.map(r => (
-              <li key={r} className="text-sm text-foreground flex gap-2 items-start"><span className="text-primary mt-0.5">•</span>{r}</li>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Planning &amp; Action Tools</p>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {actions.map(a => (
+              <Button key={a.label} variant="outline" size="sm" className="justify-start h-auto py-2 text-left whitespace-normal"
+                onClick={() => runAction(a)}>
+                {a.type === 'link' ? <Link2 className="h-4 w-4 shrink-0 text-primary" />
+                  : a.type === 'task_batch' ? <ListPlus className="h-4 w-4 shrink-0 text-primary" />
+                  : <Plus className="h-4 w-4 shrink-0 text-primary" />}
+                <span className="text-xs font-normal">{a.label}</span>
+              </Button>
             ))}
-          </ul>
+          </div>
         </CardContent></Card>
       )}
 
@@ -78,13 +106,21 @@ export default function StageToolsPanel({ stageKey, draft, onUpdateStage, onAddT
           <Button size="sm" onClick={addStageTask} disabled={!newTask.trim()}>Add</Button>
         </div>
         {stageTasks.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No tasks for this stage yet.</p>
+          <p className="text-xs text-muted-foreground">No tasks for this stage yet — use the planning tools above or add your own.</p>
         ) : (
           <ul className="divide-y divide-border">
             {stageTasks.map(t => (
               <li key={t.id} className="py-2 flex items-center justify-between gap-2">
-                <p className={`text-sm ${t.status === 'done' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{t.title}</p>
-                <StatusBadge status={t.status} options={TASK_STATUS_OPTIONS} />
+                <div className="min-w-0">
+                  <p className={`text-sm truncate ${t.status === 'done' ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{t.title}</p>
+                  {t.due_date && <p className="text-[10px] text-muted-foreground">Due {t.due_date}</p>}
+                </div>
+                <Select value={t.status || 'todo'} onValueChange={(v) => onUpdateTask(t.id, { status: v, completed_date: v === 'done' ? today() : null })}>
+                  <SelectTrigger className="h-7 w-32 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TASK_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </li>
             ))}
           </ul>

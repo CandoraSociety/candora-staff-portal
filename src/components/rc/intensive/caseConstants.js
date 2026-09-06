@@ -45,6 +45,53 @@ export const STAGE_DETAILS = {
   },
 };
 
+// Actionable tools per stage — one-click task creation (with optional due-date offsets)
+// and in-app navigation links. url supports a {clientId} placeholder.
+export const STAGE_ACTIONS = {
+  referral_screening: [
+    { type: 'link', label: 'Open client profile — referral details', url: '/rc/clients/{clientId}' },
+    { type: 'task', label: 'Add task: Confirm BRC eligibility (due in 7 days)', title: 'Confirm Building Resilient Caregivers eligibility', due_days: 7 },
+    { type: 'task', label: 'Add task: Urgency / safety screening (due in 3 days)', title: 'Complete urgency / safety screening', due_days: 3 },
+    { type: 'task', label: 'Add task: Supervisor consult for complex referral', title: 'Supervisor consult for complex referral' },
+  ],
+  assessment: [
+    { type: 'link', label: 'Open client profile — contact & demographics', url: '/rc/clients/{clientId}' },
+    { type: 'task_batch', label: 'Add intake & assessment checklist (5 tasks)', titles: [
+      'Meet the family & build rapport',
+      'Complete caregiver wellbeing screening',
+      'Complete family strengths & needs assessment',
+      'Review child development milestones (0\u20136)',
+      'Record identified needs in the Central Database',
+    ] },
+    { type: 'task', label: 'Add task: Document risk factors identified', title: 'Document risk factors identified during assessment', due_days: 7 },
+  ],
+  support_plan: [
+    { type: 'task', label: 'Add task: Draft support plan with caregiver (due in 14 days)', title: 'Draft support plan with caregiver', due_days: 14 },
+    { type: 'task', label: 'Add task: Set plan objectives & action steps', title: 'Set plan objectives & action steps', due_days: 14 },
+    { type: 'task', label: 'Add task: Identify needed referrals (internal / community)', title: 'Identify needed referrals — internal programs & community partners', due_days: 14 },
+    { type: 'link', label: 'Open Appointments — schedule planning meeting', url: '/rc/appointments' },
+    { type: 'link', label: 'Open client profile — External Referral action', url: '/rc/clients/{clientId}' },
+  ],
+  active_support: [
+    { type: 'task', label: 'Add task: Set recurring caregiver check-ins (due in 7 days)', title: 'Set recurring caregiver check-ins', due_days: 7 },
+    { type: 'link', label: 'Open Appointments — book next visit', url: '/rc/appointments' },
+    { type: 'link', label: 'Open client profile — emergency supports (food, clothing, bus tickets)', url: '/rc/clients/{clientId}' },
+    { type: 'task', label: 'Add task: Connect family with community resources', title: 'Connect family with community resources', due_days: 14 },
+  ],
+  monitoring_review: [
+    { type: 'task', label: 'Add task: 90-day support plan review (due in 90 days)', title: '90-day support plan review', due_days: 90 },
+    { type: 'task', label: 'Add task: Review objectives progress with caregiver (due in 30 days)', title: 'Review objectives progress with caregiver', due_days: 30 },
+    { type: 'task', label: 'Add task: Update risk factor statuses (due in 30 days)', title: 'Update risk factor statuses', due_days: 30 },
+    { type: 'task', label: 'Add task: Book supervisor case review (due in 30 days)', title: 'Supervisor case review', due_days: 30 },
+  ],
+  closure_followup: [
+    { type: 'task', label: 'Add task: Complete closure summary with caregiver', title: 'Complete closure summary with caregiver', due_days: 14 },
+    { type: 'task', label: 'Add task: 30-day post-closure follow-up contact (due in 30 days)', title: '30-day post-closure follow-up contact', due_days: 30 },
+    { type: 'task', label: 'Add task: 90-day post-closure follow-up contact (due in 90 days)', title: '90-day post-closure follow-up contact', due_days: 90 },
+    { type: 'task', label: 'Add task: Arrange warm handoff / transition referrals', title: 'Arrange warm handoff / transition referrals', due_days: 14 },
+  ],
+};
+
 export const STAGE_STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not Started', color: '#94a3b8' },
   { value: 'in_progress', label: 'In Progress', color: '#f59e0b' },
