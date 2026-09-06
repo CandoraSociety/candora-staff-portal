@@ -263,6 +263,7 @@ import RCClientDetail from '@/pages/rc/RCClientDetail';
 import RCIntake from '@/pages/rc/RCIntake';
 import RCAppointments from '@/pages/rc/RCAppointments';
 import RCReferrals from '@/pages/rc/RCReferrals';
+import RCIntensiveCaseManagement from '@/pages/rc/RCIntensiveCaseManagement';
 
 // EmpowerU Portal
 import EmpowerULayout from '@/components/empoweru/EmpowerULayout';
@@ -618,6 +619,7 @@ const AuthenticatedApp = () => {
           <Route path="/rc/intake" element={<RCIntake />} />
           <Route path="/rc/appointments" element={<RCAppointments />} />
           <Route path="/rc/referrals" element={<RCReferrals />} />
+          <Route path="/rc/case-management" element={<RCIntensiveCaseManagement />} />
         </Route>
 
         {/* EmpowerU Portal - standalone layout */}

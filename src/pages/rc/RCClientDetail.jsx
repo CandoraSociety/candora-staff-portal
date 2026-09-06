@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -87,7 +87,10 @@ export default function RCClientDetail() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Link to="/rc/clients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Back</Button></Link>
+        <div className="flex items-center gap-1">
+          <Link to="/rc/clients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Back</Button></Link>
+          {client.service_category === 'intensive_services' && <Link to={`/rc/case-management?client=${client.id}`}><Button variant="outline" size="sm"><ClipboardList className="h-4 w-4" /> Case Management</Button></Link>}
+        </div>
         <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit</Button>
       </div>
 
