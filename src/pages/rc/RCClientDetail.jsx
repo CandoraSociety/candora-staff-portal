@@ -13,6 +13,9 @@ import ClientFormCore, { REASON_OPTIONS } from '@/components/rc/ClientFormCore';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
+import ClientActionButtons from '@/components/rc/ClientActionButtons';
+import ExternalReferralDialog from '@/components/rc/ExternalReferralDialog';
+import { buildDefaultStages } from '@/components/rc/intensive/caseConstants';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMENT_STATUS_OPTIONS, REFERRAL_STATUS_OPTIONS, REFERRAL_DIRECTION_LABELS, IS_PHAC } from '@/lib/rcConstants';
 const STREAM_LABELS = {
   pathways: 'WD',
@@ -52,6 +55,8 @@ export default function RCClientDetail() {
   const [serviceLogOpen, setServiceLogOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [apptOpen, setApptOpen] = useState(false);
+  const [extRefOpen, setExtRefOpen] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
 
   const { data: client, isLoading } = useQuery({ queryKey: ['rc-client', id], queryFn: () => base44.entities.RCClient.get(id) });
   const { data: serviceLogs = [] } = useQuery({ queryKey: ['rc-service-logs', id], queryFn: () => base44.entities.RCServiceLog.filter({ client_id: id }) });
@@ -79,6 +84,48 @@ export default function RCClientDetail() {
     queryClient.invalidateQueries({ queryKey: ['rc-service-logs', id] });
     queryClient.invalidateQueries({ queryKey: ['rc-appointments', id] });
     queryClient.invalidateQueries({ queryKey: ['rc-referrals', id] });
+  };
+
+  const addToIntensive = async () => {
+    setActionBusy(true);
+    try {
+      if (client.service_category !== 'intensive_services') {
+        await base44.entities.RCClient.update(id, { service_category: 'intensive_services' });
+        queryClient.invalidateQueries({ queryKey: ['rc-client', id] });
+      }
+      const existing = await base44.entities.IntensiveCase.filter({ client_id: id });
+      if (existing.length === 0) {
+        await base44.entities.IntensiveCase.create({
+          client_id: id,
+          client_name: `${client.first_name} ${client.last_name}`,
+          current_stage: 'referral_screening',
+          stages: buildDefaultStages(),
+          tasks: [], risk_factors: [], objectives: [],
+        });
+      }
+      toast({ title: 'Added to Intensive Services', description: 'Case management workflow is ready.' });
+      navigate(`/rc/case-management?client=${id}`);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setActionBusy(false);
+  };
+
+  const addToCaregiverCapacity = async () => {
+    setActionBusy(true);
+    try {
+      await base44.entities.RCClient.update(id, { service_category: 'caregiver_capacity_0_5' });
+      queryClient.invalidateQueries({ queryKey: ['rc-client', id] });
+      queryClient.invalidateQueries({ queryKey: ['rc-clients'] });
+      toast({ title: 'Categorized', description: 'Client added to 0-6 Caregiver Capacity.' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setActionBusy(false);
+  };
+
+  const registerForProgram = () => {
+    toast({ title: 'Coming soon', description: 'Program registration portals will be connected here.' });
   };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
@@ -157,6 +204,14 @@ export default function RCClientDetail() {
               <p className="text-xs text-sky-700 mt-0.5">Children 0-6: {client.has_children_0_6 ? `Yes (${client.children_count_0_6 || '?'})` : 'Not specified'} {client.children_ages_detail ? `— ${client.children_ages_detail}` : ''}</p>
             </div>
           )}
+          <ClientActionButtons
+            client={client}
+            busy={actionBusy}
+            onIntensive={addToIntensive}
+            onCaregiver={addToCaregiverCapacity}
+            onRegister={registerForProgram}
+            onExternalReferral={() => setExtRefOpen(true)}
+          />
           {(() => {
             const reasonLabel = REASON_OPTIONS.find(o => o.value === client.reason_for_accessing)?.label;
             const reasonText = client.reason_for_accessing === 'other'
@@ -228,6 +283,7 @@ export default function RCClientDetail() {
       <ServiceLogDialog open={serviceLogOpen} onOpenChange={setServiceLogOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setServiceLogOpen(false); invalidateAll(); }} />
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} clientEmail={client.email} onSaved={() => { setApptOpen(false); invalidateAll(); }} />
       <ReferralDialog open={referralOpen} onOpenChange={setReferralOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setReferralOpen(false); invalidateAll(); }} />
+      <ExternalReferralDialog open={extRefOpen} onOpenChange={setExtRefOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setExtRefOpen(false); invalidateAll(); }} />
     </div>
   );
 }
