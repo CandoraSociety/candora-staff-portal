@@ -18,6 +18,33 @@ export const buildDefaultStages = () => CASE_STAGES.map(s => ({
   notes: '',
 }));
 
+export const STAGE_DETAILS = {
+  referral_screening: {
+    description: 'Receive the referral, confirm eligibility for Building Resilient Caregivers, and screen for urgency or safety concerns that need immediate attention.',
+    resources: ['Intake & referral form (Central Database client profile)', 'Program eligibility criteria sheet', 'Urgency / safety screening checklist', 'Supervisor consult for complex referrals'],
+  },
+  assessment: {
+    description: 'Meet the family, build rapport, and complete the intake & assessment conversation covering caregiver wellbeing, child development, family strengths, and identified needs.',
+    resources: ['Family strengths & needs assessment', 'Caregiver wellbeing screening tools', 'Child development milestones reference (0-6)', 'Risk factor identification guide'],
+  },
+  support_plan: {
+    description: 'Develop the individualized support plan with the caregiver — goals, objectives, action steps, frequency of contact, and the supports and referrals needed.',
+    resources: ['Support plan template (Objectives tab)', 'Referral directory — internal programs and community partners', 'Caregiver Capacity 0-6 program options', 'External Referral form (client profile)'],
+  },
+  active_support: {
+    description: 'Deliver ongoing intensive supports — regular contact, home or centre visits, coaching, resource connections, and advocacy coordinated with other services.',
+    resources: ['Visit / service logging (Service History tab)', 'Community resource directory', 'Emergency supports — food, clothing, bus tickets', 'Case tasks tracker (Tasks tab)'],
+  },
+  monitoring_review: {
+    description: 'Review progress against the support plan at set intervals, adjust objectives, monitor risk factors, and confirm services remain the right fit.',
+    resources: ['Support plan review schedule (e.g. every 90 days)', 'Risk factor monitoring (Risk Factors tab)', 'Objective progress check-in', 'Supervisor case review'],
+  },
+  closure_followup: {
+    description: 'Close the case when goals are achieved or the family exits — complete a closure summary, transition referrals as needed, and complete follow-up contact.',
+    resources: ['Closure summary template', 'Follow-up schedule (e.g. 30 and 90 days post-closure)', 'Warm handoff / transition referral guide', 'Program evaluation & outcome reporting'],
+  },
+};
+
 export const STAGE_STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not Started', color: '#94a3b8' },
   { value: 'in_progress', label: 'In Progress', color: '#f59e0b' },

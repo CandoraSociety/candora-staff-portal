@@ -14,6 +14,7 @@ import CaseTasksTab from '@/components/rc/intensive/CaseTasksTab';
 import CaseRisksTab from '@/components/rc/intensive/CaseRisksTab';
 import CaseObjectivesTab from '@/components/rc/intensive/CaseObjectivesTab';
 import { buildDefaultStages, CASE_STAGES } from '@/components/rc/intensive/caseConstants';
+import StageDetailSidebar from '@/components/rc/intensive/StageDetailSidebar';
 
 export default function RCIntensiveCaseManagement() {
   const location = useLocation();
@@ -23,6 +24,7 @@ export default function RCIntensiveCaseManagement() {
   const [draft, setDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedStage, setSelectedStage] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['rc-clients-intensive'],
@@ -45,6 +47,10 @@ export default function RCIntensiveCaseManagement() {
     if (selectedCase) { setDraft(selectedCase); setDirty(false); }
     else { setDraft(null); setDirty(false); }
   }, [selectedCase?.id, selectedId]);
+
+  useEffect(() => {
+    if (!selectedStage && draft) setSelectedStage(draft.current_stage || CASE_STAGES[0].key);
+  }, [draft, selectedStage]);
 
   const patchDraft = (fn) => { setDraft(prev => fn(prev)); setDirty(true); };
 
@@ -102,7 +108,7 @@ export default function RCIntensiveCaseManagement() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-foreground">Case Management</h1>
+        <h1 className="text-2xl font-heading font-bold text-foreground">Intensive Services Case Management (FRN)</h1>
         <p className="text-muted-foreground text-sm mt-1">Building Resilient Caregivers workflow for Intensive Services clients — stages, tasks, risk factors, and objectives.</p>
       </div>
 
@@ -137,31 +143,40 @@ export default function RCIntensiveCaseManagement() {
               <Button onClick={startCase}><ClipboardList className="h-4 w-4" /> Start Case Management</Button>
             </CardContent></Card>
           ) : !draft ? <div className="text-center py-8 text-muted-foreground">Loading workflow...</div> : (
-            <div className="space-y-4">
-              <Card><CardContent className="p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <UserRound className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <p className="text-sm font-medium text-foreground truncate">{draft.client_name}</p>
-                  {selectedClient && <Link to={`/rc/clients/${selectedClient.id}`} className="text-xs text-primary hover:underline shrink-0">View profile</Link>}
+            <div className="grid lg:grid-cols-[260px_1fr] gap-4 items-start">
+              <StageDetailSidebar
+                stages={draft.stages || []}
+                currentStage={draft.current_stage}
+                selectedKey={selectedStage}
+                onSelect={setSelectedStage}
+                taskCountFor={(key) => (draft.tasks || []).filter(t => t.stage_key === key && t.status !== 'done').length}
+              />
+              <div className="space-y-4">
+                <Card><CardContent className="p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <UserRound className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <p className="text-sm font-medium text-foreground truncate">{draft.client_name}</p>
+                    {selectedClient && <Link to={`/rc/clients/${selectedClient.id}`} className="text-xs text-primary hover:underline shrink-0">View profile</Link>}
+                  </div>
+                  <Button size="sm" onClick={save} disabled={!dirty || saving}><Save className="h-4 w-4" /> {saving ? 'Saving...' : dirty ? 'Save Changes' : 'Saved'}</Button>
+                </CardContent></Card>
+
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-2">Workflow Stages</p>
+                  <StageTracker stages={draft.stages || []} currentStage={draft.current_stage} onChange={updateStage} />
                 </div>
-                <Button size="sm" onClick={save} disabled={!dirty || saving}><Save className="h-4 w-4" /> {saving ? 'Saving...' : dirty ? 'Save Changes' : 'Saved'}</Button>
-              </CardContent></Card>
 
-              <div>
-                <p className="text-sm font-medium text-foreground mb-2">Workflow Stages</p>
-                <StageTracker stages={draft.stages || []} currentStage={draft.current_stage} onChange={updateStage} />
+                <Tabs defaultValue="tasks">
+                  <TabsList>
+                    <TabsTrigger value="tasks">Tasks ({(draft.tasks || []).length})</TabsTrigger>
+                    <TabsTrigger value="risks">Risk Factors ({(draft.risk_factors || []).length})</TabsTrigger>
+                    <TabsTrigger value="objectives">Objectives ({(draft.objectives || []).length})</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="tasks"><CaseTasksTab tasks={draft.tasks || []} onAdd={addTask} onUpdate={updateTask} onDelete={deleteTask} /></TabsContent>
+                  <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
+                  <TabsContent value="objectives"><CaseObjectivesTab objectives={draft.objectives || []} onAdd={addObjective} onUpdate={updateObjective} onDelete={deleteObjective} /></TabsContent>
+                </Tabs>
               </div>
-
-              <Tabs defaultValue="tasks">
-                <TabsList>
-                  <TabsTrigger value="tasks">Tasks ({(draft.tasks || []).length})</TabsTrigger>
-                  <TabsTrigger value="risks">Risk Factors ({(draft.risk_factors || []).length})</TabsTrigger>
-                  <TabsTrigger value="objectives">Objectives ({(draft.objectives || []).length})</TabsTrigger>
-                </TabsList>
-                <TabsContent value="tasks"><CaseTasksTab tasks={draft.tasks || []} onAdd={addTask} onUpdate={updateTask} onDelete={deleteTask} /></TabsContent>
-                <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
-                <TabsContent value="objectives"><CaseObjectivesTab objectives={draft.objectives || []} onAdd={addObjective} onUpdate={updateObjective} onDelete={deleteObjective} /></TabsContent>
-              </Tabs>
             </div>
           )}
         </div>
