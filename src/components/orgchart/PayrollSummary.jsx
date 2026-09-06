@@ -39,6 +39,11 @@ function calculateEmployerContributions(salary) {
 const BENEFITS_MONTHLY = 1900;
 const BENEFITS_ANNUAL = BENEFITS_MONTHLY * 12;
 
+// Alberta WCB (Workers' Compensation Board) premium — employer-paid, calculated as
+// insurable payroll × industry rate per $100. Placeholder rate; confirm against the
+// actual WCB-Alberta premium statement.
+const WCB_RATE_PER_100 = 0.35;
+
 // Payroll summary bar — annual / monthly / bi-weekly
 export default function PayrollSummary({ positions, showSalary, basePositions }) {
   if (!showSalary) return null;
@@ -71,6 +76,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   // per bi-weekly run is gross wages − benefits skim + employer CPP/EI.
   const benefitsSkim = BENEFITS_ANNUAL / 26;
   const payworksBiweekly = (annual + totalEmployerContributions - BENEFITS_ANNUAL) / 26;
+  // WCB estimate — insurable payroll × industry rate per $100
+  const wcbAnnual = annual * (WCB_RATE_PER_100 / 100);
   const grandTotalAnnual = annual + totalEmployerContributions + BENEFITS_ANNUAL;
   const grandTotalMonthly = grandTotalAnnual / 12;
 
@@ -160,22 +167,39 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           <span className="text-muted-foreground/40">|</span>
           <div>
             <span className="font-semibold text-foreground">Total Cost: {fmt(grandTotalAnnual)}/yr</span>
-            <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo · {fmt(grandTotalAnnual / 26)}/bi-wk</p>
+            <p className="text-xs text-muted-foreground">{fmt(grandTotalMonthly)}/mo</p>
             {hasDeltas && diffAnnual !== 0 && (
               <p className={`text-xs font-semibold italic ${diffColor(diffAnnual + diffEmployerContributions)}`}>{fmtDiff(diffAnnual + diffEmployerContributions)}/yr</p>
             )}
           </div>
         </>
       )}
-      {/* Bi-weekly Payworks Total — docked bottom-right of the financials section.
-          Actual amount Payworks withdraws: gross wages + employer CPP/EI,
-          minus the staff benefits deduction skimmed from wages and kept by Candora. */}
-      <div className="ml-auto rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm shrink-0">
-        <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
-        <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
-        <p className="text-[10px] text-muted-foreground">
-          incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} employee contribution for benefits retained by Candora
-        </p>
+      {/* Financial quick-reference boxes — docked bottom-right of the financials section */}
+      <div className="ml-auto flex flex-wrap items-stretch gap-2 shrink-0">
+        {/* Annual WCB — employer-paid Workers' Compensation premium, estimated from payroll */}
+        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground">Annual WCB</span>
+          <p className="text-base font-bold text-foreground leading-tight">{fmt(wcbAnnual)}</p>
+          <p className="text-[10px] text-muted-foreground">
+            Workers' Compensation premium · <span className="italic font-semibold text-amber-600">estimate</span>
+          </p>
+        </div>
+        {/* Monthly Victor insurance benefits — estimate */}
+        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground">Monthly Victor Insurance Benefits</span>
+          <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY)}</p>
+          <p className="text-[10px] text-muted-foreground"><span className="italic font-semibold text-amber-600">estimate</span> — confirm with actual premium</p>
+        </div>
+        {/* Bi-weekly Payworks Total — actual amount Payworks withdraws:
+            gross wages + employer CPP/EI, minus the staff benefits deduction
+            skimmed from wages and kept by Candora. */}
+        <div className="rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
+          <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
+          <p className="text-[10px] text-muted-foreground">
+            incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} employee contribution for benefits retained by Candora
+          </p>
+        </div>
       </div>
     </div>
   );
