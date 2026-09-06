@@ -13,7 +13,7 @@ import StageTracker from '@/components/rc/intensive/StageTracker';
 import CaseTasksTab from '@/components/rc/intensive/CaseTasksTab';
 import CaseRisksTab from '@/components/rc/intensive/CaseRisksTab';
 import CaseObjectivesTab from '@/components/rc/intensive/CaseObjectivesTab';
-import { buildDefaultStages, CASE_STAGES, uid } from '@/components/rc/intensive/caseConstants';
+import { buildDefaultStages, CASE_STAGES } from '@/components/rc/intensive/caseConstants';
 
 export default function RCIntensiveCaseManagement() {
   const location = useLocation();
