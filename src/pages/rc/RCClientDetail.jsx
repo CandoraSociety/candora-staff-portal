@@ -14,11 +14,9 @@ import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMENT_STATUS_OPTIONS, REFERRAL_STATUS_OPTIONS, REFERRAL_DIRECTION_LABELS, IS_PHAC } from '@/lib/rcConstants';
-import { outcomeLabel } from '@/lib/crtCodes';
-
 const STREAM_LABELS = {
-  pathways: 'Workforce Development (WD)',
-  direct_to_employment: 'Direct Employment Assistance (DEA)',
+  pathways: 'WD',
+  direct_to_employment: 'DEA',
   casual: 'Casual',
   external_referral: 'External Referral',
   internal_referral: 'Internal Referral',
@@ -131,7 +129,6 @@ export default function RCClientDetail() {
                     <span className="text-muted-foreground">Start: <span className="font-medium text-foreground">{fmtDate(d.start_date)}</span></span>
                     <span className="text-muted-foreground">Stream: <span className="font-medium text-foreground">{STREAM_LABELS[d.stream] || d.stream || '—'}</span></span>
                     <span className="text-muted-foreground">Status: <span className="font-medium text-foreground">{PROGRAM_STATUS_LABELS[d.status] || d.status || '—'}</span></span>
-                    <span className="text-muted-foreground">Outcome: <span className="font-medium text-foreground">{d.outcome ? outcomeLabel(d.outcome) : '—'}</span></span>
                     <span className="text-muted-foreground">{d.status === 'cancelled' ? 'Cancelled' : 'Completed'}: <span className="font-medium text-foreground">{fmtDate(d.end_date)}</span></span>
                   </div>
                 ) : (
