@@ -66,6 +66,11 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
     totalCPP += contribs.cpp1 + contribs.cpp2;
   });
   const totalEmployerContributions = totalEI + totalCPP;
+  // The employee's 50% share of benefits is deducted from staff wages and kept
+  // by Candora (it never leaves the account), so the actual Payworks withdrawal
+  // per bi-weekly run is gross wages − benefits skim + employer CPP/EI.
+  const benefitsSkim = BENEFITS_ANNUAL / 26;
+  const payworksBiweekly = (annual + totalEmployerContributions - BENEFITS_ANNUAL) / 26;
   const grandTotalAnnual = annual + totalEmployerContributions + BENEFITS_ANNUAL;
   const grandTotalMonthly = grandTotalAnnual / 12;
 
@@ -163,11 +168,13 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
         </>
       )}
       {/* Bi-weekly Payworks Total — docked bottom-right of the financials section.
-          Wages + employer CPP/EI contributions, nothing else. */}
+          Actual amount Payworks withdraws: gross wages + employer CPP/EI,
+          minus the staff benefits deduction skimmed from wages and kept by Candora. */}
       <div className="ml-auto rounded-lg border border-accent/50 bg-card px-4 py-1.5 text-right shadow-sm shrink-0">
         <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
-        <p className="text-base font-bold text-foreground leading-tight">
-          {fmt((annual + totalEmployerContributions) / 26)}
+        <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
+        <p className="text-[10px] text-muted-foreground">
+          incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} staff benefits deduction (kept)
         </p>
       </div>
     </div>
