@@ -174,7 +174,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
         <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
         <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
         <p className="text-[10px] text-muted-foreground">
-          incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} staff benefits deduction (kept)
+          incl. {fmt(totalEmployerContributions / 26)} employer CPP/EI · less {fmt(benefitsSkim)} employee contribution for benefits retained by Candora
         </p>
       </div>
     </div>
