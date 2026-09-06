@@ -8,9 +8,11 @@ import ClientFormCore from '@/components/rc/ClientFormCore';
 
 const EMPTY = {
   first_name: '', last_name: '', date_of_birth: '', phone: '', email: '', address: '', city: '', postal_code: '',
-  preferred_language: '', emergency_contact_name: '', emergency_contact_phone: '',
-  funder_categories: [], has_children_0_6: false, children_count_0_6: 0, children_ages_detail: '',
-  assigned_worker: '', case_status: 'intake', intake_date: '', presenting_needs: '', referral_source: '', notes: '',
+  preferred_language: '', additional_languages: '', emergency_contact_name: '', emergency_contact_phone: '',
+  service_category: '', has_children_0_6: false, children_count_0_6: 0, children_ages_detail: '',
+  english_proficiency: '', english_proficiency_notes: '', indigenous_first_nations: false, newcomer: false,
+  reason_for_accessing: '', reason_for_accessing_other: '', identified_needs: '',
+  assigned_worker: '', case_status: 'intake', intake_date: '', referral_source: '', notes: '',
 };
 
 export default function RCIntake() {
@@ -24,6 +26,10 @@ export default function RCIntake() {
   const handleSave = async () => {
     if (!form.first_name || !form.last_name) {
       toast({ title: 'First and last name are required', variant: 'destructive' });
+      return;
+    }
+    if (!form.service_category) {
+      toast({ title: 'Service category is required', variant: 'destructive' });
       return;
     }
     setSaving(true);

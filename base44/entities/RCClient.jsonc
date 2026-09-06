@@ -35,7 +35,32 @@
     },
     "preferred_language": {
       "type": "string",
-      "description": "Preferred language"
+      "description": "Primary language"
+    },
+    "additional_languages": {
+      "type": "string",
+      "description": "Additional languages spoken (comma-separated)"
+    },
+    "english_proficiency": {
+      "type": "string",
+      "enum": [
+        "strong",
+        "acceptable",
+        "low"
+      ],
+      "description": "Basic English language proficiency evaluation"
+    },
+    "english_proficiency_notes": {
+      "type": "string",
+      "description": "Notes supporting the English proficiency evaluation"
+    },
+    "indigenous_first_nations": {
+      "type": "boolean",
+      "description": "Demographics: client identifies as Indigenous / First Nations"
+    },
+    "newcomer": {
+      "type": "boolean",
+      "description": "Demographics: client identifies as a newcomer to Canada"
     },
     "emergency_contact_name": {
       "type": "string"
@@ -55,6 +80,15 @@
         ]
       },
       "description": "Funding sources/categories. phac_caregiver_capacity = caregiver support for families/parents with children 0-6 (PHAC-funded, isolatable for reporting)"
+    },
+    "service_category": {
+      "type": "string",
+      "enum": [
+        "intensive_services",
+        "caregiver_capacity_0_5",
+        "general"
+      ],
+      "description": "Service category assigned at intake (mandatory). Intensive Services, Caregiver Capacity 0-5, or General."
     },
     "has_children_0_6": {
       "type": "boolean",
@@ -89,9 +123,29 @@
       "format": "date",
       "description": "Date of intake"
     },
+    "reason_for_accessing": {
+      "type": "string",
+      "enum": [
+        "program_registration",
+        "emergency_food",
+        "emergency_clothing",
+        "bus_tickets",
+        "housing_concerns",
+        "other"
+      ],
+      "description": "Primary reason the client is accessing services"
+    },
+    "reason_for_accessing_other": {
+      "type": "string",
+      "description": "If reason for accessing services is 'other', specify"
+    },
+    "identified_needs": {
+      "type": "string",
+      "description": "Needs identified during intake"
+    },
     "presenting_needs": {
       "type": "string",
-      "description": "Client's presenting needs at intake"
+      "description": "Legacy free-text needs field (pre-'Reason For Accessing Services'). Retained for existing records."
     },
     "referral_source": {
       "type": "string",

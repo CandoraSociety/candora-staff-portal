@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/rc/StatusBadge';
-import ClientFormCore from '@/components/rc/ClientFormCore';
+import ClientFormCore, { REASON_OPTIONS } from '@/components/rc/ClientFormCore';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
@@ -143,7 +143,18 @@ export default function RCClientDetail() {
               <p className="text-xs text-sky-700 mt-0.5">Children 0-6: {client.has_children_0_6 ? `Yes (${client.children_count_0_6 || '?'})` : 'Not specified'} {client.children_ages_detail ? `— ${client.children_ages_detail}` : ''}</p>
             </div>
           )}
-          {client.presenting_needs && <div className="mt-3 pt-3 border-t border-border/50"><p className="text-xs text-muted-foreground mb-0.5">Presenting Needs</p><p className="text-sm text-foreground">{client.presenting_needs}</p></div>}
+          {(() => {
+            const reasonLabel = REASON_OPTIONS.find(o => o.value === client.reason_for_accessing)?.label;
+            const reasonText = client.reason_for_accessing === 'other'
+              ? (client.reason_for_accessing_other || 'Other')
+              : (reasonLabel || client.presenting_needs);
+            return (
+              <>
+                {reasonText && <div className="mt-3 pt-3 border-t border-border/50"><p className="text-xs text-muted-foreground mb-0.5">Reason For Accessing Services</p><p className="text-sm text-foreground">{reasonText}</p></div>}
+                {client.identified_needs && <div className="mt-3 pt-3 border-t border-border/50"><p className="text-xs text-muted-foreground mb-0.5">Identified Needs</p><p className="text-sm text-foreground">{client.identified_needs}</p></div>}
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
 
