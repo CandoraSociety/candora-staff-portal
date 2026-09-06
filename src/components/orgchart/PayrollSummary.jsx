@@ -174,8 +174,8 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           </div>
         </>
       )}
-      {/* Financial quick-reference boxes — wrap onto extra rows instead of overflowing */}
-      <div className="ml-auto flex flex-wrap justify-end items-stretch gap-2">
+      {/* Financial quick-reference boxes — docked bottom-right, single row */}
+      <div className="ml-auto flex items-stretch gap-2">
         {/* Annual WCB — employer-paid Workers' Compensation premium, estimated from payroll */}
         <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
           <span className="text-xs font-medium text-muted-foreground">Annual WCB</span>
