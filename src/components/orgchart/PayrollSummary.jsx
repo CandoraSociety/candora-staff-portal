@@ -173,28 +173,28 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
           </div>
         </>
       )}
-      {/* Financial quick-reference boxes — docked bottom-right, single row */}
-      <div className="ml-auto flex items-stretch gap-2">
+      {/* Financial quick-reference boxes — single row, stretched to fill remaining space.
+          Payworks Total = gross wages + employer CPP/EI, minus the staff benefits
+          deduction skimmed from wages and kept by Candora. */}
+      <div className="ml-auto flex items-stretch gap-2 w-full sm:w-auto">
         {/* Annual WCB — employer-paid Workers' Compensation premium, estimated from payroll */}
-        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
-          <span className="text-xs font-medium text-muted-foreground">Annual WCB</span>
-          <p className="text-base font-bold text-foreground leading-tight">~{fmt(wcbAnnual)}</p>
-          <p className="text-[10px] text-muted-foreground"><span className="italic font-semibold text-amber-600">estimate</span></p>
+        <div className="flex-1 flex items-center justify-between gap-2 rounded-lg border border-accent/50 bg-card px-3 py-1.5 shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Annual WCB</span>
+          <span className="text-sm font-bold text-foreground whitespace-nowrap">
+            ~{fmt(wcbAnnual)} <span className="text-[10px] italic font-semibold text-amber-600">estimate</span>
+          </span>
         </div>
-        {/* Monthly Victor insurance benefits — employer + employee shares */}
-        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
-          <span className="text-xs font-medium text-muted-foreground">Monthly Insurance Benefits</span>
-          <p className="text-base font-bold text-foreground leading-tight">~{fmt(BENEFITS_MONTHLY * 2)}</p>
-          <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-            employer + employee contr. · <span className="italic font-semibold text-amber-600">estimate</span>
-          </p>
+        {/* Monthly insurance benefits — employer + employee shares */}
+        <div className="flex-1 flex items-center justify-between gap-2 rounded-lg border border-accent/50 bg-card px-3 py-1.5 shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Monthly Insurance Benefits</span>
+          <span className="text-sm font-bold text-foreground whitespace-nowrap">
+            ~{fmt(BENEFITS_MONTHLY * 2)} <span className="text-[10px] text-muted-foreground">employer + employee contr. · <span className="italic font-semibold text-amber-600">estimate</span></span>
+          </span>
         </div>
-        {/* Bi-weekly Payworks Total — actual amount Payworks withdraws:
-            gross wages + employer CPP/EI, minus the staff benefits deduction
-            skimmed from wages and kept by Candora. */}
-        <div className="rounded-lg border border-accent/50 bg-card px-3 py-1.5 text-right shadow-sm">
-          <span className="text-xs font-medium text-muted-foreground">Bi-weekly Payworks Total</span>
-          <p className="text-base font-bold text-foreground leading-tight">{fmt(payworksBiweekly)}</p>
+        {/* Bi-weekly Payworks Total */}
+        <div className="flex-1 flex items-center justify-between gap-2 rounded-lg border border-accent/50 bg-card px-3 py-1.5 shadow-sm">
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Bi-weekly Payworks Total</span>
+          <span className="text-sm font-bold text-foreground whitespace-nowrap">{fmt(payworksBiweekly)}</span>
         </div>
       </div>
     </div>
