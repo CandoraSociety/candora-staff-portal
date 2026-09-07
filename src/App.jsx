@@ -314,6 +314,7 @@ import WinterWonderlandSchedule from '@/pages/winterwonderland/WinterWonderlandS
 import WinterWonderlandFundraiser from '@/pages/winterwonderland/WinterWonderlandFundraiser';
 import CommunityDashboard from '@/pages/community/CommunityDashboard';
 import CommunityPrograms from '@/pages/community/CommunityPrograms';
+import CommunityProgramDetail from '@/pages/community/CommunityProgramDetail';
 import CommunityParticipants from '@/pages/community/CommunityParticipants';
 import CommunitySessions from '@/pages/community/CommunitySessions';
 import CommunityEvaluations from '@/pages/community/CommunityEvaluations';
@@ -665,6 +666,7 @@ const AuthenticatedApp = () => {
         <Route element={<CommunityLayout />}>
           <Route path="/community" element={<CommunityDashboard />} />
           <Route path="/community/programs" element={<CommunityPrograms />} />
+          <Route path="/community/programs/:id" element={<CommunityProgramDetail />} />
           <Route path="/community/participants" element={<CommunityParticipants />} />
           <Route path="/community/sessions" element={<CommunitySessions />} />
           <Route path="/community/evaluations" element={<CommunityEvaluations />} />

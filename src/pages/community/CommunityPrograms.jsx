@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Search, Pencil, Users, Calendar } from 'lucide-react';
@@ -11,6 +12,7 @@ import ProgramDialog from '@/components/community/ProgramDialog';
 import { PROGRAM_CATEGORY_OPTIONS, PROGRAM_STATUS_OPTIONS, FUNDER_CATEGORY_OPTIONS, FUNDER_CATEGORY_LABELS } from '@/lib/communityConstants';
 
 export default function CommunityPrograms() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -56,7 +58,7 @@ export default function CommunityPrograms() {
           {filtered.map(p => {
             const cat = PROGRAM_CATEGORY_OPTIONS.find(c => c.value === p.category);
             return (
-              <Card key={p.id} className="hover:shadow-md transition-shadow"><CardContent className="p-4">
+              <Card key={p.id} className="hover:shadow-md hover:border-primary/50 transition-shadow cursor-pointer" onClick={() => navigate(`/community/programs/${p.id}`)}><CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1"><span className="text-xl">{cat?.icon}</span><div className="min-w-0"><p className="font-medium text-sm text-foreground truncate">{p.name}</p><p className="text-xs text-muted-foreground">{cat?.label}</p></div></div>
                   <StatusBadge status={p.status} options={PROGRAM_STATUS_OPTIONS} />
@@ -71,7 +73,7 @@ export default function CommunityPrograms() {
                 <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border/50 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {getRegCount(p.id)} registered</span>
                   <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {getSessionCount(p.id)} sessions</span>
-                  <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={(e) => { e.stopPropagation(); openEdit(p); }}><Pencil className="h-3.5 w-3.5" /></Button>
                 </div>
               </CardContent></Card>
             );
