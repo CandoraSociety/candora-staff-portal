@@ -262,7 +262,7 @@ export default function CentralRegCalendar() {
                   className={cn(
                     'flex flex-col min-h-28 border rounded-md p-1 text-left align-top transition-colors',
                     inMonth ? 'bg-card' : 'bg-muted/40',
-                    isSel ? 'border-primary ring-1 ring-primary' : 'border-border',
+                    isSel ? 'border-primary ring-1 ring-primary' : 'border-foreground/30',
                     dayEvents.length ? 'hover:border-primary/50' : ''
                   )}
                 >
