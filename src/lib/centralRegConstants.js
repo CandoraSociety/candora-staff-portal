@@ -94,4 +94,11 @@ export const WAITLIST_ACTIONS = {
   kids_gift_shop: { entity: 'ProgramRegistration', promote: 'approved', remove: 'withdrawn' },
 };
 
+// Kids Gift Shop time slots — values mirror the ProgramRegistration.time_slot enum.
+export const KIDS_GIFT_SHOP_TIME_SLOTS = [
+  { value: '9:00am-10:30am', label: '9:00 AM – 10:30 AM' },
+  { value: '10:30am-12:00pm', label: '10:30 AM – 12:00 PM' },
+  { value: '1:00pm-2:30pm', label: '1:00 PM – 2:30 PM' },
+];
+
 export const today = () => new Date().toISOString().split('T')[0];

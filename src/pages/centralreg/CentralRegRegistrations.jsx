@@ -32,7 +32,17 @@ export default function CentralRegRegistrations() {
     ...digilitParticipants.map(p => ({ key: `d-${p.id}`, area: 'digilit', id: p.id, name: `${p.first_name} ${p.last_name}`, program: 'Digital Literacy', date: p.registration_date, status: p.status })),
     ...ellLearners.map(l => ({ key: `l-${l.id}`, area: 'ell', id: l.id, name: `${l.first_name} ${l.last_name}`, program: l.assigned_class_name || 'ELL Program', date: l.intake_date, status: l.enrollment_status })),
     ...phacParticipants.map(p => ({ key: `p-${p.id}`, area: 'phac', id: p.id, name: `${p.child_first_name} ${p.child_last_name}`, program: 'PHAC Programs (0-6)', date: p.first_visit_date, status: null })),
-    ...programRegs.map(r => ({ key: `r-${r.id}`, area: r.program_name === 'Kids Gift Shop' ? 'kids_gift_shop' : 'reception', id: r.id, name: r.participant_name, program: r.program_name, date: r.registration_date, status: r.status })),
+    ...programRegs.map(r => {
+      const isKids = r.program_name === 'Kids Gift Shop';
+      return {
+        key: `r-${r.id}`, area: isKids ? 'kids_gift_shop' : 'reception', id: r.id, name: r.participant_name,
+        program: r.program_name, date: r.registration_date, status: r.status,
+        detail: isKids ? [
+          r.time_slot,
+          (r.children || []).map(c => `${c.first_name} (${c.age})`).join(', '),
+        ].filter(Boolean).join(' · ') : null,
+      };
+    }),
   ].sort((a, b) => (b.date || '').localeCompare(a.date || '')), [communityRegs, empowerRegs, digilitParticipants, ellLearners, phacParticipants, programRegs]);
 
   const filtered = rows.filter(r => {
@@ -82,6 +92,7 @@ export default function CentralRegRegistrations() {
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                       <span>{r.program || '—'}</span>
+                      {r.detail && <span>{r.detail}</span>}
                       {r.date && <span>Registered: {new Date(r.date).toLocaleDateString()}</span>}
                     </div>
                   </div>

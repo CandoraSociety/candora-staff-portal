@@ -6,6 +6,7 @@ import { Plus, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UniversalRegistrationDialog from '@/components/centralreg/UniversalRegistrationDialog';
+import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import { REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
 
 function AreaSection({ title, color, portalPath, children }) {
@@ -40,6 +41,7 @@ function ProgramCard({ title, subtitle, meta, onRegister }) {
 export default function CentralRegPrograms() {
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState(null); // { area, program }
+  const [giftShopOpen, setGiftShopOpen] = useState(false);
 
   const { data: communityPrograms = [], isLoading } = useQuery({ queryKey: ['cr-community-programs'], queryFn: () => base44.entities.CommunityProgram.list() });
   const { data: cohorts = [] } = useQuery({ queryKey: ['cr-empower-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
@@ -50,6 +52,11 @@ export default function CentralRegPrograms() {
 
   const onSaved = () => {
     setDialog(null);
+    queryClient.invalidateQueries();
+  };
+
+  const onGiftShopSaved = () => {
+    setGiftShopOpen(false);
     queryClient.invalidateQueries();
   };
 
@@ -120,7 +127,7 @@ export default function CentralRegPrograms() {
 
           <AreaSection title={REG_AREA_LABELS.kids_gift_shop} color="#e11d48" portalPath={REG_AREA_PATHS.kids_gift_shop}>
             <div className="space-y-2">
-              <ProgramCard title="Kids Gift Shop" subtitle="Register a child for the Kids Gift Shop (tracked under All Registrations)" onRegister={() => openDialog('kids_gift_shop', { name: 'Kids Gift Shop' })} />
+              <ProgramCard title="Kids Gift Shop" subtitle="Register a parent/guardian with their children and pick a time slot (tracked under All Registrations)" onRegister={() => setGiftShopOpen(true)} />
             </div>
           </AreaSection>
 
@@ -133,6 +140,7 @@ export default function CentralRegPrograms() {
       )}
 
       <UniversalRegistrationDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} area={dialog?.area} program={dialog?.program} onSaved={onSaved} />
+      <KidsGiftShopRegistrationDialog open={giftShopOpen} onOpenChange={setGiftShopOpen} onSaved={onGiftShopSaved} />
     </div>
   );
 }

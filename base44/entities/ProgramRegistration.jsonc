@@ -101,6 +101,47 @@
     "accommodation_needs": {
       "type": "string"
     },
+    "parent_guardian_name": {
+      "type": "string",
+      "description": "Parent/guardian full name (Kids Gift Shop and child-focused programs)"
+    },
+    "parent_guardian_phone": {
+      "type": "string",
+      "description": "Parent/guardian phone"
+    },
+    "parent_guardian_email": {
+      "type": "string",
+      "description": "Parent/guardian email"
+    },
+    "children": {
+      "type": "array",
+      "description": "Children registered under this record (Kids Gift Shop)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "description": "Child's first name"
+          },
+          "age": {
+            "type": "number",
+            "description": "Child's age"
+          }
+        },
+        "required": [
+          "first_name"
+        ]
+      }
+    },
+    "time_slot": {
+      "type": "string",
+      "enum": [
+        "9:00am-10:30am",
+        "10:30am-12:00pm",
+        "1:00pm-2:30pm"
+      ],
+      "description": "Selected time slot (Kids Gift Shop)"
+    },
     "notes": {
       "type": "string"
     }
