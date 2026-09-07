@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Play, CheckCircle2, Trash2, Copy, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Play, CheckCircle2, Trash2, Copy, ChevronDown, ChevronUp, Plus, CalendarDays } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -11,6 +11,7 @@ const NOTE_CONFIG = {
   completed:     { label: 'Completed',  icon: CheckCircle2, card: 'border-green-200 bg-green-50', iconClass: 'text-green-600' },
   cancelled:     { label: 'Cancelled',  icon: null,         card: 'border-red-200 bg-red-50',     iconClass: 'text-red-600' },
   followup_90day:{ label: '90-Day',     icon: null,         card: 'border-purple-200 bg-purple-50',iconClass: 'text-purple-600' },
+  appointment:   { label: 'Appointment',icon: CalendarDays, card: 'border-amber-200 bg-amber-50', iconClass: 'text-amber-600' },
   manual:        { label: 'Note',       icon: null,         card: 'border-slate-300 bg-slate-50', iconClass: 'text-slate-500' },
 };
 

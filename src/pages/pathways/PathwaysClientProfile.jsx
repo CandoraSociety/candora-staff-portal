@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CalendarDays, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
@@ -16,6 +16,7 @@ import CloseFileDialog from '@/components/client/CloseFileDialog';
 import { logStatusChange } from '@/lib/logStatusChange';
 import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
 import ProgramDeterminationDialog from '@/components/wizard/ProgramDeterminationDialog';
+import ScheduleAppointmentDialog from '@/components/pathways/ScheduleAppointmentDialog';
 
 const STREAM_LABELS = {
   direct_to_employment: 'DEA',
@@ -43,6 +44,7 @@ export default function PathwaysClientProfile() {
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [closingSaving, setClosingSaving] = useState(false);
   const [showProgramDetermination, setShowProgramDetermination] = useState(false);
+  const [showApptDialog, setShowApptDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -117,6 +119,16 @@ export default function PathwaysClientProfile() {
     await base44.entities.Client.update(id, { service_type: serviceType });
     setClient(prev => ({ ...prev, service_type: serviceType }));
     toast.success(serviceType === 'pathways' ? 'Set to WD (Workforce Development)' : 'Set to DEA (Direct Employment Attachment)');
+  };
+
+  // Called after an appointment is scheduled from the client profile — adds the
+  // appointment entry to the client's progress timeline so it shows alongside
+  // their other progress notes.
+  const handleAppointmentScheduled = async (noteEntry) => {
+    setShowApptDialog(false);
+    if (noteEntry) {
+      await handleSave({ roadmap_progress_notes: [noteEntry, ...(client.roadmap_progress_notes || [])] });
+    }
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
@@ -207,6 +219,10 @@ export default function PathwaysClientProfile() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowApptDialog(true)}>
+            <CalendarDays className="w-4 h-4 mr-2" />
+            Schedule Appointment
+          </Button>
           {client.file_closed ? (
             <Button variant="outline" size="sm" onClick={handleReopenFile}>
               <RotateCcw className="w-4 h-4 mr-2" />
@@ -287,6 +303,14 @@ export default function PathwaysClientProfile() {
         onOpenChange={setShowProgramDetermination}
         client={client}
         onSelect={handleProgramDetermination}
+      />
+
+      <ScheduleAppointmentDialog
+        open={showApptDialog}
+        onOpenChange={setShowApptDialog}
+        client={client}
+        currentUser={currentUser}
+        onSaved={handleAppointmentScheduled}
       />
     </div>
   );
