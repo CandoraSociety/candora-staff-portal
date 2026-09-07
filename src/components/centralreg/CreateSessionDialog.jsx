@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { TOPIC_AREA_OPTIONS } from '@/lib/digilitConstants';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const CLB_LEVELS = ['mixed', 'clb_1', 'clb_2', 'clb_3', 'clb_4', 'clb_5', 'clb_6', 'clb_7', 'clb_8', 'clb_9', 'clb_10', 'clb_11', 'clb_12'];
@@ -32,11 +33,11 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
 
   useEffect(() => {
     if (!open) return;
-    if (area === 'community') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', title: '' });
-    else if (area === 'phac') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', start_time: program?.start_time || '', end_time: program?.end_time || '', location: program?.location || '', facilitator: program?.facilitator || '' });
-    else if (area === 'ell') setForm({ name: '', clb_level: 'mixed', instructor_id: '', schedule_days: [], start_time: '', end_time: '', location: '', capacity: 15, start_date: '', end_date: '', description: '', status: 'active' });
-    else if (area === 'digilit') setForm({ session_date: todayStr(), status: 'scheduled', title: '', topic_area: 'computer_basics', start_time: '', end_time: '', location: '', max_participants: 10, facilitator_name: '' });
-    else if (area === 'empoweru') setForm({ name: '', start_date: '', end_date: '', delivery_mode: 'virtual', location: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: true, status: 'registration_open' });
+    if (area === 'community') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', title: '', room: '' });
+    else if (area === 'phac') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', start_time: program?.start_time || '', end_time: program?.end_time || '', location: program?.location || '', facilitator: program?.facilitator || '', room: '' });
+    else if (area === 'ell') setForm({ name: '', clb_level: 'mixed', instructor_id: '', schedule_days: [], start_time: '', end_time: '', location: '', room: '', capacity: 15, start_date: '', end_date: '', description: '', status: 'active' });
+    else if (area === 'digilit') setForm({ session_date: todayStr(), status: 'scheduled', title: '', topic_area: 'computer_basics', start_time: '', end_time: '', location: '', room: '', max_participants: 10, facilitator_name: '' });
+    else if (area === 'empoweru') setForm({ name: '', start_date: '', end_date: '', delivery_mode: 'virtual', location: '', room: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: true, status: 'registration_open' });
   }, [open, area, program]);
 
   const label = AREA_LABELS[area] || 'Session';
@@ -48,6 +49,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
     if (area === 'digilit' && (!form.title || !form.session_date)) { toast({ title: 'Title and date are required', variant: 'destructive' }); return; }
     if (area === 'ell' && !form.name) { toast({ title: 'Class name is required', variant: 'destructive' }); return; }
     if (area === 'empoweru' && !form.name) { toast({ title: 'Cohort name is required', variant: 'destructive' }); return; }
+    if (!form.room) { toast({ title: 'Room is required — assign where this will take place', variant: 'destructive' }); return; }
 
     setSaving(true);
     try {
@@ -80,6 +82,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
               {area === 'community' && <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>}
               {area === 'community' && <div className="space-y-1.5"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>}
               {area === 'phac' && <div className="space-y-1.5"><Label>Facilitator</Label><Input value={form.facilitator || ''} onChange={(e) => update('facilitator', e.target.value)} /></div>}
@@ -96,6 +99,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" min="1" value={form.capacity ?? 15} onChange={(e) => update('capacity', parseInt(e.target.value) || 0)} /></div>
               <div className="space-y-1.5"><Label>Start Date</Label><Input type="date" value={form.start_date || ''} onChange={(e) => update('start_date', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>End Date</Label><Input type="date" value={form.end_date || ''} onChange={(e) => update('end_date', e.target.value)} /></div>
@@ -110,6 +114,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label>Max Participants</Label><Input type="number" min="1" value={form.max_participants ?? 10} onChange={(e) => update('max_participants', parseInt(e.target.value) || 10)} /></div>
               <div className="col-span-2 space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} placeholder="Volunteer facilitator" /></div>
             </>
@@ -122,6 +127,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               <div className="space-y-1.5"><Label>Delivery Mode</Label><Select value={form.delivery_mode || 'virtual'} onValueChange={(v) => update('delivery_mode', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['in_person', 'virtual', 'hybrid'].map(m => <SelectItem key={m} value={m}>{m.replace('_', ' ')}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" min="1" value={form.capacity ?? 15} onChange={(e) => update('capacity', parseInt(e.target.value) || 0)} /></div>
               <div className="col-span-2 space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} placeholder="Physical location or meeting link" /></div>
+              <div className="col-span-2 space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>
               <div className="col-span-2 flex items-center space-x-2 pt-1">

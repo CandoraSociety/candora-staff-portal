@@ -17,6 +17,15 @@ export const REG_AREA_LABELS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.k
 export const REG_AREA_COLORS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.key, a.color]));
 export const REG_AREA_PATHS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.key, a.path]));
 
+// Rooms used for scheduling sessions/classes on the Central Registration calendar.
+export const ROOM_OPTIONS = [
+  { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb' },
+  { value: 'small_classroom', label: 'Small Classroom', abbr: 'SC', color: '#0d9488' },
+  { value: 'employment_classroom', label: 'Employment Classroom', abbr: 'EC', color: '#d97706' },
+  { value: 'other', label: 'Other', abbr: 'O', color: '#64748b' },
+];
+export const ROOM_ABBRS = Object.fromEntries(ROOM_OPTIONS.map(r => [r.value, r.abbr]));
+
 // Staff override code — lets a confirmed registration be created even when the program/area is full.
 export const REGISTRATION_OVERRIDE_CODE = '5011';
 

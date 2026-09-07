@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ROOM_OPTIONS, ROOM_ABBRS } from '@/lib/centralRegConstants';
 
 const SOURCES = [
   { key: 'pathways', label: 'Pathways Workshops', color: '#dc2626' },
@@ -31,7 +32,15 @@ const toMinutes = (t) => {
 };
 
 let seq = 0;
-const makeEvent = (source, title, date, startTime, endTime, location, facilitator) => ({
+// Room assignment — explicit room field when set, otherwise guessed from the location text.
+const locationRoom = (location) => {
+  const loc = (location || '').toLowerCase();
+  if (loc.includes('large classroom')) return 'large_classroom';
+  if (loc.includes('small classroom')) return 'small_classroom';
+  if (loc.includes('employment')) return 'employment_classroom';
+  return '';
+};
+const makeEvent = (source, title, date, startTime, endTime, location, facilitator, room) => ({
   id: `${source}-${seq++}`,
   source,
   title,
@@ -40,6 +49,7 @@ const makeEvent = (source, title, date, startTime, endTime, location, facilitato
   endTime,
   location,
   facilitator,
+  room: room || locationRoom(location) || '',
 });
 
 function expandWorkshop(w, monthStart, monthEnd) {
@@ -63,14 +73,14 @@ function expandWorkshop(w, monthStart, monthEnd) {
       guard++;
     }
   }
-  return dates.map(d => makeEvent('pathways', w.title, d, w.start_time, w.end_time, w.location, w.facilitator_name));
+  return dates.map(d => makeEvent('pathways', w.title, d, w.start_time, w.end_time, w.location, w.facilitator_name, w.room));
 }
 
 function addSessionEvents(list, records, source, monthStart, monthEnd, titleFn) {
   (records || []).filter(s => s.status !== 'cancelled').forEach(s => {
     const d = parseLocalDate(s.session_date || s.date);
     if (!d || d < monthStart || d > monthEnd) return;
-    list.push(makeEvent(source, titleFn(s), d, s.start_time, s.end_time, s.location, s.facilitator_name || s.facilitator || s.instructor_name));
+    list.push(makeEvent(source, titleFn(s), d, s.start_time, s.end_time, s.location, s.facilitator_name || s.facilitator || s.instructor_name, s.room));
   });
 }
 
@@ -78,6 +88,7 @@ export default function CentralRegCalendar() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => new Date());
   const [sourceFilter, setSourceFilter] = useState([]);
+  const [roomFilter, setRoomFilter] = useState([]);
 
   const workshopsQ = useQuery({ queryKey: ['centralreg-cal-workshops'], queryFn: () => base44.entities.Workshop.list() });
   const communityQ = useQuery({ queryKey: ['centralreg-cal-community'], queryFn: () => base44.entities.CommunitySession.list() });
@@ -110,7 +121,7 @@ export default function CentralRegCalendar() {
         if (!(cls.schedule_days || []).includes(dayName)) return;
         if (startBound && d < startBound) return;
         if (endBound && d > endBound) return;
-        list.push(makeEvent('ell', cls.name, d, cls.start_time, cls.end_time, cls.location, cls.instructor_name));
+        list.push(makeEvent('ell', cls.name, d, cls.start_time, cls.end_time, cls.location, cls.instructor_name, cls.room));
       });
     });
 
@@ -119,7 +130,7 @@ export default function CentralRegCalendar() {
       [['start_date', 'starts'], ['end_date', 'ends']].forEach(([field, verb]) => {
         const d = parseLocalDate(c[field]);
         if (d && d >= monthStart && d <= monthEnd) {
-          list.push(makeEvent('empoweru', `${c.name} — ${verb}`, d, null, null, c.location, c.facilitator_name));
+          list.push(makeEvent('empoweru', `${c.name} — ${verb}`, d, null, null, c.location, c.facilitator_name, c.room));
         }
       });
     });
@@ -129,8 +140,11 @@ export default function CentralRegCalendar() {
   }, [workshopsQ.data, communityQ.data, phacQ.data, digilitQ.data, childmindingQ.data, volunteerQ.data, ellQ.data, empoweruQ.data, monthStart, monthEnd]);
 
   const visible = useMemo(
-    () => (sourceFilter.length ? events.filter(e => sourceFilter.includes(e.source)) : events),
-    [events, sourceFilter]
+    () => events.filter(e =>
+      (!sourceFilter.length || sourceFilter.includes(e.source)) &&
+      (!roomFilter.length || roomFilter.includes(e.room))
+    ),
+    [events, sourceFilter, roomFilter]
   );
 
   const eventsByDay = useMemo(() => {
@@ -146,8 +160,24 @@ export default function CentralRegCalendar() {
   const days = eachDayOfInterval({ start: startOfWeek(monthStart), end: endOfWeek(monthEnd) });
   const selectedEvents = eventsByDay.get(format(selectedDay, 'yyyy-MM-dd')) || [];
 
+  // Selected-day events split into room sections (plus a bucket for unassigned ones)
+  const roomGroups = useMemo(() => {
+    const groups = [];
+    ROOM_OPTIONS.forEach(r => {
+      const evs = selectedEvents.filter(e => e.room === r.value);
+      if (evs.length) groups.push({ key: r.value, label: r.label, color: r.color, events: evs });
+    });
+    const unassigned = selectedEvents.filter(e => !e.room);
+    if (unassigned.length) groups.push({ key: 'unassigned', label: 'No room assigned', color: '#94a3b8', events: unassigned });
+    return groups;
+  }, [selectedEvents]);
+
   const toggleSource = (key) => {
     setSourceFilter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  };
+
+  const toggleRoom = (value) => {
+    setRoomFilter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
   };
 
   return (
@@ -185,6 +215,28 @@ export default function CentralRegCalendar() {
         )}
       </div>
 
+      {/* Room filter chips */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <span className="text-xs font-semibold text-muted-foreground">Rooms:</span>
+        {ROOM_OPTIONS.map(r => {
+          const active = roomFilter.includes(r.value);
+          return (
+            <button
+              key={r.value}
+              onClick={() => toggleRoom(r.value)}
+              className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-colors', active ? 'text-white border-transparent' : 'bg-card text-muted-foreground border-border hover:text-foreground')}
+              style={active ? { backgroundColor: r.color } : undefined}
+            >
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? 'rgba(255,255,255,0.8)' : r.color }} />
+              {r.label}
+            </button>
+          );
+        })}
+        {roomFilter.length > 0 && (
+          <Button variant="ghost" size="sm" className="text-xs" onClick={() => setRoomFilter([])}>Clear rooms</Button>
+        )}
+      </div>
+
       {/* Month grid */}
       <Card>
         <CardContent className="p-4">
@@ -219,7 +271,7 @@ export default function CentralRegCalendar() {
                       const s = SOURCES.find(x => x.key === e.source);
                       return (
                         <div key={e.id} className="truncate text-[10px] px-1 py-0.5 rounded text-white" style={{ backgroundColor: s?.color }}>
-                          {e.startTime && <span className="mr-0.5">{e.startTime}</span>}{e.title}
+                          {e.room && <span className="mr-0.5 font-semibold">{ROOM_ABBRS[e.room]}·</span>}{e.startTime && <span className="mr-0.5">{e.startTime}</span>}{e.title}
                         </div>
                       );
                     })}
@@ -238,26 +290,37 @@ export default function CentralRegCalendar() {
           <h3 className="font-semibold text-sm mb-3">{format(selectedDay, 'EEEE, MMMM d, yyyy')}</h3>
           {isLoading ? <p className="text-sm text-muted-foreground">Loading events...</p> :
             selectedEvents.length === 0 ? <p className="text-sm text-muted-foreground">No programs or workshops scheduled for this day.</p> :
-            <div className="space-y-2">
-              {selectedEvents.map(e => {
-                const s = SOURCES.find(x => x.key === e.source);
-                return (
-                  <div key={e.id} className="flex items-start gap-3 p-2 rounded-lg border border-border">
-                    <span className="mt-1 h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: s?.color }} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-sm text-foreground">{e.title}</p>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: s?.color }}>{s?.label}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                        {(e.startTime || e.endTime) && <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{e.startTime || ''}{e.startTime && e.endTime ? '–' : ''}{e.endTime || ''}</p>}
-                        {e.location && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</p>}
-                        {e.facilitator && <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{e.facilitator}</p>}
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              {roomGroups.map(g => (
+                <div key={g.key}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color }} />
+                    <p className="text-sm font-semibold" style={{ color: g.color }}>{g.label}</p>
+                    <span className="text-xs text-muted-foreground">({g.events.length})</span>
                   </div>
-                );
-              })}
+                  <div className="space-y-2">
+                    {g.events.map(e => {
+                      const s = SOURCES.find(x => x.key === e.source);
+                      return (
+                        <div key={e.id} className="flex items-start gap-3 p-2 rounded-lg border border-border">
+                          <span className="mt-1 h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: s?.color }} />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-medium text-sm text-foreground">{e.title}</p>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: s?.color }}>{s?.label}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                              {(e.startTime || e.endTime) && <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{e.startTime || ''}{e.startTime && e.endTime ? '–' : ''}{e.endTime || ''}</p>}
+                              {e.location && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</p>}
+                              {e.facilitator && <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{e.facilitator}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>}
         </CardContent>
       </Card>
