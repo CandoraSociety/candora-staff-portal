@@ -27,7 +27,7 @@ function AreaSection({ title, color, portalPath, capacityControl, children }) {
   );
 }
 
-function ProgramCard({ title, subtitle, meta, onRegister, isFull = false }) {
+function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl }) {
   return (
     <Card className="hover:shadow-sm transition-shadow"><CardContent className="p-3">
       <div className="flex items-center justify-between gap-3">
@@ -37,7 +37,10 @@ function ProgramCard({ title, subtitle, meta, onRegister, isFull = false }) {
           {meta && <p className="text-xs text-muted-foreground/80 mt-0.5">{meta}</p>}
           {isFull && <p className="text-xs text-amber-600 mt-0.5">Registration is full, but you can still add to the waitlist</p>}
         </div>
-        <Button size="sm" onClick={onRegister} className="flex-shrink-0"><Plus className="h-3.5 w-3.5" /> {isFull ? 'Add to Waitlist' : 'Register'}</Button>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {capacityControl}
+          <Button size="sm" onClick={onRegister} className="flex-shrink-0"><Plus className="h-3.5 w-3.5" /> {isFull ? 'Add to Waitlist' : 'Register'}</Button>
+        </div>
       </div>
     </CardContent></Card>
   );
@@ -54,6 +57,7 @@ export default function CentralRegPrograms() {
   const { data: phacPrograms = [] } = useQuery({ queryKey: ['cr-phac-programs'], queryFn: () => base44.entities.PHACProgram.list() });
   const { data: capacities = [] } = useQuery({ queryKey: ['cr-area-capacities'], queryFn: () => base44.entities.CentralRegAreaCapacity.list() });
   const { data: communityRegs = [] } = useQuery({ queryKey: ['cr-community-regs'], queryFn: () => base44.entities.CommunityRegistration.list('-registration_date', 500) });
+  const { data: phacParticipants = [] } = useQuery({ queryKey: ['cr-phac-participants'], queryFn: () => base44.entities.PHACParticipant.list('-created_date', 500) });
   const { data: digilitParticipants = [] } = useQuery({ queryKey: ['cr-digilit-participants'], queryFn: () => base44.entities.DigiLitParticipant.list('-registration_date', 500) });
   const { data: ellLearners = [] } = useQuery({ queryKey: ['cr-ell-learners'], queryFn: () => base44.entities.ELLLearner.list('-created_date', 500) });
   const { data: volunteers = [] } = useQuery({ queryKey: ['cr-volunteers'], queryFn: () => base44.entities.Volunteer.list('-created_date', 500) });
@@ -75,10 +79,10 @@ export default function CentralRegPrograms() {
   const openCohorts = cohorts.filter(c => c.registration_open && !['completed', 'cancelled'].includes(c.status));
   const activePhac = phacPrograms.filter(p => p.status === 'active');
 
-  // Active (spot-taking) registration counts per area, against the area maximum.
+  // Active (spot-taking) registration counts per area, against each area maximum.
   const areaFilled = {
-    community: communityRegs.filter(r => ['registered', 'active'].includes(r.status)).length,
     empoweru: empowerRegs.filter(r => ['registered', 'enrolled'].includes(r.status)).length,
+    phac: phacParticipants.filter(p => p.status === 'registered').length,
     digilit: digilitParticipants.filter(p => ['registered', 'started'].includes(p.status)).length,
     ell: ellLearners.filter(l => ['enrolled', 'active'].includes(l.enrollment_status)).length,
     volunteer: volunteers.filter(v => ['pending', 'active', 'occasional'].includes(v.status)).length,
@@ -92,6 +96,19 @@ export default function CentralRegPrograms() {
     return !!rec && rec.max_capacity > 0 && (areaFilled[area] || 0) >= rec.max_capacity;
   };
 
+  // Community programs each have their own maximum.
+  const communityProgramStats = (p) => {
+    const rec = capacities.find(c => c.area === 'community' && c.program_id === p.id);
+    const filled = communityRegs.filter(r => r.program_id === p.id && ['registered', 'active'].includes(r.status)).length;
+    return { rec, filled, full: !!rec && rec.max_capacity > 0 && filled >= rec.max_capacity };
+  };
+
+  const dialogForceWaitlist = (() => {
+    if (!dialog) return false;
+    if (dialog.area === 'community' && dialog.program) return communityProgramStats(dialog.program).full;
+    return isAreaFull(dialog.area);
+  })();
+
   const cohortMeta = (c) => {
     const regs = empowerRegs.filter(r => r.cohort_id === c.id);
     const active = regs.filter(r => ['registered', 'enrolled'].includes(r.status)).length;
@@ -103,17 +120,28 @@ export default function CentralRegPrograms() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-heading font-bold text-foreground">Programs & Registration</h1>
-        <p className="text-muted-foreground text-sm mt-1">Register a participant for any program or service requiring registration. Registrations made here appear instantly in the program's own portal. Set a Max per area — once reached, new registrations automatically go to the waitlist.</p>
+        <p className="text-muted-foreground text-sm mt-1">Register a participant for any program or service requiring registration. Registrations made here appear instantly in the program's own portal. Set a Max per program/area — once reached, new registrations automatically go to the waitlist (an override code can be entered in the form to register anyway).</p>
       </div>
 
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
         <div className="space-y-8">
-          <AreaSection title={REG_AREA_LABELS.community} color="#f97316" portalPath={REG_AREA_PATHS.community} capacityControl={capacityControlFor('community')}>
+          <AreaSection title={REG_AREA_LABELS.community} color="#f97316" portalPath={REG_AREA_PATHS.community}>
             <div className="space-y-2">
               {activeCommunity.length === 0 && <p className="text-sm text-muted-foreground py-2">No active community programs.</p>}
-              {activeCommunity.map(p => (
-                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.schedule_description, p.location].filter(Boolean).join(' · ')} isFull={isAreaFull('community')} onRegister={() => openDialog('community', p)} />
-              ))}
+              {activeCommunity.map(p => {
+                const stats = communityProgramStats(p);
+                return (
+                  <ProgramCard
+                    key={p.id}
+                    title={p.name}
+                    subtitle={p.description}
+                    meta={[p.schedule_description, p.location].filter(Boolean).join(' · ')}
+                    isFull={stats.full}
+                    capacityControl={<AreaCapacityControl area="community" programId={p.id} capacityRecord={stats.rec} filled={stats.filled} />}
+                    onRegister={() => openDialog('community', p)}
+                  />
+                );
+              })}
             </div>
           </AreaSection>
 
@@ -126,11 +154,11 @@ export default function CentralRegPrograms() {
             </div>
           </AreaSection>
 
-          <AreaSection title={REG_AREA_LABELS.phac} color="#0ea5e9" portalPath={REG_AREA_PATHS.phac}>
+          <AreaSection title={REG_AREA_LABELS.phac} color="#0ea5e9" portalPath={REG_AREA_PATHS.phac} capacityControl={capacityControlFor('phac')}>
             <div className="space-y-2">
               {activePhac.length === 0 && <p className="text-sm text-muted-foreground py-2">No active PHAC programs.</p>}
               {activePhac.map(p => (
-                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} onRegister={() => openDialog('phac', p)} />
+                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} onRegister={() => openDialog('phac', p)} />
               ))}
             </div>
           </AreaSection>
@@ -167,7 +195,7 @@ export default function CentralRegPrograms() {
         </div>
       )}
 
-      <UniversalRegistrationDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} area={dialog?.area} program={dialog?.program} forceWaitlist={dialog ? isAreaFull(dialog.area) : false} onSaved={onSaved} />
+      <UniversalRegistrationDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} area={dialog?.area} program={dialog?.program} forceWaitlist={dialogForceWaitlist} onSaved={onSaved} />
       <KidsGiftShopRegistrationDialog open={giftShopOpen} onOpenChange={setGiftShopOpen} forceWaitlist={isAreaFull('kids_gift_shop')} onSaved={onGiftShopSaved} />
     </div>
   );

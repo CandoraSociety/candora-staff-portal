@@ -4,9 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 
-// Inline editor for an area's maximum registration capacity, shown in the
-// Programs page section header. 0 / blank = no maximum.
-export default function AreaCapacityControl({ area, capacityRecord, filled }) {
+// Inline editor for a registration maximum. Works at the area level, or per
+// program when programId is given. 0 / blank = no maximum.
+export default function AreaCapacityControl({ area, programId, capacityRecord, filled }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [value, setValue] = useState('');
@@ -18,13 +18,14 @@ export default function AreaCapacityControl({ area, capacityRecord, filled }) {
   const commit = async () => {
     const num = parseInt(value, 10);
     const next = Number.isFinite(num) && num > 0 ? num : 0;
-    if ((capacityRecord?.max_capacity || 0) === next && (!capacityRecord || value === '' || String(num) === value)) {
-      setValue(next ? String(next) : '');
-    }
     try {
-      if (capacityRecord) await base44.entities.CentralRegAreaCapacity.update(capacityRecord.id, { max_capacity: next });
-      else if (next > 0) await base44.entities.CentralRegAreaCapacity.create({ area, max_capacity: next });
-      else return; // nothing to store — no max set and no existing record
+      if (capacityRecord) {
+        await base44.entities.CentralRegAreaCapacity.update(capacityRecord.id, { max_capacity: next });
+      } else if (next > 0) {
+        await base44.entities.CentralRegAreaCapacity.create({ area, max_capacity: next, ...(programId ? { program_id: programId } : {}) });
+      } else {
+        return; // nothing to store — no max set and no existing record
+      }
       queryClient.invalidateQueries({ queryKey: ['cr-area-capacities'] });
     } catch (err) {
       toast({ title: 'Error saving maximum', description: err.message, variant: 'destructive' });
@@ -32,7 +33,7 @@ export default function AreaCapacityControl({ area, capacityRecord, filled }) {
   };
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
       <span className={filled > 0 ? 'text-foreground font-medium' : ''}>{filled} registered</span>
       <span className="text-muted-foreground/50">·</span>
       <span>Max:</span>

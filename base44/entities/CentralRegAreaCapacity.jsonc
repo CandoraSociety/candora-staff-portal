@@ -4,12 +4,16 @@
   "properties": {
     "area": {
       "type": "string",
-      "description": "Program area key this maximum applies to (community, empoweru, digilit, ell, volunteer, kids_gift_shop)"
+      "description": "Program area key this maximum applies to (community, empoweru, phac, digilit, ell, volunteer, kids_gift_shop)"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Optional linked program ID \u2014 when set, the maximum applies to that single program instead of the whole area"
     },
     "max_capacity": {
       "type": "number",
       "default": 0,
-      "description": "Maximum active registrations for the area before new ones go to the waitlist. 0 = no maximum."
+      "description": "Maximum active registrations before new ones go to the waitlist. 0 = no maximum."
     }
   },
   "required": [

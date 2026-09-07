@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
-import { KIDS_GIFT_SHOP_TIME_SLOTS, today } from '@/lib/centralRegConstants';
+import ClientPicker from '@/components/centralreg/ClientPicker';
+import { KIDS_GIFT_SHOP_TIME_SLOTS, REGISTRATION_OVERRIDE_CODE, today } from '@/lib/centralRegConstants';
 
 const EMPTY_PARENT = { first_name: '', last_name: '', phone: '', email: '' };
 
@@ -21,6 +22,10 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
   const [children, setChildren] = useState([{ first_name: '', age: '' }]);
   const [timeSlot, setTimeSlot] = useState('');
   const [waitlist, setWaitlist] = useState(false);
+  const [overrideCode, setOverrideCode] = useState('');
+
+  // A full program still allows a confirmed registration with the override code.
+  const forced = forceWaitlist && overrideCode.trim() !== REGISTRATION_OVERRIDE_CODE;
 
   useEffect(() => {
     if (open) {
@@ -28,6 +33,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
       setChildren([{ first_name: '', age: '' }]);
       setTimeSlot('');
       setWaitlist(false);
+      setOverrideCode('');
     }
   }, [open]);
 
@@ -66,7 +72,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
         program_portal: 'other',
         program_name: 'Kids Gift Shop',
         registration_date: today(),
-        status: (waitlist || forceWaitlist) ? 'waitlisted' : 'approved',
+        status: (waitlist || forced) ? 'waitlisted' : 'approved',
         parent_guardian_name: parentName,
         parent_guardian_phone: parent.phone,
         parent_guardian_email: parent.email,
@@ -74,7 +80,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
         time_slot: timeSlot,
       });
       toast({
-        title: (waitlist || forceWaitlist) ? 'Added to the waitlist' : 'Registration created',
+        title: (waitlist || forced) ? 'Added to the waitlist' : 'Registration created',
         description: `${parentName} — Kids Gift Shop (${KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === timeSlot)?.label})`,
       });
       onSaved?.();
@@ -93,6 +99,10 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-foreground mb-2">Parent / Guardian</p>
+            <div className="space-y-1.5 mb-3">
+              <Label>Find an existing client (optional)</Label>
+              <ClientPicker onSelect={(c) => setParent(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>First Name *</Label><Input value={parent.first_name} onChange={(e) => updateParent('first_name', e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Last Name *</Label><Input value={parent.last_name} onChange={(e) => updateParent('last_name', e.target.value)} /></div>
@@ -127,16 +137,23 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
                 {KIDS_GIFT_SHOP_TIME_SLOTS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            {forceWaitlist && <p className="text-xs text-amber-600 pt-1">Registration is full, but you can still add to the waitlist</p>}
+            {forceWaitlist && (
+              <div className="space-y-1.5 pt-2">
+                <Label>Override code (optional)</Label>
+                <Input value={overrideCode} onChange={(e) => setOverrideCode(e.target.value)} placeholder="Enter code to register anyway" />
+                {overrideCode.trim() === REGISTRATION_OVERRIDE_CODE && <p className="text-xs text-green-600">Override accepted — this registration will be confirmed even though the program is full.</p>}
+              </div>
+            )}
+            {forced && <p className="text-xs text-amber-600 pt-1">Registration is full, but you can still add to the waitlist</p>}
             <div className="flex items-center space-x-2 pt-1">
-              <Checkbox id="kgs-waitlist" checked={forceWaitlist ? true : waitlist} disabled={forceWaitlist} onCheckedChange={(v) => setWaitlist(v === true)} />
+              <Checkbox id="kgs-waitlist" checked={forced ? true : waitlist} disabled={forced} onCheckedChange={(v) => setWaitlist(v === true)} />
               <Label htmlFor="kgs-waitlist" className="cursor-pointer">Add to the waitlist instead of confirming this slot</Label>
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : (waitlist || forceWaitlist) ? 'Add to Waitlist' : 'Register'}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : (waitlist || forced) ? 'Add to Waitlist' : 'Register'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

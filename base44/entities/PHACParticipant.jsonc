@@ -32,22 +32,35 @@
       "description": "Street address"
     },
     "city": {
-      "type": "string"
+      "type": "string",
+      "description": "City"
     },
     "preferred_language": {
       "type": "string",
       "description": "Preferred language"
     },
     "emergency_contact_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Emergency contact name"
     },
     "emergency_contact_phone": {
-      "type": "string"
+      "type": "string",
+      "description": "Emergency contact phone"
     },
     "first_visit_date": {
       "type": "string",
       "format": "date",
       "description": "First time the family attended a session"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "waitlisted",
+        "withdrawn"
+      ],
+      "default": "registered",
+      "description": "Registration status \u2014 set to 'waitlisted' when the program is full"
     },
     "notes": {
       "type": "string",

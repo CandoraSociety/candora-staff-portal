@@ -16,6 +16,9 @@ export const REG_AREA_LABELS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.k
 export const REG_AREA_COLORS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.key, a.color]));
 export const REG_AREA_PATHS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.key, a.path]));
 
+// Staff override code — lets a confirmed registration be created even when the program/area is full.
+export const REGISTRATION_OVERRIDE_CODE = '5011';
+
 // Native status options per area — mirror each entity's schema.
 export const COMMUNITY_REG_STATUS_OPTIONS = [
   { value: 'registered', label: 'Registered', color: '#3b82f6' },
@@ -63,8 +66,14 @@ export const VOLUNTEER_TYPE_OPTIONS = [
   { value: 'internal_placement', label: 'Internal Placement' },
 ];
 
+export const PHAC_STATUS_OPTIONS = [
+  { value: 'registered', label: 'Registered', color: '#3b82f6' },
+  { value: 'waitlisted', label: 'Waitlisted', color: '#a855f7' },
+  { value: 'withdrawn', label: 'Withdrawn', color: '#64748b' },
+];
 export const AREA_STATUS_OPTIONS = {
   community: COMMUNITY_REG_STATUS_OPTIONS,
+  phac: PHAC_STATUS_OPTIONS,
   empoweru: EMPOWERU_REG_STATUS_OPTIONS,
   digilit: DIGILIT_STATUS_OPTIONS,
   ell: ELL_ENROLLMENT_OPTIONS,
@@ -81,6 +90,7 @@ export const AREA_ENTITIES = {
   empoweru: 'EmpowerURegistration',
   digilit: 'DigiLitParticipant',
   ell: 'ELLLearner',
+  phac: 'PHACParticipant',
   kids_gift_shop: 'ProgramRegistration',
   reception: 'ProgramRegistration',
 };
@@ -91,6 +101,7 @@ export const WAITLIST_ACTIONS = {
   empoweru: { entity: 'EmpowerURegistration', promote: 'registered', remove: 'withdrawn', hasPosition: true },
   digilit: { entity: 'DigiLitParticipant', promote: 'registered', remove: 'withdrawn' },
   ell: { entity: 'ELLLearner', promote: 'prospective', remove: 'withdrawn' },
+  phac: { entity: 'PHACParticipant', promote: 'registered', remove: 'withdrawn' },
   reception: { entity: 'ProgramRegistration', promote: 'approved', remove: 'declined', hasPosition: true },
   volunteer: { entity: 'Volunteer', promote: 'pending', remove: 'inactive' },
   kids_gift_shop: { entity: 'ProgramRegistration', promote: 'approved', remove: 'withdrawn' },
