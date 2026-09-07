@@ -8,7 +8,7 @@ import { CASE_STATUS_OPTIONS } from '@/lib/rcConstants';
 
 export const SERVICE_CATEGORY_OPTIONS = [
   { value: 'intensive_services', label: 'Intensive Services' },
-  { value: 'caregiver_capacity_0_5', label: 'Caregiver Capacity 0-5' },
+  { value: 'caregiver_capacity_0_5', label: 'Caregiver Capacity 0-6' },
   { value: 'general', label: 'General' },
 ];
 
