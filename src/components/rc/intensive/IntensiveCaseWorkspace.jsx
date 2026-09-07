@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ClipboardList, Save } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -26,6 +26,7 @@ import CaseActivityTab from '@/components/rc/intensive/CaseActivityTab';
 import CaseOutcomesTab from '@/components/rc/intensive/CaseOutcomesTab';
 import CaseTransitionTab from '@/components/rc/intensive/CaseTransitionTab';
 import CaseWaitlistTab from '@/components/rc/intensive/CaseWaitlistTab';
+import CaseClientList from '@/components/rc/intensive/CaseClientList';
 import { buildDefaultStages, CASE_STAGES, migrateCase, today } from '@/components/rc/intensive/caseConstants';
 
 // Intensive Services (FRN / Building Resilient Caregivers) workflow workspace —
@@ -40,6 +41,7 @@ export default function IntensiveCaseWorkspace() {
   const [saving, setSaving] = useState(false);
   const [selectedStage, setSelectedStage] = useState('main');
   const [mainTab, setMainTab] = useState('workflow');
+  const [caseViewOpen, setCaseViewOpen] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['rc-clients-intensive'],
@@ -53,7 +55,7 @@ export default function IntensiveCaseWorkspace() {
 
   useEffect(() => {
     const clientParam = new URLSearchParams(location.search).get('client');
-    if (clientParam) { setSelectedId(clientParam); return; }
+    if (clientParam) { setSelectedId(clientParam); setCaseViewOpen(true); return; }
     if (!selectedId && clients.length > 0) setSelectedId(clients[0].id);
   }, [location.search, clients, selectedId]);
 
@@ -217,6 +219,12 @@ export default function IntensiveCaseWorkspace() {
     <div>
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : clients.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">No Intensive Services clients yet. Set a client's Service Category to Intensive Services on their profile to begin.</CardContent></Card>
+      ) : !caseViewOpen ? (
+        <CaseClientList
+          clients={clients}
+          cases={cases}
+          onOpenClient={(id) => { setSelectedId(id); setCaseViewOpen(true); }}
+        />
       ) : (
         <div className="grid lg:grid-cols-[260px_1fr] gap-4 items-start">
           <StageDetailSidebar
@@ -231,6 +239,9 @@ export default function IntensiveCaseWorkspace() {
           <div className="min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2.5 min-w-0">
+                <Button variant="ghost" size="sm" onClick={() => setCaseViewOpen(false)} className="gap-1 px-2 shrink-0">
+                  <ArrowLeft className="h-4 w-4" /> All Clients
+                </Button>
                 <h2 className="text-xl font-heading font-bold text-foreground truncate">
                   {selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : 'Select a client'}
                 </h2>
