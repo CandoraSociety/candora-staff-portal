@@ -20,7 +20,7 @@ const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', 
 //  ell       → ELLLearner (prospective)
 //  digilit   → DigiLitParticipant
 //  volunteer → Volunteer (pending application)
-export default function UniversalRegistrationDialog({ open, onOpenChange, area, program, onSaved }) {
+export default function UniversalRegistrationDialog({ open, onOpenChange, area, program, forceWaitlist = false, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -38,13 +38,14 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
     try {
       const name = `${form.first_name} ${form.last_name}`;
       if (area === 'community') {
+        isWaitlistedRef.current = forceWaitlist;
         const participant = await base44.entities.CommunityParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes });
-        await base44.entities.CommunityRegistration.create({ participant_id: participant.id, participant_name: name, program_id: program.id, program_name: program.name, registration_date: today(), status: 'registered', notes: form.notes });
+        await base44.entities.CommunityRegistration.create({ participant_id: participant.id, participant_name: name, program_id: program.id, program_name: program.name, registration_date: today(), status: forceWaitlist ? 'waitlisted' : 'registered', notes: form.notes });
       } else if (area === 'empoweru') {
         const regs = await base44.entities.EmpowerURegistration.filter({ cohort_id: program.id });
         const active = regs.filter(r => ['registered', 'enrolled'].includes(r.status)).length;
         const waitlistedCount = regs.filter(r => r.status === 'waitlisted').length;
-        const isFull = program.capacity && active >= program.capacity;
+        const isFull = (program.capacity && active >= program.capacity) || forceWaitlist;
         isWaitlistedRef.current = !!isFull;
         const participant = await base44.entities.EmpowerUParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes });
         await base44.entities.EmpowerURegistration.create({
@@ -60,13 +61,16 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
         });
       } else if (area === 'ell') {
-        isWaitlistedRef.current = !!form.waitlist;
-        await base44.entities.ELLLearner.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, intake_date: today(), enrollment_status: form.waitlist ? 'waitlisted' : 'prospective', notes: form.notes });
+        const waitlisting = !!form.waitlist || forceWaitlist;
+        isWaitlistedRef.current = waitlisting;
+        await base44.entities.ELLLearner.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective', notes: form.notes });
       } else if (area === 'digilit') {
-        await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: 'registered', notes: form.notes });
+        isWaitlistedRef.current = forceWaitlist;
+        await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: forceWaitlist ? 'waitlisted' : 'registered', notes: form.notes });
       } else if (area === 'volunteer') {
-        isWaitlistedRef.current = !!form.waitlist;
-        await base44.entities.Volunteer.create({ first_name: form.first_name, last_name: form.last_name, email: form.email, phone: form.phone, volunteer_type: form.volunteer_type, status: form.waitlist ? 'waitlist' : 'pending', notes: form.notes });
+        const waitlisting = !!form.waitlist || forceWaitlist;
+        isWaitlistedRef.current = waitlisting;
+        await base44.entities.Volunteer.create({ first_name: form.first_name, last_name: form.last_name, email: form.email, phone: form.phone, volunteer_type: form.volunteer_type, status: waitlisting ? 'waitlist' : 'pending', notes: form.notes });
       }
       toast({ title: isWaitlistedRef.current ? 'Added to the waitlist' : 'Registration created', description: `${name} — ${programLabel}` });
       onSaved?.();
@@ -102,17 +106,20 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
               <Select value={form.volunteer_type || 'community'} onValueChange={(v) => update('volunteer_type', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VOLUNTEER_TYPE_OPTIONS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
             </div>
           )}
-          {(area === 'ell' || area === 'volunteer') && (
-            <div className="col-span-2 flex items-center space-x-2">
-              <Checkbox id="cr-waitlist" checked={!!form.waitlist} onCheckedChange={(v) => update('waitlist', v === true)} />
-              <Label htmlFor="cr-waitlist" className="cursor-pointer">Add to the waitlist (no spot available yet)</Label>
+          {(area === 'ell' || area === 'volunteer' || forceWaitlist) && (
+            <div className="col-span-2 space-y-1">
+              {forceWaitlist && <p className="text-xs text-amber-600">Registration is full, but you can still add to the waitlist</p>}
+              <div className="flex items-center space-x-2">
+                <Checkbox id="cr-waitlist" checked={forceWaitlist ? true : !!form.waitlist} disabled={forceWaitlist} onCheckedChange={(v) => update('waitlist', v === true)} />
+                <Label htmlFor="cr-waitlist" className="cursor-pointer">Add to the waitlist (no spot available yet)</Label>
+              </div>
             </div>
           )}
           <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Register'}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : forceWaitlist ? 'Add to Waitlist' : 'Register'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

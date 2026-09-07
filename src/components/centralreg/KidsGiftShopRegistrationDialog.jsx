@@ -14,7 +14,7 @@ const EMPTY_PARENT = { first_name: '', last_name: '', phone: '', email: '' };
 
 // Kids Gift Shop registration — parent/guardian, one or more children (name + age),
 // and a time slot. Saved as a ProgramRegistration so it shows in All Registrations.
-export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onSaved }) {
+export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, forceWaitlist = false, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [parent, setParent] = useState(EMPTY_PARENT);
@@ -66,7 +66,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         program_portal: 'other',
         program_name: 'Kids Gift Shop',
         registration_date: today(),
-        status: waitlist ? 'waitlisted' : 'approved',
+        status: (waitlist || forceWaitlist) ? 'waitlisted' : 'approved',
         parent_guardian_name: parentName,
         parent_guardian_phone: parent.phone,
         parent_guardian_email: parent.email,
@@ -74,7 +74,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         time_slot: timeSlot,
       });
       toast({
-        title: waitlist ? 'Added to the waitlist' : 'Registration created',
+        title: (waitlist || forceWaitlist) ? 'Added to the waitlist' : 'Registration created',
         description: `${parentName} — Kids Gift Shop (${KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === timeSlot)?.label})`,
       });
       onSaved?.();
@@ -127,15 +127,16 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
                 {KIDS_GIFT_SHOP_TIME_SLOTS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            {forceWaitlist && <p className="text-xs text-amber-600 pt-1">Registration is full, but you can still add to the waitlist</p>}
             <div className="flex items-center space-x-2 pt-1">
-              <Checkbox id="kgs-waitlist" checked={waitlist} onCheckedChange={(v) => setWaitlist(v === true)} />
+              <Checkbox id="kgs-waitlist" checked={forceWaitlist ? true : waitlist} disabled={forceWaitlist} onCheckedChange={(v) => setWaitlist(v === true)} />
               <Label htmlFor="kgs-waitlist" className="cursor-pointer">Add to the waitlist instead of confirming this slot</Label>
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Register'}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : (waitlist || forceWaitlist) ? 'Add to Waitlist' : 'Register'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

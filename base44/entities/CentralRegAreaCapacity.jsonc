@@ -1,0 +1,19 @@
+{
+  "name": "CentralRegAreaCapacity",
+  "type": "object",
+  "properties": {
+    "area": {
+      "type": "string",
+      "description": "Program area key this maximum applies to (community, empoweru, digilit, ell, volunteer, kids_gift_shop)"
+    },
+    "max_capacity": {
+      "type": "number",
+      "default": 0,
+      "description": "Maximum active registrations for the area before new ones go to the waitlist. 0 = no maximum."
+    }
+  },
+  "required": [
+    "area",
+    "max_capacity"
+  ]
+}
