@@ -14,6 +14,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 const CLB_LEVELS = ["mixed", "clb_1", "clb_2", "clb_3", "clb_4", "clb_5", "clb_6", "clb_7", "clb_8", "clb_9", "clb_10", "clb_11", "clb_12"];
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const CLASS_COLORS = ["#f59e0b", "#2563eb", "#16a34a", "#9333ea", "#ec4899", "#0d9488", "#4f46e5", "#e11d48"];
+const classColor = (cls) => cls.color || CLASS_COLORS[[...(cls.id || "")].reduce((a, c) => a + c.charCodeAt(0), 0) % CLASS_COLORS.length];
 
 const statusColors = {
   planning: "bg-warning/10 text-warning",
@@ -40,6 +42,7 @@ function ClassFormDialog({ cls, instructors, onClose }) {
     start_date: cls?.start_date || "",
     end_date: cls?.end_date || "",
     status: cls?.status || "planning",
+    color: cls?.color || CLASS_COLORS[1],
   });
 
   const toggleDay = (day) => {
@@ -175,6 +178,21 @@ function ClassFormDialog({ cls, instructors, onClose }) {
             <Label>Description</Label>
             <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
+          <div>
+            <Label>Colour</Label>
+            <div className="flex flex-wrap gap-2">
+              {CLASS_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  aria-label={c}
+                  onClick={() => setForm({ ...form, color: c })}
+                  className={`w-7 h-7 rounded-full transition-all ${form.color === c ? "ring-2 ring-ring ring-offset-2" : "opacity-70 hover:opacity-100"}`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
@@ -293,10 +311,13 @@ export default function ELLClasses() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered?.map((cls) => (
-            <Card key={cls.id} className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50" onClick={() => navigate(`/ell/classes/${cls.id}`)}>
+            <Card key={cls.id} className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50" style={{ borderTop: `4px solid ${classColor(cls)}` }} onClick={() => navigate(`/ell/classes/${cls.id}`)}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg">{cls.name}</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: classColor(cls) }} />
+                    {cls.name}
+                  </CardTitle>
                   <Badge className={statusColors[cls.status] || "bg-muted text-muted-foreground"}>
                     {cls.status}
                   </Badge>

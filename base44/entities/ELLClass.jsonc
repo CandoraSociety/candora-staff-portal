@@ -102,6 +102,11 @@
       "default": "planning",
       "description": "Class status"
     },
+    "color": {
+      "type": "string",
+      "default": "#2563eb",
+      "description": "Accent colour used for the class card"
+    },
     "attendance": {
       "type": "array",
       "description": "Per-date attendance records for this class",
