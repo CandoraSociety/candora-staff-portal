@@ -12,6 +12,7 @@ import StatusBadge from '@/components/rc/StatusBadge';
 import { CASE_STATUS_OPTIONS, SERVICE_TYPE_OPTIONS } from '@/lib/rcConstants';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import NeedBarrierDialog, { NEED_CATEGORY_OPTIONS, NEED_STATUS_OPTIONS } from '@/components/rc/NeedBarrierDialog';
+import GeneralClientCalendar from '@/components/rc/GeneralClientCalendar';
 import { today } from '@/components/rc/intensive/caseConstants';
 
 const typeLabel = (v) => (SERVICE_TYPE_OPTIONS || []).find(o => o.value === v)?.label || v || '—';
@@ -199,6 +200,22 @@ export default function GeneralClientsWorkspace() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Calendar</CardTitle>
+                <CardDescription className="text-xs">
+                  This client's appointments and follow-up dates — book appointments directly from here.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GeneralClientCalendar
+                  clientId={selected.id}
+                  clientName={`${selected.first_name} ${selected.last_name}`}
+                  clientEmail={selected.email}
+                />
               </CardContent>
             </Card>
 

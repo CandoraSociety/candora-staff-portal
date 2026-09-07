@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, ClipboardList, Save } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ClipboardList, List, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +27,8 @@ import CaseOutcomesTab from '@/components/rc/intensive/CaseOutcomesTab';
 import CaseTransitionTab from '@/components/rc/intensive/CaseTransitionTab';
 import CaseWaitlistTab from '@/components/rc/intensive/CaseWaitlistTab';
 import CaseClientList from '@/components/rc/intensive/CaseClientList';
+import CaseCalendarTab from '@/components/rc/CaseCalendarTab';
+import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import { buildDefaultStages, CASE_STAGES, migrateCase, today } from '@/components/rc/intensive/caseConstants';
 
 // Intensive Services (FRN / Building Resilient Caregivers) workflow workspace —
@@ -42,6 +44,7 @@ export default function IntensiveCaseWorkspace() {
   const [selectedStage, setSelectedStage] = useState('main');
   const [mainTab, setMainTab] = useState('workflow');
   const [caseViewOpen, setCaseViewOpen] = useState(false);
+  const [listView, setListView] = useState('list');
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['rc-clients-intensive'],
@@ -220,11 +223,21 @@ export default function IntensiveCaseWorkspace() {
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : clients.length === 0 ? (
         <Card><CardContent className="p-8 text-center text-muted-foreground">No Intensive Services clients yet. Set a client's Service Category to Intensive Services on their profile to begin.</CardContent></Card>
       ) : !caseViewOpen ? (
-        <CaseClientList
-          clients={clients}
-          cases={cases}
-          onOpenClient={(id) => { setSelectedId(id); setCaseViewOpen(true); }}
-        />
+        <div className="space-y-4">
+          <div className="flex gap-1">
+            <Button variant={listView === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setListView('list')}><List className="h-4 w-4" /> Clients</Button>
+            <Button variant={listView === 'calendar' ? 'default' : 'outline'} size="sm" onClick={() => setListView('calendar')}><CalendarDays className="h-4 w-4" /> Calendar</Button>
+          </div>
+          {listView === 'calendar' ? (
+            <WorkerAppointmentsPanel />
+          ) : (
+            <CaseClientList
+              clients={clients}
+              cases={cases}
+              onOpenClient={(id) => { setSelectedId(id); setCaseViewOpen(true); }}
+            />
+          )}
+        </div>
       ) : (
         <div className="grid lg:grid-cols-[260px_1fr] gap-4 items-start">
           <StageDetailSidebar
@@ -284,6 +297,7 @@ export default function IntensiveCaseWorkspace() {
               <Tabs value={mainTab} onValueChange={setMainTab}>
                 <TabsList className="flex flex-wrap h-auto">
                   <TabsTrigger value="workflow">Workflow Overview</TabsTrigger>
+                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
                   <TabsTrigger value="waitlist">Waitlist ({cases.filter(c => c.case_status === 'waitlisted').length})</TabsTrigger>
                   <TabsTrigger value="overview">Client Overview</TabsTrigger>
                   <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
@@ -307,6 +321,15 @@ export default function IntensiveCaseWorkspace() {
                       <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
                     </Tabs>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="calendar" className="mt-4">
+                  <CaseCalendarTab
+                    clientId={selectedId}
+                    clientName={selectedClient ? `${selectedClient.first_name} ${selectedClient.last_name}` : ''}
+                    clientEmail={selectedClient?.email}
+                    draft={draft}
+                  />
                 </TabsContent>
 
                 <TabsContent value="waitlist" className="mt-4">

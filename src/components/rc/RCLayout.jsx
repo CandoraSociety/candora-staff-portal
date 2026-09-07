@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { LayoutDashboard, Database, UserPlus, CalendarDays, ArrowLeftRight, ClipboardList, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Database, UserPlus, ArrowLeftRight, ClipboardList, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -10,7 +10,6 @@ const NAV_ITEMS = [
   { path: '/rc', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/rc/clients', label: 'Database', icon: Database },
   { path: '/rc/intake', label: 'Intake', icon: UserPlus },
-  { path: '/rc/appointments', label: 'Appointments', icon: CalendarDays },
   { path: '/rc/referrals', label: 'Referrals', icon: ArrowLeftRight },
   { path: '/rc/case-management', label: 'Case Management', icon: ClipboardList },
 ];

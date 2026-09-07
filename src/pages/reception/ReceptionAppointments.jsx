@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/rc/StatusBadge';
 import AppointmentDialog from '@/components/reception/AppointmentDialog';
 import { APPT_STATUS_OPTIONS } from '@/lib/receptionConstants';
+import { APPOINTMENT_STATUS_OPTIONS } from '@/lib/rcConstants';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ReceptionAppointments() {
@@ -16,14 +18,24 @@ export default function ReceptionAppointments() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  // Client (Resource Centre) appointments filter
+  const [clientSearch, setClientSearch] = useState('');
+  const [clientStatusFilter, setClientStatusFilter] = useState('all');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: appointments = [], isLoading } = useQuery({ queryKey: ['reception-appointments'], queryFn: () => base44.entities.ReceptionAppointment.list('-appointment_date', 200) });
+  const { data: clientAppointments = [], isLoading: clientApptsLoading } = useQuery({ queryKey: ['rc-appointments'], queryFn: () => base44.entities.RCAppointment.list('-appointment_date', 200) });
 
   const filtered = appointments.filter(a => {
     const matchSearch = (a.visitor_name || '').toLowerCase().includes(search.toLowerCase()) || (a.staff_member || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || a.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  const filteredClientAppts = clientAppointments.filter(a => {
+    const matchSearch = (a.client_name || '').toLowerCase().includes(clientSearch.toLowerCase()) || (a.purpose || '').toLowerCase().includes(clientSearch.toLowerCase());
+    const matchStatus = clientStatusFilter === 'all' || a.status === clientStatusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -36,42 +48,81 @@ export default function ReceptionAppointments() {
       await base44.entities.ReceptionAppointment.update(appt.id, { status: 'checked_in', check_in_time: new Date().toISOString() });
       queryClient.invalidateQueries({ queryKey: ['reception-appointments'] });
       toast({ title: `${appt.visitor_name} checked in` });
-    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-heading font-bold text-foreground">Appointments</h1><p className="text-muted-foreground text-sm mt-1">Manage visitor appointments</p></div>
-        <Button onClick={openNew}><Plus className="h-4 w-4" /> New Appointment</Button>
+        <div><h1 className="text-2xl font-heading font-bold text-foreground">Appointments</h1><p className="text-muted-foreground text-sm mt-1">Visitor appointments and all Resource Centre client appointments</p></div>
+        <Button onClick={openNew}><Plus className="h-4 w-4" /> New Visitor Appointment</Button>
       </div>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by visitor or staff..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{APPT_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
-      </div>
-      {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
-       filtered.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{appointments.length === 0 ? 'No appointments yet.' : 'No appointments match your filters.'}</CardContent></Card> :
-      (
-        <div className="space-y-2">
-          {filtered.map(a => (
-            <Card key={a.id} className="hover:shadow-sm transition-shadow"><CardContent className="p-3 flex items-center justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-1"><p className="font-medium text-sm text-foreground truncate">{a.visitor_name}</p><StatusBadge status={a.status} options={APPT_STATUS_OPTIONS} /></div>
-                <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                  <span>{new Date(a.appointment_date).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-                  {a.staff_member && <span>Visiting: {a.staff_member}</span>}
-                  {a.purpose && <span>{a.purpose}</span>}
-                  {a.visitor_phone && <span>{a.visitor_phone}</span>}
-                </div>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {a.status === 'scheduled' && <Button size="sm" variant="outline" onClick={() => handleCheckIn(a)}><CheckCircle className="h-4 w-4" /> Check In</Button>}
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
-              </div>
-            </CardContent></Card>
-          ))}
-        </div>
-      )}
+
+      <Tabs defaultValue="visitors">
+        <TabsList>
+          <TabsTrigger value="visitors">Visitor Appointments ({appointments.length})</TabsTrigger>
+          <TabsTrigger value="clients">Client Appointments ({clientAppointments.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="visitors" className="mt-4 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by visitor or staff..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{APPT_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
+          </div>
+          {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
+           filtered.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{appointments.length === 0 ? 'No appointments yet.' : 'No appointments match your filters.'}</CardContent></Card> :
+          (
+            <div className="space-y-2">
+              {filtered.map(a => (
+                <Card key={a.id} className="hover:shadow-sm transition-shadow"><CardContent className="p-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1"><p className="font-medium text-sm text-foreground truncate">{a.visitor_name}</p><StatusBadge status={a.status} options={APPT_STATUS_OPTIONS} /></div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                      <span>{new Date(a.appointment_date).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                      {a.staff_member && <span>Visiting: {a.staff_member}</span>}
+                      {a.purpose && <span>{a.purpose}</span>}
+                      {a.visitor_phone && <span>{a.visitor_phone}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {a.status === 'scheduled' && <Button size="sm" variant="outline" onClick={() => handleCheckIn(a)}><CheckCircle className="h-4 w-4" /> Check In</Button>}
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </CardContent></Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="clients" className="mt-4 space-y-4">
+          <p className="text-xs text-muted-foreground">All Resource Centre client appointments across every worker — read-only view for front desk visibility.</p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by client or purpose..." value={clientSearch} onChange={(e) => setClientSearch(e.target.value)} className="pl-9" /></div>
+            <Select value={clientStatusFilter} onValueChange={setClientStatusFilter}><SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{APPOINTMENT_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
+          </div>
+          {clientApptsLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
+           filteredClientAppts.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{clientAppointments.length === 0 ? 'No client appointments yet.' : 'No client appointments match your filters.'}</CardContent></Card> :
+          (
+            <div className="space-y-2">
+              {filteredClientAppts.map(a => (
+                <Card key={a.id}><CardContent className="p-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1"><p className="font-medium text-sm text-foreground truncate">{a.client_name}</p><StatusBadge status={a.status} options={APPOINTMENT_STATUS_OPTIONS} /></div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                      <span>{new Date(a.appointment_date).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                      {a.worker_name && <span>Worker: {a.worker_name}</span>}
+                      {a.purpose && <span>{a.purpose}</span>}
+                    </div>
+                  </div>
+                </CardContent></Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
       <AppointmentDialog open={dialogOpen} onOpenChange={setDialogOpen} appointment={editing} onSaved={onSaved} />
     </div>
   );
