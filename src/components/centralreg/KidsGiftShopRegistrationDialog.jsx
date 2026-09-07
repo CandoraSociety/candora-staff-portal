@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
-import ClientPicker from '@/components/centralreg/ClientPicker';
+import ExistingClientToggle from '@/components/centralreg/ExistingClientToggle';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, REGISTRATION_OVERRIDE_CODE, today } from '@/lib/centralRegConstants';
 
 const EMPTY_PARENT = { first_name: '', last_name: '', phone: '', email: '' };
@@ -99,9 +99,8 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, for
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium text-foreground mb-2">Parent / Guardian</p>
-            <div className="space-y-1.5 mb-3">
-              <Label>Find an existing client (optional)</Label>
-              <ClientPicker onSelect={(c) => setParent(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
+            <div className="mb-3">
+              <ExistingClientToggle onSelect={(c) => setParent(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label>First Name *</Label><Input value={parent.first_name} onChange={(e) => updateParent('first_name', e.target.value)} /></div>

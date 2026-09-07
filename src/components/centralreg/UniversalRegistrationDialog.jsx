@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import ClientPicker from '@/components/centralreg/ClientPicker';
+import ExistingClientToggle from '@/components/centralreg/ExistingClientToggle';
 import { REG_AREA_LABELS, VOLUNTEER_TYPE_OPTIONS, REGISTRATION_OVERRIDE_CODE, today } from '@/lib/centralRegConstants';
 
 const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', parent_guardian_name: '', parent_guardian_phone: '', parent_guardian_email: '', volunteer_type: 'community', waitlist: false };
@@ -100,9 +100,8 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         <DialogHeader><DialogTitle>Register — {programLabel}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           {!isChild && (
-            <div className="space-y-1.5 col-span-2">
-              <Label>Find an existing client (optional)</Label>
-              <ClientPicker onSelect={(c) => setForm(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
+            <div className="col-span-2">
+              <ExistingClientToggle onSelect={(c) => setForm(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
             </div>
           )}
           <div className="space-y-1.5"><Label>{isChild ? "Child's First Name *" : 'First Name *'}</Label><Input value={form.first_name || ''} onChange={(e) => update('first_name', e.target.value)} /></div>
