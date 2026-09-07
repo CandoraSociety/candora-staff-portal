@@ -26,6 +26,18 @@ export const ROOM_OPTIONS = [
 ];
 export const ROOM_ABBRS = Object.fromEntries(ROOM_OPTIONS.map(r => [r.value, r.abbr]));
 
+// Sources shown on the Central Registration calendar.
+export const CALENDAR_SOURCES = [
+  { key: 'pathways', label: 'Pathways Workshops', color: '#dc2626' },
+  { key: 'community', label: 'Community Programs', color: '#16a34a' },
+  { key: 'phac', label: 'PHAC Programs', color: '#0ea5e9' },
+  { key: 'digilit', label: 'Digital Literacy', color: '#ca8a04' },
+  { key: 'ell', label: 'ELL Classes', color: '#7c3aed' },
+  { key: 'childminding', label: 'Childminding', color: '#ec4899' },
+  { key: 'volunteer', label: 'Volunteer Events', color: '#65a30d' },
+  { key: 'empoweru', label: 'EmpowerU', color: '#d97706' },
+];
+
 // Staff override code — lets a confirmed registration be created even when the program/area is full.
 export const REGISTRATION_OVERRIDE_CODE = '5011';
 

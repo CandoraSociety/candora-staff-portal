@@ -1,23 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addWeeks, addMonths } from 'date-fns';
-import { ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addWeeks, addMonths, addDays } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
-
-const SOURCES = [
-  { key: 'pathways', label: 'Pathways Workshops', color: '#dc2626' },
-  { key: 'community', label: 'Community Programs', color: '#16a34a' },
-  { key: 'phac', label: 'PHAC Programs', color: '#0ea5e9' },
-  { key: 'digilit', label: 'Digital Literacy', color: '#ca8a04' },
-  { key: 'ell', label: 'ELL Classes', color: '#7c3aed' },
-  { key: 'childminding', label: 'Childminding', color: '#ec4899' },
-  { key: 'volunteer', label: 'Volunteer Events', color: '#65a30d' },
-  { key: 'empoweru', label: 'EmpowerU', color: '#d97706' },
-];
+import { ROOM_OPTIONS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
+import { DayRoomView, WeekRoomView } from '@/components/centralreg/RoomScheduleViews';
 
 const parseLocalDate = (str) => {
   if (!str) return null;
@@ -87,6 +77,7 @@ function addSessionEvents(list, records, source, monthStart, monthEnd, titleFn) 
 export default function CentralRegCalendar() {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const [view, setView] = useState('month'); // month | week | day
   const [sourceFilter, setSourceFilter] = useState([]);
   const [roomFilter, setRoomFilter] = useState([]);
 
@@ -99,7 +90,6 @@ export default function CentralRegCalendar() {
   const ellQ = useQuery({ queryKey: ['centralreg-cal-ell'], queryFn: () => base44.entities.ELLClass.list() });
   const empoweruQ = useQuery({ queryKey: ['centralreg-cal-empoweru'], queryFn: () => base44.entities.EmpowerUCohort.list() });
 
-  const isLoading = [workshopsQ, communityQ, phacQ, digilitQ, childmindingQ, volunteerQ, ellQ, empoweruQ].some(q => q.isLoading);
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
 
@@ -158,20 +148,6 @@ export default function CentralRegCalendar() {
   }, [visible]);
 
   const days = eachDayOfInterval({ start: startOfWeek(monthStart), end: endOfWeek(monthEnd) });
-  const selectedEvents = eventsByDay.get(format(selectedDay, 'yyyy-MM-dd')) || [];
-
-  // Selected-day events split into room sections (plus a bucket for unassigned ones)
-  const roomGroups = useMemo(() => {
-    const groups = [];
-    ROOM_OPTIONS.forEach(r => {
-      const evs = selectedEvents.filter(e => e.room === r.value);
-      if (evs.length) groups.push({ key: r.value, label: r.label, color: r.color, events: evs });
-    });
-    const unassigned = selectedEvents.filter(e => !e.room);
-    if (unassigned.length) groups.push({ key: 'unassigned', label: 'No room assigned', color: '#94a3b8', events: unassigned });
-    return groups;
-  }, [selectedEvents]);
-
   const toggleSource = (key) => {
     setSourceFilter(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
@@ -179,6 +155,18 @@ export default function CentralRegCalendar() {
   const toggleRoom = (value) => {
     setRoomFilter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
   };
+
+  const goPrev = () => {
+    if (view === 'month') { setMonth(m => startOfMonth(addMonths(m, -1))); return; }
+    const n = view === 'week' ? addDays(selectedDay, -7) : addDays(selectedDay, -1);
+    setSelectedDay(n); setMonth(startOfMonth(n));
+  };
+  const goNext = () => {
+    if (view === 'month') { setMonth(m => startOfMonth(addMonths(m, 1))); return; }
+    const n = view === 'week' ? addDays(selectedDay, 7) : addDays(selectedDay, 1);
+    setSelectedDay(n); setMonth(startOfMonth(n));
+  };
+  const goToday = () => { const now = new Date(); setMonth(startOfMonth(now)); setSelectedDay(now); };
 
   return (
     <div className="space-y-4">
@@ -188,9 +176,23 @@ export default function CentralRegCalendar() {
           <p className="text-muted-foreground text-sm mt-1">All programs, sessions and workshops across Candora in one calendar</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => { setMonth(m => startOfMonth(addMonths(m, -1))); }}><ChevronLeft className="h-4 w-4" /></Button>
-          <Button variant="outline" onClick={() => { const now = new Date(); setMonth(startOfMonth(now)); setSelectedDay(now); }}>Today</Button>
-          <Button variant="outline" size="icon" onClick={() => { setMonth(m => startOfMonth(addMonths(m, 1))); }}><ChevronRight className="h-4 w-4" /></Button>
+          {view === 'day' && (
+            <Button variant="outline" size="sm" onClick={() => setView('month')}><ChevronLeft className="h-4 w-4" /> Month</Button>
+          )}
+          <div className="flex rounded-md border border-border overflow-hidden">
+            {[['month', 'Month'], ['week', 'Week']].map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cn('px-3 py-1.5 text-xs font-medium transition-colors', view === v ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:text-foreground')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>
+          <Button variant="outline" onClick={goToday}>Today</Button>
+          <Button variant="outline" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>
         </div>
       </div>
 
@@ -238,6 +240,7 @@ export default function CentralRegCalendar() {
       </div>
 
       {/* Month grid */}
+      {view === 'month' && (
       <Card>
         <CardContent className="p-4">
           <div className="text-center font-display font-bold text-lg mb-3">{format(month, 'MMMM yyyy')}</div>
@@ -255,7 +258,7 @@ export default function CentralRegCalendar() {
               return (
                 <button
                   key={d.toISOString()}
-                  onClick={() => setSelectedDay(d)}
+                  onClick={() => { setSelectedDay(d); setView('day'); }}
                   className={cn(
                     'flex flex-col min-h-28 border rounded-md p-1 text-left align-top transition-colors',
                     inMonth ? 'bg-card' : 'bg-muted/40',
@@ -298,46 +301,17 @@ export default function CentralRegCalendar() {
         </CardContent>
       </Card>
 
-      {/* Selected day detail */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-sm mb-3">{format(selectedDay, 'EEEE, MMMM d, yyyy')}</h3>
-          {isLoading ? <p className="text-sm text-muted-foreground">Loading events...</p> :
-            selectedEvents.length === 0 ? <p className="text-sm text-muted-foreground">No programs or workshops scheduled for this day.</p> :
-            <div className="space-y-4">
-              {roomGroups.map(g => (
-                <div key={g.key}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: g.color }} />
-                    <p className="text-sm font-semibold" style={{ color: g.color }}>{g.label}</p>
-                    <span className="text-xs text-muted-foreground">({g.events.length})</span>
-                  </div>
-                  <div className="space-y-2">
-                    {g.events.map(e => {
-                      const s = SOURCES.find(x => x.key === e.source);
-                      return (
-                        <div key={e.id} className="flex items-start gap-3 p-2 rounded-lg border border-border">
-                          <span className="mt-1 h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: s?.color }} />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-sm text-foreground">{e.title}</p>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: s?.color }}>{s?.label}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                              {(e.startTime || e.endTime) && <p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{e.startTime || ''}{e.startTime && e.endTime ? '–' : ''}{e.endTime || ''}</p>}
-                              {e.location && <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{e.location}</p>}
-                              {e.facilitator && <p className="text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{e.facilitator}</p>}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>}
-        </CardContent>
-      </Card>
+      )}
+
+      {view === 'week' && (
+        <Card>
+          <CardContent className="p-4">
+            <WeekRoomView weekStart={startOfWeek(selectedDay)} events={visible} onOpenDay={(d) => { setSelectedDay(d); setView('day'); }} />
+          </CardContent>
+        </Card>
+      )}
+
+      {view === 'day' && <DayRoomView date={selectedDay} events={visible} />}
     </div>
   );
 }
