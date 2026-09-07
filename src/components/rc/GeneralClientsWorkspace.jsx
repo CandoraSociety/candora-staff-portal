@@ -27,7 +27,7 @@ const PRIORITY_STYLES = {
 // General Clients workspace — clients who aren't on a monitored intensive workflow.
 // Structured but light: a needs & barriers assessment plus the client's history of
 // interactions, so staff can give accurate advice and make appropriate referrals.
-export default function GeneralClientsWorkspace() {
+export default function GeneralClientsWorkspace({ category = 'general' }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
@@ -40,8 +40,14 @@ export default function GeneralClientsWorkspace() {
     queryKey: ['rc-clients-all'],
     queryFn: () => base44.entities.RCClient.list('last_name', 500),
   });
-  // General clients: Service Category is General (or not yet set on legacy records).
-  const general = allClients.filter(c => c.service_category === 'general' || !c.service_category);
+  const isCaregiver = category === 'caregiver';
+  // The General tab shows everyone not on the intensive workflow (General,
+  // unset legacy records, and 0-6 Caregiver Capacity clients). The dedicated
+  // Caregiver Capacity 0-6y tab shows only the Caregiver Capacity clients.
+  const general = isCaregiver
+    ? allClients.filter(c => c.service_category === 'caregiver_capacity_0_5')
+    : allClients.filter(c => c.service_category !== 'intensive_services');
+  const heading = isCaregiver ? 'Caregiver Capacity 0-6y' : 'General Clients';
 
   const filtered = general.filter(c =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase())
@@ -87,7 +93,9 @@ export default function GeneralClientsWorkspace() {
   if (general.length === 0) {
     return (
       <Card><CardContent className="p-8 text-center text-muted-foreground">
-        No General clients yet. Clients whose Service Category is General will appear here.
+        {isCaregiver
+          ? 'No 0-6 Caregiver Capacity clients yet. Clients whose Service Category is Caregiver Capacity 0-5 will appear here.'
+          : 'No General clients yet. Clients whose Service Category is General or 0-6 Caregiver Capacity will appear here.'}
       </CardContent></Card>
     );
   }
@@ -97,7 +105,7 @@ export default function GeneralClientsWorkspace() {
       {/* Client list */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm">General Clients ({general.length})</CardTitle>
+          <CardTitle className="text-sm">{heading} ({general.length})</CardTitle>
           <div className="relative">
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search clients..." className="pl-8 h-8 text-sm" />
