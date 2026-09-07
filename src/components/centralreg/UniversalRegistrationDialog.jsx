@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { REG_AREA_LABELS, VOLUNTEER_TYPE_OPTIONS, today } from '@/lib/centralRegConstants';
 
-const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', parent_guardian_name: '', parent_guardian_phone: '', parent_guardian_email: '', volunteer_type: 'community' };
+const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', parent_guardian_name: '', parent_guardian_phone: '', parent_guardian_email: '', volunteer_type: 'community', waitlist: false };
 
 // Registers a person into the SAME records their portal uses, so both places
 // always show the same registration. Writes per area:
@@ -59,11 +60,13 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
         });
       } else if (area === 'ell') {
-        await base44.entities.ELLLearner.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, intake_date: today(), enrollment_status: 'prospective', notes: form.notes });
+        isWaitlistedRef.current = !!form.waitlist;
+        await base44.entities.ELLLearner.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, intake_date: today(), enrollment_status: form.waitlist ? 'waitlisted' : 'prospective', notes: form.notes });
       } else if (area === 'digilit') {
         await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: 'registered', notes: form.notes });
       } else if (area === 'volunteer') {
-        await base44.entities.Volunteer.create({ first_name: form.first_name, last_name: form.last_name, email: form.email, phone: form.phone, volunteer_type: form.volunteer_type, status: 'pending', notes: form.notes });
+        isWaitlistedRef.current = !!form.waitlist;
+        await base44.entities.Volunteer.create({ first_name: form.first_name, last_name: form.last_name, email: form.email, phone: form.phone, volunteer_type: form.volunteer_type, status: form.waitlist ? 'waitlist' : 'pending', notes: form.notes });
       }
       toast({ title: isWaitlistedRef.current ? 'Added to the waitlist' : 'Registration created', description: `${name} — ${programLabel}` });
       onSaved?.();
@@ -97,6 +100,12 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           {area === 'volunteer' && (
             <div className="space-y-1.5 col-span-2"><Label>Volunteer Type</Label>
               <Select value={form.volunteer_type || 'community'} onValueChange={(v) => update('volunteer_type', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VOLUNTEER_TYPE_OPTIONS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
+            </div>
+          )}
+          {(area === 'ell' || area === 'volunteer') && (
+            <div className="col-span-2 flex items-center space-x-2">
+              <Checkbox id="cr-waitlist" checked={!!form.waitlist} onCheckedChange={(v) => update('waitlist', v === true)} />
+              <Label htmlFor="cr-waitlist" className="cursor-pointer">Add to the waitlist (no spot available yet)</Label>
             </div>
           )}
           <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>

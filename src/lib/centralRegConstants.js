@@ -41,6 +41,7 @@ export const DIGILIT_STATUS_OPTIONS = [
 ];
 export const ELL_ENROLLMENT_OPTIONS = [
   { value: 'prospective', label: 'Prospective', color: '#f59e0b' },
+  { value: 'waitlisted', label: 'Waitlisted', color: '#a855f7' },
   { value: 'enrolled', label: 'Enrolled', color: '#3b82f6' },
   { value: 'active', label: 'Active', color: '#22c55e' },
   { value: 'completed', label: 'Completed', color: '#8b5cf6' },
@@ -89,6 +90,7 @@ export const WAITLIST_ACTIONS = {
   community: { entity: 'CommunityRegistration', promote: 'registered', remove: 'withdrawn' },
   empoweru: { entity: 'EmpowerURegistration', promote: 'registered', remove: 'withdrawn', hasPosition: true },
   digilit: { entity: 'DigiLitParticipant', promote: 'registered', remove: 'withdrawn' },
+  ell: { entity: 'ELLLearner', promote: 'prospective', remove: 'withdrawn' },
   reception: { entity: 'ProgramRegistration', promote: 'approved', remove: 'declined', hasPosition: true },
   volunteer: { entity: 'Volunteer', promote: 'pending', remove: 'inactive' },
   kids_gift_shop: { entity: 'ProgramRegistration', promote: 'approved', remove: 'withdrawn' },

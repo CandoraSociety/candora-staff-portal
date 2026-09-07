@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, today } from '@/lib/centralRegConstants';
 
@@ -19,12 +20,14 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
   const [parent, setParent] = useState(EMPTY_PARENT);
   const [children, setChildren] = useState([{ first_name: '', age: '' }]);
   const [timeSlot, setTimeSlot] = useState('');
+  const [waitlist, setWaitlist] = useState(false);
 
   useEffect(() => {
     if (open) {
       setParent(EMPTY_PARENT);
       setChildren([{ first_name: '', age: '' }]);
       setTimeSlot('');
+      setWaitlist(false);
     }
   }, [open]);
 
@@ -63,7 +66,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         program_portal: 'other',
         program_name: 'Kids Gift Shop',
         registration_date: today(),
-        status: 'approved',
+        status: waitlist ? 'waitlisted' : 'approved',
         parent_guardian_name: parentName,
         parent_guardian_phone: parent.phone,
         parent_guardian_email: parent.email,
@@ -71,7 +74,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         time_slot: timeSlot,
       });
       toast({
-        title: 'Registration created',
+        title: waitlist ? 'Added to the waitlist' : 'Registration created',
         description: `${parentName} — Kids Gift Shop (${KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === timeSlot)?.label})`,
       });
       onSaved?.();
@@ -124,6 +127,10 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
                 {KIDS_GIFT_SHOP_TIME_SLOTS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            <div className="flex items-center space-x-2 pt-1">
+              <Checkbox id="kgs-waitlist" checked={waitlist} onCheckedChange={(v) => setWaitlist(v === true)} />
+              <Label htmlFor="kgs-waitlist" className="cursor-pointer">Add to the waitlist instead of confirming this slot</Label>
+            </div>
           </div>
         </div>
         <DialogFooter>
