@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { BookOpen, Plus, Search, Pencil, Trash2, Clock } from "lucide-react";
@@ -216,6 +217,7 @@ function DeleteConfirmDialog({ cls, onClose }) {
 }
 
 export default function ELLClasses() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
@@ -291,7 +293,7 @@ export default function ELLClasses() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered?.map((cls) => (
-            <Card key={cls.id} className="hover:shadow-md transition-shadow">
+            <Card key={cls.id} className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50" onClick={() => navigate(`/ell/classes/${cls.id}`)}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-lg">{cls.name}</CardTitle>
@@ -318,10 +320,10 @@ export default function ELLClasses() {
                     {getEnrolledCount(cls.id)} / {cls.capacity || "—"} enrolled
                   </span>
                   <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditClass(cls); setShowForm(true); }}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditClass(cls); setShowForm(true); }}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => setDeleteClass(cls)}>
+                    <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setDeleteClass(cls); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
