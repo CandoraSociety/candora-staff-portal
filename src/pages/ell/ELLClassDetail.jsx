@@ -39,6 +39,11 @@ export default function ELLClassDetail() {
 
   const classQ = useQuery({ queryKey: ['ellClass', id], queryFn: () => base44.entities.ELLClass.get(id) });
   const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.list() });
+  const courseQ = useQuery({
+    queryKey: ['ellCourse', cls?.course_id],
+    queryFn: () => base44.entities.ELLClass.get(cls.course_id),
+    enabled: !!cls?.course_id,
+  });
 
   const cls = classQ.data;
   const classDates = useMemo(() => {
@@ -139,7 +144,7 @@ export default function ELLClassDetail() {
           <NotesTab cls={cls} userName={userName} saveClass={saveClass} selectedDate={selectedDate} />
         </TabsContent>
         <TabsContent value="lesson-plans" className="mt-4">
-          <LessonPlansTab cls={cls} userName={userName} saveClass={saveClass} selectedDate={selectedDate} />
+          <LessonPlansTab cls={cls} userName={userName} saveClass={saveClass} selectedDate={selectedDate} course={courseQ.data} />
         </TabsContent>
       </Tabs>
     </div>

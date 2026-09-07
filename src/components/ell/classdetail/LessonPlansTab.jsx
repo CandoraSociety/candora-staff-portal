@@ -1,12 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { format } from 'date-fns';
-import { Download, FileText, Plus, Upload } from 'lucide-react';
+import { BookOpen, ChevronDown, Download, FileText, Plus, Upload } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useToast } from '@/components/ui/use-toast';
 
 const parseLocalDate = (str) => {
@@ -15,41 +13,14 @@ const parseLocalDate = (str) => {
   return new Date(y, m - 1, d);
 };
 
-export default function LessonPlansTab({ cls, userName, saveClass, selectedDate }) {
+export default function LessonPlansTab({ cls, userName, saveClass, selectedDate, course }) {
   const { toast } = useToast();
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [attaching, setAttaching] = useState(false);
   const fileRef = useRef(null);
 
   const plans = [...(cls.lesson_plans || [])].sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
-
-  const handleCreate = async () => {
-    if (!title.trim() || !content.trim()) {
-      toast({ title: 'Title and content are required', variant: 'destructive' });
-      return;
-    }
-    setSaving(true);
-    try {
-      await saveClass({
-        lesson_plans: [...(cls.lesson_plans || []), {
-          id: crypto.randomUUID(),
-          title: title.trim(),
-          date: selectedDate || null,
-          content: content.trim(),
-          created_by_name: userName,
-          created_date: format(new Date(), 'yyyy-MM-dd'),
-        }],
-      });
-      setTitle(''); setContent('');
-      toast({ title: 'Lesson plan created' });
-    } catch (e) {
-      toast({ title: e.message, variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const coursePlans = [...(course?.lesson_plans || [])].sort((a, b) => (b.created_date || '').localeCompare(a.created_date || ''));
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -77,29 +48,33 @@ export default function LessonPlansTab({ cls, userName, saveClass, selectedDate 
     }
   };
 
+  const handleAttach = async (plan) => {
+    setAttaching(true);
+    try {
+      await saveClass({
+        lesson_plans: [...(cls.lesson_plans || []), {
+          id: crypto.randomUUID(),
+          title: plan.title,
+          date: selectedDate || null,
+          content: plan.content || null,
+          file_url: plan.file_url || null,
+          file_name: plan.file_name || null,
+          source_course_name: course?.name || null,
+          created_by_name: plan.created_by_name || userName,
+          created_date: format(new Date(), 'yyyy-MM-dd'),
+        }],
+      });
+      toast({ title: 'Course material attached to class' });
+    } catch (e) {
+      toast({ title: e.message, variant: 'destructive' });
+    } finally {
+      setAttaching(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2 items-start">
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <h3 className="font-semibold text-sm">Create a Lesson Plan</h3>
-            <div>
-              <Label>Title *</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 3 — Past tense" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Attached to {selectedDate ? format(parseLocalDate(selectedDate), 'MMM d, yyyy') : 'the date selected in the calendar'}
-            </p>
-            <div>
-              <Label>Content *</Label>
-              <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Objectives, activities, materials, homework..." />
-            </div>
-            <Button onClick={handleCreate} disabled={saving}>
-              <Plus className="h-4 w-4 mr-2" />{saving ? 'Saving...' : 'Create Plan'}
-            </Button>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardContent className="p-4 space-y-3">
             <h3 className="font-semibold text-sm">Upload a Lesson Plan</h3>
@@ -112,6 +87,41 @@ export default function LessonPlansTab({ cls, userName, saveClass, selectedDate 
               <span className="text-sm text-muted-foreground">{uploading ? 'Uploading...' : 'Click to choose a file'}</span>
               <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
             </label>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <Collapsible>
+              <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 p-4 text-left hover:bg-muted/50 transition-colors">
+                <span className="font-semibold text-sm flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Course Material{course ? ` — ${course.name}` : ''}
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-4 pb-4 pt-3 space-y-2 border-t max-h-80 overflow-y-auto">
+                  {!course ? (
+                    <p className="text-sm text-muted-foreground">Link this class to a course (Edit Class) to browse that course's lesson plans here.</p>
+                  ) : coursePlans.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No course material yet. Create lesson plans for this course in the Courses section.</p>
+                  ) : coursePlans.map(p => (
+                    <div key={p.id} className="flex items-center justify-between gap-2 border rounded-lg p-2.5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{p.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.file_url ? 'Uploaded file' : 'Created in-app'}{p.created_by_name ? ` · ${p.created_by_name}` : ''}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="outline" className="shrink-0" onClick={() => handleAttach(p)} disabled={attaching}>
+                        <Plus className="h-3.5 w-3.5 mr-1.5" />Attach
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </CardContent>
         </Card>
       </div>
@@ -130,12 +140,13 @@ export default function LessonPlansTab({ cls, userName, saveClass, selectedDate 
                       <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                       <span className="truncate">{p.title}</span>
                     </p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full text-white shrink-0" style={{ backgroundColor: p.file_url ? '#0284c7' : '#16a34a' }}>
-                      {p.file_url ? 'Uploaded' : 'Created'}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full text-white shrink-0" style={{ backgroundColor: p.file_url ? '#0284c7' : p.source_course_name ? '#9333ea' : '#16a34a' }}>
+                      {p.file_url ? 'Uploaded' : p.source_course_name ? 'From course' : 'Created'}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                     {p.date && <span>For: {format(parseLocalDate(p.date), 'MMM d, yyyy')}</span>}
+                    {p.source_course_name && <span>Course: {p.source_course_name}</span>}
                     <span>By: {p.created_by_name || 'Staff'}</span>
                     {p.created_date && <span>Added: {format(parseLocalDate(p.created_date), 'MMM d, yyyy')}</span>}
                   </div>

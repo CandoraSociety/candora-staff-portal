@@ -38,6 +38,10 @@
       "type": "string",
       "description": "Instructor name (denormalized for display)"
     },
+    "course_id": {
+      "type": "string",
+      "description": "Reference to the ELLClass course this class belongs to \u2014 links the class to the course whose lesson plans / course material applies to it"
+    },
     "schedule_days": {
       "type": "array",
       "items": {
@@ -193,6 +197,10 @@
           "file_name": {
             "type": "string",
             "description": "Uploaded lesson plan file name"
+          },
+          "source_course_name": {
+            "type": "string",
+            "description": "Name of the course this plan was attached from (course material attached to a class)"
           },
           "created_by_name": {
             "type": "string"

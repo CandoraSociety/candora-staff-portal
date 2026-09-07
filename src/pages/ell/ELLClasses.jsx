@@ -24,7 +24,7 @@ const statusColors = {
   cancelled: "bg-destructive/10 text-destructive-foreground",
 };
 
-function ClassFormDialog({ cls, instructors, onClose }) {
+function ClassFormDialog({ cls, instructors, courses, onClose }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(true);
@@ -43,6 +43,7 @@ function ClassFormDialog({ cls, instructors, onClose }) {
     end_date: cls?.end_date || "",
     status: cls?.status || "planning",
     color: cls?.color || CLASS_COLORS[1],
+    course_id: cls?.course_id || "",
   });
 
   const toggleDay = (day) => {
@@ -124,6 +125,19 @@ function ClassFormDialog({ cls, instructors, onClose }) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label>Linked Course</Label>
+            <Select value={form.course_id || "none"} onValueChange={(v) => setForm({ ...form, course_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {(courses || []).filter((c) => c.id !== cls?.id).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">Course whose lesson plans and material apply to this class.</p>
           </div>
           <div>
             <Label>Schedule Days</Label>
@@ -355,7 +369,7 @@ export default function ELLClasses() {
         </div>
       )}
 
-      {showForm && <ClassFormDialog cls={editClass} instructors={instructors} onClose={() => { setShowForm(false); setEditClass(null); }} />}
+      {showForm && <ClassFormDialog cls={editClass} instructors={instructors} courses={classes} onClose={() => { setShowForm(false); setEditClass(null); }} />}
       {deleteClass && <DeleteConfirmDialog cls={deleteClass} onClose={() => setDeleteClass(null)} />}
     </div>
   );

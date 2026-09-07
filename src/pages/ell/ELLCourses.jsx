@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { format } from 'date-fns';
-import { GraduationCap, Clock, MapPin, Users, User as UserIcon, CalendarRange, Snowflake } from 'lucide-react';
+import { BookOpen, GraduationCap, Clock, MapPin, Users, User as UserIcon, CalendarRange, Snowflake } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import CourseLessonPlansDialog from '@/components/ell/CourseLessonPlansDialog';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -74,7 +76,7 @@ const roomLabel = (cls) => {
   return r ? r.label : (cls.location || 'Room TBC');
 };
 
-function CourseProfileCard({ cls, enrolled }) {
+function CourseProfileCard({ cls, enrolled, onManagePlans }) {
   const profile = COURSE_PROFILES[cls.name] || {};
   const color = profile.color || '#7c3aed';
   const days = (DAY_ORDER.filter(d => (cls.schedule_days || []).includes(d))).map(d => DAY_LABELS[d]).join(' / ');
@@ -124,12 +126,18 @@ function CourseProfileCard({ cls, enrolled }) {
         )}
 
         {cls.description && <p className="text-sm text-muted-foreground leading-relaxed">{cls.description}</p>}
+
+        <Button variant="outline" size="sm" className="w-full" onClick={onManagePlans}>
+          <BookOpen className="h-4 w-4 mr-2" />
+          Lesson Plans ({(cls.lesson_plans || []).length})
+        </Button>
       </CardContent>
     </Card>
   );
 }
 
 export default function ELLCourses() {
+  const [plansCourse, setPlansCourse] = useState(null);
   const classesQ = useQuery({ queryKey: ['ell-courses-classes'], queryFn: () => base44.entities.ELLClass.list() });
   const learnersQ = useQuery({ queryKey: ['ell-courses-learners'], queryFn: () => base44.entities.ELLLearner.list() });
 
@@ -168,7 +176,7 @@ export default function ELLCourses() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {sorted.map(cls => (
-            <CourseProfileCard key={cls.id} cls={cls} enrolled={enrolledByClass[cls.id] || 0} />
+            <CourseProfileCard key={cls.id} cls={cls} enrolled={enrolledByClass[cls.id] || 0} onManagePlans={() => setPlansCourse(cls)} />
           ))}
         </div>
       )}
@@ -177,6 +185,8 @@ export default function ELLCourses() {
         <Snowflake className="h-3.5 w-3.5" />
         Winter break note: last teaching day before winter break is December 15/17, as applicable.
       </p>
+
+      {plansCourse && <CourseLessonPlansDialog course={plansCourse} onClose={() => setPlansCourse(null)} />}
     </div>
   );
 }
