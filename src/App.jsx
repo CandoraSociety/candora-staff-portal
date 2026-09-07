@@ -227,6 +227,7 @@ import ELLLayout from '@/components/ell/ELLLayout';
 import ELLDashboard from '@/pages/ell/ELLDashboard';
 import ELLLearners from '@/pages/ell/ELLLearners';
 import ELLClasses from '@/pages/ell/ELLClasses';
+import ELLCourses from '@/pages/ell/ELLCourses';
 import ELLSchedule from '@/pages/ell/ELLSchedule';
 import ELLInstructors from '@/pages/ell/ELLInstructors';
 import ELLAssessments from '@/pages/ell/ELLAssessments';
@@ -587,6 +588,7 @@ const AuthenticatedApp = () => {
           <Route path="/ell" element={<ELLDashboard />} />
           <Route path="/ell/learners" element={<ELLLearners />} />
           <Route path="/ell/classes" element={<ELLClasses />} />
+          <Route path="/ell/courses" element={<ELLCourses />} />
           <Route path="/ell/schedule" element={<ELLSchedule />} />
           <Route path="/ell/instructors" element={<ELLInstructors />} />
           <Route path="/ell/assessments" element={<ELLAssessments />} />

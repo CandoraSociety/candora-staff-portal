@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import EAFloatingWidget from "@/components/ed/EAFloatingWidget";
 import ModuleGate from "@/components/shared/ModuleGate";
-import { GraduationCap, LayoutDashboard, Users, BookOpen, CalendarDays, UserCog, ClipboardCheck, Menu, X } from "lucide-react";
+import { GraduationCap, LayoutDashboard, Users, BookOpen, CalendarDays, UserCog, ClipboardCheck, Menu, X, BookMarked } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/ell", icon: LayoutDashboard },
   { name: "Learners", href: "/ell/learners", icon: Users },
   { name: "Classes", href: "/ell/classes", icon: BookOpen },
+  { name: "Courses", href: "/ell/courses", icon: BookMarked },
   { name: "Schedule", href: "/ell/schedule", icon: CalendarDays },
   { name: "Instructors", href: "/ell/instructors", icon: UserCog },
   { name: "Assessments", href: "/ell/assessments", icon: ClipboardCheck },
