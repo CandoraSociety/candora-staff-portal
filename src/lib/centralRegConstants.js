@@ -9,6 +9,7 @@ export const REG_AREA_OPTIONS = [
   { key: 'ell', label: 'ELL (English Language Learning)', color: '#22c55e', path: '/ell/learners' },
   { key: 'digilit', label: 'Digital Literacy', color: '#6366f1', path: '/digilit/participants' },
   { key: 'volunteer', label: 'Volunteer Program', color: '#ec4899', path: '/volunteermgr/volunteers' },
+  { key: 'kids_gift_shop', label: 'Kids Gift Shop', color: '#e11d48', path: '/central-registration/registrations' },
   { key: 'reception', label: 'Other / Cross-Portal', color: '#64748b', path: '/reception/registration' },
 ];
 export const REG_AREA_LABELS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.key, a.label]));
@@ -66,6 +67,7 @@ export const AREA_STATUS_OPTIONS = {
   empoweru: EMPOWERU_REG_STATUS_OPTIONS,
   digilit: DIGILIT_STATUS_OPTIONS,
   ell: ELL_ENROLLMENT_OPTIONS,
+  kids_gift_shop: REG_STATUS_OPTIONS,
   reception: REG_STATUS_OPTIONS,
 };
 export const AREA_STATUS_LABELS = Object.fromEntries(
@@ -78,6 +80,7 @@ export const AREA_ENTITIES = {
   empoweru: 'EmpowerURegistration',
   digilit: 'DigiLitParticipant',
   ell: 'ELLLearner',
+  kids_gift_shop: 'ProgramRegistration',
   reception: 'ProgramRegistration',
 };
 
@@ -88,6 +91,7 @@ export const WAITLIST_ACTIONS = {
   digilit: { entity: 'DigiLitParticipant', promote: 'registered', remove: 'withdrawn' },
   reception: { entity: 'ProgramRegistration', promote: 'approved', remove: 'declined', hasPosition: true },
   volunteer: { entity: 'Volunteer', promote: 'pending', remove: 'inactive' },
+  kids_gift_shop: { entity: 'ProgramRegistration', promote: 'approved', remove: 'withdrawn' },
 };
 
 export const today = () => new Date().toISOString().split('T')[0];

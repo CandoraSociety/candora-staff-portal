@@ -118,6 +118,12 @@ export default function CentralRegPrograms() {
             </div>
           </AreaSection>
 
+          <AreaSection title={REG_AREA_LABELS.kids_gift_shop} color="#e11d48" portalPath={REG_AREA_PATHS.kids_gift_shop}>
+            <div className="space-y-2">
+              <ProgramCard title="Kids Gift Shop" subtitle="Register a child for the Kids Gift Shop (tracked under All Registrations)" onRegister={() => openDialog('kids_gift_shop', { name: 'Kids Gift Shop' })} />
+            </div>
+          </AreaSection>
+
           <AreaSection title="Other programs & services" color="#64748b" portalPath={REG_AREA_PATHS.reception}>
             <Card><CardContent className="p-3 text-sm text-muted-foreground">
               For programs without a dedicated listing above (FRN, Resource Centre, and other services), registrations are taken on the cross-portal form and tracked under <Link className="text-primary underline" to="/central-registration/registrations">All Registrations</Link> — including approval and waitlist handling.

@@ -36,6 +36,7 @@ export default function CentralRegDashboard() {
     ell: ellLearners.filter(l => ['prospective', 'enrolled', 'active'].includes(l.enrollment_status)).length,
     digilit: digilitParticipants.filter(p => ['registered', 'started'].includes(p.status)).length,
     reception: programRegs.filter(r => ['approved', 'enrolled'].includes(r.status)).length,
+    kids_gift_shop: programRegs.filter(r => r.program_name === 'Kids Gift Shop' && ['approved', 'enrolled'].includes(r.status)).length,
     volunteer: volunteers.filter(v => ['pending', 'active', 'occasional'].includes(v.status)).length,
   };
 

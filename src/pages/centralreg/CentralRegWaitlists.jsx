@@ -27,7 +27,7 @@ export default function CentralRegWaitlists() {
     communityRegs.filter(r => r.status === 'waitlisted').forEach(r => wl.push({ key: `c-${r.id}`, area: 'community', id: r.id, name: r.participant_name, program: r.program_name, position: null, date: r.registration_date }));
     empowerRegs.filter(r => r.status === 'waitlisted').forEach(r => wl.push({ key: `e-${r.id}`, area: 'empoweru', id: r.id, name: r.participant_name, program: r.cohort_name, position: r.waitlist_position, date: r.registration_date }));
     digilitParticipants.filter(p => p.status === 'waitlisted').forEach(p => wl.push({ key: `d-${p.id}`, area: 'digilit', id: p.id, name: `${p.first_name} ${p.last_name}`, program: 'Digital Literacy', position: null, date: p.registration_date }));
-    programRegs.filter(r => r.status === 'waitlisted').forEach(r => wl.push({ key: `r-${r.id}`, area: 'reception', id: r.id, name: r.participant_name, program: r.program_name, position: r.waitlist_position || null, date: r.registration_date }));
+    programRegs.filter(r => r.status === 'waitlisted').forEach(r => wl.push({ key: `r-${r.id}`, area: r.program_name === 'Kids Gift Shop' ? 'kids_gift_shop' : 'reception', id: r.id, name: r.participant_name, program: r.program_name, position: r.waitlist_position || null, date: r.registration_date }));
     volunteers.filter(v => v.status === 'waitlist').forEach(v => wl.push({ key: `v-${v.id}`, area: 'volunteer', id: v.id, name: `${v.first_name} ${v.last_name}`, program: 'Volunteer Program', position: null, date: null }));
     return wl.sort((a, b) => (a.position || 99) - (b.position || 99));
   }, [communityRegs, empowerRegs, digilitParticipants, programRegs, volunteers]);

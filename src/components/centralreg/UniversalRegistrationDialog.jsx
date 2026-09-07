@@ -19,6 +19,7 @@ const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', 
 //  ell       → ELLLearner (prospective)
 //  digilit   → DigiLitParticipant
 //  volunteer → Volunteer (pending application)
+//  kids_gift_shop → ProgramRegistration (cross-portal record, approved)
 export default function UniversalRegistrationDialog({ open, onOpenChange, area, program, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -64,6 +65,13 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: 'registered', notes: form.notes });
       } else if (area === 'volunteer') {
         await base44.entities.Volunteer.create({ first_name: form.first_name, last_name: form.last_name, email: form.email, phone: form.phone, volunteer_type: form.volunteer_type, status: 'pending', notes: form.notes });
+      } else if (area === 'kids_gift_shop') {
+        await base44.entities.ProgramRegistration.create({
+          participant_first_name: form.first_name, participant_last_name: form.last_name, participant_name: name,
+          participant_phone: form.phone, participant_email: form.email,
+          program_portal: 'other', program_name: program?.name || 'Kids Gift Shop',
+          registration_date: today(), status: 'approved', notes: form.notes,
+        });
       }
       toast({ title: isWaitlistedRef.current ? 'Added to the waitlist' : 'Registration created', description: `${name} — ${programLabel}` });
       onSaved?.();
