@@ -46,6 +46,16 @@
       "type": "string",
       "description": "Room / address where the workshop is held"
     },
+    "room": {
+      "type": "string",
+      "enum": [
+        "large_classroom",
+        "small_classroom",
+        "employment_classroom",
+        "other"
+      ],
+      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, or Other space)"
+    },
     "capacity": {
       "type": "number",
       "default": 15,
@@ -87,7 +97,8 @@
         "completed",
         "cancelled"
       ],
-      "default": "scheduled"
+      "default": "scheduled",
+      "description": "Workshop status"
     },
     "color": {
       "type": "string",

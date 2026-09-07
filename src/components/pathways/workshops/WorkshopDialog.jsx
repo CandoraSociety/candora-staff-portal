@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { base44 } from '@/api/base44Client';
 import { todayISO, WORKSHOP_CATEGORIES, WORKSHOP_AUDIENCES } from '@/lib/workshopSchedule';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const COLOR_CHOICES = ['#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2'];
 const JOB_CLUB_BLUE = '#2563eb';
@@ -16,7 +17,7 @@ const isJobClubPreset = (p) => !!(p?.title && p.title.trim().toLowerCase().start
 const EMPTY = {
   title: '', description: '',
   facilitator_name: '', facilitator_email: '',
-  location: '', capacity: 15,
+  location: '', room: 'employment_classroom', capacity: 15,
   date: todayISO(), start_time: '10:00', end_time: '11:30',
   recurrence_pattern: 'none', recurrence_end_date: '',
   status: 'scheduled', color: '#2563eb',
@@ -56,6 +57,7 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, prese
         facilitator_name: form.facilitator_name?.trim() || '',
         facilitator_email: form.facilitator_email?.trim() || '',
         location: form.location?.trim() || '',
+        room: form.room || 'employment_classroom',
         capacity: Number(form.capacity) || 0,
         date: form.date,
         start_time: form.start_time || '',
@@ -138,10 +140,20 @@ export default function WorkshopDialog({ open, onClose, onSaved, workshop, prese
               <Input type="email" value={form.facilitator_email} onChange={e => set('facilitator_email', e.target.value)} className={fieldCls} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label>Location</Label>
               <Input value={form.location} onChange={e => set('location', e.target.value)} placeholder="Room / address" className={fieldCls} />
+            </div>
+            <div>
+              <Label>Room</Label>
+              <select
+                value={form.room || 'employment_classroom'}
+                onChange={e => set('room', e.target.value)}
+                className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+              >
+                {ROOM_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
             </div>
             <div>
               <Label>Capacity</Label>
