@@ -54,6 +54,7 @@ export function migrateCase(c) {
   const mappedCurrent = LEGACY_STAGE_MAP[c.current_stage] || c.current_stage;
   return {
     ...c,
+    case_status: c.case_status || 'active',
     stages,
     current_stage: stages.some(s => s.key === mappedCurrent) ? mappedCurrent : stages[0].key,
     tasks: (c.tasks || []).map(t => ({ ...t, stage_key: LEGACY_STAGE_MAP[t.stage_key] || t.stage_key })),

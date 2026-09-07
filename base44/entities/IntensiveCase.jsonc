@@ -39,6 +39,39 @@
       "format": "date",
       "description": "Date the next formal service-plan review is due"
     },
+    "case_status": {
+      "type": "string",
+      "enum": [
+        "waitlisted",
+        "active",
+        "closed"
+      ],
+      "default": "active",
+      "description": "Case-level status \u2014 'waitlisted' means the client is waiting for capacity to begin intensive service (waitlist is reportable for FRN)"
+    },
+    "waitlist_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the client was added to the intensive services waitlist"
+    },
+    "waitlist_priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Waitlist priority"
+    },
+    "waitlist_notes": {
+      "type": "string",
+      "description": "Reason / context for the waitlist entry (why the client is waiting, circumstances to consider when capacity opens)"
+    },
+    "waitlist_removed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the client left the waitlist (service started, or otherwise removed)"
+    },
     "current_stage": {
       "type": "string",
       "description": "Stage key currently active in the Building Resilient Caregivers workflow"

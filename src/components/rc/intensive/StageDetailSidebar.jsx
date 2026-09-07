@@ -15,7 +15,9 @@ export default function StageDetailSidebar({ stages = [], currentStage, selected
   const overdueReviews = (caseData?.next_review_due && caseData.next_review_due < todayStr)
     || (caseData?.next_contact_due && caseData.next_contact_due < todayStr);
 
+  const statusLabels = { waitlisted: 'Waitlisted', active: 'Active', closed: 'Closed' };
   const info = [
+    { label: 'Case Status', value: caseData?.case_status ? statusLabels[caseData.case_status] || caseData.case_status : null },
     { label: 'Assigned Worker', value: caseData?.assigned_worker },
     { label: 'Service Start', value: caseData?.service_start_date },
     { label: 'Complexity', value: caseData?.complexity_level ? COMPLEXITY_OPTIONS.find(c => c.value === caseData.complexity_level)?.label : null },

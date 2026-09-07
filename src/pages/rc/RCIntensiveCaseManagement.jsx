@@ -25,6 +25,7 @@ import CaseServicePlanTab from '@/components/rc/intensive/CaseServicePlanTab';
 import CaseActivityTab from '@/components/rc/intensive/CaseActivityTab';
 import CaseOutcomesTab from '@/components/rc/intensive/CaseOutcomesTab';
 import CaseTransitionTab from '@/components/rc/intensive/CaseTransitionTab';
+import CaseWaitlistTab from '@/components/rc/intensive/CaseWaitlistTab';
 import { buildDefaultStages, CASE_STAGES, migrateCase, today } from '@/components/rc/intensive/caseConstants';
 
 export default function RCIntensiveCaseManagement() {
@@ -104,6 +105,7 @@ export default function RCIntensiveCaseManagement() {
         stages: buildDefaultStages(),
         assigned_worker: me?.full_name || '',
         service_start_date: today(),
+        case_status: 'active',
         tasks: [], risk_factors: [], objectives: [], history_log: [], documents: [],
         assessments: [], contacts: [], reviews: [], outcomes: [], followups: [],
         service_plan: {}, transition: {},
@@ -113,6 +115,45 @@ export default function RCIntensiveCaseManagement() {
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
+  };
+
+  const addToWaitlist = async () => {
+    if (!selectedClient) return;
+    try {
+      const existing = cases.find(c => c.client_id === selectedId);
+      if (existing) {
+        await base44.entities.IntensiveCase.update(existing.id, {
+          case_status: 'waitlisted',
+          waitlist_date: existing.waitlist_date || today(),
+          waitlist_removed_date: null,
+        });
+      } else {
+        await base44.entities.IntensiveCase.create({
+          client_id: selectedId,
+          client_name: `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim(),
+          current_stage: CASE_STAGES[0].key,
+          stages: buildDefaultStages(),
+          case_status: 'waitlisted',
+          waitlist_date: today(),
+          tasks: [], risk_factors: [], objectives: [], history_log: [], documents: [],
+          assessments: [], contacts: [], reviews: [], outcomes: [], followups: [],
+          service_plan: {}, transition: {},
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ['intensive-cases'] });
+      toast({ title: 'Added to the Intensive Services waitlist' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  // Updates any case in the list — routes through the draft (autosave) when it's the
+  // currently open case, otherwise updates the record directly and refreshes.
+  const updateCaseById = (id, patch) => {
+    if (draft?.id === id) { patchDraft(d => ({ ...d, ...patch })); return; }
+    base44.entities.IntensiveCase.update(id, patch)
+      .then(() => queryClient.invalidateQueries({ queryKey: ['intensive-cases'] }))
+      .catch(err => toast({ title: 'Error updating case', description: err.message, variant: 'destructive' }));
   };
 
   const save = async (silent = false) => {
@@ -235,6 +276,7 @@ export default function RCIntensiveCaseManagement() {
               <Tabs value={mainTab} onValueChange={setMainTab}>
                 <TabsList className="flex flex-wrap h-auto">
                   <TabsTrigger value="workflow">Workflow Overview</TabsTrigger>
+                  <TabsTrigger value="waitlist">Waitlist ({cases.filter(c => c.case_status === 'waitlisted').length})</TabsTrigger>
                   <TabsTrigger value="overview">Client Overview</TabsTrigger>
                   <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
                   <TabsTrigger value="history">History Log</TabsTrigger>
@@ -257,6 +299,18 @@ export default function RCIntensiveCaseManagement() {
                       <TabsContent value="risks"><CaseRisksTab risks={draft.risk_factors || []} onAdd={addRisk} onUpdate={updateRisk} onDelete={deleteRisk} /></TabsContent>
                     </Tabs>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="waitlist" className="mt-4">
+                  <CaseWaitlistTab
+                    cases={cases}
+                    clients={clients}
+                    selectedClientId={selectedId}
+                    canAddToWaitlist={!!selectedClient && selectedCase?.case_status !== 'waitlisted'}
+                    onAddToWaitlist={addToWaitlist}
+                    onUpdate={updateCaseById}
+                    onOpenClient={(id) => setSelectedId(id)}
+                  />
                 </TabsContent>
 
                 <TabsContent value="overview" className="mt-4">

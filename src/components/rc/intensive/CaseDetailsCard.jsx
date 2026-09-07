@@ -3,16 +3,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COMPLEXITY_OPTIONS } from './caseConstants';
+import { COMPLEXITY_OPTIONS, today } from './caseConstants';
 
-// Case-level details — assigned worker, service dates, complexity and
-// required-contact/review dates (surfaced in the workflow sidebar).
+const CASE_STATUS_OPTIONS = [
+  { value: 'waitlisted', label: 'Waitlisted' },
+  { value: 'active', label: 'Active' },
+  { value: 'closed', label: 'Closed' },
+];
+
+// Case-level details — status (incl. waitlist), assigned worker, service dates,
+// complexity and required-contact/review dates (surfaced in the workflow sidebar).
 export default function CaseDetailsCard({ draft, onChange }) {
   const set = (k, v) => onChange({ [k]: v });
+  const setStatus = (v) => onChange({
+    case_status: v,
+    waitlist_date: v === 'waitlisted' ? (draft.waitlist_date || today()) : draft.waitlist_date,
+    waitlist_removed_date: v !== 'waitlisted' ? (draft.waitlist_removed_date || today()) : null,
+  });
+
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">Case Details</CardTitle></CardHeader>
-      <CardContent className="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
+      <CardContent className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Case Status</Label>
+          <Select value={draft.case_status || 'active'} onValueChange={setStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CASE_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Assigned Worker</Label>
           <Input value={draft.assigned_worker || ''} onChange={(e) => set('assigned_worker', e.target.value)} />
