@@ -3,13 +3,16 @@
 // with "Test" and the last name contains "Test".
 
 export const TEST_CLIENT_BG = '#00e5ff'; // neon blue
-export const TEST_CLIENT_TEXT = '#ffd700'; // sportscar yellow
-export const TEST_CLIENT_MUTED = '#0a4a5c'; // readable dark text on neon blue
+export const TEST_CLIENT_TEXT = '#000000'; // bold black
+export const TEST_CLIENT_MUTED = '#0a3d4d'; // readable dark text on neon blue
 
+// A test client is identified by its name containing "Test" (in the first or
+// last name) — covers "Testabc Xyztestson", "CaregiverTest Participant",
+// "GeneralTest Client", etc.
 export const isTestClient = (c) =>
   !!c &&
-  (c.first_name || '').trim().toLowerCase().startsWith('test') &&
-  (c.last_name || '').toLowerCase().includes('test');
+  ((c.first_name || '').toLowerCase().includes('test') ||
+   (c.last_name || '').toLowerCase().includes('test'));
 
 // Completely randomized name — first name always starts with "Test",
 // last name always contains the word "Test".
