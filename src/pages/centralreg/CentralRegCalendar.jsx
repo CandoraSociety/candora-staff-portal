@@ -257,7 +257,7 @@ export default function CentralRegCalendar() {
                   key={d.toISOString()}
                   onClick={() => setSelectedDay(d)}
                   className={cn(
-                    'min-h-[6.75rem] border rounded-md p-1 text-left align-top transition-colors',
+                    'flex flex-col min-h-28 border rounded-md p-1 text-left align-top transition-colors',
                     inMonth ? 'bg-card' : 'bg-muted/40',
                     isSel ? 'border-primary ring-1 ring-primary' : 'border-border',
                     dayEvents.length ? 'hover:border-primary/50' : ''
@@ -266,8 +266,8 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  {/* Fixed room quadrants — same position in every date cell, so you can see at a glance whether a room is booked or free */}
-                  <div className="grid grid-cols-2 gap-0.5 mt-1">
+                  {/* Fixed room quadrants — same position in every date cell, filling the whole cell so you can see at a glance whether a room is booked or free */}
+                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 mt-1 flex-1 min-h-0">
                     {ROOM_OPTIONS.map(r => {
                       const count = dayEvents.filter(e => e.room === r.value).length;
                       return (
@@ -275,12 +275,15 @@ export default function CentralRegCalendar() {
                           key={r.value}
                           title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''}` : `${r.label}: available`}
                           className={cn(
-                            'rounded px-1 py-1 text-center text-[9px] font-semibold leading-none border',
-                            count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/50 bg-muted/30 border-border/70'
+                            'rounded flex flex-col items-center justify-center leading-none border overflow-hidden',
+                            count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
                           )}
                           style={count > 0 ? { backgroundColor: r.color } : undefined}
                         >
-                          {r.abbr}{count > 0 && <span className="ml-0.5 opacity-90">{count}</span>}
+                          <span className="text-[10px] font-bold">{r.abbr}</span>
+                          {count > 0
+                            ? <span className="text-[9px] opacity-90 mt-0.5">{count} booked</span>
+                            : <span className="text-[9px] opacity-70 mt-0.5">free</span>}
                         </div>
                       );
                     })}
