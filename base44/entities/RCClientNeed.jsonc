@@ -1,0 +1,77 @@
+{
+  "name": "RCClientNeed",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Linked RCClient ID"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food_security",
+        "housing",
+        "employment_income",
+        "childcare",
+        "transportation",
+        "mental_health",
+        "physical_health",
+        "documentation_id",
+        "family_support",
+        "finances",
+        "social_isolation",
+        "other"
+      ],
+      "description": "Need / barrier category"
+    },
+    "category_other": {
+      "type": "string",
+      "description": "If category is 'other', specify"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the need / barrier is, in plain language"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "How pressing this need is"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "addressed"
+      ],
+      "default": "open",
+      "description": "Open = identified, not yet acted on; in_progress = being addressed; addressed = resolved/supported"
+    },
+    "date_identified": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the need was identified"
+    },
+    "addressed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the need was addressed"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Context, actions taken, referrals made for this need"
+    }
+  },
+  "required": [
+    "client_id"
+  ]
+}

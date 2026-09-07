@@ -2,26 +2,38 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { History, Plus, Search } from 'lucide-react';
+import { ClipboardList, History, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { CASE_STATUS_OPTIONS, SERVICE_TYPE_OPTIONS } from '@/lib/rcConstants';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
+import NeedBarrierDialog, { NEED_CATEGORY_OPTIONS, NEED_STATUS_OPTIONS } from '@/components/rc/NeedBarrierDialog';
+import { today } from '@/components/rc/intensive/caseConstants';
 
 const typeLabel = (v) => (SERVICE_TYPE_OPTIONS || []).find(o => o.value === v)?.label || v || '—';
+const needCategoryLabel = (v, other) => v === 'other' ? (other ? `Other — ${other}` : 'Other') : (NEED_CATEGORY_OPTIONS.find(o => o.value === v)?.label || v);
 
-// General Clients workspace — clients who aren't on a monitored intensive case.
-// No workflow wizard: staff log interactions and referrals so the client's history
-// with Candora is available for accurate advice and appropriate referrals.
+const PRIORITY_STYLES = {
+  high: 'bg-red-100 text-red-700',
+  medium: 'bg-amber-100 text-amber-700',
+  low: 'bg-muted text-muted-foreground',
+};
+
+// General Clients workspace — clients who aren't on a monitored intensive workflow.
+// Structured but light: a needs & barriers assessment plus the client's history of
+// interactions, so staff can give accurate advice and make appropriate referrals.
 export default function GeneralClientsWorkspace() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [logOpen, setLogOpen] = useState(false);
+  const [needOpen, setNeedOpen] = useState(false);
+  const [needRecord, setNeedRecord] = useState(null);
 
   const { data: allClients = [], isLoading } = useQuery({
     queryKey: ['rc-clients-all'],
@@ -42,10 +54,32 @@ export default function GeneralClientsWorkspace() {
     enabled: !!selectedId,
   });
 
-  const onSaved = () => {
+  const { data: needs = [] } = useQuery({
+    queryKey: ['rc-client-needs', selectedId],
+    queryFn: () => base44.entities.RCClientNeed.filter({ client_id: selectedId }, '-date_identified', 200),
+    enabled: !!selectedId,
+  });
+
+  const invalidateNeeds = () => queryClient.invalidateQueries({ queryKey: ['rc-client-needs', selectedId] });
+
+  const updateNeedStatus = (need, status) => {
+    base44.entities.RCClientNeed.update(need.id, { status, addressed_date: status === 'addressed' ? (need.addressed_date || today()) : null })
+      .then(invalidateNeeds)
+      .catch(err => toast({ title: 'Error updating need', description: err.message, variant: 'destructive' }));
+  };
+
+  const deleteNeed = (id) => {
+    base44.entities.RCClientNeed.delete(id)
+      .then(invalidateNeeds)
+      .catch(err => toast({ title: 'Error deleting need', description: err.message, variant: 'destructive' }));
+  };
+
+  const onLogSaved = () => {
     setLogOpen(false);
     queryClient.invalidateQueries({ queryKey: ['rc-service-logs', selectedId] });
   };
+
+  const openNeeds = needs.filter(n => n.status !== 'addressed');
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
@@ -56,8 +90,6 @@ export default function GeneralClientsWorkspace() {
       </CardContent></Card>
     );
   }
-
-  const lastLog = logs[0];
 
   return (
     <div className="grid lg:grid-cols-[280px_1fr] gap-4 items-start">
@@ -81,10 +113,10 @@ export default function GeneralClientsWorkspace() {
         </CardContent>
       </Card>
 
-      {/* Selected client history */}
+      {/* Selected client — assessment + history */}
       <div className="min-w-0 space-y-4">
         {!selected ? (
-          <Card><CardContent className="p-8 text-center text-muted-foreground">Select a client to view their history with Candora.</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-muted-foreground">Select a client to view their assessment and history with Candora.</CardContent></Card>
         ) : (
           <>
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -95,19 +127,28 @@ export default function GeneralClientsWorkspace() {
                 <StatusBadge status={selected.case_status} options={CASE_STATUS_OPTIONS} />
                 <Link to={`/rc/clients/${selected.id}`} className="text-xs text-primary hover:underline shrink-0">View profile</Link>
               </div>
-              <Button size="sm" onClick={() => setLogOpen(true)}>
-                <Plus className="h-4 w-4" /> Log Interaction
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={() => { setNeedRecord(null); setNeedOpen(true); }}>
+                  <ClipboardList className="h-4 w-4" /> Add Need / Barrier
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setLogOpen(true)}>
+                  <Plus className="h-4 w-4" /> Log Interaction
+                </Button>
+              </div>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-4 gap-3">
+              <Card><CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">Open needs</p>
+                <p className="text-2xl font-heading font-bold">{openNeeds.length}</p>
+              </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Total interactions</p>
                 <p className="text-2xl font-heading font-bold">{logs.length}</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Last interaction</p>
-                <p className="text-lg font-semibold mt-1">{lastLog?.service_date || '—'}</p>
+                <p className="text-lg font-semibold mt-1">{logs[0]?.service_date || '—'}</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-xs text-muted-foreground">Follow-ups flagged</p>
@@ -116,10 +157,56 @@ export default function GeneralClientsWorkspace() {
             </div>
 
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Needs & Barriers Assessment</CardTitle>
+                <CardDescription className="text-xs">
+                  The needs and barriers identified for this client, with priority and status — so advice and referrals stay grounded in what's actually going on.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {needs.length === 0 ? (
+                  <div className="text-center py-6 space-y-2">
+                    <p className="text-sm text-muted-foreground">No needs or barriers recorded yet for this client.</p>
+                    <Button size="sm" variant="outline" onClick={() => { setNeedRecord(null); setNeedOpen(true); }}>
+                      <Plus className="h-4 w-4" /> Record the first need / barrier
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {needs.map(n => (
+                      <div key={n.id} className="p-3 rounded-md border border-border/50">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${PRIORITY_STYLES[n.priority] || PRIORITY_STYLES.low}`}>{n.priority || 'low'}</span>
+                          <span className="text-sm font-medium">{needCategoryLabel(n.category, n.category_other)}</span>
+                          {n.date_identified && <span className="text-xs text-muted-foreground">identified {n.date_identified}</span>}
+                          <div className="ml-auto flex items-center gap-1.5">
+                            <Select value={n.status || 'open'} onValueChange={(v) => updateNeedStatus(n, v)}>
+                              <SelectTrigger className="h-7 w-32 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>{NEED_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setNeedRecord(n); setNeedOpen(true); }}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteNeed(n.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        {n.description && <p className="text-sm mt-1.5 text-foreground/90">{n.description}</p>}
+                        {n.notes && <p className="text-xs mt-1 text-muted-foreground italic">{n.notes}</p>}
+                        {n.status === 'addressed' && n.addressed_date && <p className="text-xs mt-1 text-muted-foreground">Addressed {n.addressed_date}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2"><History className="h-4 w-4" /> Interaction History</CardTitle>
                 <CardDescription className="text-xs">
-                  Every logged interaction — information & referrals, advocacy, navigation, practical support and crisis response — so staff can give accurate advice and make appropriate referrals.
+                  Every logged interaction — information & referrals, advocacy, navigation, practical support and crisis response.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -155,7 +242,15 @@ export default function GeneralClientsWorkspace() {
               onOpenChange={(o) => { if (!o) setLogOpen(false); }}
               clientId={selected.id}
               clientName={`${selected.first_name} ${selected.last_name}`}
-              onSaved={onSaved}
+              onSaved={onLogSaved}
+            />
+            <NeedBarrierDialog
+              open={needOpen}
+              onOpenChange={(o) => { if (!o) { setNeedOpen(false); setNeedRecord(null); } }}
+              clientId={selected.id}
+              clientName={`${selected.first_name} ${selected.last_name}`}
+              record={needRecord}
+              onSaved={() => { setNeedOpen(false); setNeedRecord(null); invalidateNeeds(); }}
             />
           </>
         )}
