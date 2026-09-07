@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROOM_OPTIONS, ROOM_ABBRS } from '@/lib/centralRegConstants';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const SOURCES = [
   { key: 'pathways', label: 'Pathways Workshops', color: '#dc2626' },
@@ -257,7 +257,7 @@ export default function CentralRegCalendar() {
                   key={d.toISOString()}
                   onClick={() => setSelectedDay(d)}
                   className={cn(
-                    'min-h-24 border rounded-md p-1 text-left align-top transition-colors',
+                    'min-h-[6.75rem] border rounded-md p-1 text-left align-top transition-colors',
                     inMonth ? 'bg-card' : 'bg-muted/40',
                     isSel ? 'border-primary ring-1 ring-primary' : 'border-border',
                     dayEvents.length ? 'hover:border-primary/50' : ''
@@ -266,17 +266,28 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  <div className="space-y-0.5 mt-0.5">
-                    {dayEvents.slice(0, 3).map(e => {
-                      const s = SOURCES.find(x => x.key === e.source);
+                  {/* Fixed room quadrants — same position in every date cell, so you can see at a glance whether a room is booked or free */}
+                  <div className="grid grid-cols-2 gap-0.5 mt-1">
+                    {ROOM_OPTIONS.map(r => {
+                      const count = dayEvents.filter(e => e.room === r.value).length;
                       return (
-                        <div key={e.id} className="truncate text-[10px] px-1 py-0.5 rounded text-white" style={{ backgroundColor: s?.color }}>
-                          {e.room && <span className="mr-0.5 font-semibold">{ROOM_ABBRS[e.room]}·</span>}{e.startTime && <span className="mr-0.5">{e.startTime}</span>}{e.title}
+                        <div
+                          key={r.value}
+                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''}` : `${r.label}: available`}
+                          className={cn(
+                            'rounded px-1 py-1 text-center text-[9px] font-semibold leading-none border',
+                            count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/50 bg-muted/30 border-border/70'
+                          )}
+                          style={count > 0 ? { backgroundColor: r.color } : undefined}
+                        >
+                          {r.abbr}{count > 0 && <span className="ml-0.5 opacity-90">{count}</span>}
                         </div>
                       );
                     })}
-                    {dayEvents.length > 3 && <div className="text-[10px] text-muted-foreground px-1">+{dayEvents.length - 3} more</div>}
                   </div>
+                  {dayEvents.some(e => !e.room) && (
+                    <div className="text-[9px] text-muted-foreground mt-0.5 px-0.5">+{dayEvents.filter(e => !e.room).length} no room</div>
+                  )}
                 </button>
               );
             })}
