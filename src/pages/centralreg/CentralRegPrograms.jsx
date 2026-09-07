@@ -28,6 +28,27 @@ function AreaSection({ title, color, portalPath, capacityControl, children }) {
   );
 }
 
+// FRN targeted groups — registered here, tracked in the FRN portal and All Registrations.
+const FRN_TARGETED_PROGRAMS = ['Connect Parent Group', 'Wellness Compass', 'Neurodivergent Parenting Group', 'Triple P', "Nobody's Perfect"];
+
+function CategorySection({ title, description, portalPath, portalLabel = 'Open portal', capacityControl, children }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-heading font-bold text-foreground">{title}</h2>
+          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        </div>
+        <div className="flex items-center gap-3">
+          {capacityControl}
+          {portalPath && <Link to={portalPath}><Button size="sm" variant="ghost">{portalLabel}<ExternalLink className="h-3.5 w-3.5" /></Button></Link>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl, noSessions = false, sessionLabel = 'Session', onCreateSession }) {
   return (
     <Card className="hover:shadow-sm transition-shadow"><CardContent className="p-3">
@@ -95,6 +116,7 @@ export default function CentralRegPrograms() {
     ell: ellLearners.filter(l => ['enrolled', 'active'].includes(l.enrollment_status)).length,
     volunteer: volunteers.filter(v => ['pending', 'active', 'occasional'].includes(v.status)).length,
     kids_gift_shop: programRegs.filter(r => r.program_name === 'Kids Gift Shop' && ['approved', 'enrolled'].includes(r.status)).length,
+    frn: programRegs.filter(r => r.program_portal === 'frn' && ['approved', 'enrolled'].includes(r.status)).length,
   };
   const capacityControlFor = (area) => (
     <AreaCapacityControl area={area} capacityRecord={capacities.find(c => c.area === area)} filled={areaFilled[area] || 0} />
@@ -132,8 +154,64 @@ export default function CentralRegPrograms() {
       </div>
 
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : (
-        <div className="space-y-8">
-          <AreaSection title={REG_AREA_LABELS.community} color="#f97316" portalPath={REG_AREA_PATHS.community}>
+        <div className="space-y-10">
+          {/* ===== Kids Gift Shop ===== */}
+          <CategorySection title="Kids Gift Shop" portalPath={REG_AREA_PATHS.kids_gift_shop} portalLabel="All registrations" capacityControl={capacityControlFor('kids_gift_shop')}>
+            <ProgramCard title="Kids Gift Shop" subtitle="Register a parent/guardian with their children and pick a time slot (tracked under All Registrations)" isFull={isAreaFull('kids_gift_shop')} onRegister={() => setGiftShopOpen(true)} />
+          </CategorySection>
+
+          {/* ===== Adult Learning: ELL, Digital Literacy, EmpowerU ===== */}
+          <CategorySection title="Adult Learning" description="English Language Learning, Digital Literacy, and EmpowerU programs.">
+            <div className="space-y-6">
+              <AreaSection title={REG_AREA_LABELS.ell} color="#22c55e" portalPath={REG_AREA_PATHS.ell} capacityControl={capacityControlFor('ell')}>
+                <div className="space-y-2">
+                  <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
+                </div>
+              </AreaSection>
+
+              <AreaSection title={REG_AREA_LABELS.digilit} color="#6366f1" portalPath={REG_AREA_PATHS.digilit} capacityControl={capacityControlFor('digilit')}>
+                <div className="space-y-2">
+                  <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} noSessions={!digilitSessions.some(s => s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'digilit' })} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} />
+                </div>
+              </AreaSection>
+
+              <AreaSection title={REG_AREA_LABELS.empoweru} color="#8b5cf6" portalPath={REG_AREA_PATHS.empoweru} capacityControl={capacityControlFor('empoweru')}>
+                <div className="space-y-2">
+                  {openCohorts.length === 0 && (
+                    <div className="flex items-center justify-between gap-3 py-2">
+                      <p className="text-sm text-muted-foreground">No cohorts are open for registration right now — learners can't register until a cohort is created.</p>
+                      <Button size="sm" variant="outline" onClick={() => setSessionDialog({ area: 'empoweru' })}><CalendarPlus className="h-3.5 w-3.5" /> Create Cohort</Button>
+                    </div>
+                  )}
+                  {openCohorts.map(c => (
+                    <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => openDialog('empoweru', c)} />
+                  ))}
+                </div>
+              </AreaSection>
+            </div>
+          </CategorySection>
+
+          {/* ===== PHAC Programs ===== */}
+          <CategorySection title="PHAC Programs" description="PHAC-funded programs for families with children ages 0-6." portalPath={REG_AREA_PATHS.phac} capacityControl={capacityControlFor('phac')}>
+            <div className="space-y-2">
+              {activePhac.length === 0 && <p className="text-sm text-muted-foreground py-2">PHAC programs are yet to be added — create them in the PHAC portal and they'll appear here.</p>}
+              {activePhac.map(p => (
+                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} noSessions={!phacSessions.some(s => s.program_id === p.id && s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'phac', program: p })} onRegister={() => openDialog('phac', p)} />
+              ))}
+            </div>
+          </CategorySection>
+
+          {/* ===== FRN Targeted Programs ===== */}
+          <CategorySection title="FRN Targeted Programs" description="Family Resource Network targeted groups." portalPath={REG_AREA_PATHS.frn} capacityControl={capacityControlFor('frn')}>
+            <div className="space-y-2">
+              {FRN_TARGETED_PROGRAMS.map(name => (
+                <ProgramCard key={name} title={name} subtitle="FRN targeted group — the registration appears in the FRN portal and under All Registrations" isFull={isAreaFull('frn')} onRegister={() => openDialog('frn', { name })} />
+              ))}
+            </div>
+          </CategorySection>
+
+          {/* ===== Community Programs ===== */}
+          <CategorySection title="Community Programs" portalPath={REG_AREA_PATHS.community}>
             <div className="space-y-2">
               {activeCommunity.length === 0 && <p className="text-sm text-muted-foreground py-2">No active community programs.</p>}
               {activeCommunity.map(p => {
@@ -154,58 +232,19 @@ export default function CentralRegPrograms() {
                 );
               })}
             </div>
-          </AreaSection>
+          </CategorySection>
 
-          <AreaSection title={REG_AREA_LABELS.empoweru} color="#8b5cf6" portalPath={REG_AREA_PATHS.empoweru} capacityControl={capacityControlFor('empoweru')}>
-            <div className="space-y-2">
-              {openCohorts.length === 0 && (
-                <div className="flex items-center justify-between gap-3 py-2">
-                  <p className="text-sm text-muted-foreground">No cohorts are open for registration right now — learners can't register until a cohort is created.</p>
-                  <Button size="sm" variant="outline" onClick={() => setSessionDialog({ area: 'empoweru' })}><CalendarPlus className="h-3.5 w-3.5" /> Create Cohort</Button>
-                </div>
-              )}
-              {openCohorts.map(c => (
-                <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => openDialog('empoweru', c)} />
-              ))}
-            </div>
-          </AreaSection>
-
-          <AreaSection title={REG_AREA_LABELS.phac} color="#0ea5e9" portalPath={REG_AREA_PATHS.phac} capacityControl={capacityControlFor('phac')}>
-            <div className="space-y-2">
-              {activePhac.length === 0 && <p className="text-sm text-muted-foreground py-2">No active PHAC programs.</p>}
-              {activePhac.map(p => (
-                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} noSessions={!phacSessions.some(s => s.program_id === p.id && s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'phac', program: p })} onRegister={() => openDialog('phac', p)} />
-              ))}
-            </div>
-          </AreaSection>
-
-          <AreaSection title={REG_AREA_LABELS.ell} color="#22c55e" portalPath={REG_AREA_PATHS.ell} capacityControl={capacityControlFor('ell')}>
-            <div className="space-y-2">
-              <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
-            </div>
-          </AreaSection>
-
-          <AreaSection title={REG_AREA_LABELS.digilit} color="#6366f1" portalPath={REG_AREA_PATHS.digilit} capacityControl={capacityControlFor('digilit')}>
-            <div className="space-y-2">
-              <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} noSessions={!digilitSessions.some(s => s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'digilit' })} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} />
-            </div>
-          </AreaSection>
-
+          {/* ===== Volunteer (standalone, not a course category) ===== */}
           <AreaSection title={REG_AREA_LABELS.volunteer} color="#ec4899" portalPath={REG_AREA_PATHS.volunteer} capacityControl={capacityControlFor('volunteer')}>
             <div className="space-y-2">
               <ProgramCard title="Volunteer Registration" subtitle="Register a new volunteer application (processed on the Volunteer Registration page)" isFull={isAreaFull('volunteer')} onRegister={() => openDialog('volunteer', { name: 'Volunteer Program' })} />
             </div>
           </AreaSection>
 
-          <AreaSection title={REG_AREA_LABELS.kids_gift_shop} color="#e11d48" portalPath={REG_AREA_PATHS.kids_gift_shop} capacityControl={capacityControlFor('kids_gift_shop')}>
-            <div className="space-y-2">
-              <ProgramCard title="Kids Gift Shop" subtitle="Register a parent/guardian with their children and pick a time slot (tracked under All Registrations)" isFull={isAreaFull('kids_gift_shop')} onRegister={() => setGiftShopOpen(true)} />
-            </div>
-          </AreaSection>
-
+          {/* ===== Other programs & services ===== */}
           <AreaSection title="Other programs & services" color="#64748b" portalPath={REG_AREA_PATHS.reception}>
             <Card><CardContent className="p-3 text-sm text-muted-foreground">
-              For programs without a dedicated listing above (FRN, Resource Centre, and other services), registrations are taken on the cross-portal form and tracked under <Link className="text-primary underline" to="/central-registration/registrations">All Registrations</Link> — including approval and waitlist handling.
+              For programs without a dedicated listing above (Resource Centre and other services), registrations are taken on the cross-portal form and tracked under <Link className="text-primary underline" to="/central-registration/registrations">All Registrations</Link> — including approval and waitlist handling.
             </CardContent></Card>
           </AreaSection>
         </div>

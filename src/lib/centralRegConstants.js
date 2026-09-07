@@ -8,6 +8,7 @@ export const REG_AREA_OPTIONS = [
   { key: 'phac', label: 'PHAC Programs (0-6)', color: '#0ea5e9', path: '/phac/programs' },
   { key: 'ell', label: 'ELL (English Language Learning)', color: '#22c55e', path: '/ell/learners' },
   { key: 'digilit', label: 'Digital Literacy', color: '#6366f1', path: '/digilit/participants' },
+  { key: 'frn', label: 'FRN Targeted Programs', color: '#14b8a6', path: '/frn/participants' },
   { key: 'volunteer', label: 'Volunteer Program', color: '#ec4899', path: '/volunteermgr/volunteers' },
   { key: 'kids_gift_shop', label: 'Kids Gift Shop', color: '#e11d48', path: '/central-registration/registrations' },
   { key: 'reception', label: 'Other / Cross-Portal', color: '#64748b', path: '/reception/registration' },
@@ -78,6 +79,7 @@ export const AREA_STATUS_OPTIONS = {
   digilit: DIGILIT_STATUS_OPTIONS,
   ell: ELL_ENROLLMENT_OPTIONS,
   kids_gift_shop: REG_STATUS_OPTIONS,
+  frn: REG_STATUS_OPTIONS,
   reception: REG_STATUS_OPTIONS,
 };
 export const AREA_STATUS_LABELS = Object.fromEntries(
@@ -92,6 +94,7 @@ export const AREA_ENTITIES = {
   ell: 'ELLLearner',
   phac: 'PHACParticipant',
   kids_gift_shop: 'ProgramRegistration',
+  frn: 'ProgramRegistration',
   reception: 'ProgramRegistration',
 };
 
@@ -105,6 +108,7 @@ export const WAITLIST_ACTIONS = {
   reception: { entity: 'ProgramRegistration', promote: 'approved', remove: 'declined', hasPosition: true },
   volunteer: { entity: 'Volunteer', promote: 'pending', remove: 'inactive' },
   kids_gift_shop: { entity: 'ProgramRegistration', promote: 'approved', remove: 'withdrawn' },
+  frn: { entity: 'ProgramRegistration', promote: 'approved', remove: 'declined', hasPosition: true },
 };
 
 // Kids Gift Shop time slots — values mirror the ProgramRegistration.time_slot enum.

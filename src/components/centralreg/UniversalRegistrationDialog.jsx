@@ -20,6 +20,7 @@ const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', 
 //  phac      → PHACParticipant (child + parent/guardian)
 //  ell       → ELLLearner (prospective)
 //  digilit   → DigiLitParticipant
+//  frn       → FRNParticipant + ProgramRegistration (cross-portal record)
 //  volunteer → Volunteer (pending application)
 // When the program/area is at its maximum, the person is waitlisted instead —
 // unless the override code is entered, which registers them fully.
@@ -76,6 +77,15 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
       } else if (area === 'digilit') {
         isWaitlistedRef.current = forced;
         await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: forced ? 'waitlisted' : 'registered', notes: form.notes });
+      } else if (area === 'frn') {
+        isWaitlistedRef.current = forced;
+        await base44.entities.FRNParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n') });
+        await base44.entities.ProgramRegistration.create({
+          participant_first_name: form.first_name, participant_last_name: form.last_name, participant_name: name,
+          participant_phone: form.phone, participant_email: form.email,
+          program_portal: 'frn', program_name: program?.name || 'FRN Program',
+          registration_date: today(), status: forced ? 'waitlisted' : 'approved', notes: form.notes,
+        });
       } else if (area === 'volunteer') {
         const waitlisting = !!form.waitlist || forced;
         isWaitlistedRef.current = waitlisting;
