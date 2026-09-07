@@ -3,7 +3,7 @@ import { eachDayOfInterval, format } from 'date-fns';
 import { CalendarDays, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import ClassDateCalendar from '@/components/ell/classdetail/ClassDateCalendar';
 import { useToast } from '@/components/ui/use-toast';
 
 const parseLocalDate = (str) => {
@@ -87,18 +87,12 @@ export default function AttendanceTab({ cls, participants, userName, saveClass }
             <p className="text-sm text-muted-foreground">Add schedule days and start/end dates to this class to take attendance.</p>
           ) : (
             <>
-              <div>
-                <Label>Class date</Label>
-                <select
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-                >
-                  {classDates.map(d => (
-                    <option key={d} value={d}>{format(parseLocalDate(d), 'EEE, MMM d, yyyy')}</option>
-                  ))}
-                </select>
-              </div>
+              <ClassDateCalendar
+                dates={classDates}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+                markedDates={attendance.map(a => a.date)}
+              />
               {participants.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No learners assigned to this class yet.</p>
               ) : (
