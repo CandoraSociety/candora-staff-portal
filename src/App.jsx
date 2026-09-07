@@ -292,6 +292,14 @@ import DigiLitParticipants from '@/pages/digilit/DigiLitParticipants';
 import DigiLitSessions from '@/pages/digilit/DigiLitSessions';
 import DigiLitEvaluations from '@/pages/digilit/DigiLitEvaluations';
 
+// Central Registration Portal
+import CentralRegLayout from '@/components/centralreg/CentralRegLayout';
+import CentralRegDashboard from '@/pages/centralreg/CentralRegDashboard';
+import CentralRegPrograms from '@/pages/centralreg/CentralRegPrograms';
+import CentralRegRegistrations from '@/pages/centralreg/CentralRegRegistrations';
+import CentralRegWaitlists from '@/pages/centralreg/CentralRegWaitlists';
+import CentralRegVolunteers from '@/pages/centralreg/CentralRegVolunteers';
+
 // Community Programs Portal
 import CommunityLayout from '@/components/community/CommunityLayout';
 
@@ -683,6 +691,15 @@ const AuthenticatedApp = () => {
           <Route path="/reception/registration" element={<ReceptionProgramRegistration />} />
           <Route path="/reception/resources" element={<ReceptionResourceFinder />} />
           <Route path="/reception/urgent" element={<ReceptionUrgentAlerts />} />
+        </Route>
+
+        {/* Central Registration Portal - standalone layout */}
+        <Route element={<CentralRegLayout />}>
+          <Route path="/central-registration" element={<CentralRegDashboard />} />
+          <Route path="/central-registration/programs" element={<CentralRegPrograms />} />
+          <Route path="/central-registration/registrations" element={<CentralRegRegistrations />} />
+          <Route path="/central-registration/waitlists" element={<CentralRegWaitlists />} />
+          <Route path="/central-registration/volunteers" element={<CentralRegVolunteers />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}
