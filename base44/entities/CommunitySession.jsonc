@@ -40,6 +40,22 @@
       ],
       "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, or Other space)"
     },
+    "recurrence_pattern": {
+      "type": "string",
+      "enum": [
+        "none",
+        "weekly",
+        "biweekly",
+        "monthly"
+      ],
+      "default": "none",
+      "description": "How the session recurs from the base date (expanded on the Central Registration calendar)"
+    },
+    "recurrence_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last recurrence date (blank for a one-off session)"
+    },
     "facilitator_name": {
       "type": "string",
       "description": "Volunteer/staff facilitating"
@@ -61,6 +77,41 @@
       },
       "description": "IDs of participants who attended"
     },
+    "plan": {
+      "type": "string",
+      "description": "Session plan \u2014 projects, activities, materials planned for this session"
+    },
+    "documents": {
+      "type": "array",
+      "description": "Uploaded photos and documents (patterns, instructions) attached to this session",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "Display name of the file"
+          },
+          "file_url": {
+            "type": "string",
+            "description": "Uploaded file URL"
+          },
+          "uploaded_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "uploaded_by_name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "file_url"
+        ]
+      }
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -68,7 +119,8 @@
         "completed",
         "cancelled"
       ],
-      "default": "scheduled"
+      "default": "scheduled",
+      "description": "Session status"
     },
     "notes": {
       "type": "string"

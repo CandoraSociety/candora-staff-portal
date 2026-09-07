@@ -66,6 +66,30 @@ function expandWorkshop(w, monthStart, monthEnd) {
   return dates.map(d => makeEvent('pathways', w.title, d, w.start_time, w.end_time, w.location, w.facilitator_name, w.room));
 }
 
+// Community sessions — single date, or expanded from a recurrence pattern
+function expandCommunitySession(s, monthStart, monthEnd) {
+  const base = parseLocalDate(s.session_date);
+  if (!base) return [];
+  const dates = [];
+  const push = (d) => { if (d >= monthStart && d <= monthEnd) dates.push(d); };
+  if (!s.recurrence_pattern || s.recurrence_pattern === 'none') {
+    push(base);
+  } else {
+    const limit = s.recurrence_end_date ? parseLocalDate(s.recurrence_end_date) : monthEnd;
+    let cursor = base;
+    let guard = 0;
+    while (cursor <= limit && guard < 400) {
+      push(cursor);
+      if (s.recurrence_pattern === 'weekly') cursor = addWeeks(cursor, 1);
+      else if (s.recurrence_pattern === 'biweekly') cursor = addWeeks(cursor, 2);
+      else if (s.recurrence_pattern === 'monthly') cursor = addMonths(cursor, 1);
+      else break;
+      guard++;
+    }
+  }
+  return dates.map(d => makeEvent('community', s.title || s.program_name || 'Community Session', d, s.start_time, s.end_time, s.location, s.facilitator_name, s.room));
+}
+
 function addSessionEvents(list, records, source, monthStart, monthEnd, titleFn) {
   (records || []).filter(s => s.status !== 'cancelled').forEach(s => {
     const d = parseLocalDate(s.session_date || s.date);
@@ -96,7 +120,7 @@ export default function CentralRegCalendar() {
   const events = useMemo(() => {
     const list = [];
     (workshopsQ.data || []).forEach(w => list.push(...expandWorkshop(w, monthStart, monthEnd)));
-    addSessionEvents(list, communityQ.data, 'community', monthStart, monthEnd, s => s.title || s.program_name || 'Community Session');
+    (communityQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandCommunitySession(s, monthStart, monthEnd)));
     addSessionEvents(list, phacQ.data, 'phac', monthStart, monthEnd, s => s.program_name || 'PHAC Session');
     addSessionEvents(list, digilitQ.data, 'digilit', monthStart, monthEnd, s => s.title || 'Digital Literacy Session');
     addSessionEvents(list, childmindingQ.data, 'childminding', monthStart, monthEnd, s => s.title || 'Childminding');

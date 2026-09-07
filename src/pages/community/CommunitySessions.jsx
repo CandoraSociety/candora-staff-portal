@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, Pencil, CalendarDays, Clock, MapPin, User, CheckCircle } from 'lucide-react';
+import { Plus, Search, Pencil, CalendarDays, Clock, MapPin, User, ClipboardCheck, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/rc/StatusBadge';
 import SessionDialog from '@/components/community/SessionDialog';
+import SessionDetailDialog from '@/components/community/SessionDetailDialog';
 import { SESSION_STATUS_OPTIONS } from '@/lib/communityConstants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -17,6 +18,7 @@ export default function CommunitySessions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [detailSession, setDetailSession] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -34,13 +36,6 @@ export default function CommunitySessions() {
   const openEdit = (s) => { setEditing(s); setDialogOpen(true); };
   const onSaved = () => { setDialogOpen(false); queryClient.invalidateQueries({ queryKey: ['community-sessions'] }); };
 
-  const handleMarkCompleted = async (session) => {
-    try {
-      await base44.entities.CommunitySession.update(session.id, { status: 'completed', attended_participant_ids: session.registered_participant_ids || [] });
-      queryClient.invalidateQueries({ queryKey: ['community-sessions'] });
-      toast({ title: 'Session marked as completed' });
-    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-  };
 
   return (
     <div className="space-y-4">
@@ -70,12 +65,13 @@ export default function CommunitySessions() {
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p className="flex items-center gap-1.5"><CalendarDays className="h-3 w-3" /> {s.session_date ? new Date(s.session_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}{(s.start_time || s.end_time) && ` · ${s.start_time || ''}${s.end_time ? `–${s.end_time}` : ''}`}</p>
+                  {s.recurrence_pattern && s.recurrence_pattern !== 'none' && <p className="flex items-center gap-1.5"><Repeat className="h-3 w-3" /> Repeats {s.recurrence_pattern}{s.recurrence_end_date ? ` until ${new Date(s.recurrence_end_date + 'T00:00:00').toLocaleDateString()}` : ''}</p>}
                   {s.location && <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {s.location}</p>}
                   {s.facilitator_name && <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {s.facilitator_name}</p>}
                   <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {regCount} registered{s.status === 'completed' && ` · ${attCount} attended`}</p>
                 </div>
                 <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/50">
-                  {s.status === 'scheduled' && <Button size="sm" variant="outline" onClick={() => handleMarkCompleted(s)}><CheckCircle className="h-4 w-4" /> Mark Completed</Button>}
+                  <Button size="sm" variant="outline" onClick={() => setDetailSession(s)}><ClipboardCheck className="h-4 w-4" /> Attendance &amp; Details</Button>
                   <Button size="sm" variant="ghost" className="ml-auto" onClick={() => openEdit(s)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
                 </div>
               </CardContent></Card>
@@ -84,6 +80,7 @@ export default function CommunitySessions() {
         </div>
       )}
       <SessionDialog open={dialogOpen} onOpenChange={setDialogOpen} session={editing} onSaved={onSaved} />
+      <SessionDetailDialog open={!!detailSession} onOpenChange={(v) => { if (!v) setDetailSession(null); }} session={detailSession} onSaved={() => queryClient.invalidateQueries({ queryKey: ['community-sessions'] })} />
     </div>
   );
 }
