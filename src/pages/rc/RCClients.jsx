@@ -12,10 +12,57 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StatusBadge from '@/components/rc/StatusBadge';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, IS_PHAC } from '@/lib/rcConstants';
 
+const SORT_OPTIONS = [
+  { value: 'last_name_asc', label: 'Last Name (A → Z)' },
+  { value: 'last_name_desc', label: 'Last Name (Z → A)' },
+  { value: 'first_name_asc', label: 'First Name (A → Z)' },
+  { value: 'first_name_desc', label: 'First Name (Z → A)' },
+  { value: 'intake_date_desc', label: 'Intake Date (newest)' },
+  { value: 'intake_date_asc', label: 'Intake Date (oldest)' },
+  { value: 'updated_date_desc', label: 'Recent Activity (newest)' },
+  { value: 'updated_date_asc', label: 'Recent Activity (oldest)' },
+];
+
+const PROGRAM_AREA_OPTIONS = [
+  { value: 'pathways', label: 'Pathways' },
+  { value: 'empoweru', label: 'EmpowerU' },
+  { value: 'frn', label: 'FRN' },
+  { value: 'phac', label: 'PHAC' },
+  { value: 'community', label: 'Community' },
+  { value: 'ell', label: 'ELL' },
+  { value: 'digilit', label: 'Digital Literacy' },
+];
+
+const DEMOGRAPHIC_OPTIONS = [
+  { value: 'indigenous_first_nations', label: 'Indigenous / First Nations' },
+  { value: 'newcomer', label: 'Newcomer' },
+  { value: 'senior', label: 'Senior' },
+  { value: 'youth_under_25', label: 'Youth under 25' },
+];
+
+function compareClients(a, b, key) {
+  const dir = key.endsWith('_desc') ? -1 : 1;
+  if (key.startsWith('last_name')) {
+    const cmp = `${a.last_name || ''}, ${a.first_name || ''}`.localeCompare(`${b.last_name || ''}, ${b.first_name || ''}`);
+    return cmp * dir;
+  }
+  if (key.startsWith('first_name')) {
+    const cmp = `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`);
+    return cmp * dir;
+  }
+  const field = key.startsWith('intake_date') ? 'intake_date' : 'updated_date';
+  const ad = a[field] ? new Date(a[field]).getTime() : 0;
+  const bd = b[field] ? new Date(b[field]).getTime() : 0;
+  return (ad - bd) * dir;
+}
+
 export default function RCClients() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [funderFilter, setFunderFilter] = useState('all');
+  const [programFilter, setProgramFilter] = useState('all');
+  const [demoFilter, setDemoFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('last_name_asc');
   const [showTestClients, setShowTestClients] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({ queryKey: ['rc-clients'], queryFn: () => base44.entities.RCClient.list() });
@@ -25,8 +72,10 @@ export default function RCClients() {
     const matchSearch = name.includes(search.toLowerCase()) || (c.email || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || c.case_status === statusFilter;
     const matchFunder = funderFilter === 'all' || (c.funder_categories || []).includes(funderFilter);
-    return matchSearch && matchStatus && matchFunder;
-  });
+    const matchProgram = programFilter === 'all' || (c.program_participations || []).some(p => p.program === programFilter);
+    const matchDemo = demoFilter === 'all' || c[demoFilter] === true;
+    return matchSearch && matchStatus && matchFunder && matchProgram && matchDemo;
+  }).sort((a, b) => compareClients(a, b, sortBy));
 
   return (
     <div className="space-y-4">
@@ -38,10 +87,13 @@ export default function RCClients() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-        <Select value={funderFilter} onValueChange={setFunderFilter}><SelectTrigger className="w-full sm:w-52"><SelectValue placeholder="All funders" /></SelectTrigger><SelectContent><SelectItem value="all">All funders</SelectItem>{FUNDER_CATEGORIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent></Select>
+      <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-48"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+        <Select value={sortBy} onValueChange={setSortBy}><SelectTrigger className="w-full sm:w-48"><SelectValue /></SelectTrigger><SelectContent>{SORT_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select>
+        <Select value={programFilter} onValueChange={setProgramFilter}><SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All program areas" /></SelectTrigger><SelectContent><SelectItem value="all">All program areas</SelectItem>{PROGRAM_AREA_OPTIONS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent></Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{CASE_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select>
+        <Select value={funderFilter} onValueChange={setFunderFilter}><SelectTrigger className="w-full sm:w-52"><SelectValue placeholder="All funders" /></SelectTrigger><SelectContent><SelectItem value="all">All funders</SelectItem>{FUNDER_CATEGORIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent></Select>
+        <Select value={demoFilter} onValueChange={setDemoFilter}><SelectTrigger className="w-full sm:w-52"><SelectValue placeholder="All demographics" /></SelectTrigger><SelectContent><SelectItem value="all">All demographics</SelectItem>{DEMOGRAPHIC_OPTIONS.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent></Select>
       </div>
 
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
