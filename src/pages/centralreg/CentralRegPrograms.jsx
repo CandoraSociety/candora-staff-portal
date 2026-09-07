@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Plus, ExternalLink } from 'lucide-react';
+import { Plus, ExternalLink, CalendarPlus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UniversalRegistrationDialog from '@/components/centralreg/UniversalRegistrationDialog';
+import CreateSessionDialog from '@/components/centralreg/CreateSessionDialog';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import AreaCapacityControl from '@/components/centralreg/AreaCapacityControl';
 import { REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
@@ -27,7 +28,7 @@ function AreaSection({ title, color, portalPath, capacityControl, children }) {
   );
 }
 
-function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl }) {
+function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl, noSessions = false, sessionLabel = 'Session', onCreateSession }) {
   return (
     <Card className="hover:shadow-sm transition-shadow"><CardContent className="p-3">
       <div className="flex items-center justify-between gap-3">
@@ -36,10 +37,12 @@ function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capaci
           {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           {meta && <p className="text-xs text-muted-foreground/80 mt-0.5">{meta}</p>}
           {isFull && <p className="text-xs text-amber-600 mt-0.5">Registration is full, but you can still add to the waitlist</p>}
+          {noSessions && <p className="text-xs text-red-600 mt-0.5">No {sessionLabel.toLowerCase()}s scheduled — create one to enable registration</p>}
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {capacityControl}
-          <Button size="sm" onClick={onRegister} className="flex-shrink-0"><Plus className="h-3.5 w-3.5" /> {isFull ? 'Add to Waitlist' : 'Register'}</Button>
+          {onCreateSession && <Button size="sm" variant="outline" onClick={onCreateSession} className="flex-shrink-0"><CalendarPlus className="h-3.5 w-3.5" /> Create {sessionLabel}</Button>}
+          <Button size="sm" onClick={onRegister} disabled={noSessions} className="flex-shrink-0"><Plus className="h-3.5 w-3.5" /> {isFull ? 'Add to Waitlist' : 'Register'}</Button>
         </div>
       </div>
     </CardContent></Card>
@@ -49,6 +52,7 @@ function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capaci
 export default function CentralRegPrograms() {
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState(null); // { area, program }
+  const [sessionDialog, setSessionDialog] = useState(null); // { area, program }
   const [giftShopOpen, setGiftShopOpen] = useState(false);
 
   const { data: communityPrograms = [], isLoading } = useQuery({ queryKey: ['cr-community-programs'], queryFn: () => base44.entities.CommunityProgram.list() });
@@ -62,6 +66,10 @@ export default function CentralRegPrograms() {
   const { data: ellLearners = [] } = useQuery({ queryKey: ['cr-ell-learners'], queryFn: () => base44.entities.ELLLearner.list('-created_date', 500) });
   const { data: volunteers = [] } = useQuery({ queryKey: ['cr-volunteers'], queryFn: () => base44.entities.Volunteer.list('-created_date', 500) });
   const { data: programRegs = [] } = useQuery({ queryKey: ['reception-registrations'], queryFn: () => base44.entities.ProgramRegistration.list('-registration_date', 500) });
+  const { data: communitySessions = [] } = useQuery({ queryKey: ['cr-community-sessions'], queryFn: () => base44.entities.CommunitySession.list('-session_date', 500) });
+  const { data: phacSessions = [] } = useQuery({ queryKey: ['cr-phac-sessions'], queryFn: () => base44.entities.PHACSession.list('-session_date', 500) });
+  const { data: ellClasses = [] } = useQuery({ queryKey: ['cr-ell-classes'], queryFn: () => base44.entities.ELLClass.list() });
+  const { data: digilitSessions = [] } = useQuery({ queryKey: ['cr-digilit-sessions'], queryFn: () => base44.entities.DigiLitSession.list('-session_date', 500) });
 
   const openDialog = (area, program = null) => setDialog({ area, program });
 
@@ -137,6 +145,9 @@ export default function CentralRegPrograms() {
                     subtitle={p.description}
                     meta={[p.schedule_description, p.location].filter(Boolean).join(' · ')}
                     isFull={stats.full}
+                    noSessions={!communitySessions.some(s => s.program_id === p.id && s.status !== 'cancelled')}
+                    sessionLabel="Session"
+                    onCreateSession={() => setSessionDialog({ area: 'community', program: p })}
                     capacityControl={<AreaCapacityControl area="community" programId={p.id} capacityRecord={stats.rec} filled={stats.filled} />}
                     onRegister={() => openDialog('community', p)}
                   />
@@ -147,7 +158,12 @@ export default function CentralRegPrograms() {
 
           <AreaSection title={REG_AREA_LABELS.empoweru} color="#8b5cf6" portalPath={REG_AREA_PATHS.empoweru} capacityControl={capacityControlFor('empoweru')}>
             <div className="space-y-2">
-              {openCohorts.length === 0 && <p className="text-sm text-muted-foreground py-2">No cohorts are open for registration right now.</p>}
+              {openCohorts.length === 0 && (
+                <div className="flex items-center justify-between gap-3 py-2">
+                  <p className="text-sm text-muted-foreground">No cohorts are open for registration right now — learners can't register until a cohort is created.</p>
+                  <Button size="sm" variant="outline" onClick={() => setSessionDialog({ area: 'empoweru' })}><CalendarPlus className="h-3.5 w-3.5" /> Create Cohort</Button>
+                </div>
+              )}
               {openCohorts.map(c => (
                 <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => openDialog('empoweru', c)} />
               ))}
@@ -158,20 +174,20 @@ export default function CentralRegPrograms() {
             <div className="space-y-2">
               {activePhac.length === 0 && <p className="text-sm text-muted-foreground py-2">No active PHAC programs.</p>}
               {activePhac.map(p => (
-                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} onRegister={() => openDialog('phac', p)} />
+                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} noSessions={!phacSessions.some(s => s.program_id === p.id && s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'phac', program: p })} onRegister={() => openDialog('phac', p)} />
               ))}
             </div>
           </AreaSection>
 
           <AreaSection title={REG_AREA_LABELS.ell} color="#22c55e" portalPath={REG_AREA_PATHS.ell} capacityControl={capacityControlFor('ell')}>
             <div className="space-y-2">
-              <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
+              <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
             </div>
           </AreaSection>
 
           <AreaSection title={REG_AREA_LABELS.digilit} color="#6366f1" portalPath={REG_AREA_PATHS.digilit} capacityControl={capacityControlFor('digilit')}>
             <div className="space-y-2">
-              <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} />
+              <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} noSessions={!digilitSessions.some(s => s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'digilit' })} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} />
             </div>
           </AreaSection>
 
@@ -196,6 +212,7 @@ export default function CentralRegPrograms() {
       )}
 
       <UniversalRegistrationDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} area={dialog?.area} program={dialog?.program} forceWaitlist={dialogForceWaitlist} onSaved={onSaved} />
+      <CreateSessionDialog open={!!sessionDialog} onOpenChange={(o) => !o && setSessionDialog(null)} area={sessionDialog?.area} program={sessionDialog?.program} onSaved={() => { setSessionDialog(null); queryClient.invalidateQueries(); }} />
       <KidsGiftShopRegistrationDialog open={giftShopOpen} onOpenChange={setGiftShopOpen} forceWaitlist={isAreaFull('kids_gift_shop')} onSaved={onGiftShopSaved} />
     </div>
   );
