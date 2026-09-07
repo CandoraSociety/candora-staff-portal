@@ -15,10 +15,9 @@ const parseLocalDate = (str) => {
   return new Date(y, m - 1, d);
 };
 
-export default function LessonPlansTab({ cls, userName, saveClass }) {
+export default function LessonPlansTab({ cls, userName, saveClass, selectedDate }) {
   const { toast } = useToast();
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
   const [content, setContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -37,13 +36,13 @@ export default function LessonPlansTab({ cls, userName, saveClass }) {
         lesson_plans: [...(cls.lesson_plans || []), {
           id: crypto.randomUUID(),
           title: title.trim(),
-          date: date || null,
+          date: selectedDate || null,
           content: content.trim(),
           created_by_name: userName,
           created_date: format(new Date(), 'yyyy-MM-dd'),
         }],
       });
-      setTitle(''); setDate(''); setContent('');
+      setTitle(''); setContent('');
       toast({ title: 'Lesson plan created' });
     } catch (e) {
       toast({ title: e.message, variant: 'destructive' });
@@ -62,7 +61,7 @@ export default function LessonPlansTab({ cls, userName, saveClass }) {
         lesson_plans: [...(cls.lesson_plans || []), {
           id: crypto.randomUUID(),
           title: file.name,
-          date: date || null,
+          date: selectedDate || null,
           file_url,
           file_name: file.name,
           created_by_name: userName,
@@ -84,16 +83,13 @@ export default function LessonPlansTab({ cls, userName, saveClass }) {
         <Card>
           <CardContent className="p-4 space-y-3">
             <h3 className="font-semibold text-sm">Create a Lesson Plan</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Title *</Label>
-                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 3 — Past tense" />
-              </div>
-              <div>
-                <Label>Class date</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
+            <div>
+              <Label>Title *</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Unit 3 — Past tense" />
             </div>
+            <p className="text-xs text-muted-foreground">
+              Attached to {selectedDate ? format(parseLocalDate(selectedDate), 'MMM d, yyyy') : 'the date selected in the calendar'}
+            </p>
             <div>
               <Label>Content *</Label>
               <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Objectives, activities, materials, homework..." />
@@ -108,10 +104,9 @@ export default function LessonPlansTab({ cls, userName, saveClass }) {
           <CardContent className="p-4 space-y-3">
             <h3 className="font-semibold text-sm">Upload a Lesson Plan</h3>
             <p className="text-sm text-muted-foreground">Attach an existing document (PDF, Word, etc.).</p>
-            <div>
-              <Label>Applies to class date (optional)</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Attached to {selectedDate ? format(parseLocalDate(selectedDate), 'MMM d, yyyy') : 'the date selected in the calendar'}
+            </p>
             <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg py-8 px-4 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
               <Upload className="h-6 w-6 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">{uploading ? 'Uploading...' : 'Click to choose a file'}</span>

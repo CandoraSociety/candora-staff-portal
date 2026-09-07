@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { format } from 'date-fns';
+import { eachDayOfInterval, format } from 'date-fns';
 import { ArrowLeft, Clock, MapPin, User as UserIcon, CalendarRange, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import ParticipantsTab from '@/components/ell/classdetail/ParticipantsTab';
 import AttendanceTab from '@/components/ell/classdetail/AttendanceTab';
 import NotesTab from '@/components/ell/classdetail/NotesTab';
 import LessonPlansTab from '@/components/ell/classdetail/LessonPlansTab';
+import ClassDateCalendar from '@/components/ell/classdetail/ClassDateCalendar';
 
 const parseLocalDate = (str) => {
   if (!str) return null;
@@ -30,6 +31,7 @@ export default function ELLClassDetail() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [userName, setUserName] = useState('Staff');
+  const [selectedDate, setSelectedDate] = useState('');
 
   useEffect(() => {
     base44.auth.me().then(me => setUserName(me?.full_name || 'Staff')).catch(() => {});
@@ -37,6 +39,26 @@ export default function ELLClassDetail() {
 
   const classQ = useQuery({ queryKey: ['ellClass', id], queryFn: () => base44.entities.ELLClass.get(id) });
   const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.list() });
+
+  const cls = classQ.data;
+  const classDates = useMemo(() => {
+    if (!cls?.start_date || !cls?.end_date || !(cls.schedule_days || []).length) return [];
+    const start = parseLocalDate(cls.start_date);
+    const end = parseLocalDate(cls.end_date);
+    if (end < start) return [];
+    return eachDayOfInterval({ start, end })
+      .filter(d => cls.schedule_days.includes(format(d, 'eeee').toLowerCase()))
+      .map(d => format(d, 'yyyy-MM-dd'));
+  }, [cls?.start_date, cls?.end_date, cls?.schedule_days]);
+
+  // Default to the most recent past class date (or the first upcoming one)
+  useEffect(() => {
+    if (!selectedDate && classDates.length) {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const past = classDates.filter(d => d <= today);
+      setSelectedDate(past.length ? past[past.length - 1] : classDates[0]);
+    }
+  }, [classDates, selectedDate]);
 
   const saveClass = async (patch) => {
     await base44.entities.ELLClass.update(id, patch);
@@ -52,7 +74,6 @@ export default function ELLClassDetail() {
     );
   }
 
-  const cls = classQ.data;
   if (!cls) {
     return (
       <div className="text-center py-12 space-y-3">
@@ -90,6 +111,17 @@ export default function ELLClassDetail() {
         </CardContent>
       </Card>
 
+      {classDates.length > 0 && (
+        <div className="max-w-[300px]">
+          <ClassDateCalendar
+            dates={classDates}
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+            markedDates={(cls.attendance || []).map(a => a.date)}
+          />
+        </div>
+      )}
+
       <Tabs defaultValue="participants">
         <TabsList>
           <TabsTrigger value="participants">Participants</TabsTrigger>
@@ -101,13 +133,13 @@ export default function ELLClassDetail() {
           <ParticipantsTab participants={participants} />
         </TabsContent>
         <TabsContent value="attendance" className="mt-4">
-          <AttendanceTab cls={cls} participants={participants} userName={userName} saveClass={saveClass} />
+          <AttendanceTab cls={cls} participants={participants} userName={userName} saveClass={saveClass} selectedDate={selectedDate} onSelectDate={setSelectedDate} classDates={classDates} />
         </TabsContent>
         <TabsContent value="notes" className="mt-4">
-          <NotesTab cls={cls} userName={userName} saveClass={saveClass} />
+          <NotesTab cls={cls} userName={userName} saveClass={saveClass} selectedDate={selectedDate} />
         </TabsContent>
         <TabsContent value="lesson-plans" className="mt-4">
-          <LessonPlansTab cls={cls} userName={userName} saveClass={saveClass} />
+          <LessonPlansTab cls={cls} userName={userName} saveClass={saveClass} selectedDate={selectedDate} />
         </TabsContent>
       </Tabs>
     </div>

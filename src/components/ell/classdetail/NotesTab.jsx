@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
@@ -14,10 +13,9 @@ const parseLocalDate = (str) => {
   return new Date(y, m - 1, d);
 };
 
-export default function NotesTab({ cls, userName, saveClass }) {
+export default function NotesTab({ cls, userName, saveClass, selectedDate }) {
   const { toast } = useToast();
   const [note, setNote] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [saving, setSaving] = useState(false);
   const notes = [...(cls.notes || [])].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
@@ -31,7 +29,7 @@ export default function NotesTab({ cls, userName, saveClass }) {
       await saveClass({
         notes: [...(cls.notes || []), {
           id: crypto.randomUUID(),
-          date,
+          date: selectedDate || format(new Date(), 'yyyy-MM-dd'),
           note: note.trim(),
           created_by_name: userName,
         }],
@@ -50,10 +48,9 @@ export default function NotesTab({ cls, userName, saveClass }) {
       <Card>
         <CardContent className="p-4 space-y-3">
           <h3 className="font-semibold text-sm">Add a Note</h3>
-          <div>
-            <Label>Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Dated {selectedDate ? format(parseLocalDate(selectedDate), 'MMM d, yyyy') : format(new Date(), 'MMM d, yyyy')} — set by the calendar above
+          </p>
           <div>
             <Label>Note</Label>
             <Textarea rows={5} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Class progress, observations, follow-ups..." />

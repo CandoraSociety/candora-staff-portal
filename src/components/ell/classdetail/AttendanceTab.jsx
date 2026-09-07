@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { eachDayOfInterval, format } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import { CalendarDays, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import ClassDateCalendar from '@/components/ell/classdetail/ClassDateCalendar';
 import { useToast } from '@/components/ui/use-toast';
 
 const parseLocalDate = (str) => {
@@ -18,25 +17,9 @@ const STATUS_OPTIONS = [
   { value: 'absent', label: 'Absent', active: 'bg-destructive text-white' },
 ];
 
-export default function AttendanceTab({ cls, participants, userName, saveClass }) {
+export default function AttendanceTab({ cls, participants, userName, saveClass, selectedDate, onSelectDate, classDates }) {
   const { toast } = useToast();
   const attendance = cls.attendance || [];
-
-  // All class dates generated from schedule days between start/end dates
-  const classDates = useMemo(() => {
-    const start = cls.start_date ? parseLocalDate(cls.start_date) : null;
-    const end = cls.end_date ? parseLocalDate(cls.end_date) : null;
-    if (!start || !end || !(cls.schedule_days || []).length || end < start) return [];
-    return eachDayOfInterval({ start, end })
-      .filter(d => cls.schedule_days.includes(format(d, 'eeee').toLowerCase()))
-      .map(d => format(d, 'yyyy-MM-dd'));
-  }, [cls.start_date, cls.end_date, cls.schedule_days]);
-
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const past = classDates.filter(d => d <= today);
-    return past.length ? past[past.length - 1] : (classDates[0] || '');
-  });
   const [statuses, setStatuses] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -82,44 +65,37 @@ export default function AttendanceTab({ cls, participants, userName, saveClass }
     <div className="grid gap-4 lg:grid-cols-2 items-start">
       <Card>
         <CardContent className="p-4 space-y-4">
-          <h3 className="font-semibold text-sm flex items-center gap-2"><CalendarDays className="h-4 w-4" />Mark Attendance</h3>
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Attendance {selectedDate && <span className="text-muted-foreground font-normal">— {format(parseLocalDate(selectedDate), 'EEE, MMM d, yyyy')}</span>}
+          </h3>
           {classDates.length === 0 ? (
             <p className="text-sm text-muted-foreground">Add schedule days and start/end dates to this class to take attendance.</p>
+          ) : participants.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No learners assigned to this class yet.</p>
           ) : (
-            <>
-              <ClassDateCalendar
-                dates={classDates}
-                selectedDate={selectedDate}
-                onSelect={setSelectedDate}
-                markedDates={attendance.map(a => a.date)}
-              />
-              {participants.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No learners assigned to this class yet.</p>
-              ) : (
-                <div>
-                  {participants.map(p => (
-                    <div key={p.id} className="flex items-center justify-between gap-3 py-2 border-b last:border-0">
-                      <p className="text-sm font-medium">{p.first_name} {p.last_name}</p>
-                      <div className="flex gap-1">
-                        {STATUS_OPTIONS.map(o => (
-                          <button
-                            key={o.value}
-                            type="button"
-                            onClick={() => setStatuses(s => ({ ...s, [p.id]: o.value }))}
-                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${statuses[p.id] === o.value ? o.active : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
-                          >
-                            {o.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  <Button className="mt-4 w-full" onClick={handleSave} disabled={saving}>
-                    <Save className="h-4 w-4 mr-2" />{existing ? 'Update' : 'Save'} Attendance
-                  </Button>
+            <div>
+              {participants.map(p => (
+                <div key={p.id} className="flex items-center justify-between gap-3 py-2 border-b last:border-0">
+                  <p className="text-sm font-medium">{p.first_name} {p.last_name}</p>
+                  <div className="flex gap-1">
+                    {STATUS_OPTIONS.map(o => (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => setStatuses(s => ({ ...s, [p.id]: o.value }))}
+                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${statuses[p.id] === o.value ? o.active : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </>
+              ))}
+              <Button className="mt-4 w-full" onClick={handleSave} disabled={saving || !selectedDate}>
+                <Save className="h-4 w-4 mr-2" />{existing ? 'Update' : 'Save'} Attendance
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -137,7 +113,7 @@ export default function AttendanceTab({ cls, participants, userName, saveClass }
               const absent = vals.filter(v => v === 'absent').length;
               return (
                 <div key={a.id} className="flex items-center justify-between gap-2 py-2 border-b last:border-0 text-sm">
-                  <button className="font-medium hover:underline text-left" onClick={() => setSelectedDate(a.date)}>
+                  <button className="font-medium hover:underline text-left" onClick={() => onSelectDate?.(a.date)}>
                     {format(parseLocalDate(a.date), 'EEE, MMM d, yyyy')}
                   </button>
                   <span className="text-xs text-muted-foreground shrink-0">{present} present · {late} late · {absent} absent</span>
