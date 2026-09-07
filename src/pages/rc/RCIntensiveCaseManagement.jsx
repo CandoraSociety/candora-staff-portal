@@ -118,7 +118,7 @@ export default function RCIntensiveCaseManagement() {
   };
 
   const addToWaitlist = async () => {
-    if (!selectedClient) return;
+    if (!selectedClient || selectedClient.service_category !== 'intensive_services') return;
     try {
       const existing = cases.find(c => c.client_id === selectedId);
       if (existing) {
@@ -306,7 +306,7 @@ export default function RCIntensiveCaseManagement() {
                     cases={cases}
                     clients={clients}
                     selectedClientId={selectedId}
-                    canAddToWaitlist={!!selectedClient && selectedCase?.case_status !== 'waitlisted'}
+                    canAddToWaitlist={!!selectedClient && selectedClient.service_category === 'intensive_services' && selectedCase?.case_status !== 'waitlisted'}
                     onAddToWaitlist={addToWaitlist}
                     onUpdate={updateCaseById}
                     onOpenClient={(id) => setSelectedId(id)}
