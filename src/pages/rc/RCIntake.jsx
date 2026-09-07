@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import ClientFormCore from '@/components/rc/ClientFormCore';
+import { generateTestClientName, TEST_CLIENT_BG, TEST_CLIENT_TEXT } from '@/lib/rcTestClients';
 
 const EMPTY = {
   first_name: '', last_name: '', date_of_birth: '', phone: '', email: '', address: '', city: '', postal_code: '',
@@ -22,6 +23,26 @@ export default function RCIntake() {
   const [form, setForm] = useState({ ...EMPTY, intake_date: new Date().toISOString().split('T')[0] });
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleTestClient = async () => {
+    setSaving(true);
+    try {
+      const { first_name, last_name } = generateTestClientName();
+      const created = await base44.entities.RCClient.create({
+        first_name,
+        last_name,
+        intake_date: new Date().toISOString().split('T')[0],
+        case_status: 'intake',
+        notes: 'Test client — created for testing purposes.',
+      });
+      toast({ title: 'Test client created', description: `${first_name} ${last_name}` });
+      navigate(`/rc/clients/${created.id}`);
+    } catch (err) {
+      toast({ title: 'Error creating test client', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.first_name || !form.last_name) {
@@ -52,6 +73,7 @@ export default function RCIntake() {
       </div>
       <Card><CardContent className="p-5"><ClientFormCore form={form} update={update} /></CardContent></Card>
       <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={handleTestClient} disabled={saving} style={{ backgroundColor: TEST_CLIENT_BG, color: TEST_CLIENT_TEXT, borderColor: TEST_CLIENT_BG, fontWeight: 700 }}>Create Test Client</Button>
         <Button variant="outline" onClick={() => navigate('/rc/clients')}>Cancel</Button>
         <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Complete Intake'}</Button>
       </div>

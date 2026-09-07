@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Search, UserPlus, Phone, Mail, Baby } from 'lucide-react';
+import { Search, UserPlus, Phone, Mail, Baby, FlaskConical } from 'lucide-react';
+import TestClientsDialog from '@/components/rc/TestClientsDialog';
+import { isTestClient, TEST_CLIENT_BG, TEST_CLIENT_TEXT, TEST_CLIENT_MUTED } from '@/lib/rcTestClients';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +16,7 @@ export default function RCClients() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [funderFilter, setFunderFilter] = useState('all');
+  const [showTestClients, setShowTestClients] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({ queryKey: ['rc-clients'], queryFn: () => base44.entities.RCClient.list() });
 
@@ -29,7 +32,10 @@ export default function RCClients() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-heading font-bold text-foreground">Client Database</h1><p className="text-muted-foreground text-sm mt-1">Full CRM — search, filter, and manage client records</p></div>
-        <Link to="/rc/intake"><Button><UserPlus className="h-4 w-4" /> New Intake</Button></Link>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowTestClients(true)}><FlaskConical className="h-4 w-4" /> Test Clients</Button>
+          <Link to="/rc/intake"><Button><UserPlus className="h-4 w-4" /> New Intake</Button></Link>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
@@ -44,20 +50,22 @@ export default function RCClients() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(c => {
             const phac = IS_PHAC(c);
+            const isTest = isTestClient(c);
+            const testSub = isTest ? { color: TEST_CLIENT_MUTED } : undefined;
             return (
               <Link key={c.id} to={`/rc/clients/${c.id}`}>
-                <Card className="hover:shadow-md transition-shadow h-full">
+                <Card className="hover:shadow-md transition-shadow h-full" style={isTest ? { backgroundColor: TEST_CLIENT_BG, borderColor: TEST_CLIENT_BG } : undefined}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center"><span className="text-primary font-semibold text-sm">{c.first_name?.[0]}{c.last_name?.[0]}</span></div>
-                        <div><p className="font-medium text-sm text-foreground">{c.first_name} {c.last_name}</p>{c.assigned_worker && <p className="text-xs text-muted-foreground">{c.assigned_worker}</p>}</div>
+                        <div><p className="font-medium text-sm text-foreground" style={isTest ? { color: TEST_CLIENT_TEXT, fontWeight: 800 } : undefined}>{c.first_name} {c.last_name}</p>{c.assigned_worker && <p className="text-xs text-muted-foreground" style={testSub}>{c.assigned_worker}</p>}</div>
                       </div>
                       <StatusBadge status={c.case_status} options={CASE_STATUS_OPTIONS} />
                     </div>
                     <div className="space-y-1 mb-2">
-                      {c.phone && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Phone className="h-3 w-3" /> {c.phone}</p>}
-                      {c.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Mail className="h-3 w-3" /> {c.email}</p>}
+                      {c.phone && <p className="text-xs text-muted-foreground flex items-center gap-1.5" style={testSub}><Phone className="h-3 w-3" /> {c.phone}</p>}
+                      {c.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5" style={testSub}><Mail className="h-3 w-3" /> {c.email}</p>}
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {(c.funder_categories || []).map(f => {
@@ -73,6 +81,8 @@ export default function RCClients() {
           })}
         </div>
       )}
+
+      <TestClientsDialog open={showTestClients} onOpenChange={setShowTestClients} testClients={clients.filter(isTestClient)} />
     </div>
   );
 }
