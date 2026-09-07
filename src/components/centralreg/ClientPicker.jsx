@@ -12,10 +12,9 @@ export default function ClientPicker({ onSelect, placeholder }) {
 
   const q = search.trim().toLowerCase();
   const matches = useMemo(() => {
-    if (!q) return [];
+    if (!q) return clients;
     return clients
-      .filter(c => `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase().includes(q))
-      .slice(0, 20);
+      .filter(c => `${c.first_name || ''} ${c.last_name || ''}`.toLowerCase().includes(q));
   }, [clients, q]);
 
   return (
@@ -27,23 +26,21 @@ export default function ClientPicker({ onSelect, placeholder }) {
         className="pl-9"
         onChange={(e) => setSearch(e.target.value)}
       />
-      {q && (
-        <div className="mt-1.5 rounded-md border border-border bg-popover max-h-48 overflow-y-auto">
-          {matches.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-muted-foreground">No matching clients.</p>
-          ) : matches.map(c => (
-            <button
-              key={c.id}
-              type="button"
-              className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent truncate"
-              onClick={() => { onSelect?.(c); setSearch(''); }}
-            >
-              {c.first_name} {c.last_name}
-              <span className="text-xs text-muted-foreground ml-1">{[c.phone, c.email].filter(Boolean).map(s => `· ${s}`).join(' ')}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mt-1.5 rounded-md border border-border bg-popover max-h-56 overflow-y-auto">
+        {matches.length === 0 ? (
+          <p className="px-3 py-2 text-sm text-muted-foreground">No matching clients.</p>
+        ) : matches.map(c => (
+          <button
+            key={c.id}
+            type="button"
+            className="w-full text-left px-3 py-1.5 text-sm hover:bg-accent truncate"
+            onClick={() => { onSelect?.(c); setSearch(''); }}
+          >
+            {c.first_name} {c.last_name}
+            <span className="text-xs text-muted-foreground ml-1">{[c.phone, c.email].filter(Boolean).map(s => `· ${s}`).join(' ')}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
