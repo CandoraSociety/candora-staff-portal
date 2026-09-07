@@ -299,6 +299,7 @@ import CentralRegPrograms from '@/pages/centralreg/CentralRegPrograms';
 import CentralRegRegistrations from '@/pages/centralreg/CentralRegRegistrations';
 import CentralRegWaitlists from '@/pages/centralreg/CentralRegWaitlists';
 import CentralRegVolunteers from '@/pages/centralreg/CentralRegVolunteers';
+import CentralRegCalendar from '@/pages/centralreg/CentralRegCalendar';
 
 // Community Programs Portal
 import CommunityLayout from '@/components/community/CommunityLayout';
@@ -698,6 +699,7 @@ const AuthenticatedApp = () => {
           <Route path="/central-registration" element={<CentralRegDashboard />} />
           <Route path="/central-registration/programs" element={<CentralRegPrograms />} />
           <Route path="/central-registration/registrations" element={<CentralRegRegistrations />} />
+          <Route path="/central-registration/calendar" element={<CentralRegCalendar />} />
           <Route path="/central-registration/waitlists" element={<CentralRegWaitlists />} />
           <Route path="/central-registration/volunteers" element={<CentralRegVolunteers />} />
         </Route>

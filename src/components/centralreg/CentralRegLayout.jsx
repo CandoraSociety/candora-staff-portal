@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { path: '/central-registration', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/central-registration/programs', label: 'Programs & Registration', icon: ClipboardList },
   { path: '/central-registration/registrations', label: 'All Registrations', icon: Users },
+  { path: '/central-registration/calendar', label: 'Calendar', icon: CalendarDays },
   { path: '/central-registration/waitlists', label: 'Waitlists', icon: ListOrdered },
   { path: '/central-registration/volunteers', label: 'Volunteer Registration', icon: HeartHandshake },
 ];
