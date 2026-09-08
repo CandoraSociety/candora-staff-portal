@@ -59,6 +59,38 @@
       },
       "description": "For recurring sessions \u2014 occurrence dates (YYYY-MM-DD) that have been completed, tracked per date instead of completing the whole series"
     },
+    "attendance": {
+      "type": "array",
+      "description": "Per-date attendance records \u2014 one entry per occurrence date, so recurring sessions track who attended each date",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Occurrence date this attendance was taken for"
+          },
+          "statuses": {
+            "type": "object",
+            "description": "Map of participant ID -> present | absent | late"
+          },
+          "recorded_by_name": {
+            "type": "string"
+          },
+          "recorded_date": {
+            "type": "string",
+            "description": "ISO timestamp of when attendance was saved"
+          }
+        },
+        "required": [
+          "id",
+          "date"
+        ]
+      }
+    },
     "facilitator_name": {
       "type": "string",
       "description": "Volunteer facilitator leading the session"
