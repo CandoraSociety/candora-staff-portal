@@ -34,8 +34,11 @@ export default function InvoiceNumberDialog({ open, onOpenChange, billingMonth, 
       }
       return res.data;
     },
-    onSuccess: () => {
-      toast.success(`Invoice number set to #${value.trim()} for ${monthLabel} — on the invoice and the CRT.`);
+    onSuccess: (data) => {
+      const extra = data?.renumbered?.length
+        ? ` Later months (${data.renumbered.map((r) => r.billingMonth).join(', ')}) were renumbered to match.`
+        : '';
+      toast.success(`Invoice number set to #${value.trim()} for ${monthLabel} — on the invoice and the CRT.${extra}`);
       onOpenChange(false);
       queryClient.invalidateQueries();
     },
