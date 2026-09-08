@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus, Printer, StickyNote } from 'lucide-react';
+import { FileText, Loader2, Lock, Unlock, Calendar, AlertCircle, Plus, Printer, StickyNote, Hash } from 'lucide-react';
 import { format } from 'date-fns';
 import InvoiceDocument from './InvoiceDocument';
 import ManualInvoiceNoteDialog from './ManualInvoiceNoteDialog';
+import InvoiceNumberDialog from './InvoiceNumberDialog';
 import { currentBillingMonth } from '@/components/billing/billingMonth';
 import { monthsInRange, snapshotToData, aggregateMonthData } from './aggregateInvoiceData';
 
@@ -43,6 +44,7 @@ export default function MonthlyInvoices() {
   const [rangeStart, setRangeStart] = useState(currentMonth);
   const [rangeEnd, setRangeEnd] = useState(currentMonth);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [showNumberDialog, setShowNumberDialog] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -310,7 +312,7 @@ export default function MonthlyInvoices() {
   // (aggregated range data for a multi-month invoice, single-month live otherwise).
   const renderData = isFinalized && selected
     ? {
-        invoiceNumber: selected.invoice_number ? Number(selected.invoice_number) : null,
+        invoiceNumber: (selected.invoice_number != null && selected.invoice_number !== '') ? selected.invoice_number : null,
         billingMonth: selected.billing_month,
         header: selected.header_info || [],
         lineItems: selected.line_items || [],
@@ -321,6 +323,9 @@ export default function MonthlyInvoices() {
     : activeData && activeData.status === 'success'
       ? activeData
       : null;
+
+  // Number shown on the invoice right now — prefills the edit dialog.
+  const currentInvoiceNumber = (isFinalized && selected ? selected.invoice_number : renderData?.invoiceNumber) ?? null;
 
   // The heading reflects the month (or range) actually being shown.
   const monthLabel = isRange
@@ -370,6 +375,10 @@ export default function MonthlyInvoices() {
               <Button onClick={() => setShowNoteDialog(true)} variant="outline" size="sm" disabled={!effectiveMonth}>
                 <StickyNote className="h-4 w-4 mr-2" />
                 Add/Edit Note
+              </Button>
+              <Button onClick={() => setShowNumberDialog(true)} variant="outline" size="sm" disabled={!effectiveMonth}>
+                <Hash className="h-4 w-4 mr-2" />
+                Edit Invoice #
               </Button>
               {selected && (
                 <Badge variant={isFinalized ? 'outline' : 'default'} className={isFinalized ? 'border-slate-400 text-slate-600' : ''}>
@@ -533,6 +542,14 @@ export default function MonthlyInvoices() {
         invoiceId={selected?.id}
         billingMonth={effectiveMonth}
         monthLabel={monthLabel}
+      />
+      <InvoiceNumberDialog
+        open={showNumberDialog}
+        onOpenChange={setShowNumberDialog}
+        billingMonth={effectiveMonth}
+        monthLabel={monthLabel}
+        currentNumber={currentInvoiceNumber}
+        invoiceId={selected?.id}
       />
     </div>
   );

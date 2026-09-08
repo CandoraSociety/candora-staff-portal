@@ -5,6 +5,10 @@
     "invoice_number": {
       "type": "string"
     },
+    "invoice_number_manual": {
+      "type": "boolean",
+      "description": "True when the invoice number was set manually from the Billing tab. The number is used exactly as entered (no resubmission-suffix normalization) and has been written to column B of that month's row on the CRT Invoice Tracker."
+    },
     "billing_month": {
       "type": "string",
       "description": "YYYY-MM \u2014 the first month this invoice covers"

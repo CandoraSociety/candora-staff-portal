@@ -10,8 +10,11 @@ const SUFFIXES_2026 = { '2026-04': 3, '2026-05': 2, '2026-06': 3, '2026-07': 3 }
 //   • one of the four 2026 months → normalized to its current resubmission
 //     number, e.g. source 11 / 11.1 / 11.2 for April → "11.3"
 //   • otherwise → the plain number (fractional sources returned as-is)
-export function displayInvoiceNumber(rawNumber, billingMonth) {
+export function displayInvoiceNumber(rawNumber, billingMonth, isManual = false) {
   if (rawNumber == null || rawNumber === '') return null;
+  // A manually set number is displayed exactly as entered — the resubmission
+  // suffix normalization below never overrides a manual value.
+  if (isManual) return rawNumber;
   const n = Number(rawNumber);
   if (isNaN(n)) return null;
   const suffix = SUFFIXES_2026[String(billingMonth)];

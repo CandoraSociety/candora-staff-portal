@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, AlertCircle, Printer } from 'lucide-react';
+import { Loader2, AlertCircle, Printer, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InvoiceDocument from './InvoiceDocument';
+import InvoiceNumberDialog from './InvoiceNumberDialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { displayInvoiceNumber } from './invoiceNumber';
@@ -29,6 +31,7 @@ export default function PackageInvoiceTab({ pkg }) {
     ? pkg.billing_month_end
     : null;
   const dataMonth = end || start;
+  const [showNumberDialog, setShowNumberDialog] = useState(false);
 
   // Linked Invoice record from the Invoices tab.
   const { data: linkedInvoice } = useQuery({
@@ -39,6 +42,7 @@ export default function PackageInvoiceTab({ pkg }) {
   });
 
   const useSnapshot = linkedInvoice && linkedInvoice.status === 'finalized';
+  const isManualNumber = !!linkedInvoice?.invoice_number_manual;
 
   const { data: live, isLoading, error } = useQuery({
     queryKey: ['package-invoice-data', pkg.id, dataMonth],
@@ -86,9 +90,14 @@ export default function PackageInvoiceTab({ pkg }) {
     setTimeout(() => { if (!printWin.closed) printWin.print(); }, 800);
   };
 
+  // Number currently shown on the package invoice — prefills the edit dialog.
+  const shownNumber = useSnapshot
+    ? displayInvoiceNumber(linkedInvoice?.invoice_number, linkedInvoice?.billing_month, isManualNumber)
+    : displayInvoiceNumber(live?.invoiceNumber ?? linkedInvoice?.invoice_number, live?.billingMonth ?? linkedInvoice?.billing_month, isManualNumber);
+
   if (useSnapshot) {
     const snap = {
-      invoiceNumber: displayInvoiceNumber(linkedInvoice.invoice_number, linkedInvoice.billing_month),
+      invoiceNumber: displayInvoiceNumber(linkedInvoice.invoice_number, linkedInvoice.billing_month, isManualNumber),
       billingMonth: linkedInvoice.billing_month,
       header: linkedInvoice.header_info || [],
       lineItems: linkedInvoice.line_items || [],
@@ -98,11 +107,22 @@ export default function PackageInvoiceTab({ pkg }) {
     };
     return (
       <div className="space-y-3">
-        <div className="flex justify-end no-print">
+        <div className="flex justify-end no-print gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowNumberDialog(true)} disabled={!dataMonth}>
+            <Hash className="h-4 w-4 mr-2" /> Edit Invoice #
+          </Button>
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" /> Print / Save PDF
           </Button>
         </div>
+        <InvoiceNumberDialog
+          open={showNumberDialog}
+          onOpenChange={setShowNumberDialog}
+          billingMonth={dataMonth}
+          monthLabel={format(monthFirst(dataMonth), 'MMMM yyyy')}
+          currentNumber={shownNumber}
+          invoiceId={pkg.invoice_id}
+        />
         <div className="invoice-viewer-card rounded-xl border bg-card shadow">
           <div className="invoice-viewer-content pt-6">
             <InvoiceDocument
@@ -147,7 +167,7 @@ export default function PackageInvoiceTab({ pkg }) {
     srcNumber = linkedInvoice.invoice_number;
     srcMonth = linkedInvoice.billing_month;
   }
-  const liveData = { ...live, invoiceNumber: displayInvoiceNumber(srcNumber, srcMonth) };
+  const liveData = { ...live, invoiceNumber: displayInvoiceNumber(srcNumber, srcMonth, isManualNumber) };
 
   return (
     <div className="space-y-3">
