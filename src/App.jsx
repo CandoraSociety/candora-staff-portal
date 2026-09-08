@@ -249,6 +249,7 @@ import FRNDashboard from '@/pages/frn/FRNDashboard';
 import FRNParticipants from '@/pages/frn/FRNParticipants';
 import FRNIntake from '@/pages/frn/FRNIntake';
 import FRNAssessments from '@/pages/frn/FRNAssessments';
+import FRNSessions from '@/pages/frn/FRNSessions';
 
 // PHAC Programs Portal
 import PHACLayout from '@/components/phac/PHACLayout';
@@ -614,6 +615,7 @@ const AuthenticatedApp = () => {
           <Route path="/frn/participants" element={<FRNParticipants />} />
           <Route path="/frn/intake" element={<FRNIntake />} />
           <Route path="/frn/assessments" element={<FRNAssessments />} />
+          <Route path="/frn/sessions" element={<FRNSessions />} />
         </Route>
 
         {/* PHAC Programs Portal - standalone layout */}

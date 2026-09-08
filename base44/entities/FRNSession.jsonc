@@ -1,10 +1,10 @@
 {
-  "name": "DigiLitSession",
+  "name": "FRNSession",
   "type": "object",
   "properties": {
-    "title": {
+    "program_name": {
       "type": "string",
-      "description": "Session title/topic (e.g. 'Email Basics', 'Internet Safety')"
+      "description": "FRN targeted program this session belongs to (Connect Parent Group, Wellness Compass, Neurodivergent Parenting Group, Triple P, Nobody's Perfect)"
     },
     "session_date": {
       "type": "string",
@@ -21,7 +21,7 @@
     },
     "location": {
       "type": "string",
-      "description": "Where the session is held"
+      "description": "Location details (shown on calendar listings)"
     },
     "room": {
       "type": "string",
@@ -53,43 +53,7 @@
     },
     "facilitator_name": {
       "type": "string",
-      "description": "Volunteer facilitator leading the session"
-    },
-    "facilitator_email": {
-      "type": "string"
-    },
-    "topic_area": {
-      "type": "string",
-      "enum": [
-        "computer_basics",
-        "internet_email",
-        "smartphone_basics",
-        "online_safety",
-        "job_search_online",
-        "office_software",
-        "social_media",
-        "other"
-      ],
-      "default": "computer_basics",
-      "description": "Topic category"
-    },
-    "max_participants": {
-      "type": "number",
-      "default": 10
-    },
-    "registered_participant_ids": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "IDs of registered DigiLitParticipants"
-    },
-    "attended_participant_ids": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "IDs of participants who attended"
+      "description": "Staff/volunteer facilitating the session"
     },
     "status": {
       "type": "string",
@@ -98,14 +62,15 @@
         "completed",
         "cancelled"
       ],
-      "default": "scheduled"
+      "default": "scheduled",
+      "description": "Session status"
     },
     "notes": {
       "type": "string"
     }
   },
   "required": [
-    "title",
+    "program_name",
     "session_date"
   ]
 }

@@ -8,6 +8,15 @@ export const FRN_PROGRAMS = [
 
 export const PROGRAM_LABELS = Object.fromEntries(FRN_PROGRAMS.map(p => [p.value, p.label]));
 
+// FRN targeted programs that sessions can be scheduled for (used in Central Registration and the FRN portal).
+export const FRN_TARGETED_PROGRAM_NAMES = ['Connect Parent Group', 'Wellness Compass', 'Neurodivergent Parenting Group', 'Triple P', "Nobody's Perfect"];
+
+export const FRN_SESSION_STATUS_OPTIONS = [
+  { value: 'scheduled', label: 'Scheduled', color: '#3b82f6' },
+  { value: 'completed', label: 'Completed', color: '#22c55e' },
+  { value: 'cancelled', label: 'Cancelled', color: '#ef4444' },
+];
+
 export const REFERRAL_STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending', color: '#f59e0b' },
   { value: 'assessment_scheduled', label: 'Assessment Scheduled', color: '#3b82f6' },

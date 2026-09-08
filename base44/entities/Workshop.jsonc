@@ -52,9 +52,11 @@
         "large_classroom",
         "small_classroom",
         "employment_classroom",
+        "arc",
+        "virtual",
         "other"
       ],
-      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, or Other space)"
+      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Virtual, or Other space)"
     },
     "capacity": {
       "type": "number",

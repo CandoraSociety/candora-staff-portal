@@ -13,7 +13,7 @@
     "session_date": {
       "type": "string",
       "format": "date",
-      "description": "Date of the drop-in session"
+      "description": "Date of the drop-in session (base date for recurring sessions)"
     },
     "start_time": {
       "type": "string",
@@ -33,9 +33,27 @@
         "large_classroom",
         "small_classroom",
         "employment_classroom",
+        "arc",
+        "virtual",
         "other"
       ],
-      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, or Other space)"
+      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Virtual, or Other space)"
+    },
+    "recurrence_pattern": {
+      "type": "string",
+      "enum": [
+        "none",
+        "weekly",
+        "biweekly",
+        "monthly"
+      ],
+      "default": "none",
+      "description": "How the session recurs from the base date (expanded on the Central Registration calendar)"
+    },
+    "recurrence_end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last recurrence date (blank for a one-off session)"
     },
     "facilitator": {
       "type": "string",

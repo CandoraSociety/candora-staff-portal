@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { COHORT_STATUS_OPTIONS, DELIVERY_MODE_OPTIONS } from '@/lib/empoweruConstants';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const EMPTY = { name: '', start_date: '', end_date: '', delivery_mode: 'virtual', location: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: false, registration_deadline: '', status: 'planning', notes: '' };
 
@@ -43,6 +44,7 @@ export default function CohortFormDialog({ open, onOpenChange, cohort, onSaved }
           <div className="space-y-1.5"><Label>Delivery Mode</Label><Select value={form.delivery_mode || 'virtual'} onValueChange={(v) => update('delivery_mode', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DELIVERY_MODE_OPTIONS.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" min="1" value={form.capacity ?? 15} onChange={(e) => update('capacity', parseInt(e.target.value) || 15)} /></div>
           <div className="space-y-1.5 col-span-2"><Label>Location / Meeting Link</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+          <div className="space-y-1.5 col-span-2"><Label>Room</Label><Select value={form.room || 'none'} onValueChange={(v) => update('room', v === 'none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="none">Other / TBC</SelectItem>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Facilitator Phone</Label><Input value={form.facilitator_phone || ''} onChange={(e) => update('facilitator_phone', e.target.value)} /></div>
           <div className="space-y-1.5 col-span-2"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { ROOM_OPTIONS } from "@/lib/centralRegConstants";
 import { BookOpen, Plus, Search, Pencil, Trash2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ function ClassFormDialog({ cls, instructors, courses, onClose }) {
     start_time: cls?.start_time || "",
     end_time: cls?.end_time || "",
     location: cls?.location || "",
+    room: cls?.room || "",
     capacity: cls?.capacity || 15,
     start_date: cls?.start_date || "",
     end_date: cls?.end_date || "",
@@ -168,10 +170,20 @@ function ClassFormDialog({ cls, instructors, courses, onClose }) {
               <Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <Label>Location</Label>
               <Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+            </div>
+            <div>
+              <Label>Room</Label>
+              <Select value={form.room || "none"} onValueChange={(v) => setForm({ ...form, room: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Other / TBC</SelectItem>
+                  {ROOM_OPTIONS.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Capacity</Label>

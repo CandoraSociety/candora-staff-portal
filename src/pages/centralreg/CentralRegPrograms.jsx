@@ -91,6 +91,7 @@ export default function CentralRegPrograms() {
   const { data: phacSessions = [] } = useQuery({ queryKey: ['cr-phac-sessions'], queryFn: () => base44.entities.PHACSession.list('-session_date', 500) });
   const { data: ellClasses = [] } = useQuery({ queryKey: ['cr-ell-classes'], queryFn: () => base44.entities.ELLClass.list() });
   const { data: digilitSessions = [] } = useQuery({ queryKey: ['cr-digilit-sessions'], queryFn: () => base44.entities.DigiLitSession.list('-session_date', 500) });
+  const { data: frnSessions = [] } = useQuery({ queryKey: ['cr-frn-sessions'], queryFn: () => base44.entities.FRNSession.list('-session_date', 500) });
 
   const openDialog = (area, program = null) => setDialog({ area, program });
 
@@ -205,7 +206,16 @@ export default function CentralRegPrograms() {
           <CategorySection title="FRN Targeted Programs" description="Family Resource Network targeted groups." portalPath={REG_AREA_PATHS.frn} capacityControl={capacityControlFor('frn')}>
             <div className="space-y-2">
               {FRN_TARGETED_PROGRAMS.map(name => (
-                <ProgramCard key={name} title={name} subtitle="FRN targeted group — the registration appears in the FRN portal and under All Registrations" isFull={isAreaFull('frn')} onRegister={() => openDialog('frn', { name })} />
+                <ProgramCard
+                  key={name}
+                  title={name}
+                  subtitle="FRN targeted group — the registration appears in the FRN portal and under All Registrations"
+                  isFull={isAreaFull('frn')}
+                  noSessions={!frnSessions.some(s => s.program_name === name && s.status !== 'cancelled')}
+                  sessionLabel="Session"
+                  onCreateSession={() => setSessionDialog({ area: 'frn', program: { name } })}
+                  onRegister={() => openDialog('frn', { name })}
+                />
               ))}
             </div>
           </CategorySection>

@@ -12,14 +12,38 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { TOPIC_AREA_OPTIONS } from '@/lib/digilitConstants';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import { FRN_TARGETED_PROGRAM_NAMES } from '@/lib/frnConstants';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const CLB_LEVELS = ['mixed', 'clb_1', 'clb_2', 'clb_3', 'clb_4', 'clb_5', 'clb_6', 'clb_7', 'clb_8', 'clb_9', 'clb_10', 'clb_11', 'clb_12'];
 const todayStr = () => new Date().toISOString().split('T')[0];
 
 const AREA_LABELS = {
-  community: 'Session', phac: 'Session', digilit: 'Session', ell: 'Class', empoweru: 'Cohort',
+  community: 'Session', phac: 'Session', frn: 'Session', digilit: 'Session', ell: 'Class', empoweru: 'Cohort',
 };
+
+// Recurrence parameters shared by session-type creation areas (community, phac, digilit, frn).
+function RecurrenceFields({ form, update }) {
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label>Repeats</Label>
+        <Select value={form.recurrence_pattern || 'none'} onValueChange={(v) => update('recurrence_pattern', v)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Does not repeat</SelectItem>
+            <SelectItem value="weekly">Weekly</SelectItem>
+            <SelectItem value="biweekly">Bi-weekly</SelectItem>
+            <SelectItem value="monthly">Monthly</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {form.recurrence_pattern && form.recurrence_pattern !== 'none' ? (
+        <div className="space-y-1.5"><Label>Repeat Until</Label><Input type="date" value={form.recurrence_end_date || ''} onChange={(e) => update('recurrence_end_date', e.target.value)} /></div>
+      ) : <div />}
+    </>
+  );
+}
 
 // Creates a session/class/cohort directly in the program's HOME-PORTAL entity,
 // so it appears in both Central Registration and the program's own portal.
@@ -33,10 +57,11 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
 
   useEffect(() => {
     if (!open) return;
-    if (area === 'community') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', title: '', room: '' });
-    else if (area === 'phac') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', start_time: program?.start_time || '', end_time: program?.end_time || '', location: program?.location || '', facilitator: program?.facilitator || '', room: '' });
+    if (area === 'community') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', title: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '' });
+    else if (area === 'phac') setForm({ session_date: todayStr(), status: 'scheduled', program_id: program?.id || '', program_name: program?.name || '', start_time: program?.start_time || '', end_time: program?.end_time || '', location: program?.location || '', facilitator: program?.facilitator || '', room: '', recurrence_pattern: 'none', recurrence_end_date: '' });
+    else if (area === 'frn') setForm({ session_date: todayStr(), status: 'scheduled', program_name: program?.name || '', start_time: '', end_time: '', location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator_name: '', notes: '' });
     else if (area === 'ell') setForm({ name: '', clb_level: 'mixed', instructor_id: '', schedule_days: [], start_time: '', end_time: '', location: '', room: '', capacity: 15, start_date: '', end_date: '', description: '', status: 'active' });
-    else if (area === 'digilit') setForm({ session_date: todayStr(), status: 'scheduled', title: '', topic_area: 'computer_basics', start_time: '', end_time: '', location: '', room: '', max_participants: 10, facilitator_name: '' });
+    else if (area === 'digilit') setForm({ session_date: todayStr(), status: 'scheduled', title: '', topic_area: 'computer_basics', start_time: '', end_time: '', location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', max_participants: 10, facilitator_name: '' });
     else if (area === 'empoweru') setForm({ name: '', start_date: '', end_date: '', delivery_mode: 'virtual', location: '', room: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: true, status: 'registration_open' });
   }, [open, area, program]);
 
@@ -45,7 +70,8 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
   const toggleDay = (d) => setForm(p => ({ ...p, schedule_days: (p.schedule_days || []).includes(d) ? (p.schedule_days || []).filter(x => x !== d) : [...(p.schedule_days || []), d] }));
 
   const handleSave = async () => {
-    if (['community', 'phac'].includes(area) && !form.session_date) { toast({ title: 'Session date is required', variant: 'destructive' }); return; }
+    if (['community', 'phac', 'frn'].includes(area) && !form.session_date) { toast({ title: 'Session date is required', variant: 'destructive' }); return; }
+    if (area === 'frn' && !form.program_name) { toast({ title: 'Program is required', variant: 'destructive' }); return; }
     if (area === 'digilit' && (!form.title || !form.session_date)) { toast({ title: 'Title and date are required', variant: 'destructive' }); return; }
     if (area === 'ell' && !form.name) { toast({ title: 'Class name is required', variant: 'destructive' }); return; }
     if (area === 'empoweru' && !form.name) { toast({ title: 'Cohort name is required', variant: 'destructive' }); return; }
@@ -58,7 +84,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
         const instr = instructors.find(i => i.id === form.instructor_id);
         payload.instructor_name = instr ? `${instr.first_name} ${instr.last_name}` : '';
       }
-      const entity = { community: 'CommunitySession', phac: 'PHACSession', ell: 'ELLClass', digilit: 'DigiLitSession', empoweru: 'EmpowerUCohort' }[area];
+      const entity = { community: 'CommunitySession', phac: 'PHACSession', frn: 'FRNSession', ell: 'ELLClass', digilit: 'DigiLitSession', empoweru: 'EmpowerUCohort' }[area];
       await base44.entities[entity].create(payload);
       toast({ title: `${label} created`, description: 'It now appears in both Central Registration and the program\'s home portal.' });
       onSaved?.();
@@ -86,6 +112,7 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               {area === 'community' && <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>}
               {area === 'community' && <div className="space-y-1.5"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>}
               {area === 'phac' && <div className="space-y-1.5"><Label>Facilitator</Label><Input value={form.facilitator || ''} onChange={(e) => update('facilitator', e.target.value)} /></div>}
+              {['community', 'phac', 'frn'].includes(area) && <RecurrenceFields form={form} update={update} />}
               <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
             </>
           )}
@@ -117,6 +144,19 @@ export default function CreateSessionDialog({ open, onOpenChange, area, program,
               <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1.5"><Label>Max Participants</Label><Input type="number" min="1" value={form.max_participants ?? 10} onChange={(e) => update('max_participants', parseInt(e.target.value) || 10)} /></div>
               <div className="col-span-2 space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} placeholder="Volunteer facilitator" /></div>
+              <RecurrenceFields form={form} update={update} />
+            </>
+          )}
+          {area === 'frn' && (
+            <>
+              <div className="col-span-2 space-y-1.5"><Label>Program *</Label><Select value={form.program_name || ''} onValueChange={(v) => update('program_name', v)}><SelectTrigger><SelectValue placeholder="Select program..." /></SelectTrigger><SelectContent>{FRN_TARGETED_PROGRAM_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label>Date *</Label><Input type="date" value={form.session_date || ''} onChange={(e) => update('session_date', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Facilitator</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
             </>
           )}
           {area === 'empoweru' && (

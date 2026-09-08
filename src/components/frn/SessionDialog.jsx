@@ -1,0 +1,68 @@
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import { FRN_TARGETED_PROGRAM_NAMES, FRN_SESSION_STATUS_OPTIONS } from '@/lib/frnConstants';
+
+const EMPTY = { program_name: '', session_date: '', start_time: '', end_time: '', location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator_name: '', status: 'scheduled', notes: '' };
+
+export default function SessionDialog({ open, onOpenChange, session, presetProgramName, onSaved }) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+
+  useEffect(() => {
+    if (open) setForm(session ? { ...EMPTY, ...session } : { ...EMPTY, program_name: presetProgramName || '', session_date: new Date().toISOString().split('T')[0] });
+  }, [open, session, presetProgramName]);
+
+  const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
+
+  const handleSave = async () => {
+    if (!form.program_name || !form.session_date) { toast({ title: 'Program and date are required', variant: 'destructive' }); return; }
+    setSaving(true);
+    try {
+      if (session) await base44.entities.FRNSession.update(session.id, form);
+      else await base44.entities.FRNSession.create(form);
+      toast({ title: session ? 'Session updated' : 'Session created' });
+      onSaved?.();
+    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>{session ? 'Edit Session' : 'New Session'}</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5 col-span-2">
+            <Label>Program *</Label>
+            <Select value={form.program_name || ''} onValueChange={(v) => update('program_name', v)}>
+              <SelectTrigger><SelectValue placeholder="Select program..." /></SelectTrigger>
+              <SelectContent>{FRN_TARGETED_PROGRAM_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5"><Label>Date *</Label><Input type="date" value={form.session_date || ''} onChange={(e) => update('session_date', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Status</Label><Select value={form.status || 'scheduled'} onValueChange={(v) => update('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FRN_SESSION_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Facilitator</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Room *</Label><Select value={form.room || ''} onValueChange={(v) => update('room', v)}><SelectTrigger><SelectValue placeholder="Select room..." /></SelectTrigger><SelectContent>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Repeats</Label><Select value={form.recurrence_pattern || 'none'} onValueChange={(v) => update('recurrence_pattern', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Does not repeat</SelectItem><SelectItem value="weekly">Weekly</SelectItem><SelectItem value="biweekly">Bi-weekly</SelectItem><SelectItem value="monthly">Monthly</SelectItem></SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Repeat Until</Label><Input type="date" value={form.recurrence_end_date || ''} onChange={(e) => update('recurrence_end_date', e.target.value)} disabled={!form.recurrence_pattern || form.recurrence_pattern === 'none'} /></div>
+          <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -19,17 +19,31 @@ export const REG_AREA_PATHS = Object.fromEntries(REG_AREA_OPTIONS.map(a => [a.ke
 
 // Rooms used for scheduling sessions/classes on the Central Registration calendar.
 export const ROOM_OPTIONS = [
-  { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb' },
   { value: 'small_classroom', label: 'Small Classroom', abbr: 'SC', color: '#0d9488' },
   { value: 'employment_classroom', label: 'Employment Classroom', abbr: 'EC', color: '#d97706' },
+  { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb' },
+  { value: 'arc', label: 'ARC', abbr: 'ARC', color: '#9333ea' },
+  { value: 'virtual', label: 'Virtual', abbr: 'V', color: '#0891b2' },
   { value: 'other', label: 'Other', abbr: 'O', color: '#64748b' },
 ];
 export const ROOM_ABBRS = Object.fromEntries(ROOM_OPTIONS.map(r => [r.value, r.abbr]));
+export const ROOM_LABELS = Object.fromEntries(ROOM_OPTIONS.map(r => [r.value, r.label]));
+
+// Month-grid quadrants: the three classrooms each get their own fixed quadrant.
+// ARC and Other sessions share the "Other / ARC" quadrant; Virtual sessions render
+// as a thin bar at the bottom of the date cell instead of taking a room quadrant.
+export const ROOM_QUADRANTS = [
+  { value: 'small_classroom', label: 'Small Classroom', abbr: 'SC', color: '#0d9488', matches: ['small_classroom'] },
+  { value: 'employment_classroom', label: 'Employment Classroom', abbr: 'EC', color: '#d97706', matches: ['employment_classroom'] },
+  { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb', matches: ['large_classroom'] },
+  { value: 'other', label: 'Other / ARC', abbr: 'O', color: '#64748b', matches: ['other', 'arc'] },
+];
 
 // Sources shown on the Central Registration calendar.
 export const CALENDAR_SOURCES = [
   { key: 'pathways', label: 'Pathways Workshops', color: '#dc2626' },
   { key: 'community', label: 'Community Programs', color: '#16a34a' },
+  { key: 'frn', label: 'FRN Programs', color: '#14b8a6' },
   { key: 'phac', label: 'PHAC Programs', color: '#0ea5e9' },
   { key: 'digilit', label: 'Digital Literacy', color: '#ca8a04' },
   { key: 'ell', label: 'ELL Classes', color: '#7c3aed' },

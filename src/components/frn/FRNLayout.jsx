@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Users, ClipboardList, CheckSquare, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Users, ClipboardList, CheckSquare, LayoutDashboard, Menu, X, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { path: '/frn/participants', label: 'Participants', icon: Users },
   { path: '/frn/intake', label: 'Intake & Referrals', icon: ClipboardList },
   { path: '/frn/assessments', label: 'Assessments', icon: CheckSquare },
+  { path: '/frn/sessions', label: 'Sessions', icon: CalendarDays },
 ];
 
 export default function FRNLayout() {

@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { SESSION_STATUS_OPTIONS, TOPIC_AREA_OPTIONS } from '@/lib/digilitConstants';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
-const EMPTY = { title: '', session_date: '', start_time: '', end_time: '', location: '', facilitator_name: '', facilitator_email: '', topic_area: 'computer_basics', max_participants: 10, registered_participant_ids: [], attended_participant_ids: [], status: 'scheduled', notes: '' };
+const EMPTY = { title: '', session_date: '', start_time: '', end_time: '', location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator_name: '', facilitator_email: '', topic_area: 'computer_basics', max_participants: 10, registered_participant_ids: [], attended_participant_ids: [], status: 'scheduled', notes: '' };
 
 export default function SessionDialog({ open, onOpenChange, session, onSaved }) {
   const { toast } = useToast();
@@ -50,10 +51,13 @@ export default function SessionDialog({ open, onOpenChange, session, onSaved }) 
           <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Room</Label><Select value={form.room || 'none'} onValueChange={(v) => update('room', v === 'none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="none">Other / TBC</SelectItem>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Max Participants</Label><Input type="number" min="1" value={form.max_participants ?? 10} onChange={(e) => update('max_participants', parseInt(e.target.value) || 10)} /></div>
           <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} placeholder="Volunteer facilitator" /></div>
           <div className="space-y-1.5"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Status</Label><Select value={form.status || 'scheduled'} onValueChange={(v) => update('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{SESSION_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Repeats</Label><Select value={form.recurrence_pattern || 'none'} onValueChange={(v) => update('recurrence_pattern', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Does not repeat</SelectItem><SelectItem value="weekly">Weekly</SelectItem><SelectItem value="biweekly">Bi-weekly</SelectItem><SelectItem value="monthly">Monthly</SelectItem></SelectContent></Select></div>
+          <div className="space-y-1.5"><Label>Repeat Until</Label><Input type="date" value={form.recurrence_end_date || ''} onChange={(e) => update('recurrence_end_date', e.target.value)} disabled={!form.recurrence_pattern || form.recurrence_pattern === 'none'} /></div>
           <div className="col-span-2 mt-1"><Label className="text-sm font-medium">Registered Participants ({(form.registered_participant_ids || []).length})</Label><div className="max-h-40 overflow-y-auto border rounded-md p-2 mt-1 space-y-1">{participants.length === 0 ? <p className="text-xs text-muted-foreground text-center py-2">No participants registered yet</p> : participants.map(p => <div key={p.id} className="flex items-center gap-2"><input type="checkbox" checked={(form.registered_participant_ids || []).includes(p.id)} onChange={() => toggleParticipant(p.id)} className="rounded" /><span className="text-sm">{p.first_name} {p.last_name}{p.status === 'completed' ? ' ✓' : ''}</span></div>)}</div></div>
           <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
         </div>

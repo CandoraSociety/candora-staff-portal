@@ -10,10 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { SESSION_STATUS_OPTIONS, isOffSeason } from '@/lib/phacConstants';
+import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const EMPTY = {
   program_id: '', program_name: '', session_date: '', start_time: '', end_time: '',
-  location: '', facilitator: '', attendee_count: 0, adult_count: 0, child_count: 0,
+  location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator: '',
+  attendee_count: 0, adult_count: 0, child_count: 0,
   status: 'scheduled', notes: '',
 };
 
@@ -117,6 +119,34 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
             <Label>Facilitator</Label>
             <Input value={form.facilitator || ''} onChange={(e) => update('facilitator', e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <Label>Room</Label>
+            <Select value={form.room || 'none'} onValueChange={(v) => update('room', v === 'none' ? '' : v)}>
+              <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Other / TBC</SelectItem>
+                {ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Repeats</Label>
+            <Select value={form.recurrence_pattern || 'none'} onValueChange={(v) => update('recurrence_pattern', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Does not repeat</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {form.recurrence_pattern && form.recurrence_pattern !== 'none' && (
+            <div className="space-y-1.5">
+              <Label>Repeat Until</Label>
+              <Input type="date" value={form.recurrence_end_date || ''} onChange={(e) => update('recurrence_end_date', e.target.value)} />
+            </div>
+          )}
           {offSeason && (
             <div className="col-span-2">
               <Alert>

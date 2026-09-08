@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROOM_OPTIONS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
+import { ROOM_OPTIONS, ROOM_QUADRANTS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
 import { DayRoomView, WeekRoomView } from '@/components/centralreg/RoomScheduleViews';
 
 const parseLocalDate = (str) => {
@@ -66,8 +66,9 @@ function expandWorkshop(w, monthStart, monthEnd) {
   return dates.map(d => makeEvent('pathways', w.title, d, w.start_time, w.end_time, w.location, w.facilitator_name, w.room));
 }
 
-// Community sessions — single date, or expanded from a recurrence pattern
-function expandCommunitySession(s, monthStart, monthEnd) {
+// Session-style records (Community / PHAC / Digital Literacy / FRN) — single
+// date, or expanded from a recurrence pattern onto the calendar.
+function expandRecSession(source, s, monthStart, monthEnd, titleFn) {
   const base = parseLocalDate(s.session_date);
   if (!base) return [];
   const dates = [];
@@ -87,7 +88,7 @@ function expandCommunitySession(s, monthStart, monthEnd) {
       guard++;
     }
   }
-  return dates.map(d => makeEvent('community', s.title || s.program_name || 'Community Session', d, s.start_time, s.end_time, s.location, s.facilitator_name, s.room));
+  return dates.map(d => makeEvent(source, titleFn(s), d, s.start_time, s.end_time, s.location, s.facilitator_name || s.facilitator, s.room));
 }
 
 function addSessionEvents(list, records, source, monthStart, monthEnd, titleFn) {
@@ -113,6 +114,7 @@ export default function CentralRegCalendar() {
   const volunteerQ = useQuery({ queryKey: ['centralreg-cal-volunteer'], queryFn: () => base44.entities.VolunteerEvent.list() });
   const ellQ = useQuery({ queryKey: ['centralreg-cal-ell'], queryFn: () => base44.entities.ELLClass.list() });
   const empoweruQ = useQuery({ queryKey: ['centralreg-cal-empoweru'], queryFn: () => base44.entities.EmpowerUCohort.list() });
+  const frnQ = useQuery({ queryKey: ['centralreg-cal-frn'], queryFn: () => base44.entities.FRNSession.list() });
 
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
@@ -120,9 +122,10 @@ export default function CentralRegCalendar() {
   const events = useMemo(() => {
     const list = [];
     (workshopsQ.data || []).forEach(w => list.push(...expandWorkshop(w, monthStart, monthEnd)));
-    (communityQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandCommunitySession(s, monthStart, monthEnd)));
-    addSessionEvents(list, phacQ.data, 'phac', monthStart, monthEnd, s => s.program_name || 'PHAC Session');
-    addSessionEvents(list, digilitQ.data, 'digilit', monthStart, monthEnd, s => s.title || 'Digital Literacy Session');
+    (communityQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandRecSession('community', s, monthStart, monthEnd, x => x.title || x.program_name || 'Community Session')));
+    (phacQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandRecSession('phac', s, monthStart, monthEnd, x => x.program_name || 'PHAC Session')));
+    (digilitQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandRecSession('digilit', s, monthStart, monthEnd, x => x.title || 'Digital Literacy Session')));
+    (frnQ.data || []).filter(s => s.status !== 'cancelled').forEach(s => list.push(...expandRecSession('frn', s, monthStart, monthEnd, x => x.program_name || 'FRN Session')));
     addSessionEvents(list, childmindingQ.data, 'childminding', monthStart, monthEnd, s => s.title || 'Childminding');
     addSessionEvents(list, volunteerQ.data, 'volunteer', monthStart, monthEnd, s => s.title || 'Volunteer Event');
 
@@ -151,7 +154,7 @@ export default function CentralRegCalendar() {
 
     list.sort((a, b) => a.date - b.date || toMinutes(a.startTime) - toMinutes(b.startTime));
     return list;
-  }, [workshopsQ.data, communityQ.data, phacQ.data, digilitQ.data, childmindingQ.data, volunteerQ.data, ellQ.data, empoweruQ.data, monthStart, monthEnd]);
+  }, [workshopsQ.data, communityQ.data, phacQ.data, digilitQ.data, frnQ.data, childmindingQ.data, volunteerQ.data, ellQ.data, empoweruQ.data, monthStart, monthEnd]);
 
   const visible = useMemo(
     () => events.filter(e =>
@@ -293,14 +296,17 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  {/* Fixed room quadrants — same position in every date cell, filling the whole cell so you can see at a glance whether a room is booked or free */}
+                  {/* Fixed room quadrants — same position in every date cell, filling the whole cell so you can see at a glance whether a room is booked or free.
+                      ARC and Other sessions share the "Other / ARC" quadrant (with the ARC count indicated); Virtual sessions render as a thin bar below the quadrants. */}
                   <div className="grid grid-cols-2 grid-rows-2 gap-0.5 mt-1 flex-1 min-h-0">
-                    {ROOM_OPTIONS.map(r => {
-                      const count = dayEvents.filter(e => e.room === r.value).length;
+                    {ROOM_QUADRANTS.map(r => {
+                      const matched = dayEvents.filter(e => r.matches.includes(e.room));
+                      const count = matched.length;
+                      const arcCount = matched.filter(e => e.room === 'arc').length;
                       return (
                         <div
                           key={r.value}
-                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''}` : `${r.label}: available`}
+                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''}${arcCount ? ` (ARC: ${arcCount})` : ''}` : `${r.label}: available`}
                           className={cn(
                             'rounded flex flex-col items-center justify-center leading-none border overflow-hidden',
                             count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
@@ -309,12 +315,24 @@ export default function CentralRegCalendar() {
                         >
                           <span className="text-[10px] font-bold">{r.abbr}</span>
                           {count > 0
-                            ? <span className="text-[9px] opacity-90 mt-0.5">{count} booked</span>
+                            ? <span className="text-[9px] opacity-90 mt-0.5">{count} booked{arcCount ? ` · ARC ${arcCount}` : ''}</span>
                             : <span className="text-[9px] opacity-70 mt-0.5">free</span>}
                         </div>
                       );
                     })}
                   </div>
+                  {(() => {
+                    const virtual = dayEvents.filter(e => e.room === 'virtual');
+                    if (!virtual.length) return null;
+                    return (
+                      <div
+                        title={virtual.map(e => e.title).join(', ')}
+                        className="mt-0.5 h-2.5 rounded bg-cyan-700/80 overflow-hidden flex items-center px-1"
+                      >
+                        <span className="text-[8px] font-semibold text-white leading-none truncate">Virtual × {virtual.length}</span>
+                      </div>
+                    );
+                  })()}
                   {dayEvents.some(e => !e.room) && (
                     <div className="text-[9px] text-muted-foreground mt-0.5 px-0.5">+{dayEvents.filter(e => !e.room).length} no room</div>
                   )}
