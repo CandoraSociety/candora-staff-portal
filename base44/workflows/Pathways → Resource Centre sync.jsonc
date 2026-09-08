@@ -1,0 +1,38 @@
+{
+  "name": "Pathways \u2192 Resource Centre sync",
+  "description": "Auto-create/update a Resource Centre (RCClient) record from a Pathways CM client, mirroring personal details and maintaining a Pathways program summary (start date, anticipated completion, career counsellor, service navigator).",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "Client"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "pathways_resource_centre_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncPathwaysClientToRC",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncPathwaysClientToRC"
+  }
+}

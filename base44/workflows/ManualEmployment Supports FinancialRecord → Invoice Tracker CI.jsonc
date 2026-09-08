@@ -1,0 +1,39 @@
+{
+  "name": "Manual/Employment Supports FinancialRecord \u2192 Invoice Tracker CI",
+  "description": "When an employment_supports FinancialRecord is created, updated, or deleted (incl. manual entries from the Supporting Documents tab), recompute that billing month's running employment-supports reimbursable total into Invoice Tracker column CI.",
+  "trigger": {
+    "condition": "${ (.trigger.data.record_type == \"employment_supports\") }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "FinancialRecord"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "manual_employment_supports_financialrecord_invoice_tracker_ci",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncEmploymentSupportsToInvoiceTracker",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncEmploymentSupportsToInvoiceTracker"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "Auto-Sync Exposure Course Approval",
+  "description": "When an exposure_course PurchaseRequest is approved with payment details and not yet linked to a FinancialRecord, create that FinancialRecord, link it, and sync the cumulative month total to CRT Invoice Tracker columns CF (DEA) / CG (WD). Backend-triggered so billing fires on the actual state change, independent of the determination dialog's frontend bundle.",
+  "trigger": {
+    "condition": "${ ((.trigger.data.request_type == \"exposure_course\") and (.trigger.data.status == \"approved\")) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "update",
+        "create"
+      ],
+      "entity_name": "PurchaseRequest"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_sync_exposure_course_approval",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "autoSyncExposureCourseApproval",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "autoSyncExposureCourseApproval"
+  }
+}

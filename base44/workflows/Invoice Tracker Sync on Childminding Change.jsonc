@@ -1,0 +1,39 @@
+{
+  "name": "Invoice Tracker Sync on Childminding Change",
+  "description": "When a ChildmindingRecord is created, updated, or deleted, re-sync the affected month's Pathways childminding billing total into column CH of the matching month row on the active CRT workbook's Invoice Tracker sheet. A date change re-syncs both the old and new month.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "ChildmindingRecord"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "invoice_tracker_sync_on_childminding_change",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncChildmindingToInvoiceTracker",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncChildmindingToInvoiceTracker"
+  }
+}

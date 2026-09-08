@@ -1,0 +1,39 @@
+{
+  "name": "Work Exposure Hours \u2192 Invoice Tracker CJ",
+  "description": "Whenever an employer/staff work exposure hours submission is created, updated, or deleted, recompute the running paid-work-exposure dollar total (column CJ) for that submission's billing month in the CRT Invoice Tracker.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "WorkExposureHoursSubmission"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "work_exposure_hours_invoice_tracker_cj",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncWorkExposureToInvoiceTracker",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncWorkExposureToInvoiceTracker"
+  }
+}

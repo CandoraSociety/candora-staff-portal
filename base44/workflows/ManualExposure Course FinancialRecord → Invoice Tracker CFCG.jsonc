@@ -1,0 +1,39 @@
+{
+  "name": "Manual/Exposure Course FinancialRecord \u2192 Invoice Tracker CF/CG",
+  "description": "When an exposure_course FinancialRecord is created, updated, or deleted (incl. manual entries from the Supporting Documents tab), recompute that billing month's running exposure-course reimbursable totals (split DEA/WD) into Invoice Tracker columns CF/CG and Deliverables row 17.",
+  "trigger": {
+    "condition": "${ (.trigger.data.record_type == \"exposure_course\") }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "FinancialRecord"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "manual_exposure_course_financialrecord_invoice_tracker_cf_cg",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncExposureCoursesToInvoiceTracker",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncExposureCoursesToInvoiceTracker"
+  }
+}

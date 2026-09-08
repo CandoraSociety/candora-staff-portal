@@ -1,0 +1,39 @@
+{
+  "name": "Manual/Work Exposure FinancialRecord \u2192 Invoice Tracker CJ",
+  "description": "When a paid_external_placement FinancialRecord is created, updated, or deleted (incl. manual entries from the Supporting Documents tab), recompute that billing month's running paid-work-exposure total into Invoice Tracker column CJ.",
+  "trigger": {
+    "condition": "${ (.trigger.data.record_type == \"paid_external_placement\") }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "FinancialRecord"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "manual_work_exposure_financialrecord_invoice_tracker_cj",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncWorkExposureToInvoiceTracker",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "syncWorkExposureToInvoiceTracker"
+  }
+}
