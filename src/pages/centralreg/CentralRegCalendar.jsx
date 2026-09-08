@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROOM_OPTIONS, ROOM_STACK, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
+import { ROOM_OPTIONS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
 import { DayRoomView, WeekRoomView } from '@/components/centralreg/RoomScheduleViews';
 import DetailedDayView from '@/components/centralreg/DetailedDayView';
 
@@ -184,6 +184,10 @@ export default function CentralRegCalendar() {
     setRoomFilter(prev => prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]);
   };
 
+  // Rooms actually shown on the Month / Week views — when filtering, only the
+  // selected rooms appear (stretched to fill the space).
+  const shownRooms = roomFilter.length ? ROOM_OPTIONS.filter(r => roomFilter.includes(r.value)) : ROOM_OPTIONS;
+
   const goPrev = () => {
     if (view === 'month') { setMonth(m => startOfMonth(addMonths(m, -1))); return; }
     const n = view === 'week' ? addDays(selectedDay, -7) : addDays(selectedDay, -1);
@@ -240,6 +244,7 @@ export default function CentralRegCalendar() {
             </button>
           );
         })}
+        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSourceFilter(SOURCES.map(s => s.key))}>Select all</Button>
         {sourceFilter.length > 0 && (
           <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSourceFilter([])}>Clear filters</Button>
         )}
@@ -262,6 +267,7 @@ export default function CentralRegCalendar() {
             </button>
           );
         })}
+        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setRoomFilter(ROOM_OPTIONS.map(r => r.value))}>Select all</Button>
         {roomFilter.length > 0 && (
           <Button variant="ghost" size="sm" className="text-xs" onClick={() => setRoomFilter([])}>Clear rooms</Button>
         )}
@@ -297,23 +303,27 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  {/* Vertical room stack — one row per room (incl. Echo Valley and Virtual), same position in every date cell, so you can see at a glance whether a room is booked or free. */}
+                  {/* Vertical room stack — one row per selected room, each split into AM / PM halves so only the part of the day that is actually booked is highlighted. */}
                   <div className="flex flex-col gap-0.5 mt-1 flex-1 min-h-0">
-                    {ROOM_STACK.map(r => {
-                      const matched = dayEvents.filter(e => r.matches.includes(e.room));
-                      const count = matched.length;
+                    {shownRooms.map(r => {
+                      const matched = dayEvents.filter(e => e.room === r.value);
+                      const am = matched.filter(e => e.startTime && toMinutes(e.startTime) < 720);
+                      const pm = matched.filter(e => !e.startTime || toMinutes(e.startTime) >= 720);
                       return (
-                        <div
-                          key={r.value}
-                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''} — ${matched.map(e => e.title).join(', ')}` : `${r.label}: available`}
-                          className={cn(
-                            'rounded flex items-center justify-between gap-1 px-1 py-[3px] leading-none border overflow-hidden',
-                            count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
-                          )}
-                          style={count > 0 ? { backgroundColor: r.color } : undefined}
-                        >
-                          <span className="text-[9px] font-bold">{r.abbr}</span>
-                          <span className="text-[8px] opacity-90 truncate">{count > 0 ? `${count} booked` : 'free'}</span>
+                        <div key={r.value} className="flex-1 flex gap-0.5 min-h-0">
+                          {[['AM', am], ['PM', pm]].map(([half, list]) => (
+                            <div
+                              key={half}
+                              title={`${r.label} ${half}: ${list.length ? list.map(e => `${e.startTime || ''} ${e.title}`).join(', ') : 'free'}`}
+                              className={cn(
+                                'flex-1 rounded flex items-center justify-center leading-none border overflow-hidden',
+                                list.length ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
+                              )}
+                              style={list.length ? { backgroundColor: r.color } : undefined}
+                            >
+                              <span className="text-[8px] font-bold">{list.length ? `${r.abbr} ${list.length}` : half}</span>
+                            </div>
+                          ))}
                         </div>
                       );
                     })}
@@ -333,7 +343,7 @@ export default function CentralRegCalendar() {
       {view === 'week' && (
         <Card>
           <CardContent className="p-4">
-            <WeekRoomView weekStart={startOfWeek(selectedDay)} events={visible} onOpenDay={(d) => { setSelectedDay(d); setView('day'); }} />
+            <WeekRoomView weekStart={startOfWeek(selectedDay)} events={visible} rooms={shownRooms} onOpenDay={(d) => { setSelectedDay(d); setView('day'); }} />
           </CardContent>
         </Card>
       )}

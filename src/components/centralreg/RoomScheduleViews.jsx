@@ -78,10 +78,10 @@ export function DayRoomView({ date, events }) {
   );
 }
 
-export function WeekRoomView({ weekStart, events, onOpenDay }) {
+export function WeekRoomView({ weekStart, events, rooms = ROOM_OPTIONS, onOpenDay }) {
   const days = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
   const rows = [
-    ...ROOM_OPTIONS.map(r => ({ label: r.label, color: r.color, value: r.value })),
+    ...rooms.map(r => ({ label: r.label, color: r.color, value: r.value })),
     { label: 'No room', color: '#94a3b8', value: '' },
   ];
   return (
@@ -110,21 +110,27 @@ export function WeekRoomView({ weekStart, events, onOpenDay }) {
               </div>
               {days.map(d => {
                 const evs = events.filter(e => isSameDay(e.date, d) && (e.room || '') === r.value).sort(byTime);
+                // AM / PM halves — each half is tinted only when a booking falls in that part of the day
+                const am = evs.filter(e => e.startTime && toMinutes(e.startTime) < 720);
+                const pm = evs.filter(e => !e.startTime || toMinutes(e.startTime) >= 720);
                 return (
-                  <div key={d.toISOString()} className={cn('min-h-24 rounded border p-1 space-y-1', evs.length ? 'border-transparent' : 'border-border bg-muted/30')}>
-                    {evs.length === 0
-                      ? <p className="text-[10px] text-muted-foreground/60 text-center pt-7">free</p>
-                      : evs.map(e => (
-                        <button
-                          key={e.id}
-                          onClick={() => onOpenDay?.(d)}
-                          title={`${e.startTime || ''} ${e.title}`}
-                          className="w-full text-left text-[10px] px-1 py-1 rounded text-white leading-tight hover:opacity-90"
-                          style={{ backgroundColor: r.color }}
-                        >
-                          {e.startTime && <span className="font-semibold">{e.startTime} </span>}{e.title}
-                        </button>
-                      ))}
+                  <div key={d.toISOString()} className="min-h-24 rounded border border-border bg-muted/30 p-1 flex flex-col gap-1">
+                    {[['AM', am], ['PM', pm]].map(([half, list]) => (
+                      <div key={half} className="flex-1 rounded px-1 space-y-1" style={list.length ? { backgroundColor: r.color + '1f' } : undefined}>
+                        <p className="text-[8px] font-semibold text-muted-foreground/60">{list.length ? `${half} · ${list.length} booked` : half}</p>
+                        {list.map(e => (
+                          <button
+                            key={e.id}
+                            onClick={() => onOpenDay?.(d)}
+                            title={`${e.startTime || ''} ${e.title}`}
+                            className="w-full text-left text-[10px] px-1 py-1 rounded text-white leading-tight hover:opacity-90"
+                            style={{ backgroundColor: r.color }}
+                          >
+                            {e.startTime && <span className="font-semibold">{e.startTime} </span>}{e.title}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
                   </div>
                 );
               })}
