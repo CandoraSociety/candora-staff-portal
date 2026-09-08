@@ -10,6 +10,10 @@ export const DAY_END = 22 * 60;  // 22:00
 export const SLOT = 15;
 export const DURATION_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180];
 
+// Virtual and Other are not exclusive spaces — several bookings can run at the
+// same time in them, so overlapping slots stay available for those rooms.
+const SHARED_ROOMS = ['virtual', 'other'];
+
 const fmtLabel = (mins) => {
   const h24 = Math.floor(mins / 60);
   const m = mins % 60;
@@ -23,9 +27,11 @@ const fmtLabel = (mins) => {
 export default function TimeSlotPicker({ dateISO, room, excludeId, duration, start, onStartChange, onDurationChange, onValidityChange, disabled }) {
   const { bookings = [], isLoading } = useDayBookings(dateISO, !disabled);
 
+  const sharedRoom = SHARED_ROOMS.includes(room);
+
   const busy = useMemo(
-    () => (bookings || []).filter(b => b.id !== excludeId && room && b.room === room),
-    [bookings, room, excludeId]
+    () => sharedRoom ? [] : (bookings || []).filter(b => b.id !== excludeId && room && b.room === room),
+    [bookings, room, excludeId, sharedRoom]
   );
 
   const durationOptions = useMemo(() => {
@@ -83,7 +89,9 @@ export default function TimeSlotPicker({ dateISO, room, excludeId, duration, sta
       ) : (
         <>
           <p className="text-[11px] text-muted-foreground">
-            Greyed-out times are already booked in {ROOM_LABELS[room] || room} that day. Click an open time to start the session there.
+            {sharedRoom
+              ? `${ROOM_LABELS[room] || room} can hold multiple sessions at once — all times are open.`
+              : `Greyed-out times are already booked in ${ROOM_LABELS[room] || room} that day. Click an open time to start the session there.`}
           </p>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-1">
             {slots.map(m => {
