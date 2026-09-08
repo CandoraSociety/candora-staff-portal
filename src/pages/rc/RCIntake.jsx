@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import ClientFormCore from '@/components/rc/ClientFormCore';
+import ClientPicker from '@/components/centralreg/ClientPicker';
 import { generateTestClientName, TEST_CLIENT_BG, TEST_CLIENT_TEXT } from '@/lib/rcTestClients';
 
 const EMPTY = {
@@ -65,12 +66,23 @@ export default function RCIntake() {
     }
   };
 
+  const handleSelectExisting = (client) => {
+    toast({ title: 'Opening client profile', description: `${client.first_name} ${client.last_name}` });
+    navigate(`/rc/clients/${client.id}`);
+  };
+
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-2xl font-heading font-bold text-foreground">New Client Intake</h1>
+        <h1 className="text-2xl font-heading font-bold text-foreground">New Client Profile</h1>
         <p className="text-muted-foreground text-sm mt-1">Register a new client in the Candora Central Database</p>
       </div>
+      <Card>
+        <CardContent className="p-5 space-y-2">
+          <p className="text-sm font-medium text-foreground">Existing client — select for service</p>
+          <ClientPicker onSelect={handleSelectExisting} placeholder="Type an existing client's name..." />
+        </CardContent>
+      </Card>
       <Card><CardContent className="p-5"><ClientFormCore form={form} update={update} /></CardContent></Card>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={handleTestClient} disabled={saving} style={{ backgroundColor: TEST_CLIENT_BG, color: TEST_CLIENT_TEXT, borderColor: TEST_CLIENT_BG, fontWeight: 700 }}>Create Test Client</Button>
