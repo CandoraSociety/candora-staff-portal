@@ -12,7 +12,6 @@ import CompleteDateDialog from '@/components/digilit/CompleteDateDialog';
 
 const isRecurring = (s) => s.recurrence_pattern && s.recurrence_pattern !== 'none';
 import { SESSION_STATUS_OPTIONS, TOPIC_AREA_OPTIONS, TOPIC_AREA_LABELS } from '@/lib/digilitConstants';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function DigiLitSessions() {
   const [search, setSearch] = useState('');
@@ -21,7 +20,6 @@ export default function DigiLitSessions() {
   const [editing, setEditing] = useState(null);
   const [completing, setCompleting] = useState(null);
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const { data: sessions = [], isLoading } = useQuery({ queryKey: ['digilit-sessions'], queryFn: () => base44.entities.DigiLitSession.list('-session_date', 200) });
 
@@ -34,15 +32,6 @@ export default function DigiLitSessions() {
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (s) => { setEditing(s); setDialogOpen(true); };
   const onSaved = () => { setDialogOpen(false); queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] }); };
-
-  const handleMarkCompleted = async (session) => {
-    try {
-      // Mark all registered as attended
-      await base44.entities.DigiLitSession.update(session.id, { status: 'completed', attended_participant_ids: session.registered_participant_ids || [] });
-      queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] });
-      toast({ title: 'Session marked as completed' });
-    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-  };
 
   return (
     <div className="space-y-4">
@@ -78,8 +67,11 @@ export default function DigiLitSessions() {
                   {isRecurring(s) && <p className="flex items-center gap-1.5"><CalendarCheck className="h-3 w-3" /> {(s.completed_dates || []).length} date{(s.completed_dates || []).length === 1 ? '' : 's'} completed</p>}
                 </div>
                 <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/50">
-                  {s.status === 'scheduled' && !isRecurring(s) && <Button size="sm" variant="outline" onClick={() => handleMarkCompleted(s)}><CheckCircle className="h-4 w-4" /> Mark Completed</Button>}
-                  {s.status === 'scheduled' && isRecurring(s) && <Button size="sm" variant="outline" onClick={() => setCompleting(s)}><CalendarCheck className="h-4 w-4" /> Complete a Date</Button>}
+                  {s.status === 'scheduled' && (
+                    <Button size="sm" variant="outline" onClick={() => setCompleting(s)}>
+                      {isRecurring(s) ? <><CalendarCheck className="h-4 w-4" /> Complete a Date</> : <><CheckCircle className="h-4 w-4" /> Mark Completed</>}
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" className="ml-auto" onClick={() => openEdit(s)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
                 </div>
               </CardContent></Card>
@@ -88,7 +80,7 @@ export default function DigiLitSessions() {
         </div>
       )}
       <SessionDialog open={dialogOpen} onOpenChange={setDialogOpen} session={editing} onSaved={onSaved} />
-      <CompleteDateDialog session={completing} open={!!completing} onOpenChange={(v) => { if (!v) setCompleting(null); }} onSaved={() => { setCompleting(null); queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] }); }} />
+      <CompleteDateDialog session={completing} open={!!completing} onOpenChange={(v) => { if (!v) setCompleting(null); }} onChanged={() => queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] })} onSaved={() => { setCompleting(null); queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] }); }} />
     </div>
   );
 }

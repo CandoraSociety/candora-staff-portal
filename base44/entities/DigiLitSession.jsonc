@@ -61,7 +61,7 @@
     },
     "attendance": {
       "type": "array",
-      "description": "Per-date attendance records \u2014 one entry per occurrence date, so recurring sessions track who attended each date",
+      "description": "Per-date attendance records \u2014 one entry per occurrence date, following the workshop-roster model: participants check in as 'present', then the Complete Session action records the final attended / no-show outcome for that date",
       "items": {
         "type": "object",
         "properties": {
@@ -75,7 +75,7 @@
           },
           "statuses": {
             "type": "object",
-            "description": "Map of participant ID -> present | absent | late"
+            "description": "Map of participant ID -> present (checked in) | attended | no_show (final outcome recorded by Complete Session)"
           },
           "recorded_by_name": {
             "type": "string"
@@ -129,7 +129,7 @@
       "items": {
         "type": "string"
       },
-      "description": "IDs of participants who attended"
+      "description": "IDs of participants who attended (one-off sessions \u2014 set by Complete Session)"
     },
     "status": {
       "type": "string",
