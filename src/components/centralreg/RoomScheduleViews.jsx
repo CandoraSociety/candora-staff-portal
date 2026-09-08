@@ -13,6 +13,14 @@ const toMinutes = (t) => {
 
 const byTime = (a, b) => toMinutes(a.startTime) - toMinutes(b.startTime);
 
+// Compact start time for the strips inside the room bars — "09:00" → "9", "13:30" → "1:30"
+const shortTime = (t) => {
+  if (!t) return '•';
+  const [h, m] = t.split(':').map(Number);
+  const h12 = ((h + 11) % 12) + 1;
+  return m ? `${h12}:${String(m).padStart(2, '0')}` : `${h12}`;
+};
+
 function EventDetailRow({ e }) {
   const s = CALENDAR_SOURCES.find(x => x.key === e.source);
   return (
@@ -54,12 +62,19 @@ export function RoomBarsCell({ events, rooms = ROOM_OPTIONS }) {
               <div
                 key={half}
                 className={cn(
-                  'flex-1 rounded border overflow-hidden flex items-center justify-center',
-                  list.length ? 'text-white border-transparent' : 'bg-muted/30 text-muted-foreground/50 border-border/70'
+                  'flex-1 rounded border overflow-hidden flex flex-col',
+                  list.length ? 'text-white border-transparent' : 'bg-muted/30 text-muted-foreground/50 border-border/70 justify-center items-center'
                 )}
                 style={list.length ? { backgroundColor: r.color } : undefined}
               >
-                <span className="text-[8px] font-bold leading-none">{list.length ? list.length : half}</span>
+                {list.length === 0
+                  ? <span className="text-[8px] font-bold leading-none">{half}</span>
+                  : list.map(e => (
+                    // One strip per booking — rooms like Virtual and Other can hold several at once
+                    <span key={e.id} className="flex-1 min-h-0 flex items-center justify-center border-b border-black/15 last:border-b-0">
+                      <span className="text-[7px] font-bold leading-none truncate px-0.5">{shortTime(e.startTime)}</span>
+                    </span>
+                  ))}
               </div>
             ))}
           </div>
