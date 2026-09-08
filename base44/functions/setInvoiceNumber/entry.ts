@@ -72,6 +72,17 @@ export default async function(req: Request): Promise<Response> {
 
     await writeTrackerCell(accessToken, wb.id, sheetName, INVOICE_NUMBER_COL, rowNumber, value, isNumeric ? 'General' : '@');
 
+    // Keep the Invoice record for the changed month in sync too (the dialog
+    // updates it when it has the id; this covers every other view) — best-effort.
+    try {
+      const recs = await base44.entities.Invoice.filter({ billing_month: billingMonth });
+      for (const rec of (recs || [])) {
+        if (!rec.billing_month_end || rec.billing_month_end === rec.billing_month) {
+          await base44.entities.Invoice.update(rec.id, { invoice_number: numStr });
+        }
+      }
+    } catch { /* record sync is best-effort */ }
+
     // Keep the Invoice records for renumbered months in sync so closed-off
     // snapshots show the updated numbers too (best-effort).
     for (const rn of renumbered) {

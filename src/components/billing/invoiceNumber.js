@@ -7,9 +7,10 @@ const SUFFIXES_2026 = { '2026-04': 3, '2026-05': 2, '2026-06': 3, '2026-07': 3 }
 
 // Returns the display invoice number for a given billing month.
 //   • null/empty source  → null  (InvoiceDocument falls back to "Draft Invoice")
-//   • one of the four 2026 months → normalized to its current resubmission
-//     number, e.g. source 11 / 11.1 / 11.2 for April → "11.3"
-//   • otherwise → the plain number (fractional sources returned as-is)
+//   • one of the four 2026 months with a whole-number source (legacy cell that
+//     never held its resubmission suffix) → normalized, e.g. 11 → "11.3"
+//   • otherwise → the number as stored (a fractional source like 13.4 already
+//     carries its real resubmission number, so it displays exactly as-is)
 export function displayInvoiceNumber(rawNumber, billingMonth, isManual = false) {
   if (rawNumber == null || rawNumber === '') return null;
   // A manually set number is displayed exactly as entered — the resubmission
@@ -18,6 +19,6 @@ export function displayInvoiceNumber(rawNumber, billingMonth, isManual = false) 
   const n = Number(rawNumber);
   if (isNaN(n)) return null;
   const suffix = SUFFIXES_2026[String(billingMonth)];
-  if (suffix != null) return `${Math.floor(n)}.${suffix}`;
+  if (suffix != null && Number.isInteger(n)) return `${n}.${suffix}`;
   return n;
 }
