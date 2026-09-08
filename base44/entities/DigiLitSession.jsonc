@@ -51,6 +51,14 @@
       "format": "date",
       "description": "Last recurrence date (blank for a one-off session)"
     },
+    "completed_dates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date"
+      },
+      "description": "For recurring sessions \u2014 occurrence dates (YYYY-MM-DD) that have been completed, tracked per date instead of completing the whole series"
+    },
     "facilitator_name": {
       "type": "string",
       "description": "Volunteer facilitator leading the session"

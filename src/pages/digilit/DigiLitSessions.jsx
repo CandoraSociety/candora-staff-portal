@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, Pencil, CalendarDays, Clock, MapPin, User, CheckCircle } from 'lucide-react';
+import { Plus, Search, Pencil, CalendarDays, Clock, MapPin, User, CheckCircle, CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/rc/StatusBadge';
 import SessionDialog from '@/components/digilit/SessionDialog';
+import CompleteDateDialog from '@/components/digilit/CompleteDateDialog';
+
+const isRecurring = (s) => s.recurrence_pattern && s.recurrence_pattern !== 'none';
 import { SESSION_STATUS_OPTIONS, TOPIC_AREA_OPTIONS, TOPIC_AREA_LABELS } from '@/lib/digilitConstants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -16,6 +19,7 @@ export default function DigiLitSessions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [completing, setCompleting] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -71,9 +75,11 @@ export default function DigiLitSessions() {
                   {s.location && <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {s.location}</p>}
                   {s.facilitator_name && <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {s.facilitator_name}</p>}
                   <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {regCount} registered{s.status === 'completed' && ` · ${attCount} attended`}{s.max_participants && ` / ${s.max_participants} max`}</p>
+                  {isRecurring(s) && <p className="flex items-center gap-1.5"><CalendarCheck className="h-3 w-3" /> {(s.completed_dates || []).length} date{(s.completed_dates || []).length === 1 ? '' : 's'} completed</p>}
                 </div>
                 <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/50">
-                  {s.status === 'scheduled' && <Button size="sm" variant="outline" onClick={() => handleMarkCompleted(s)}><CheckCircle className="h-4 w-4" /> Mark Completed</Button>}
+                  {s.status === 'scheduled' && !isRecurring(s) && <Button size="sm" variant="outline" onClick={() => handleMarkCompleted(s)}><CheckCircle className="h-4 w-4" /> Mark Completed</Button>}
+                  {s.status === 'scheduled' && isRecurring(s) && <Button size="sm" variant="outline" onClick={() => setCompleting(s)}><CalendarCheck className="h-4 w-4" /> Complete a Date</Button>}
                   <Button size="sm" variant="ghost" className="ml-auto" onClick={() => openEdit(s)}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
                 </div>
               </CardContent></Card>
@@ -82,6 +88,7 @@ export default function DigiLitSessions() {
         </div>
       )}
       <SessionDialog open={dialogOpen} onOpenChange={setDialogOpen} session={editing} onSaved={onSaved} />
+      <CompleteDateDialog session={completing} open={!!completing} onOpenChange={(v) => { if (!v) setCompleting(null); }} onSaved={() => { setCompleting(null); queryClient.invalidateQueries({ queryKey: ['digilit-sessions'] }); }} />
     </div>
   );
 }
