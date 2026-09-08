@@ -33,6 +33,42 @@ function EventDetailRow({ e }) {
   );
 }
 
+// Vertical room bars for a single date — one thin bar per room side by side,
+// the AM half on top and the PM half on the bottom of each bar. Each half is
+// shaded in the room's colour only when a booking falls in that part of the day.
+export function RoomBarsCell({ events, rooms = ROOM_OPTIONS }) {
+  return (
+    <div className="flex gap-0.5 flex-1 min-h-0">
+      {rooms.map(r => {
+        const matched = events.filter(e => e.room === r.value);
+        const am = matched.filter(e => e.startTime && toMinutes(e.startTime) < 720);
+        const pm = matched.filter(e => !e.startTime || toMinutes(e.startTime) >= 720);
+        return (
+          <div
+            key={r.value}
+            title={`${r.label} — AM: ${am.length ? am.map(e => `${e.startTime} ${e.title}`).join(', ') : 'free'} · PM: ${pm.length ? pm.map(e => `${e.startTime} ${e.title}`).join(', ') : 'free'}`}
+            className="flex-1 flex flex-col gap-0.5 min-h-0 min-w-0"
+          >
+            <span className="text-[8px] font-bold text-muted-foreground/70 text-center leading-none">{r.abbr}</span>
+            {[['AM', am], ['PM', pm]].map(([half, list]) => (
+              <div
+                key={half}
+                className={cn(
+                  'flex-1 rounded border overflow-hidden flex items-center justify-center',
+                  list.length ? 'text-white border-transparent' : 'bg-muted/30 text-muted-foreground/50 border-border/70'
+                )}
+                style={list.length ? { backgroundColor: r.color } : undefined}
+              >
+                <span className="text-[8px] font-bold leading-none">{list.length ? list.length : half}</span>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function RoomBlock({ room, events }) {
   return (
     <Card className="overflow-hidden">
@@ -80,63 +116,36 @@ export function DayRoomView({ date, events }) {
 
 export function WeekRoomView({ weekStart, events, rooms = ROOM_OPTIONS, onOpenDay }) {
   const days = eachDayOfInterval({ start: weekStart, end: addDays(weekStart, 6) });
-  const rows = [
-    ...rooms.map(r => ({ label: r.label, color: r.color, value: r.value })),
-    { label: 'No room', color: '#94a3b8', value: '' },
-  ];
   return (
     <div>
-      <div className="text-center font-display font-bold text-lg mb-3">Week of {format(weekStart, 'MMMM d, yyyy')}</div>
-      <div className="overflow-x-auto">
-        <div className="min-w-[950px] space-y-1">
-          <div className="grid grid-cols-8 gap-1">
-            <div />
-            {days.map(d => (
+      <div className="text-center font-display font-bold text-lg mb-2">Week of {format(weekStart, 'MMMM d, yyyy')}</div>
+      {/* Room legend — the vertical bars only show abbreviations */}
+      <div className="flex flex-wrap gap-2 justify-center mb-3">
+        {rooms.map(r => (
+          <span key={r.value} className="flex items-center gap-1 text-[10px] font-medium" style={{ color: r.color }}>
+            <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: r.color }} />{r.label}
+          </span>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {days.map(d => {
+          const dayEvents = events.filter(e => isSameDay(e.date, d)).sort(byTime);
+          const noRoom = dayEvents.filter(e => !e.room).length;
+          return (
+            <div key={d.toISOString()}>
               <button
-                key={d.toISOString()}
                 onClick={() => onOpenDay?.(d)}
-                className={cn('rounded py-1.5 text-center text-xs font-semibold transition-colors', isSameDay(d, new Date()) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-accent')}
+                className={cn('w-full rounded py-1.5 text-center text-xs font-semibold transition-colors', isSameDay(d, new Date()) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-accent')}
               >
                 {format(d, 'EEE d')}
               </button>
-            ))}
-          </div>
-          {rows.map(r => (
-            <div key={r.label} className="grid grid-cols-8 gap-1">
-              <div className="flex items-center justify-end pr-2">
-                <span className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap" style={{ color: r.color }}>
-                  <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: r.color }} />{r.label}
-                </span>
+              <div className="mt-1 rounded border border-border bg-muted/20 p-1 flex flex-col min-h-48">
+                <RoomBarsCell events={dayEvents} rooms={rooms} />
+                {noRoom > 0 && <p className="text-[9px] text-muted-foreground mt-1 text-center">+{noRoom} no room</p>}
               </div>
-              {days.map(d => {
-                const evs = events.filter(e => isSameDay(e.date, d) && (e.room || '') === r.value).sort(byTime);
-                // AM / PM halves — each half is tinted only when a booking falls in that part of the day
-                const am = evs.filter(e => e.startTime && toMinutes(e.startTime) < 720);
-                const pm = evs.filter(e => !e.startTime || toMinutes(e.startTime) >= 720);
-                return (
-                  <div key={d.toISOString()} className="min-h-24 rounded border border-border bg-muted/30 p-1 flex flex-col gap-1">
-                    {[['AM', am], ['PM', pm]].map(([half, list]) => (
-                      <div key={half} className="flex-1 rounded px-1 space-y-1" style={list.length ? { backgroundColor: r.color + '1f' } : undefined}>
-                        <p className="text-[8px] font-semibold text-muted-foreground/60">{list.length ? `${half} · ${list.length} booked` : half}</p>
-                        {list.map(e => (
-                          <button
-                            key={e.id}
-                            onClick={() => onOpenDay?.(d)}
-                            title={`${e.startTime || ''} ${e.title}`}
-                            className="w-full text-left text-[10px] px-1 py-1 rounded text-white leading-tight hover:opacity-90"
-                            style={{ backgroundColor: r.color }}
-                          >
-                            {e.startTime && <span className="font-semibold">{e.startTime} </span>}{e.title}
-                          </button>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );

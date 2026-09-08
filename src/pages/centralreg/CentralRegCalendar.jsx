@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ROOM_OPTIONS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
-import { DayRoomView, WeekRoomView } from '@/components/centralreg/RoomScheduleViews';
+import { DayRoomView, WeekRoomView, RoomBarsCell } from '@/components/centralreg/RoomScheduleViews';
 import DetailedDayView from '@/components/centralreg/DetailedDayView';
 
 const parseLocalDate = (str) => {
@@ -303,31 +303,8 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  {/* Vertical room stack — one row per selected room, each split into AM / PM halves so only the part of the day that is actually booked is highlighted. */}
-                  <div className="flex flex-col gap-0.5 mt-1 flex-1 min-h-0">
-                    {shownRooms.map(r => {
-                      const matched = dayEvents.filter(e => e.room === r.value);
-                      const am = matched.filter(e => e.startTime && toMinutes(e.startTime) < 720);
-                      const pm = matched.filter(e => !e.startTime || toMinutes(e.startTime) >= 720);
-                      return (
-                        <div key={r.value} className="flex-1 flex gap-0.5 min-h-0">
-                          {[['AM', am], ['PM', pm]].map(([half, list]) => (
-                            <div
-                              key={half}
-                              title={`${r.label} ${half}: ${list.length ? list.map(e => `${e.startTime || ''} ${e.title}`).join(', ') : 'free'}`}
-                              className={cn(
-                                'flex-1 rounded flex items-center justify-center leading-none border overflow-hidden',
-                                list.length ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
-                              )}
-                              style={list.length ? { backgroundColor: r.color } : undefined}
-                            >
-                              <span className="text-[8px] font-bold">{list.length ? `${r.abbr} ${list.length}` : half}</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {/* Vertical room bars — one bar per selected room, AM half on top and PM half on the bottom; each half is shaded only when a booking falls in that part of the day. */}
+                  <RoomBarsCell events={dayEvents} rooms={shownRooms} />
                   {dayEvents.some(e => !e.room) && (
                     <div className="text-[9px] text-muted-foreground mt-0.5 px-0.5">+{dayEvents.filter(e => !e.room).length} no room</div>
                   )}
