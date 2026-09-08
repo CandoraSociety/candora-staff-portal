@@ -1,13 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
+import { getGraphToken, listCrtFiles } from '../../shared/crtWorkbook.ts';
 import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonthToKey, writeTrackerCell, colIndex, cellToMonthKey } from '../../shared/invoiceTracker.ts';
 
-// Manually sets the invoice number for one billing month: writes the value to
-// column B of that month's row on the active CRT's Invoice Tracker sheet —
-// the cell the auto-generated invoice reads its number from — so the number
-// on the invoice and the CRT stay in sync.
+// Manually sets the invoice number for one billing month across EVERY CRT
+// workbook version: writes the value to column B of that month's row on the
+// Invoice Tracker sheet of the active CRT AND every archived CRT copy that
+// still has a row for that month. The invoice numbers run sequentially, so a
+// manual change also shifts every LATER month row by the same amount the
+// changed month moved (in each version), keeping the sequence intact.
 
 const INVOICE_NUMBER_COL = 'B';
+
+// Write the target value + shift every later month row by `delta` in one
+// workbook's Invoice Tracker. Returns null when the workbook has no tracker
+// sheet or no row for the month. Throws on write failures (the caller decides
+// whether to continue with the other workbooks).
+async function applyToWorkbook(accessToken, file, key, value, isNumeric, delta, idxB) {
+  const sheetName = await findInvoiceTrackerSheet(accessToken, file.id);
+  if (!sheetName) return null;
+  const { values, startRow } = await readInvoiceTracker(accessToken, file.id, sheetName);
+  const rowNumber = findMonthRow(values, key, startRow);
+  if (!rowNumber) return null;
+
+  const renumbered = [];
+  if (delta !== 0) {
+    for (let r = 0; r < values.length; r++) {
+      const rowVals = values[r];
+      if (!rowVals) continue;
+      const rk = cellToMonthKey(rowVals[0]);
+      if (!rk) continue;
+      const isLater = rk.year > key.year || (rk.year === key.year && rk.month > key.month);
+      if (!isLater) continue;
+      const cur = rowVals[idxB];
+      if (cur == null || cur === '' || isNaN(Number(cur))) continue; // unassigned rows stay blank
+      const nextVal = Number(cur) + delta;
+      await writeTrackerCell(accessToken, file.id, sheetName, INVOICE_NUMBER_COL, startRow + r, nextVal, 'General');
+      renumbered.push({ billingMonth: `${rk.year}-${String(rk.month + 1).padStart(2, '0')}`, value: nextVal });
+    }
+  }
+
+  await writeTrackerCell(accessToken, file.id, sheetName, INVOICE_NUMBER_COL, rowNumber, value, isNumeric ? 'General' : '@');
+  return { sheetName, rowNumber, renumbered };
+}
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -23,56 +57,58 @@ export default async function(req: Request): Promise<Response> {
     if (!numStr) return Response.json({ error: 'invoiceNumber is required' }, { status: 400 });
 
     const accessToken = await getGraphToken();
-    const wb = await getActiveCrtWorkbook(accessToken);
-    if (!wb) return Response.json({ status: 'no_workbook', billingMonth });
+    const files = await listCrtFiles(accessToken); // sorted latest-first; files[0] = active
+    if (!files.length) return Response.json({ status: 'no_workbook', billingMonth });
 
-    const sheetName = await findInvoiceTrackerSheet(accessToken, wb.id);
-    if (!sheetName) return Response.json({ status: 'no_sheet', workbook: wb.name, billingMonth });
-
-    const { values, startRow } = await readInvoiceTracker(accessToken, wb.id, sheetName);
     const key = billingMonthToKey(billingMonth);
     if (!key) return Response.json({ status: 'invalid_month', billingMonth });
 
-    const rowNumber = findMonthRow(values, key, startRow);
-    if (!rowNumber) return Response.json({ status: 'month_not_found', billingMonth, workbook: wb.name });
-
     // Numeric values are written as numbers with a General format so fractional
-    // resubmission numbers (e.g. 11.3) display exactly; anything else goes in
+    // resubmission numbers (e.g. 13.4) display exactly; anything else goes in
     // as text.
     const asNum = Number(numStr);
     const isNumeric = !isNaN(asNum);
     const value = isNumeric ? asNum : numStr;
-
-    // The invoice numbers run sequentially down the tracker, so a manual change
-    // shifts every LATER month by the same amount the changed month moved —
-    // each subsequent row keeps its offset from this one (including any
-    // resubmission suffix), just shifted by the delta.
     const idxB = colIndex(INVOICE_NUMBER_COL);
-    const targetRow = values[rowNumber - startRow] || [];
-    const oldRaw = targetRow[idxB];
+
+    // Active workbook first: the month row must exist there, and its current
+    // value defines how far the number moved (the ripple delta).
+    const active = files[0];
+    let activeSheetName: string | null = null;
+    try { activeSheetName = await findInvoiceTrackerSheet(accessToken, active.id); } catch { /* none */ }
+    if (!activeSheetName) return Response.json({ status: 'no_sheet', workbook: active.name, billingMonth });
+    const { values, startRow } = await readInvoiceTracker(accessToken, active.id, activeSheetName);
+    const activeRow = findMonthRow(values, key, startRow);
+    if (!activeRow) return Response.json({ status: 'month_not_found', billingMonth, workbook: active.name });
+    const oldRaw = (values[activeRow - startRow] || [])[idxB];
     const oldNum = oldRaw != null && oldRaw !== '' && !isNaN(Number(oldRaw)) ? Number(oldRaw) : null;
     const delta = isNumeric && oldNum != null ? Math.floor(asNum) - Math.floor(oldNum) : 0;
 
-    const renumbered = [];
-    if (delta !== 0) {
-      for (let r = 0; r < values.length; r++) {
-        const rowVals = values[r];
-        if (!rowVals) continue;
-        const rk = cellToMonthKey(rowVals[0]);
-        if (!rk) continue;
-        const isLater = rk.year > key.year || (rk.year === key.year && rk.month > key.month);
-        if (!isLater) continue;
-        const cur = rowVals[idxB];
-        if (cur == null || cur === '' || isNaN(Number(cur))) continue; // unassigned rows stay blank
-        const nextVal = Number(cur) + delta;
-        await writeTrackerCell(accessToken, wb.id, sheetName, INVOICE_NUMBER_COL, startRow + r, nextVal, 'General');
-        renumbered.push({ billingMonth: `${rk.year}-${String(rk.month + 1).padStart(2, '0')}`, value: nextVal });
+    // Apply to every CRT version — active first, then each archived copy that
+    // still has a row for the month. One workbook failing never stops the rest.
+    let renumbered: any[] = [];
+    let rowNumber = activeRow;
+    const updated: string[] = [];
+    const failed: any[] = [];
+    for (const file of files) {
+      try {
+        const res = await applyToWorkbook(accessToken, file, key, value, isNumeric, delta, idxB);
+        if (!res) continue; // no tracker sheet / no row for this month in this version
+        updated.push(file.name);
+        if (file.id === active.id) {
+          rowNumber = res.rowNumber;
+          renumbered = res.renumbered;
+        }
+      } catch (e: any) {
+        failed.push({ workbook: file.name, error: e.message });
       }
     }
 
-    await writeTrackerCell(accessToken, wb.id, sheetName, INVOICE_NUMBER_COL, rowNumber, value, isNumeric ? 'General' : '@');
+    if (!updated.length) {
+      return Response.json({ status: 'error', message: 'No CRT workbook could be updated', failed }, { status: 500 });
+    }
 
-    // Keep the Invoice record for the changed month in sync too (the dialog
+    // Keep the Invoice record for the changed month in sync (the dialog
     // updates it when it has the id; this covers every other view) — best-effort.
     try {
       const recs = await base44.entities.Invoice.filter({ billing_month: billingMonth });
@@ -96,7 +132,17 @@ export default async function(req: Request): Promise<Response> {
       } catch { /* record sync is best-effort */ }
     }
 
-    return Response.json({ status: 'success', workbook: wb.name, sheet: sheetName, billingMonth, row: rowNumber, cell: `${INVOICE_NUMBER_COL}${rowNumber}`, value, renumbered });
+    return Response.json({
+      status: 'success',
+      workbook: active.name,
+      billingMonth,
+      row: rowNumber,
+      cell: `${INVOICE_NUMBER_COL}${rowNumber}`,
+      value,
+      workbooksUpdated: updated,
+      failedWorkbooks: failed,
+      renumbered,
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
