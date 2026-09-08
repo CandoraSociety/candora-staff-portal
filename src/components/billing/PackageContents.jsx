@@ -365,6 +365,18 @@ export default function PackageContents({ pkg, onViewInvoice }) {
   const handleRemoveMonth = (type, month) =>
     setAddedMonths((prev) => ({ ...prev, [type]: prev[type].filter((m) => m !== month) }));
 
+  // Wait for the off-screen invoice document to mount (the invoice queries
+  // update React state asynchronously; polling lets the re-render commit).
+  const waitForInvoiceNode = async (timeoutMs = 6000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < timeoutMs) {
+      const n = invoiceWrapRef.current?.querySelector('.invoice-document');
+      if (n) return n;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return invoiceWrapRef.current?.querySelector('.invoice-document') || null;
+  };
+
   const handleDownloadAll = async () => {
     setZipping(true);
     try {
@@ -378,16 +390,28 @@ export default function PackageContents({ pkg, onViewInvoice }) {
       const entries = []; // { name, blob }
 
       // Invoice — render the on-screen InvoiceDocument to a PDF so the archive
-      // contains the real invoice, not a placeholder README.
-      if (invoiceData && invoiceWrapRef.current) {
-        const node = invoiceWrapRef.current.querySelector('.invoice-document');
-        if (node) {
-          try {
-            entries.push({ name: cleanFileName(`Invoice_${billingMonth}.pdf`), blob: await buildInvoicePdfFromNode(node), essential: true });
-          } catch {
-            toast.error('Could not render the invoice PDF — it will be skipped from the ZIP.');
-          }
+      // contains the real invoice, not a placeholder README. The invoice
+      // queries re-fetch on every open (the live CRT tracker read is slow), so
+      // clicking Download All early could silently drop the invoice — wait for
+      // the data to be ready first.
+      if (pkg.invoice_id) {
+        await queryClient.refetchQueries({ queryKey: ['linked-invoice', pkg.invoice_id] });
+      }
+      const invRecord = pkg.invoice_id
+        ? queryClient.getQueryData(['linked-invoice', pkg.invoice_id])
+        : null;
+      if (!(invRecord && invRecord.status === 'finalized')) {
+        await queryClient.refetchQueries({ queryKey: ['package-invoice-data', pkg.id, dataMonth] });
+      }
+      const invoiceNode = await waitForInvoiceNode();
+      if (invoiceNode) {
+        try {
+          entries.push({ name: cleanFileName(`Invoice_${billingMonth}.pdf`), blob: await buildInvoicePdfFromNode(invoiceNode), essential: true });
+        } catch {
+          toast.error('Could not render the invoice PDF — it will be skipped from the ZIP.');
         }
+      } else {
+        toast.warning('Invoice data was not available — the invoice was left out of the ZIP.');
       }
 
       if (cmRecords.length) {
