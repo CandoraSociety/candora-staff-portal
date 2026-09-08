@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { SESSION_STATUS_OPTIONS, TOPIC_AREA_OPTIONS } from '@/lib/digilitConstants';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import TimeSlotPicker from '@/components/shared/TimeSlotPicker';
+import { timeToMinutes, minutesToTime } from '@/lib/sessionAvailability';
 
 const EMPTY = { title: '', session_date: '', start_time: '', end_time: '', location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator_name: '', facilitator_email: '', topic_area: 'computer_basics', max_participants: 10, registered_participant_ids: [], attended_participant_ids: [], status: 'scheduled', notes: '' };
 
@@ -17,11 +19,29 @@ export default function SessionDialog({ open, onOpenChange, session, onSaved }) 
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const [duration, setDuration] = useState(60);
+  const [timeOk, setTimeOk] = useState(true);
 
   const { data: participants = [] } = useQuery({ queryKey: ['digilit-participants'], queryFn: () => base44.entities.DigiLitParticipant.list('-registration_date', 500), enabled: open });
 
-  useEffect(() => { if (open) setForm(session ? { ...session } : { ...EMPTY, session_date: new Date().toISOString().split('T')[0] }); }, [open, session]);
+  useEffect(() => {
+    if (open) {
+      setForm(session ? { ...session } : { ...EMPTY, session_date: new Date().toISOString().split('T')[0] });
+      const d = session?.start_time && session?.end_time ? timeToMinutes(session.end_time) - timeToMinutes(session.start_time) : 60;
+      setDuration(d > 0 ? d : 60);
+      setTimeOk(true);
+    }
+  }, [open, session]);
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
+
+  const applyStart = (start) => {
+    update('start_time', start);
+    update('end_time', start ? minutesToTime(timeToMinutes(start) + duration) : '');
+  };
+  const applyDuration = (v) => {
+    setDuration(v);
+    if (form.start_time) update('end_time', minutesToTime(timeToMinutes(form.start_time) + v));
+  };
 
   const toggleParticipant = (id) => {
     const ids = form.registered_participant_ids || [];
@@ -48,10 +68,12 @@ export default function SessionDialog({ open, onOpenChange, session, onSaved }) 
           <div className="space-y-1.5 col-span-2"><Label>Title *</Label><Input value={form.title || ''} onChange={(e) => update('title', e.target.value)} placeholder="e.g. Email Basics" /></div>
           <div className="space-y-1.5"><Label>Date *</Label><Input type="date" value={form.session_date || ''} onChange={(e) => update('session_date', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Topic Area</Label><Select value={form.topic_area || 'computer_basics'} onValueChange={(v) => update('topic_area', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TOPIC_AREA_OPTIONS.map(t => <SelectItem key={t.value} value={t.value}>{t.icon} {t.label}</SelectItem>)}</SelectContent></Select></div>
-          <div className="space-y-1.5"><Label>Start Time</Label><Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>End Time</Label><Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Location</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Room</Label><Select value={form.room || 'none'} onValueChange={(v) => update('room', v === 'none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="none">Other / TBC</SelectItem>{ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-2 col-span-2 border border-border rounded-md p-3 bg-muted/30">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Duration &amp; Time Slot</p>
+            <TimeSlotPicker dateISO={form.session_date || ''} room={form.room || ''} excludeId={session?.id} duration={duration} start={form.start_time || ''} onStartChange={applyStart} onDurationChange={applyDuration} onValidityChange={setTimeOk} />
+          </div>
           <div className="space-y-1.5"><Label>Max Participants</Label><Input type="number" min="1" value={form.max_participants ?? 10} onChange={(e) => update('max_participants', parseInt(e.target.value) || 10)} /></div>
           <div className="space-y-1.5"><Label>Facilitator Name</Label><Input value={form.facilitator_name || ''} onChange={(e) => update('facilitator_name', e.target.value)} placeholder="Volunteer facilitator" /></div>
           <div className="space-y-1.5"><Label>Facilitator Email</Label><Input type="email" value={form.facilitator_email || ''} onChange={(e) => update('facilitator_email', e.target.value)} /></div>
@@ -61,7 +83,7 @@ export default function SessionDialog({ open, onOpenChange, session, onSaved }) 
           <div className="col-span-2 mt-1"><Label className="text-sm font-medium">Registered Participants ({(form.registered_participant_ids || []).length})</Label><div className="max-h-40 overflow-y-auto border rounded-md p-2 mt-1 space-y-1">{participants.length === 0 ? <p className="text-xs text-muted-foreground text-center py-2">No participants registered yet</p> : participants.map(p => <div key={p.id} className="flex items-center gap-2"><input type="checkbox" checked={(form.registered_participant_ids || []).includes(p.id)} onChange={() => toggleParticipant(p.id)} className="rounded" /><span className="text-sm">{p.first_name} {p.last_name}{p.status === 'completed' ? ' ✓' : ''}</span></div>)}</div></div>
           <div className="space-y-1.5 col-span-2"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
         </div>
-        <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving || !timeOk}>{saving ? 'Saving...' : 'Save'}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
   );

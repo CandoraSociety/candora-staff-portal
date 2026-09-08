@@ -77,10 +77,11 @@
         "small_classroom",
         "employment_classroom",
         "arc",
+        "echo_valley",
         "virtual",
         "other"
       ],
-      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Virtual, or Other space)"
+      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Echo Valley, Virtual, or Other space)"
     },
     "capacity": {
       "type": "number",

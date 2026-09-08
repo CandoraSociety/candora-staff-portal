@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { SESSION_STATUS_OPTIONS, isOffSeason } from '@/lib/phacConstants';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import TimeSlotPicker from '@/components/shared/TimeSlotPicker';
+import { timeToMinutes, minutesToTime } from '@/lib/sessionAvailability';
 
 const EMPTY = {
   program_id: '', program_name: '', session_date: '', start_time: '', end_time: '',
@@ -23,6 +25,8 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const [duration, setDuration] = useState(60);
+  const [timeOk, setTimeOk] = useState(true);
 
   const { data: programs = [] } = useQuery({
     queryKey: ['phac-programs'],
@@ -33,10 +37,22 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
   useEffect(() => {
     if (open) {
       setForm(session ? { ...EMPTY, ...session } : { ...EMPTY, session_date: new Date().toISOString().split('T')[0] });
+      const d = session?.start_time && session?.end_time ? timeToMinutes(session.end_time) - timeToMinutes(session.start_time) : 60;
+      setDuration(d > 0 ? d : 60);
+      setTimeOk(true);
     }
   }, [open, session]);
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const applyStart = (start) => {
+    update('start_time', start);
+    update('end_time', start ? minutesToTime(timeToMinutes(start) + duration) : '');
+  };
+  const applyDuration = (v) => {
+    setDuration(v);
+    if (form.start_time) update('end_time', minutesToTime(timeToMinutes(form.start_time) + v));
+  };
 
   const handleProgramChange = (programId) => {
     const p = programs.find(p => p.id === programId);
@@ -104,14 +120,6 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>Start Time</Label>
-            <Input type="time" value={form.start_time || ''} onChange={(e) => update('start_time', e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>End Time</Label>
-            <Input type="time" value={form.end_time || ''} onChange={(e) => update('end_time', e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
             <Label>Location</Label>
             <Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} />
           </div>
@@ -128,6 +136,10 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
                 {ROOM_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-2 col-span-2 border border-border rounded-md p-3 bg-muted/30">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Duration &amp; Time Slot</p>
+            <TimeSlotPicker dateISO={form.session_date || ''} room={form.room || ''} excludeId={session?.id} duration={duration} start={form.start_time || ''} onStartChange={applyStart} onDurationChange={applyDuration} onValidityChange={setTimeOk} />
           </div>
           <div className="space-y-1.5">
             <Label>Repeats</Label>
@@ -184,7 +196,7 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+          <Button onClick={handleSave} disabled={saving || !timeOk}>{saving ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

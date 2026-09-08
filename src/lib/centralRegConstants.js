@@ -22,6 +22,7 @@ export const ROOM_OPTIONS = [
   { value: 'small_classroom', label: 'Small Classroom', abbr: 'SC', color: '#0d9488' },
   { value: 'employment_classroom', label: 'Employment Classroom', abbr: 'EC', color: '#d97706' },
   { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb' },
+  { value: 'echo_valley', label: 'Echo Valley', abbr: 'EV', color: '#65a30d' },
   { value: 'arc', label: 'ARC', abbr: 'ARC', color: '#9333ea' },
   { value: 'virtual', label: 'Virtual', abbr: 'V', color: '#0891b2' },
   { value: 'other', label: 'Other', abbr: 'O', color: '#64748b' },
@@ -38,6 +39,10 @@ export const ROOM_QUADRANTS = [
   { value: 'large_classroom', label: 'Large Classroom', abbr: 'LC', color: '#2563eb', matches: ['large_classroom'] },
   { value: 'other', label: 'Other / ARC', abbr: 'O', color: '#64748b', matches: ['other', 'arc'] },
 ];
+
+// Vertical room stack — one entry per room (incl. Echo Valley and Virtual),
+// used by the month-grid cells and the detailed day-view columns.
+export const ROOM_STACK = ROOM_OPTIONS.map(r => ({ ...r, matches: [r.value] }));
 
 // Sources shown on the Central Registration calendar.
 export const CALENDAR_SOURCES = [

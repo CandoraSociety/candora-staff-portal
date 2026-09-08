@@ -6,8 +6,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ROOM_OPTIONS, ROOM_QUADRANTS, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
+import { ROOM_OPTIONS, ROOM_STACK, CALENDAR_SOURCES as SOURCES } from '@/lib/centralRegConstants';
 import { DayRoomView, WeekRoomView } from '@/components/centralreg/RoomScheduleViews';
+import DetailedDayView from '@/components/centralreg/DetailedDayView';
 
 const parseLocalDate = (str) => {
   if (!str) return null;
@@ -203,11 +204,11 @@ export default function CentralRegCalendar() {
           <p className="text-muted-foreground text-sm mt-1">All programs, sessions and workshops across Candora in one calendar</p>
         </div>
         <div className="flex items-center gap-2">
-          {view === 'day' && (
+          {(view === 'day' || view === 'detail') && (
             <Button variant="outline" size="sm" onClick={() => setView('month')}><ChevronLeft className="h-4 w-4" /> Month</Button>
           )}
           <div className="flex rounded-md border border-border overflow-hidden">
-            {[['month', 'Month'], ['week', 'Week']].map(([v, label]) => (
+            {[['month', 'Month'], ['week', 'Week'], ['detail', 'Detail']].map(([v, label]) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -287,7 +288,7 @@ export default function CentralRegCalendar() {
                   key={d.toISOString()}
                   onClick={() => { setSelectedDay(d); setView('day'); }}
                   className={cn(
-                    'flex flex-col min-h-28 border rounded-md p-1 text-left align-top transition-colors',
+                    'flex flex-col min-h-36 border rounded-md p-1 text-left align-top transition-colors',
                     inMonth ? 'bg-card' : 'bg-muted/40',
                     isSel ? 'border-primary ring-1 ring-primary' : 'border-foreground/30',
                     dayEvents.length ? 'hover:border-primary/50' : ''
@@ -296,43 +297,27 @@ export default function CentralRegCalendar() {
                   <span className={cn('text-xs font-semibold px-1', inMonth ? 'text-foreground' : 'text-muted-foreground/50', isToday && 'bg-primary text-primary-foreground rounded-full px-1.5')}>
                     {format(d, 'd')}
                   </span>
-                  {/* Fixed room quadrants — same position in every date cell, filling the whole cell so you can see at a glance whether a room is booked or free.
-                      ARC and Other sessions share the "Other / ARC" quadrant (with the ARC count indicated); Virtual sessions render as a thin bar below the quadrants. */}
-                  <div className="grid grid-cols-2 grid-rows-2 gap-0.5 mt-1 flex-1 min-h-0">
-                    {ROOM_QUADRANTS.map(r => {
+                  {/* Vertical room stack — one row per room (incl. Echo Valley and Virtual), same position in every date cell, so you can see at a glance whether a room is booked or free. */}
+                  <div className="flex flex-col gap-0.5 mt-1 flex-1 min-h-0">
+                    {ROOM_STACK.map(r => {
                       const matched = dayEvents.filter(e => r.matches.includes(e.room));
                       const count = matched.length;
-                      const arcCount = matched.filter(e => e.room === 'arc').length;
                       return (
                         <div
                           key={r.value}
-                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''}${arcCount ? ` (ARC: ${arcCount})` : ''}` : `${r.label}: available`}
+                          title={count > 0 ? `${r.label}: ${count} session${count > 1 ? 's' : ''} — ${matched.map(e => e.title).join(', ')}` : `${r.label}: available`}
                           className={cn(
-                            'rounded flex flex-col items-center justify-center leading-none border overflow-hidden',
+                            'rounded flex items-center justify-between gap-1 px-1 py-[3px] leading-none border overflow-hidden',
                             count > 0 ? 'text-white border-transparent' : 'text-muted-foreground/60 bg-muted/30 border-border/70'
                           )}
                           style={count > 0 ? { backgroundColor: r.color } : undefined}
                         >
-                          <span className="text-[10px] font-bold">{r.abbr}</span>
-                          {count > 0
-                            ? <span className="text-[9px] opacity-90 mt-0.5">{count} booked{arcCount ? ` · ARC ${arcCount}` : ''}</span>
-                            : <span className="text-[9px] opacity-70 mt-0.5">free</span>}
+                          <span className="text-[9px] font-bold">{r.abbr}</span>
+                          <span className="text-[8px] opacity-90 truncate">{count > 0 ? `${count} booked` : 'free'}</span>
                         </div>
                       );
                     })}
                   </div>
-                  {(() => {
-                    const virtual = dayEvents.filter(e => e.room === 'virtual');
-                    if (!virtual.length) return null;
-                    return (
-                      <div
-                        title={virtual.map(e => e.title).join(', ')}
-                        className="mt-0.5 h-2.5 rounded bg-cyan-700/80 overflow-hidden flex items-center px-1"
-                      >
-                        <span className="text-[8px] font-semibold text-white leading-none truncate">Virtual × {virtual.length}</span>
-                      </div>
-                    );
-                  })()}
                   {dayEvents.some(e => !e.room) && (
                     <div className="text-[9px] text-muted-foreground mt-0.5 px-0.5">+{dayEvents.filter(e => !e.room).length} no room</div>
                   )}
@@ -354,6 +339,7 @@ export default function CentralRegCalendar() {
       )}
 
       {view === 'day' && <DayRoomView date={selectedDay} events={visible} />}
+      {view === 'detail' && <DetailedDayView date={selectedDay} events={visible} />}
     </div>
   );
 }
