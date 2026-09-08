@@ -26,7 +26,7 @@ export default function PHACDashboard() {
   const isOffSeasonNow = isOffSeason(now);
 
   const upcomingSessions = sessions
-    .filter(s => s.status === 'scheduled' && new Date(s.session_date) >= new Date(now.toDateString()))
+    .filter(s => s.status === 'scheduled' && new Date(s.session_date + 'T00:00:00') >= new Date(now.toDateString()))
     .sort((a, b) => new Date(a.session_date) - new Date(b.session_date))
     .slice(0, 5);
 
@@ -127,7 +127,7 @@ export default function PHACDashboard() {
                     <div>
                       <p className="text-sm font-medium text-foreground">{s.program_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(s.session_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {new Date(s.session_date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                         {s.start_time ? ` · ${s.start_time}` : ''}
                       </p>
                     </div>

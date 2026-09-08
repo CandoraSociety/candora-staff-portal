@@ -48,7 +48,7 @@ export default function CommunityDashboard() {
             {upcomingSessions.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No upcoming sessions</p> : (
               <div className="space-y-2">{upcomingSessions.map(s => (
                 <div key={s.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                  <div><p className="text-sm font-medium text-foreground">{s.title || s.program_name}</p><p className="text-xs text-muted-foreground">{new Date(s.session_date).toLocaleDateString()} · {s.start_time || 'TBD'} · {s.facilitator_name || 'TBD'}</p></div>
+                  <div><p className="text-sm font-medium text-foreground">{s.title || s.program_name}</p><p className="text-xs text-muted-foreground">{new Date(s.session_date + 'T00:00:00').toLocaleDateString()} · {s.start_time || 'TBD'} · {s.facilitator_name || 'TBD'}</p></div>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{s.program_name}</span>
                 </div>
               ))}</div>

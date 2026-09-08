@@ -64,7 +64,7 @@ export default function CommunitySessions() {
                   <StatusBadge status={s.status} options={SESSION_STATUS_OPTIONS} />
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  <p className="flex items-center gap-1.5"><CalendarDays className="h-3 w-3" /> {s.session_date ? new Date(s.session_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}{(s.start_time || s.end_time) && ` · ${s.start_time || ''}${s.end_time ? `–${s.end_time}` : ''}`}</p>
+                  <p className="flex items-center gap-1.5"><CalendarDays className="h-3 w-3" /> {s.session_date ? new Date(s.session_date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'TBD'}{(s.start_time || s.end_time) && ` · ${s.start_time || ''}${s.end_time ? `–${s.end_time}` : ''}`}</p>
                   {s.recurrence_pattern && s.recurrence_pattern !== 'none' && <p className="flex items-center gap-1.5"><Repeat className="h-3 w-3" /> Repeats {s.recurrence_pattern}{s.recurrence_end_date ? ` until ${new Date(s.recurrence_end_date + 'T00:00:00').toLocaleDateString()}` : ''}</p>}
                   {s.location && <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {s.location}</p>}
                   {s.facilitator_name && <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {s.facilitator_name}</p>}

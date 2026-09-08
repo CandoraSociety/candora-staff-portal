@@ -74,7 +74,7 @@ export default function PHACSessions() {
                     <StatusBadge status={s.status} options={SESSION_STATUS_OPTIONS} />
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                    <span>{new Date(s.session_date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span>{new Date(s.session_date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     {s.start_time && <span>{s.start_time}{s.end_time ? `–${s.end_time}` : ''}</span>}
                     {s.location && <span>{s.location}</span>}
                     {s.facilitator && <span>Facilitator: {s.facilitator}</span>}
