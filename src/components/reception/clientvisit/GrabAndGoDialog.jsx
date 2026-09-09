@@ -11,20 +11,22 @@ import { GRAB_AND_GO_OPTIONS, logGrabAndGoVisit } from '@/lib/rcClientVisits';
 export default function GrabAndGoDialog({ open, onOpenChange, client, onSaved }) {
   const { toast } = useToast();
   const [resourceType, setResourceType] = useState('');
+  const [resourceQuantity, setResourceQuantity] = useState('');
   const [resourceOther, setResourceOther] = useState('');
   const [comments, setComments] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) { setResourceType(''); setResourceOther(''); setComments(''); }
+    if (open) { setResourceType(''); setResourceQuantity(''); setResourceOther(''); setComments(''); }
   }, [open]);
 
   const handleSave = async () => {
     if (!resourceType) { toast({ title: 'Select a resource', variant: 'destructive' }); return; }
+    if (resourceType === 'bus_tickets' && (!resourceQuantity || Number(resourceQuantity) < 1)) { toast({ title: 'Enter the number of bus tickets', variant: 'destructive' }); return; }
     if (resourceType === 'other' && !resourceOther.trim()) { toast({ title: 'Specify the other resource', variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      await logGrabAndGoVisit({ client, resourceType, resourceOther, comments });
+      await logGrabAndGoVisit({ client, resourceType, resourceQuantity, resourceOther, comments });
       toast({ title: 'Grab and go visit logged', description: 'Added to the client\'s service history' });
       onOpenChange(false);
       onSaved?.();
@@ -49,6 +51,9 @@ export default function GrabAndGoDialog({ open, onOpenChange, client, onSaved })
               </SelectContent>
             </Select>
           </div>
+          {resourceType === 'bus_tickets' && (
+            <div className="space-y-1.5"><Label>Quantity (number of tickets) *</Label><Input type="number" min="1" step="1" value={resourceQuantity} onChange={(e) => setResourceQuantity(e.target.value)} placeholder="e.g. 2" /></div>
+          )}
           {resourceType === 'other' && (
             <div className="space-y-1.5"><Label>Other (specify) *</Label><Input value={resourceOther} onChange={(e) => setResourceOther(e.target.value)} placeholder="Describe the resource provided" /></div>
           )}

@@ -29,16 +29,18 @@ export const todayStr = () => new Date().toISOString().split('T')[0];
 export const clientFullName = (c) => `${c?.first_name || ''} ${c?.last_name || ''}`.trim();
 
 // Grab-and-go: logged immediately — visit record, service history entry and visit count
-export async function logGrabAndGoVisit({ client, resourceType, resourceOther, comments, byName }) {
+export async function logGrabAndGoVisit({ client, resourceType, resourceQuantity, resourceOther, comments, byName }) {
   const today = todayStr();
   const clientName = clientFullName(client);
   const resourceLabel = grabAndGoLabel(resourceType, resourceOther);
+  const quantity = resourceType === 'bus_tickets' && resourceQuantity ? Number(resourceQuantity) : null;
   await base44.entities.RCClientVisit.create({
     client_id: client.id,
     client_name: clientName,
     visit_date: today,
     visit_type: 'grab_and_go',
     resource_type: resourceType,
+    resource_quantity: quantity,
     resource_other: resourceOther || '',
     comments: comments || '',
     status: 'complete',
@@ -50,7 +52,7 @@ export async function logGrabAndGoVisit({ client, resourceType, resourceOther, c
     service_date: today,
     service_type: 'practical_support',
     worker_name: byName || 'Reception',
-    description: `Grab and Go — ${resourceLabel}`,
+    description: `Grab and Go — ${resourceLabel}${quantity ? ` (qty: ${quantity})` : ''}`,
     notes: comments || '',
   });
   await base44.entities.RCClient.update(client.id, { visit_count: (client.visit_count || 0) + 1 });

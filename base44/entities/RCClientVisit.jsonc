@@ -36,6 +36,10 @@
       ],
       "description": "Grab-and-go resource provided to the client"
     },
+    "resource_quantity": {
+      "type": "number",
+      "description": "Quantity provided (e.g. number of bus tickets) \u2014 shown for resources where a count matters"
+    },
     "resource_other": {
       "type": "string",
       "description": "If resource_type is 'other', specify"
