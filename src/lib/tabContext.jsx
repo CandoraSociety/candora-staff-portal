@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, LayoutGrid, Users, Heart, Briefcase, Gavel,
@@ -82,12 +82,6 @@ export function TabProvider({ children }) {
     return isTabRoute(location.pathname) ? prefix : '/';
   });
 
-  // Ref to track activeTab without re-triggering the location effect
-  const activeTabRef = useRef(activeTab);
-  useEffect(() => {
-    activeTabRef.current = activeTab;
-  }, [activeTab]);
-
   // Persist to localStorage
   useEffect(() => {
     try {
@@ -113,15 +107,12 @@ export function TabProvider({ children }) {
         const registry = PORTAL_REGISTRY[prefix];
         return [...prev, { path: prefix, label: registry?.label || prefix, fullPath }];
       });
-    } else {
-      // Non-portal route (e.g. /admin): update the active tab's fullPath
-      // so clicking the tab returns to this page
-      setTabs(prev =>
-        prev.map(t =>
-          t.path === activeTabRef.current ? { ...t, fullPath } : t
-        )
-      );
     }
+    // Non-portal routes (e.g. /admin, /user/settings) intentionally leave tab
+    // state untouched — they are utility pages opened over the current tab.
+    // Overwriting a tab's stored destination with a non-portal path hijacked
+    // tabs (e.g. the fixed Dashboard tab permanently pointing at /admin),
+    // which made tab clicks land on the wrong page or seem frozen.
   }, [location.pathname, location.search]);
 
   const openTab = useCallback((path, metadata) => {

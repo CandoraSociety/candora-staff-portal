@@ -82,9 +82,11 @@ export default function KeepAliveOutlet() {
 
         // For active portal: use live contexts (navigation works normally)
         // For inactive portals: use frozen contexts with noop navigator
+        // Inactive entries reuse one stable noop-navigator context per entry so
+        // cached portal trees don't re-render on every app navigation.
         const navValue = isActive
           ? navCtx
-          : { ...cached.navCtx, navigator: noopNavigator };
+          : cached.noopNavCtx || (cached.noopNavCtx = { ...cached.navCtx, navigator: noopNavigator });
         const locValue = isActive ? locCtx : cached.locCtx;
         const outletEl = isActive ? outlet : cached.outlet;
 
