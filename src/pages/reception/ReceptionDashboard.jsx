@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import ClickToCallButton from '@/components/reception/ClickToCallButton';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
+import ReceptionDashboardCalendar from '@/components/reception/ReceptionDashboardCalendar';
 import { APPT_STATUS_OPTIONS, DROPIN_STATUS_OPTIONS, REG_STATUS_OPTIONS } from '@/lib/receptionConstants';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -78,6 +79,8 @@ export default function ReceptionDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ReceptionDashboardCalendar />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Link to="/reception/staff"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"><Users className="h-5 w-5 text-blue-600" /></div><div><p className="text-sm font-medium text-foreground">Staff Directory</p><p className="text-xs text-muted-foreground">Find staff &amp; call</p></div></CardContent></Card></Link>
