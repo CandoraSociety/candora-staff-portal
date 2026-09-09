@@ -19,6 +19,22 @@ export const CASE_STATUS_OPTIONS = [
 export const CASE_STATUS_LABELS = Object.fromEntries(CASE_STATUS_OPTIONS.map(s => [s.value, s.label]));
 export const CASE_STATUS_COLORS = Object.fromEntries(CASE_STATUS_OPTIONS.map(s => [s.value, s.color]));
 
+// Reasons for Drop-In Casework and Scheduled Visits — these visits involve more
+// complex or time-consuming needs than grab-and-go resources.
+export const CASEWORK_REASON_OPTIONS = [
+  { value: 'housing_concerns', label: 'Housing Concerns' },
+  { value: 'financial_assistance', label: 'Financial / Income Support' },
+  { value: 'mental_health_wellbeing', label: 'Mental Health & Wellbeing' },
+  { value: 'family_parenting_support', label: 'Family & Parenting Support' },
+  { value: 'advocacy_navigation', label: 'Advocacy & System Navigation' },
+  { value: 'documentation_id', label: 'Documentation / ID' },
+  { value: 'employment_income', label: 'Employment & Income' },
+  { value: 'settlement_immigration', label: 'Settlement & Immigration' },
+  { value: 'health_medical', label: 'Health & Medical' },
+  { value: 'crisis_safety', label: 'Crisis / Safety Concerns' },
+  { value: 'other', label: 'Other' },
+];
+
 export const SERVICE_TYPE_OPTIONS = [
   { value: 'information_referral', label: 'Information & Referral' },
   { value: 'advocacy', label: 'Advocacy' },

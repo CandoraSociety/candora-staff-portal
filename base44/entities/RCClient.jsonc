@@ -175,13 +175,22 @@
         "emergency_clothing",
         "bus_tickets",
         "housing_concerns",
+        "financial_assistance",
+        "mental_health_wellbeing",
+        "family_parenting_support",
+        "advocacy_navigation",
+        "documentation_id",
+        "employment_income",
+        "settlement_immigration",
+        "health_medical",
+        "crisis_safety",
         "other"
       ],
-      "description": "Primary reason the client is accessing services"
+      "description": "Reason the client is accessing services / reason for the visit. Grab-and-go visits use the basic options; Drop-In Casework and Scheduled Visits use the more complex casework options (housing, financial, mental health, family support, advocacy, etc.)."
     },
     "reason_for_accessing_other": {
       "type": "string",
-      "description": "If reason for accessing services is 'other', specify"
+      "description": "If reason is 'other', specify"
     },
     "identified_needs": {
       "type": "string",

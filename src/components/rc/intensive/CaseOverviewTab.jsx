@@ -10,6 +10,15 @@ const REASON_LABELS = {
   emergency_clothing: 'Emergency Clothing',
   bus_tickets: 'Bus Tickets',
   housing_concerns: 'Housing Concerns',
+  financial_assistance: 'Financial / Income Support',
+  mental_health_wellbeing: 'Mental Health & Wellbeing',
+  family_parenting_support: 'Family & Parenting Support',
+  advocacy_navigation: 'Advocacy & System Navigation',
+  documentation_id: 'Documentation / ID',
+  employment_income: 'Employment & Income',
+  settlement_immigration: 'Settlement & Immigration',
+  health_medical: 'Health & Medical',
+  crisis_safety: 'Crisis / Safety Concerns',
   other: 'Other',
 };
 

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/rc/StatusBadge';
 import ClientFormCore, { REASON_OPTIONS } from '@/components/rc/ClientFormCore';
+import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
@@ -214,7 +215,7 @@ export default function RCClientDetail() {
             onExternalReferral={() => setExtRefOpen(true)}
           />
           {(() => {
-            const reasonLabel = REASON_OPTIONS.find(o => o.value === client.reason_for_accessing)?.label;
+            const reasonLabel = [...REASON_OPTIONS, ...CASEWORK_REASON_OPTIONS].find(o => o.value === client.reason_for_accessing)?.label;
             const reasonText = client.reason_for_accessing === 'other'
               ? (client.reason_for_accessing_other || 'Other')
               : (reasonLabel || client.presenting_needs);

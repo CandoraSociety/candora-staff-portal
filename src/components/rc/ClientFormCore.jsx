@@ -46,7 +46,7 @@ const SPOUSE_STATUSES = ['married', 'common_law'];
 
 // compact = Create Client Profile — hides Service Category and everything below
 // it except Notes (those are managed in other areas of the client file).
-export default function ClientFormCore({ form, update, clients = [], compact = false }) {
+export default function ClientFormCore({ form, update, clients = [], compact = false, reasonOptions = REASON_OPTIONS, reasonLabel = 'Reason For Accessing Services' }) {
   const isCaregiver = form.service_category === 'caregiver_capacity_0_5';
   const showSpouse = SPOUSE_STATUSES.includes(form.marital_status);
   const spouseOptions = (clients || []).filter((c) => c.id && c.id !== form.id);
@@ -171,10 +171,10 @@ export default function ClientFormCore({ form, update, clients = [], compact = f
 
           <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
             <div className="space-y-1.5">
-              <Label>Reason For Accessing Services</Label>
+              <Label>{reasonLabel}</Label>
               <Select value={form.reason_for_accessing || ''} onValueChange={(v) => update('reason_for_accessing', v)}>
                 <SelectTrigger><SelectValue placeholder="Select a reason" /></SelectTrigger>
-                <SelectContent>{REASON_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                <SelectContent>{reasonOptions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             {form.reason_for_accessing === 'other' && (

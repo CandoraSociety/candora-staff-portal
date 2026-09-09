@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { CalendarClock } from 'lucide-react';
 import ClientFormCore from '@/components/rc/ClientFormCore';
+import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import { useToast } from '@/components/ui/use-toast';
 import { todayStr } from '@/lib/rcClientVisits';
 
@@ -104,7 +105,7 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
             </AlertTitle>
           </Alert>
         )}
-        <ClientFormCore form={form} update={update} />
+        <ClientFormCore form={form} update={update} reasonOptions={CASEWORK_REASON_OPTIONS} reasonLabel="Reason for Visit" />
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving}>{saving ? 'Submitting...' : 'Submit'}</Button>
