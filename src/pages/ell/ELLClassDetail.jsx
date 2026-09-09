@@ -39,13 +39,13 @@ export default function ELLClassDetail() {
 
   const classQ = useQuery({ queryKey: ['ellClass', id], queryFn: () => base44.entities.ELLClass.get(id) });
   const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.list() });
+
+  const cls = classQ.data;
   const courseQ = useQuery({
     queryKey: ['ellCourse', cls?.course_id],
     queryFn: () => base44.entities.ELLClass.get(cls.course_id),
     enabled: !!cls?.course_id,
   });
-
-  const cls = classQ.data;
   const classDates = useMemo(() => {
     if (!cls?.start_date || !cls?.end_date || !(cls.schedule_days || []).length) return [];
     const start = parseLocalDate(cls.start_date);
