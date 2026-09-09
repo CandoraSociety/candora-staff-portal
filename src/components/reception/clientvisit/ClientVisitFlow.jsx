@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +32,7 @@ const EMPTY_FORM = {
 // via includeGrabAndGo={false}).
 export default function ClientVisitFlow({ includeGrabAndGo = true }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState(null);
@@ -184,10 +186,10 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
         <>
           <Card>
             <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate(`/rc/clients/${selected.id}`)} title="Open client profile">
                 <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center"><UserSearch className="h-5 w-5 text-primary" /></div>
                 <div>
-                  <p className="font-medium text-foreground">{clientFullName(selected)}</p>
+                  <p className="font-medium text-foreground group-hover:text-primary group-hover:underline">{clientFullName(selected)}</p>
                   <p className="text-xs text-muted-foreground">
                     {[selected.phone, selected.email, selected.city].filter(Boolean).join(' · ') || 'No contact info'}
                     {selected.service_category ? ` · ${SERVICE_CATEGORY_OPTIONS.find(o => o.value === selected.service_category)?.label || selected.service_category}` : ''}
