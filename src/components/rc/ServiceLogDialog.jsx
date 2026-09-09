@@ -9,11 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { SERVICE_TYPE_OPTIONS, FUNDER_CATEGORIES } from '@/lib/rcConstants';
+import { SERVICE_TYPE_OPTIONS, FUNDER_CATEGORIES, CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
+import { SERVICE_CATEGORY_OPTIONS } from '@/components/rc/ClientFormCore';
 import { useAuth } from '@/lib/AuthContext';
 
 const EMPTY = {
   client_id: '', client_name: '', service_date: '', service_type: '',
+  reason_for_visit: '', reason_for_visit_other: '', service_category: '',
   funder_category: '', worker_name: '', description: '', duration_minutes: 0,
   outcome: '', follow_up_needed: false, follow_up_date: '', notes: '',
 };
@@ -92,6 +94,21 @@ export default function ServiceLogDialog({ open, onOpenChange, clientId, clientN
             <Select value={form.funder_category} onValueChange={(v) => update('funder_category', v)}>
               <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
               <SelectContent>{FUNDER_CATEGORIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5"><Label>Reason for Visit</Label>
+            <Select value={form.reason_for_visit} onValueChange={(v) => update('reason_for_visit', v)}>
+              <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+              <SelectContent>{CASEWORK_REASON_OPTIONS.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          {form.reason_for_visit === 'other' && (
+            <div className="space-y-1.5"><Label>If other, specify</Label><Input value={form.reason_for_visit_other || ''} onChange={(e) => update('reason_for_visit_other', e.target.value)} /></div>
+          )}
+          <div className="space-y-1.5"><Label>Service Category</Label>
+            <Select value={form.service_category} onValueChange={(v) => update('service_category', v)}>
+              <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+              <SelectContent>{SERVICE_CATEGORY_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5"><Label>Worker Name</Label><Input value={form.worker_name || ''} onChange={(e) => update('worker_name', e.target.value)} /></div>

@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { CalendarClock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import ClientFormCore from '@/components/rc/ClientFormCore';
 import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,6 +26,7 @@ const CLIENT_FIELDS = [
 export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, onSaved }) {
   const { toast } = useToast();
   const [form, setForm] = useState({});
+  const [durationMinutes, setDurationMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
 
   const { data: caseworkers = [] } = useQuery({
@@ -49,6 +52,7 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
   useEffect(() => {
     if (open && client) {
       setForm(CLIENT_FIELDS.reduce((acc, f) => ({ ...acc, [f]: client[f] ?? '' }), {}));
+      setDurationMinutes(0);
     }
   }, [open, client]);
 
@@ -69,6 +73,7 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
         client_name: clientName,
         visit_date: todayStr(),
         visit_type: mode,
+        duration_minutes: durationMinutes || 0,
         intake_snapshot: { ...form },
         caseworker_name: workerName,
         caseworker_email: caseworker?.staff_email || '',
@@ -106,6 +111,17 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
           </Alert>
         )}
         <ClientFormCore form={form} update={update} reasonOptions={CASEWORK_REASON_OPTIONS} reasonLabel="Reason for Visit" />
+        <div className="space-y-1.5 mt-3">
+          <Label htmlFor="visit-duration">Hours of Service (minutes)</Label>
+          <Input
+            id="visit-duration"
+            type="number"
+            min="0"
+            value={durationMinutes || ''}
+            placeholder="e.g. 45"
+            onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)}
+          />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving}>{saving ? 'Submitting...' : 'Submit'}</Button>

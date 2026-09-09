@@ -29,6 +29,36 @@
       ],
       "description": "Type of service provided"
     },
+    "reason_for_visit": {
+      "type": "string",
+      "enum": [
+        "housing_concerns",
+        "financial_assistance",
+        "mental_health_wellbeing",
+        "family_parenting_support",
+        "advocacy_navigation",
+        "documentation_id",
+        "employment_income",
+        "settlement_immigration",
+        "health_medical",
+        "crisis_safety",
+        "other"
+      ],
+      "description": "Reason for the visit \u2014 same casework options used on Drop-In Casework and Scheduled Visit forms"
+    },
+    "reason_for_visit_other": {
+      "type": "string",
+      "description": "If reason for visit is 'other', specify"
+    },
+    "service_category": {
+      "type": "string",
+      "enum": [
+        "intensive_services",
+        "caregiver_capacity_0_5",
+        "general"
+      ],
+      "description": "Service category (Intensive Services, Caregiver Capacity 0-5, or General)"
+    },
     "funder_category": {
       "type": "string",
       "enum": [

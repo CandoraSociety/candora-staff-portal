@@ -44,6 +44,11 @@
       "type": "string",
       "description": "If resource_type is 'other', specify"
     },
+    "duration_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Hours of service \u2014 duration of the visit in minutes (casework and scheduled visits)"
+    },
     "comments": {
       "type": "string",
       "description": "Reception comments captured with the visit"
