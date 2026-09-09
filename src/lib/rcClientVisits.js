@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 
 // Shared logic for Reception Client Visits — used by the Reception Client Visit
 // tab and the Central Database Worker Dashboard.
@@ -58,14 +59,60 @@ export async function logGrabAndGoVisit({ client, resourceType, resourceQuantity
   await base44.entities.RCClient.update(client.id, { visit_count: (client.visit_count || 0) + 1 });
 }
 
-// Caseworker completes a visit — marks it complete, adds the service history
-// entry and increments the client's visit count.
+// Drop-in casework and scheduled visits — the service history entry is created
+// up front (so the visit shows on the client profile immediately), and the
+// caseworker completing the pending visit later appends their notes to it.
+const SERVICE_LOG_REASON_VALUES = [
+  'housing_concerns', 'financial_assistance', 'mental_health_wellbeing', 'family_parenting_support',
+  'advocacy_navigation', 'documentation_id', 'employment_income', 'settlement_immigration',
+  'health_medical', 'crisis_safety', 'other',
+];
+
+export async function logCaseworkVisitToServiceHistory({ visit, mode, form, workerName, durationMinutes }) {
+  const reason = SERVICE_LOG_REASON_VALUES.includes(form.reason_for_accessing) ? form.reason_for_accessing : null;
+  const reasonLabel = reason
+    ? (reason === 'other'
+        ? (form.reason_for_accessing_other || 'Other')
+        : (CASEWORK_REASON_OPTIONS.find(o => o.value === reason)?.label || reason))
+    : '';
+  const entry = {
+    client_id: visit.client_id,
+    client_name: visit.client_name,
+    service_date: visit.visit_date,
+    service_type: 'information_referral',
+    worker_name: workerName || '',
+    description: [VISIT_TYPE_LABELS[mode] || 'Client visit', reasonLabel].filter(Boolean).join(' — '),
+    duration_minutes: durationMinutes || 0,
+    source_visit_id: visit.id,
+  };
+  if (reason) {
+    entry.reason_for_visit = reason;
+    if (reason === 'other') entry.reason_for_visit_other = form.reason_for_accessing_other || '';
+  }
+  if (form.service_category) entry.service_category = form.service_category;
+  if (form.identified_needs) entry.notes = form.identified_needs;
+  await base44.entities.RCServiceLog.create(entry);
+}
+
+// Caseworker completes a visit — marks it complete and updates the service
+// history entry created when the visit was logged (appending their notes).
+// Legacy pending visits without an existing entry get one created here.
 export async function completeClientVisit({ visit, visitNotes, followUpRequired }) {
   await base44.entities.RCClientVisit.update(visit.id, {
     status: 'complete',
     visit_notes: visitNotes,
     follow_up_required: followUpRequired,
   });
+  const existing = await base44.entities.RCServiceLog.filter({ source_visit_id: visit.id });
+  if (existing.length > 0) {
+    const log = existing[0];
+    await base44.entities.RCServiceLog.update(log.id, {
+      worker_name: visit.caseworker_name || log.worker_name,
+      notes: [log.notes, visitNotes].filter(Boolean).join('\n\n'),
+      follow_up_needed: followUpRequired === 'yes',
+    });
+    return;
+  }
   await base44.entities.RCServiceLog.create({
     client_id: visit.client_id,
     client_name: visit.client_name,

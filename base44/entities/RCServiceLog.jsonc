@@ -98,6 +98,10 @@
     },
     "notes": {
       "type": "string"
+    },
+    "source_visit_id": {
+      "type": "string",
+      "description": "Reference to the RCClientVisit this entry was logged from (drop-in casework / scheduled visits). Lets the caseworker's visit completion update this entry instead of creating a duplicate."
     }
   },
   "required": [

@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import ClientFormCore from '@/components/rc/ClientFormCore';
 import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import { useToast } from '@/components/ui/use-toast';
-import { todayStr } from '@/lib/rcClientVisits';
+import { todayStr, logCaseworkVisitToServiceHistory } from '@/lib/rcClientVisits';
 
 const CLIENT_FIELDS = [
   'first_name', 'last_name', 'date_of_birth', 'phone', 'email', 'address', 'city', 'postal_code',
@@ -85,7 +85,7 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
       const clientName = `${form.first_name} ${form.last_name}`.trim();
       const payload = sanitizeForm(form);
       await base44.entities.RCClient.update(client.id, payload);
-      await base44.entities.RCClientVisit.create({
+      const visit = await base44.entities.RCClientVisit.create({
         client_id: client.id,
         client_name: clientName,
         visit_date: todayStr(),
@@ -98,9 +98,11 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
         status: 'pending',
         created_by_name: 'Reception',
       });
+      await logCaseworkVisitToServiceHistory({ visit, mode, form: payload, workerName, durationMinutes });
+      await base44.entities.RCClient.update(client.id, { visit_count: (client.visit_count || 0) + 1 });
       toast({
         title: mode === 'scheduled' ? 'Scheduled visit logged' : 'Drop-in casework visit logged',
-        description: workerName ? `Added to ${workerName}'s worker dashboard` : 'No caseworker assigned — set one on the client profile',
+        description: `Added to the client's service history${workerName ? ` and to ${workerName}'s worker dashboard` : ''}`,
       });
       onOpenChange(false);
       onSaved?.();
