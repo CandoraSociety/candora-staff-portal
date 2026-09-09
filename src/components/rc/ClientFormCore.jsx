@@ -27,8 +27,40 @@ export const REASON_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
-export default function ClientFormCore({ form, update }) {
+const GENDER_OPTIONS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+];
+
+const MARITAL_STATUS_OPTIONS = [
+  { value: 'single', label: 'Single' },
+  { value: 'married', label: 'Married' },
+  { value: 'common_law', label: 'Common Law' },
+  { value: 'separated', label: 'Separated' },
+  { value: 'divorced', label: 'Divorced' },
+  { value: 'widowed', label: 'Widowed' },
+];
+
+// Marital statuses where a spouse can be attached
+const SPOUSE_STATUSES = ['married', 'common_law'];
+
+// compact = Create Client Profile — hides Service Category and everything below
+// it except Notes (those are managed in other areas of the client file).
+export default function ClientFormCore({ form, update, clients = [], compact = false }) {
   const isCaregiver = form.service_category === 'caregiver_capacity_0_5';
+  const showSpouse = SPOUSE_STATUSES.includes(form.marital_status);
+  const spouseOptions = (clients || []).filter((c) => c.id && c.id !== form.id);
+
+  const setSpouse = (id) => {
+    if (!id || id === 'none') {
+      update('spouse_client_id', '');
+      update('spouse_name', '');
+      return;
+    }
+    const spouse = (clients || []).find((c) => c.id === id);
+    update('spouse_client_id', id);
+    update('spouse_name', spouse ? `${spouse.first_name} ${spouse.last_name}`.trim() : '');
+  };
 
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -36,6 +68,13 @@ export default function ClientFormCore({ form, update }) {
       <div className="space-y-1.5"><Label>First Name *</Label><Input value={form.first_name || ''} onChange={(e) => update('first_name', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>Last Name *</Label><Input value={form.last_name || ''} onChange={(e) => update('last_name', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>Date of Birth</Label><Input type="date" value={form.date_of_birth || ''} onChange={(e) => update('date_of_birth', e.target.value)} /></div>
+      <div className="space-y-1.5">
+        <Label>Gender</Label>
+        <Select value={form.gender || ''} onValueChange={(v) => update('gender', v)}>
+          <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+          <SelectContent>{GENDER_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
       <div className="space-y-1.5"><Label>Primary Language</Label><Input value={form.preferred_language || ''} onChange={(e) => update('preferred_language', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>Additional Languages</Label><Input value={form.additional_languages || ''} onChange={(e) => update('additional_languages', e.target.value)} placeholder="e.g. Arabic, Spanish" /></div>
       <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone || ''} onChange={(e) => update('phone', e.target.value)} /></div>
@@ -43,6 +82,28 @@ export default function ClientFormCore({ form, update }) {
       <div className="space-y-1.5 col-span-2"><Label>Address</Label><Input value={form.address || ''} onChange={(e) => update('address', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>City</Label><Input value={form.city || ''} onChange={(e) => update('city', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>Postal Code</Label><Input value={form.postal_code || ''} onChange={(e) => update('postal_code', e.target.value)} /></div>
+
+      <div className="space-y-1.5 mt-2">
+        <Label>Marital Status</Label>
+        <Select value={form.marital_status || ''} onValueChange={(v) => update('marital_status', v)}>
+          <SelectTrigger><SelectValue placeholder="Select marital status" /></SelectTrigger>
+          <SelectContent>{MARITAL_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5 mt-2"><Label>Number of Dependants</Label><Input type="number" min="0" value={form.dependants_count ?? ''} onChange={(e) => update('dependants_count', e.target.value === '' ? '' : parseInt(e.target.value) || 0)} /></div>
+      {showSpouse && (
+        <div className="space-y-1.5 col-span-2">
+          <Label>Spouse (existing client)</Label>
+          <Select value={form.spouse_client_id || 'none'} onValueChange={setSpouse}>
+            <SelectTrigger><SelectValue placeholder="Select the spouse's client profile" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {spouseOptions.map(c => <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <div className="space-y-1.5 col-span-2"><Label>Dependant Details</Label><Input value={form.dependants_detail || ''} onChange={(e) => update('dependants_detail', e.target.value)} placeholder="e.g. 2 children (ages 3 and 7), elderly mother" /></div>
 
       <div className="col-span-2 mt-2">
         <p className="text-sm font-medium text-foreground mb-2">Demographics</p>
@@ -84,56 +145,60 @@ export default function ClientFormCore({ form, update }) {
       <div className="space-y-1.5"><Label>Name</Label><Input value={form.emergency_contact_name || ''} onChange={(e) => update('emergency_contact_name', e.target.value)} /></div>
       <div className="space-y-1.5"><Label>Phone</Label><Input value={form.emergency_contact_phone || ''} onChange={(e) => update('emergency_contact_phone', e.target.value)} /></div>
 
-      <div className="col-span-2 mt-2 space-y-1.5">
-        <Label>Service Category *</Label>
-        <Select value={form.service_category || ''} onValueChange={(v) => update('service_category', v)}>
-          <SelectTrigger><SelectValue placeholder="Select a service category" /></SelectTrigger>
-          <SelectContent>{SERVICE_CATEGORY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
-      </div>
-
-      {isCaregiver && (
-        <div className="col-span-2 mt-2 p-3 rounded-lg bg-sky-50 border border-sky-200">
-          <p className="text-sm font-medium text-sky-900 mb-2">Caregiver Capacity Details</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 col-span-2">
-              <Checkbox id="has-children" checked={form.has_children_0_6 || false} onCheckedChange={(v) => update('has_children_0_6', v)} />
-              <label htmlFor="has-children" className="text-sm cursor-pointer">Has children aged 0-6</label>
-            </div>
-            <div className="space-y-1.5"><Label>Number of children (0-6)</Label><Input type="number" min="0" value={form.children_count_0_6 ?? ''} onChange={(e) => update('children_count_0_6', parseInt(e.target.value) || 0)} /></div>
-            <div className="space-y-1.5"><Label>Children's Ages (details)</Label><Input value={form.children_ages_detail || ''} onChange={(e) => update('children_ages_detail', e.target.value)} placeholder="e.g. 2yr, 4yr" /></div>
-          </div>
-        </div>
-      )}
-
-      <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
-        <div className="space-y-1.5">
-          <Label>Reason For Accessing Services</Label>
-          <Select value={form.reason_for_accessing || ''} onValueChange={(v) => update('reason_for_accessing', v)}>
-            <SelectTrigger><SelectValue placeholder="Select a reason" /></SelectTrigger>
-            <SelectContent>{REASON_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        {form.reason_for_accessing === 'other' && (
-          <div className="space-y-1.5"><Label>Other (specify)</Label><Input value={form.reason_for_accessing_other || ''} onChange={(e) => update('reason_for_accessing_other', e.target.value)} /></div>
-        )}
-        <div className="space-y-1.5"><Label>Identified Needs</Label><Textarea value={form.identified_needs || ''} onChange={(e) => update('identified_needs', e.target.value)} rows={2} /></div>
-      </div>
-
-      <div className="col-span-2 mt-4 p-4 rounded-lg bg-muted border border-border/60">
-        <p className="text-sm font-medium text-foreground mb-2">Case Management</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5"><Label>Assigned Worker</Label><Input value={form.assigned_worker || ''} onChange={(e) => update('assigned_worker', e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>Case Status</Label>
-            <Select value={form.case_status || 'intake'} onValueChange={(v) => update('case_status', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{CASE_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+      {!compact && (
+        <>
+          <div className="col-span-2 mt-2 space-y-1.5">
+            <Label>Service Category *</Label>
+            <Select value={form.service_category || ''} onValueChange={(v) => update('service_category', v)}>
+              <SelectTrigger><SelectValue placeholder="Select a service category" /></SelectTrigger>
+              <SelectContent>{SERVICE_CATEGORY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5"><Label>Intake Date</Label><Input type="date" value={form.intake_date || ''} onChange={(e) => update('intake_date', e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>Referral Source</Label><Input value={form.referral_source || ''} onChange={(e) => update('referral_source', e.target.value)} placeholder="How they came to Candora" /></div>
-        </div>
-      </div>
+
+          {isCaregiver && (
+            <div className="col-span-2 mt-2 p-3 rounded-lg bg-sky-50 border border-sky-200">
+              <p className="text-sm font-medium text-sky-900 mb-2">Caregiver Capacity Details</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 col-span-2">
+                  <Checkbox id="has-children" checked={form.has_children_0_6 || false} onCheckedChange={(v) => update('has_children_0_6', v)} />
+                  <label htmlFor="has-children" className="text-sm cursor-pointer">Has children aged 0-6</label>
+                </div>
+                <div className="space-y-1.5"><Label>Number of children (0-6)</Label><Input type="number" min="0" value={form.children_count_0_6 ?? ''} onChange={(e) => update('children_count_0_6', parseInt(e.target.value) || 0)} /></div>
+                <div className="space-y-1.5"><Label>Children's Ages (details)</Label><Input value={form.children_ages_detail || ''} onChange={(e) => update('children_ages_detail', e.target.value)} placeholder="e.g. 2yr, 4yr" /></div>
+              </div>
+            </div>
+          )}
+
+          <div className="col-span-2 mt-3 pt-3 border-t border-border space-y-3">
+            <div className="space-y-1.5">
+              <Label>Reason For Accessing Services</Label>
+              <Select value={form.reason_for_accessing || ''} onValueChange={(v) => update('reason_for_accessing', v)}>
+                <SelectTrigger><SelectValue placeholder="Select a reason" /></SelectTrigger>
+                <SelectContent>{REASON_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            {form.reason_for_accessing === 'other' && (
+              <div className="space-y-1.5"><Label>Other (specify)</Label><Input value={form.reason_for_accessing_other || ''} onChange={(e) => update('reason_for_accessing_other', e.target.value)} /></div>
+            )}
+            <div className="space-y-1.5"><Label>Identified Needs</Label><Textarea value={form.identified_needs || ''} onChange={(e) => update('identified_needs', e.target.value)} rows={2} /></div>
+          </div>
+
+          <div className="col-span-2 mt-4 p-4 rounded-lg bg-muted border border-border/60">
+            <p className="text-sm font-medium text-foreground mb-2">Case Management</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5"><Label>Assigned Worker</Label><Input value={form.assigned_worker || ''} onChange={(e) => update('assigned_worker', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Case Status</Label>
+                <Select value={form.case_status || 'intake'} onValueChange={(v) => update('case_status', v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{CASE_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5"><Label>Intake Date</Label><Input type="date" value={form.intake_date || ''} onChange={(e) => update('intake_date', e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Referral Source</Label><Input value={form.referral_source || ''} onChange={(e) => update('referral_source', e.target.value)} placeholder="How they came to Candora" /></div>
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="col-span-2 mt-4 pt-3 border-t border-border space-y-1.5"><Label>Notes</Label><Textarea value={form.notes || ''} onChange={(e) => update('notes', e.target.value)} rows={2} /></div>
     </div>

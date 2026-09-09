@@ -17,6 +17,7 @@ import { todayStr, clientFullName } from '@/lib/rcClientVisits';
 const EMPTY_FORM = {
   first_name: '', last_name: '', date_of_birth: '', phone: '', email: '', address: '', city: '', postal_code: '',
   preferred_language: '', additional_languages: '', emergency_contact_name: '', emergency_contact_phone: '',
+  gender: '', marital_status: '', spouse_client_id: '', spouse_name: '', dependants_count: '', dependants_detail: '',
   service_category: '', has_children_0_6: false, children_count_0_6: 0, children_ages_detail: '',
   english_proficiency: '', english_proficiency_notes: '', indigenous_first_nations: false, newcomer: false,
   senior: false, youth_under_25: false,
@@ -64,7 +65,6 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
 
   const handleCreate = async () => {
     if (!createForm.first_name || !createForm.last_name) { toast({ title: 'First and last name are required', variant: 'destructive' }); return; }
-    if (!createForm.service_category) { toast({ title: 'Service category is required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
       const created = await base44.entities.RCClient.create({ ...createForm, case_status: 'intake', intake_date: todayStr() });
@@ -153,7 +153,7 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
               <p className="font-heading font-bold text-foreground">New Client Profile</p>
               <Button variant="ghost" size="sm" onClick={() => { setShowCreate(false); setCreateForm({ ...EMPTY_FORM }); }}><RotateCcw className="h-4 w-4" /> Back to search</Button>
             </div>
-            <ClientFormCore form={createForm} update={updateCreate} />
+            <ClientFormCore form={createForm} update={updateCreate} clients={sortedClients} compact />
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={() => { setShowCreate(false); setCreateForm({ ...EMPTY_FORM }); }}>Cancel</Button>
               <Button onClick={handleCreate} disabled={saving}>{saving ? 'Saving...' : 'Create Profile'}</Button>
@@ -208,7 +208,7 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit Client Info</DialogTitle></DialogHeader>
-          <ClientFormCore form={editForm} update={updateEdit} />
+          <ClientFormCore form={editForm} update={updateEdit} clients={sortedClients} />
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
             <Button onClick={handleEditSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
