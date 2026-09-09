@@ -14,6 +14,11 @@
       "type": "boolean",
       "default": true,
       "description": "Whether this caseworker is currently active"
+    },
+    "intensive_access": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this caseworker has permission for Intensive Services casework (full FRN workflow access). Without it, they only see intensive client names and status in the Case Management master list."
     }
   },
   "required": [

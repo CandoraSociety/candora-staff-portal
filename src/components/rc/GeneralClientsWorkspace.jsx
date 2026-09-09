@@ -14,6 +14,8 @@ import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
 import NeedBarrierDialog, { NEED_CATEGORY_OPTIONS, NEED_STATUS_OPTIONS } from '@/components/rc/NeedBarrierDialog';
 import GeneralClientCalendar from '@/components/rc/GeneralClientCalendar';
 import { today } from '@/components/rc/intensive/caseConstants';
+import { useAuth } from '@/lib/AuthContext';
+import { matchesWorker } from '@/lib/rcCaseAccess';
 
 const typeLabel = (v) => (SERVICE_TYPE_OPTIONS || []).find(o => o.value === v)?.label || v || '—';
 const needCategoryLabel = (v, other) => v === 'other' ? (other ? `Other — ${other}` : 'Other') : (NEED_CATEGORY_OPTIONS.find(o => o.value === v)?.label || v);
@@ -27,9 +29,10 @@ const PRIORITY_STYLES = {
 // General Clients workspace — clients who aren't on a monitored intensive workflow.
 // Structured but light: a needs & barriers assessment plus the client's history of
 // interactions, so staff can give accurate advice and make appropriate referrals.
-export default function GeneralClientsWorkspace({ category = 'general' }) {
+export default function GeneralClientsWorkspace({ category = 'general', onlyMine = false }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [logOpen, setLogOpen] = useState(false);
@@ -44,9 +47,10 @@ export default function GeneralClientsWorkspace({ category = 'general' }) {
   // The General tab shows everyone not on the intensive workflow (General,
   // unset legacy records, and 0-6 Caregiver Capacity clients). The dedicated
   // Caregiver Capacity 0-6y tab shows only the Caregiver Capacity clients.
+  const scoped = onlyMine ? allClients.filter(c => matchesWorker(c.assigned_worker, user)) : allClients;
   const general = isCaregiver
-    ? allClients.filter(c => c.service_category === 'caregiver_capacity_0_5')
-    : allClients.filter(c => c.service_category !== 'intensive_services');
+    ? scoped.filter(c => c.service_category === 'caregiver_capacity_0_5')
+    : scoped.filter(c => c.service_category !== 'intensive_services');
   const heading = isCaregiver ? 'Caregiver Capacity 0-6y' : 'General Clients';
 
   const filtered = general.filter(c =>
@@ -93,7 +97,9 @@ export default function GeneralClientsWorkspace({ category = 'general' }) {
   if (general.length === 0) {
     return (
       <Card><CardContent className="p-8 text-center text-muted-foreground">
-        {isCaregiver
+        {onlyMine
+          ? (isCaregiver ? 'No Caregiver Capacity 0-6y clients assigned to you.' : 'No General clients assigned to you yet — clients you work with appear here once your name is on their record.')
+          : isCaregiver
           ? 'No 0-6 Caregiver Capacity clients yet. Clients whose Service Category is Caregiver Capacity 0-5 will appear here.'
           : 'No General clients yet. Clients whose Service Category is General or 0-6 Caregiver Capacity will appear here.'}
       </CardContent></Card>

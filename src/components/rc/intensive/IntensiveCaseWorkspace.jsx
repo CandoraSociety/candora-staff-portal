@@ -30,10 +30,11 @@ import CaseClientList from '@/components/rc/intensive/CaseClientList';
 import CaseCalendarTab from '@/components/rc/CaseCalendarTab';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import { buildDefaultStages, CASE_STAGES, migrateCase, today } from '@/components/rc/intensive/caseConstants';
+import { matchesWorker } from '@/lib/rcCaseAccess';
 
 // Intensive Services (FRN / Building Resilient Caregivers) workflow workspace —
 // sidebar stage wizard, waitlist, assessments, goals, plan, activity and transition.
-export default function IntensiveCaseWorkspace() {
+export default function IntensiveCaseWorkspace({ onlyMine = false }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -56,14 +57,20 @@ export default function IntensiveCaseWorkspace() {
   });
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
 
+  // "My Case Management" scope — only clients whose case or client record has
+  // the signed-in worker's name on it.
+  const visibleClients = onlyMine
+    ? clients.filter(c => matchesWorker(c.assigned_worker, me) || cases.some(k => k.client_id === c.id && matchesWorker(k.assigned_worker, me)))
+    : clients;
+
   useEffect(() => {
     const clientParam = new URLSearchParams(location.search).get('client');
     if (clientParam) { setSelectedId(clientParam); setCaseViewOpen(true); return; }
-    if (!selectedId && clients.length > 0) setSelectedId(clients[0].id);
-  }, [location.search, clients, selectedId]);
+    if (!selectedId && visibleClients.length > 0) setSelectedId(visibleClients[0].id);
+  }, [location.search, visibleClients, selectedId]);
 
   const selectedCase = cases.find(c => c.client_id === selectedId);
-  const selectedClient = clients.find(c => c.id === selectedId);
+  const selectedClient = visibleClients.find(c => c.id === selectedId);
 
   useEffect(() => {
     setDraft(selectedCase ? migrateCase(selectedCase) : null);
@@ -220,8 +227,8 @@ export default function IntensiveCaseWorkspace() {
 
   return (
     <div>
-      {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : clients.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">No Intensive Services clients yet. Set a client's Service Category to Intensive Services on their profile to begin.</CardContent></Card>
+      {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> : visibleClients.length === 0 ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">{onlyMine ? 'No Intensive Services clients assigned to you.' : "No Intensive Services clients yet. Set a client's Service Category to Intensive Services on their profile to begin."}</CardContent></Card>
       ) : !caseViewOpen ? (
         <div className="space-y-4">
           <div className="flex gap-1">
@@ -266,7 +273,7 @@ export default function IntensiveCaseWorkspace() {
                 <Select value={selectedId || undefined} onValueChange={setSelectedId}>
                   <SelectTrigger className="w-56"><SelectValue placeholder="Switch client" /></SelectTrigger>
                   <SelectContent>
-                    {clients.map(c => (
+                    {visibleClients.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>
                     ))}
                   </SelectContent>

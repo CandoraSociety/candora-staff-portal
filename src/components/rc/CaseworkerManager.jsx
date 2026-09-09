@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Plus, Trash2, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -46,6 +47,12 @@ export default function CaseworkerManager() {
     }
   };
 
+  const toggleIntensive = (cw, checked) => {
+    base44.entities.RCCaseworker.update(cw.id, { intensive_access: checked })
+      .then(() => queryClient.invalidateQueries({ queryKey: ['rc-caseworkers'] }))
+      .catch(err => toast({ title: 'Error updating permission', description: err.message, variant: 'destructive' }));
+  };
+
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
@@ -60,7 +67,13 @@ export default function CaseworkerManager() {
                   <p className="text-sm font-medium text-foreground">{cw.display_name || cw.staff_email}</p>
                   <p className="text-xs text-muted-foreground">{cw.staff_email}</p>
                 </div>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleRemove(cw)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                    <Switch checked={!!cw.intensive_access} onCheckedChange={(v) => toggleIntensive(cw, v)} />
+                    Intensive casework
+                  </label>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleRemove(cw)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
               </div>
             ))}
           </div>

@@ -30,7 +30,7 @@ export default function MyCaseManagement() {
   const onCompleted = () => queryClient.invalidateQueries({ queryKey: ['rc-client-visits'] });
 
   return (
-    <div className="space-y-4 max-w-3xl mx-auto">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Pending Visits ({pending.length})</CardTitle>

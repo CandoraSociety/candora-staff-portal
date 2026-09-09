@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import IntensiveCaseWorkspace from '@/components/rc/intensive/IntensiveCaseWorkspace';
-import GeneralClientsWorkspace from '@/components/rc/GeneralClientsWorkspace';
+import { useAuth } from '@/lib/AuthContext';
+import { useIntensiveAccess } from '@/lib/rcCaseAccess';
+import CaseCategoryTabs from '@/components/rc/CaseCategoryTabs';
 import MyCaseManagement from '@/components/rc/MyCaseManagement';
 import ManagePortalUsersButton from '@/components/rc/ManagePortalUsersButton';
 
-// Case Management — split by service category. Intensive Services clients get the
-// full FRN workflow wizard; General clients get a lightweight interaction history
-// (no monitored workflow — they typically reach out on their own). "My Case
-// Management" holds the signed-in caseworker's pending client visits.
+// Case Management — two scopes. "Master List" shows every client under case
+// management; "My Case Management" shows only participants the signed-in
+// caseworker has worked with (their assigned visits plus clients whose record
+// or case has their name on it). Each scope breaks clients down by service
+// category: Intensive Services (full workflow requires intensive casework
+// permission — without it, the master list still shows client names and that
+// they're receiving intensive services), General Clients, and Caregiver
+// Capacity 0-6y.
 export default function RCIntensiveCaseManagement() {
-  const [mode, setMode] = useState('intensive');
+  const [scope, setScope] = useState('master');
+  const { user } = useAuth();
+  const { hasAccess } = useIntensiveAccess(user);
 
   return (
     <div className="space-y-4">
@@ -18,30 +25,25 @@ export default function RCIntensiveCaseManagement() {
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Case Management</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Intensive Services (FRN — Building Resilient Caregivers) workflow, General Clients interaction history, and 0-6 Caregiver Capacity clients.
+            All clients under case management, split by service category — Intensive Services, General Clients, and 0-6 Caregiver Capacity.
           </p>
         </div>
         <ManagePortalUsersButton />
       </div>
 
-      <Tabs value={mode} onValueChange={setMode}>
+      <Tabs value={scope} onValueChange={setScope}>
         <TabsList>
-          <TabsTrigger value="intensive">Intensive Services</TabsTrigger>
-          <TabsTrigger value="general">General Clients</TabsTrigger>
-          <TabsTrigger value="caregiver">Caregiver Capacity 0-6y</TabsTrigger>
+          <TabsTrigger value="master">Master List</TabsTrigger>
           <TabsTrigger value="my">My Case Management</TabsTrigger>
         </TabsList>
-        <TabsContent value="intensive" className="mt-4">
-          <IntensiveCaseWorkspace />
-        </TabsContent>
-        <TabsContent value="general" className="mt-4">
-          <GeneralClientsWorkspace />
-        </TabsContent>
-        <TabsContent value="caregiver" className="mt-4">
-          <GeneralClientsWorkspace category="caregiver" />
+        <TabsContent value="master" className="mt-4">
+          <CaseCategoryTabs scope="master" intensiveAccess={hasAccess} />
         </TabsContent>
         <TabsContent value="my" className="mt-4">
-          <MyCaseManagement />
+          <div className="space-y-4">
+            <MyCaseManagement />
+            <CaseCategoryTabs scope="my" intensiveAccess={hasAccess} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
