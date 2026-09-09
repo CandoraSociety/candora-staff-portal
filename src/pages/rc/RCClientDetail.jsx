@@ -176,6 +176,7 @@ export default function RCClientDetail() {
                 ? <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Last visit: {lastVisit}</p>
                 : <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Last visit: —</p>;
             })()}
+            <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Visits: {client.visit_count || 0}</p>
             {client.created_date && <p className="text-muted-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Profile created: {new Date(client.created_date).toLocaleDateString()}</p>}
           </div>
           {(client.program_participations || []).map((pp, i) => {

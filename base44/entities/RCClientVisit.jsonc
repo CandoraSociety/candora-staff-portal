@@ -1,0 +1,93 @@
+{
+  "name": "RCClientVisit",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to RCClient"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "visit_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the visit"
+    },
+    "visit_type": {
+      "type": "string",
+      "enum": [
+        "grab_and_go",
+        "drop_in_casework",
+        "scheduled"
+      ],
+      "description": "Kind of client visit logged from Reception"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "access_computer_phone",
+        "baby_supplies",
+        "bus_tickets",
+        "emergency_food",
+        "general_supplies",
+        "other"
+      ],
+      "description": "Grab-and-go resource provided to the client"
+    },
+    "resource_other": {
+      "type": "string",
+      "description": "If resource_type is 'other', specify"
+    },
+    "comments": {
+      "type": "string",
+      "description": "Reception comments captured with the visit"
+    },
+    "intake_snapshot": {
+      "type": "object",
+      "description": "Intake-form information captured for casework visits (personal, demographic, reason for accessing, identified needs, case management)"
+    },
+    "caseworker_name": {
+      "type": "string",
+      "description": "Caseworker the visit is assigned to"
+    },
+    "caseworker_email": {
+      "type": "string",
+      "description": "Caseworker's staff user email \u2014 routes the visit to their personal Worker Dashboard in the Central Database portal"
+    },
+    "appointment_id": {
+      "type": "string",
+      "description": "Reference to RCAppointment (scheduled visits)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "complete"
+      ],
+      "default": "pending",
+      "description": "pending = waiting on the caseworker to complete the visit record; complete = logged in the client's service history"
+    },
+    "visit_notes": {
+      "type": "string",
+      "description": "Client visit notes completed by the caseworker"
+    },
+    "follow_up_required": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "description": "Whether follow-up is required (completed by the caseworker)"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Reception staff member who logged the visit"
+    }
+  },
+  "required": [
+    "client_id",
+    "visit_date"
+  ]
+}

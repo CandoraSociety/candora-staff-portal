@@ -1,0 +1,22 @@
+{
+  "name": "RCCaseworker",
+  "type": "object",
+  "properties": {
+    "staff_email": {
+      "type": "string",
+      "description": "Staff user email \u2014 visits assigned to this caseworker appear on their personal Worker Dashboard"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Caseworker name as it appears on client records and appointments"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this caseworker is currently active"
+    }
+  },
+  "required": [
+    "staff_email"
+  ]
+}

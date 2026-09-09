@@ -163,6 +163,11 @@
       "type": "string",
       "description": "General case notes"
     },
+    "visit_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total client visits logged (grab-and-go, drop-in casework and scheduled visits)"
+    },
     "program_participations": {
       "type": "array",
       "description": "Program-participation indicators auto-maintained by each program's sync into the Candora Central Database. One entry per program a person participates in. Managed by base44/shared/centralDbSync.ts \u2014 do not edit manually.",

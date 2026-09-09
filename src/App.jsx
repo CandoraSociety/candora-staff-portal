@@ -266,6 +266,7 @@ import RCClientDetail from '@/pages/rc/RCClientDetail';
 import RCIntake from '@/pages/rc/RCIntake';
 import RCReferrals from '@/pages/rc/RCReferrals';
 import RCIntensiveCaseManagement from '@/pages/rc/RCIntensiveCaseManagement';
+import RCWorkerDashboard from '@/pages/rc/RCWorkerDashboard';
 
 // EmpowerU Portal
 import EmpowerULayout from '@/components/empoweru/EmpowerULayout';
@@ -341,6 +342,7 @@ import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
+import ReceptionClientVisit from '@/pages/reception/ReceptionClientVisit';
 import ReceptionStaffDirectory from '@/pages/reception/ReceptionStaffDirectory';
 import ReceptionProgramRegistration from '@/pages/reception/ReceptionProgramRegistration';
 import ReceptionResourceFinder from '@/pages/reception/ReceptionResourceFinder';
@@ -634,6 +636,7 @@ const AuthenticatedApp = () => {
           <Route path="/rc/intake" element={<RCIntake />} />
           <Route path="/rc/referrals" element={<RCReferrals />} />
           <Route path="/rc/case-management" element={<RCIntensiveCaseManagement />} />
+          <Route path="/rc/worker-dashboard" element={<RCWorkerDashboard />} />
         </Route>
 
         {/* EmpowerU Portal - standalone layout */}
@@ -696,6 +699,7 @@ const AuthenticatedApp = () => {
           <Route path="/reception" element={<ReceptionDashboard />} />
           <Route path="/reception/appointments" element={<ReceptionAppointments />} />
           <Route path="/reception/dropins" element={<ReceptionDropIns />} />
+          <Route path="/reception/client-visit" element={<ReceptionClientVisit />} />
           <Route path="/reception/staff" element={<ReceptionStaffDirectory />} />
           <Route path="/reception/registration" element={<ReceptionProgramRegistration />} />
           <Route path="/reception/resources" element={<ReceptionResourceFinder />} />
