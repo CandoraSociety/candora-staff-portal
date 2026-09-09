@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { UserSearch, UserPlus, ShoppingBasket, HandHelping, CalendarCheck, Pencil, RotateCcw } from 'lucide-react';
+import { UserSearch, UserPlus, ShoppingBasket, HandHelping, CalendarCheck, Pencil, RotateCcw, FlaskConical } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import ClientFormCore from '@/components/rc/ClientFormCore';
 import { SERVICE_CATEGORY_OPTIONS } from '@/components/rc/ClientFormCore';
+import { generateTestClientName } from '@/lib/rcTestClients';
 import GrabAndGoDialog from '@/components/reception/clientvisit/GrabAndGoDialog';
 import CaseworkVisitDialog from '@/components/reception/clientvisit/CaseworkVisitDialog';
 import { todayStr, clientFullName } from '@/lib/rcClientVisits';
@@ -40,6 +41,7 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
   const [caseworkMode, setCaseworkMode] = useState(null); // 'drop_in_casework' | 'scheduled'
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [creatingTest, setCreatingTest] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['reception-visit-clients'],
@@ -77,6 +79,21 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
       toast({ title: 'Error creating client profile', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateTestClient = async () => {
+    setCreatingTest(true);
+    try {
+      const name = generateTestClientName();
+      const created = await base44.entities.RCClient.create({ ...name, case_status: 'intake', intake_date: todayStr() });
+      toast({ title: 'Test client created', description: clientFullName(created) });
+      setSelected(created);
+      queryClient.invalidateQueries({ queryKey: ['reception-visit-clients'] });
+    } catch (err) {
+      toast({ title: 'Error creating test client', description: err.message, variant: 'destructive' });
+    } finally {
+      setCreatingTest(false);
     }
   };
 
@@ -140,6 +157,7 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
             </div>
             <div className="flex items-center gap-2 pt-1">
               <p className="text-xs text-muted-foreground flex-1">Client doesn't have an existing profile?</p>
+              <Button variant="outline" size="sm" onClick={handleCreateTestClient} disabled={creatingTest}><FlaskConical className="h-4 w-4" /> {creatingTest ? 'Creating...' : 'Create Test Client'}</Button>
               <Button variant="outline" size="sm" onClick={() => setShowCreate(true)}><UserPlus className="h-4 w-4" /> Create Client Profile</Button>
             </div>
           </CardContent>
