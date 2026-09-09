@@ -21,6 +21,16 @@ const CLIENT_FIELDS = [
   'identified_needs', 'assigned_worker', 'case_status', 'intake_date', 'referral_source', 'notes',
 ];
 
+const BOOLEAN_FIELDS = ['has_children_0_6', 'indigenous_first_nations', 'newcomer', 'senior', 'youth_under_25'];
+
+// Coerce checkbox fields to booleans and children count to a number — the API
+// rejects empty strings for typed fields.
+const sanitizeForm = (form) => ({
+  ...form,
+  ...BOOLEAN_FIELDS.reduce((acc, f) => ({ ...acc, [f]: !!form[f] }), {}),
+  children_count_0_6: form.children_count_0_6 === '' || form.children_count_0_6 == null ? 0 : Number(form.children_count_0_6) || 0,
+});
+
 // Drop-in casework and scheduled visits — collects the same information as the
 // Central Database intake form, then routes the visit to the assigned caseworker.
 export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, onSaved }) {
@@ -51,7 +61,13 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
 
   useEffect(() => {
     if (open && client) {
-      setForm(CLIENT_FIELDS.reduce((acc, f) => ({ ...acc, [f]: client[f] ?? '' }), {}));
+      setForm(CLIENT_FIELDS.reduce((acc, f) => {
+        const v = client[f];
+        if (BOOLEAN_FIELDS.includes(f)) acc[f] = !!v;
+        else if (f === 'children_count_0_6') acc[f] = typeof v === 'number' ? v : 0;
+        else acc[f] = v ?? '';
+        return acc;
+      }, {}));
       setDurationMinutes(0);
     }
   }, [open, client]);
@@ -67,14 +83,15 @@ export default function CaseworkVisitDialog({ open, onOpenChange, client, mode, 
       const workerName = (mode === 'scheduled' ? scheduledAppt?.worker_name : form.assigned_worker || client.assigned_worker || '').trim();
       const caseworker = caseworkers.find(c => (c.display_name || '').toLowerCase() === workerName.toLowerCase());
       const clientName = `${form.first_name} ${form.last_name}`.trim();
-      await base44.entities.RCClient.update(client.id, form);
+      const payload = sanitizeForm(form);
+      await base44.entities.RCClient.update(client.id, payload);
       await base44.entities.RCClientVisit.create({
         client_id: client.id,
         client_name: clientName,
         visit_date: todayStr(),
         visit_type: mode,
         duration_minutes: durationMinutes || 0,
-        intake_snapshot: { ...form },
+        intake_snapshot: { ...payload },
         caseworker_name: workerName,
         caseworker_email: caseworker?.staff_email || '',
         appointment_id: mode === 'scheduled' ? scheduledAppt?.id || '' : '',
