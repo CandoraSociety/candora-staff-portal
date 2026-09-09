@@ -52,7 +52,7 @@ export const PORTAL_MODULES = [
   { id: 'digilit',          label: 'Digital Literacy',                route: '/digilit' },
   { id: 'ell',              label: 'English Language Learning',      route: '/ell' },
   { id: 'empoweru',         label: 'EmpowerU',                        route: '/empoweru' },
-  { id: 'rc',               label: 'Resource Centre',                 route: '/rc' },
+  { id: 'rc',               label: 'Candora Central Database',        route: '/rc' },
   { id: 'childminding',     label: 'Childminding',                   route: '/childminding' },
   { id: 'reception',        label: 'Reception',                      route: '/reception' },
   { id: 'phac',             label: 'PHAC Programs',                   route: '/phac' },
