@@ -1,0 +1,35 @@
+{
+  "name": "RCClientNote",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Reference to RCClient"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client full name"
+    },
+    "note": {
+      "type": "string",
+      "description": "Objective staff note about the client (recurring issues, context workers should know). Must be factual and free of opinion, accusations, or unnecessary detail."
+    },
+    "is_safety_alert": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this entry flags a safety concern for staff"
+    },
+    "safety_alert_explanation": {
+      "type": "string",
+      "description": "Objective description of the safety concern (observed behaviour, dates, actions taken). Required when is_safety_alert is true."
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who wrote the note"
+    }
+  },
+  "required": [
+    "client_id",
+    "note"
+  ]
+}

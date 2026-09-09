@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route, ClipboardList, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +12,8 @@ import StatusBadge from '@/components/rc/StatusBadge';
 import ClientFormCore, { REASON_OPTIONS } from '@/components/rc/ClientFormCore';
 import { CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import ServiceLogDialog from '@/components/rc/ServiceLogDialog';
+import ClientNoteDialog from '@/components/rc/ClientNoteDialog';
+import ClientNotesSection from '@/components/rc/ClientNotesSection';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
 import ClientActionButtons from '@/components/rc/ClientActionButtons';
@@ -57,12 +59,14 @@ export default function RCClientDetail() {
   const [referralOpen, setReferralOpen] = useState(false);
   const [apptOpen, setApptOpen] = useState(false);
   const [extRefOpen, setExtRefOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
 
   const { data: client, isLoading } = useQuery({ queryKey: ['rc-client', id], queryFn: () => base44.entities.RCClient.get(id) });
   const { data: serviceLogs = [] } = useQuery({ queryKey: ['rc-service-logs', id], queryFn: () => base44.entities.RCServiceLog.filter({ client_id: id }) });
   const { data: appointments = [] } = useQuery({ queryKey: ['rc-appointments', id], queryFn: () => base44.entities.RCAppointment.filter({ client_id: id }) });
   const { data: referrals = [] } = useQuery({ queryKey: ['rc-referrals', id], queryFn: () => base44.entities.RCReferral.filter({ client_id: id }) });
+  const { data: profileNotes = [] } = useQuery({ queryKey: ['rc-client-notes', id], queryFn: () => base44.entities.RCClientNote.filter({ client_id: id }) });
 
   const phac = IS_PHAC(client);
 
@@ -86,6 +90,7 @@ export default function RCClientDetail() {
     queryClient.invalidateQueries({ queryKey: ['rc-appointments', id] });
     queryClient.invalidateQueries({ queryKey: ['rc-referrals', id] });
   };
+  const invalidateNotes = () => queryClient.invalidateQueries({ queryKey: ['rc-client-notes', id] });
 
   const addToIntensive = async () => {
     setActionBusy(true);
@@ -155,11 +160,14 @@ export default function RCClientDetail() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-1 justify-end">
-              {(client.funder_categories || []).map(f => {
-                const fc = FUNDER_CATEGORIES.find(x => x.value === f);
-                return fc ? <span key={f} className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: fc.color + '20', color: fc.color }}>{fc.label}</span> : null;
-              })}
+            <div className="flex flex-col items-end gap-2">
+              <Button variant="outline" size="sm" className="h-8" onClick={() => setNoteOpen(true)}><StickyNote className="h-4 w-4" /> Add Note</Button>
+              <div className="flex flex-wrap gap-1 justify-end">
+                {(client.funder_categories || []).map(f => {
+                  const fc = FUNDER_CATEGORIES.find(x => x.value === f);
+                  return fc ? <span key={f} className="text-xs px-2 py-1 rounded-full" style={{ backgroundColor: fc.color + '20', color: fc.color }}>{fc.label}</span> : null;
+                })}
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -226,6 +234,7 @@ export default function RCClientDetail() {
               </>
             );
           })()}
+          <ClientNotesSection notes={profileNotes} onChanged={invalidateNotes} />
         </CardContent>
       </Card>
 
@@ -283,6 +292,7 @@ export default function RCClientDetail() {
       </Dialog>
 
       <ServiceLogDialog open={serviceLogOpen} onOpenChange={setServiceLogOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setServiceLogOpen(false); invalidateAll(); }} />
+      <ClientNoteDialog open={noteOpen} onOpenChange={setNoteOpen} client={client} onSaved={() => { setNoteOpen(false); invalidateNotes(); }} />
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} clientEmail={client.email} onSaved={() => { setApptOpen(false); invalidateAll(); }} />
       <ReferralDialog open={referralOpen} onOpenChange={setReferralOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setReferralOpen(false); invalidateAll(); }} />
       <ExternalReferralDialog open={extRefOpen} onOpenChange={setExtRefOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setExtRefOpen(false); invalidateAll(); }} />
