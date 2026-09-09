@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SERVICE_TYPE_OPTIONS, FUNDER_CATEGORIES } from '@/lib/rcConstants';
+import { useAuth } from '@/lib/AuthContext';
 
 const EMPTY = {
   client_id: '', client_name: '', service_date: '', service_type: '',
@@ -19,6 +20,7 @@ const EMPTY = {
 
 export default function ServiceLogDialog({ open, onOpenChange, clientId, clientName, onSaved }) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
 
@@ -35,9 +37,10 @@ export default function ServiceLogDialog({ open, onOpenChange, clientId, clientN
         client_id: clientId || '',
         client_name: clientName || '',
         service_date: new Date().toISOString().split('T')[0],
+        worker_name: user?.full_name || '',
       });
     }
-  }, [open, clientId, clientName]);
+  }, [open, clientId, clientName, user]);
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
