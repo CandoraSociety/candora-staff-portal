@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { path: '/rc', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/rc/worker-dashboard', label: 'My Dashboard', icon: CalendarCheck },
   { path: '/rc/clients', label: 'Database', icon: Database },
-  { path: '/rc/intake', label: 'Intake', icon: UserPlus },
+  { path: '/rc/intake', label: 'Client Visit', icon: UserPlus },
   { path: '/rc/referrals', label: 'Referrals', icon: ArrowLeftRight },
   { path: '/rc/case-management', label: 'Case Management', icon: ClipboardList },
 ];
