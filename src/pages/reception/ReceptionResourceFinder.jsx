@@ -16,6 +16,7 @@ export default function ReceptionResourceFinder() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [aiQuery, setAiQuery] = useState('');
   const [aiResults, setAiResults] = useState(null);
+  const [aiCommunity, setAiCommunity] = useState([]);
   const [aiReasoning, setAiReasoning] = useState('');
   const [aiSearching, setAiSearching] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -42,6 +43,7 @@ export default function ReceptionResourceFinder() {
     if (!aiQuery.trim()) return;
     setAiSearching(true);
     setAiResults(null);
+    setAiCommunity([]);
     setAiReasoning('');
     try {
       const resourceList = activeResources.map(r => ({
@@ -51,19 +53,41 @@ export default function ReceptionResourceFinder() {
       }));
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a resource navigator for a community services organization. A receptionist is looking for resources to help a participant.\n\nUser query: "${aiQuery}"\n\nAvailable resources:\n${JSON.stringify(resourceList)}\n\nFind the resources that best match the user's needs. Consider the description, keywords, category, and eligibility criteria. Return the matching resource IDs ranked by relevance (most relevant first). Also provide a brief explanation of why these resources match.`,
+        prompt: `You are a resource navigator for Candora, a community services organization in Edmonton, Alberta, Canada. A receptionist is helping a participant with the following need:\n\n"${aiQuery}"\n\nDo two things:\n\n1. Search the Edmonton Metropolitan Area (Edmonton and surrounding communities like Sherwood Park, St. Albert, Spruce Grove, Leduc, Fort Saskatchewan, Beaumont, Morinville, Stony Plain) for real, currently-available community resources and services that address this need. Prioritize free or low-cost services, non-profits, government programs, 211-listed services and community agencies. For each, include the organization name, what it provides, contact info, address, hours if known, eligibility, and cost.\n\n2. From this list of Candora's own internal/known resources, identify which ones also match:\n${JSON.stringify(resourceList)}\n\nReturn the Edmonton Metro Area community resources (most relevant first, up to 8), the matching internal resource IDs, and a brief explanation of your recommendations.`,
+        add_context_from_internet: true,
+        model: 'gemini_3_flash',
         response_json_schema: {
           type: "object",
           properties: {
-            matches: { type: "array", items: { type: "string" }, description: "Resource IDs ranked by relevance" },
-            reasoning: { type: "string", description: "Brief explanation of why these resources match" }
+            community_resources: {
+              type: "array",
+              description: "Real Edmonton Metro Area community resources/services matching the need, ranked by relevance",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string", description: "Organization/service name" },
+                  description: { type: "string", description: "What it provides and why it fits" },
+                  category: { type: "string", description: "e.g. Food Security, Housing, Mental Health" },
+                  contact_phone: { type: "string", description: "Phone number if known, else empty string" },
+                  website: { type: "string", description: "Website URL if known, else empty string" },
+                  address: { type: "string", description: "Address if known, else empty string" },
+                  hours: { type: "string", description: "Hours of operation if known, else empty string" },
+                  eligibility: { type: "string", description: "Eligibility criteria if known, else empty string" },
+                  cost: { type: "string", description: "Cost (free, low-cost, etc.) if known, else empty string" }
+                },
+                required: ["name", "description"]
+              }
+            },
+            internal_matches: { type: "array", items: { type: "string" }, description: "Matching internal resource IDs ranked by relevance" },
+            reasoning: { type: "string", description: "Brief explanation of the recommendations" }
           }
         }
       });
 
-      setAiResults(result.matches || []);
+      setAiResults(result.internal_matches || []);
+      setAiCommunity(result.community_resources || []);
       setAiReasoning(result.reasoning || '');
-      if (!result.matches || result.matches.length === 0) {
+      if ((!result.internal_matches || result.internal_matches.length === 0) && (!result.community_resources || result.community_resources.length === 0)) {
         toast({ title: 'No matching resources found', description: 'Try rephrasing your query' });
       }
     } catch (err) {
@@ -73,7 +97,7 @@ export default function ReceptionResourceFinder() {
     }
   };
 
-  const clearAiSearch = () => { setAiResults(null); setAiReasoning(''); setAiQuery(''); };
+  const clearAiSearch = () => { setAiResults(null); setAiCommunity([]); setAiReasoning(''); setAiQuery(''); };
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (r) => { setEditing(r); setDialogOpen(true); };
@@ -92,7 +116,7 @@ export default function ReceptionResourceFinder() {
             <Sparkles className="h-4 w-4 text-primary" />
             <p className="text-sm font-medium text-foreground">AI-Powered Search</p>
           </div>
-          <p className="text-xs text-muted-foreground mb-2">Describe what the participant needs in plain language — the AI will match them to the best resources.</p>
+          <p className="text-xs text-muted-foreground mb-2">Describe what the participant needs in plain language — the AI will search Edmonton Metro Area community services and match them to the best resources, including Candora's own.</p>
           <div className="flex gap-2">
             <Input placeholder="e.g. 'A single mother needs help with food and childcare'" value={aiQuery} onChange={(e) => setAiQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAiSearch(); }} />
             <Button onClick={handleAiSearch} disabled={aiSearching}>{aiSearching ? <><Loader2 className="h-4 w-4 animate-spin" /> Searching...</> : <><Sparkles className="h-4 w-4" /> Search</>}</Button>
@@ -108,9 +132,44 @@ export default function ReceptionResourceFinder() {
         <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); clearAiSearch(); }}><SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All types" /></SelectTrigger><SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="internal">Internal</SelectItem><SelectItem value="external">External</SelectItem></SelectContent></Select>
       </div>
 
+      {aiSearching && <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Searching Edmonton Metro Area services...</div>}
+
+      {!aiSearching && aiResults && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-heading font-bold text-foreground">Edmonton Metro Area Resources</h2>
+            <span className="text-xs text-muted-foreground">Found via live search</span>
+          </div>
+          {aiCommunity.length === 0 ? <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">No community services found for this query. Try rephrasing it.</CardContent></Card> : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {aiCommunity.map((r, i) => (
+                <Card key={i} className="border-primary/20">
+                  <CardContent className="p-4">
+                    <div className="mb-2">
+                      <p className="font-medium text-sm text-foreground">{r.name}</p>
+                      {r.category && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{r.category}</span>}
+                    </div>
+                    {r.description && <p className="text-sm text-muted-foreground mb-2">{r.description}</p>}
+                    <div className="space-y-0.5">
+                      {r.contact_phone && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Phone className="h-3 w-3" /> {r.contact_phone}</p>}
+                      {r.address && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><MapPin className="h-3 w-3" /> {r.address}</p>}
+                      {r.website && <a href={r.website} target="_blank" rel="noreferrer" className="text-xs text-primary flex items-center gap-1.5 hover:underline"><Globe className="h-3 w-3" /> {r.website}</a>}
+                    </div>
+                    {r.hours && <p className="text-xs text-muted-foreground mt-2"><span className="font-medium">Hours:</span> {r.hours}</p>}
+                    {r.eligibility && <p className="text-xs text-muted-foreground mt-1"><span className="font-medium">Eligibility:</span> {r.eligibility}</p>}
+                    {r.cost && <p className="text-xs text-muted-foreground mt-1"><span className="font-medium">Cost:</span> {r.cost}</p>}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+          <h2 className="text-lg font-heading font-bold text-foreground pt-2">Matching Resources in Candora's Directory</h2>
+        </div>
+      )}
+
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
-       displayList.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{activeResources.length === 0 ? 'No resources yet. Add some to get started.' : aiResults ? 'No AI matches found. Try the text search instead.' : 'No resources match your filters.'}</CardContent></Card> :
-      (
+       displayList.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{activeResources.length === 0 ? 'No resources yet. Add some to get started.' : aiResults ? 'No directory matches found for this query — see the Edmonton Metro Area results above.' : 'No resources match your filters.'}</CardContent></Card> :
+       (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {displayList.map(r => {
             const cat = RESOURCE_CATEGORY_OPTIONS.find(c => c.value === r.category);
