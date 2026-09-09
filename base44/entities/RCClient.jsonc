@@ -15,6 +15,42 @@
       "format": "date",
       "description": "Date of birth"
     },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female"
+      ],
+      "description": "Gender"
+    },
+    "marital_status": {
+      "type": "string",
+      "enum": [
+        "single",
+        "married",
+        "common_law",
+        "separated",
+        "divorced",
+        "widowed"
+      ],
+      "description": "Marital status"
+    },
+    "spouse_client_id": {
+      "type": "string",
+      "description": "Linked RCClient ID of the client's spouse, when the spouse is an existing client"
+    },
+    "spouse_name": {
+      "type": "string",
+      "description": "Spouse's full name (denormalized from the linked client profile)"
+    },
+    "dependants_count": {
+      "type": "number",
+      "description": "Number of dependants"
+    },
+    "dependants_detail": {
+      "type": "string",
+      "description": "Dependant details (e.g. 2 children ages 3 and 7, elderly mother)"
+    },
     "phone": {
       "type": "string",
       "description": "Phone number"
