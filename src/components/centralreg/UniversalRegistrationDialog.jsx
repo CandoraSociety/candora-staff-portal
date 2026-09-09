@@ -73,7 +73,11 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
       } else if (area === 'ell') {
         const waitlisting = !!form.waitlist || forced;
         isWaitlistedRef.current = waitlisting;
-        await base44.entities.ELLLearner.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective', notes: form.notes });
+        await base44.entities.ELLLearner.create({
+          first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email,
+          intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective',
+          notes: [program?.name && program.name !== 'ELL Program' ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
+        });
       } else if (area === 'digilit') {
         isWaitlistedRef.current = forced;
         await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: forced ? 'waitlisted' : 'registered', notes: form.notes });

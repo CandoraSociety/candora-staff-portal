@@ -109,6 +109,18 @@ export default function CentralRegPrograms() {
   const openCohorts = cohorts.filter(c => c.registration_open && !['completed', 'cancelled'].includes(c.status));
   const activePhac = phacPrograms.filter(p => p.status === 'active');
 
+  // ELL programs (course profiles) — top-level ELLClass records that other
+  // delivery classes can attach to via course_id. Registered separately.
+  const ellPrograms = ellClasses
+    .filter(c => c.status !== 'cancelled' && !c.course_id)
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const ellClassMeta = (cls) => {
+    const clb = { clb_1: 'CLB 1', clb_2: 'CLB 2', clb_3: 'CLB 3', clb_4: 'CLB 4', clb_5: 'CLB 5', clb_6: 'CLB 6', mixed: 'Mixed levels' }[cls.clb_level];
+    const days = { monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri' };
+    const schedule = (cls.schedule_days || []).map(d => days[d]).filter(Boolean).join(' / ');
+    return [clb, schedule, cls.start_time && cls.end_time ? `${cls.start_time}–${cls.end_time}` : ''].filter(Boolean).join(' · ');
+  };
+
   // Active (spot-taking) registration counts per area, against each area maximum.
   const areaFilled = {
     empoweru: empowerRegs.filter(r => ['registered', 'enrolled'].includes(r.status)).length,
@@ -166,7 +178,20 @@ export default function CentralRegPrograms() {
             <div className="space-y-6">
               <AreaSection title={REG_AREA_LABELS.ell} color="#22c55e" portalPath={REG_AREA_PATHS.ell} capacityControl={capacityControlFor('ell')}>
                 <div className="space-y-2">
-                  <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
+                  <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner without a specific program (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
+                  {ellPrograms.map(cls => (
+                    <ProgramCard
+                      key={cls.id}
+                      title={cls.name}
+                      subtitle={cls.description}
+                      meta={ellClassMeta(cls)}
+                      isFull={isAreaFull('ell')}
+                      noSessions={cls.status !== 'active'}
+                      sessionLabel="Class"
+                      onCreateSession={() => setSessionDialog({ area: 'ell', program: cls })}
+                      onRegister={() => openDialog('ell', cls)}
+                    />
+                  ))}
                 </div>
               </AreaSection>
 
