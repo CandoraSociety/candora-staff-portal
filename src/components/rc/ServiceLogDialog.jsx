@@ -9,14 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { SERVICE_TYPE_OPTIONS, FUNDER_CATEGORIES, CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
+import { SERVICE_TYPE_OPTIONS, CASEWORK_REASON_OPTIONS } from '@/lib/rcConstants';
 import { SERVICE_CATEGORY_OPTIONS } from '@/components/rc/ClientFormCore';
 import { useAuth } from '@/lib/AuthContext';
 
 const EMPTY = {
   client_id: '', client_name: '', service_date: '', service_type: '',
   reason_for_visit: '', reason_for_visit_other: '', service_category: '',
-  funder_category: '', worker_name: '', description: '', duration_minutes: 0,
+  worker_name: '', description: '', duration_minutes: 0,
   outcome: '', follow_up_needed: false, follow_up_date: '', notes: '',
 };
 
@@ -88,12 +88,6 @@ export default function ServiceLogDialog({ open, onOpenChange, clientId, clientN
             <Select value={form.service_type} onValueChange={(v) => update('service_type', v)}>
               <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
               <SelectContent>{SERVICE_TYPE_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5"><Label>Funder Category</Label>
-            <Select value={form.funder_category} onValueChange={(v) => update('funder_category', v)}>
-              <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
-              <SelectContent>{FUNDER_CATEGORIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5"><Label>Reason for Visit</Label>
