@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -11,6 +12,7 @@ import { TEST_CLIENT_BG, TEST_CLIENT_TEXT, TEST_CLIENT_MUTED } from '@/lib/rcTes
 // delete-all action. Rows use the same neon blue / sportscar yellow highlight
 // used in the client list.
 export default function TestClientsDialog({ open, onOpenChange, testClients = [] }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,15 @@ export default function TestClientsDialog({ open, onOpenChange, testClients = []
           {testClients.map(c => (
             <div key={c.id} className="flex items-center justify-between gap-3 rounded-md px-3 py-2" style={{ backgroundColor: TEST_CLIENT_BG }}>
               <div className="min-w-0">
-                <p className="text-sm font-bold truncate" style={{ color: TEST_CLIENT_TEXT }}>{c.first_name} {c.last_name}</p>
+                <button
+                  type="button"
+                  className="text-sm font-bold truncate block text-left hover:underline cursor-pointer"
+                  style={{ color: TEST_CLIENT_TEXT }}
+                  title="Open client profile"
+                  onClick={() => { onOpenChange(false); navigate(`/rc/clients/${c.id}`); }}
+                >
+                  {c.first_name} {c.last_name}
+                </button>
                 <p className="text-xs truncate" style={{ color: TEST_CLIENT_MUTED }}>{[c.email, c.phone].filter(Boolean).join(' · ') || 'No contact info'}</p>
               </div>
               <Button size="sm" variant="destructive" className="flex-shrink-0" onClick={() => removeOne(c)}><Trash2 className="h-3.5 w-3.5" /> Delete</Button>
