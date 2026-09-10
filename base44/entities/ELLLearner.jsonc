@@ -84,6 +84,19 @@
       "type": "string",
       "description": "Name of assigned class (denormalized for display)"
     },
+    "interested_course_id": {
+      "type": "string",
+      "description": "Reference to the ELLClass (course) the learner registered for / is interested in"
+    },
+    "interested_course_name": {
+      "type": "string",
+      "description": "Name of the course the learner is interested in (denormalized for display)"
+    },
+    "waitlist_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the learner was added to the ELL waitlist"
+    },
     "referral_source": {
       "type": "string",
       "description": "How the learner heard about the program"

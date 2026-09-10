@@ -77,6 +77,9 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email,
           intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective',
           notes: [program?.name && program.name !== 'ELL Program' ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
+          waitlist_date: waitlisting ? today() : null,
+          interested_course_id: program?.id || null,
+          interested_course_name: program?.name && program.name !== 'ELL Program' ? program.name : null,
         });
       } else if (area === 'digilit') {
         isWaitlistedRef.current = forced;

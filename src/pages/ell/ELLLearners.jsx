@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { useEllRosters, LearnerRosterTable } from "@/components/ell/ELLLearnerRosterTabs";
 
 const CLB_LEVELS = ["not_assessed", "clb_1", "clb_2", "clb_3", "clb_4", "clb_5", "clb_6", "clb_7", "clb_8", "clb_9", "clb_10", "clb_11", "clb_12"];
 
 const statusColors = {
   prospective: "bg-muted text-muted-foreground",
+  waitlisted: "bg-warning/10 text-warning",
   enrolled: "bg-primary/10 text-primary",
   active: "bg-success/10 text-success",
   completed: "bg-accent/10 text-accent-foreground",
@@ -47,12 +50,17 @@ function LearnerFormDialog({ learner, onClose }) {
       return;
     }
     setSaving(true);
+    const payload = { ...form };
+    // Track when a learner is newly placed on the waitlist (drives "days waitlisted").
+    if (form.enrollment_status === "waitlisted" && learner?.enrollment_status !== "waitlisted") {
+      payload.waitlist_date = new Date().toISOString().split("T")[0];
+    }
     try {
       if (learner) {
-        await base44.entities.ELLLearner.update(learner.id, form);
+        await base44.entities.ELLLearner.update(learner.id, payload);
         toast({ title: "Learner updated" });
       } else {
-        await base44.entities.ELLLearner.create(form);
+        await base44.entities.ELLLearner.create(payload);
         toast({ title: "Learner added" });
       }
       queryClient.invalidateQueries(["ellLearners"]);
@@ -121,7 +129,7 @@ function LearnerFormDialog({ learner, onClose }) {
               <Select value={form.enrollment_status} onValueChange={(v) => setForm({ ...form, enrollment_status: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["prospective", "enrolled", "active", "completed", "withdrawn"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {["prospective", "waitlisted", "enrolled", "active", "completed", "withdrawn"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -184,6 +192,8 @@ function DeleteConfirmDialog({ learner, onClose }) {
 }
 
 export default function ELLLearners() {
+  const [tab, setTab] = useState("all");
+  const rosters = useEllRosters();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
@@ -217,72 +227,91 @@ export default function ELLLearners() {
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search learners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
-        </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-        >
-          <option value="all">All Status</option>
-          <option value="prospective">Prospective</option>
-          <option value="enrolled">Enrolled</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="withdrawn">Withdrawn</option>
-        </select>
-      </div>
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList>
+          <TabsTrigger value="all">All Learners</TabsTrigger>
+          <TabsTrigger value="active">Active Learners ({rosters.activeLearners.length})</TabsTrigger>
+          <TabsTrigger value="waitlisted">Waitlisted Learners ({rosters.waitlisted.length})</TabsTrigger>
+        </TabsList>
 
-      {isLoading ? (
-        <div className="text-center py-12">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-        </div>
-      ) : filtered?.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No learners found</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {filtered?.map((learner) => (
-                <div key={learner.id} className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
-                      {learner.first_name?.[0]}{learner.last_name?.[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="font-medium text-sm truncate">{learner.first_name} {learner.last_name}</h4>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {learner.clb_level?.replace("_", " ").toUpperCase()}
-                        {learner.country_of_origin ? ` · ${learner.country_of_origin}` : ""}
-                        {learner.email ? ` · ${learner.email}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={statusColors[learner.enrollment_status] || "bg-muted text-muted-foreground"}>
-                      {learner.enrollment_status}
-                    </Badge>
-                    <Button size="icon" variant="ghost" onClick={() => { setEditLearner(learner); setShowForm(true); }}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => setDeleteLearner(learner)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+        <TabsContent value="all" className="space-y-4 mt-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search learners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="prospective">Prospective</option>
+              <option value="waitlisted">Waitlisted</option>
+              <option value="enrolled">Enrolled</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="withdrawn">Withdrawn</option>
+            </select>
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : filtered?.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No learners found</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {filtered?.map((learner) => (
+                    <div key={learner.id} className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
+                          {learner.first_name?.[0]}{learner.last_name?.[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-medium text-sm truncate">{learner.first_name} {learner.last_name}</h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {learner.clb_level?.replace("_", " ").toUpperCase()}
+                            {learner.country_of_origin ? ` · ${learner.country_of_origin}` : ""}
+                            {learner.email ? ` · ${learner.email}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={statusColors[learner.enrollment_status] || "bg-muted text-muted-foreground"}>
+                          {learner.enrollment_status}
+                        </Badge>
+                        <Button size="icon" variant="ghost" onClick={() => { setEditLearner(learner); setShowForm(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => setDeleteLearner(learner)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="active" className="mt-4">
+          <LearnerRosterTable mode="active" learners={rosters.activeLearners} classById={rosters.classById} note={rosters.rosterNote} isLoading={rosters.isLoading} />
+        </TabsContent>
+
+        <TabsContent value="waitlisted" className="mt-4">
+          <LearnerRosterTable mode="waitlisted" learners={rosters.waitlisted} isLoading={rosters.isLoading} />
+        </TabsContent>
+      </Tabs>
 
       {showForm && <LearnerFormDialog learner={editLearner} onClose={() => { setShowForm(false); setEditLearner(null); }} />}
       {deleteLearner && <DeleteConfirmDialog learner={deleteLearner} onClose={() => setDeleteLearner(null)} />}

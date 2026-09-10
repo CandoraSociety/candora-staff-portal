@@ -10,6 +10,7 @@ import CreateSessionDialog from '@/components/centralreg/CreateSessionDialog';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import AreaCapacityControl from '@/components/centralreg/AreaCapacityControl';
 import { REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
+import ELLLearnerRosterTabs from '@/components/ell/ELLLearnerRosterTabs';
 
 function AreaSection({ title, color, portalPath, capacityControl, children }) {
   return (
@@ -191,6 +192,10 @@ export default function CentralRegPrograms() {
                       onRegister={() => openDialog('ell', cls)}
                     />
                   ))}
+                </div>
+                <div className="pt-3 mt-3 border-t">
+                  <p className="text-sm font-medium text-foreground mb-2">Learner Rosters</p>
+                  <ELLLearnerRosterTabs />
                 </div>
               </AreaSection>
 
