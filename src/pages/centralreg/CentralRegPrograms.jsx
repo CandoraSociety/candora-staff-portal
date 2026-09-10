@@ -178,7 +178,6 @@ export default function CentralRegPrograms() {
             <div className="space-y-6">
               <AreaSection title={REG_AREA_LABELS.ell} color="#22c55e" portalPath={REG_AREA_PATHS.ell} capacityControl={capacityControlFor('ell')}>
                 <div className="space-y-2">
-                  <ProgramCard title="ELL Program — Ongoing Intake" subtitle="Register a new learner without a specific program (they start as Prospective until assessed and placed in a class)" isFull={isAreaFull('ell')} noSessions={!ellClasses.some(c => c.status === 'active')} sessionLabel="Class" onCreateSession={() => setSessionDialog({ area: 'ell' })} onRegister={() => openDialog('ell', { name: 'ELL Program' })} />
                   {ellPrograms.map(cls => (
                     <ProgramCard
                       key={cls.id}
