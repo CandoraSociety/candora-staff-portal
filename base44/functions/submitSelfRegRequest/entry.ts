@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
-import { matchSettings, restrictionActive, applySelfRegAction, todayStr } from '../../shared/selfReg.ts';
+import { matchSettings, restrictionActive, activeEllLearners, applySelfRegAction, todayStr } from '../../shared/selfReg.ts';
 
 // Public (QR-code) endpoint — no auth. Records a registration REQUEST.
 // When the program does not require registrar approval, the registration is
@@ -28,9 +28,19 @@ export default async function(req) {
     }
 
     // ELL active-learner restriction: the requester must have selected their
-    // name from the active-learner roster.
-    if (area === 'ell' && restrictionActive(setting) && !learner_id) {
-      return Response.json({ error: 'Registration for this course is currently limited to active learners — your name was not found on the active list' }, { status: 403 });
+    // name from the active-learner roster (verified server-side).
+    if (area === 'ell' && restrictionActive(setting)) {
+      if (!learner_id) {
+        return Response.json({ error: 'Registration for this course is currently limited to active learners — your name was not found on the active list' }, { status: 403 });
+      }
+      const [learners, classes] = await Promise.all([
+        svc.entities.ELLLearner.list('-created_date', 1000),
+        svc.entities.ELLClass.list(),
+      ]);
+      const roster = activeEllLearners(learners, classes).map(l => l.id);
+      if (!roster.includes(learner_id)) {
+        return Response.json({ error: 'Registration for this course is currently limited to active learners — your name was not found on the active list' }, { status: 403 });
+      }
     }
 
     const record = {
