@@ -1,4 +1,6 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,6 +52,21 @@ export default function ClientFormCore({ form, update, clients = [], compact = f
   const isCaregiver = form.service_category === 'caregiver_capacity_0_5';
   const showSpouse = SPOUSE_STATUSES.includes(form.marital_status);
   const spouseOptions = (clients || []).filter((c) => c.id && c.id !== form.id);
+
+  // Assigned Worker dropdown — active resource workers (RCCaseworker list).
+  // Anyone added there gets their own Worker Dashboard in the Central Database.
+  const { data: caseworkers = [] } = useQuery({
+    queryKey: ['rc-caseworkers'],
+    queryFn: () => base44.entities.RCCaseworker.list(),
+  });
+  const activeWorkers = caseworkers
+    .filter((c) => c.active !== false)
+    .map((c) => c.display_name || c.staff_email);
+  // Keep any legacy typed-in worker visible in the dropdown so existing
+  // client records don't appear blank.
+  const workerOptions = form.assigned_worker && !activeWorkers.includes(form.assigned_worker)
+    ? [...activeWorkers, form.assigned_worker]
+    : activeWorkers;
 
   const setSpouse = (id) => {
     if (!id || id === 'none') {
@@ -186,7 +203,16 @@ export default function ClientFormCore({ form, update, clients = [], compact = f
           <div className="col-span-2 mt-4 p-4 rounded-lg bg-muted border border-border/60">
             <p className="text-sm font-medium text-foreground mb-2">Case Management</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5"><Label>Assigned Worker</Label><Input value={form.assigned_worker || ''} onChange={(e) => update('assigned_worker', e.target.value)} /></div>
+              <div className="space-y-1.5">
+                <Label>Assigned Worker</Label>
+                <Select value={form.assigned_worker || 'none'} onValueChange={(v) => update('assigned_worker', v === 'none' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Select a resource worker" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {workerOptions.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1.5"><Label>Case Status</Label>
                 <Select value={form.case_status || 'intake'} onValueChange={(v) => update('case_status', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
