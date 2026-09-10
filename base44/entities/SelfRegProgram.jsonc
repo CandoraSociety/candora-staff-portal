@@ -1,0 +1,49 @@
+{
+  "name": "SelfRegProgram",
+  "type": "object",
+  "properties": {
+    "area": {
+      "type": "string",
+      "enum": [
+        "community",
+        "empoweru",
+        "phac",
+        "ell",
+        "digilit",
+        "frn"
+      ],
+      "description": "Program area this self-registration setting belongs to"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Linked program/cohort/course ID (null for name-only programs like FRN groups and area-wide Digital Literacy)"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program name (used to match settings when there is no program ID)"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether public self-registration (QR page) is enabled for this program"
+    },
+    "require_approval": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the registrar must approve requests. False = 'Do not require registrar approval to register' (public submissions are registered immediately)"
+    },
+    "active_learners_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "ELL only \u2014 restrict self-registration to learners on the Active Learners roster"
+    },
+    "active_learners_expiry": {
+      "type": "string",
+      "format": "date",
+      "description": "ELL only \u2014 when set, the active-learners-only restriction stops applying after this date"
+    }
+  },
+  "required": [
+    "area"
+  ]
+}

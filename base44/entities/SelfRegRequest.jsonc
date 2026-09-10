@@ -1,0 +1,109 @@
+{
+  "name": "SelfRegRequest",
+  "type": "object",
+  "properties": {
+    "area": {
+      "type": "string",
+      "enum": [
+        "community",
+        "empoweru",
+        "phac",
+        "ell",
+        "digilit",
+        "frn"
+      ],
+      "description": "Program area the request is for"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Linked program/cohort/course ID (null for name-only programs)"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program name the person requested"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Selected session ID (when the program has sessions)"
+    },
+    "session_name": {
+      "type": "string",
+      "description": "Selected session name"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Selected session date"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "Requester's first name (child's first name for PHAC programs)"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Requester's last name (child's last name for PHAC programs)"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Requester's phone"
+    },
+    "email": {
+      "type": "string",
+      "description": "Requester's email"
+    },
+    "parent_guardian_name": {
+      "type": "string",
+      "description": "Parent/guardian name (PHAC programs)"
+    },
+    "parent_guardian_phone": {
+      "type": "string",
+      "description": "Parent/guardian phone (PHAC programs)"
+    },
+    "parent_guardian_email": {
+      "type": "string",
+      "description": "Parent/guardian email (PHAC programs)"
+    },
+    "learner_id": {
+      "type": "string",
+      "description": "ELL active-learner restriction \u2014 the ELLLearner the requester selected from the active roster"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes submitted with the request"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "waitlisted"
+      ],
+      "default": "pending",
+      "description": "pending = awaiting the registrar; approved/rejected/waitlisted = registrar's decision"
+    },
+    "auto_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the request was registered automatically (program does not require registrar approval)"
+    },
+    "reviewed_by_name": {
+      "type": "string",
+      "description": "Staff member who reviewed the request"
+    },
+    "reviewed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was reviewed"
+    },
+    "review_notes": {
+      "type": "string",
+      "description": "Notes recorded with the decision"
+    }
+  },
+  "required": [
+    "area",
+    "first_name",
+    "last_name"
+  ]
+}
