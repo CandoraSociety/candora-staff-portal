@@ -14,6 +14,7 @@ import { TabProvider } from '@/lib/tabContext';
 import VolunteerPortal from '@/pages/portal/VolunteerPortal';
 import StaffPortal from '@/pages/portal/StaffPortal';
 import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
+import SelfRegister from '@/pages/portal/SelfRegister';
 
 // Auth pages
 import Login from '@/pages/Login';
@@ -303,6 +304,7 @@ import CentralRegRegistrations from '@/pages/centralreg/CentralRegRegistrations'
 import CentralRegWaitlists from '@/pages/centralreg/CentralRegWaitlists';
 import CentralRegVolunteers from '@/pages/centralreg/CentralRegVolunteers';
 import CentralRegCalendar from '@/pages/centralreg/CentralRegCalendar';
+import CentralRegSelfRegRequests from '@/pages/centralreg/CentralRegSelfRegRequests';
 
 // Community Programs Portal
 import CommunityLayout from '@/components/community/CommunityLayout';
@@ -358,7 +360,7 @@ import EmployerDashboard from '@/pages/employer-portal/EmployerDashboard';
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
-  const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal'].includes(location);
+  const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/self-register'].includes(location);
 
   // Only show loading spinner for protected routes, not public auth pages
   if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
@@ -389,6 +391,9 @@ const AuthenticatedApp = () => {
       <Route path="/volunteer-portal" element={<VolunteerPortal />} />
       <Route path="/staff-portal" element={<StaffPortal />} />
       <Route path="/pathways-intake" element={<PathwaysPublicIntake />} />
+
+      {/* Public QR self-registration page — standalone, no auth, no app navigation */}
+      <Route path="/self-register" element={<SelfRegister />} />
 
       {/* Employer Portal — isolated, employer-only (login is public) */}
       <Route path="/employer-portal/login" element={<EmployerLogin />} />
@@ -711,6 +716,7 @@ const AuthenticatedApp = () => {
           <Route path="/central-registration/registrations" element={<CentralRegRegistrations />} />
           <Route path="/central-registration/calendar" element={<CentralRegCalendar />} />
           <Route path="/central-registration/waitlists" element={<CentralRegWaitlists />} />
+          <Route path="/central-registration/requests" element={<CentralRegSelfRegRequests />} />
           <Route path="/central-registration/volunteers" element={<CentralRegVolunteers />} />
         </Route>
 

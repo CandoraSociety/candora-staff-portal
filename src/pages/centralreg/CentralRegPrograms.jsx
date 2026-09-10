@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Plus, ExternalLink, CalendarPlus } from 'lucide-react';
+import { Plus, ExternalLink, CalendarPlus, QrCode } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UniversalRegistrationDialog from '@/components/centralreg/UniversalRegistrationDialog';
+import SelfRegSettingsDialog from '@/components/centralreg/SelfRegSettingsDialog';
 import CreateSessionDialog from '@/components/centralreg/CreateSessionDialog';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import AreaCapacityControl from '@/components/centralreg/AreaCapacityControl';
@@ -50,7 +51,7 @@ function CategorySection({ title, description, portalPath, portalLabel = 'Open p
   );
 }
 
-function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl, noSessions = false, sessionLabel = 'Session', onCreateSession }) {
+function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capacityControl, noSessions = false, sessionLabel = 'Session', onCreateSession, onSelfReg }) {
   return (
     <Card className="hover:shadow-sm transition-shadow"><CardContent className="p-3">
       <div className="flex items-center justify-between gap-3">
@@ -63,6 +64,7 @@ function ProgramCard({ title, subtitle, meta, onRegister, isFull = false, capaci
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {capacityControl}
+          {onSelfReg && <Button size="sm" variant="outline" onClick={onSelfReg} title="Public self-registration (QR code & settings)" className="flex-shrink-0"><QrCode className="h-3.5 w-3.5" /></Button>}
           {onCreateSession && <Button size="sm" variant="outline" onClick={onCreateSession} className="flex-shrink-0"><CalendarPlus className="h-3.5 w-3.5" /> Create {sessionLabel}</Button>}
           <Button size="sm" onClick={onRegister} disabled={noSessions} className="flex-shrink-0"><Plus className="h-3.5 w-3.5" /> {isFull ? 'Add to Waitlist' : 'Register'}</Button>
         </div>
@@ -75,6 +77,7 @@ export default function CentralRegPrograms() {
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState(null); // { area, program }
   const [sessionDialog, setSessionDialog] = useState(null); // { area, program }
+  const [selfRegDialog, setSelfRegDialog] = useState(null); // { area, program }
   const [giftShopOpen, setGiftShopOpen] = useState(false);
 
   const { data: communityPrograms = [], isLoading } = useQuery({ queryKey: ['cr-community-programs'], queryFn: () => base44.entities.CommunityProgram.list() });
@@ -190,6 +193,7 @@ export default function CentralRegPrograms() {
                       sessionLabel="Class"
                       onCreateSession={() => setSessionDialog({ area: 'ell', program: cls })}
                       onRegister={() => openDialog('ell', cls)}
+                      onSelfReg={() => setSelfRegDialog({ area: 'ell', program: cls })}
                     />
                   ))}
                 </div>
@@ -201,7 +205,7 @@ export default function CentralRegPrograms() {
 
               <AreaSection title={REG_AREA_LABELS.digilit} color="#6366f1" portalPath={REG_AREA_PATHS.digilit} capacityControl={capacityControlFor('digilit')}>
                 <div className="space-y-2">
-                  <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} noSessions={!digilitSessions.some(s => s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'digilit' })} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} />
+                  <ProgramCard title="Digital Literacy Program" subtitle="Register a new participant for digital literacy sessions" isFull={isAreaFull('digilit')} noSessions={!digilitSessions.some(s => s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'digilit' })} onRegister={() => openDialog('digilit', { name: 'Digital Literacy' })} onSelfReg={() => setSelfRegDialog({ area: 'digilit', program: { name: 'Digital Literacy' } })} />
                 </div>
               </AreaSection>
 
@@ -214,7 +218,7 @@ export default function CentralRegPrograms() {
                     </div>
                   )}
                   {openCohorts.map(c => (
-                    <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => openDialog('empoweru', c)} />
+                    <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => openDialog('empoweru', c)} onSelfReg={() => setSelfRegDialog({ area: 'empoweru', program: c })} />
                   ))}
                 </div>
               </AreaSection>
@@ -226,7 +230,7 @@ export default function CentralRegPrograms() {
             <div className="space-y-2">
               {activePhac.length === 0 && <p className="text-sm text-muted-foreground py-2">PHAC programs are yet to be added — create them in the PHAC portal and they'll appear here.</p>}
               {activePhac.map(p => (
-                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} noSessions={!phacSessions.some(s => s.program_id === p.id && s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'phac', program: p })} onRegister={() => openDialog('phac', p)} />
+                <ProgramCard key={p.id} title={p.name} subtitle={p.description} meta={[p.location, p.facilitator].filter(Boolean).join(' · ')} isFull={isAreaFull('phac')} noSessions={!phacSessions.some(s => s.program_id === p.id && s.status !== 'cancelled')} sessionLabel="Session" onCreateSession={() => setSessionDialog({ area: 'phac', program: p })} onRegister={() => openDialog('phac', p)} onSelfReg={() => setSelfRegDialog({ area: 'phac', program: p })} />
               ))}
             </div>
           </CategorySection>
@@ -244,6 +248,7 @@ export default function CentralRegPrograms() {
                   sessionLabel="Session"
                   onCreateSession={() => setSessionDialog({ area: 'frn', program: { name } })}
                   onRegister={() => openDialog('frn', { name })}
+                  onSelfReg={() => setSelfRegDialog({ area: 'frn', program: { name } })}
                 />
               ))}
             </div>
@@ -267,6 +272,7 @@ export default function CentralRegPrograms() {
                     onCreateSession={() => setSessionDialog({ area: 'community', program: p })}
                     capacityControl={<AreaCapacityControl area="community" programId={p.id} capacityRecord={stats.rec} filled={stats.filled} />}
                     onRegister={() => openDialog('community', p)}
+                    onSelfReg={() => setSelfRegDialog({ area: 'community', program: p })}
                   />
                 );
               })}
@@ -290,6 +296,7 @@ export default function CentralRegPrograms() {
       )}
 
       <UniversalRegistrationDialog open={!!dialog} onOpenChange={(o) => !o && setDialog(null)} area={dialog?.area} program={dialog?.program} forceWaitlist={dialogForceWaitlist} onSaved={onSaved} />
+      <SelfRegSettingsDialog open={!!selfRegDialog} onOpenChange={(o) => !o && setSelfRegDialog(null)} area={selfRegDialog?.area} program={selfRegDialog?.program} />
       <CreateSessionDialog open={!!sessionDialog} onOpenChange={(o) => !o && setSessionDialog(null)} area={sessionDialog?.area} program={sessionDialog?.program} onSaved={() => { setSessionDialog(null); queryClient.invalidateQueries(); }} />
       <KidsGiftShopRegistrationDialog open={giftShopOpen} onOpenChange={setGiftShopOpen} forceWaitlist={isAreaFull('kids_gift_shop')} onSaved={onGiftShopSaved} />
     </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -9,6 +11,7 @@ const NAV_ITEMS = [
   { path: '/central-registration', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/central-registration/programs', label: 'Programs & Registration', icon: ClipboardList },
   { path: '/central-registration/registrations', label: 'All Registrations', icon: Users },
+  { path: '/central-registration/requests', label: 'Registration Requests', icon: Inbox },
   { path: '/central-registration/calendar', label: 'Calendar', icon: CalendarDays },
   { path: '/central-registration/waitlists', label: 'Waitlists', icon: ListOrdered },
   { path: '/central-registration/volunteers', label: 'Volunteer Registration', icon: HeartHandshake },
@@ -18,6 +21,13 @@ export default function CentralRegLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, orgName } = useOrgSettings();
+
+  // Pending public QR self-registration requests — shown as a badge on the nav.
+  const { data: pendingReqs = [] } = useQuery({
+    queryKey: ['selfreg-requests-pending'],
+    queryFn: () => base44.entities.SelfRegRequest.filter({ status: 'pending' }),
+  });
+  const pendingCount = pendingReqs.length;
 
   const isActive = (path) => path === '/central-registration' ? location.pathname === '/central-registration' : location.pathname.startsWith(path);
 
@@ -32,13 +42,13 @@ export default function CentralRegLayout() {
           </div>
           <nav className="hidden lg:flex items-center gap-1">
             {NAV_ITEMS.map(item => { const Icon = item.icon; return (
-              <Link key={item.path} to={item.path} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}</Link>
+              <Link key={item.path} to={item.path} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}{item.path === '/central-registration/requests' && pendingCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">{pendingCount}</span>}</Link>
             ); })}
           </nav>
           <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
         {mobileOpen && <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">{NAV_ITEMS.map(item => { const Icon = item.icon; return (
-          <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}</Link>
+          <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}{item.path === '/central-registration/requests' && pendingCount > 0 && <span className="ml-auto inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">{pendingCount}</span>}</Link>
         ); })}</nav>}
       </header>
       <main className="p-4 lg:p-6 max-w-7xl mx-auto"><Outlet /></main>
