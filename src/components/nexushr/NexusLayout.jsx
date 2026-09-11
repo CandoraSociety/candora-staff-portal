@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import {
   LayoutDashboard, Users, FileText, ClipboardList, AlertTriangle,
-  GraduationCap, Scale, BookOpen, TrendingUp, DollarSign,
+  GraduationCap, BookOpen,
   Shield, ChevronLeft, ChevronRight, LogOut, Award, Home, Clock, Star, Mail
 } from 'lucide-react';
 
@@ -21,9 +21,6 @@ const allNavItems = [
   { path: '/nexushr/email-employees', label: 'Email Employees', icon: Mail, access: 'manager' },
   { path: '/nexushr/contracts', label: 'Contracts', icon: FileText, access: 'hr_admin' },
   { path: '/nexushr/corrective-actions', label: 'Corrective Actions', icon: Shield, access: 'hr_admin' },
-  { path: '/nexushr/legal', label: 'Legal Cases', icon: Scale, access: 'hr_admin' },
-  { path: '/nexushr/career-plans', label: 'Career & Succession', icon: TrendingUp, access: 'hr_admin' },
-  { path: '/nexushr/pay-grid', label: 'Pay Grid', icon: DollarSign, access: 'hr_admin' },
   { path: '/nexushr/service-awards', label: 'Service Awards', icon: Award, access: 'hr_admin' },
   { path: '/nexushr/onboarding', label: 'Onboarding', icon: Users, access: 'hr_admin' },
 ];
