@@ -222,11 +222,11 @@ export default function FinanceReimbursements() {
                                   <th className="px-2 py-1.5 font-semibold">Program</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">GST</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">Total</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted/70">1/2 GST</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted/70">Funder Cost</th>
-                                  <th className="px-2 py-1.5 font-semibold bg-muted/70">Account #</th>
-                                  <th className="px-2 py-1.5 font-semibold bg-muted/70">Funder #</th>
-                                  <th className="px-2 py-1.5 font-semibold text-center bg-muted/70">Save</th>
+                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted">1/2 GST</th>
+                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted">Funder Cost</th>
+                                  <th className="px-2 py-1.5 font-semibold bg-muted">Account #</th>
+                                  <th className="px-2 py-1.5 font-semibold bg-muted">Funder #</th>
+                                  <th className="px-2 py-1.5 font-semibold text-center bg-muted">Save</th>
                                   <th className="px-2 py-1.5 font-semibold text-center">Receipt</th>
                                 </tr>
                               </thead>
