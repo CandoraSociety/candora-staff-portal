@@ -28,11 +28,15 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
       const name = displayName(user);
       setHeader({
         payable_to: name,
-        etransfer_email: user?.email || '',
+        etransfer_email: user?.etransfer_email || user?.email || '',
         requested_by: name,
         date_requested: format(new Date(), 'yyyy-MM-dd'),
-        staff_signature: name,
+        staff_signature: '',
       });
+      // Pick up the latest saved e-transfer email from the profile
+      base44.auth.me().then(u => {
+        setHeader(h => ({ ...h, etransfer_email: u?.etransfer_email || u?.email || '' }));
+      }).catch(() => {});
     }
   }, [open, user]);
 
@@ -44,6 +48,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
   const submit = async () => {
     setError('');
     if (!header.payable_to.trim()) { setError('Enter who the cheque is payable to.'); return; }
+    if (!header.staff_signature.trim()) { setError('Type your e-signature to submit.'); return; }
     setSubmitting(true);
     try {
       const form = await base44.entities.StaffReimbursementRequest.create({
@@ -115,7 +120,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
               <Input type="date" value={header.date_requested} onChange={e => setH('date_requested', e.target.value)} />
             </div>
             <div className="col-span-2">
-              <Label className="text-xs">Staff Signature (type your name)</Label>
+              <Label className="text-xs">e-Signature — type your full name *</Label>
               <Input value={header.staff_signature} onChange={e => setH('staff_signature', e.target.value)} />
             </div>
           </div>

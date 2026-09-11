@@ -2,6 +2,7 @@ import React from 'react';
 import { Receipt } from 'lucide-react';
 import UnsubmittedEntries from '@/components/reimbursements/UnsubmittedEntries';
 import ReimbursementFormsList from '@/components/reimbursements/ReimbursementFormsList';
+import EtransferEmailBar from '@/components/reimbursements/EtransferEmailBar';
 
 export default function ReimbursementRequests() {
   return (
@@ -14,6 +15,8 @@ export default function ReimbursementRequests() {
           Enter each out-of-pocket purchase as it happens. When you're ready, submit your unsubmitted entries as one reimbursement form — Finance reviews it and marks it paid.
         </p>
       </div>
+
+      <EtransferEmailBar />
 
       <UnsubmittedEntries />
 

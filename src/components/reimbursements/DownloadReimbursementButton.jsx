@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Download, PenLine } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -11,8 +15,28 @@ const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 
 export default function DownloadReimbursementButton({ entries }) {
   const { user } = useCurrentUser();
+  const [sigOpen, setSigOpen] = useState(false);
+  const [signature, setSignature] = useState('');
+  const [sigError, setSigError] = useState('');
 
-  const download = () => {
+  const askForSignature = () => {
+    setSignature('');
+    setSigError('');
+    setSigOpen(true);
+  };
+
+  const download = async () => {
+    const sig = signature.trim();
+    if (!sig) { setSigError('Type your full name to e-sign the form.'); return; }
+    setSigError('');
+
+    // Use the latest saved e-transfer email from the profile
+    let etransferEmail = user?.etransfer_email || user?.email || '';
+    try {
+      const u = await base44.auth.me();
+      if (u?.etransfer_email || u?.email) etransferEmail = u.etransfer_email || u.email;
+    } catch { /* fall back to the loaded user */ }
+
     const name = displayName(user);
     const total = entries.reduce((s, e) => s + (e.total_cost || 0), 0);
     const gstTotal = entries.reduce((s, e) => s + (e.gst || 0), 0);
@@ -64,6 +88,7 @@ export default function DownloadReimbursementButton({ entries }) {
     .totals .grand { border-top: 2px solid #1e2f4d; font-weight: bold; font-size: 12pt; padding-top: 6px; }
     .sig { margin-top: 36px; display: flex; gap: 40px; }
     .sig .line { flex: 1; border-top: 1px solid #333; padding-top: 4px; font-size: 8.5pt; color: #555; }
+    .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; }
     .footnote { margin-top: 22px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
 </head>
@@ -78,7 +103,7 @@ export default function DownloadReimbursementButton({ entries }) {
 
   <div class="fields">
     <div class="field"><div class="lbl">Cheque Payable to</div><div class="val">${esc(name)}</div></div>
-    <div class="field"><div class="lbl">E-transfer Email</div><div class="val">${esc(user?.email || '')}</div></div>
+    <div class="field"><div class="lbl">E-transfer Email</div><div class="val">${esc(etransferEmail)}</div></div>
     <div class="field"><div class="lbl">Requested by</div><div class="val">${esc(name)}</div></div>
     <div class="field"><div class="lbl">Date Requested</div><div class="val">${format(new Date(), 'yyyy-MM-dd')}</div></div>
   </div>
@@ -104,7 +129,7 @@ export default function DownloadReimbursementButton({ entries }) {
   </div>
 
   <div class="sig">
-    <div class="line">Staff Signature (typed): ${esc(name)}</div>
+    <div class="line"><span class="signed">${esc(sig)}</span>Staff e-Signature</div>
     <div class="line">Finance Approval</div>
   </div>
 
@@ -120,11 +145,38 @@ export default function DownloadReimbursementButton({ entries }) {
     if (!win) return;
     win.document.write(html);
     win.document.close();
+    setSigOpen(false);
   };
 
   return (
-    <Button variant="outline" size="sm" className="gap-2" disabled={!entries || entries.length === 0} onClick={download}>
-      <Download className="w-4 h-4" />Download Reimbursement
-    </Button>
+    <>
+      <Button variant="outline" size="sm" className="gap-2" disabled={!entries || entries.length === 0} onClick={askForSignature}>
+        <Download className="w-4 h-4" />Download Reimbursement
+      </Button>
+
+      <Dialog open={sigOpen} onOpenChange={setSigOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><PenLine className="w-4 h-4" />e-Sign Your Reimbursement Form</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Type your full name below to e-sign the downloadable reimbursement form. This signature will fill the signature slot on the form.
+            </p>
+            <div>
+              <Label className="text-xs">e-Signature — type your full name *</Label>
+              <Input value={signature} onChange={e => { setSignature(e.target.value); setSigError(''); }} placeholder={displayName(user)} />
+            </div>
+            {sigError && <p className="text-xs text-red-600">{sigError}</p>}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button onClick={download} className="gap-2">
+              <Download className="w-4 h-4" />Download
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
