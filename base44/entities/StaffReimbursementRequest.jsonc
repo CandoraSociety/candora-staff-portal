@@ -10,6 +10,89 @@
       "type": "string",
       "description": "Email of the staff member requesting reimbursement"
     },
+    "payable_to": {
+      "type": "string",
+      "description": "Cheque Payable to: who the cheque should be made out to"
+    },
+    "etransfer_email": {
+      "type": "string",
+      "description": "E-transfer email for the payment (shown beside Cheque Payable to on the form)"
+    },
+    "requested_by": {
+      "type": "string",
+      "description": "Requested by: name on the form"
+    },
+    "date_requested": {
+      "type": "string",
+      "format": "date",
+      "description": "Date Requested: date on the cheque request form"
+    },
+    "staff_signature": {
+      "type": "string",
+      "description": "Staff Signature: typed name of the requesting staff member"
+    },
+    "verified_by": {
+      "type": "string",
+      "description": "Verified by: name of the person who verified the request (filled during review)"
+    },
+    "line_items": {
+      "type": "array",
+      "description": "Expense lines on the cheque request form (one row per receipt)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "receipt_no": {
+            "type": "string",
+            "description": "Receipt #"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of purchase"
+          },
+          "program": {
+            "type": "string",
+            "description": "Program the expense relates to"
+          },
+          "supplier": {
+            "type": "string",
+            "description": "Supplier (where the purchase was made)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description (items purchased)"
+          },
+          "total_cost": {
+            "type": "number",
+            "description": "Total cost (with GST)"
+          },
+          "gst": {
+            "type": "number",
+            "description": "GST portion of the total cost"
+          },
+          "half_gst": {
+            "type": "number",
+            "description": "Half of the GST portion"
+          },
+          "funder_cost": {
+            "type": "number",
+            "description": "Funder cost"
+          },
+          "account_no": {
+            "type": "string",
+            "description": "Account #"
+          },
+          "funder_no": {
+            "type": "string",
+            "description": "Funder #"
+          },
+          "receipt_url": {
+            "type": "string",
+            "description": "Uploaded receipt image/file for this line"
+          }
+        }
+      }
+    },
     "department": {
       "type": "string",
       "enum": [
@@ -64,7 +147,7 @@
     },
     "amount": {
       "type": "number",
-      "description": "Full amount the staff member paid out of pocket (tax included). This is the amount to be reimbursed."
+      "description": "Total Requested \u2014 sum of all line item total costs (with GST). This is the amount to be reimbursed."
     },
     "tax": {
       "type": "number",
@@ -117,8 +200,7 @@
   "required": [
     "requester_name",
     "requester_email",
-    "expense_category",
-    "date_incurred",
+    "payable_to",
     "amount"
   ]
 }

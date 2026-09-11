@@ -1,6 +1,6 @@
 import React from 'react';
 import { Receipt } from 'lucide-react';
-import ReimbursementRequestForm from '@/components/reimbursements/ReimbursementRequestForm';
+import ChequeRequestForm from '@/components/reimbursements/ChequeRequestForm';
 import ReimbursementRequestsTable from '@/components/reimbursements/ReimbursementRequestsTable';
 
 export default function ReimbursementRequests() {
@@ -11,13 +11,13 @@ export default function ReimbursementRequests() {
           <Receipt className="w-6 h-6" />Reimbursement Requests
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Submit out-of-pocket expenses for reimbursement and track the status of your requests. Requests are reviewed by Finance.
+          Complete the cheque request form to be reimbursed for out-of-pocket expenses. Requests are reviewed and verified by Finance.
         </p>
       </div>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">New Request</h2>
-        <ReimbursementRequestForm />
+        <ChequeRequestForm />
       </section>
 
       <section className="space-y-3">
