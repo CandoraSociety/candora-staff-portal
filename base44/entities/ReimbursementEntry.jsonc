@@ -1,0 +1,78 @@
+{
+  "name": "ReimbursementEntry",
+  "type": "object",
+  "properties": {
+    "requester_name": {
+      "type": "string",
+      "description": "Full name of the staff member who entered this receipt"
+    },
+    "requester_email": {
+      "type": "string",
+      "description": "Email of the staff member who entered this receipt"
+    },
+    "receipt_no": {
+      "type": "string",
+      "description": "Receipt # from the vendor receipt"
+    },
+    "date_incurred": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of purchase"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description (items purchased)"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Supplier (where the purchase was made)"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total cost of the receipt (with GST)"
+    },
+    "gst": {
+      "type": "number",
+      "description": "GST portion of the total cost"
+    },
+    "funder_cost": {
+      "type": "number",
+      "description": "Funder cost"
+    },
+    "account_no": {
+      "type": "string",
+      "description": "Account #"
+    },
+    "funder_no": {
+      "type": "string",
+      "description": "Funder #"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Uploaded receipt image/file"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this entry"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unsubmitted",
+        "submitted",
+        "paid"
+      ],
+      "default": "unsubmitted",
+      "description": "unsubmitted = sits in the staff member's Not Submitted list; submitted = compiled into a reimbursement form awaiting finance; paid = the reimbursement form was paid out"
+    },
+    "form_id": {
+      "type": "string",
+      "description": "Reference to the StaffReimbursementRequest (submitted reimbursement form) this entry was compiled into"
+    }
+  },
+  "required": [
+    "requester_name",
+    "requester_email",
+    "total_cost"
+  ]
+}

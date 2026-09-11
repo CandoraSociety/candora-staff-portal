@@ -1,0 +1,163 @@
+import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { Check } from 'lucide-react';
+import { useCurrentUser } from '@/lib/useAuth';
+import { displayName } from '@/lib/userDisplayName';
+
+const BLANK = {
+  receipt_no: '', date_incurred: '', description: '', supplier: '',
+  total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '',
+  receipt_url: '', notes: '',
+};
+
+export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
+  const qc = useQueryClient();
+  const { user } = useCurrentUser();
+  const editing = !!entry?.id;
+  const [form, setForm] = useState(BLANK);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      setError('');
+      setForm(entry ? {
+        receipt_no: entry.receipt_no || '',
+        date_incurred: entry.date_incurred || format(new Date(), 'yyyy-MM-dd'),
+        description: entry.description || '',
+        supplier: entry.supplier || '',
+        total_cost: entry.total_cost ?? '',
+        gst: entry.gst ?? '',
+        funder_cost: entry.funder_cost ?? '',
+        account_no: entry.account_no || '',
+        funder_no: entry.funder_no || '',
+        receipt_url: entry.receipt_url || '',
+        notes: entry.notes || '',
+      } : { ...BLANK, date_incurred: format(new Date(), 'yyyy-MM-dd') });
+    }
+  }, [open, entry]);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      set('receipt_url', file_url);
+    } catch (err) {
+      setError('Receipt upload failed.');
+    }
+  };
+
+  const save = async () => {
+    setError('');
+    if (!form.description.trim()) { setError('Describe what was purchased.'); return; }
+    const amt = parseFloat(form.total_cost);
+    if (isNaN(amt) || amt <= 0) { setError('Enter the receipt total cost (with GST).'); return; }
+    setSubmitting(true);
+    try {
+      const payload = {
+        receipt_no: form.receipt_no,
+        date_incurred: form.date_incurred || null,
+        description: form.description,
+        supplier: form.supplier,
+        total_cost: amt,
+        gst: form.gst ? parseFloat(form.gst) : 0,
+        funder_cost: form.funder_cost ? parseFloat(form.funder_cost) : 0,
+        account_no: form.account_no,
+        funder_no: form.funder_no,
+        receipt_url: form.receipt_url,
+        notes: form.notes,
+      };
+      if (editing) {
+        await base44.entities.ReimbursementEntry.update(entry.id, payload);
+      } else {
+        await base44.entities.ReimbursementEntry.create({
+          ...payload,
+          requester_name: displayName(user),
+          requester_email: user?.email || '',
+          status: 'unsubmitted',
+        });
+      }
+      qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
+      onOpenChange(false);
+    } catch (err) {
+      setError(err?.message || 'Failed to save entry.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{editing ? 'Edit Receipt Entry' : 'New Receipt Entry'}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Date of Purchase</Label>
+              <Input type="date" value={form.date_incurred} onChange={e => set('date_incurred', e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Receipt #</Label>
+              <Input value={form.receipt_no} onChange={e => set('receipt_no', e.target.value)} placeholder="e.g. 1042" />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Description (items purchased) *</Label>
+            <Input value={form.description} onChange={e => set('description', e.target.value)} placeholder="e.g. Craft supplies for sewing group" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Supplier</Label>
+              <Input value={form.supplier} onChange={e => set('supplier', e.target.value)} placeholder="e.g. Dollar Tree" />
+            </div>
+            <div>
+              <Label className="text-xs">Total Cost (with GST) *</Label>
+              <Input type="number" step="0.01" min="0" value={form.total_cost} onChange={e => set('total_cost', e.target.value)} placeholder="0.00" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs">GST</Label>
+              <Input type="number" step="0.01" min="0" value={form.gst} onChange={e => set('gst', e.target.value)} placeholder="0.00" />
+            </div>
+            <div>
+              <Label className="text-xs">Funder Cost</Label>
+              <Input type="number" step="0.01" min="0" value={form.funder_cost} onChange={e => set('funder_cost', e.target.value)} placeholder="0.00" />
+            </div>
+            <div>
+              <Label className="text-xs">Funder #</Label>
+              <Input value={form.funder_no} onChange={e => set('funder_no', e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Account #</Label>
+              <Input value={form.account_no} onChange={e => set('account_no', e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Receipt</Label>
+              <Input type="file" accept="image/*,application/pdf" onChange={onFile} />
+              {form.receipt_url && <div className="text-xs text-green-700 mt-1 flex items-center gap-1"><Check className="w-3 h-3" /> Receipt attached</div>}
+            </div>
+          </div>
+          {error && <div className="text-xs text-red-600">{error}</div>}
+        </div>
+        <DialogFooter>
+          <DialogClose asChild><Button variant="outline" disabled={submitting}>Cancel</Button></DialogClose>
+          <Button onClick={save} disabled={submitting}>{submitting ? 'Saving…' : (editing ? 'Save Entry' : 'Add Entry')}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

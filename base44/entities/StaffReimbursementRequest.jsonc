@@ -4,11 +4,11 @@
   "properties": {
     "requester_name": {
       "type": "string",
-      "description": "Full name of the staff member requesting reimbursement"
+      "description": "Full name of the staff member who submitted the reimbursement form"
     },
     "requester_email": {
       "type": "string",
-      "description": "Email of the staff member requesting reimbursement"
+      "description": "Email of the staff member who submitted the reimbursement form"
     },
     "payable_to": {
       "type": "string",
@@ -25,73 +25,11 @@
     "date_requested": {
       "type": "string",
       "format": "date",
-      "description": "Date Requested: date on the cheque request form"
+      "description": "Date Requested: date on the reimbursement form"
     },
     "staff_signature": {
       "type": "string",
       "description": "Staff Signature: typed name of the requesting staff member"
-    },
-    "verified_by": {
-      "type": "string",
-      "description": "Verified by: name of the person who verified the request (filled during review)"
-    },
-    "line_items": {
-      "type": "array",
-      "description": "Expense lines on the cheque request form (one row per receipt)",
-      "items": {
-        "type": "object",
-        "properties": {
-          "receipt_no": {
-            "type": "string",
-            "description": "Receipt #"
-          },
-          "date": {
-            "type": "string",
-            "format": "date",
-            "description": "Date of purchase"
-          },
-          "program": {
-            "type": "string",
-            "description": "Program the expense relates to"
-          },
-          "supplier": {
-            "type": "string",
-            "description": "Supplier (where the purchase was made)"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description (items purchased)"
-          },
-          "total_cost": {
-            "type": "number",
-            "description": "Total cost (with GST)"
-          },
-          "gst": {
-            "type": "number",
-            "description": "GST portion of the total cost"
-          },
-          "half_gst": {
-            "type": "number",
-            "description": "Half of the GST portion"
-          },
-          "funder_cost": {
-            "type": "number",
-            "description": "Funder cost"
-          },
-          "account_no": {
-            "type": "string",
-            "description": "Account #"
-          },
-          "funder_no": {
-            "type": "string",
-            "description": "Funder #"
-          },
-          "receipt_url": {
-            "type": "string",
-            "description": "Uploaded receipt image/file for this line"
-          }
-        }
-      }
     },
     "department": {
       "type": "string",
@@ -110,52 +48,26 @@
         "Reception",
         "Other"
       ],
-      "description": "Department the expense relates to"
+      "description": "Department the expenses relate to"
     },
-    "expense_category": {
-      "type": "string",
-      "enum": [
-        "travel",
-        "mileage",
-        "parking",
-        "supplies",
-        "meals",
-        "training",
-        "equipment",
-        "software",
-        "office",
-        "other"
-      ],
-      "description": "Category of personal expense incurred for the organization"
+    "entry_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of the ReimbursementEntry records (individual receipts) compiled into this form by Submit for Reimbursement"
     },
-    "expense_category_other": {
-      "type": "string",
-      "description": "If expense category is 'other', specify"
-    },
-    "description": {
-      "type": "string",
-      "description": "What the expense was for"
-    },
-    "vendor": {
-      "type": "string",
-      "description": "Where the purchase was made (store, service, etc.)"
-    },
-    "date_incurred": {
-      "type": "string",
-      "format": "date",
-      "description": "Date the expense was incurred by the staff member"
+    "entry_count": {
+      "type": "number",
+      "description": "Number of individual receipt entries compiled into this form"
     },
     "amount": {
       "type": "number",
-      "description": "Total Requested \u2014 sum of all line item total costs (with GST). This is the amount to be reimbursed."
+      "description": "Total Requested \u2014 sum of all entry total costs (with GST). This is the amount to be reimbursed."
     },
     "tax": {
       "type": "number",
-      "description": "Tax portion of the amount (documented only). The full amount is reimbursed regardless."
-    },
-    "receipt_url": {
-      "type": "string",
-      "description": "Uploaded receipt for the expense"
+      "description": "Total GST across all entries (documented only). The full amount is reimbursed regardless."
     },
     "status": {
       "type": "string",
@@ -166,24 +78,25 @@
         "rejected"
       ],
       "default": "pending",
-      "description": "Workflow status of the reimbursement request"
+      "description": "pending = submitted, awaiting finance; approved = verified by finance; paid = reimbursement paid out; rejected = declined by finance"
     },
     "submitted_date": {
       "type": "string",
       "format": "date",
-      "description": "Date the request was submitted (auto-set)"
+      "description": "Date the form was submitted for reimbursement (auto-set)"
     },
     "reviewed_by": {
       "type": "string",
-      "description": "Email of the finance staff who reviewed the request"
+      "description": "Email of the finance staff who reviewed the form"
     },
     "reviewed_by_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Name of the finance staff who reviewed the form"
     },
     "reviewed_date": {
       "type": "string",
       "format": "date",
-      "description": "Date the request was approved or rejected"
+      "description": "Date the form was approved or rejected"
     },
     "payment_date": {
       "type": "string",
@@ -191,10 +104,12 @@
       "description": "Date the reimbursement was paid out to the staff member"
     },
     "rejection_reason": {
-      "type": "string"
+      "type": "string",
+      "description": "Why the form was rejected"
     },
     "notes": {
-      "type": "string"
+      "type": "string",
+      "description": "Notes about this form"
     }
   },
   "required": [
