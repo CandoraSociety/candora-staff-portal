@@ -10,6 +10,7 @@ import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLi
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
+import { programLabel } from '@/lib/reimbursementConstants';
 
 const STATUS_STYLES = {
   pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
@@ -207,7 +208,7 @@ export default function FinanceReimbursements() {
                                   <th className="px-2 py-1.5 font-semibold">Date</th>
                                   <th className="px-2 py-1.5 font-semibold">Description</th>
                                   <th className="px-2 py-1.5 font-semibold">Supplier</th>
-                                  <th className="px-2 py-1.5 font-semibold">Receipt #</th>
+                                  <th className="px-2 py-1.5 font-semibold">Program</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">GST</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">Total</th>
                                   <th className="px-2 py-1.5 font-semibold text-center">Receipt</th>
@@ -219,7 +220,7 @@ export default function FinanceReimbursements() {
                                     <td className="px-2 py-1.5 whitespace-nowrap">{fmtDate(e.date_incurred)}</td>
                                     <td className="px-2 py-1.5">{e.description}</td>
                                     <td className="px-2 py-1.5">{e.supplier || '—'}</td>
-                                    <td className="px-2 py-1.5">{e.receipt_no || '—'}</td>
+                                    <td className="px-2 py-1.5">{programLabel(e)}</td>
                                     <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
                                     <td className="px-2 py-1.5 text-right font-medium">{fmt(e.total_cost)}</td>
                                     <td className="px-2 py-1.5 text-center">

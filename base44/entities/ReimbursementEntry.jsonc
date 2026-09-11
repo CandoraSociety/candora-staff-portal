@@ -10,9 +10,26 @@
       "type": "string",
       "description": "Email of the staff member who entered this receipt"
     },
-    "receipt_no": {
+    "program": {
       "type": "string",
-      "description": "Receipt # from the vendor receipt"
+      "enum": [
+        "phac",
+        "frn",
+        "food_services",
+        "kids_gift_shop",
+        "pathways",
+        "ell",
+        "empoweru",
+        "admin",
+        "fcss",
+        "community_lunch",
+        "other"
+      ],
+      "description": "Program the purchase relates to (PHAC, FRN, Candora Food Services, Kids Gift Shop, Pathways, ELL, EmpowerU, Admin, FCSS, Community Lunch, Other)"
+    },
+    "program_other": {
+      "type": "string",
+      "description": "If program is 'other', specify"
     },
     "date_incurred": {
       "type": "string",

@@ -4,17 +4,19 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
+import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
 const BLANK_DRAFT = {
-  receipt_no: '', date_incurred: format(new Date(), 'yyyy-MM-dd'), description: '', supplier: '',
+  program: '', program_other: '', date_incurred: format(new Date(), 'yyyy-MM-dd'), description: '', supplier: '',
   total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
 };
 
@@ -76,12 +78,15 @@ export default function UnsubmittedEntries() {
   const saveDraft = async () => {
     setDraftError('');
     if (!draft.description.trim()) { setDraftError('Describe what was purchased.'); return; }
+    if (!draft.program) { setDraftError('Select the program this purchase relates to.'); return; }
+    if (draft.program === 'other' && !draft.program_other.trim()) { setDraftError('Specify the program.'); return; }
     const amt = parseFloat(draft.total_cost);
     if (isNaN(amt) || amt <= 0) { setDraftError('Enter the receipt total cost (with GST).'); return; }
     addEntry.mutate({
       requester_name: displayName(user),
       requester_email: user?.email || '',
-      receipt_no: draft.receipt_no,
+      program: draft.program,
+      program_other: draft.program === 'other' ? draft.program_other : '',
       date_incurred: draft.date_incurred || null,
       description: draft.description,
       supplier: draft.supplier,
@@ -137,7 +142,7 @@ export default function UnsubmittedEntries() {
                   <th className="px-3 py-2.5 font-semibold">Date</th>
                   <th className="px-3 py-2.5 font-semibold">Description</th>
                   <th className="px-3 py-2.5 font-semibold">Supplier</th>
-                  <th className="px-3 py-2.5 font-semibold">Receipt #</th>
+                  <th className="px-3 py-2.5 font-semibold">Program</th>
                   <th className="px-3 py-2.5 font-semibold text-right">GST</th>
                   <th className="px-3 py-2.5 font-semibold text-right">Total (with GST)</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Receipt</th>
@@ -150,7 +155,17 @@ export default function UnsubmittedEntries() {
                     <td className="px-2 py-1.5"><Input type="date" value={draft.date_incurred} onChange={e => updateDraft('date_incurred', e.target.value)} className="h-8 w-[130px]" /></td>
                     <td className="px-2 py-1.5"><Input value={draft.description} onChange={e => updateDraft('description', e.target.value)} placeholder="Items purchased" className="h-8 min-w-[180px]" /></td>
                     <td className="px-2 py-1.5"><Input value={draft.supplier} onChange={e => updateDraft('supplier', e.target.value)} placeholder="Supplier" className="h-8 w-[120px]" /></td>
-                    <td className="px-2 py-1.5"><Input value={draft.receipt_no} onChange={e => updateDraft('receipt_no', e.target.value)} className="h-8 w-[80px]" /></td>
+                    <td className="px-2 py-1.5">
+                      <Select value={draft.program} onValueChange={v => updateDraft('program', v)}>
+                        <SelectTrigger className="h-8 w-[150px]"><SelectValue placeholder="Program" /></SelectTrigger>
+                        <SelectContent>
+                          {PROGRAM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      {draft.program === 'other' && (
+                        <Input value={draft.program_other} onChange={e => updateDraft('program_other', e.target.value)} placeholder="Specify program" className="h-8 w-[150px] mt-1" />
+                      )}
+                    </td>
                     <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.gst} onChange={e => updateDraft('gst', e.target.value)} placeholder="0.00" className="h-8 w-[80px] text-right" /></td>
                     <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateDraft('total_cost', e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
                     <td className="px-2 py-1.5 text-center">
@@ -181,7 +196,7 @@ export default function UnsubmittedEntries() {
                       {e.notes && <p className="text-xs text-muted-foreground truncate" title={e.notes}>{e.notes}</p>}
                     </td>
                     <td className="px-3 py-2.5">{e.supplier || '—'}</td>
-                    <td className="px-3 py-2.5">{e.receipt_no || '—'}</td>
+                    <td className="px-3 py-2.5">{programLabel(e)}</td>
                     <td className="px-3 py-2.5 text-right text-muted-foreground">{e.gst ? fmt(e.gst) : '—'}</td>
                     <td className="px-3 py-2.5 text-right font-semibold">{fmt(e.total_cost)}</td>
                     <td className="px-3 py-2.5 text-center">

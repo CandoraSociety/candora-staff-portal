@@ -5,13 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Check } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
+import { PROGRAM_OPTIONS } from '@/lib/reimbursementConstants';
 
 const BLANK = {
-  receipt_no: '', date_incurred: '', description: '', supplier: '',
+  program: '', program_other: '', date_incurred: '', description: '', supplier: '',
   total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '',
   receipt_url: '', notes: '',
 };
@@ -28,7 +30,8 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
     if (open) {
       setError('');
       setForm(entry ? {
-        receipt_no: entry.receipt_no || '',
+        program: entry.program || '',
+        program_other: entry.program_other || '',
         date_incurred: entry.date_incurred || format(new Date(), 'yyyy-MM-dd'),
         description: entry.description || '',
         supplier: entry.supplier || '',
@@ -39,7 +42,7 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         funder_no: entry.funder_no || '',
         receipt_url: entry.receipt_url || '',
         notes: entry.notes || '',
-      } : { ...BLANK, date_incurred: format(new Date(), 'yyyy-MM-dd') });
+      } : { ...BLANK, date_incurred: format(new Date(), 'yyyy-MM-dd'), program: '', program_other: '' });
     }
   }, [open, entry]);
 
@@ -59,12 +62,15 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
   const save = async () => {
     setError('');
     if (!form.description.trim()) { setError('Describe what was purchased.'); return; }
+    if (!form.program) { setError('Select the program this purchase relates to.'); return; }
+    if (form.program === 'other' && !form.program_other.trim()) { setError('Specify the program.'); return; }
     const amt = parseFloat(form.total_cost);
     if (isNaN(amt) || amt <= 0) { setError('Enter the receipt total cost (with GST).'); return; }
     setSubmitting(true);
     try {
       const payload = {
-        receipt_no: form.receipt_no,
+        program: form.program,
+        program_other: form.program === 'other' ? form.program_other : '',
         date_incurred: form.date_incurred || null,
         description: form.description,
         supplier: form.supplier,
@@ -108,10 +114,21 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
               <Input type="date" value={form.date_incurred} onChange={e => set('date_incurred', e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Receipt #</Label>
-              <Input value={form.receipt_no} onChange={e => set('receipt_no', e.target.value)} placeholder="e.g. 1042" />
+              <Label className="text-xs">Program *</Label>
+              <Select value={form.program} onValueChange={v => set('program', v)}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Select program" /></SelectTrigger>
+                <SelectContent>
+                  {PROGRAM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+          {form.program === 'other' && (
+            <div>
+              <Label className="text-xs">Specify Program *</Label>
+              <Input value={form.program_other} onChange={e => set('program_other', e.target.value)} placeholder="Program name" />
+            </div>
+          )}
           <div>
             <Label className="text-xs">Description (items purchased) *</Label>
             <Input value={form.description} onChange={e => set('description', e.target.value)} placeholder="e.g. Craft supplies for sewing group" />
