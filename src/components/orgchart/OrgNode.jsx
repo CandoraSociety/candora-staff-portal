@@ -62,6 +62,14 @@ export default function OrgNode({
         onDrop={isScenario ? (e) => { e.preventDefault(); onDrop?.(position.id); } : undefined}
       >
         {isScenario && <GripVertical className="w-3 h-3 text-muted-foreground/30 absolute top-1 left-1 cursor-grab" />}
+        {children.length > 0 && (
+          <div
+            title={`${children.length} position${children.length === 1 ? "" : "s"} report${children.length === 1 ? "s" : ""} to this position`}
+            className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center shadow-sm z-[1]"
+          >
+            {children.length}
+          </div>
+        )}
         <div className="flex justify-center mb-1">
           {position.is_vacant ? <UserX className="w-6 h-6 text-muted-foreground/50" /> : <User className="w-6 h-6 text-accent" />}
         </div>

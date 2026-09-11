@@ -144,7 +144,7 @@ function computeLayout(all) {
 }
 
 function NodeCard({ position, absX, absY, originalPositions, isScenario, showSalary, showNames,
-  onEdit, onDelete, isDragging, isDropTarget, onMouseDown }) {
+  onEdit, onDelete, isDragging, isDropTarget, onMouseDown, reportCount = 0 }) {
 
   let isChanged = false;
   if (isScenario && originalPositions?.length > 0) {
@@ -177,6 +177,14 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       onMouseDown={isScenario ? onMouseDown : undefined}
     >
       {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" />}
+      {reportCount > 0 && (
+        <div
+          title={`${reportCount} position${reportCount === 1 ? "" : "s"} report${reportCount === 1 ? "s" : ""} to this position`}
+          className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center shadow-sm z-[1]"
+        >
+          {reportCount}
+        </div>
+      )}
       <div className="flex justify-center mb-0.5">
         {position.is_vacant ? <UserX className="w-5 h-5 text-muted-foreground/50" /> : <User className="w-5 h-5 text-accent" />}
       </div>
@@ -452,6 +460,12 @@ export default function OrgTreeLayout({
     });
   });
 
+  // Direct-report counts per position (solid reporting lines only)
+  const reportCounts = {};
+  positions.forEach(p => {
+    if (p.reports_to_id) reportCounts[p.reports_to_id] = (reportCounts[p.reports_to_id] || 0) + 1;
+  });
+
   const lines = [];
   positions.forEach(p => {
     if (!p.reports_to_id || p.reports_to_id === "" || p.reports_to_id === null) return;
@@ -575,6 +589,7 @@ export default function OrgTreeLayout({
                 <NodeCard
                   key={p.id}
                   position={p}
+                  reportCount={reportCounts[p.id] || 0}
                   absX={isDragging ? drag.currentX + NODE_W / 2 : absX}
                   absY={isDragging ? drag.currentY : absY}
                   originalPositions={originalPositions}
