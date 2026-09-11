@@ -46,6 +46,7 @@ import NexusCareerPlans from '@/pages/nexushr/NexusCareerPlans';
 import NexusPayGrid from '@/pages/nexushr/NexusPayGrid';
 import NexusServiceAwards from '@/pages/nexushr/NexusServiceAwards';
 import NexusTimeLogs from '@/pages/nexushr/NexusTimeLogs';
+import NexusTimesheets from '@/pages/nexushr/NexusTimesheets';
 import NexusRecognition from '@/pages/nexushr/NexusRecognition';
 import NexusOnboarding from '@/pages/nexushr/NexusOnboarding';
 import NexusEmailEmployees from '@/pages/nexushr/NexusEmailEmployees';
@@ -484,6 +485,7 @@ const AuthenticatedApp = () => {
           <Route path="/nexushr/pay-grid" element={<NexusPayGrid />} />
           <Route path="/nexushr/service-awards" element={<NexusServiceAwards />} />
           <Route path="/nexushr/time-logs" element={<NexusTimeLogs />} />
+          <Route path="/nexushr/timesheets" element={<NexusTimesheets />} />
           <Route path="/nexushr/recognition" element={<NexusRecognition />} />
           <Route path="/nexushr/onboarding" element={<NexusOnboarding />} />
           <Route path="/nexushr/email-employees" element={<NexusEmailEmployees />} />

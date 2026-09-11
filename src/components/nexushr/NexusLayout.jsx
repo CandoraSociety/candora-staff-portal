@@ -6,7 +6,7 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import {
   LayoutDashboard, Users, FileText, ClipboardList, AlertTriangle,
   GraduationCap, BookOpen,
-  Shield, ChevronLeft, ChevronRight, LogOut, Award, Home, Clock, Star, Mail
+  Shield, ChevronLeft, ChevronRight, LogOut, Award, Home, Star, Mail
 } from 'lucide-react';
 
 const allNavItems = [
@@ -16,7 +16,7 @@ const allNavItems = [
   { path: '/nexushr/incidents', label: 'Incident Reports', icon: AlertTriangle, access: 'manager' },
   { path: '/nexushr/training', label: 'Training & Certs', icon: GraduationCap, access: 'manager' },
   { path: '/nexushr/documents', label: 'Documents', icon: BookOpen, access: 'manager' },
-  { path: '/nexushr/time-logs', label: 'Time Logs', icon: Clock, access: 'manager' },
+  { path: '/nexushr/timesheets', label: 'Timesheets', icon: ClipboardList, access: 'manager' },
   { path: '/nexushr/recognition', label: 'Recognition', icon: Star, access: 'manager' },
   { path: '/nexushr/email-employees', label: 'Email Employees', icon: Mail, access: 'manager' },
   { path: '/nexushr/contracts', label: 'Contracts', icon: FileText, access: 'hr_admin' },

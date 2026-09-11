@@ -1,0 +1,165 @@
+{
+  "name": "Timesheet",
+  "type": "object",
+  "properties": {
+    "employee_name": {
+      "type": "string",
+      "description": "Full name of the employee who submitted the timesheet"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee who submitted the timesheet"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Name of the supervisor selected to review and approve this timesheet"
+    },
+    "supervisor_email": {
+      "type": "string",
+      "description": "Email of the supervisor \u2014 pending timesheets with this email appear on their main dashboard for approval"
+    },
+    "pay_period_start": {
+      "type": "string",
+      "format": "date",
+      "description": "Pay period start date (auto-populated \u2014 Candora pay periods are 2 weeks, ending on a Friday)"
+    },
+    "pay_period_end": {
+      "type": "string",
+      "format": "date",
+      "description": "Pay period end date (auto-populated)"
+    },
+    "regular_entries": {
+      "type": "array",
+      "description": "Regular Scheduled Hours \u2014 one row per day of the 14-day pay period",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "description": "Day of the week (Sunday\u2013Saturday)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Start time (HH:MM)"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "End time (HH:MM)"
+          },
+          "break_hours": {
+            "type": "number",
+            "description": "Rest break hours deducted from the day"
+          },
+          "total_hours": {
+            "type": "number",
+            "description": "Total paid hours for the day (auto-calculated from start/end/break)"
+          },
+          "paid_leave_hours": {
+            "type": "number",
+            "description": "Paid leave hours (sick, personal, etc.) for the day"
+          },
+          "banked_hours": {
+            "type": "number",
+            "description": "Banked hours (+/-) for the day \u2014 worked but banked instead of paid"
+          }
+        }
+      }
+    },
+    "additional_entries": {
+      "type": "array",
+      "description": "Additional Hours \u2014 hours in addition to regular scheduled hours",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Start time (HH:MM)"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "End time (HH:MM)"
+          },
+          "break_hours": {
+            "type": "number",
+            "description": "Break hours deducted"
+          },
+          "paid_hours": {
+            "type": "number",
+            "description": "Paid hours (auto-calculated from start/end/break)"
+          }
+        }
+      }
+    },
+    "total_regular_hours": {
+      "type": "number",
+      "description": "Total regular scheduled hours across the period"
+    },
+    "total_paid_leave_hours": {
+      "type": "number",
+      "description": "Total paid leave hours (sick etc.) across the period"
+    },
+    "total_banked_hours": {
+      "type": "number",
+      "description": "Total banked hours (+/-) across the period"
+    },
+    "total_additional_hours": {
+      "type": "number",
+      "description": "Total additional hours"
+    },
+    "total_paid_hours": {
+      "type": "number",
+      "description": "TOTAL HOURS PAID \u2014 regular + paid leave + additional (banked excluded)"
+    },
+    "employee_notes": {
+      "type": "string",
+      "description": "Notes from the employee submitted with the timesheet"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "pending = awaiting supervisor approval; approved = approved by supervisor (moves to the Approved list in HR); rejected = declined by supervisor"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the timesheet was submitted (auto-set)"
+    },
+    "approved_by_name": {
+      "type": "string",
+      "description": "Name of the supervisor who approved/rejected the timesheet"
+    },
+    "approved_by_email": {
+      "type": "string",
+      "description": "Email of the supervisor who approved/rejected the timesheet"
+    },
+    "approved_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the timesheet was approved or rejected"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Why the timesheet was rejected"
+    }
+  },
+  "required": [
+    "employee_name",
+    "employee_email",
+    "supervisor_email",
+    "pay_period_start",
+    "pay_period_end"
+  ]
+}
