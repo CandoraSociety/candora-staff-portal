@@ -4,7 +4,8 @@ import {
   LayoutDashboard, AppWindow, Settings, Users, Bell, 
   Building2, Shield, ChevronLeft, ChevronRight, LogOut,
   Megaphone, CheckCircle2, LayoutPanelLeft, Calendar, Receipt,
-  ShoppingBag, CreditCard
+  ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -27,6 +28,17 @@ const PURCHASES = {
   children: [
     { path: '/reimbursement-requests', label: 'Reimbursement Requests', icon: Receipt },
     { path: '/candora-cc-receipts', label: 'Candora CC Receipts', icon: CreditCard },
+  ],
+};
+
+// Time & Attendance — hover reveals the sub-tabs
+const TIME_ATTENDANCE = {
+  label: 'Time & Attendance',
+  icon: CalendarClock,
+  children: [
+    { path: '/time-off/vacation-request', label: 'Vacation / Time-off Request', icon: PlaneTakeoff },
+    { path: '/time-off/sick-personal', label: 'Sick Time / Personal Day', icon: ThermometerSun },
+    { path: '/time-off/timesheets', label: 'Timesheets', icon: ClipboardList },
   ],
 };
 
@@ -102,6 +114,8 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           ))}
 
           <NavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
+
+          <NavGroup item={TIME_ATTENDANCE} collapsed={collapsed} active={TIME_ATTENDANCE.children.some(c => isActive(c.path))} />
 
           {isAdmin && (
             <>
