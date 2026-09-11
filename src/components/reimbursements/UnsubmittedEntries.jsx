@@ -3,20 +3,30 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ExternalLink, Paperclip, Pencil, Plus, Send, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
+import { displayName } from '@/lib/userDisplayName';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
+const BLANK_DRAFT = {
+  receipt_no: '', date_incurred: format(new Date(), 'yyyy-MM-dd'), description: '', supplier: '',
+  total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
+};
+
 export default function UnsubmittedEntries() {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
-  const [entryDialogOpen, setEntryDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [draft, setDraft] = useState(null); // non-null = inline new-entry row is open
+  const [draftError, setDraftError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['my-reimbursement-entries', user?.email],
@@ -36,8 +46,58 @@ export default function UnsubmittedEntries() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] }),
   });
 
-  const openEdit = (entry) => { setEditingEntry(entry); setEntryDialogOpen(true); };
-  const openAdd = () => { setEditingEntry(null); setEntryDialogOpen(true); };
+  const addEntry = useMutation({
+    mutationFn: payload => base44.entities.ReimbursementEntry.create(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
+      setDraft(null);
+      setDraftError('');
+    },
+  });
+
+  const updateDraft = (k, v) => setDraft(d => ({ ...d, [k]: v }));
+
+  const startDraft = () => setDraft({ ...BLANK_DRAFT, date_incurred: format(new Date(), 'yyyy-MM-dd') });
+
+  const onDraftFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      updateDraft('receipt_url', file_url);
+    } catch (err) {
+      setDraftError('Receipt upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveDraft = async () => {
+    setDraftError('');
+    if (!draft.description.trim()) { setDraftError('Describe what was purchased.'); return; }
+    const amt = parseFloat(draft.total_cost);
+    if (isNaN(amt) || amt <= 0) { setDraftError('Enter the receipt total cost (with GST).'); return; }
+    addEntry.mutate({
+      requester_name: displayName(user),
+      requester_email: user?.email || '',
+      receipt_no: draft.receipt_no,
+      date_incurred: draft.date_incurred || null,
+      description: draft.description,
+      supplier: draft.supplier,
+      total_cost: amt,
+      gst: draft.gst ? parseFloat(draft.gst) : 0,
+      funder_cost: draft.funder_cost ? parseFloat(draft.funder_cost) : 0,
+      account_no: draft.account_no,
+      funder_no: draft.funder_no,
+      receipt_url: draft.receipt_url,
+      status: 'unsubmitted',
+    });
+  };
+
+  const openEdit = (entry) => { setEditingEntry(entry); setEditDialogOpen(true); };
+
+  const hasRows = unsubmitted.length > 0 || draft;
 
   return (
     <section className="space-y-3">
@@ -51,7 +111,7 @@ export default function UnsubmittedEntries() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={openAdd}>
+          <Button variant="outline" size="sm" className="gap-2" onClick={startDraft} disabled={!!draft}>
             <Plus className="w-4 h-4" />Add Receipt Entry
           </Button>
           <Button size="sm" className="gap-2" disabled={unsubmitted.length === 0} onClick={() => setSubmitOpen(true)}>
@@ -62,7 +122,7 @@ export default function UnsubmittedEntries() {
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground text-center py-6">Loading your entries…</p>
-      ) : unsubmitted.length === 0 ? (
+      ) : !hasRows ? (
         <Card className="p-0">
           <div className="py-8 text-center text-sm text-muted-foreground">
             No unsubmitted entries. Click <span className="font-medium text-foreground">Add Receipt Entry</span> each time you spend money out of pocket.
@@ -85,6 +145,32 @@ export default function UnsubmittedEntries() {
                 </tr>
               </thead>
               <tbody>
+                {draft && (
+                  <tr className="border-t border-border bg-primary/5">
+                    <td className="px-2 py-1.5"><Input type="date" value={draft.date_incurred} onChange={e => updateDraft('date_incurred', e.target.value)} className="h-8 w-[130px]" /></td>
+                    <td className="px-2 py-1.5"><Input value={draft.description} onChange={e => updateDraft('description', e.target.value)} placeholder="Items purchased" className="h-8 min-w-[180px]" /></td>
+                    <td className="px-2 py-1.5"><Input value={draft.supplier} onChange={e => updateDraft('supplier', e.target.value)} placeholder="Supplier" className="h-8 w-[120px]" /></td>
+                    <td className="px-2 py-1.5"><Input value={draft.receipt_no} onChange={e => updateDraft('receipt_no', e.target.value)} className="h-8 w-[80px]" /></td>
+                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.gst} onChange={e => updateDraft('gst', e.target.value)} placeholder="0.00" className="h-8 w-[80px] text-right" /></td>
+                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateDraft('total_cost', e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
+                    <td className="px-2 py-1.5 text-center">
+                      <label className="inline-flex items-center justify-center cursor-pointer" title={draft.receipt_url ? 'Receipt attached' : 'Attach receipt'}>
+                        <Paperclip className={`w-4 h-4 ${draft.receipt_url ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={onDraftFile} disabled={uploading} />
+                      </label>
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={saveDraft} disabled={addEntry.isPending} className="text-green-700 hover:text-green-800 transition-colors disabled:opacity-50" title="Save entry">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => { setDraft(null); setDraftError(''); }} className="text-muted-foreground hover:text-destructive transition-colors" title="Cancel">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {unsubmitted.map(e => (
                   <tr key={e.id} className="border-t border-border hover:bg-muted/30">
                     <td className="px-3 py-2.5 whitespace-nowrap">
@@ -120,6 +206,7 @@ export default function UnsubmittedEntries() {
                 <tr className="border-t border-border bg-muted/30">
                   <td colSpan={5} className="px-3 py-2 text-xs text-muted-foreground">
                     {unsubmitted.length} receipt entr{unsubmitted.length === 1 ? 'y' : 'ies'} (incl. {fmt(gstTotal)} GST)
+                    {draftError && <span className="text-red-600 ml-2">{draftError}</span>}
                   </td>
                   <td className="px-3 py-2 text-right font-semibold">{fmt(total)}</td>
                   <td colSpan={2} className="px-3 py-2 text-right text-xs text-muted-foreground">Total not yet submitted</td>
@@ -130,7 +217,7 @@ export default function UnsubmittedEntries() {
         </Card>
       )}
 
-      <ReceiptEntryDialog open={entryDialogOpen} onOpenChange={setEntryDialogOpen} entry={editingEntry} />
+      <ReceiptEntryDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} entry={editingEntry} />
       <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} />
     </section>
   );
