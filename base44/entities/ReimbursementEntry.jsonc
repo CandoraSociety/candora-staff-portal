@@ -52,6 +52,10 @@
       "type": "number",
       "description": "GST portion of the total cost"
     },
+    "food_included": {
+      "type": "boolean",
+      "description": "Whether the purchase includes food items. When false, GST auto-calculates at 5% Alberta GST; when true, GST is entered manually (not all food is charged GST)."
+    },
     "funder_cost": {
       "type": "number",
       "description": "Funder cost"

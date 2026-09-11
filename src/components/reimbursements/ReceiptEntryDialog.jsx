@@ -6,15 +6,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { Check } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS } from '@/lib/reimbursementConstants';
 
+// Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
+const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
+
 const BLANK = {
   program: '', program_other: '', date_incurred: '', description: '', supplier: '',
-  total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '',
+  total_cost: '', gst: '', food_included: null, funder_cost: '', account_no: '', funder_no: '',
   receipt_url: '', notes: '',
 };
 
@@ -37,16 +41,32 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         supplier: entry.supplier || '',
         total_cost: entry.total_cost ?? '',
         gst: entry.gst ?? '',
+        food_included: entry.food_included === true,
         funder_cost: entry.funder_cost ?? '',
         account_no: entry.account_no || '',
         funder_no: entry.funder_no || '',
         receipt_url: entry.receipt_url || '',
         notes: entry.notes || '',
-      } : { ...BLANK, date_incurred: format(new Date(), 'yyyy-MM-dd'), program: '', program_other: '' });
+      } : { ...BLANK, date_incurred: format(new Date(), 'yyyy-MM-dd'), program: '', program_other: '', food_included: null });
     }
   }, [open, entry]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const setTotal = (v) => {
+    set('total_cost', v);
+    if (form.food_included === false) set('gst', calcGst(v));
+  };
+
+  const toggleFood = (checked) => {
+    set('food_included', checked);
+    if (checked) {
+      set('gst', ''); // GST on food varies — entered manually
+    } else {
+      const amt = parseFloat(form.total_cost);
+      if (!isNaN(amt) && amt > 0) set('gst', calcGst(amt));
+    }
+  };
 
   const onFile = async (e) => {
     const file = e.target.files?.[0];
@@ -64,6 +84,8 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
     if (!form.description.trim()) { setError('Describe what was purchased.'); return; }
     if (!form.program) { setError('Select the program this purchase relates to.'); return; }
     if (form.program === 'other' && !form.program_other.trim()) { setError('Specify the program.'); return; }
+    if (form.food_included === null || form.food_included === undefined) { setError('Indicate whether this purchase includes food items.'); return; }
+    if (form.food_included === true && form.gst === '') { setError('Enter the GST amount (enter 0 if none was charged).'); return; }
     const amt = parseFloat(form.total_cost);
     if (isNaN(amt) || amt <= 0) { setError('Enter the receipt total cost (with GST).'); return; }
     setSubmitting(true);
@@ -75,7 +97,8 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         description: form.description,
         supplier: form.supplier,
         total_cost: amt,
-        gst: form.gst ? parseFloat(form.gst) : 0,
+        gst: form.gst !== '' && form.gst !== null ? parseFloat(form.gst) : 0,
+        food_included: form.food_included === true,
         funder_cost: form.funder_cost ? parseFloat(form.funder_cost) : 0,
         account_no: form.account_no,
         funder_no: form.funder_no,
@@ -140,13 +163,23 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
             </div>
             <div>
               <Label className="text-xs">Total Cost (with GST) *</Label>
-              <Input type="number" step="0.01" min="0" value={form.total_cost} onChange={e => set('total_cost', e.target.value)} placeholder="0.00" />
+              <Input type="number" step="0.01" min="0" value={form.total_cost} onChange={e => setTotal(e.target.value)} placeholder="0.00" />
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox checked={form.food_included === true} onCheckedChange={toggleFood} id="reimb-food-included" />
+            <Label htmlFor="reimb-food-included" className="text-xs">Does this include food items? * (if yes, GST is entered manually)</Label>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">GST</Label>
-              <Input type="number" step="0.01" min="0" value={form.gst} onChange={e => set('gst', e.target.value)} placeholder="0.00" />
+              <Input
+                type="number" step="0.01" min="0" value={form.gst}
+                onChange={e => set('gst', e.target.value)}
+                placeholder={form.food_included === false ? 'auto' : '0.00'}
+                disabled={form.food_included === false}
+                title={form.food_included === false ? 'Auto-calculated at 5% Alberta GST' : 'Enter the GST amount from the receipt'}
+              />
             </div>
             <div>
               <Label className="text-xs">Funder Cost</Label>

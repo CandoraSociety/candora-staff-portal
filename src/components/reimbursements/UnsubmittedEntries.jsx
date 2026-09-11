@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Check, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
@@ -17,8 +18,11 @@ const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
 const BLANK_DRAFT = {
   program: '', program_other: '', date_incurred: format(new Date(), 'yyyy-MM-dd'), description: '', supplier: '',
-  total_cost: '', gst: '', funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
+  total_cost: '', gst: '', food_included: null, funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
 };
+
+// Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
+const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
 
 export default function UnsubmittedEntries() {
   const qc = useQueryClient();
@@ -59,6 +63,21 @@ export default function UnsubmittedEntries() {
 
   const updateDraft = (k, v) => setDraft(d => ({ ...d, [k]: v }));
 
+  const updateTotalDraft = (v) => {
+    updateDraft('total_cost', v);
+    if (draft.food_included === false) updateDraft('gst', calcGst(v));
+  };
+
+  const toggleFood = (checked) => {
+    updateDraft('food_included', checked);
+    if (checked) {
+      updateDraft('gst', ''); // GST on food varies — entered manually
+    } else {
+      const amt = parseFloat(draft.total_cost);
+      if (!isNaN(amt) && amt > 0) updateDraft('gst', calcGst(amt));
+    }
+  };
+
   const startDraft = () => setDraft({ ...BLANK_DRAFT, date_incurred: format(new Date(), 'yyyy-MM-dd') });
 
   const onDraftFile = async (e) => {
@@ -80,8 +99,10 @@ export default function UnsubmittedEntries() {
     if (!draft.description.trim()) { setDraftError('Describe what was purchased.'); return; }
     if (!draft.program) { setDraftError('Select the program this purchase relates to.'); return; }
     if (draft.program === 'other' && !draft.program_other.trim()) { setDraftError('Specify the program.'); return; }
+    if (draft.food_included === null || draft.food_included === undefined) { setDraftError('Indicate whether this purchase includes food items.'); return; }
     const amt = parseFloat(draft.total_cost);
     if (isNaN(amt) || amt <= 0) { setDraftError('Enter the receipt total cost (with GST).'); return; }
+    if (draft.food_included === true && draft.gst === '') { setDraftError('Enter the GST amount (enter 0 if none was charged).'); return; }
     addEntry.mutate({
       requester_name: displayName(user),
       requester_email: user?.email || '',
@@ -91,7 +112,8 @@ export default function UnsubmittedEntries() {
       description: draft.description,
       supplier: draft.supplier,
       total_cost: amt,
-      gst: draft.gst ? parseFloat(draft.gst) : 0,
+      gst: draft.gst !== '' && draft.gst !== null ? parseFloat(draft.gst) : 0,
+      food_included: draft.food_included === true,
       funder_cost: draft.funder_cost ? parseFloat(draft.funder_cost) : 0,
       account_no: draft.account_no,
       funder_no: draft.funder_no,
@@ -145,6 +167,7 @@ export default function UnsubmittedEntries() {
                   <th className="px-3 py-2.5 font-semibold">Program</th>
                   <th className="px-3 py-2.5 font-semibold text-right">GST</th>
                   <th className="px-3 py-2.5 font-semibold text-right">Total (with GST)</th>
+                  <th className="px-3 py-2.5 font-semibold text-center">Food?</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Receipt</th>
                   <th className="px-3 py-2.5 w-[80px]"></th>
                 </tr>
@@ -166,8 +189,21 @@ export default function UnsubmittedEntries() {
                         <Input value={draft.program_other} onChange={e => updateDraft('program_other', e.target.value)} placeholder="Specify program" className="h-8 w-[150px] mt-1" />
                       )}
                     </td>
-                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.gst} onChange={e => updateDraft('gst', e.target.value)} placeholder="0.00" className="h-8 w-[80px] text-right" /></td>
-                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateDraft('total_cost', e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
+                    <td className="px-2 py-1.5">
+                      <Input
+                        type="number" step="0.01" min="0" value={draft.gst}
+                        onChange={e => updateDraft('gst', e.target.value)}
+                        placeholder={draft.food_included === false ? 'auto' : '0.00'}
+                        disabled={draft.food_included === false}
+                        title={draft.food_included === false ? 'Auto-calculated at 5% Alberta GST' : 'Enter the GST amount from the receipt'}
+                        className="h-8 w-[80px] text-right disabled:bg-muted/50" />
+                    </td>
+                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateTotalDraft(e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
+                    <td className="px-2 py-1.5 text-center">
+                      <label className="inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Does this include food items?">
+                        <Checkbox checked={draft.food_included === true} onCheckedChange={toggleFood} />
+                      </label>
+                    </td>
                     <td className="px-2 py-1.5 text-center">
                       <label className="inline-flex items-center justify-center cursor-pointer" title={draft.receipt_url ? 'Receipt attached' : 'Attach receipt'}>
                         <Paperclip className={`w-4 h-4 ${draft.receipt_url ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -199,6 +235,9 @@ export default function UnsubmittedEntries() {
                     <td className="px-3 py-2.5">{programLabel(e)}</td>
                     <td className="px-3 py-2.5 text-right text-muted-foreground">{e.gst ? fmt(e.gst) : '—'}</td>
                     <td className="px-3 py-2.5 text-right font-semibold">{fmt(e.total_cost)}</td>
+                    <td className="px-3 py-2.5 text-center text-xs text-muted-foreground">
+                      {e.food_included === true ? 'Food' : '—'}
+                    </td>
                     <td className="px-3 py-2.5 text-center">
                       {e.receipt_url ? (
                         <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
@@ -224,7 +263,7 @@ export default function UnsubmittedEntries() {
                     {draftError && <span className="text-red-600 ml-2">{draftError}</span>}
                   </td>
                   <td className="px-3 py-2 text-right font-semibold">{fmt(total)}</td>
-                  <td colSpan={2} className="px-3 py-2 text-right text-xs text-muted-foreground">Total not yet submitted</td>
+                  <td colSpan={3} className="px-3 py-2 text-right text-xs text-muted-foreground">Total not yet submitted</td>
                 </tr>
               </tbody>
             </table>
