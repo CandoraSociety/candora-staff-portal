@@ -57,7 +57,7 @@ export default function DownloadReimbursementButton({ entries }) {
         <td>${esc(programLabel(e) || '—')}</td>
         <td class="r">${fmt(e.gst)}</td>
         <td class="r">${fmt(e.total_cost)}</td>
-        <td class="r">${e.gst ? fmt(e.gst / 2) : '$ -'}</td>
+        <td class="r fill">${e.gst ? fmt(e.gst / 2) : '$ -'}</td>
         <td class="r fill">${e.funder_cost ? fmt(e.funder_cost) : ''}</td>
         <td class="fill">${esc(e.account_no || '')}</td>
         <td class="fill">${esc(e.funder_no || '')}</td>
@@ -69,7 +69,7 @@ export default function DownloadReimbursementButton({ entries }) {
   <title>Reimbursement Request — ${esc(name)}</title>
   <style>
     @page { size: letter landscape; margin: 0.5in; }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11pt; margin: 0; }
     .header { border-bottom: 3px solid #1e2f4d; padding-bottom: 10px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
     .header h1 { margin: 0; font-size: 18pt; color: #1e2f4d; }
@@ -84,7 +84,7 @@ export default function DownloadReimbursementButton({ entries }) {
     td { border-bottom: 1px solid #ccc; padding: 6px 8px; vertical-align: top; }
     tr:nth-child(even) td { background: #f4f6f9; }
     .r { text-align: right; } .nw { white-space: nowrap; }
-    .fill { background: #fff; border: 1px solid #ccc; min-height: 14px; }
+    .fill { background: #e8e8e8 !important; border: 1px solid #bbb; min-height: 14px; }
     .receipt { margin-top: 3px; font-size: 8pt; color: #555; word-break: break-all; }
     .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }
