@@ -79,6 +79,7 @@ import UsersAccess from '@/pages/admin/UsersAccess';
 import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
 import UserSettings from '@/pages/UserSettings';
+import ReimbursementRequests from '@/pages/ReimbursementRequests';
 
 // Pathways CM - Case Management
 import PathwaysLayout from '@/components/pathways/PathwaysLayout';
@@ -435,6 +436,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/announcements" element={<Announcements />} />
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
           <Route path="/user/settings" element={<UserSettings />} />
+          <Route path="/reimbursement-requests" element={<ReimbursementRequests />} />
         </Route>
 
         {/* Volunteer Manager - standalone layout */}
