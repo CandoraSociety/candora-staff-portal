@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
-import { extractReceiptDate } from '@/lib/receiptDateExtraction';
+import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
 import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
@@ -90,12 +90,20 @@ export default function UnsubmittedEntries() {
       setUploading(true);
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       updateDraft('receipt_url', file_url);
-      // Read the purchase date off the receipt — falls back to manual entry when unreadable
-      const date = await extractReceiptDate(file_url);
-      if (date) {
-        updateDraft('date_incurred', date);
+      // Autofill from the receipt — anything unreadable falls back to manual entry
+      const d = await extractReceiptDetails(file_url);
+      if (d) {
+        setDraft(prev => ({
+          ...prev,
+          date_incurred: d.date || prev.date_incurred,
+          description: d.description || prev.description,
+          supplier: d.supplier || prev.supplier,
+          total_cost: d.total != null ? String(d.total) : prev.total_cost,
+          gst: d.gst != null ? String(d.gst) : prev.gst,
+        }));
+        if (!d.date) setDraftError('Could not read the purchase date from the receipt — enter it manually.');
       } else {
-        setDraftError('Could not read the purchase date from the receipt — enter it manually.');
+        setDraftError('Could not read the receipt — fill in the details manually.');
       }
     } catch (err) {
       setDraftError('Receipt upload failed.');
