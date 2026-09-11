@@ -57,6 +57,10 @@ export default function DownloadReimbursementButton({ entries }) {
         <td>${esc(programLabel(e) || '—')}</td>
         <td class="r">${fmt(e.gst)}</td>
         <td class="r">${fmt(e.total_cost)}</td>
+        <td class="r">${e.gst ? fmt(e.gst / 2) : '$ -'}</td>
+        <td class="r fill">${e.funder_cost ? fmt(e.funder_cost) : ''}</td>
+        <td class="fill">${esc(e.account_no || '')}</td>
+        <td class="fill">${esc(e.funder_no || '')}</td>
       </tr>`).join('');
 
     const html = `<!DOCTYPE html>
@@ -80,6 +84,7 @@ export default function DownloadReimbursementButton({ entries }) {
     td { border-bottom: 1px solid #ccc; padding: 6px 8px; vertical-align: top; }
     tr:nth-child(even) td { background: #f4f6f9; }
     .r { text-align: right; } .nw { white-space: nowrap; }
+    .fill { background: #fff; border: 1px solid #ccc; min-height: 14px; }
     .receipt { margin-top: 3px; font-size: 8pt; color: #555; word-break: break-all; }
     .receipt a { color: #1a56db; text-decoration: underline; }
     .receipt.none { color: #999; font-style: italic; }
@@ -118,6 +123,10 @@ export default function DownloadReimbursementButton({ entries }) {
         <th>Program</th>
         <th class="r">GST</th>
         <th class="r">Total (with GST)</th>
+        <th class="r">1/2 GST</th>
+        <th class="r">Funder Cost</th>
+        <th>Account #</th>
+        <th>Funder #</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>

@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
+import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
 
 const STATUS_STYLES = {
   pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
@@ -211,6 +212,11 @@ export default function FinanceReimbursements() {
                                   <th className="px-2 py-1.5 font-semibold">Program</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">GST</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">Total</th>
+                                  <th className="px-2 py-1.5 font-semibold text-right">1/2 GST</th>
+                                  <th className="px-2 py-1.5 font-semibold text-right">Funder Cost</th>
+                                  <th className="px-2 py-1.5 font-semibold">Account #</th>
+                                  <th className="px-2 py-1.5 font-semibold">Funder #</th>
+                                  <th className="px-2 py-1.5 font-semibold text-center">Save</th>
                                   <th className="px-2 py-1.5 font-semibold text-center">Receipt</th>
                                 </tr>
                               </thead>
@@ -223,6 +229,7 @@ export default function FinanceReimbursements() {
                                     <td className="px-2 py-1.5">{programLabel(e)}</td>
                                     <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
                                     <td className="px-2 py-1.5 text-right font-medium">{fmt(e.total_cost)}</td>
+                                    <FinanceEntryFundingCells entry={e} />
                                     <td className="px-2 py-1.5 text-center">
                                       {e.receipt_url ? (
                                         <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
@@ -233,7 +240,7 @@ export default function FinanceReimbursements() {
                                   </tr>
                                 ))}
                                 {items.length === 0 && (
-                                  <tr><td colSpan={7} className="px-2 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
+                                  <tr><td colSpan={12} className="px-2 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
                                 )}
                               </tbody>
                             </table>
