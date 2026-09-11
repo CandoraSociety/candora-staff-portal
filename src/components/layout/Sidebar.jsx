@@ -176,8 +176,17 @@ function NavGroup({ item, collapsed, active }) {
   const location = useLocation();
   const Icon = item.icon;
   const childActive = (path) => location.pathname.startsWith(path);
+  // The flyout is fixed-positioned at the row's edge — the nav's scroll
+  // container would clip an absolutely-positioned flyout (overflow-y:auto
+  // also clips on the x axis), which is why plain CSS positioning failed.
+  const [pos, setPos] = useState(null); // { top, left } while hovering
+  const open = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos({ top: r.top, left: r.right });
+  };
+
   return (
-    <div className="relative group/nav">
+    <div onMouseEnter={open} onMouseLeave={() => setPos(null)}>
       <div
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
@@ -190,27 +199,33 @@ function NavGroup({ item, collapsed, active }) {
         <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/70")} />
         {!collapsed && <span>{item.label}</span>}
       </div>
-      <div className="hidden group-hover/nav:block absolute left-full top-0 ml-2 z-50 min-w-[220px] rounded-lg border border-sidebar-border bg-sidebar py-1.5 px-1.5 shadow-xl">
-        {item.children.map(child => {
-          const ChildIcon = child.icon;
-          const isChildActive = childActive(child.path);
-          return (
-            <Link
-              key={child.path}
-              to={child.path}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isChildActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              )}
-            >
-              <ChildIcon className="w-4 h-4 flex-shrink-0" />
-              <span className="whitespace-nowrap">{child.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+      {pos && (
+        <div
+          style={{ top: pos.top, left: pos.left }}
+          className="fixed z-50 min-w-[220px] rounded-lg border border-sidebar-border bg-sidebar py-1.5 px-1.5 shadow-xl"
+        >
+          {item.children.map(child => {
+            const ChildIcon = child.icon;
+            const isChildActive = childActive(child.path);
+            return (
+              <Link
+                key={child.path}
+                to={child.path}
+                onClick={() => setPos(null)}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  isChildActive
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <ChildIcon className="w-4 h-4 flex-shrink-0" />
+                <span className="whitespace-nowrap">{child.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
