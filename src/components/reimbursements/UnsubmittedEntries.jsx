@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Check, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
@@ -212,10 +211,17 @@ export default function UnsubmittedEntries() {
                       )}
                     </td>
                     <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateTotalDraft(e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
-                    <td className="px-2 py-1.5 text-center">
-                      <label className="inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Does this include food items?">
-                        <Checkbox checked={draft.food_included === true} onCheckedChange={toggleFood} />
-                      </label>
+                    <td className="px-2 py-1.5">
+                      <div className="flex items-center justify-center gap-1" title="Does this include food items?">
+                        <button
+                          type="button" onClick={() => toggleFood(true)}
+                          className={`h-7 px-2.5 rounded-md text-xs font-medium border transition-colors ${draft.food_included === true ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                        >Yes</button>
+                        <button
+                          type="button" onClick={() => toggleFood(false)}
+                          className={`h-7 px-2.5 rounded-md text-xs font-medium border transition-colors ${draft.food_included === false ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                        >No</button>
+                      </div>
                     </td>
                     <td className="px-2 py-1.5 text-center">
                       <label className="inline-flex items-center justify-center cursor-pointer" title={draft.receipt_url ? 'Receipt attached' : 'Attach receipt'}>

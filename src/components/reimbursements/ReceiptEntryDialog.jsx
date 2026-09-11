@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { Check } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useAuth';
@@ -171,9 +170,18 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
               <Input type="number" step="0.01" min="0" value={form.total_cost} onChange={e => setTotal(e.target.value)} placeholder="0.00" />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox checked={form.food_included === true} onCheckedChange={toggleFood} id="reimb-food-included" />
-            <Label htmlFor="reimb-food-included" className="text-xs">Does this include food items? * (if yes, GST is entered manually)</Label>
+          <div>
+            <Label className="text-xs">Does this include food items? * (if yes, GST is entered manually)</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <button
+                type="button" onClick={() => toggleFood(true)}
+                className={`h-8 px-4 rounded-md text-sm font-medium border transition-colors ${form.food_included === true ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+              >Yes</button>
+              <button
+                type="button" onClick={() => toggleFood(false)}
+                className={`h-8 px-4 rounded-md text-sm font-medium border transition-colors ${form.food_included === false ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+              >No</button>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
