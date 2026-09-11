@@ -10,9 +10,10 @@ import { base44 } from '@/api/base44Client';
 import { ROLES } from '@/lib/constants';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
+import { displayName, displayInitials } from '@/lib/userDisplayName';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile, className }) {
-  const initials = (user?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials = displayInitials(user);
   const roleLabel = ROLES.find(r => r.value === user?.role)?.label || user?.role || 'Staff';
   const [open, setOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
@@ -49,7 +50,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile, classNa
                 </AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground leading-none">{user?.full_name || 'User'}</p>
+                <p className="text-sm font-medium text-foreground leading-none">{displayName(user)}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{roleLabel}</p>
               </div>
             </button>

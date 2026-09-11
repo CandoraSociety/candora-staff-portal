@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2, Send, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
+import { displayName } from '@/lib/userDisplayName';
 
 const emptyLine = () => ({
   receipt_no: '', date: '', program: '', supplier: '', description: '',
@@ -48,10 +49,11 @@ export default function ChequeRequestForm() {
 
   useEffect(() => {
     if (user?.full_name && !header.payable_to) {
+      const name = displayName(user);
       setHeader(h => ({
         ...h,
-        payable_to: h.payable_to || user.full_name,
-        requested_by: h.requested_by || user.full_name,
+        payable_to: h.payable_to || name,
+        requested_by: h.requested_by || name,
       }));
     }
   }, [user?.full_name]);
@@ -82,7 +84,7 @@ export default function ChequeRequestForm() {
     setSubmitting(true);
     try {
       await base44.entities.StaffReimbursementRequest.create({
-        requester_name: user?.full_name || 'Unknown',
+        requester_name: displayName(user),
         requester_email: user?.email || '',
         payable_to: header.payable_to,
         etransfer_email: header.etransfer_email,

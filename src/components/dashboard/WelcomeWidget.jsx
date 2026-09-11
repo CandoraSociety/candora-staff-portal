@@ -1,10 +1,11 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
+import { displayName } from '@/lib/userDisplayName';
 
 export default function WelcomeWidget({ user }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const firstName = (user?.full_name || 'there').split(' ')[0];
+  const firstName = (displayName(user) || 'there').split(' ')[0];
 
   return (
     <div className="rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground relative overflow-hidden">

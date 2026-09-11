@@ -12,6 +12,7 @@ import { Upload, ChevronDown, ChevronUp, User, Briefcase, Calendar, Edit, Sparkl
 import { useOutletContext } from 'react-router-dom';
 import CropImageDialog from '@/components/settings/CropImageDialog';
 import EditEmployeeDialog from '@/components/settings/EditEmployeeDialog';
+import { displayName, displayInitials } from '@/lib/userDisplayName';
 import ProfileEffectsDialog from '@/components/settings/ProfileEffectsDialog';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -118,7 +119,7 @@ export default function UserSettings() {
                     <Avatar className="w-48 h-48 relative flex-shrink-0">
                       <AvatarImage src={profilePicture} className="object-cover" />
                       <AvatarFallback className="text-5xl bg-primary text-primary-foreground">
-                        {(currentUser?.full_name || 'U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        {displayInitials(currentUser)}
                       </AvatarFallback>
                       {isSavingProfile && (
                         <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
@@ -202,7 +203,7 @@ export default function UserSettings() {
                   <User className="w-5 h-5 text-muted-foreground mt-0.5" />
                   <div>
                     <p className="text-xs text-muted-foreground">Full Name</p>
-                    <p className="font-medium">{employeeRecord?.first_name || currentUser?.full_name || 'N/A'}</p>
+                    <p className="font-medium">{employeeRecord?.first_name || displayName(currentUser)}</p>
                   </div>
                 </div>
                 {employeeRecord ? (

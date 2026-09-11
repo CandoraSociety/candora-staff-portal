@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { normalizeUser } from '@/lib/userDisplayName';
 
 export function useCurrentUser() {
   const [user, setUser] = useState(null);
@@ -7,7 +8,7 @@ export function useCurrentUser() {
 
   useEffect(() => {
     base44.auth.me().then(u => {
-      setUser(u);
+      setUser(normalizeUser(u));
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
