@@ -1,0 +1,50 @@
+{
+  "name": "FunderReportingFile",
+  "type": "object",
+  "properties": {
+    "funder": {
+      "type": "string",
+      "enum": [
+        "phac",
+        "frn",
+        "ecala",
+        "empoweru",
+        "fcss",
+        "grants"
+      ],
+      "description": "Funder this document belongs to (PHAC, FRN, ECALA, EmpowerU, FCSS, Grants)"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Display name of the file"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded file URL"
+    },
+    "doc_type": {
+      "type": "string",
+      "enum": [
+        "template",
+        "guideline",
+        "submitted_report",
+        "other"
+      ],
+      "default": "other",
+      "description": "Kind of document (reporting template, funder guideline, previously submitted report, other)"
+    },
+    "reporting_period": {
+      "type": "string",
+      "description": "Reporting period this document relates to (e.g. '2026 Q2', '2025-26 Annual')"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this document"
+    }
+  },
+  "required": [
+    "funder",
+    "file_name",
+    "file_url"
+  ]
+}

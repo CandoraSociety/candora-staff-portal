@@ -1,0 +1,92 @@
+{
+  "name": "FunderReport",
+  "type": "object",
+  "properties": {
+    "funder": {
+      "type": "string",
+      "enum": [
+        "phac",
+        "frn",
+        "ecala",
+        "empoweru",
+        "fcss",
+        "grants"
+      ],
+      "description": "Funder this report is for (PHAC, FRN, ECALA, EmpowerU, FCSS, Grants)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Report title (auto-generated from the funder, report type and period if not given)"
+    },
+    "report_kind": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "annual",
+        "final",
+        "other"
+      ],
+      "default": "quarterly",
+      "description": "Type of report by frequency/cadence (monthly, quarterly, annual, final, other)"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "financial",
+        "narrative",
+        "both",
+        "other"
+      ],
+      "default": "narrative",
+      "description": "Type of report content (financial, narrative, both, other)"
+    },
+    "period_label": {
+      "type": "string",
+      "description": "Reporting period label (e.g. '2026 Q2', '2025-26 Annual')"
+    },
+    "period_start": {
+      "type": "string",
+      "format": "date",
+      "description": "Reporting period start date"
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date",
+      "description": "Reporting period end date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_progress",
+        "completed",
+        "submitted"
+      ],
+      "default": "draft",
+      "description": "Report status"
+    },
+    "linked_file_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of attached FunderReportingFile records (template, guidelines, other documents)"
+    },
+    "linked_file_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of attached documents (denormalized for display)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this report"
+    }
+  },
+  "required": [
+    "funder",
+    "title"
+  ]
+}
