@@ -34,7 +34,7 @@
     "date_incurred": {
       "type": "string",
       "format": "date",
-      "description": "Date of purchase"
+      "description": "Date of purchase (read from the receipt when uploaded, manual entry otherwise)"
     },
     "description": {
       "type": "string",
@@ -46,15 +46,23 @@
     },
     "total_cost": {
       "type": "number",
-      "description": "Total cost of the receipt (with GST)"
+      "description": "Claimable total cost (with GST) \u2014 the receipt total minus any excluded personal items (their 5% GST is deducted too)"
     },
     "gst": {
       "type": "number",
-      "description": "GST portion of the total cost"
+      "description": "GST portion of the claimable total cost"
     },
     "food_included": {
       "type": "boolean",
       "description": "Whether the purchase includes food items. When false, GST auto-calculates at 5% Alberta GST; when true, GST is entered manually (not all food is charged GST)."
+    },
+    "excluded_amount": {
+      "type": "number",
+      "description": "Price (before GST) of personal item(s) on this receipt that are excluded from the claim. 5% GST is added automatically when deducted."
+    },
+    "excluded_description": {
+      "type": "string",
+      "description": "Short description of the excluded personal item(s)"
     },
     "funder_cost": {
       "type": "number",

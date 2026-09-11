@@ -12,14 +12,15 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS } from '@/lib/reimbursementConstants';
 import { extractReceiptDate } from '@/lib/receiptDateExtraction';
+import ExcludedItemsControl from './ExcludedItemsControl';
 
 // Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
 const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
 
 const BLANK = {
   program: '', program_other: '', date_incurred: '', description: '', supplier: '',
-  total_cost: '', gst: '', food_included: null, funder_cost: '', account_no: '', funder_no: '',
-  receipt_url: '', notes: '',
+  total_cost: '', gst: '', food_included: null, excluded_amount: '', excluded_description: '',
+  funder_cost: '', account_no: '', funder_no: '', receipt_url: '', notes: '',
 };
 
 export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
@@ -42,6 +43,8 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         total_cost: entry.total_cost ?? '',
         gst: entry.gst ?? '',
         food_included: entry.food_included === true,
+        excluded_amount: entry.excluded_amount ?? '',
+        excluded_description: entry.excluded_description || '',
         funder_cost: entry.funder_cost ?? '',
         account_no: entry.account_no || '',
         funder_no: entry.funder_no || '',
@@ -92,6 +95,12 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
     if (form.food_included === true && form.gst === '') { setError('Enter the GST amount (enter 0 if none was charged).'); return; }
     const amt = parseFloat(form.total_cost);
     if (isNaN(amt) || amt <= 0) { setError('Enter the receipt total cost (with GST).'); return; }
+    // Personal item(s) excluded from the claim — price entered before GST, 5% GST added automatically
+    const excl = parseFloat(form.excluded_amount);
+    const hasExcl = !isNaN(excl) && excl > 0;
+    const exclIncl = hasExcl ? +(excl * 1.05).toFixed(2) : 0;
+    const exclGst = hasExcl ? +(excl * 0.05).toFixed(2) : 0;
+    const gstVal = form.gst !== '' && form.gst !== null ? parseFloat(form.gst) : 0;
     setSubmitting(true);
     try {
       const payload = {
@@ -100,8 +109,10 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         date_incurred: form.date_incurred || null,
         description: form.description,
         supplier: form.supplier,
-        total_cost: amt,
-        gst: form.gst !== '' && form.gst !== null ? parseFloat(form.gst) : 0,
+        total_cost: hasExcl ? Math.max(0, +(amt - exclIncl).toFixed(2)) : amt,
+        gst: hasExcl ? Math.max(0, +(gstVal - exclGst).toFixed(2)) : gstVal,
+        excluded_amount: hasExcl ? excl : null,
+        excluded_description: hasExcl ? form.excluded_description : '',
         food_included: form.food_included === true,
         funder_cost: form.funder_cost ? parseFloat(form.funder_cost) : 0,
         account_no: form.account_no,
@@ -168,6 +179,14 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
             <div>
               <Label className="text-xs">Total Cost (with GST) *</Label>
               <Input type="number" step="0.01" min="0" value={form.total_cost} onChange={e => setTotal(e.target.value)} placeholder="0.00" />
+              <div className="mt-1 flex items-center justify-end">
+                <ExcludedItemsControl
+                  amount={form.excluded_amount}
+                  description={form.excluded_description}
+                  onAmount={v => set('excluded_amount', v)}
+                  onDescription={v => set('excluded_description', v)}
+                />
+              </div>
             </div>
           </div>
           <div>

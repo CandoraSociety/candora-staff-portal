@@ -238,7 +238,15 @@ export default function FinanceReimbursements() {
                                     <td className="px-2 py-1.5">{e.supplier || '—'}</td>
                                     <td className="px-2 py-1.5">{programLabel(e)}</td>
                                     <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
-                                    <td className="px-2 py-1.5 text-right font-medium">{fmt(e.total_cost)}</td>
+                                    <td className="px-2 py-1.5 text-right font-medium">
+                                      {fmt(e.total_cost)}
+                                      {e.excluded_amount > 0 && (
+                                        <span
+                                          className="block text-[10px] font-normal text-amber-600"
+                                          title={e.excluded_description ? `Personal item excluded: ${e.excluded_description}` : 'Personal item excluded'}
+                                        >✂ −{fmt(e.excluded_amount * 1.05)}</span>
+                                      )}
+                                    </td>
                                     <FinanceEntryFundingCells entry={e} />
                                     <td className="px-2 py-1.5 text-center">
                                       {e.receipt_url ? (

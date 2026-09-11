@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
 import { extractReceiptDate } from '@/lib/receiptDateExtraction';
+import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
 import DownloadReimbursementButton from './DownloadReimbursementButton';
@@ -19,7 +20,8 @@ const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
 const BLANK_DRAFT = {
   program: '', program_other: '', date_incurred: format(new Date(), 'yyyy-MM-dd'), description: '', supplier: '',
-  total_cost: '', gst: '', food_included: null, funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
+  total_cost: '', gst: '', food_included: null, excluded_amount: '', excluded_description: '',
+  funder_cost: '', account_no: '', funder_no: '', receipt_url: '',
 };
 
 // Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
@@ -111,6 +113,12 @@ export default function UnsubmittedEntries() {
     const amt = parseFloat(draft.total_cost);
     if (isNaN(amt) || amt <= 0) { setDraftError('Enter the receipt total cost (with GST).'); return; }
     if (draft.food_included === true && draft.gst === '') { setDraftError('Enter the GST amount (enter 0 if none was charged).'); return; }
+    // Personal item(s) excluded from the claim — price entered before GST, 5% GST added automatically
+    const excl = parseFloat(draft.excluded_amount);
+    const hasExcl = !isNaN(excl) && excl > 0;
+    const exclIncl = hasExcl ? +(excl * 1.05).toFixed(2) : 0;
+    const exclGst = hasExcl ? +(excl * 0.05).toFixed(2) : 0;
+    const gstVal = draft.gst !== '' && draft.gst !== null ? parseFloat(draft.gst) : 0;
     addEntry.mutate({
       requester_name: displayName(user),
       requester_email: user?.email || '',
@@ -119,8 +127,10 @@ export default function UnsubmittedEntries() {
       date_incurred: draft.date_incurred || null,
       description: draft.description,
       supplier: draft.supplier,
-      total_cost: amt,
-      gst: draft.gst !== '' && draft.gst !== null ? parseFloat(draft.gst) : 0,
+      total_cost: hasExcl ? Math.max(0, +(amt - exclIncl).toFixed(2)) : amt,
+      gst: hasExcl ? Math.max(0, +(gstVal - exclGst).toFixed(2)) : gstVal,
+      excluded_amount: hasExcl ? excl : null,
+      excluded_description: hasExcl ? draft.excluded_description : '',
       food_included: draft.food_included === true,
       funder_cost: draft.funder_cost ? parseFloat(draft.funder_cost) : 0,
       account_no: draft.account_no,
@@ -210,7 +220,17 @@ export default function UnsubmittedEntries() {
                         <p className="mt-1 text-[10px] leading-tight text-amber-600 max-w-[110px]">GST must be entered manually — not all food is charged GST.</p>
                       )}
                     </td>
-                    <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateTotalDraft(e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
+                    <td className="px-2 py-1.5">
+                      <Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateTotalDraft(e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" />
+                      <div className="flex items-center justify-end mt-1">
+                        <ExcludedItemsControl
+                          amount={draft.excluded_amount}
+                          description={draft.excluded_description}
+                          onAmount={v => updateDraft('excluded_amount', v)}
+                          onDescription={v => updateDraft('excluded_description', v)}
+                        />
+                      </div>
+                    </td>
                     <td className="px-2 py-1.5">
                       <div className="flex items-center justify-center gap-1" title="Does this include food items?">
                         <button
@@ -253,7 +273,15 @@ export default function UnsubmittedEntries() {
                     <td className="px-3 py-2.5">{e.supplier || '—'}</td>
                     <td className="px-3 py-2.5">{programLabel(e)}</td>
                     <td className="px-3 py-2.5 text-right text-muted-foreground">{e.gst ? fmt(e.gst) : '—'}</td>
-                    <td className="px-3 py-2.5 text-right font-semibold">{fmt(e.total_cost)}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold">
+                      {fmt(e.total_cost)}
+                      {e.excluded_amount > 0 && (
+                        <span
+                          className="block text-[10px] font-normal text-amber-600"
+                          title={e.excluded_description ? `Personal item excluded: ${e.excluded_description}` : 'Personal item excluded'}
+                        >✂ −{fmt(e.excluded_amount * 1.05)}</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2.5 text-center text-xs text-muted-foreground">
                       {e.food_included === true ? 'Food' : '—'}
                     </td>

@@ -47,6 +47,7 @@ export default function DownloadReimbursementButton({ entries }) {
         <td class="nw">${esc(e.date_incurred || '—')}</td>
         <td>
           ${esc(e.description)}
+          ${e.excluded_amount > 0 ? `<div class="excl">✂ ${fmt(e.excluded_amount * 1.05)} personal item excluded${e.excluded_description ? ` (${esc(e.excluded_description)})` : ''}</div>` : ''}
           ${e.receipt_url ? `
           <div class="receipt">
             <a class="btn" href="${esc(e.receipt_url)}" target="_blank" rel="noopener noreferrer">Receipt</a>
@@ -87,6 +88,7 @@ export default function DownloadReimbursementButton({ entries }) {
     .receipt { margin-top: 3px; font-size: 8pt; color: #555; word-break: break-all; }
     .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }
+    .excl { margin-top: 2px; font-size: 8pt; color: #b45309; }
     .totals { margin-top: 14px; margin-left: auto; width: 280px; }
     .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 10pt; }
     .totals .grand { border-top: 2px solid #1e2f4d; font-weight: bold; font-size: 12pt; padding-top: 6px; }
