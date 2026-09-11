@@ -12,6 +12,7 @@ import { Check } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS } from '@/lib/reimbursementConstants';
+import { extractReceiptDate } from '@/lib/receiptDateExtraction';
 
 // Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
 const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
@@ -74,6 +75,10 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       set('receipt_url', file_url);
+      // Read the purchase date off the receipt — falls back to manual entry when unreadable
+      const date = await extractReceiptDate(file_url);
+      if (date) set('date_incurred', date);
+      else setError('Could not read the purchase date from the receipt — enter it manually.');
     } catch (err) {
       setError('Receipt upload failed.');
     }

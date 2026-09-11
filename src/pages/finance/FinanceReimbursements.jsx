@@ -5,8 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -29,6 +31,9 @@ export default function FinanceReimbursements() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
+  const [approveTarget, setApproveTarget] = useState(null); // form pending e-signature approval
+  const [approveSig, setApproveSig] = useState('');
+  const [approveError, setApproveError] = useState('');
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['staff-reimbursements'],
@@ -185,7 +190,7 @@ export default function FinanceReimbursements() {
                         <td className="px-3 py-2 text-center">
                           {r.status === 'pending' && (
                             <div className="flex items-center justify-center gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setStatus.mutate({ form: r, status: 'approved' })} title="Approve">
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => { setApproveTarget(r); setApproveSig(''); setApproveError(''); }} title="Approve (e-sign)">
                                 <Check className="w-4 h-4" />
                               </Button>
                               <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
@@ -203,6 +208,11 @@ export default function FinanceReimbursements() {
                       {expanded && (
                         <tr className="bg-muted/20">
                           <td colSpan={7} className="px-3 py-2">
+                            {r.finance_signature && (
+                              <p className="text-xs text-muted-foreground mb-2">
+                                Finance e-Signature: <span className="font-medium italic">{r.finance_signature}</span>
+                              </p>
+                            )}
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="text-left text-muted-foreground uppercase">
@@ -255,6 +265,40 @@ export default function FinanceReimbursements() {
           </div>
         </Card>
       )}
+
+      <Dialog open={!!approveTarget} onOpenChange={o => !o && setApproveTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><PenLine className="w-4 h-4" />e-Sign the Approval</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Type your full name below to e-sign this reimbursement approval for {approveTarget?.requester_name}.
+              This signature will be recorded as the finance approval on the form.
+            </p>
+            <div>
+              <Label className="text-xs">e-Signature — type your full name *</Label>
+              <Input value={approveSig} onChange={e => { setApproveSig(e.target.value); setApproveError(''); }} placeholder={displayName(user)} />
+            </div>
+            {approveError && <p className="text-xs text-red-600">{approveError}</p>}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button
+              className="gap-2"
+              disabled={setStatus.isPending}
+              onClick={() => {
+                const sig = approveSig.trim();
+                if (!sig) { setApproveError('Type your full name to e-sign the approval.'); return; }
+                setStatus.mutate({ form: approveTarget, status: 'approved', patch: { finance_signature: sig } });
+                setApproveTarget(null);
+              }}
+            >
+              <Check className="w-4 h-4" />Approve &amp; Sign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -49,8 +49,7 @@ export default function DownloadReimbursementButton({ entries }) {
           ${esc(e.description)}
           ${e.receipt_url ? `
           <div class="receipt">
-            <a href="${esc(e.receipt_url)}" target="_blank" rel="noopener noreferrer">View receipt</a>
-            <span class="url">${esc(e.receipt_url)}</span>
+            <a class="btn" href="${esc(e.receipt_url)}" target="_blank" rel="noopener noreferrer">Receipt</a>
           </div>` : '<div class="receipt none">No receipt attached</div>'}
         </td>
         <td>${esc(e.supplier || '—')}</td>
@@ -86,7 +85,7 @@ export default function DownloadReimbursementButton({ entries }) {
     .r { text-align: right; } .nw { white-space: nowrap; }
     .fill { background: #fff; border: 1px solid #ccc; min-height: 14px; }
     .receipt { margin-top: 3px; font-size: 8pt; color: #555; word-break: break-all; }
-    .receipt a { color: #1a56db; text-decoration: underline; }
+    .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }
     .totals { margin-top: 14px; margin-left: auto; width: 280px; }
     .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 10pt; }

@@ -8,7 +8,7 @@
     },
     "requester_email": {
       "type": "string",
-      "description": "Email of the staff member who submitted the reimbursement form"
+      "description": "Email of the staff member who submitted the form"
     },
     "payable_to": {
       "type": "string",
@@ -29,7 +29,11 @@
     },
     "staff_signature": {
       "type": "string",
-      "description": "Staff Signature: typed name of the requesting staff member"
+      "description": "Staff e-Signature: typed name of the requesting staff member, captured at submission"
+    },
+    "finance_signature": {
+      "type": "string",
+      "description": "Finance e-Signature: typed name of the finance staff member who approved the form, captured at approval"
     },
     "department": {
       "type": "string",

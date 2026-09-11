@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
+import { extractReceiptDate } from '@/lib/receiptDateExtraction';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
 import DownloadReimbursementButton from './DownloadReimbursementButton';
@@ -88,6 +89,13 @@ export default function UnsubmittedEntries() {
       setUploading(true);
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       updateDraft('receipt_url', file_url);
+      // Read the purchase date off the receipt — falls back to manual entry when unreadable
+      const date = await extractReceiptDate(file_url);
+      if (date) {
+        updateDraft('date_incurred', date);
+      } else {
+        setDraftError('Could not read the purchase date from the receipt — enter it manually.');
+      }
     } catch (err) {
       setDraftError('Receipt upload failed.');
     } finally {
