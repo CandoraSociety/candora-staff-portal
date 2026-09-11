@@ -40,8 +40,10 @@ export default function DownloadReimbursementButton({ entries }) {
     const name = displayName(user);
     const total = entries.reduce((s, e) => s + (e.total_cost || 0), 0);
     const gstTotal = entries.reduce((s, e) => s + (e.gst || 0), 0);
+    // Line items in chronological order
+    const sortedEntries = [...entries].sort((a, b) => String(a.date_incurred || '').localeCompare(String(b.date_incurred || '')));
 
-    const rows = entries.map((e, i) => `
+    const rows = sortedEntries.map((e, i) => `
       <tr>
         <td>${i + 1}</td>
         <td class="nw">${esc(e.date_incurred || '—')}</td>

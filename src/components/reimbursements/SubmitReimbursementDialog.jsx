@@ -44,6 +44,8 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
 
   const total = entries.reduce((s, e) => s + (e.total_cost || 0), 0);
   const gstTotal = entries.reduce((s, e) => s + (e.gst || 0), 0);
+  // Line items in chronological order
+  const sorted = [...entries].sort((a, b) => String(a.date_incurred || '').localeCompare(String(b.date_incurred || '')));
 
   const submit = async () => {
     setError('');
@@ -59,7 +61,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
         requested_by: header.requested_by || displayName(user),
         date_requested: header.date_requested || null,
         staff_signature: header.staff_signature,
-        entry_ids: entries.map(e => e.id),
+        entry_ids: sorted.map(e => e.id),
         entry_count: entries.length,
         amount: total,
         tax: gstTotal,
@@ -67,7 +69,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
         submitted_date: format(new Date(), 'yyyy-MM-dd'),
       });
       await base44.entities.ReimbursementEntry.bulkUpdate(
-        entries.map(e => ({ id: e.id, status: 'submitted', form_id: form.id }))
+        sorted.map(e => ({ id: e.id, status: 'submitted', form_id: form.id }))
       );
       qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
       qc.invalidateQueries({ queryKey: ['my-reimbursement-forms'] });
@@ -135,7 +137,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
                 </tr>
               </thead>
               <tbody>
-                {entries.map(e => (
+                {sorted.map(e => (
                   <tr key={e.id} className="border-t border-border">
                     <td className="px-2.5 py-1.5 whitespace-nowrap">{e.date_incurred || '—'}</td>
                     <td className="px-2.5 py-1.5">{e.description}</td>
