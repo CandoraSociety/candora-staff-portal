@@ -68,7 +68,7 @@ export default function DownloadReimbursementButton({ entries }) {
 <head>
   <title>Reimbursement Request — ${esc(name)}</title>
   <style>
-    @page { size: letter; margin: 0.6in; }
+    @page { size: letter landscape; margin: 0.5in; }
     * { box-sizing: border-box; }
     body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11pt; margin: 0; }
     .header { border-bottom: 3px solid #1e2f4d; padding-bottom: 10px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }

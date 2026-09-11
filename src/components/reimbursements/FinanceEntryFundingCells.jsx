@@ -44,29 +44,29 @@ export default function FinanceEntryFundingCells({ entry }) {
 
   return (
     <>
-      <td className="px-2 py-1.5 text-right whitespace-nowrap text-muted-foreground">
+      <td className="px-2 py-1.5 text-right whitespace-nowrap text-muted-foreground bg-muted/50">
         {entry.gst ? fmt(entry.gst / 2) : '$ -'}
       </td>
-      <td className="px-2 py-1.5">
+      <td className="px-2 py-1.5 bg-muted/50">
         <Input
           type="number" step="0.01" min="0"
           value={funderCost}
           onChange={e => { setFunderCost(e.target.value); setSaved(false); }}
           placeholder="$0.00" className="h-7 w-24 text-xs" />
       </td>
-      <td className="px-2 py-1.5">
+      <td className="px-2 py-1.5 bg-muted/50">
         <Input
           value={accountNo}
           onChange={e => { setAccountNo(e.target.value); setSaved(false); }}
           placeholder="—" className="h-7 w-24 text-xs" />
       </td>
-      <td className="px-2 py-1.5">
+      <td className="px-2 py-1.5 bg-muted/50">
         <Input
           value={funderNo}
           onChange={e => { setFunderNo(e.target.value); setSaved(false); }}
           placeholder="—" className="h-7 w-24 text-xs" />
       </td>
-      <td className="px-2 py-1.5 text-center">
+      <td className="px-2 py-1.5 text-center bg-muted/50">
         {dirty ? (
           <Button size="sm" variant="ghost" className="h-7 w-7 px-0 text-blue-600 hover:bg-blue-50" onClick={save} disabled={saving} title="Save funding details">
             <Save className="w-3.5 h-3.5" />
