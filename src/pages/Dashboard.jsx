@@ -19,6 +19,7 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import SupervisorTimesheetAlerts from '@/components/timesheets/SupervisorTimesheetAlerts';
+import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAlerts';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
@@ -196,6 +197,9 @@ export default function Dashboard() {
 
       {/* Timesheets awaiting supervisor approval */}
       <SupervisorTimesheetAlerts user={user} />
+
+      {/* Vacation requests awaiting supervisor approval */}
+      <SupervisorVacationAlerts user={user} />
 
       {/* Employee Info Card */}
       <EmployeeInfoCard user={user} />

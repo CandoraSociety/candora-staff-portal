@@ -1,0 +1,83 @@
+{
+  "name": "TimeOffRecord",
+  "type": "object",
+  "properties": {
+    "employee_name": {
+      "type": "string",
+      "description": "Full name of the employee"
+    },
+    "employee_email": {
+      "type": "string",
+      "description": "Email of the employee"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "vacation",
+        "sick",
+        "personal"
+      ],
+      "description": "vacation = vacation/time-off request (needs supervisor approval); sick = sick time; personal = personal day (sick/personal are logged directly)"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "First date of the time off"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last date of the time off (same as start_date for a single day)"
+    },
+    "hours_per_day": {
+      "type": "number",
+      "default": 8,
+      "description": "Paid leave hours per day of this time off"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Name of the supervisor who reviews the request"
+    },
+    "supervisor_email": {
+      "type": "string",
+      "description": "Email of the supervisor \u2014 pending vacation requests appear on their main dashboard for approval"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "description": "pending = vacation request awaiting supervisor approval; approved = counts as paid leave (auto-fills the employee's timesheet); rejected = declined"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes submitted with the request/log"
+    },
+    "approved_by_name": {
+      "type": "string",
+      "description": "Name of the supervisor who approved/rejected"
+    },
+    "approved_by_email": {
+      "type": "string",
+      "description": "Email of the supervisor who approved/rejected"
+    },
+    "approved_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the request was approved or rejected"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "Why the request was rejected"
+    }
+  },
+  "required": [
+    "employee_name",
+    "employee_email",
+    "kind",
+    "start_date",
+    "end_date"
+  ]
+}

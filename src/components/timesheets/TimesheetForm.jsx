@@ -1,12 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import SupervisorSelect, { useSupervisors } from '@/components/timeoff/SupervisorSelect';
 import { getPayPeriod, getPeriodDays, periodLabel, ymd } from '@/lib/payPeriods';
+import { cn } from '@/lib/utils';
+
+const LEAVE_KIND_LABELS = { vacation: 'vacation', sick: 'sick time', personal: 'personal day' };
 
 // Auto-calculate a day's paid hours from start/end times minus break.
 // Returns null when times aren't both present (total can then be typed manually).
@@ -38,14 +41,48 @@ export default function TimesheetForm({ user, onSubmitted }) {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: employees = [] } = useQuery({
-    queryKey: ['timesheet-supervisors'],
-    queryFn: () => base44.entities.Employee.list(),
+  const supervisors = useSupervisors();
+
+  // Approved vacation / sick / personal time overlapping this pay period —
+  // automatically recorded in the Paid Leave column.
+  const { data: leaveRecords = [] } = useQuery({
+    queryKey: ['timeoff', 'approved', user?.email],
+    queryFn: () => base44.entities.TimeOffRecord.filter({ employee_email: user.email, status: 'approved' }),
+    enabled: !!user?.email,
   });
-  const supervisors = employees
-    .filter(e => !e.access_disabled && e.status !== 'terminated')
-    .map(e => ({ email: e.email, name: `${e.first_name || ''} ${e.last_name || ''}`.trim() }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const leaveByDate = useMemo(() => {
+    const map = {};
+    for (const rec of leaveRecords) {
+      let d = new Date(rec.start_date + 'T00:00:00Z');
+      const end = new Date((rec.end_date || rec.start_date) + 'T00:00:00Z');
+      let guard = 0;
+      while (d <= end && guard < 60) {
+        map[d.toISOString().slice(0, 10)] = { hours: rec.hours_per_day || 8, kind: rec.kind };
+        d = new Date(d.getTime() + 86400000);
+        guard++;
+      }
+    }
+    return map;
+  }, [leaveRecords]);
+
+  const [leaveApplied, setLeaveApplied] = useState(false);
+  useEffect(() => {
+    if (leaveApplied || !Object.keys(leaveByDate).length) return;
+    setRegularRows(prev => prev.map(r => (leaveByDate[r.date] && !r.paid_leave_hours)
+      ? { ...r, paid_leave_hours: String(leaveByDate[r.date].hours) }
+      : r));
+    setLeaveApplied(true);
+  }, [leaveByDate, leaveApplied]);
+
+  const autoLeaveSummary = useMemo(() => {
+    const counts = {};
+    for (const r of regularRows) {
+      const l = leaveByDate[r.date];
+      if (l) counts[l.kind] = (counts[l.kind] || 0) + 1;
+    }
+    return counts;
+  }, [regularRows, leaveByDate]);
 
   const updateRegular = (idx, field, value) => {
     setRegularRows(prev => prev.map((r, i) => {
@@ -119,6 +156,7 @@ export default function TimesheetForm({ user, onSubmitted }) {
       setNotes('');
       setRegularRows(blankRegular());
       setAdditionalRows([blankAdditionalRow()]);
+      setLeaveApplied(false);
     } finally {
       setSubmitting(false);
     }
@@ -137,20 +175,16 @@ export default function TimesheetForm({ user, onSubmitted }) {
             Submissions through the Wednesday after a period ends count for that period.
           </p>
         </div>
-        <div>
-          <Label>Supervisor (for approval)</Label>
-          <Select value={supervisorEmail} onValueChange={setSupervisorEmail}>
-            <SelectTrigger className="w-full mt-1.5">
-              <SelectValue placeholder="Select your supervisor" />
-            </SelectTrigger>
-            <SelectContent>
-              {supervisors.map(s => (
-                <SelectItem key={s.email} value={s.email}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <SupervisorSelect value={supervisorEmail} onChange={setSupervisorEmail} />
       </div>
+
+      {Object.keys(autoLeaveSummary).length > 0 && (
+        <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm">
+          <span className="font-semibold text-warning">Automatically recorded from your approved time off: </span>
+          {Object.entries(autoLeaveSummary).map(([kind, n]) => `${n} ${LEAVE_KIND_LABELS[kind]} day${n > 1 ? 's' : ''}`).join(' · ')}
+          <span className="text-muted-foreground"> — filled into the Paid Leave column.</span>
+        </div>
+      )}
 
       {/* Regular Scheduled Hours */}
       <div>
@@ -178,7 +212,7 @@ export default function TimesheetForm({ user, onSubmitted }) {
                   <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cellInput} placeholder="0" value={r.break_hours} onChange={e => updateRegular(i, 'break_hours', e.target.value)} /></td>
                   <td className="px-1 py-1"><Input type="time" className={cellInput} value={r.end_time} onChange={e => updateRegular(i, 'end_time', e.target.value)} /></td>
                   <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cellInput} placeholder="0" value={r.total_hours} onChange={e => updateRegular(i, 'total_hours', e.target.value)} /></td>
-                  <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cellInput} placeholder="0" value={r.paid_leave_hours} onChange={e => updateRegular(i, 'paid_leave_hours', e.target.value)} /></td>
+                  <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cn(cellInput, leaveByDate[r.date] && 'bg-warning/10')} title={leaveByDate[r.date] ? `Approved ${LEAVE_KIND_LABELS[leaveByDate[r.date].kind]} time (auto-filled)` : undefined} placeholder="0" value={r.paid_leave_hours} onChange={e => updateRegular(i, 'paid_leave_hours', e.target.value)} /></td>
                   <td className="px-1 py-1"><Input type="number" step="0.25" className={cellInput} placeholder="0" value={r.banked_hours} onChange={e => updateRegular(i, 'banked_hours', e.target.value)} /></td>
                 </tr>
               ))}
