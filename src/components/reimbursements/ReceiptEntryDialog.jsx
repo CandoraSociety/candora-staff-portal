@@ -180,6 +180,9 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
                 disabled={form.food_included === false}
                 title={form.food_included === false ? 'Auto-calculated at 5% Alberta GST' : 'Enter the GST amount from the receipt'}
               />
+              {form.food_included === true && (
+                <p className="mt-1 text-xs text-amber-600">GST must be entered manually — not all food is charged GST.</p>
+              )}
             </div>
             <div>
               <Label className="text-xs">Funder Cost</Label>

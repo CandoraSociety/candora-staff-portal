@@ -197,6 +197,9 @@ export default function UnsubmittedEntries() {
                         disabled={draft.food_included === false}
                         title={draft.food_included === false ? 'Auto-calculated at 5% Alberta GST' : 'Enter the GST amount from the receipt'}
                         className="h-8 w-[80px] text-right disabled:bg-muted/50" />
+                      {draft.food_included === true && (
+                        <p className="mt-1 text-[10px] leading-tight text-amber-600 max-w-[110px]">GST must be entered manually — not all food is charged GST.</p>
+                      )}
                     </td>
                     <td className="px-2 py-1.5"><Input type="number" step="0.01" min="0" value={draft.total_cost} onChange={e => updateTotalDraft(e.target.value)} placeholder="0.00" className="h-8 w-[100px] text-right" /></td>
                     <td className="px-2 py-1.5 text-center">
