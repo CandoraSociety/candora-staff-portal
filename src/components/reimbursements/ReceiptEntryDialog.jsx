@@ -11,6 +11,7 @@ import { Check } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS } from '@/lib/reimbursementConstants';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
 import ExcludedItemsControl from './ExcludedItemsControl';
 
@@ -23,10 +24,12 @@ const BLANK = {
   funder_cost: '', account_no: '', funder_no: '', receipt_url: '', notes: '',
 };
 
-export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
+export default function ReceiptEntryDialog({ open, onOpenChange, entry, mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const editing = !!entry?.id;
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
   const [form, setForm] = useState(BLANK);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -132,16 +135,16 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry }) {
         notes: form.notes,
       };
       if (editing) {
-        await base44.entities.ReimbursementEntry.update(entry.id, payload);
+        await entryEntity.update(entry.id, payload);
       } else {
-        await base44.entities.ReimbursementEntry.create({
+        await entryEntity.create({
           ...payload,
           requester_name: displayName(user),
           requester_email: user?.email || '',
           status: 'unsubmitted',
         });
       }
-      qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
+      qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
       onOpenChange(false);
     } catch (err) {
       setError(err?.message || 'Failed to save entry.');

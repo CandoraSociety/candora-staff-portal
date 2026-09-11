@@ -9,10 +9,11 @@ import { Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
-export default function SubmitReimbursementDialog({ open, onOpenChange, entries }) {
+export default function SubmitReimbursementDialog({ open, onOpenChange, entries, mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [header, setHeader] = useState({
@@ -21,6 +22,9 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
+  const formEntity = base44.entities[cfg.formEntity];
 
   useEffect(() => {
     if (open) {
@@ -53,7 +57,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
     if (!header.staff_signature.trim()) { setError('Type your e-signature to submit.'); return; }
     setSubmitting(true);
     try {
-      const form = await base44.entities.StaffReimbursementRequest.create({
+      const form = await formEntity.create({
         requester_name: displayName(user),
         requester_email: user?.email || '',
         payable_to: header.payable_to,
@@ -68,12 +72,12 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
         status: 'pending',
         submitted_date: format(new Date(), 'yyyy-MM-dd'),
       });
-      await base44.entities.ReimbursementEntry.bulkUpdate(
+      await entryEntity.bulkUpdate(
         sorted.map(e => ({ id: e.id, status: 'submitted', form_id: form.id }))
       );
-      qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
-      qc.invalidateQueries({ queryKey: ['my-reimbursement-forms'] });
-      qc.invalidateQueries({ queryKey: ['staff-reimbursements'] });
+      qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
+      qc.invalidateQueries({ queryKey: [cfg.myFormsKey] });
+      qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
       onOpenChange(false);
     } catch (err) {
       setError(err?.message || 'Failed to submit reimbursement.');
@@ -86,13 +90,13 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Submit for Reimbursement</DialogTitle>
+          <DialogTitle>{cfg.submitTitle}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
           <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
             <p className="text-muted-foreground text-xs">
               This will compile <span className="font-medium text-foreground">{entries.length}</span> receipt
-              entr{entries.length === 1 ? 'y' : 'ies'} into one reimbursement form and submit it to Finance.
+              entr{entries.length === 1 ? 'y' : 'ies'} into one {mode === 'cc' ? 'Candora MasterCard receipts submission' : 'reimbursement form'} and submit it to Finance.
             </p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-muted-foreground">Total Requested</span>
@@ -153,7 +157,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries 
         <DialogFooter>
           <DialogClose asChild><Button variant="outline" disabled={submitting}>Cancel</Button></DialogClose>
           <Button onClick={submit} disabled={submitting} className="gap-2">
-            <Send className="w-4 h-4" />{submitting ? 'Submitting…' : 'Submit for Reimbursement'}
+            <Send className="w-4 h-4" />{submitting ? 'Submitting…' : cfg.submitTitle}
           </Button>
         </DialogFooter>
       </DialogContent>

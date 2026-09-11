@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
 import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
@@ -27,7 +28,7 @@ const BLANK_DRAFT = {
 // Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
 const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
 
-export default function UnsubmittedEntries() {
+export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [editingEntry, setEditingEntry] = useState(null);
@@ -37,9 +38,12 @@ export default function UnsubmittedEntries() {
   const [draftError, setDraftError] = useState('');
   const [uploading, setUploading] = useState(false);
 
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
+
   const { data: entries = [], isLoading } = useQuery({
-    queryKey: ['my-reimbursement-entries', user?.email],
-    queryFn: () => base44.entities.ReimbursementEntry.filter({ requester_email: user?.email }),
+    queryKey: [cfg.myEntriesKey, user?.email],
+    queryFn: () => entryEntity.filter({ requester_email: user?.email }),
     enabled: !!user?.email,
   });
 
@@ -51,14 +55,14 @@ export default function UnsubmittedEntries() {
   const gstTotal = unsubmitted.reduce((s, e) => s + (e.gst || 0), 0);
 
   const del = useMutation({
-    mutationFn: id => base44.entities.ReimbursementEntry.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] }),
+    mutationFn: id => entryEntity.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] }),
   });
 
   const addEntry = useMutation({
-    mutationFn: payload => base44.entities.ReimbursementEntry.create(payload),
+    mutationFn: payload => entryEntity.create(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['my-reimbursement-entries'] });
+      qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
       setDraft(null);
       setDraftError('');
     },
@@ -167,9 +171,9 @@ export default function UnsubmittedEntries() {
           <Button variant="outline" size="sm" className="gap-2" onClick={startDraft} disabled={!!draft}>
             <Plus className="w-4 h-4" />Add Receipt Entry
           </Button>
-          <DownloadReimbursementButton entries={unsubmitted} />
+          <DownloadReimbursementButton entries={unsubmitted} mode={mode} />
           <Button size="sm" className="gap-2" disabled={unsubmitted.length === 0} onClick={() => setSubmitOpen(true)}>
-            <Send className="w-4 h-4" />Submit for Reimbursement
+            <Send className="w-4 h-4" />{cfg.submitButton}
           </Button>
         </div>
       </div>
@@ -326,8 +330,8 @@ export default function UnsubmittedEntries() {
         </Card>
       )}
 
-      <ReceiptEntryDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} entry={editingEntry} />
-      <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} />
+      <ReceiptEntryDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} entry={editingEntry} mode={mode} />
+      <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} mode={mode} />
     </section>
   );
 }

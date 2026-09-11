@@ -14,6 +14,7 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
   pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
@@ -25,7 +26,7 @@ const STATUS_STYLES = {
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yy') : '—';
 
-export default function FinanceReimbursements() {
+export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [search, setSearch] = useState('');
@@ -34,15 +35,18 @@ export default function FinanceReimbursements() {
   const [approveTarget, setApproveTarget] = useState(null); // form pending e-signature approval
   const [approveSig, setApproveSig] = useState('');
   const [approveError, setApproveError] = useState('');
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
+  const formEntity = base44.entities[cfg.formEntity];
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['staff-reimbursements'],
-    queryFn: () => base44.entities.StaffReimbursementRequest.list('-submitted_date', 200),
+    queryKey: [cfg.financeFormsKey],
+    queryFn: () => formEntity.list('-submitted_date', 200),
   });
 
   const { data: entries = [] } = useQuery({
-    queryKey: ['staff-reimbursement-entries'],
-    queryFn: () => base44.entities.ReimbursementEntry.list('-created_date', 500),
+    queryKey: [cfg.financeEntriesKey],
+    queryFn: () => entryEntity.list('-created_date', 500),
   });
 
   const entriesByForm = useMemo(() => {
@@ -78,24 +82,24 @@ export default function FinanceReimbursements() {
         extra.reviewed_by_name = displayName(user);
       }
       if (status === 'paid') extra.payment_date = format(new Date(), 'yyyy-MM-dd');
-      await base44.entities.StaffReimbursementRequest.update(form.id, { status, ...extra });
+      await formEntity.update(form.id, { status, ...extra });
       // When marked paid, the staff member's individual entries move to their Paid section.
       if (status === 'paid') {
-        await base44.entities.ReimbursementEntry.updateMany({ form_id: form.id }, { $set: { status: 'paid' } });
+        await entryEntity.updateMany({ form_id: form.id }, { $set: { status: 'paid' } });
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['staff-reimbursements'] });
-      qc.invalidateQueries({ queryKey: ['staff-reimbursement-entries'] });
+      qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
+      qc.invalidateQueries({ queryKey: [cfg.financeEntriesKey] });
     },
   });
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Receipt className="h-6 w-6 text-primary" /> Staff Reimbursement Requests</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Receipt className="h-6 w-6 text-primary" /> {cfg.financeTitle}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Reimbursement forms submitted by staff. Each form compiles that staff member's individual receipt entries — verify, then mark paid to reimburse.
+          {cfg.financeSubtitle}
         </p>
       </div>
 
@@ -141,7 +145,7 @@ export default function FinanceReimbursements() {
         <div className="text-sm text-muted-foreground">Loading…</div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
-          No reimbursement forms yet. Forms appear here when staff click “Submit for Reimbursement”.
+          {cfg.financeEmpty}
         </CardContent></Card>
       ) : (
         <Card className="p-0">
@@ -247,7 +251,7 @@ export default function FinanceReimbursements() {
                                         >✂ −{fmt(e.excluded_amount * 1.05)}</span>
                                       )}
                                     </td>
-                                    <FinanceEntryFundingCells entry={e} />
+                                    <FinanceEntryFundingCells entry={e} mode={mode} />
                                     <td className="px-2 py-1.5 text-center">
                                       {e.receipt_url ? (
                                         <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Banknote, ChevronDown, ChevronUp, ExternalLink, Receipt as ReceiptIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
   pending: { label: 'Submitted', cls: 'bg-amber-100 text-amber-800' },
@@ -18,19 +19,22 @@ const STATUS_STYLES = {
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yyyy') : '—';
 
-export default function ReimbursementFormsList({ statuses, emptyText }) {
+export default function ReimbursementFormsList({ statuses, emptyText, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
   const [expandedId, setExpandedId] = useState(null);
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
+  const formEntity = base44.entities[cfg.formEntity];
 
   const { data: forms = [], isLoading } = useQuery({
-    queryKey: ['my-reimbursement-forms', user?.email],
-    queryFn: () => base44.entities.StaffReimbursementRequest.filter({ requester_email: user?.email }),
+    queryKey: [cfg.myFormsKey, user?.email],
+    queryFn: () => formEntity.filter({ requester_email: user?.email }),
     enabled: !!user?.email,
   });
 
   const { data: entries = [] } = useQuery({
-    queryKey: ['my-reimbursement-entries', user?.email],
-    queryFn: () => base44.entities.ReimbursementEntry.filter({ requester_email: user?.email }),
+    queryKey: [cfg.myEntriesKey, user?.email],
+    queryFn: () => entryEntity.filter({ requester_email: user?.email }),
     enabled: !!user?.email,
   });
 
@@ -71,7 +75,7 @@ export default function ReimbursementFormsList({ statuses, emptyText }) {
             <div className="flex items-center gap-4 px-4 py-3 flex-wrap">
               <div className="flex-1 min-w-[200px]">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">Reimbursement Form — {fmtDate(f.submitted_date || f.date_requested)}</p>
+                  <p className="font-medium">{cfg.formCardLabel} — {fmtDate(f.submitted_date || f.date_requested)}</p>
                   <Badge className={st.cls}>{st.label}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">

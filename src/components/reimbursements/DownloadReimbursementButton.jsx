@@ -9,15 +9,17 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export default function DownloadReimbursementButton({ entries }) {
+export default function DownloadReimbursementButton({ entries, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
   const [sigOpen, setSigOpen] = useState(false);
   const [signature, setSignature] = useState('');
   const [sigError, setSigError] = useState('');
+  const cfg = REIMBURSEMENT_MODES[mode];
 
   const askForSignature = () => {
     setSignature('');
@@ -68,7 +70,7 @@ export default function DownloadReimbursementButton({ entries }) {
     const html = `<!DOCTYPE html>
 <html>
 <head>
-  <title>Reimbursement Request — ${esc(name)}</title>
+  <title>${cfg.docTitle} — ${esc(name)}</title>
   <style>
     @page { size: letter landscape; margin: 0.5in; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -104,7 +106,7 @@ export default function DownloadReimbursementButton({ entries }) {
   <div class="header">
     <div>
       <div class="org">Candora</div>
-      <h1>Staff Reimbursement Request</h1>
+      <h1>${cfg.docTitle}</h1>
     </div>
     <div class="date">Generated ${format(new Date(), 'MMMM d, yyyy')}</div>
   </div>
@@ -163,17 +165,17 @@ export default function DownloadReimbursementButton({ entries }) {
   return (
     <>
       <Button variant="outline" size="sm" className="gap-2" disabled={!entries || entries.length === 0} onClick={askForSignature}>
-        <Download className="w-4 h-4" />Download Reimbursement
+        <Download className="w-4 h-4" />{cfg.downloadButton}
       </Button>
 
       <Dialog open={sigOpen} onOpenChange={setSigOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><PenLine className="w-4 h-4" />e-Sign Your Reimbursement Form</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><PenLine className="w-4 h-4" />e-Sign Your {cfg.docTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Type your full name below to e-sign the downloadable reimbursement form. This signature will fill the signature slot on the form.
+              Type your full name below to e-sign the downloadable form. This signature will fill the signature slot on the form.
             </p>
             <div>
               <Label className="text-xs">e-Signature — type your full name *</Label>

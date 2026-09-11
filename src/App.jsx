@@ -80,6 +80,7 @@ import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
 import UserSettings from '@/pages/UserSettings';
 import ReimbursementRequests from '@/pages/ReimbursementRequests';
+import CandoraCCReceipts from '@/pages/CandoraCCReceipts';
 
 // Pathways CM - Case Management
 import PathwaysLayout from '@/components/pathways/PathwaysLayout';
@@ -339,6 +340,7 @@ import FinanceDashboard from '@/pages/finance/FinanceDashboard';
 import FinancePayroll from '@/pages/finance/FinancePayroll';
 import FinancePathways from '@/pages/finance/FinancePathways';
 import FinanceReimbursements from '@/pages/finance/FinanceReimbursements';
+import FinanceMasterCard from '@/pages/finance/FinanceMasterCard';
 import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
@@ -437,6 +439,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
           <Route path="/user/settings" element={<UserSettings />} />
           <Route path="/reimbursement-requests" element={<ReimbursementRequests />} />
+          <Route path="/candora-cc-receipts" element={<CandoraCCReceipts />} />
         </Route>
 
         {/* Volunteer Manager - standalone layout */}
@@ -743,6 +746,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/payroll" element={<FinancePayroll />} />
           <Route path="/finance/pathways" element={<FinancePathways />} />
           <Route path="/finance/reimbursements" element={<FinanceReimbursements />} />
+          <Route path="/finance/mastercard" element={<FinanceMasterCard />} />
           <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
         </Route>

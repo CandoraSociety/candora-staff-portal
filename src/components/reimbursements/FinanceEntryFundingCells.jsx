@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Save } from 'lucide-react';
+import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
@@ -13,8 +14,10 @@ const fmt = n => `$${Number(n || 0).toFixed(2)}`;
  * plus a per-row save button. Returns <td> cells — place directly inside
  * the entries table row in the finance portal.
  */
-export default function FinanceEntryFundingCells({ entry }) {
+export default function FinanceEntryFundingCells({ entry, mode = 'reimbursement' }) {
   const qc = useQueryClient();
+  const cfg = REIMBURSEMENT_MODES[mode];
+  const entryEntity = base44.entities[cfg.entryEntity];
   const [funderCost, setFunderCost] = useState(entry.funder_cost ?? '');
   const [accountNo, setAccountNo] = useState(entry.account_no || '');
   const [funderNo, setFunderNo] = useState(entry.funder_no || '');
@@ -29,12 +32,12 @@ export default function FinanceEntryFundingCells({ entry }) {
   const save = async () => {
     setSaving(true);
     try {
-      await base44.entities.ReimbursementEntry.update(entry.id, {
+      await entryEntity.update(entry.id, {
         funder_cost: funderCost === '' ? null : Number(funderCost),
         account_no: accountNo,
         funder_no: funderNo,
       });
-      await qc.invalidateQueries({ queryKey: ['staff-reimbursement-entries'] });
+      await qc.invalidateQueries({ queryKey: [cfg.financeEntriesKey] });
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } finally {

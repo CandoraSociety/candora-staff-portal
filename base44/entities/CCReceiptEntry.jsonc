@@ -1,0 +1,107 @@
+{
+  "name": "CCReceiptEntry",
+  "type": "object",
+  "properties": {
+    "requester_name": {
+      "type": "string",
+      "description": "Full name of the staff member who entered this receipt"
+    },
+    "requester_email": {
+      "type": "string",
+      "description": "Email of the staff member who entered this receipt"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "phac",
+        "frn",
+        "food_services",
+        "kids_gift_shop",
+        "pathways",
+        "ell",
+        "empoweru",
+        "admin",
+        "fcss",
+        "community_lunch",
+        "other"
+      ],
+      "description": "Program the purchase relates to (PHAC, FRN, Candora Food Services, Kids Gift Shop, Pathways, ELL, EmpowerU, Admin, FCSS, Community Lunch, Other)"
+    },
+    "program_other": {
+      "type": "string",
+      "description": "If program is 'other', specify"
+    },
+    "date_incurred": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of purchase (read from the receipt when uploaded, manual entry otherwise)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description (items purchased)"
+    },
+    "supplier": {
+      "type": "string",
+      "description": "Supplier (where the purchase was made)"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Claimable total cost (with GST) \u2014 the receipt total minus any excluded personal items (their 5% GST is deducted too)"
+    },
+    "gst": {
+      "type": "number",
+      "description": "GST portion of the claimable total cost"
+    },
+    "food_included": {
+      "type": "boolean",
+      "description": "Whether the purchase includes food items. When false, GST auto-calculates at 5% Alberta GST; when true, GST is entered manually (not all food is charged GST)."
+    },
+    "excluded_amount": {
+      "type": "number",
+      "description": "Price (before GST) of personal item(s) on this receipt that are excluded from the claim. 5% GST is added automatically when deducted."
+    },
+    "excluded_description": {
+      "type": "string",
+      "description": "Short description of the excluded personal item(s)"
+    },
+    "funder_cost": {
+      "type": "number",
+      "description": "Funder cost"
+    },
+    "account_no": {
+      "type": "string",
+      "description": "Account #"
+    },
+    "funder_no": {
+      "type": "string",
+      "description": "Funder #"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Uploaded receipt image/file"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this entry"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "unsubmitted",
+        "submitted",
+        "paid"
+      ],
+      "default": "unsubmitted",
+      "description": "unsubmitted = sits in the staff member's Not Submitted list; submitted = compiled into a MasterCard receipts submission awaiting finance; paid = the submission was processed by finance"
+    },
+    "form_id": {
+      "type": "string",
+      "description": "Reference to the CCReceiptSubmission this entry was compiled into"
+    }
+  },
+  "required": [
+    "requester_name",
+    "requester_email",
+    "total_cost"
+  ]
+}
