@@ -16,6 +16,7 @@ import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
 import DownloadReimbursementButton from './DownloadReimbursementButton';
+import MultiVendorReceiptDialog from './MultiVendorReceiptDialog';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
@@ -37,6 +38,7 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
   const [draft, setDraft] = useState(null); // non-null = inline new-entry row is open
   const [draftError, setDraftError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [multiVendor, setMultiVendor] = useState(null); // receipt with several vendors → create one entry per vendor
 
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
@@ -96,6 +98,13 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
       updateDraft('receipt_url', file_url);
       // Autofill from the receipt — anything unreadable falls back to manual entry
       const d = await extractReceiptDetails(file_url);
+      // Multiple vendors on one receipt → review and create a separate entry per vendor
+      if (d?.vendors?.length > 1) {
+        setDraft(null);
+        setDraftError('');
+        setMultiVendor({ vendors: d.vendors, receiptUrl: file_url });
+        return;
+      }
       if (d) {
         setDraft(prev => ({
           ...prev,
@@ -330,6 +339,13 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
         </Card>
       )}
 
+      <MultiVendorReceiptDialog
+        open={!!multiVendor}
+        onOpenChange={o => { if (!o) setMultiVendor(null); }}
+        vendors={multiVendor?.vendors || []}
+        receiptUrl={multiVendor?.receiptUrl}
+        mode={mode}
+      />
       <ReceiptEntryDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} entry={editingEntry} mode={mode} />
       <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} mode={mode} />
     </section>
