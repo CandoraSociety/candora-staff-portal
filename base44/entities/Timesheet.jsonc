@@ -58,9 +58,21 @@
             "type": "number",
             "description": "Total paid hours for the day (auto-calculated from start/end/break)"
           },
+          "vacation_hours": {
+            "type": "number",
+            "description": "Vacation paid-leave hours for the day (auto-filled from approved vacation time)"
+          },
+          "sick_hours": {
+            "type": "number",
+            "description": "Sick-time paid-leave hours for the day (auto-filled from logged sick time)"
+          },
+          "personal_hours": {
+            "type": "number",
+            "description": "Personal-day paid-leave hours for the day (auto-filled from logged personal days)"
+          },
           "paid_leave_hours": {
             "type": "number",
-            "description": "Paid leave hours (sick, personal, etc.) for the day"
+            "description": "Combined paid leave hours for the day (vacation + sick + personal) \u2014 kept for compatibility and totals"
           },
           "banked_hours": {
             "type": "number",
@@ -102,9 +114,21 @@
       "type": "number",
       "description": "Total regular scheduled hours across the period"
     },
+    "total_vacation_hours": {
+      "type": "number",
+      "description": "Total vacation paid-leave hours across the period"
+    },
+    "total_sick_hours": {
+      "type": "number",
+      "description": "Total sick-time paid-leave hours across the period"
+    },
+    "total_personal_hours": {
+      "type": "number",
+      "description": "Total personal-day paid-leave hours across the period"
+    },
     "total_paid_leave_hours": {
       "type": "number",
-      "description": "Total paid leave hours (sick etc.) across the period"
+      "description": "Total combined paid leave hours (vacation + sick + personal) across the period"
     },
     "total_banked_hours": {
       "type": "number",

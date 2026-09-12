@@ -32,7 +32,8 @@ export default function TimesheetForm({ user, onSubmitted }) {
   const periodDays = useMemo(() => getPeriodDays(period), [period]);
 
   const blankRegular = () => periodDays.map(d => ({
-    day: d.dayLabel, date: d.date, start_time: '', end_time: '', break_hours: '', total_hours: '', paid_leave_hours: '', banked_hours: '',
+    day: d.dayLabel, date: d.date, start_time: '', end_time: '', break_hours: '', total_hours: '',
+    vacation_hours: '', sick_hours: '', personal_hours: '', banked_hours: '',
   }));
 
   const [regularRows, setRegularRows] = useState(blankRegular);
@@ -69,9 +70,12 @@ export default function TimesheetForm({ user, onSubmitted }) {
   const [leaveApplied, setLeaveApplied] = useState(false);
   useEffect(() => {
     if (leaveApplied || !Object.keys(leaveByDate).length) return;
-    setRegularRows(prev => prev.map(r => (leaveByDate[r.date] && !r.paid_leave_hours)
-      ? { ...r, paid_leave_hours: String(leaveByDate[r.date].hours) }
-      : r));
+    const kindField = { vacation: 'vacation_hours', sick: 'sick_hours', personal: 'personal_hours' };
+    setRegularRows(prev => prev.map(r => {
+      const l = leaveByDate[r.date];
+      const field = l && kindField[l.kind];
+      return (field && !r[field]) ? { ...r, [field]: String(l.hours) } : r;
+    }));
     setLeaveApplied(true);
   }, [leaveByDate, leaveApplied]);
 
@@ -106,10 +110,13 @@ export default function TimesheetForm({ user, onSubmitted }) {
 
   const totals = useMemo(() => {
     const total_regular = regularRows.reduce((s, r) => s + toNum(r.total_hours), 0);
-    const paid_leave = regularRows.reduce((s, r) => s + toNum(r.paid_leave_hours), 0);
+    const vacation = regularRows.reduce((s, r) => s + toNum(r.vacation_hours), 0);
+    const sick = regularRows.reduce((s, r) => s + toNum(r.sick_hours), 0);
+    const personal = regularRows.reduce((s, r) => s + toNum(r.personal_hours), 0);
+    const paid_leave = vacation + sick + personal;
     const banked = regularRows.reduce((s, r) => s + toNum(r.banked_hours), 0);
     const additional = additionalRows.reduce((s, r) => s + toNum(r.paid_hours), 0);
-    return { total_regular, paid_leave, banked, additional, total_paid: total_regular + paid_leave + additional };
+    return { total_regular, vacation, sick, personal, paid_leave, banked, additional, total_paid: total_regular + paid_leave + additional };
   }, [regularRows, additionalRows]);
 
   const submit = async () => {
@@ -135,13 +142,19 @@ export default function TimesheetForm({ user, onSubmitted }) {
           ...r,
           break_hours: toNum(r.break_hours),
           total_hours: toNum(r.total_hours),
-          paid_leave_hours: toNum(r.paid_leave_hours),
+          vacation_hours: toNum(r.vacation_hours),
+          sick_hours: toNum(r.sick_hours),
+          personal_hours: toNum(r.personal_hours),
+          paid_leave_hours: +(toNum(r.vacation_hours) + toNum(r.sick_hours) + toNum(r.personal_hours)).toFixed(2),
           banked_hours: toNum(r.banked_hours),
         })),
         additional_entries: additionalRows
           .filter(r => r.date || r.start_time || r.end_time || r.paid_hours)
           .map(r => ({ ...r, break_hours: toNum(r.break_hours), paid_hours: toNum(r.paid_hours) })),
         total_regular_hours: totals.total_regular,
+        total_vacation_hours: totals.vacation,
+        total_sick_hours: totals.sick,
+        total_personal_hours: totals.personal,
         total_paid_leave_hours: totals.paid_leave,
         total_banked_hours: totals.banked,
         total_additional_hours: totals.additional,
@@ -182,7 +195,7 @@ export default function TimesheetForm({ user, onSubmitted }) {
         <div className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm">
           <span className="font-semibold text-warning">Automatically recorded from your approved time off: </span>
           {Object.entries(autoLeaveSummary).map(([kind, n]) => `${n} ${LEAVE_KIND_LABELS[kind]} day${n > 1 ? 's' : ''}`).join(' · ')}
-          <span className="text-muted-foreground"> — filled into the Paid Leave column.</span>
+          <span className="text-muted-foreground"> — filled into the matching column (Vacation / Sick / Personal).</span>
         </div>
       )}
 
@@ -190,7 +203,7 @@ export default function TimesheetForm({ user, onSubmitted }) {
       <div>
         <h2 className="font-semibold mb-2">Regular Scheduled Hours</h2>
         <div className="overflow-x-auto rounded-xl border">
-          <table className="w-full text-sm min-w-[760px]">
+          <table className="w-full text-sm min-w-[960px]">
             <thead className="bg-muted/50 text-left text-xs">
               <tr>
                 <th className="px-2 py-2 font-medium">Day</th>
@@ -199,7 +212,9 @@ export default function TimesheetForm({ user, onSubmitted }) {
                 <th className="px-2 py-2 font-medium">Break (hrs)</th>
                 <th className="px-2 py-2 font-medium">End Time</th>
                 <th className="px-2 py-2 font-medium">Total Paid Hrs</th>
-                <th className="px-2 py-2 font-medium">Paid Leave (sick etc)</th>
+                <th className="px-2 py-2 font-medium">Vacation</th>
+                <th className="px-2 py-2 font-medium">Sick</th>
+                <th className="px-2 py-2 font-medium">Personal</th>
                 <th className="px-2 py-2 font-medium">Banked (+/- hrs)</th>
               </tr>
             </thead>
@@ -212,14 +227,30 @@ export default function TimesheetForm({ user, onSubmitted }) {
                   <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cellInput} placeholder="0" value={r.break_hours} onChange={e => updateRegular(i, 'break_hours', e.target.value)} /></td>
                   <td className="px-1 py-1"><Input type="time" className={cellInput} value={r.end_time} onChange={e => updateRegular(i, 'end_time', e.target.value)} /></td>
                   <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cellInput} placeholder="0" value={r.total_hours} onChange={e => updateRegular(i, 'total_hours', e.target.value)} /></td>
-                  <td className="px-1 py-1"><Input type="number" step="0.25" min="0" className={cn(cellInput, leaveByDate[r.date] && 'bg-warning/10')} title={leaveByDate[r.date] ? `Approved ${LEAVE_KIND_LABELS[leaveByDate[r.date].kind]} time (auto-filled)` : undefined} placeholder="0" value={r.paid_leave_hours} onChange={e => updateRegular(i, 'paid_leave_hours', e.target.value)} /></td>
+                  {['vacation', 'sick', 'personal'].map(kind => {
+                    const field = `${kind}_hours`;
+                    const l = leaveByDate[r.date];
+                    return (
+                      <td key={kind} className="px-1 py-1">
+                        <Input
+                          type="number" step="0.25" min="0" placeholder="0"
+                          className={cn(cellInput, l?.kind === kind && 'bg-warning/10')}
+                          title={l?.kind === kind ? `Approved ${LEAVE_KIND_LABELS[kind]} time (auto-filled)` : undefined}
+                          value={r[field]}
+                          onChange={e => updateRegular(i, field, e.target.value)}
+                        />
+                      </td>
+                    );
+                  })}
                   <td className="px-1 py-1"><Input type="number" step="0.25" className={cellInput} placeholder="0" value={r.banked_hours} onChange={e => updateRegular(i, 'banked_hours', e.target.value)} /></td>
                 </tr>
               ))}
               <tr className="border-t bg-muted/40 font-semibold">
                 <td colSpan={5} className="px-2 py-2 text-right">Totals</td>
                 <td className="px-2 py-2">{Math.round(totals.total_regular * 100) / 100}</td>
-                <td className="px-2 py-2">{Math.round(totals.paid_leave * 100) / 100}</td>
+                <td className="px-2 py-2">{Math.round(totals.vacation * 100) / 100}</td>
+                <td className="px-2 py-2">{Math.round(totals.sick * 100) / 100}</td>
+                <td className="px-2 py-2">{Math.round(totals.personal * 100) / 100}</td>
                 <td className="px-2 py-2">{Math.round(totals.banked * 100) / 100}</td>
               </tr>
             </tbody>
