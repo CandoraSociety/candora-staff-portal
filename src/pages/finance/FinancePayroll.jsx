@@ -1,13 +1,8 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, CalendarOff, HeartPulse, HeartHandshake, Users, Pencil } from 'lucide-react';
-import WageAdjustmentDialog from '@/components/finance/WageAdjustmentDialog';
-import { computeTimeOffBalances } from '@/lib/timeOffBalances';
+import { Clock, CalendarOff, HeartPulse, HeartHandshake, Users } from 'lucide-react';
+import StaffListingTab from '@/components/finance/StaffListingTab';
 
 const STAFF_TABS = [
   { value: 'timesheets',  label: 'Timesheet Submissions', icon: Clock },
@@ -24,94 +19,6 @@ function Placeholder({ icon: Icon, title, desc }) {
         <Icon className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
         <h3 className="font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">{desc}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function StaffListingTab() {
-  const { data: employees = [], isLoading } = useQuery({
-    queryKey: ['employees-finance'],
-    queryFn: () => base44.entities.Employee.filter({ status: 'active' }),
-  });
-  const [editing, setEditing] = useState(null);
-
-  const { data: approvedTimesheets = [] } = useQuery({
-    queryKey: ['timesheets', 'all-approved'],
-    queryFn: () => base44.entities.Timesheet.filter({ status: 'approved' }, '-submitted_date', 500),
-  });
-
-  const timesheetsByEmail = {};
-  for (const t of approvedTimesheets) {
-    const key = (t.employee_email || '').toLowerCase();
-    (timesheetsByEmail[key] ||= []).push(t);
-  }
-  // Available vacation / sick / personal — starting balance from the employee
-  // file, plus vacation accrued from approved timesheet hours, minus time taken.
-  const balancesOf = (employee) =>
-    computeTimeOffBalances(employee, timesheetsByEmail[(employee.email || '').toLowerCase()] || []);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Staff Listing &amp; Wage Adjustments</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="text-sm text-muted-foreground">Loading staff...</div>
-        ) : employees.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-8 text-center">No active staff found.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-muted/50">
-                <tr>
-                  <th className="text-left px-3 py-2 font-semibold">Name</th>
-                  <th className="text-left px-3 py-2 font-semibold">Position</th>
-                  <th className="text-left px-3 py-2 font-semibold">Status</th>
-                  <th className="text-left px-3 py-2 font-semibold">Employment</th>
-                  <th className="text-right px-3 py-2 font-semibold">Hourly Wage</th>
-                  <th className="text-right px-3 py-2 font-semibold">Salary</th>
-                  <th className="text-right px-3 py-2 font-semibold">Vacation %</th>
-                  <th className="text-right px-3 py-2 font-semibold">Vacation Avail.</th>
-                  <th className="text-right px-3 py-2 font-semibold">Sick Avail.</th>
-                  <th className="text-right px-3 py-2 font-semibold">Personal Avail.</th>
-                  <th className="text-left px-3 py-2 font-semibold">Pay Grade</th>
-                  <th className="text-center px-3 py-2 font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {employees.map(e => (
-                  <tr key={e.id} className="hover:bg-muted/30">
-                    <td className="px-3 py-2 font-medium">{e.first_name} {e.last_name}</td>
-                    <td className="px-3 py-2">{e.position || '—'}</td>
-                    <td className="px-3 py-2"><Badge variant="outline">{e.status}</Badge></td>
-                    <td className="px-3 py-2">{e.employment_type ? <Badge variant="outline" className="capitalize">{e.employment_type}</Badge> : '—'}</td>
-                    <td className="px-3 py-2 text-right">{e.hourly_wage ? `$${Number(e.hourly_wage).toFixed(2)}` : '—'}</td>
-                    <td className="px-3 py-2 text-right">{e.salary ? `$${Number(e.salary).toFixed(2)}` : '—'}</td>
-                    <td className="px-3 py-2 text-right">{e.vacation_percentage != null ? `${e.vacation_percentage}%` : '—'}</td>
-                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).vacation} hrs</td>
-                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).sick} hrs</td>
-                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).personal} hrs</td>
-                    <td className="px-3 py-2">{e.pay_grade || '—'}</td>
-                    <td className="px-3 py-2 text-center">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditing(e)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {editing && (
-          <WageAdjustmentDialog
-            employee={editing}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        )}
       </CardContent>
     </Card>
   );

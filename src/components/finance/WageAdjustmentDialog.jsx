@@ -15,7 +15,9 @@ const EMPLOYMENT_STATUS = ['active', 'on_leave', 'probation', 'occasional', 'ter
 
 export default function WageAdjustmentDialog({ employee, onDone, onCancel }) {
   const queryClient = useQueryClient();
+  const isHourly = employee.employment_type === 'hourly';
   const [salary, setSalary] = useState(employee.salary ?? '');
+  const [hourlyWage, setHourlyWage] = useState(employee.hourly_wage ?? '');
   const [payGrade, setPayGrade] = useState(employee.pay_grade || '');
   const [status, setStatus] = useState(employee.status || 'active');
   const [benefitsTier, setBenefitsTier] = useState(employee.benefits_tier || '');
@@ -36,7 +38,9 @@ export default function WageAdjustmentDialog({ employee, onDone, onCancel }) {
     setSaving(true);
     try {
       await base44.entities.Employee.update(employee.id, {
-        salary: parseFloat(salary) || 0,
+        ...(isHourly
+          ? { hourly_wage: parseFloat(hourlyWage) || 0 }
+          : { salary: parseFloat(salary) || 0 }),
         pay_grade: payGrade,
         status,
       });
@@ -60,8 +64,17 @@ export default function WageAdjustmentDialog({ employee, onDone, onCancel }) {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">New Salary ($)</Label>
-              <Input type="number" step="0.01" value={salary} onChange={e => setSalary(e.target.value)} className="mt-1" />
+              {isHourly ? (
+                <>
+                  <Label className="text-xs">New Hourly Wage ($)</Label>
+                  <Input type="number" step="0.01" value={hourlyWage} onChange={e => setHourlyWage(e.target.value)} className="mt-1" />
+                </>
+              ) : (
+                <>
+                  <Label className="text-xs">New Salary ($)</Label>
+                  <Input type="number" step="0.01" value={salary} onChange={e => setSalary(e.target.value)} className="mt-1" />
+                </>
+              )}
             </div>
             <div>
               <Label className="text-xs">Pay Grade</Label>
