@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, CalendarOff, HeartPulse, HeartHandshake, Users, Pencil } from 'lucide-react';
 import WageAdjustmentDialog from '@/components/finance/WageAdjustmentDialog';
+import { computeTimeOffBalances } from '@/lib/timeOffBalances';
 
 const STAFF_TABS = [
   { value: 'timesheets',  label: 'Timesheet Submissions', icon: Clock },
@@ -35,6 +36,21 @@ function StaffListingTab() {
   });
   const [editing, setEditing] = useState(null);
 
+  const { data: approvedTimesheets = [] } = useQuery({
+    queryKey: ['timesheets', 'all-approved'],
+    queryFn: () => base44.entities.Timesheet.filter({ status: 'approved' }, '-submitted_date', 500),
+  });
+
+  const timesheetsByEmail = {};
+  for (const t of approvedTimesheets) {
+    const key = (t.employee_email || '').toLowerCase();
+    (timesheetsByEmail[key] ||= []).push(t);
+  }
+  // Available vacation / sick / personal — starting balance from the employee
+  // file, plus vacation accrued from approved timesheet hours, minus time taken.
+  const balancesOf = (employee) =>
+    computeTimeOffBalances(employee, timesheetsByEmail[(employee.email || '').toLowerCase()] || []);
+
   return (
     <Card>
       <CardHeader>
@@ -53,7 +69,13 @@ function StaffListingTab() {
                   <th className="text-left px-3 py-2 font-semibold">Name</th>
                   <th className="text-left px-3 py-2 font-semibold">Position</th>
                   <th className="text-left px-3 py-2 font-semibold">Status</th>
+                  <th className="text-left px-3 py-2 font-semibold">Employment</th>
+                  <th className="text-right px-3 py-2 font-semibold">Hourly Wage</th>
                   <th className="text-right px-3 py-2 font-semibold">Salary</th>
+                  <th className="text-right px-3 py-2 font-semibold">Vacation %</th>
+                  <th className="text-right px-3 py-2 font-semibold">Vacation Avail.</th>
+                  <th className="text-right px-3 py-2 font-semibold">Sick Avail.</th>
+                  <th className="text-right px-3 py-2 font-semibold">Personal Avail.</th>
                   <th className="text-left px-3 py-2 font-semibold">Pay Grade</th>
                   <th className="text-center px-3 py-2 font-semibold">Actions</th>
                 </tr>
@@ -64,7 +86,13 @@ function StaffListingTab() {
                     <td className="px-3 py-2 font-medium">{e.first_name} {e.last_name}</td>
                     <td className="px-3 py-2">{e.position || '—'}</td>
                     <td className="px-3 py-2"><Badge variant="outline">{e.status}</Badge></td>
+                    <td className="px-3 py-2">{e.employment_type ? <Badge variant="outline" className="capitalize">{e.employment_type}</Badge> : '—'}</td>
+                    <td className="px-3 py-2 text-right">{e.hourly_wage ? `$${Number(e.hourly_wage).toFixed(2)}` : '—'}</td>
                     <td className="px-3 py-2 text-right">{e.salary ? `$${Number(e.salary).toFixed(2)}` : '—'}</td>
+                    <td className="px-3 py-2 text-right">{e.vacation_percentage != null ? `${e.vacation_percentage}%` : '—'}</td>
+                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).vacation} hrs</td>
+                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).sick} hrs</td>
+                    <td className="px-3 py-2 text-right font-medium">{balancesOf(e).personal} hrs</td>
                     <td className="px-3 py-2">{e.pay_grade || '—'}</td>
                     <td className="px-3 py-2 text-center">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditing(e)}>

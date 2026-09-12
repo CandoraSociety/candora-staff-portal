@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import SupervisorSelect, { useSupervisors } from '@/components/timeoff/SupervisorSelect';
 import { getPayPeriod, getPeriodDays, periodLabel, ymd } from '@/lib/payPeriods';
 import { cn } from '@/lib/utils';
+import { computeTimeOffBalances } from '@/lib/timeOffBalances';
 
 const LEAVE_KIND_LABELS = { vacation: 'vacation', sick: 'sick time', personal: 'personal day' };
 
@@ -51,6 +52,23 @@ export default function TimesheetForm({ user, onSubmitted }) {
     queryFn: () => base44.entities.TimeOffRecord.filter({ employee_email: user.email, status: 'approved' }),
     enabled: !!user?.email,
   });
+
+  // My employee file + approved timesheets → available vacation / sick / personal time
+  const { data: myEmployeeList = [] } = useQuery({
+    queryKey: ['employee-record', user?.email],
+    queryFn: () => base44.entities.Employee.filter({ email: user.email }),
+    enabled: !!user?.email,
+  });
+  const { data: myApprovedTimesheets = [] } = useQuery({
+    queryKey: ['timesheets', 'mine-approved', user?.email],
+    queryFn: () => base44.entities.Timesheet.filter({ employee_email: user.email, status: 'approved' }, '-submitted_date', 200),
+    enabled: !!user?.email,
+  });
+  const showBalances = myEmployeeList.length > 0;
+  const balances = useMemo(
+    () => computeTimeOffBalances(myEmployeeList[0], myApprovedTimesheets),
+    [myEmployeeList, myApprovedTimesheets]
+  );
 
   const leaveByDate = useMemo(() => {
     const map = {};
@@ -212,9 +230,18 @@ export default function TimesheetForm({ user, onSubmitted }) {
                 <th className="px-2 py-2 font-medium">Break (hrs)</th>
                 <th className="px-2 py-2 font-medium">End Time</th>
                 <th className="px-2 py-2 font-medium">Total Paid Hrs</th>
-                <th className="px-2 py-2 font-medium">Vacation</th>
-                <th className="px-2 py-2 font-medium">Sick</th>
-                <th className="px-2 py-2 font-medium">Personal</th>
+                <th className="px-2 py-2 font-medium">
+                  Vacation
+                  {showBalances && <span className="block text-[10px] font-normal text-muted-foreground">{balances.vacation} hrs avail</span>}
+                </th>
+                <th className="px-2 py-2 font-medium">
+                  Sick
+                  {showBalances && <span className="block text-[10px] font-normal text-muted-foreground">{balances.sick} hrs avail</span>}
+                </th>
+                <th className="px-2 py-2 font-medium">
+                  Personal
+                  {showBalances && <span className="block text-[10px] font-normal text-muted-foreground">{balances.personal} hrs avail</span>}
+                </th>
                 <th className="px-2 py-2 font-medium">Banked (+/- hrs)</th>
               </tr>
             </thead>

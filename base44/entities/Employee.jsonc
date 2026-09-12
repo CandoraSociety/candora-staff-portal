@@ -85,6 +85,37 @@
       "type": "number",
       "description": "Annual salary"
     },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "salary",
+        "hourly"
+      ],
+      "description": "Salary or hourly employee \u2014 hourly staff submit timesheets"
+    },
+    "hourly_wage": {
+      "type": "number",
+      "description": "Hourly wage (hourly employees only)"
+    },
+    "vacation_percentage": {
+      "type": "number",
+      "description": "Vacation accrual percentage \u2014 vacation hours earned per 100 hours worked"
+    },
+    "vacation_hours_start": {
+      "type": "number",
+      "default": 0,
+      "description": "Starting vacation hours available (set manually where the employee is at)"
+    },
+    "sick_hours_start": {
+      "type": "number",
+      "default": 0,
+      "description": "Starting sick-time hours available (set manually)"
+    },
+    "personal_hours_start": {
+      "type": "number",
+      "default": 0,
+      "description": "Starting personal-day hours available (set manually)"
+    },
     "employee_id_number": {
       "type": "string",
       "description": "Internal employee ID"

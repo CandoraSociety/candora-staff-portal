@@ -16,6 +16,8 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
     first_name: '', last_name: '', email: '', phone: '',
     position: '', department: '', org_tier: '', status: 'active', hire_date: '',
     can_access_billing: false,
+    employment_type: '', hourly_wage: '', vacation_percentage: '',
+    vacation_hours_start: '', sick_hours_start: '', personal_hours_start: '',
   });
 
   const { data: orgSettingsList = [] } = useQuery({
@@ -42,13 +44,27 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         status: employee.status || 'active',
         hire_date: employee.hire_date || '',
         can_access_billing: employee.can_access_billing || false,
+        employment_type: employee.employment_type || '',
+        hourly_wage: employee.hourly_wage ?? '',
+        vacation_percentage: employee.vacation_percentage ?? '',
+        vacation_hours_start: employee.vacation_hours_start ?? '',
+        sick_hours_start: employee.sick_hours_start ?? '',
+        personal_hours_start: employee.personal_hours_start ?? '',
       });
     }
   }, [employee]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(data);
+    const num = v => (v === '' || v === null ? null : Number(v));
+    onSubmit({
+      ...data,
+      hourly_wage: num(data.hourly_wage),
+      vacation_percentage: num(data.vacation_percentage),
+      vacation_hours_start: num(data.vacation_hours_start) ?? 0,
+      sick_hours_start: num(data.sick_hours_start) ?? 0,
+      personal_hours_start: num(data.personal_hours_start) ?? 0,
+    });
   };
 
   return (
@@ -94,11 +110,51 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         <Input type="date" value={data.hire_date} onChange={e => setData({ ...data, hire_date: e.target.value })} />
       </div>
       <div className="space-y-1">
+        <Label>Employment Type</Label>
+        <Select value={data.employment_type} onValueChange={val => setData({ ...data, employment_type: val })}>
+          <SelectTrigger><SelectValue placeholder="Salary or hourly" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="salary">Salary</SelectItem>
+            <SelectItem value="hourly">Hourly</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {data.employment_type === 'hourly' && (
+        <div className="space-y-1">
+          <Label>Hourly Wage ($)</Label>
+          <Input type="number" step="0.01" min="0" value={data.hourly_wage} onChange={e => setData({ ...data, hourly_wage: e.target.value })} placeholder="e.g. 18.50" />
+        </div>
+      )}
+      <div className="space-y-1">
+        <Label>Vacation Accrual (%)</Label>
+        <Input type="number" step="0.01" min="0" value={data.vacation_percentage} onChange={e => setData({ ...data, vacation_percentage: e.target.value })} placeholder="e.g. 4 — vacation hours earned per 100 hours worked" />
+      </div>
+      <div className="space-y-1">
         <Label>Status</Label>
         <Select value={data.status} onValueChange={val => setData({ ...data, status: val })}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>{statuses.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}</SelectContent>
         </Select>
+      </div>
+      <div className="rounded-lg border p-3 space-y-3">
+        <div>
+          <Label className="text-sm font-medium">Time-Off Starting Balances (hours)</Label>
+          <p className="text-xs text-muted-foreground mt-0.5">Where this employee is at right now — vacation accrues automatically from here as hours are worked.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Vacation</Label>
+            <Input type="number" step="0.25" min="0" value={data.vacation_hours_start} onChange={e => setData({ ...data, vacation_hours_start: e.target.value })} placeholder="0" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Sick</Label>
+            <Input type="number" step="0.25" min="0" value={data.sick_hours_start} onChange={e => setData({ ...data, sick_hours_start: e.target.value })} placeholder="0" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Personal</Label>
+            <Input type="number" step="0.25" min="0" value={data.personal_hours_start} onChange={e => setData({ ...data, personal_hours_start: e.target.value })} placeholder="0" />
+          </div>
+        </div>
       </div>
       <div className="flex items-center justify-between rounded-lg border p-3">
         <div>
