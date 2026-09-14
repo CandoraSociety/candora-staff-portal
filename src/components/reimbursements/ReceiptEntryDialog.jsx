@@ -24,7 +24,7 @@ const BLANK = {
   funder_cost: '', account_no: '', funder_no: '', receipt_url: '', notes: '',
 };
 
-export default function ReceiptEntryDialog({ open, onOpenChange, onSaved, entry, mode = 'reimbursement' }) {
+export default function ReceiptEntryDialog({ open, onOpenChange, onSaved, entry, attachToFormId, mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const editing = !!entry?.id;
@@ -141,7 +141,9 @@ export default function ReceiptEntryDialog({ open, onOpenChange, onSaved, entry,
           ...payload,
           requester_name: displayName(user),
           requester_email: user?.email || '',
-          status: 'unsubmitted',
+          // When added straight into a submitted request, the entry joins that form immediately
+          status: attachToFormId ? 'submitted' : 'unsubmitted',
+          form_id: attachToFormId || null,
         });
       }
       qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });

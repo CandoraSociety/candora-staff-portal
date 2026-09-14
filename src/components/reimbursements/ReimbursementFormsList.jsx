@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
+import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Plus, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
@@ -135,9 +135,17 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
             {expanded && (
               <div className="border-t border-border bg-muted/20">
                 {f.status === 'pending' && (
-                  <p className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-amber-50/50">
-                    You can still edit these entries until Finance starts processing this form.
-                  </p>
+                  <div className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-amber-50/50 flex items-center justify-between gap-2 flex-wrap">
+                    <span>You can still edit these entries until Finance starts processing this form.</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2.5 gap-1 text-xs"
+                      onClick={() => setEditState({ entry: null, form: f })}
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add receipt entry
+                    </Button>
+                  </div>
                 )}
                 <table className="w-full text-sm">
                   <thead>
@@ -194,6 +202,7 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
           onOpenChange={o => { if (!o) setEditState(null); }}
           onSaved={() => handleEntrySaved(editState.form)}
           entry={editState.entry}
+          attachToFormId={editState.entry ? undefined : editState.form.id}
           mode={mode}
         />
       )}
