@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
+import { Check, FolderPlus, Paperclip, Pencil, Plus, Send, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { PROGRAM_OPTIONS, programLabel } from '@/lib/reimbursementConstants';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
+import { getFormItems, syncFormTotals, invalidateFormQueries } from '@/lib/reimbursementFormTotals';
 import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
 import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
@@ -42,12 +45,23 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
 
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
+  const formEntity = base44.entities[cfg.formEntity];
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: [cfg.myEntriesKey, user?.email],
     queryFn: () => entryEntity.filter({ requester_email: user?.email }),
     enabled: !!user?.email,
   });
+
+  // Still-editable submitted requests — entries can be moved into these
+  const { data: pendingForms = [] } = useQuery({
+    queryKey: [cfg.myFormsKey, user?.email, 'pending-editable'],
+    queryFn: () => formEntity.filter({ requester_email: user.email, status: 'pending' }),
+    enabled: !!user?.email,
+  });
+  const sortedPending = [...pendingForms].sort((a, b) =>
+    (b.submitted_date || b.created_date || '').localeCompare(a.submitted_date || a.created_date || '')
+  );
 
   const unsubmitted = entries
     .filter(e => e.status === 'unsubmitted')
@@ -163,6 +177,15 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
 
   const openEdit = (entry) => { setEditingEntry(entry); setEditDialogOpen(true); };
 
+  // Move an unsubmitted entry straight into a still-editable submitted request
+  const attachEntry = async (entry, form) => {
+    await entryEntity.update(entry.id, { status: 'submitted', form_id: form.id });
+    const items = await getFormItems({ cfg, userEmail: user?.email, formId: form.id });
+    await syncFormTotals({ cfg, form, items });
+    invalidateFormQueries(qc, cfg);
+    toast.success('Moved into your submitted request — its totals were updated.');
+  };
+
   const hasRows = unsubmitted.length > 0 || draft;
 
   return (
@@ -209,7 +232,7 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
                   <th className="px-3 py-2.5 font-semibold text-right">Total (with GST)</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Food?</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Receipt</th>
-                  <th className="px-3 py-2.5 w-[80px]"></th>
+                  <th className="px-3 py-2.5 w-[110px]"></th>
                 </tr>
               </thead>
               <tbody>
@@ -315,6 +338,26 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="flex items-center justify-center gap-1">
+                        {sortedPending.length > 0 && (sortedPending.length === 1 ? (
+                          <button onClick={() => attachEntry(e, sortedPending[0])} className="text-muted-foreground hover:text-primary transition-colors" title="Move this entry into your submitted request (still awaiting Finance)">
+                            <FolderPlus className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="text-muted-foreground hover:text-primary transition-colors" title="Add to a submitted request">
+                                <FolderPlus className="w-4 h-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {sortedPending.map(f => (
+                                <DropdownMenuItem key={f.id} onClick={() => attachEntry(e, f)}>
+                                  {cfg.formCardLabel} — {f.submitted_date ? format(new Date(f.submitted_date + 'T00:00:00'), 'MMM d, yyyy') : 'recent'} ({fmt(f.amount)})
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ))}
                         <button onClick={() => openEdit(e)} className="text-muted-foreground hover:text-foreground transition-colors" title="Edit entry">
                           <Pencil className="w-4 h-4" />
                         </button>

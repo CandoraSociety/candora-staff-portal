@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Plus, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
+import { getFormItems, syncFormTotals, invalidateFormQueries } from '@/lib/reimbursementFormTotals';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
@@ -54,22 +55,12 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
   // Staff can still edit entries while the form sits at 'pending'.
   // Finance pressing Processing (or marking paid) locks it.
   const updateFormTotals = async (form, items) => {
-    const amount = items.reduce((s, e) => s + (e.total_cost || 0), 0);
-    const tax = items.reduce((s, e) => s + (e.gst || 0), 0);
-    await formEntity.update(form.id, {
-      amount: +amount.toFixed(2),
-      tax: +tax.toFixed(2),
-      entry_count: items.length,
-      entry_ids: items.map(e => e.id),
-    });
-    qc.invalidateQueries({ queryKey: [cfg.myFormsKey] });
-    qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
-    qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
+    await syncFormTotals({ cfg, form, items });
+    invalidateFormQueries(qc, cfg);
   };
 
   const handleEntrySaved = async (form) => {
-    const fresh = await entryEntity.filter({ requester_email: user?.email });
-    const items = fresh.filter(e => e.form_id === form.id && e.status !== 'unsubmitted');
+    const items = await getFormItems({ cfg, userEmail: user?.email, formId: form.id });
     await updateFormTotals(form, items);
   };
 
