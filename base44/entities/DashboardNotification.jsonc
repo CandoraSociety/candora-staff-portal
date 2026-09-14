@@ -20,6 +20,10 @@
       "default": "other",
       "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, other)"
     },
+    "related_form_id": {
+      "type": "string",
+      "description": "ID of the reimbursement/MasterCard form this notification is about \u2014 lets Finance dismiss it if the payment is reversed"
+    },
     "title": {
       "type": "string",
       "description": "Short notification headline"

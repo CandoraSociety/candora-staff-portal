@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign } from 'lucide-react';
+import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -40,6 +40,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const [approveSig, setApproveSig] = useState('');
   const [approveError, setApproveError] = useState('');
   const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
+  const [reverseTarget, setReverseTarget] = useState(null); // paid submission to reverse
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
   const formEntity = base44.entities[cfg.formEntity];
@@ -98,12 +99,30 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
             recipient_email: form.requester_email,
             recipient_name: form.requester_name,
             kind: isCC ? 'cc_receipts_paid' : 'reimbursement_paid',
+            related_form_id: form.id,
             title: isCC ? 'MasterCard receipts paid out' : 'Reimbursement paid out',
             message: `Finance has marked your ${isCC ? 'Candora MasterCard receipt submission' : 'reimbursement request'} of ${fmt(form.amount)} as paid (${extra.payment_date}).`,
             link: isCC ? '/candora-cc-receipts' : '/reimbursement-requests',
           });
         }
       }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
+      qc.invalidateQueries({ queryKey: [cfg.financeEntriesKey] });
+    },
+  });
+
+  // Reverse a paid submission — returns it to Processing, puts its entries back to
+  // submitted, and dismisses any unread "paid" notification on the staff dashboard.
+  const reversePayment = useMutation({
+    mutationFn: async ({ form }) => {
+      await formEntity.update(form.id, { status: 'processing', payment_date: null });
+      await entryEntity.updateMany({ form_id: form.id }, { $set: { status: 'submitted' } });
+      await base44.entities.DashboardNotification.updateMany(
+        { related_form_id: form.id, is_read: false },
+        { $set: { is_read: true } }
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
@@ -250,6 +269,11 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                                 <Banknote className="w-4 h-4" /> Pay
                               </Button>
                             )}
+                            {r.status === 'paid' && (
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-amber-700 hover:bg-amber-50" onClick={() => setReverseTarget(r)} title="Reverse paid status — returns the submission to Processing">
+                                <RotateCcw className="w-4 h-4" /> Reverse
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -383,6 +407,36 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               }}
             >
               <Check className="w-4 h-4" />OK — Mark as Paid
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!reverseTarget} onOpenChange={o => { if (!o) setReverseTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><RotateCcw className="w-4 h-4" />Reverse Paid Status</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This will return the submission from{' '}
+              <span className="font-medium text-foreground">{reverseTarget?.requester_name}</span> ({fmt(reverseTarget?.amount)}){' '}
+              to Processing so it can be corrected and paid again. The staff member's entries return to their Submitted list,
+              and any unread payment notification on their dashboard is dismissed.
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              disabled={reversePayment.isPending}
+              onClick={() => {
+                reversePayment.mutate({ form: reverseTarget });
+                setReverseTarget(null);
+              }}
+            >
+              <RotateCcw className="w-4 h-4" />Reverse to Processing
             </Button>
           </DialogFooter>
         </DialogContent>
