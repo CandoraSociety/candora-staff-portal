@@ -77,12 +77,13 @@
       "type": "string",
       "enum": [
         "pending",
+        "processing",
         "approved",
         "paid",
         "rejected"
       ],
       "default": "pending",
-      "description": "pending = submitted, awaiting finance; approved = verified by finance; paid = reimbursement paid out; rejected = declined by finance"
+      "description": "pending = submitted, awaiting finance (staff can still edit its entries); processing = finance is processing it \u2014 locked for staff edits until unselected; approved = verified by finance; paid = reimbursement paid out (locked); rejected = declined by finance"
     },
     "submitted_date": {
       "type": "string",
