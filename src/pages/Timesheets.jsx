@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ClipboardList } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ClipboardList, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import TimesheetForm from '@/components/timesheets/TimesheetForm';
 import TimesheetDetail from '@/components/timesheets/TimesheetDetail';
 import TimesheetStatusBadge from '@/components/timesheets/TimesheetStatusBadge';
 import { useCurrentUser } from '@/lib/useAuth';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import { getPayPeriod, periodLabel } from '@/lib/payPeriods';
 
 export default function Timesheets() {
   const { user, loading } = useCurrentUser();
+  const { isSupervisor, isAdmin } = useSupervisorAccess();
   const qc = useQueryClient();
   const [expandedId, setExpandedId] = useState(null);
   const period = getPayPeriod(new Date());
@@ -22,13 +26,20 @@ export default function Timesheets() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <ClipboardList className="h-6 w-6 text-primary" /> Timesheets
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Submit your hours for the current pay period ({periodLabel(period)}). Your supervisor reviews and approves each timesheet.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <ClipboardList className="h-6 w-6 text-primary" /> Timesheets
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Submit your hours for the current pay period ({periodLabel(period)}). Your supervisor reviews and approves each timesheet.
+          </p>
+        </div>
+        {(isSupervisor || isAdmin) && (
+          <Button asChild variant="outline" size="sm" className="h-8 gap-1.5 flex-shrink-0">
+            <Link to="/time-off/team"><Users className="w-4 h-4" /> Team Schedule</Link>
+          </Button>
+        )}
       </div>
 
       {!loading && user && (

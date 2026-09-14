@@ -85,6 +85,7 @@ import CandoraCCReceipts from '@/pages/CandoraCCReceipts';
 import VacationTimeOffRequest from '@/pages/VacationTimeOffRequest';
 import SickTimePersonalDay from '@/pages/SickTimePersonalDay';
 import Timesheets from '@/pages/Timesheets';
+import TeamSchedule from '@/pages/TeamSchedule';
 
 // Pathways CM - Case Management
 import PathwaysLayout from '@/components/pathways/PathwaysLayout';
@@ -447,6 +448,7 @@ const AuthenticatedApp = () => {
           <Route path="/time-off/vacation-request" element={<VacationTimeOffRequest />} />
           <Route path="/time-off/sick-personal" element={<SickTimePersonalDay />} />
           <Route path="/time-off/timesheets" element={<Timesheets />} />
+          <Route path="/time-off/team" element={<TeamSchedule />} />
         </Route>
 
         {/* Volunteer Manager - standalone layout */}
