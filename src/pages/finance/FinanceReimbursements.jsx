@@ -88,9 +88,21 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
       }
       if (status === 'paid') extra.payment_date = format(new Date(), 'yyyy-MM-dd');
       await formEntity.update(form.id, { status, ...extra });
-      // When marked paid, the staff member's individual entries move to their Paid section.
+      // When marked paid, the staff member's individual entries move to their Paid section
+      // and a payment notification lands on their main Dashboard.
       if (status === 'paid') {
         await entryEntity.updateMany({ form_id: form.id }, { $set: { status: 'paid' } });
+        if (form.requester_email) {
+          const isCC = mode === 'cc';
+          await base44.entities.DashboardNotification.create({
+            recipient_email: form.requester_email,
+            recipient_name: form.requester_name,
+            kind: isCC ? 'cc_receipts_paid' : 'reimbursement_paid',
+            title: isCC ? 'MasterCard receipts paid out' : 'Reimbursement paid out',
+            message: `Finance has marked your ${isCC ? 'Candora MasterCard receipt submission' : 'reimbursement request'} of ${fmt(form.amount)} as paid (${extra.payment_date}).`,
+            link: isCC ? '/candora-cc-receipts' : '/reimbursement-requests',
+          });
+        }
       }
     },
     onSuccess: () => {

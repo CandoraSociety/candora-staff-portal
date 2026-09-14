@@ -1,0 +1,46 @@
+{
+  "name": "DashboardNotification",
+  "type": "object",
+  "properties": {
+    "recipient_email": {
+      "type": "string",
+      "description": "Email of the staff user the notification is for \u2014 appears on their main Dashboard"
+    },
+    "recipient_name": {
+      "type": "string",
+      "description": "Display name of the recipient (denormalized for display)"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "reimbursement_paid",
+        "cc_receipts_paid",
+        "other"
+      ],
+      "default": "other",
+      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, other)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short notification headline"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification body text shown on the Dashboard"
+    },
+    "link": {
+      "type": "string",
+      "description": "Optional in-app path to open from the notification (e.g. /reimbursement-requests)"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the recipient has dismissed the notification from their Dashboard"
+    }
+  },
+  "required": [
+    "recipient_email",
+    "title",
+    "message"
+  ]
+}
