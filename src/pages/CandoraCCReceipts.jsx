@@ -24,7 +24,7 @@ export default function CandoraCCReceipts() {
         <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Submitted</h2>
         <ReimbursementFormsList
           mode="cc"
-          statuses={['pending', 'approved', 'rejected']}
+          statuses={['pending', 'processing', 'approved', 'rejected']}
           emptyText="Nothing submitted yet. Use “Submit Receipts” to send your MasterCard receipts to Finance."
         />
       </section>

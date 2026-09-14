@@ -24,7 +24,7 @@ const BLANK = {
   funder_cost: '', account_no: '', funder_no: '', receipt_url: '', notes: '',
 };
 
-export default function ReceiptEntryDialog({ open, onOpenChange, entry, mode = 'reimbursement' }) {
+export default function ReceiptEntryDialog({ open, onOpenChange, onSaved, entry, mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const editing = !!entry?.id;
@@ -145,6 +145,7 @@ export default function ReceiptEntryDialog({ open, onOpenChange, entry, mode = '
         });
       }
       qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
+      onSaved?.();
       onOpenChange(false);
     } catch (err) {
       setError(err?.message || 'Failed to save entry.');

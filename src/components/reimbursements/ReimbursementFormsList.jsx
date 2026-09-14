@@ -1,16 +1,18 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Banknote, ChevronDown, ChevronUp, ExternalLink, Receipt as ReceiptIcon } from 'lucide-react';
+import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
+import ReceiptEntryDialog from './ReceiptEntryDialog';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
   pending: { label: 'Submitted', cls: 'bg-amber-100 text-amber-800' },
+  processing: { label: 'Processing', cls: 'bg-purple-100 text-purple-800' },
   approved: { label: 'Approved', cls: 'bg-blue-100 text-blue-800' },
   paid: { label: 'Paid', cls: 'bg-green-100 text-green-800' },
   rejected: { label: 'Rejected', cls: 'bg-red-100 text-red-800' },
@@ -21,7 +23,9 @@ const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yyyy') : '—
 
 export default function ReimbursementFormsList({ statuses, emptyText, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
+  const qc = useQueryClient();
   const [expandedId, setExpandedId] = useState(null);
+  const [editState, setEditState] = useState(null); // { entry, form } — editing an entry inside a submitted (pending) form
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
   const formEntity = base44.entities[cfg.formEntity];
@@ -46,6 +50,35 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
     }
     return map;
   }, [entries]);
+
+  // Staff can still edit entries while the form sits at 'pending'.
+  // Finance pressing Processing (or marking paid) locks it.
+  const updateFormTotals = async (form, items) => {
+    const amount = items.reduce((s, e) => s + (e.total_cost || 0), 0);
+    const tax = items.reduce((s, e) => s + (e.gst || 0), 0);
+    await formEntity.update(form.id, {
+      amount: +amount.toFixed(2),
+      tax: +tax.toFixed(2),
+      entry_count: items.length,
+      entry_ids: items.map(e => e.id),
+    });
+    qc.invalidateQueries({ queryKey: [cfg.myFormsKey] });
+    qc.invalidateQueries({ queryKey: [cfg.myEntriesKey] });
+    qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
+  };
+
+  const handleEntrySaved = async (form) => {
+    const fresh = await entryEntity.filter({ requester_email: user?.email });
+    const items = fresh.filter(e => e.form_id === form.id && e.status !== 'unsubmitted');
+    await updateFormTotals(form, items);
+  };
+
+  const removeFromForm = async (form, entry) => {
+    if (!window.confirm('Remove this receipt from the request? It will move back to your Not Submitted list.')) return;
+    await entryEntity.update(entry.id, { status: 'unsubmitted', form_id: null });
+    const items = (entriesByForm[form.id] || []).filter(e => e.id !== entry.id);
+    await updateFormTotals(form, items);
+  };
 
   const filtered = forms
     .filter(f => statuses.includes(f.status))
@@ -101,6 +134,11 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
             </div>
             {expanded && (
               <div className="border-t border-border bg-muted/20">
+                {f.status === 'pending' && (
+                  <p className="px-4 py-1.5 text-xs text-muted-foreground border-b border-border bg-amber-50/50">
+                    You can still edit these entries until Finance starts processing this form.
+                  </p>
+                )}
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-left text-xs text-muted-foreground uppercase tracking-wide">
@@ -109,6 +147,7 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
                       <th className="px-4 py-2 font-semibold">Supplier</th>
                       <th className="px-4 py-2 font-semibold text-right">Total</th>
                       <th className="px-4 py-2 font-semibold text-center">Receipt</th>
+                      {f.status === 'pending' && <th className="px-4 py-2 font-semibold text-center">Edit</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -125,6 +164,18 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
                             </a>
                           ) : <span className="text-xs text-muted-foreground">—</span>}
                         </td>
+                        {f.status === 'pending' && (
+                          <td className="px-4 py-2 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditState({ entry: e, form: f })} title="Edit this entry">
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:bg-red-50" onClick={() => removeFromForm(f, e)} title="Remove from this request (back to Not Submitted)">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                     {items.length === 0 && (
@@ -137,6 +188,15 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
           </Card>
         );
       })}
+      {editState && (
+        <ReceiptEntryDialog
+          open
+          onOpenChange={o => { if (!o) setEditState(null); }}
+          onSaved={() => handleEntrySaved(editState.form)}
+          entry={editState.entry}
+          mode={mode}
+        />
+      )}
     </div>
   );
 }

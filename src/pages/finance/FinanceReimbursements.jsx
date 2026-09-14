@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine } from 'lucide-react';
+import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -18,6 +18,7 @@ import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
   pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
+  processing: { label: 'Processing', cls: 'bg-purple-100 text-purple-800' },
   approved: { label: 'Approved', cls: 'bg-blue-100 text-blue-800' },
   paid: { label: 'Paid', cls: 'bg-green-100 text-green-800' },
   rejected: { label: 'Rejected', cls: 'bg-red-100 text-red-800' },
@@ -134,6 +135,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
             <SelectItem value="approved">Approved</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
@@ -192,21 +194,37 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                         <td className="px-3 py-2 text-right font-semibold">{fmt(r.amount)}</td>
                         <td className="px-3 py-2 text-center"><Badge className={st.cls}>{st.label}</Badge></td>
                         <td className="px-3 py-2 text-center">
-                          {r.status === 'pending' && (
-                            <div className="flex items-center justify-center gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => { setApproveTarget(r); setApproveSig(''); setApproveError(''); }} title="Approve (e-sign)">
-                                <Check className="w-4 h-4" />
+                          <div className="flex items-center justify-center gap-1 flex-wrap">
+                            {(r.status === 'pending' || r.status === 'processing') && (
+                              <Button
+                                size="sm"
+                                variant={r.status === 'processing' ? 'secondary' : 'default'}
+                                className="h-7 px-3 gap-1.5 font-semibold"
+                                onClick={() => setStatus.mutate({ form: r, status: r.status === 'processing' ? 'pending' : 'processing' })}
+                                title={r.status === 'processing'
+                                  ? 'Processing — click again to unlock so the staff member can edit'
+                                  : 'Mark as processing — locks the submission so the staff member can no longer edit it'}
+                              >
+                                {r.status === 'processing' ? <Check className="w-4 h-4" /> : <CircleDollarSign className="w-4 h-4" />}
+                                Processing
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
-                                <X className="w-4 h-4" />
+                            )}
+                            {r.status === 'pending' && (
+                              <>
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => { setApproveTarget(r); setApproveSig(''); setApproveError(''); }} title="Approve (e-sign)">
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                            {(r.status === 'approved' || r.status === 'pending' || r.status === 'processing') && (
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setStatus.mutate({ form: r, status: 'paid' })} title="Mark paid">
+                                <Banknote className="w-4 h-4" /> Pay
                               </Button>
-                            </div>
-                          )}
-                          {(r.status === 'approved' || r.status === 'pending') && (
-                            <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setStatus.mutate({ form: r, status: 'paid' })} title="Mark paid">
-                              <Banknote className="w-4 h-4" /> Pay
-                            </Button>
-                          )}
+                            )}
+                          </div>
                         </td>
                       </tr>
                       {expanded && (

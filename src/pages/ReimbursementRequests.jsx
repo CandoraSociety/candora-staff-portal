@@ -23,7 +23,7 @@ export default function ReimbursementRequests() {
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Submitted Reimbursements</h2>
         <ReimbursementFormsList
-          statuses={['pending', 'approved', 'rejected']}
+          statuses={['pending', 'processing', 'approved', 'rejected']}
           emptyText="Nothing submitted yet. Use “Submit for Reimbursement” to send your entries to Finance."
         />
       </section>
