@@ -28,7 +28,7 @@ const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yy') : '—';
 
 // Scotiabank online banking — opened (small window) when Finance presses Pay
-const SCOTIA_PAY_URL = 'https://auth.scotiaonline.scotiabank.com/online?oauth_key=663Fp2X7Oqo&oauth_key_signature=eyJraWQiOiJTd1dmbV9ITlNFTVVNbUVHMnh2LUsydmlhOGVvdzRFTEZhejdxMEdZalVjIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJyZWZlcmVyIjoiaHR0cHM6Ly93d3cuYmluZy5jb20vIiwicmFyZiI6ZmFsc2UsIm9hdXRoX2tleSI6IjY2M0ZwMlg3T3FvIiwiY29uc2VudF9yZXF1aXJlZCI6ZmFsc2UsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vd3d3LnNjb3RpYW9ubGluZS5zY290aWFiYW5rLmNvbS9vbmxpbmUvbGFuZGluZy9vYXV0aGxhbmRpbmcuYm5zIiwiZXhwIjoxNzg5NDAwMzAwLCJpYXQiOjE3ODkzOTkxMDAsImp0aSI6IjY1NGUyZGVlLWVkZmUtNDk3OS05NThkLWUyOTY4ZTQxZGM2OSIsImNsaWVudF9pZCI6IjhlZTkwYzM5LTFjNTItNGZmNC04YWU2LWE3YjU0YzUzOTkzMyIsImNsaWVudF9tZXRhZGF0YSI6eyJDaGFubmVsSUQiOiJTT0wiLCJBcHBsaWNhdGlvbkNvZGUiOiJINyJ9LCJpc3N1ZXIiOiJodHRwczovL3Bhc3Nwb3J0LnNjb3RpYWJhbmsuY29tIn0.hD0skjapYdoKnX1WGYKqjD-fMhlmmnypaTXptIjMxMmNieWd5Y6MeEqEQ8aD-EEFrWPIyWR4Pbo34EBGPTMhoMJxOcLtnBFCvlCe0yMKzscuF1fc8P7QK1ZMBEIKMdLQif1Nu4sjQSLpwrv2VV1NBN99IvTaABdIinGh7ROCdsEu_SRWVFYndioV0b4hYpMTx2BfRi8o5an57Fih_CdMSuWsPuEVGFLMLSaS8XYVN_zx-B6JQPgLelpBbt4SI9vOwGf2JYWiEYWCxIASoUyiAaHVr90904pHc6fZs11RX-XtrqAen5O6b5XIRVy3KL1EgHvURlQNM8QPH3B0B7P-Kg&preferred_environment=';
+const SCOTIA_PAY_URL = 'https://www.scotiabank.com/ca/en/personal/bank-your-way/app-and-online/online-banking.html';
 
 export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const qc = useQueryClient();
