@@ -27,6 +27,9 @@ const STATUS_STYLES = {
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yy') : '—';
 
+// Scotiabank online banking — opened (small window) when Finance presses Pay
+const SCOTIA_PAY_URL = 'https://auth.scotiaonline.scotiabank.com/online?oauth_key=663Fp2X7Oqo&oauth_key_signature=eyJraWQiOiJTd1dmbV9ITlNFTVVNbUVHMnh2LUsydmlhOGVvdzRFTEZhejdxMEdZalVjIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJyZWZlcmVyIjoiaHR0cHM6Ly93d3cuYmluZy5jb20vIiwicmFyZiI6ZmFsc2UsIm9hdXRoX2tleSI6IjY2M0ZwMlg3T3FvIiwiY29uc2VudF9yZXF1aXJlZCI6ZmFsc2UsInJlZGlyZWN0X3VyaSI6Imh0dHBzOi8vd3d3LnNjb3RpYW9ubGluZS5zY290aWFiYW5rLmNvbS9vbmxpbmUvbGFuZGluZy9vYXV0aGxhbmRpbmcuYm5zIiwiZXhwIjoxNzg5NDAwMzAwLCJpYXQiOjE3ODkzOTkxMDAsImp0aSI6IjY1NGUyZGVlLWVkZmUtNDk3OS05NThkLWUyOTY4ZTQxZGM2OSIsImNsaWVudF9pZCI6IjhlZTkwYzM5LTFjNTItNGZmNC04YWU2LWE3YjU0YzUzOTkzMyIsImNsaWVudF9tZXRhZGF0YSI6eyJDaGFubmVsSUQiOiJTT0wiLCJBcHBsaWNhdGlvbkNvZGUiOiJINyJ9LCJpc3N1ZXIiOiJodHRwczovL3Bhc3Nwb3J0LnNjb3RpYWJhbmsuY29tIn0.hD0skjapYdoKnX1WGYKqjD-fMhlmmnypaTXptIjMxMmNieWd5Y6MeEqEQ8aD-EEFrWPIyWR4Pbo34EBGPTMhoMJxOcLtnBFCvlCe0yMKzscuF1fc8P7QK1ZMBEIKMdLQif1Nu4sjQSLpwrv2VV1NBN99IvTaABdIinGh7ROCdsEu_SRWVFYndioV0b4hYpMTx2BfRi8o5an57Fih_CdMSuWsPuEVGFLMLSaS8XYVN_zx-B6JQPgLelpBbt4SI9vOwGf2JYWiEYWCxIASoUyiAaHVr90904pHc6fZs11RX-XtrqAen5O6b5XIRVy3KL1EgHvURlQNM8QPH3B0B7P-Kg&preferred_environment=';
+
 export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
@@ -36,6 +39,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const [approveTarget, setApproveTarget] = useState(null); // form pending e-signature approval
   const [approveSig, setApproveSig] = useState('');
   const [approveError, setApproveError] = useState('');
+  const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
   const formEntity = base44.entities[cfg.formEntity];
@@ -94,6 +98,16 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
       qc.invalidateQueries({ queryKey: [cfg.financeEntriesKey] });
     },
   });
+
+  // Pay flow — 1) lock the submission as Processing if it isn't already,
+  // 2) open Scotiabank in a small window, 3) confirm paid once the transaction completes
+  const startPayment = (r) => {
+    if (r.status !== 'processing') {
+      setStatus.mutate({ form: r, status: 'processing' });
+    }
+    window.open(SCOTIA_PAY_URL, 'scotiabank-payment', 'width=900,height=700');
+    setPayTarget(r);
+  };
 
   return (
     <div className="space-y-6">
@@ -220,7 +234,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                               </>
                             )}
                             {(r.status === 'approved' || r.status === 'pending' || r.status === 'processing') && (
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setStatus.mutate({ form: r, status: 'paid' })} title="Mark paid">
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => startPayment(r)} title="Pay — locks as Processing, opens Scotiabank, then confirm paid">
                                 <Banknote className="w-4 h-4" /> Pay
                               </Button>
                             )}
@@ -325,6 +339,38 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               }}
             >
               <Check className="w-4 h-4" />Approve &amp; Sign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!payTarget} onOpenChange={o => { if (!o) setPayTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Banknote className="w-4 h-4" />Confirm Payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              The Scotiabank window is open. Complete the e-transfer of{' '}
+              <span className="font-semibold text-foreground">{fmt(payTarget?.amount)}</span> to{' '}
+              <span className="font-semibold text-foreground">{payTarget?.payable_to}</span>
+              {payTarget?.etransfer_email ? ` (${payTarget.etransfer_email})` : ''}.
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              Select OK once the transaction is complete to mark this submission as paid.
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+            <Button
+              className="gap-2"
+              disabled={setStatus.isPending}
+              onClick={() => {
+                setStatus.mutate({ form: payTarget, status: 'paid' });
+                setPayTarget(null);
+              }}
+            >
+              <Check className="w-4 h-4" />OK — Mark as Paid
             </Button>
           </DialogFooter>
         </DialogContent>
