@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Plus, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
+import DownloadReimbursementButton from './DownloadReimbursementButton';
 import { getFormItems, syncFormTotals, invalidateFormQueries } from '@/lib/reimbursementFormTotals';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
@@ -114,13 +115,16 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
               </div>
               <div className="text-right">
                 <p className="font-bold text-lg">{fmt(f.amount)}</p>
-                <button
-                  className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                  onClick={() => setExpandedId(expanded ? null : f.id)}
-                >
-                  {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  {expanded ? 'Hide items' : 'View items'}
-                </button>
+                <div className="flex items-center justify-end gap-2 mt-1">
+                  <DownloadReimbursementButton entries={items} form={f} mode={mode} />
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    onClick={() => setExpandedId(expanded ? null : f.id)}
+                  >
+                    {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    {expanded ? 'Hide items' : 'View items'}
+                  </button>
+                </div>
               </div>
             </div>
             {expanded && (

@@ -14,7 +14,7 @@ import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export default function DownloadReimbursementButton({ entries, mode = 'reimbursement' }) {
+export default function DownloadReimbursementButton({ entries, form, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
   const [sigOpen, setSigOpen] = useState(false);
   const [signature, setSignature] = useState('');
@@ -22,7 +22,8 @@ export default function DownloadReimbursementButton({ entries, mode = 'reimburse
   const cfg = REIMBURSEMENT_MODES[mode];
 
   const askForSignature = () => {
-    setSignature('');
+    // A submitted request already carries its staff e-signature — prefill it
+    setSignature(form?.staff_signature || '');
     setSigError('');
     setSigOpen(true);
   };
@@ -40,6 +41,8 @@ export default function DownloadReimbursementButton({ entries, mode = 'reimburse
     } catch { /* fall back to the loaded user */ }
 
     const name = displayName(user);
+    const payableTo = form?.payable_to || name;
+    const dateRequested = form?.date_requested || format(new Date(), 'yyyy-MM-dd');
     const total = entries.reduce((s, e) => s + (e.total_cost || 0), 0);
     const gstTotal = entries.reduce((s, e) => s + (e.gst || 0), 0);
     // Line items in chronological order
@@ -112,10 +115,10 @@ export default function DownloadReimbursementButton({ entries, mode = 'reimburse
   </div>
 
   <div class="fields">
-    <div class="field"><div class="lbl">Cheque Payable to</div><div class="val">${esc(name)}</div></div>
+    <div class="field"><div class="lbl">Cheque Payable to</div><div class="val">${esc(payableTo)}</div></div>
     <div class="field"><div class="lbl">E-transfer Email</div><div class="val">${esc(etransferEmail)}</div></div>
-    <div class="field"><div class="lbl">Requested by</div><div class="val">${esc(name)}</div></div>
-    <div class="field"><div class="lbl">Date Requested</div><div class="val">${format(new Date(), 'yyyy-MM-dd')}</div></div>
+    <div class="field"><div class="lbl">Requested by</div><div class="val">${esc(form?.requested_by || name)}</div></div>
+    <div class="field"><div class="lbl">Date Requested</div><div class="val">${esc(dateRequested)}</div></div>
   </div>
 
   <table>
@@ -143,12 +146,14 @@ export default function DownloadReimbursementButton({ entries, mode = 'reimburse
   </div>
 
   <div class="sig">
-    <div class="line"><span class="signed">${esc(sig)}</span>Staff e-Signature</div>
-    <div class="line">Finance Approval</div>
+    <div class="line"><span class="signed">${esc(form?.staff_signature || sig)}</span>Staff e-Signature</div>
+    <div class="line">${form?.finance_signature ? `<span class="signed">${esc(form.finance_signature)}</span>` : ''}Finance Approval</div>
   </div>
 
   <div class="footnote">
-    ${entries.length} receipt entr${entries.length === 1 ? 'y' : 'ies'} compiled from the Not Submitted list. Receipt links above open the uploaded receipt files.
+    ${form
+      ? `${entries.length} receipt entr${entries.length === 1 ? 'y' : 'ies'} from the ${esc(cfg.formCardLabel)} submitted on ${esc(form.submitted_date || dateRequested)}. Receipt links above open the uploaded receipt files.`
+      : `${entries.length} receipt entr${entries.length === 1 ? 'y' : 'ies'} compiled from the Not Submitted list. Receipt links above open the uploaded receipt files.`}
   </div>
 
   <script>window.onload = function () { setTimeout(function () { window.print(); }, 150); };</script>
