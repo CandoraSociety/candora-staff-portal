@@ -106,6 +106,7 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
     .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }
     .excl { margin-top: 2px; font-size: 8pt; color: #b45309; }
+    .col-totals { break-inside: avoid; page-break-inside: avoid; }
     .col-totals td { border-top: 2px solid #1e2f4d; border-bottom: none; font-weight: bold; background: #fff !important; padding-top: 8px; }
     .col-totals .tl { text-align: right; font-size: 9.5pt; text-transform: uppercase; color: #1e2f4d; }
     .totals { margin-top: 14px; margin-left: auto; width: 280px; }
@@ -152,8 +153,8 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
         <th>Funder #</th>
       </tr>
     </thead>
-    <tbody>${rows}</tbody>
-    <tfoot>
+    <tbody>
+      ${rows}
       <tr class="col-totals">
         <td colspan="5" class="tl">Column Totals</td>
         <td class="r">${fmt(total)}</td>
@@ -162,7 +163,7 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
         <td class="r">${fmt(funderCostTotal)}</td>
         <td colspan="2"></td>
       </tr>
-    </tfoot>
+    </tbody>
   </table>
 
   <div class="totals">
