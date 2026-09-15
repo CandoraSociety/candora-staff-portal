@@ -19,6 +19,8 @@ import { PORTAL_MODULES, TIER_LABELS } from '@/lib/tierPermissionPresets';
 import { appParams } from '@/lib/app-params';
 import ConcludeEmploymentDialog from '@/components/employees/ConcludeEmploymentDialog';
 import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
+import ReportsToDialog from '@/components/employees/ReportsToDialog';
+import { UserCog } from 'lucide-react';
 
 const TABS = [
   { id: 'overview',     label: 'Overview',    icon: Activity },
@@ -47,6 +49,7 @@ export default function NexusEmployeeProfile() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [concludeOpen, setConcludeOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [reportsToOpen, setReportsToOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
@@ -83,6 +86,13 @@ export default function NexusEmployeeProfile() {
     queryKey: ['access-permissions', employee?.email],
     queryFn: () => base44.entities.AccessPermission.filter({ scope_value: employee?.email }),
     enabled: !!employee?.email,
+  });
+
+  // All employees — used to display the supervisor's name instead of their email
+  const { data: allEmployees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => base44.entities.Employee.list('-created_date', 500),
+    enabled: !!id,
   });
 
   const updateMutation = useMutation({
@@ -204,6 +214,11 @@ export default function NexusEmployeeProfile() {
   const isDeceased = !!employee.is_deceased;
   const pendingMilestones = calculateMilestones(employee, timeLogs, recognitions);
 
+  const manager = allEmployees.find(
+    e => (e.email || '').toLowerCase() === (employee.manager_email || '').toLowerCase()
+  );
+  const managerName = manager ? `${manager.first_name} ${manager.last_name}` : '';
+
   return (
     <div className="space-y-6">
       {/* Top nav */}
@@ -265,6 +280,10 @@ export default function NexusEmployeeProfile() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setReportsToOpen(true)}>
+                    <UserCog className="w-3.5 h-3.5 mr-1" />
+                    Reports To{employee.manager_email ? `: ${managerName || employee.manager_email}` : ''}
+                  </Button>
                   <DropdownMenu open={statusOpen} onOpenChange={setStatusOpen}>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm"><Pencil className="w-3.5 h-3.5 mr-1" />Status</Button>
@@ -327,8 +346,14 @@ export default function NexusEmployeeProfile() {
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <OverviewTab employee={employee} timeLogs={timeLogs} recognitions={recognitions} pendingMilestones={pendingMilestones} />
+        <OverviewTab employee={employee} timeLogs={timeLogs} recognitions={recognitions} pendingMilestones={pendingMilestones} managerName={managerName} />
       )}
+
+      <ReportsToDialog
+        open={reportsToOpen}
+        onOpenChange={setReportsToOpen}
+        employee={employee}
+      />
       {activeTab === 'performance' && (
         <PerformanceTab reviews={reviews} />
       )}
@@ -414,7 +439,7 @@ Welcome aboard!
   );
 }
 
-function OverviewTab({ employee, timeLogs, recognitions, pendingMilestones }) {
+function OverviewTab({ employee, timeLogs, recognitions, pendingMilestones, managerName }) {
   return (
     <div className="space-y-6">
       <EmployeeHourStats timeLogs={timeLogs} />
@@ -439,7 +464,7 @@ function OverviewTab({ employee, timeLogs, recognitions, pendingMilestones }) {
             {employee.manager_email && (
               <div>
                 <dt className="text-muted-foreground text-xs">Reports To</dt>
-                <dd className="font-medium">{employee.manager_email}</dd>
+                <dd className="font-medium">{managerName || employee.manager_email}</dd>
               </div>
             )}
             {employee.pay_grade && (
