@@ -11,11 +11,15 @@ import { UserCog } from 'lucide-react';
 export default function ReportsToDialog({ open, onOpenChange, employee }) {
   const queryClient = useQueryClient();
   const [value, setValue] = useState(employee?.manager_email || 'none');
+  const [dottedValue, setDottedValue] = useState(employee?.dotted_line_manager_email || 'none');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open) setValue(employee?.manager_email || 'none');
-  }, [open, employee?.manager_email]);
+    if (open) {
+      setValue(employee?.manager_email || 'none');
+      setDottedValue(employee?.dotted_line_manager_email || 'none');
+    }
+  }, [open, employee?.manager_email, employee?.dotted_line_manager_email]);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
@@ -32,6 +36,7 @@ export default function ReportsToDialog({ open, onOpenChange, employee }) {
     try {
       await base44.entities.Employee.update(employee.id, {
         manager_email: value === 'none' ? '' : value,
+        dotted_line_manager_email: dottedValue === 'none' ? '' : dottedValue,
       });
       queryClient.invalidateQueries({ queryKey: ['employee', employee.id] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
@@ -68,6 +73,26 @@ export default function ReportsToDialog({ open, onOpenChange, employee }) {
             </Select>
             <p className="text-xs text-muted-foreground">
               Vacation requests and timesheets from this employee will be routed to their supervisor for approval.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Dotted-Line Reports To</p>
+            <Select value={dottedValue} onValueChange={setDottedValue}>
+              <SelectTrigger>
+                <SelectValue placeholder={isLoading ? 'Loading employees…' : 'Select a dotted-line manager'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— No dotted-line manager —</SelectItem>
+                {options.map(e => (
+                  <SelectItem key={e.id} value={e.email}>
+                    {e.first_name} {e.last_name} — {e.position}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              An indirect reporting relationship only — dotted-line managers do not receive approval requests.
             </p>
           </div>
 

@@ -75,7 +75,11 @@
     },
     "manager_email": {
       "type": "string",
-      "description": "Direct manager's email"
+      "description": "Direct manager's email (solid-line reports-to)"
+    },
+    "dotted_line_manager_email": {
+      "type": "string",
+      "description": "Dotted-line manager's email \u2014 indirect reporting relationship (no approval routing)"
     },
     "pay_grade": {
       "type": "string",
