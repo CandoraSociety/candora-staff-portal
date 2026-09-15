@@ -4,6 +4,11 @@ import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escAttr = s => esc(s).replace(/"/g, '&quot;');
+// Fillable Account # / Funder # cell — rendered as a text input so the values can be
+// typed in on screen (in the viewer) and persist into the saved/printed PDF
+const fillableCell = (entry, field) => `
+        <td class="fill"><input class="cell-input" type="text" data-entry-id="${escAttr(entry.id || '')}" data-field="${field}" value="${escAttr(entry[field] || '')}" placeholder="—" /></td>`;
 // Candora logo (public asset — same as the app favicon)
 export const CANDORA_LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 // Funder Cost autofill: Total (with GST) − GST + 1/2 GST = Total − 1/2 GST
@@ -43,8 +48,8 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
         <td class="r">${fmt(e.gst)}</td>
         <td class="r fill">${e.gst ? fmt(e.gst / 2) : '$ -'}</td>
         <td class="r fill">${fmt(funderCostOf(e))}</td>
-        <td class="fill">${esc(e.account_no || '')}</td>
-        <td class="fill">${esc(e.funder_no || '')}</td>
+        ${fillableCell(e, 'account_no')}
+        ${fillableCell(e, 'funder_no')}
       </tr>`).join('');
 
   // Column totals — Total (with GST), GST, 1/2 GST, Funder Cost
@@ -76,6 +81,8 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
     tr:nth-child(even) td { background: #f4f6f9; }
     .r { text-align: right; } .nw { white-space: nowrap; }
     .fill { background: #e8e8e8 !important; border: 1px solid #bbb; min-height: 14px; }
+    .cell-input { width: 100%; border: none; background: transparent; font: inherit; padding: 0; margin: 0; color: inherit; }
+    .cell-input:focus { outline: none; }
     .receipt { margin-top: 3px; font-size: 8pt; color: #555; word-break: break-all; }
     .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }

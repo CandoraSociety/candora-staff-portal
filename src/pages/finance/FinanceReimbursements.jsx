@@ -280,7 +280,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                                 <RotateCcw className="w-4 h-4" /> Reverse
                               </Button>
                             )}
-                            <OpenReimbursementButton entries={items} form={r} mode={mode} />
+                            <OpenReimbursementButton entries={items} form={r} mode={mode} editable />
                           </div>
                         </td>
                       </tr>

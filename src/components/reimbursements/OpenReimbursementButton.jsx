@@ -1,21 +1,27 @@
 import React, { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Printer, Share2, Send, Loader2 } from 'lucide-react';
+import { FileText, Printer, Share2, Send, Loader2, Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
+import { invalidateFormQueries } from '@/lib/reimbursementFormTotals';
 import { buildReimbursementDocumentHtml } from './reimbursementDocumentHtml';
 
 // "Open" button — shows the full reimbursement document in a viewer with
 // Save (print / save as PDF) and Share (email the document) options.
 // No signature prompt: signatures come from the form record when there is one,
 // and for unsubmitted compilations the opening staff member's name fills the signature line.
-export default function OpenReimbursementButton({ entries, form, mode = 'reimbursement' }) {
+// editable (finance) — Account # / Funder # become editable in the viewer and
+// a "Save Fields" action writes the typed values back to the receipt entries.
+export default function OpenReimbursementButton({ entries, form, mode = 'reimbursement', editable = false }) {
   const { user } = useCurrentUser();
+  const qc = useQueryClient();
   const cfg = REIMBURSEMENT_MODES[mode];
   const iframeRef = useRef(null);
   const [open, setOpen] = useState(false);
@@ -25,6 +31,8 @@ export default function OpenReimbursementButton({ entries, form, mode = 'reimbur
   const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState('');
   const [shareError, setShareError] = useState('');
+  const [savingFields, setSavingFields] = useState(false);
+  const [fieldsSaved, setFieldsSaved] = useState(false);
 
   const openDoc = async () => {
     let etransferEmail = form?.etransfer_email || '';
@@ -47,12 +55,52 @@ export default function OpenReimbursementButton({ entries, form, mode = 'reimbur
     }));
     setSentTo('');
     setShareError('');
+    setFieldsSaved(false);
     setOpen(true);
   };
 
   const save = () => {
     const w = iframeRef.current?.contentWindow;
     if (w) { w.focus(); w.print(); }
+  };
+
+  // Finance editing — persist the Account # / Funder # values typed into the document
+  const saveFields = async () => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    const inputs = [...doc.querySelectorAll('input.cell-input[data-entry-id]')];
+    const byId = {};
+    inputs.forEach(inp => {
+      if (!inp.dataset.entryId) return;
+      byId[inp.dataset.entryId] = byId[inp.dataset.entryId] || {};
+      byId[inp.dataset.entryId][inp.dataset.field] = inp.value.trim();
+    });
+    const originals = new Map(entries.map(e => [e.id, e]));
+    const updates = Object.entries(byId)
+      .filter(([id, fields]) => {
+        const e = originals.get(id);
+        return e && ((fields.account_no || '') !== (e.account_no || '') || (fields.funder_no || '') !== (e.funder_no || ''));
+      })
+      .map(([id, fields]) => ({ id, fields }));
+    if (updates.length === 0) {
+      toast.info('No changes to save — Account # / Funder # already match the record.');
+      setFieldsSaved(true);
+      return;
+    }
+    setSavingFields(true);
+    try {
+      const entryEntity = base44.entities[cfg.entryEntity];
+      for (const { id, fields } of updates) {
+        await entryEntity.update(id, { account_no: fields.account_no || '', funder_no: fields.funder_no || '' });
+      }
+      invalidateFormQueries(qc, cfg);
+      setFieldsSaved(true);
+      toast.success(`Saved Account # / Funder # for ${updates.length} receipt ${updates.length === 1 ? 'entry' : 'entries'}.`);
+    } catch {
+      toast.error('Could not save the Account # / Funder # values. Try again.');
+    } finally {
+      setSavingFields(false);
+    }
   };
 
   const share = async () => {
@@ -102,7 +150,18 @@ export default function OpenReimbursementButton({ entries, form, mode = 'reimbur
             title={cfg.docTitle}
             className="flex-1 w-full border border-border rounded-md bg-white"
           />
+          {editable && (
+            <p className="text-xs text-muted-foreground">
+              Account # and Funder # are editable in the document — type in the boxes, then Save Fields to update the receipt records.
+            </p>
+          )}
           <DialogFooter>
+            {editable && (
+              <Button variant="outline" className="gap-2 mr-auto" disabled={savingFields} onClick={saveFields}>
+                {savingFields ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {fieldsSaved && !savingFields ? 'Saved' : 'Save Fields'}
+              </Button>
+            )}
             <Button variant="outline" className="gap-2" onClick={save}>
               <Printer className="w-4 h-4" />Save
             </Button>
