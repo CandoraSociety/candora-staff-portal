@@ -296,18 +296,28 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1 flex-wrap">
                             {(r.status === 'pending' || r.status === 'processing') && (
-                              <Button
-                                size="sm"
-                                variant={r.status === 'processing' ? 'secondary' : 'default'}
-                                className="h-7 px-3 gap-1.5 font-semibold"
-                                onClick={() => setStatus.mutate({ form: r, status: r.status === 'processing' ? 'pending' : 'processing' })}
-                                title={r.status === 'processing'
-                                  ? 'Processing — click again to unlock so the staff member can edit'
-                                  : 'Mark as processing — locks the submission so the staff member can no longer edit it'}
-                              >
-                                {r.status === 'processing' ? <Check className="w-4 h-4" /> : <CircleDollarSign className="w-4 h-4" />}
-                                Processing
-                              </Button>
+                              r.status === 'processing' ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-3 gap-1.5 font-semibold"
+                                  onClick={() => setStatus.mutate({ form: r, status: 'pending' })}
+                                  title="Remove from Processing — returns the submission to Pending so the staff member can edit it again"
+                                >
+                                  <RotateCcw className="w-4 h-4" />
+                                  Remove from Processing
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  className="h-7 px-3 gap-1.5 font-semibold"
+                                  onClick={() => setStatus.mutate({ form: r, status: 'processing' })}
+                                  title="Mark as processing — locks the submission so the staff member can no longer edit it"
+                                >
+                                  <CircleDollarSign className="w-4 h-4" />
+                                  Processing
+                                </Button>
+                              )
                             )}
                             {r.status === 'pending' && (
                               <>
