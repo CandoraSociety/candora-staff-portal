@@ -27,7 +27,7 @@ function calcRowHours(start, end, breakH) {
 const toNum = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 const blankAdditionalRow = () => ({ date: '', start_time: '', end_time: '', break_hours: '', paid_hours: '' });
 
-export default function TimesheetForm({ user, onSubmitted }) {
+export default function TimesheetForm({ user, onSubmitted, fixedSupervisor }) {
   const { toast } = useToast();
   const period = useMemo(() => getPayPeriod(new Date()), []);
   const periodDays = useMemo(() => getPeriodDays(period), [period]);
@@ -77,6 +77,11 @@ export default function TimesheetForm({ user, onSubmitted }) {
       if (me?.manager_email) setSupervisorEmail(me.manager_email);
     }
   }, [myEmployeeList, supervisorEmail]);
+
+  // Test tab — the supervisor is pinned to the Executive Director
+  useEffect(() => {
+    if (fixedSupervisor && !supervisorEmail) setSupervisorEmail(fixedSupervisor.email);
+  }, [fixedSupervisor, supervisorEmail]);
 
   const leaveByDate = useMemo(() => {
     const map = {};
@@ -154,7 +159,7 @@ export default function TimesheetForm({ user, onSubmitted }) {
       toast({ title: 'No hours entered', description: 'Enter hours on at least one day before submitting.', variant: 'destructive' });
       return;
     }
-    const supervisor = supervisors.find(s => s.email === supervisorEmail);
+    const supervisor = fixedSupervisor || supervisors.find(s => s.email === supervisorEmail);
     setSubmitting(true);
     try {
       await base44.entities.Timesheet.create({
@@ -214,7 +219,15 @@ export default function TimesheetForm({ user, onSubmitted }) {
             Submissions through the Wednesday after a period ends count for that period.
           </p>
         </div>
-        <SupervisorSelect value={supervisorEmail} onChange={setSupervisorEmail} />
+        {fixedSupervisor ? (
+          <div className="rounded-xl border bg-muted/30 p-4">
+            <Label className="text-xs text-muted-foreground">Supervisor (for approval)</Label>
+            <p className="font-bold text-lg mt-1">{fixedSupervisor.name}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Test submissions route to you as the supervisor for approval.
+            </p>
+          </div>
+        ) : <SupervisorSelect value={supervisorEmail} onChange={setSupervisorEmail} />}
       </div>
 
       {Object.keys(autoLeaveSummary).length > 0 && (

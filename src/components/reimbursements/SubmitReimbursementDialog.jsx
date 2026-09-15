@@ -13,7 +13,7 @@ import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
-export default function SubmitReimbursementDialog({ open, onOpenChange, entries, mode = 'reimbursement' }) {
+export default function SubmitReimbursementDialog({ open, onOpenChange, entries, mode = 'reimbursement', supervisorOverride }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [header, setHeader] = useState({
@@ -32,13 +32,17 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
     enabled: open,
   });
 
-  // Route to the submitter's direct supervisor (Reports To) for approval first
+  // Route to the submitter's direct supervisor (Reports To) for approval first.
+  // `supervisorOverride` (Executive Director's test tab) pins the supervisor so
+  // test submissions route to the Executive Director for approval.
   const myEmployee = employees.find(e => !e.is_deleted && (e.email || '').toLowerCase() === (user?.email || '').toLowerCase());
-  const supervisorEmail = myEmployee?.manager_email || '';
-  const supervisorRecord = supervisorEmail
-    ? employees.find(e => (e.email || '').toLowerCase() === supervisorEmail.toLowerCase())
+  const managerEmail = myEmployee?.manager_email || '';
+  const supervisorEmail = supervisorOverride?.email || managerEmail;
+  const managerRecord = managerEmail
+    ? employees.find(e => (e.email || '').toLowerCase() === managerEmail.toLowerCase())
     : null;
-  const supervisorName = supervisorRecord ? `${supervisorRecord.first_name} ${supervisorRecord.last_name}` : supervisorEmail;
+  const supervisorName = supervisorOverride?.name
+    || (managerRecord ? `${managerRecord.first_name} ${managerRecord.last_name}` : managerEmail);
 
   useEffect(() => {
     if (open) {

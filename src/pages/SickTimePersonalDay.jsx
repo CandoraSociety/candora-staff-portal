@@ -3,15 +3,30 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ThermometerSun, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SickDayForm from '@/components/timeoff/SickDayForm';
 import MyTimeOffList from '@/components/timeoff/MyTimeOffList';
+import TestEmployeeBanner from '@/components/shared/TestEmployeeBanner';
 import { useCurrentUser } from '@/lib/useAuth';
 import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
+import { useExecutiveDirector, TEST_EMPLOYEE } from '@/lib/testEmployee';
 
 export default function SickTimePersonalDay() {
   const { user } = useCurrentUser();
   const { isSupervisor, isAdmin } = useSupervisorAccess();
+  const { isExecutiveDirector } = useExecutiveDirector();
   const qc = useQueryClient();
+  const refresh = () => qc.invalidateQueries({ queryKey: ['timeoff'] });
+
+  const myTab = (
+    <>
+      <SickDayForm user={user} onSubmitted={refresh} />
+      <div>
+        <h2 className="font-semibold mb-2">My Records</h2>
+        {user && <MyTimeOffList user={user} kinds={['sick', 'personal']} />}
+      </div>
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -31,12 +46,23 @@ export default function SickTimePersonalDay() {
         )}
       </div>
 
-      <SickDayForm user={user} onSubmitted={() => qc.invalidateQueries({ queryKey: ['timeoff'] })} />
-
-      <div>
-        <h2 className="font-semibold mb-2">My Records</h2>
-        {user && <MyTimeOffList user={user} kinds={['sick', 'personal']} />}
-      </div>
+      {isExecutiveDirector ? (
+        <Tabs defaultValue="mine">
+          <TabsList>
+            <TabsTrigger value="mine">My Records</TabsTrigger>
+            <TabsTrigger value="test">Test — Test Employee</TabsTrigger>
+          </TabsList>
+          <TabsContent value="mine" className="mt-4 space-y-6">{myTab}</TabsContent>
+          <TabsContent value="test" className="mt-4 space-y-6">
+            <TestEmployeeBanner />
+            <SickDayForm user={TEST_EMPLOYEE} onSubmitted={refresh} />
+            <div>
+              <h2 className="font-semibold mb-2">Test Employee's Records</h2>
+              <MyTimeOffList user={TEST_EMPLOYEE} kinds={['sick', 'personal']} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : myTab}
     </div>
   );
 }

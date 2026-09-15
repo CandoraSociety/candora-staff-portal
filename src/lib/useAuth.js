@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { normalizeUser } from '@/lib/userDisplayName';
+import { useActingUser } from '@/lib/ActingUserContext';
 
 export function useCurrentUser() {
+  const actingUser = useActingUser();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +15,9 @@ export function useCurrentUser() {
     }).catch(() => setLoading(false));
   }, []);
 
-  return { user, loading };
+  // Inside an ActingUserProvider (Executive Director's test-employee tabs),
+  // report the acting user instead of the signed-in one.
+  return { user: actingUser || user, loading: actingUser ? false : loading };
 }
 
 export function useAccessLevel() {

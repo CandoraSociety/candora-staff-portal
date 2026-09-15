@@ -1,28 +1,34 @@
-import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { ClipboardList, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import TimesheetForm from '@/components/timesheets/TimesheetForm';
-import TimesheetDetail from '@/components/timesheets/TimesheetDetail';
-import TimesheetStatusBadge from '@/components/timesheets/TimesheetStatusBadge';
+import TimesheetSubmissionsList from '@/components/timesheets/TimesheetSubmissionsList';
+import TestEmployeeBanner from '@/components/shared/TestEmployeeBanner';
 import { useCurrentUser } from '@/lib/useAuth';
 import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
+import { useExecutiveDirector, TEST_EMPLOYEE } from '@/lib/testEmployee';
 import { getPayPeriod, periodLabel } from '@/lib/payPeriods';
 
 export default function Timesheets() {
   const { user, loading } = useCurrentUser();
   const { isSupervisor, isAdmin } = useSupervisorAccess();
+  const { isExecutiveDirector, supervisor } = useExecutiveDirector();
   const qc = useQueryClient();
-  const [expandedId, setExpandedId] = useState(null);
   const period = getPayPeriod(new Date());
+  const refresh = () => qc.invalidateQueries({ queryKey: ['timesheets'] });
 
-  const { data: mine = [] } = useQuery({
-    queryKey: ['timesheets', 'mine', user?.email],
-    queryFn: () => base44.entities.Timesheet.filter({ employee_email: user.email }, '-submitted_date', 50),
-    enabled: !!user?.email,
-  });
+  const myTab = (
+    <>
+      {!loading && user && <TimesheetForm user={user} onSubmitted={refresh} />}
+      <div>
+        <h2 className="font-semibold mb-2">My Submissions</h2>
+        <TimesheetSubmissionsList email={user?.email} emptyText="You haven't submitted any timesheets yet." />
+      </div>
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -42,40 +48,23 @@ export default function Timesheets() {
         )}
       </div>
 
-      {!loading && user && (
-        <TimesheetForm user={user} onSubmitted={() => qc.invalidateQueries({ queryKey: ['timesheets'] })} />
-      )}
-
-      {/* My submissions */}
-      <div>
-        <h2 className="font-semibold mb-2">My Submissions</h2>
-        {mine.length === 0 ? (
-          <p className="text-sm text-muted-foreground">You haven't submitted any timesheets yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {mine.map(t => (
-              <div key={t.id} className="rounded-xl border bg-card p-4">
-                <button
-                  className="w-full flex flex-wrap items-center gap-x-6 gap-y-1 text-left"
-                  onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
-                >
-                  <div>
-                    <p className="font-medium">{t.pay_period_start} → {t.pay_period_end}</p>
-                    <p className="text-xs text-muted-foreground">Submitted {t.submitted_date} · Supervisor: {t.supervisor_name || t.supervisor_email}</p>
-                  </div>
-                  <p className="text-sm">Total paid: <span className="font-bold">{t.total_paid_hours || 0} hrs</span></p>
-                  <div className="ml-auto"><TimesheetStatusBadge status={t.status} /></div>
-                </button>
-                {expandedId === t.id && (
-                  <div className="mt-4 border-t pt-4">
-                    <TimesheetDetail timesheet={t} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {isExecutiveDirector ? (
+        <Tabs defaultValue="mine">
+          <TabsList>
+            <TabsTrigger value="mine">My Timesheets</TabsTrigger>
+            <TabsTrigger value="test">Test — Test Employee</TabsTrigger>
+          </TabsList>
+          <TabsContent value="mine" className="mt-4 space-y-6">{myTab}</TabsContent>
+          <TabsContent value="test" className="mt-4 space-y-6">
+            <TestEmployeeBanner supervisor={supervisor} />
+            <TimesheetForm user={TEST_EMPLOYEE} fixedSupervisor={supervisor} onSubmitted={refresh} />
+            <div>
+              <h2 className="font-semibold mb-2">Test Employee's Submissions</h2>
+              <TimesheetSubmissionsList email={TEST_EMPLOYEE.email} emptyText="No test timesheets yet." />
+            </div>
+          </TabsContent>
+        </Tabs>
+      ) : myTab}
     </div>
   );
 }

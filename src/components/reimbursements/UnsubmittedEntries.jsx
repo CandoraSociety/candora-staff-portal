@@ -32,7 +32,7 @@ const BLANK_DRAFT = {
 // Alberta GST is 5% — the GST portion of an all-inclusive total is total × (5/105) = total / 21
 const calcGst = (total) => (parseFloat(total) / 21).toFixed(2);
 
-export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
+export default function UnsubmittedEntries({ mode = 'reimbursement', supervisorOverride }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [editingEntry, setEditingEntry] = useState(null);
@@ -390,7 +390,7 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
         mode={mode}
       />
       <ReceiptEntryDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} entry={editingEntry} mode={mode} />
-      <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} mode={mode} />
+      <SubmitReimbursementDialog open={submitOpen} onOpenChange={setSubmitOpen} entries={unsubmitted} mode={mode} supervisorOverride={supervisorOverride} />
     </section>
   );
 }
