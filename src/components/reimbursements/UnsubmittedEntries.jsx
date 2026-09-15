@@ -18,7 +18,7 @@ import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
 import ExcludedItemsControl from './ExcludedItemsControl';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import SubmitReimbursementDialog from './SubmitReimbursementDialog';
-import DownloadReimbursementButton from './DownloadReimbursementButton';
+import OpenReimbursementButton from './OpenReimbursementButton';
 import MultiVendorReceiptDialog from './MultiVendorReceiptDialog';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
@@ -203,7 +203,7 @@ export default function UnsubmittedEntries({ mode = 'reimbursement' }) {
           <Button variant="outline" size="sm" className="gap-2" onClick={startDraft} disabled={!!draft}>
             <Plus className="w-4 h-4" />Add Receipt Entry
           </Button>
-          <DownloadReimbursementButton entries={unsubmitted} mode={mode} />
+          <OpenReimbursementButton entries={unsubmitted} mode={mode} />
           <Button size="sm" className="gap-2" disabled={unsubmitted.length === 0} onClick={() => setSubmitOpen(true)}>
             <Send className="w-4 h-4" />{cfg.submitButton}
           </Button>
