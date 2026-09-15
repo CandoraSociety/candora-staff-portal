@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Plus, Receipt as ReceiptIcon, Trash2 } from 'lucide-react';
+import { Banknote, ChevronDown, ChevronUp, ExternalLink, Pencil, Plus, Receipt as ReceiptIcon, Trash2, Undo2 } from 'lucide-react';
 import ReceiptEntryDialog from './ReceiptEntryDialog';
 import OpenReimbursementButton from './OpenReimbursementButton';
 import { getFormItems, syncFormTotals, invalidateFormQueries } from '@/lib/reimbursementFormTotals';
@@ -72,6 +72,15 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
     await updateFormTotals(form, items);
   };
 
+  // Withdraw a submitted request while it's still pending (before Finance starts
+  // processing it) — the entries return to the Not Submitted list, the form is removed.
+  const withdrawForm = async (form) => {
+    if (!window.confirm(`Withdraw this ${cfg.formCardLabel}? All receipt entries will move back to your Not Submitted list, and the request will be cancelled. You can edit them and resubmit later.`)) return;
+    await entryEntity.updateMany({ form_id: form.id, status: 'submitted' }, { $set: { status: 'unsubmitted', form_id: null } });
+    await formEntity.delete(form.id);
+    invalidateFormQueries(qc, cfg);
+  };
+
   const filtered = forms
     .filter(f => statuses.includes(f.status))
     .sort((a, b) => (b.submitted_date || b.created_date || '').localeCompare(a.submitted_date || a.created_date || ''));
@@ -122,6 +131,17 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
                 <p className="font-bold text-lg">{fmt(f.amount)}</p>
                 <div className="flex items-center justify-end gap-2 mt-1">
                   <OpenReimbursementButton entries={items} form={f} mode={mode} />
+                  {f.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2.5 gap-1 text-xs"
+                      onClick={() => withdrawForm(f)}
+                      title="Withdraw this request — receipts go back to your Not Submitted list"
+                    >
+                      <Undo2 className="w-3.5 h-3.5" /> Withdraw
+                    </Button>
+                  )}
                   <button
                     className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
                     onClick={() => setExpandedId(expanded ? null : f.id)}
