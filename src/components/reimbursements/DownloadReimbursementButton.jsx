@@ -16,7 +16,10 @@ const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').re
 // Candora logo (public asset — same as the app favicon)
 const CANDORA_LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
 // Funder Cost autofill: Total (with GST) − GST + 1/2 GST = Total − 1/2 GST
-const funderCostOf = e => (e.funder_cost != null && e.funder_cost !== '') ? e.funder_cost : (e.total_cost || 0) - (e.gst || 0) / 2;
+// A stored funder_cost of 0 (or empty) is treated as not set — autofill applies instead
+const funderCostOf = e => (typeof e.funder_cost === 'number' && e.funder_cost > 0)
+  ? e.funder_cost
+  : (e.total_cost || 0) - (e.gst || 0) / 2;
 
 export default function DownloadReimbursementButton({ entries, form, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
@@ -99,6 +102,7 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
     table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
     th { background: #1e2f4d; color: #fff; text-align: left; padding: 6px 8px; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.03em; }
     td { border-bottom: 1px solid #ccc; padding: 6px 8px; vertical-align: top; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
     tr:nth-child(even) td { background: #f4f6f9; }
     .r { text-align: right; } .nw { white-space: nowrap; }
     .fill { background: #e8e8e8 !important; border: 1px solid #bbb; min-height: 14px; }
