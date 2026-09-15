@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { PlaneTakeoff, Check, X } from 'lucide-react';
+import TeamScheduleSection from '@/components/timeoff/TeamScheduleSection';
 import { ymd } from '@/lib/payPeriods';
 
 // Highly visible banner on the main Dashboard for supervisors:
@@ -77,6 +78,8 @@ export default function SupervisorVacationAlerts({ user }) {
           )}
         </div>
       ))}
+
+      <TeamScheduleSection />
     </div>
   );
 }
