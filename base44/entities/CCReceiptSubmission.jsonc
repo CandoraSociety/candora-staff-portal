@@ -35,6 +35,14 @@
       "type": "string",
       "description": "Finance e-Signature: typed name of the finance staff member who approved the form, captured at approval"
     },
+    "approved_by": {
+      "type": "string",
+      "enum": [
+        "Jim Cunningham",
+        "Graham Currie"
+      ],
+      "description": "Finance approver selected when the submission is processed \u2014 printed as 'Approved by' on the downloadable form and shown in both the finance and staff portals"
+    },
     "department": {
       "type": "string",
       "enum": [

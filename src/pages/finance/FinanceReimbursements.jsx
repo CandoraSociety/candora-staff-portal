@@ -14,6 +14,7 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
+import DownloadReimbursementButton from '@/components/reimbursements/DownloadReimbursementButton';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
@@ -40,6 +41,9 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const [approveSig, setApproveSig] = useState('');
   const [approveError, setApproveError] = useState('');
   const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
+  const [payApprover, setPayApprover] = useState(''); // approver recorded on the form when paid
+  const [paySig, setPaySig] = useState(''); // finance e-signature recorded on the form when paid
+  const [payError, setPayError] = useState('');
   const [reverseTarget, setReverseTarget] = useState(null); // paid submission to reverse
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
@@ -137,6 +141,10 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
       setStatus.mutate({ form: r, status: 'processing' });
     }
     window.open(SCOTIA_PAY_URL, 'scotiabank-payment', 'width=900,height=700');
+    // Prefill from the form when it was already paid once (e.g. reversed and re-paid)
+    setPayApprover(r.approved_by || '');
+    setPaySig(r.finance_signature || '');
+    setPayError('');
     setPayTarget(r);
   };
 
@@ -274,15 +282,18 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                                 <RotateCcw className="w-4 h-4" /> Reverse
                               </Button>
                             )}
+                            <DownloadReimbursementButton entries={items} form={r} mode={mode} />
                           </div>
                         </td>
                       </tr>
                       {expanded && (
                         <tr className="bg-muted/20">
                           <td colSpan={7} className="px-3 py-2">
-                            {r.finance_signature && (
+                            {(r.finance_signature || r.approved_by) && (
                               <p className="text-xs text-muted-foreground mb-2">
-                                Finance e-Signature: <span className="font-medium italic">{r.finance_signature}</span>
+                                {r.approved_by && <>Approved by <span className="font-medium">{r.approved_by}</span></>}
+                                {r.approved_by && r.finance_signature && ' · '}
+                                {r.finance_signature && <>Finance e-Signature: <span className="font-medium italic">{r.finance_signature}</span></>}
                               </p>
                             )}
                             <table className="w-full text-xs">
@@ -386,6 +397,21 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
             <DialogTitle className="flex items-center gap-2"><Banknote className="w-4 h-4" />Confirm Payment</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Approved by *</Label>
+              <Select value={payApprover} onValueChange={v => { setPayApprover(v); setPayError(''); }}>
+                <SelectTrigger className="w-full h-9"><SelectValue placeholder="Select approver" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Jim Cunningham">Jim Cunningham</SelectItem>
+                  <SelectItem value="Graham Currie">Graham Currie</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Finance e-Signature — type your full name *</Label>
+              <Input value={paySig} onChange={e => { setPaySig(e.target.value); setPayError(''); }} placeholder={displayName(user)} />
+            </div>
+            {payError && <p className="text-xs text-red-600">{payError}</p>}
             <p className="text-sm text-muted-foreground">
               The Scotiabank window is open. Complete the e-transfer of{' '}
               <span className="font-semibold text-foreground">{fmt(payTarget?.amount)}</span> to{' '}
@@ -402,7 +428,13 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               className="gap-2"
               disabled={setStatus.isPending}
               onClick={() => {
-                setStatus.mutate({ form: payTarget, status: 'paid' });
+                if (!payApprover) { setPayError('Select the approver.'); return; }
+                if (!paySig.trim()) { setPayError('Type your full name to e-sign the payment.'); return; }
+                setStatus.mutate({
+                  form: payTarget,
+                  status: 'paid',
+                  patch: { approved_by: payApprover, finance_signature: paySig.trim() },
+                });
                 setPayTarget(null);
               }}
             >

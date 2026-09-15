@@ -26,15 +26,12 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
   const [sigOpen, setSigOpen] = useState(false);
   const [signature, setSignature] = useState('');
   const [sigError, setSigError] = useState('');
-  const [approvedBy, setApprovedBy] = useState('');
   const cfg = REIMBURSEMENT_MODES[mode];
 
   const askForSignature = () => {
     // A submitted request already carries its staff e-signature — prefill it
     setSignature(form?.staff_signature || '');
     setSigError('');
-    // Prefill the finance approver when the form already records one
-    setApprovedBy(form?.finance_signature || '');
     setSigOpen(true);
   };
 
@@ -182,7 +179,8 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
 
   <div class="sig">
     <div class="line"><span class="signed">${esc(form?.staff_signature || sig)}</span><div class="rule">Staff e-Signature</div></div>
-    <div class="line"><span class="signed">${esc(approvedBy)}</span><div class="rule">Approved by</div></div>
+    <div class="line"><span class="signed">${esc(form?.approved_by || '')}</span><div class="rule">Approved by</div></div>
+    <div class="line"><span class="signed">${esc(form?.finance_signature || '')}</span><div class="rule">Finance e-Signature</div></div>
   </div>
 
   <div class="footnote">
@@ -221,18 +219,9 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
               <Label className="text-xs">e-Signature — type your full name *</Label>
               <Input value={signature} onChange={e => { setSignature(e.target.value); setSigError(''); }} placeholder={displayName(user)} />
             </div>
-            <div>
-              <Label className="text-xs">Approved by (Finance)</Label>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={approvedBy}
-                onChange={e => setApprovedBy(e.target.value)}
-              >
-                <option value="">— Select approver —</option>
-                <option value="Jim Cunningham">Jim Cunningham</option>
-                <option value="Graham Currie">Graham Currie</option>
-              </select>
-            </div>
+            {form?.approved_by && (
+              <p className="text-xs text-muted-foreground">Approved by <span className="font-medium">{form.approved_by}</span></p>
+            )}
             {sigError && <p className="text-xs text-red-600">{sigError}</p>}
           </div>
           <DialogFooter>

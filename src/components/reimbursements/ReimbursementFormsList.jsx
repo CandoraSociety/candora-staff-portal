@@ -108,6 +108,7 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
                   {' · '}Cheque payable to {f.payable_to}
                   {f.etransfer_email ? ` · e-transfer: ${f.etransfer_email}` : ''}
                   {f.status === 'paid' && f.payment_date ? ` · paid ${fmtDate(f.payment_date)}` : ''}
+                  {f.approved_by ? ` · approved by ${f.approved_by}` : ''}
                 </p>
                 {f.status === 'rejected' && f.rejection_reason && (
                   <p className="text-xs text-red-600 mt-0.5">{f.rejection_reason}</p>
