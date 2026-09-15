@@ -14,7 +14,7 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
-import DownloadReimbursementButton from '@/components/reimbursements/DownloadReimbursementButton';
+import OpenReimbursementButton from '@/components/reimbursements/OpenReimbursementButton';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
@@ -280,7 +280,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                                 <RotateCcw className="w-4 h-4" /> Reverse
                               </Button>
                             )}
-                            <DownloadReimbursementButton entries={items} form={r} mode={mode} />
+                            <OpenReimbursementButton entries={items} form={r} mode={mode} />
                           </div>
                         </td>
                       </tr>
