@@ -117,8 +117,9 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
     .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 10pt; }
     .totals .grand { border-top: 2px solid #1e2f4d; font-weight: bold; font-size: 12pt; padding-top: 6px; }
     .sig { margin-top: 36px; display: flex; gap: 40px; }
-    .sig .line { flex: 1; border-top: 1px solid #333; padding-top: 4px; font-size: 8.5pt; color: #555; }
-    .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; }
+    .sig .line { flex: 1; font-size: 8.5pt; color: #555; }
+    .sig .rule { border-top: 1px solid #333; margin-top: 10px; padding-top: 4px; }
+    .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; display: block; min-height: 26px; }
     .footnote { margin-top: 22px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
 </head>
@@ -176,8 +177,8 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
   </div>
 
   <div class="sig">
-    <div class="line"><span class="signed">${esc(form?.staff_signature || sig)}</span>Staff e-Signature</div>
-    <div class="line">${form?.finance_signature ? `<span class="signed">${esc(form.finance_signature)}</span>` : ''}Finance Approval</div>
+    <div class="line"><span class="signed">${esc(form?.staff_signature || sig)}</span><div class="rule">Staff e-Signature</div></div>
+    <div class="line"><span class="signed">${form?.finance_signature ? esc(form.finance_signature) : ''}</span><div class="rule">Finance Approval</div></div>
   </div>
 
   <div class="footnote">
