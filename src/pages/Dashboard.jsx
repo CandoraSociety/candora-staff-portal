@@ -19,6 +19,8 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import SupervisorTimesheetAlerts from '@/components/timesheets/SupervisorTimesheetAlerts';
+import SupervisorReimbursementAlerts from '@/components/reimbursements/SupervisorReimbursementAlerts';
+
 import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAlerts';
 import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAlerts';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
@@ -198,6 +200,7 @@ export default function Dashboard() {
 
       {/* Timesheets awaiting supervisor approval */}
       <SupervisorTimesheetAlerts user={user} />
+          <SupervisorReimbursementAlerts user={user} />
 
       {/* Vacation requests awaiting supervisor approval */}
       <SupervisorVacationAlerts user={user} />

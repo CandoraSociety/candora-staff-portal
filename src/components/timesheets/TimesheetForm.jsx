@@ -70,6 +70,14 @@ export default function TimesheetForm({ user, onSubmitted }) {
     [myEmployeeList, myApprovedTimesheets]
   );
 
+  // Timesheets always route to the employee's direct supervisor first (Reports To)
+  useEffect(() => {
+    if (!supervisorEmail && myEmployeeList.length > 0) {
+      const me = myEmployeeList.find(e => !e.is_deleted) || myEmployeeList[0];
+      if (me?.manager_email) setSupervisorEmail(me.manager_email);
+    }
+  }, [myEmployeeList, supervisorEmail]);
+
   const leaveByDate = useMemo(() => {
     const map = {};
     for (const rec of leaveRecords) {

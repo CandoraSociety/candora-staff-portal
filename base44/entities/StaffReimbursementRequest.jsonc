@@ -91,7 +91,38 @@
         "rejected"
       ],
       "default": "pending",
-      "description": "pending = submitted, awaiting finance (staff can still edit its entries); processing = finance is processing it \u2014 locked for staff edits until unselected; approved = verified by finance; paid = reimbursement paid out (locked); rejected = declined by finance"
+      "description": "pending = submitted and supervisor-approved, awaiting finance (staff can still edit its entries); processing = finance is processing it \u2014 locked for staff edits until unselected; approved = verified by finance; paid = reimbursement paid out (locked); rejected = declined by supervisor or finance"
+    },
+    "supervisor_email": {
+      "type": "string",
+      "description": "Direct supervisor's email \u2014 the submission is routed to them for approval before Finance processing"
+    },
+    "supervisor_name": {
+      "type": "string",
+      "description": "Direct supervisor's display name (denormalized for display)"
+    },
+    "supervisor_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Supervisor approval stage: pending = awaiting the direct supervisor's approval (shown in the finance portal's Pending Supervisor Approval section); approved = supervisor approved, moves on to Finance; rejected = declined by the supervisor"
+    },
+    "supervisor_approved_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the supervisor approved or rejected the submission"
+    },
+    "supervisor_approved_by_name": {
+      "type": "string",
+      "description": "Name of the supervisor who approved/rejected the submission"
+    },
+    "supervisor_rejection_reason": {
+      "type": "string",
+      "description": "Why the supervisor rejected the submission"
     },
     "submitted_date": {
       "type": "string",

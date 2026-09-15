@@ -32,7 +32,7 @@ export default function Timesheets() {
             <ClipboardList className="h-6 w-6 text-primary" /> Timesheets
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Submit your hours for the current pay period ({periodLabel(period)}). Your supervisor reviews and approves each timesheet.
+            Submit your hours for the current pay period ({periodLabel(period)}). Your direct supervisor reviews and approves each timesheet before it goes to Payroll.
           </p>
         </div>
         {(isSupervisor || isAdmin) && (

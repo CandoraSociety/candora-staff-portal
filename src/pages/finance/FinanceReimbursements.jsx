@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign, RotateCcw } from 'lucide-react';
+import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign, RotateCcw, Hourglass } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -67,9 +67,16 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
     return map;
   }, [entries]);
 
+  // Submissions awaiting the direct supervisor's approval — held in a separate
+  // read-only section; Finance cannot process them until the supervisor approves.
+  const pendingSupervisor = useMemo(() => {
+    return requests.filter(r => r.supervisor_status === 'pending' && r.status !== 'rejected');
+  }, [requests]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return requests
+      .filter(r => r.supervisor_status !== 'pending')
       .filter(r => filterStatus === 'all' || r.status === filterStatus)
       .filter(r => {
         if (!q) return true;
@@ -78,7 +85,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
       });
   }, [requests, filterStatus, search]);
 
-  const totalPending = requests.filter(r => r.status === 'pending').reduce((s, r) => s + (r.amount || 0), 0);
+  const totalPending = requests.filter(r => r.status === 'pending' && r.supervisor_status !== 'pending').reduce((s, r) => s + (r.amount || 0), 0);
   const totalApproved = requests.filter(r => r.status === 'approved').reduce((s, r) => s + (r.amount || 0), 0);
   const totalPaid = requests.filter(r => r.status === 'paid').reduce((s, r) => s + (r.amount || 0), 0);
 
@@ -175,6 +182,47 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
           </CardContent>
         </Card>
       </div>
+
+      {pendingSupervisor.length > 0 && (
+        <Card className="p-0 border-amber-300 bg-amber-50/30">
+          <div className="px-4 py-3 border-b border-amber-200 bg-amber-100/50 flex flex-wrap items-center gap-2">
+            <Hourglass className="h-4 w-4 text-amber-700" />
+            <h3 className="font-semibold text-amber-800 text-sm">Pending Supervisor Approval ({pendingSupervisor.length})</h3>
+            <p className="text-xs text-amber-700/80">Awaiting the employee's direct supervisor — these cannot be processed by Finance yet.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/20">
+                <tr>
+                  <th className="text-left px-3 py-2 font-semibold">Staff Member</th>
+                  <th className="text-left px-3 py-2 font-semibold">Date Requested</th>
+                  <th className="text-center px-3 py-2 font-semibold">Entries</th>
+                  <th className="text-right px-3 py-2 font-semibold">Total Requested</th>
+                  <th className="text-left px-3 py-2 font-semibold">Awaiting Supervisor</th>
+                  <th className="text-center px-3 py-2 font-semibold">View</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {pendingSupervisor.map(r => (
+                  <tr key={r.id} className="hover:bg-muted/30">
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{r.requester_name || '—'}</div>
+                      <div className="text-xs text-muted-foreground">{r.requester_email || ''}</div>
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap">{fmtDate(r.date_requested || r.submitted_date)}</td>
+                    <td className="px-3 py-2 text-center">{r.entry_count || (entriesByForm[r.id] || []).length || '—'}</td>
+                    <td className="px-3 py-2 text-right font-semibold">{fmt(r.amount)}</td>
+                    <td className="px-3 py-2">{r.supervisor_name || r.supervisor_email || '—'}</td>
+                    <td className="px-3 py-2 text-center">
+                      <OpenReimbursementButton entries={entriesByForm[r.id] || []} form={r} mode={mode} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="flex items-center justify-end gap-2">
         <div className="relative">

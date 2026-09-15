@@ -99,9 +99,11 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
           <Card key={f.id} className="p-0 overflow-hidden">
             <div className="flex items-center gap-4 px-4 py-3 flex-wrap">
               <div className="flex-1 min-w-[200px]">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium">{cfg.formCardLabel} — {fmtDate(f.submitted_date || f.date_requested)}</p>
-                  <Badge className={st.cls}>{st.label}</Badge>
+                  <Badge className={st.cls}>
+                    {f.status === 'pending' && f.supervisor_status === 'pending' ? 'Awaiting Supervisor Approval' : st.label}
+                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {f.entry_count || items.length || 0} receipt entr{(f.entry_count || items.length) === 1 ? 'y' : 'ies'}
@@ -109,6 +111,8 @@ export default function ReimbursementFormsList({ statuses, emptyText, mode = 're
                   {f.etransfer_email ? ` · e-transfer: ${f.etransfer_email}` : ''}
                   {f.status === 'paid' && f.payment_date ? ` · paid ${fmtDate(f.payment_date)}` : ''}
                   {f.approved_by ? ` · approved by ${f.approved_by}` : ''}
+                  {f.status === 'pending' && f.supervisor_status === 'pending'
+                    ? ` · awaiting approval from ${f.supervisor_name || f.supervisor_email || 'your supervisor'}` : ''}
                 </p>
                 {f.status === 'rejected' && f.rejection_reason && (
                   <p className="text-xs text-red-600 mt-0.5">{f.rejection_reason}</p>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,20 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
   const formEntity = base44.entities[cfg.formEntity];
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => base44.entities.Employee.list('-created_date', 500),
+    enabled: open,
+  });
+
+  // Route to the submitter's direct supervisor (Reports To) for approval first
+  const myEmployee = employees.find(e => !e.is_deleted && (e.email || '').toLowerCase() === (user?.email || '').toLowerCase());
+  const supervisorEmail = myEmployee?.manager_email || '';
+  const supervisorRecord = supervisorEmail
+    ? employees.find(e => (e.email || '').toLowerCase() === supervisorEmail.toLowerCase())
+    : null;
+  const supervisorName = supervisorRecord ? `${supervisorRecord.first_name} ${supervisorRecord.last_name}` : supervisorEmail;
 
   useEffect(() => {
     if (open) {
@@ -70,6 +84,9 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
         amount: total,
         tax: gstTotal,
         status: 'pending',
+        supervisor_email: supervisorEmail,
+        supervisor_name: supervisorName,
+        supervisor_status: supervisorEmail ? 'pending' : 'approved',
         submitted_date: format(new Date(), 'yyyy-MM-dd'),
       });
       await entryEntity.bulkUpdate(
@@ -96,7 +113,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
           <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
             <p className="text-muted-foreground text-xs">
               This will compile <span className="font-medium text-foreground">{entries.length}</span> receipt
-              entr{entries.length === 1 ? 'y' : 'ies'} into one {mode === 'cc' ? 'Candora MasterCard receipts submission' : 'reimbursement form'} and submit it to Finance.
+              entr{entries.length === 1 ? 'y' : 'ies'} into one {mode === 'cc' ? 'Candora MasterCard receipts submission' : 'reimbursement form'} and submit it to your direct supervisor for approval before it goes to Finance.
             </p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-muted-foreground">Total Requested</span>
@@ -107,6 +124,17 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
               <span>{fmt(gstTotal)}</span>
             </div>
           </div>
+
+          {supervisorEmail ? (
+            <p className="text-xs text-muted-foreground">
+              Routed for approval to your direct supervisor:{' '}
+              <span className="font-medium text-foreground">{supervisorName}</span>.
+            </p>
+          ) : (
+            <p className="text-xs text-amber-600">
+              No supervisor is set on your employee record — this submission will go straight to Finance.
+            </p>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>

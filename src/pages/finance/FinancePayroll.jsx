@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, CalendarOff, HeartPulse, HeartHandshake, Users } from 'lucide-react';
 import StaffListingTab from '@/components/finance/StaffListingTab';
+import FinanceTimesheetSubmissions from '@/components/finance/FinanceTimesheetSubmissions';
 
 const STAFF_TABS = [
   { value: 'timesheets',  label: 'Timesheet Submissions', icon: Clock },
@@ -37,8 +38,7 @@ export default function FinancePayroll() {
           {STAFF_TABS.map(t => <TabsTrigger key={t.value} value={t.value} className="text-xs">{t.label}</TabsTrigger>)}
         </TabsList>
         <TabsContent value="timesheets" className="mt-4">
-          <Placeholder icon={Clock} title="Timesheet Submissions"
-            desc="Staff timesheet submissions will be collected here and routed to payroll. Integration with the HR Management portal is planned." />
+          <FinanceTimesheetSubmissions />
         </TabsContent>
         <TabsContent value="vacation" className="mt-4">
           <Placeholder icon={CalendarOff} title="Vacation Requests"
