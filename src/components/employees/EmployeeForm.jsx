@@ -15,6 +15,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
     position: '', department: '', org_tier: '', status: 'active', hire_date: '',
+    manager_email: '',
     can_access_billing: false,
     employment_type: '', hourly_wage: '', vacation_percentage: '',
     vacation_hours_start: '', sick_hours_start: '', personal_hours_start: '',
@@ -25,6 +26,16 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
     queryFn: () => base44.entities.OrgSettings.list(),
     staleTime: 1000 * 60 * 5,
   });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['employees'],
+    queryFn: () => base44.entities.Employee.list('-created_date', 500),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const supervisorOptions = employees
+    .filter(e => !e.is_deleted && e.status !== 'terminated' && e.email?.toLowerCase() !== employee?.email?.toLowerCase())
+    .sort((a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`));
 
   const orgTiers = (orgSettingsList[0]?.tier_configs?.length > 0
     ? orgSettingsList[0].tier_configs
@@ -43,6 +54,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         org_tier: employee.org_tier || '',
         status: employee.status || 'active',
         hire_date: employee.hire_date || '',
+        manager_email: employee.manager_email || '',
         can_access_billing: employee.can_access_billing || false,
         employment_type: employee.employment_type || '',
         hourly_wage: employee.hourly_wage ?? '',
@@ -59,6 +71,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
     const num = v => (v === '' || v === null ? null : Number(v));
     onSubmit({
       ...data,
+      manager_email: data.manager_email === 'none' ? '' : data.manager_email,
       hourly_wage: num(data.hourly_wage),
       vacation_percentage: num(data.vacation_percentage),
       vacation_hours_start: num(data.vacation_hours_start) ?? 0,
@@ -103,6 +116,18 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         <Select value={data.department} onValueChange={val => setData({ ...data, department: val })}>
           <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
           <SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <Label>Reports To (Supervisor)</Label>
+        <Select value={data.manager_email || 'none'} onValueChange={val => setData({ ...data, manager_email: val })}>
+          <SelectTrigger><SelectValue placeholder="Select a supervisor" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">— No supervisor —</SelectItem>
+            {supervisorOptions.map(e => (
+              <SelectItem key={e.id} value={e.email}>{e.first_name} {e.last_name} — {e.position}</SelectItem>
+            ))}
+          </SelectContent>
         </Select>
       </div>
       <div className="space-y-1">
