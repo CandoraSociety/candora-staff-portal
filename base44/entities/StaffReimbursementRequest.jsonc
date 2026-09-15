@@ -33,7 +33,7 @@
     },
     "finance_signature": {
       "type": "string",
-      "description": "Finance e-Signature: typed name of the finance staff member who approved the form, captured at approval"
+      "description": "Finance e-Signature: typed name of the finance staff member who approved the form or confirmed payment \u2014 printed as 'Financial Officer Approval' on the downloadable form"
     },
     "approved_by": {
       "type": "string",
@@ -41,7 +41,7 @@
         "Jim Cunningham",
         "Graham Currie"
       ],
-      "description": "Finance approver selected when the payment is confirmed \u2014 printed as 'Approved by' on the downloadable form and shown in both the finance and staff portals"
+      "description": "Finance approver selected when the payment is confirmed \u2014 shown in both the finance and staff portals"
     },
     "department": {
       "type": "string",
@@ -119,6 +119,10 @@
     "supervisor_approved_by_name": {
       "type": "string",
       "description": "Name of the supervisor who approved/rejected the submission"
+    },
+    "supervisor_signature": {
+      "type": "string",
+      "description": "Supervisor e-Signature: typed name of the supervisor who approved the submission, captured at approval \u2014 printed on the Approved by line of the downloadable form"
     },
     "supervisor_rejection_reason": {
       "type": "string",

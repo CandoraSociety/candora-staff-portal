@@ -155,7 +155,8 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
 
   <div class="sig">
     <div class="line"><span class="signed">${esc(form?.staff_signature || staffSignature)}</span><div class="rule">Staff e-Signature</div></div>
-    <div class="line"><span class="signed">${esc(form?.approved_by || '')}</span><div class="rule">Approved by</div></div>
+    <div class="line"><span class="signed">${esc(form?.supervisor_signature || form?.approved_by || '')}</span><div class="rule">Approved by</div></div>
+    <div class="line"><span class="signed">${esc(form?.finance_signature || '')}</span><div class="rule">Financial Officer Approval</div></div>
   </div>
 
   <div class="footnote">

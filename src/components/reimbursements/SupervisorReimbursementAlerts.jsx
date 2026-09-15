@@ -23,6 +23,9 @@ export default function SupervisorReimbursementAlerts({ user }) {
   const { toast } = useToast();
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState('');
+  const [approvingId, setApprovingId] = useState(null);
+  const [approveSig, setApproveSig] = useState('');
+  const [sigError, setSigError] = useState('');
   const [acting, setActing] = useState(false);
 
   const { data: forms = [] } = useQuery({
@@ -61,7 +64,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
 
   if (!forms.length) return null;
 
-  const act = async (form, status) => {
+  const act = async (form, status, signature) => {
     setActing(true);
     try {
       const entity = base44.entities[form.formEntity];
@@ -70,6 +73,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
           supervisor_status: 'approved',
           supervisor_approved_date: ymd(Date.now()),
           supervisor_approved_by_name: user.full_name,
+          supervisor_signature: signature,
         });
       } else {
         await entity.update(form.id, {
@@ -94,6 +98,9 @@ export default function SupervisorReimbursementAlerts({ user }) {
       toast({ title: status === 'approved' ? 'Submission approved' : 'Submission rejected' });
       setRejectingId(null);
       setReason('');
+      setApprovingId(null);
+      setApproveSig('');
+      setSigError('');
     } finally {
       setActing(false);
     }
@@ -131,9 +138,23 @@ export default function SupervisorReimbursementAlerts({ user }) {
                 <Button variant="destructive" size="sm" disabled={acting} onClick={() => act(f, 'rejected')}><X className="w-4 h-4 mr-1" /> Confirm rejection</Button>
                 <Button variant="ghost" size="sm" onClick={() => { setRejectingId(null); setReason(''); }}>Cancel</Button>
               </div>
+            ) : approvingId === f.id ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                  <Input className="flex-1" placeholder="e-Signature — type your full name" value={approveSig} onChange={e => { setApproveSig(e.target.value); setSigError(''); }} />
+                  <Button size="sm" disabled={acting} onClick={() => {
+                    const sig = approveSig.trim();
+                    if (!sig) { setSigError('Type your full name to e-sign the approval.'); return; }
+                    act(f, 'approved', sig);
+                  }}><Check className="w-4 h-4 mr-1" /> Sign &amp; Approve</Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setApprovingId(null); setApproveSig(''); setSigError(''); }}>Cancel</Button>
+                </div>
+                {sigError && <p className="text-xs text-red-600">{sigError}</p>}
+                <p className="text-xs text-muted-foreground">Your e-signature is recorded on the Approved by line of the reimbursement form.</p>
+              </div>
             ) : (
               <div className="flex gap-2">
-                <Button size="sm" disabled={acting} onClick={() => act(f, 'approved')}><Check className="w-4 h-4 mr-1" /> Approve</Button>
+                <Button size="sm" disabled={acting} onClick={() => setApprovingId(f.id)}><Check className="w-4 h-4 mr-1" /> Approve</Button>
                 <Button size="sm" variant="outline" disabled={acting} onClick={() => setRejectingId(f.id)}>Reject</Button>
               </div>
             )}
