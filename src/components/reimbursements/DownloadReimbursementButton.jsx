@@ -13,6 +13,10 @@ import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Candora logo (public asset — same as the app favicon)
+const CANDORA_LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
+// Funder Cost autofill: Total (with GST) − GST + 1/2 GST = Total − 1/2 GST
+const funderCostOf = e => (e.funder_cost != null && e.funder_cost !== '') ? e.funder_cost : (e.total_cost || 0) - (e.gst || 0) / 2;
 
 export default function DownloadReimbursementButton({ entries, form, mode = 'reimbursement' }) {
   const { user } = useCurrentUser();
@@ -52,6 +56,7 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
       <tr>
         <td>${i + 1}</td>
         <td class="nw">${esc(e.date_incurred || '—')}</td>
+        <td>${esc(e.supplier || '—')}</td>
         <td>
           ${esc(e.description)}
           ${e.excluded_amount > 0 ? `<div class="excl">✂ ${fmt(e.excluded_amount * 1.05)} personal item excluded${e.excluded_description ? ` (${esc(e.excluded_description)})` : ''}</div>` : ''}
@@ -60,15 +65,18 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
             <a class="btn" href="${esc(e.receipt_url)}" target="_blank" rel="noopener noreferrer">Receipt</a>
           </div>` : '<div class="receipt none">No receipt attached</div>'}
         </td>
-        <td>${esc(e.supplier || '—')}</td>
         <td>${esc(programLabel(e) || '—')}</td>
-        <td class="r">${fmt(e.gst)}</td>
         <td class="r">${fmt(e.total_cost)}</td>
+        <td class="r">${fmt(e.gst)}</td>
         <td class="r fill">${e.gst ? fmt(e.gst / 2) : '$ -'}</td>
-        <td class="r fill">${e.funder_cost ? fmt(e.funder_cost) : ''}</td>
+        <td class="r fill">${fmt(funderCostOf(e))}</td>
         <td class="fill">${esc(e.account_no || '')}</td>
         <td class="fill">${esc(e.funder_no || '')}</td>
       </tr>`).join('');
+
+    // Column totals — Total (with GST), GST, 1/2 GST, Funder Cost
+    const halfGstTotal = gstTotal / 2;
+    const funderCostTotal = sortedEntries.reduce((s, e) => s + funderCostOf(e), 0);
 
     const html = `<!DOCTYPE html>
 <html>
@@ -79,6 +87,8 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 11pt; margin: 0; }
     .header { border-bottom: 3px solid #1e2f4d; padding-bottom: 10px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .header .brand { display: flex; align-items: center; gap: 14px; }
+    .header .logo { height: 64px; width: auto; }
     .header h1 { margin: 0; font-size: 18pt; color: #1e2f4d; }
     .header .org { font-size: 13pt; font-weight: bold; color: #1e2f4d; }
     .header .date { font-size: 10pt; color: #555; }
@@ -96,6 +106,8 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
     .receipt .btn { display: inline-block; background: #1e2f4d; color: #fff; font-size: 8.5pt; font-weight: bold; padding: 3px 12px; border-radius: 3px; text-decoration: none; }
     .receipt.none { color: #999; font-style: italic; }
     .excl { margin-top: 2px; font-size: 8pt; color: #b45309; }
+    .col-totals td { border-top: 2px solid #1e2f4d; border-bottom: none; font-weight: bold; background: #fff !important; padding-top: 8px; }
+    .col-totals .tl { text-align: right; font-size: 9.5pt; text-transform: uppercase; color: #1e2f4d; }
     .totals { margin-top: 14px; margin-left: auto; width: 280px; }
     .totals .row { display: flex; justify-content: space-between; padding: 4px 8px; font-size: 10pt; }
     .totals .grand { border-top: 2px solid #1e2f4d; font-weight: bold; font-size: 12pt; padding-top: 6px; }
@@ -107,9 +119,12 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
 </head>
 <body>
   <div class="header">
-    <div>
-      <div class="org">Candora</div>
-      <h1>${cfg.docTitle}</h1>
+    <div class="brand">
+      <img class="logo" src="${CANDORA_LOGO_URL}" alt="Candora" />
+      <div>
+        <div class="org">Candora</div>
+        <h1>${cfg.docTitle}</h1>
+      </div>
     </div>
     <div class="date">Generated ${format(new Date(), 'MMMM d, yyyy')}</div>
   </div>
@@ -126,11 +141,11 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
       <tr>
         <th style="width:22px">#</th>
         <th>Date</th>
-        <th>Description &amp; Receipt</th>
         <th>Supplier</th>
+        <th>Description &amp; Receipt</th>
         <th>Program</th>
-        <th class="r">GST</th>
         <th class="r">Total (with GST)</th>
+        <th class="r">GST</th>
         <th class="r">1/2 GST</th>
         <th class="r">Funder Cost</th>
         <th>Account #</th>
@@ -138,6 +153,16 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
       </tr>
     </thead>
     <tbody>${rows}</tbody>
+    <tfoot>
+      <tr class="col-totals">
+        <td colspan="5" class="tl">Column Totals</td>
+        <td class="r">${fmt(total)}</td>
+        <td class="r">${fmt(gstTotal)}</td>
+        <td class="r">${fmt(halfGstTotal)}</td>
+        <td class="r">${fmt(funderCostTotal)}</td>
+        <td colspan="2"></td>
+      </tr>
+    </tfoot>
   </table>
 
   <div class="totals">
