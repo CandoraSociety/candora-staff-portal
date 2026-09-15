@@ -180,7 +180,6 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
   <div class="sig">
     <div class="line"><span class="signed">${esc(form?.staff_signature || sig)}</span><div class="rule">Staff e-Signature</div></div>
     <div class="line"><span class="signed">${esc(form?.approved_by || '')}</span><div class="rule">Approved by</div></div>
-    <div class="line"><span class="signed">${esc(form?.finance_signature || '')}</span><div class="rule">Finance e-Signature</div></div>
   </div>
 
   <div class="footnote">
@@ -202,7 +201,13 @@ export default function DownloadReimbursementButton({ entries, form, mode = 'rei
 
   return (
     <>
-      <Button variant="outline" size="sm" className="gap-2" disabled={!entries || entries.length === 0} onClick={askForSignature}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-2"
+        disabled={!entries || entries.length === 0}
+        onClick={() => (form?.staff_signature ? download() : askForSignature())}
+      >
         <Download className="w-4 h-4" />{cfg.downloadButton}
       </Button>
 

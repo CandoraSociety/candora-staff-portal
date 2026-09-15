@@ -42,7 +42,6 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const [approveError, setApproveError] = useState('');
   const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
   const [payApprover, setPayApprover] = useState(''); // approver recorded on the form when paid
-  const [paySig, setPaySig] = useState(''); // finance e-signature recorded on the form when paid
   const [payError, setPayError] = useState('');
   const [reverseTarget, setReverseTarget] = useState(null); // paid submission to reverse
   const cfg = REIMBURSEMENT_MODES[mode];
@@ -143,7 +142,6 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
     window.open(SCOTIA_PAY_URL, 'scotiabank-payment', 'width=900,height=700');
     // Prefill from the form when it was already paid once (e.g. reversed and re-paid)
     setPayApprover(r.approved_by || '');
-    setPaySig(r.finance_signature || '');
     setPayError('');
     setPayTarget(r);
   };
@@ -407,10 +405,6 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-xs">Finance e-Signature — type your full name *</Label>
-              <Input value={paySig} onChange={e => { setPaySig(e.target.value); setPayError(''); }} placeholder={displayName(user)} />
-            </div>
             {payError && <p className="text-xs text-red-600">{payError}</p>}
             <p className="text-sm text-muted-foreground">
               The Scotiabank window is open. Complete the e-transfer of{' '}
@@ -429,12 +423,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               disabled={setStatus.isPending}
               onClick={() => {
                 if (!payApprover) { setPayError('Select the approver.'); return; }
-                if (!paySig.trim()) { setPayError('Type your full name to e-sign the payment.'); return; }
-                setStatus.mutate({
-                  form: payTarget,
-                  status: 'paid',
-                  patch: { approved_by: payApprover, finance_signature: paySig.trim() },
-                });
+                setStatus.mutate({ form: payTarget, status: 'paid', patch: { approved_by: payApprover } });
                 setPayTarget(null);
               }}
             >
