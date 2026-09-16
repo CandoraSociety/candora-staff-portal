@@ -6,11 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { Save, X } from 'lucide-react';
-
-const DEPARTMENTS = [
-  'Family Programs', 'Pathways Employment Program', 'Social Enterprise',
-  'Admin/Support', 'Executive', 'Community Programs', 'Resource Centre', 'Multiple', 'Other'
-];
+import { EMPLOYEE_DEPARTMENTS as DEPARTMENTS } from '@/lib/employeeDepartments';
 
 function buildInitialForm(employeeRecord, currentUser) {
   // Only fall back to full_name if there's no employee record at all and full_name looks like a real name (has a space)

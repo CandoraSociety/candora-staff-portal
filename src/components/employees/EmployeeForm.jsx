@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
+import { EMPLOYEE_DEPARTMENTS, EMPLOYEE_DIVISIONS, EMPLOYEE_STATUSES } from '@/lib/employeeDepartments';
 
-const departments = ['Family Programs', 'Pathways Employment Program', 'Social Enterprise', 'Admin/Support', 'Executive', 'Community Programs', 'Resource Centre', 'Multiple', 'Other'];
-const divisions = ['PHAC', 'FRN', 'Other'];
-const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
+const departments = EMPLOYEE_DEPARTMENTS;
+const divisions = EMPLOYEE_DIVISIONS;
+const statuses = EMPLOYEE_STATUSES;
 
 export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabel }) {
   const [data, setData] = useState({

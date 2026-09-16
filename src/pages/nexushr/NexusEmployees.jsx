@@ -5,6 +5,8 @@ import { useOutletContext } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EMPLOYEE_STATUSES } from '@/lib/employeeDepartments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, RotateCcw, Trash2, Copy, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +22,8 @@ import FileAccessSelector from '@/components/files/FileAccessSelector';
 
 export default function NexusEmployees() {
   const [search, setSearch] = useState('');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(1); // 1 = employee details, 2 = portal + file access
   const [pendingEmployee, setPendingEmployee] = useState(null); // data from step 1
@@ -167,10 +171,14 @@ Welcome aboard!
 
 
   const searchStr = search.toLowerCase();
-  const matches = (e) => `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(searchStr);
+  const matches = (e) => `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(searchStr)
+    && (deptFilter === 'all' || e.department === deptFilter)
+    && (statusFilter === 'all' || e.status === statusFilter);
+  const byName = (a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+  const deptOptions = [...new Set(employees.filter(e => !e.is_deleted && e.department).map(e => e.department))].sort((a, b) => a.localeCompare(b));
 
-  const active = employees.filter(e => !e.is_deleted && e.status !== 'terminated' && matches(e));
-  const former = employees.filter(e => !e.is_deleted && e.status === 'terminated' && matches(e));
+  const active = employees.filter(e => !e.is_deleted && e.status !== 'terminated' && matches(e)).sort(byName);
+  const former = employees.filter(e => !e.is_deleted && e.status === 'terminated' && matches(e)).sort(byName);
 
   // Soft-deleted within 30 days
   const today = new Date();
@@ -191,9 +199,25 @@ Welcome aboard!
         actions={<Button onClick={openAddDialog} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
       />
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <Select value={deptFilter} onValueChange={setDeptFilter}>
+          <SelectTrigger className="w-full sm:w-[210px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All departments</SelectItem>
+            {deptOptions.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[170px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {EMPLOYEE_STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
