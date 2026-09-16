@@ -14,7 +14,6 @@ import HowToSearch from "@/components/howto/HowToSearch";
 import GoogleTranslateWidget from "@/components/dashboard/GoogleTranslateWidget";
 import RecentActivityWidget from "@/components/dashboard/RecentActivityWidget";
 import EAAssistantWidget from "@/components/ed/EAAssistantWidget";
-import FinanceFileApprovalWidget from "@/components/ed/FinanceFileApprovalWidget";
 
 function greeting() {
   const h = new Date().getHours();
@@ -101,7 +100,6 @@ export default function EDDashboard() {
       </div>
 
       {/* Finance File Access Approvals */}
-      <FinanceFileApprovalWidget />
 
       {/* Project Progress + Recent Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
