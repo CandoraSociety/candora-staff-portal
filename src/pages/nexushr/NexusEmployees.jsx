@@ -24,6 +24,8 @@ export default function NexusEmployees() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [empTypeFilter, setEmpTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('first_name');
   const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(1); // 1 = employee details, 2 = portal + file access
   const [pendingEmployee, setPendingEmployee] = useState(null); // data from step 1
@@ -173,12 +175,20 @@ Welcome aboard!
   const searchStr = search.toLowerCase();
   const matches = (e) => `${e.first_name} ${e.last_name} ${e.position} ${e.department} ${e.email}`.toLowerCase().includes(searchStr)
     && (deptFilter === 'all' || e.department === deptFilter)
-    && (statusFilter === 'all' || e.status === statusFilter);
+    && (statusFilter === 'all' || e.status === statusFilter)
+    && (empTypeFilter === 'all' || e.employment_type === empTypeFilter);
   const byName = (a, b) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+  const sortEmployees = (list) => {
+    const arr = [...list];
+    if (sortBy === 'last_name') return arr.sort((a, b) => (a.last_name || '').localeCompare(b.last_name || '') || (a.first_name || '').localeCompare(b.first_name || ''));
+    if (sortBy === 'start_newest') return arr.sort((a, b) => new Date(b.hire_date || 0) - new Date(a.hire_date || 0));
+    if (sortBy === 'start_oldest') return arr.sort((a, b) => new Date(a.hire_date || 0) - new Date(b.hire_date || 0));
+    return arr.sort(byName);
+  };
   const deptOptions = [...new Set(employees.filter(e => !e.is_deleted && e.department).map(e => e.department))].sort((a, b) => a.localeCompare(b));
 
-  const active = employees.filter(e => !e.is_deleted && e.status !== 'terminated' && matches(e)).sort(byName);
-  const former = employees.filter(e => !e.is_deleted && e.status === 'terminated' && matches(e)).sort(byName);
+  const active = sortEmployees(employees.filter(e => !e.is_deleted && e.status !== 'terminated' && matches(e)));
+  const former = sortEmployees(employees.filter(e => !e.is_deleted && e.status === 'terminated' && matches(e)));
 
   // Soft-deleted within 30 days
   const today = new Date();
@@ -199,11 +209,28 @@ Welcome aboard!
         actions={<Button onClick={openAddDialog} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
       />
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full sm:w-[190px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="first_name">First name (A–Z)</SelectItem>
+            <SelectItem value="last_name">Last name (A–Z)</SelectItem>
+            <SelectItem value="start_newest">Start date (newest)</SelectItem>
+            <SelectItem value="start_oldest">Start date (oldest)</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={empTypeFilter} onValueChange={setEmpTypeFilter}>
+          <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All position types</SelectItem>
+            <SelectItem value="salary">Salary</SelectItem>
+            <SelectItem value="hourly">Hourly</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={deptFilter} onValueChange={setDeptFilter}>
           <SelectTrigger className="w-full sm:w-[210px]"><SelectValue /></SelectTrigger>
           <SelectContent>
