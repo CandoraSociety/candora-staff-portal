@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
 
-const departments = ['Family Programs', 'Pathways Employment Program', 'Social Enterprise', 'Admin/Support', 'Executive', 'Community Programs', 'Multiple', 'Other'];
+const departments = ['Family Programs', 'Pathways Employment Program', 'Social Enterprise', 'Admin/Support', 'Executive', 'Community Programs', 'Resource Centre', 'Multiple', 'Other'];
 const divisions = ['PHAC', 'FRN', 'Other'];
 const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
 
