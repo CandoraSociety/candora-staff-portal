@@ -75,7 +75,14 @@
       "items": {
         "type": "string"
       },
-      "description": "Array of Announcement IDs this user has dismissed from their dashboard notification ribbon"
+      "description": "Array of Announcement IDs this user has permanently dismissed (hidden) from their dashboard notification ribbon"
+    },
+    "cleared_announcement_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Announcement IDs this user has cleared from the bell (marked as seen \u2014 badge count clears, notification stays in the list)"
     }
   },
   "required": [

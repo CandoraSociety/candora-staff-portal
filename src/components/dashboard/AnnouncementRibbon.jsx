@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bell, ChevronDown, ChevronUp, X, Megaphone } from 'lucide-react';
+import { Bell, ChevronDown, ChevronUp, X, Megaphone, CheckCheck } from 'lucide-react';
 
 const priorityDot = {
   urgent: 'bg-destructive',
@@ -25,7 +25,9 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
   });
 
   const dismissed = prefs?.dismissed_announcement_ids || [];
+  const cleared = prefs?.cleared_announcement_ids || [];
 
+  // All live announcements this user hasn't permanently dismissed
   const active = useMemo(
     () =>
       announcements
@@ -37,25 +39,35 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
     [announcements, dismissed]
   );
 
-  const handleDismiss = async (id) => {
-    const next = [...new Set([...dismissed, id])];
+  // Unseen ones drive the bell badge + marquee; clearing the bell keeps them in the list
+  const unseen = active.filter(a => !cleared.includes(a.id));
+  const count = unseen.length;
+  const marqueeText = unseen.map(a => a.title).join('   •   ');
+
+  const savePrefs = async (updates) => {
     if (prefs) {
-      await base44.entities.UserDashboardPreference.update(prefs.id, { dismissed_announcement_ids: next });
+      await base44.entities.UserDashboardPreference.update(prefs.id, updates);
     } else if (user?.id) {
-      await base44.entities.UserDashboardPreference.create({ user_id: user.id, dismissed_announcement_ids: next });
+      await base44.entities.UserDashboardPreference.create({ user_id: user.id, ...updates });
     }
     queryClient.invalidateQueries(['userPreferences', user?.id]);
   };
 
-  const count = active.length;
-  const marqueeText = active.map(a => a.title).join('   •   ');
+  const handleDismiss = (id) =>
+    savePrefs({ dismissed_announcement_ids: [...new Set([...dismissed, id])] });
+
+  const handleClearBell = () =>
+    savePrefs({ cleared_announcement_ids: [...new Set([...cleared, ...active.map(a => a.id)])] });
 
   return (
     <div className="w-full">
       {/* Ribbon bar */}
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setExpanded(v => !v)}
-        className="group w-full flex items-center gap-3 px-4 py-2 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-sm transition-all"
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setExpanded(v => !v); }}
+        className="group w-full flex items-center gap-3 px-4 py-2 rounded-xl border border-border bg-card hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer"
       >
         {/* Bell + badge */}
         <div className="relative flex-shrink-0">
@@ -78,9 +90,23 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
               </span>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground truncate">No new announcements</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {active.length > 0 ? 'Announcements' : 'No new announcements'}
+            </p>
           )}
         </div>
+
+        {/* Clear bell (mark all as seen) — keeps the notifications, just clears the badge */}
+        {count > 0 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleClearBell(); }}
+            title="Clear bell (notifications stay in the list)"
+            className="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary px-2 py-1 rounded-md hover:bg-primary/10 transition-colors"
+          >
+            <CheckCheck className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Clear</span>
+          </button>
+        )}
 
         {/* Expand indicator */}
         <div className="flex-shrink-0 flex items-center gap-1.5">
@@ -93,7 +119,7 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Expanded panel */}
       {expanded && (
@@ -103,12 +129,23 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
               <Megaphone className="w-4 h-4 text-primary" />
               <span className="text-sm font-semibold">Notifications</span>
             </div>
-            <button
-              onClick={() => setExpanded(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {count > 0 && (
+                <button
+                  onClick={handleClearBell}
+                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark all as seen
+                </button>
+              )}
+              <button
+                onClick={() => setExpanded(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           {active.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
@@ -138,7 +175,7 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
                 </div>
                 <button
                   onClick={() => handleDismiss(ann.id)}
-                  title="Dismiss this notification"
+                  title="Dismiss this notification (hide it permanently)"
                   className="flex-shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
