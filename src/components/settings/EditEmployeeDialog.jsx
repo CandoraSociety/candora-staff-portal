@@ -9,7 +9,7 @@ import { Save, X } from 'lucide-react';
 
 const DEPARTMENTS = [
   'Family Programs', 'Pathways Employment Program', 'Social Enterprise',
-  'Admin/Support', 'Executive', 'Community Programs', 'Other'
+  'Admin/Support', 'Executive', 'Community Programs', 'Multiple', 'Other'
 ];
 
 function buildInitialForm(employeeRecord, currentUser) {
