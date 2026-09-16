@@ -197,7 +197,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Announcement Ribbon */}
-      <AnnouncementRibbon announcements={userAnnouncements} />
+      <AnnouncementRibbon announcements={userAnnouncements} user={user} />
 
       {/* Timesheets awaiting supervisor approval */}
       <SupervisorTimesheetAlerts user={user} />

@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Bell, ChevronDown, ChevronUp, X, Megaphone } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 const priorityDot = {
   urgent: 'bg-destructive',
@@ -10,19 +11,41 @@ const priorityDot = {
   low: 'bg-muted-foreground',
 };
 
-export default function AnnouncementRibbon({ announcements = [] }) {
+export default function AnnouncementRibbon({ announcements = [], user }) {
   const [expanded, setExpanded] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: prefs } = useQuery({
+    queryKey: ['userPreferences', user?.id],
+    queryFn: async () => {
+      const p = await base44.entities.UserDashboardPreference.filter({ user_id: user?.id });
+      return p[0] || null;
+    },
+    enabled: !!user?.id,
+  });
+
+  const dismissed = prefs?.dismissed_announcement_ids || [];
 
   const active = useMemo(
     () =>
       announcements
-        .filter(a => a.is_active)
+        .filter(a => a.is_active && !dismissed.includes(a.id))
         .sort((a, b) => {
           const order = { urgent: 0, high: 1, normal: 2, low: 3 };
           return (order[a.priority] || 2) - (order[b.priority] || 2);
         }),
-    [announcements]
+    [announcements, dismissed]
   );
+
+  const handleDismiss = async (id) => {
+    const next = [...new Set([...dismissed, id])];
+    if (prefs) {
+      await base44.entities.UserDashboardPreference.update(prefs.id, { dismissed_announcement_ids: next });
+    } else if (user?.id) {
+      await base44.entities.UserDashboardPreference.create({ user_id: user.id, dismissed_announcement_ids: next });
+    }
+    queryClient.invalidateQueries(['userPreferences', user?.id]);
+  };
 
   const count = active.length;
   const marqueeText = active.map(a => a.title).join('   •   ');
@@ -113,6 +136,13 @@ export default function AnnouncementRibbon({ announcements = [] }) {
                     {formatDistanceToNow(new Date(ann.created_date), { addSuffix: true })}
                   </p>
                 </div>
+                <button
+                  onClick={() => handleDismiss(ann.id)}
+                  title="Dismiss this notification"
+                  className="flex-shrink-0 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))
           )}

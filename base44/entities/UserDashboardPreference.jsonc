@@ -69,6 +69,13 @@
         "type": "string"
       },
       "description": "List of Microsoft app IDs (outlook, teams, word, excel, powerpoint) the user wants in the sidebar ribbon. Empty/null = all apps shown."
+    },
+    "dismissed_announcement_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of Announcement IDs this user has dismissed from their dashboard notification ribbon"
     }
   },
   "required": [
