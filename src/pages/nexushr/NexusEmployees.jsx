@@ -201,11 +201,13 @@ Welcome aboard!
   });
 
   const filtered = active; // kept for compatibility
+  const totalEmployees = employees.filter(e => !e.is_deleted && e.status !== 'terminated').length;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Employees"
+        description={`Total Employees: ${totalEmployees}${(search || deptFilter !== 'all' || statusFilter !== 'all' || empTypeFilter !== 'all') ? ` · Showing ${active.length}` : ''}`}
         actions={<Button onClick={openAddDialog} size="sm"><Plus className="w-4 h-4 mr-1" />Add Employee</Button>}
       />
 
