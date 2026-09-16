@@ -8,13 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { DEFAULT_TIER_CONFIGS } from '@/lib/tierPermissionPresets';
 
-const departments = ['Administration', 'Operations', 'Finance', 'Human Resources', 'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'];
+const departments = ['Family Programs', 'Pathways Employment Program', 'Social Enterprise', 'Admin/Support', 'Executive', 'Community Programs', 'Other'];
+const divisions = ['PHAC', 'FRN', 'Other'];
 const statuses = ['active', 'on_leave', 'terminated', 'suspended', 'probation', 'occasional'];
 
 export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabel }) {
   const [data, setData] = useState({
     first_name: '', last_name: '', email: '', phone: '',
-    position: '', department: '', org_tier: '', status: 'active', hire_date: '',
+    position: '', department: '', division: '', org_tier: '', status: 'active', hire_date: '',
     manager_email: '',
     can_access_billing: false,
     employment_type: '', hourly_wage: '', vacation_percentage: '',
@@ -51,6 +52,7 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
         phone: employee.phone || '',
         position: employee.position || '',
         department: employee.department || '',
+        division: employee.division || '',
         org_tier: employee.org_tier || '',
         status: employee.status || 'active',
         hire_date: employee.hire_date || '',
@@ -113,11 +115,20 @@ export default function EmployeeForm({ employee, onSubmit, isLoading, submitLabe
       </div>
       <div className="space-y-1">
         <Label>Department *</Label>
-        <Select value={data.department} onValueChange={val => setData({ ...data, department: val })}>
+        <Select value={data.department} onValueChange={val => setData({ ...data, department: val, division: val === 'Family Programs' ? data.division : '' })}>
           <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
           <SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
         </Select>
       </div>
+      {data.department === 'Family Programs' && (
+        <div className="space-y-1">
+          <Label>Division</Label>
+          <Select value={data.division} onValueChange={val => setData({ ...data, division: val })}>
+            <SelectTrigger><SelectValue placeholder="Select division" /></SelectTrigger>
+            <SelectContent>{divisions.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="space-y-1">
         <Label>Reports To (Supervisor)</Label>
         <Select value={data.manager_email || 'none'} onValueChange={val => setData({ ...data, manager_email: val })}>

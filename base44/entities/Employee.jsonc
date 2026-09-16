@@ -25,18 +25,24 @@
     "department": {
       "type": "string",
       "enum": [
-        "Administration",
-        "Operations",
-        "Finance",
-        "Human Resources",
-        "Marketing",
-        "IT",
-        "Sales",
-        "Customer Service",
-        "Legal",
+        "Family Programs",
+        "Pathways Employment Program",
+        "Social Enterprise",
+        "Admin/Support",
+        "Executive",
+        "Community Programs",
         "Other"
       ],
       "description": "Department"
+    },
+    "division": {
+      "type": "string",
+      "enum": [
+        "PHAC",
+        "FRN",
+        "Other"
+      ],
+      "description": "Division within Family Programs (selected when department is Family Programs)"
     },
     "org_tier": {
       "type": "string",

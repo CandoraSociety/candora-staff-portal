@@ -8,8 +8,8 @@ import { base44 } from '@/api/base44Client';
 import { Save, X } from 'lucide-react';
 
 const DEPARTMENTS = [
-  'Administration', 'Operations', 'Finance', 'Human Resources',
-  'Marketing', 'IT', 'Sales', 'Customer Service', 'Legal', 'Other'
+  'Family Programs', 'Pathways Employment Program', 'Social Enterprise',
+  'Admin/Support', 'Executive', 'Community Programs', 'Other'
 ];
 
 function buildInitialForm(employeeRecord, currentUser) {
