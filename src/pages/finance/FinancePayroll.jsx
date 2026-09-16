@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, CalendarOff, HeartPulse, HeartHandshake, Users } from 'lucide-react';
 import StaffListingTab from '@/components/finance/StaffListingTab';
 import FinanceTimesheetSubmissions from '@/components/finance/FinanceTimesheetSubmissions';
+import FinanceVacationRequestsTab from '@/components/finance/FinanceVacationRequestsTab';
 
 const STAFF_TABS = [
   { value: 'timesheets',  label: 'Timesheet Submissions', icon: Clock },
@@ -41,8 +42,7 @@ export default function FinancePayroll() {
           <FinanceTimesheetSubmissions />
         </TabsContent>
         <TabsContent value="vacation" className="mt-4">
-          <Placeholder icon={CalendarOff} title="Vacation Requests"
-            desc="Vacation requests and accrual balances will be tracked here, synced with the HR Management portal." />
+          <FinanceVacationRequestsTab />
         </TabsContent>
         <TabsContent value="sick" className="mt-4">
           <Placeholder icon={HeartPulse} title="Sick Time"
