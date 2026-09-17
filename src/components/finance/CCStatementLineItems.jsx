@@ -6,9 +6,13 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X, FileScan } from 'lucide-react';
 
+// Statement lines that aren't purchases — skipped when reading the statement
+// (interest charges and payments made onto the credit card aren't receiptable)
+const EXCLUDED_LINE_RE = /\binterest\b|\bpayment\b/i;
+
 // One line item row on a monthly card statement — description + amount are
 // editable inline, and each line can have its own receipt attached.
-function LineItemRow({ item, onDeleted }) {
+function LineItemRow({ item, index, onDeleted }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [description, setDescription] = useState(item.description || '');
@@ -59,6 +63,7 @@ function LineItemRow({ item, onDeleted }) {
 
   return (
     <tr className="hover:bg-muted/30">
+      <td className="px-3 py-1.5 text-center text-xs text-muted-foreground align-middle w-10">{index}</td>
       <td className="px-3 py-1.5">
         <Input
           className="h-8 text-sm"
@@ -160,20 +165,26 @@ export default function CCStatementLineItems({ statement }) {
           required: ['items'],
         },
       });
-      const rows = (res?.output?.items || res?.items || [])
-        .filter(i => i && typeof i.description === 'string' && i.description.trim())
+      const all = (res?.output?.items || res?.items || [])
+        .filter(i => i && typeof i.description === 'string' && i.description.trim());
+      const rows = all
+        .filter(i => !EXCLUDED_LINE_RE.test(i.description))
         .map(i => ({
           statement_id: statementId,
           description: i.description.trim(),
           amount: typeof i.amount === 'number' ? i.amount : Number(String(i.amount ?? '').replace(/[^0-9.\-]/g, '')) || 0,
         }));
+      const skipped = all.length - rows.length;
       if (rows.length === 0) {
         toast({ title: 'No line items found', description: 'Add them manually below instead.', variant: 'destructive' });
         return;
       }
       await base44.entities.CCStatementLineItem.bulkCreate(rows);
       qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
-      toast({ title: `Read ${rows.length} line item${rows.length === 1 ? '' : 's'} from the statement`, description: 'Edit any row and attach its receipt below.' });
+      toast({
+        title: `Read ${rows.length} line item${rows.length === 1 ? '' : 's'} from the statement`,
+        description: skipped > 0 ? `Skipped ${skipped} interest/payment line${skipped === 1 ? '' : 's'}. Attach a receipt to each row below.` : 'Edit any row and attach its receipt below.',
+      });
     } catch (err) {
       toast({ title: 'Could not read the statement', description: err?.message || 'Try adding the line items manually instead.', variant: 'destructive' });
     } finally {
@@ -231,6 +242,7 @@ export default function CCStatementLineItems({ statement }) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/20">
             <tr>
+              <th className="text-center px-3 py-1.5 font-semibold w-10">#</th>
               <th className="text-left px-3 py-1.5 font-semibold">Description</th>
               <th className="text-left px-3 py-1.5 font-semibold">Amount</th>
               <th className="text-left px-3 py-1.5 font-semibold">Receipt</th>
@@ -238,8 +250,9 @@ export default function CCStatementLineItems({ statement }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {items.map(item => <LineItemRow key={item.id} item={item} />)}
+            {items.map((item, idx) => <LineItemRow key={item.id} item={item} index={idx + 1} />)}
             <tr className="bg-muted/10">
+              <td />
               <td className="px-3 py-1.5">
                 <Input
                   className="h-8 text-sm"

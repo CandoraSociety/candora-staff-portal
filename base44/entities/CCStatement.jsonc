@@ -26,6 +26,20 @@
       "type": "string",
       "format": "date",
       "description": "Date the statement was uploaded"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed"
+      ],
+      "default": "active",
+      "description": "active = receipts are still being attached to its line items; completed = finished and moved to the Completed section (grouped by year)"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the statement was marked complete"
     }
   },
   "required": [

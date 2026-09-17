@@ -34,7 +34,7 @@ const fmtDate = d => d ? format(new Date(d + 'T00:00:00'), 'MMM d, yy') : '—';
 // Scotiabank online banking — opened (small window) when Finance presses Pay
 const SCOTIA_PAY_URL = 'https://www.scotiabank.com/ca/en/personal/bank-your-way/app-and-online/online-banking.html';
 
-export default function FinanceReimbursements({ mode = 'reimbursement' }) {
+export default function FinanceReimbursements({ mode = 'reimbursement', hideSummary = false }) {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
   const [search, setSearch] = useState('');
@@ -168,26 +168,28 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <Card className="border-amber-200 bg-amber-50/50">
-          <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Pending review</div>
-            <div className="text-lg font-bold text-amber-700">{fmt(totalPending)}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-blue-200 bg-blue-50/50">
-          <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Approved (awaiting payment)</div>
-            <div className="text-lg font-bold text-blue-700">{fmt(totalApproved)}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-green-200 bg-green-50/50">
-          <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Paid Out</div>
-            <div className="text-lg font-bold text-green-700">{fmt(totalPaid)}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {!hideSummary && (
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="border-amber-200 bg-amber-50/50">
+            <CardContent className="p-3">
+              <div className="text-xs text-muted-foreground">Pending review</div>
+              <div className="text-lg font-bold text-amber-700">{fmt(totalPending)}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-blue-200 bg-blue-50/50">
+            <CardContent className="p-3">
+              <div className="text-xs text-muted-foreground">Approved (awaiting payment)</div>
+              <div className="text-lg font-bold text-blue-700">{fmt(totalApproved)}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-green-200 bg-green-50/50">
+            <CardContent className="p-3">
+              <div className="text-xs text-muted-foreground">Paid Out</div>
+              <div className="text-lg font-bold text-green-700">{fmt(totalPaid)}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {pendingSupervisor.length > 0 && (
         <Card className="p-0 border-amber-300 bg-amber-50/30">
