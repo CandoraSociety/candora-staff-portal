@@ -248,7 +248,11 @@ export default function DrawSignatureCanvas({ onChange }) {
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        className="w-full rounded-lg border-2 border-dashed border-border bg-white touch-none cursor-crosshair"
+        style={{
+          cursor:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28'><path d='M14 1v8M14 19v8M1 14h8M19 14h8' stroke='%230f172a' stroke-width='2'/><circle cx='14' cy='14' r='8' fill='rgba(255,255,255,0.75)' stroke='%230f172a' stroke-width='2'/><circle cx='14' cy='14' r='2.5' fill='%23f59e0b' stroke='%230f172a' stroke-width='1'/></svg>\") 14 14, crosshair",
+        }}
+        className="w-full rounded-lg border-2 border-dashed border-border bg-white touch-none"
       />
 
       <div className="flex items-center justify-between gap-3">
