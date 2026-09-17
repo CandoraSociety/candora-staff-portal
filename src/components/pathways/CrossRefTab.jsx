@@ -223,6 +223,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const focusValueRef = useRef({});
   const justConfirmedRef = useRef(false);
   const [pendingHide, setPendingHide] = useState(null);
+  const [resetReviewOpen, setResetReviewOpen] = useState(false);
   const [sendingId, setSendingId] = useState(null);
   const [pendingEdit, setPendingEdit] = useState(null);
 
@@ -593,6 +594,29 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     if (!wasUpdated) pushCrossRefUpdate(r);
   };
 
+  // Master-list clients in scope for the cross-reference review: the ENTIRE
+  // master list EXCEPT those listed as Cancelled, Incomplete, or finished
+  // their 90-day follow-up (program complete with a recorded 90-day outcome —
+  // 'P' is the projected/pending marker, not a completed follow-up).
+  const masterReviewClients = useMemo(() => (activeClients || []).filter(c => {
+    const done90 = c.program_status === 'complete' && c.followup_90day_status && c.followup_90day_status !== 'P';
+    return !(c.program_status === 'cancelled' || c.program_status === 'incomplete' || done90);
+  }), [activeClients]);
+
+  // Keyed identities (HSID + name spellings) of the EXCLUDED master-list
+  // clients — any row belonging to one of them stays out of the review.
+  const excludedClientKeys = useMemo(() => {
+    const s = new Set();
+    (activeClients || []).forEach(c => {
+      const done90 = c.program_status === 'complete' && c.followup_90day_status && c.followup_90day_status !== 'P';
+      if (!(c.program_status === 'cancelled' || c.program_status === 'incomplete' || done90)) return;
+      const h = normHsid(c.compass_hsid);
+      if (h) s.add(`h:${h}`);
+      buildClientNameKeys(c).forEach(k => { if (k) s.add(`n:${k}`); });
+    });
+    return s;
+  }, [activeClients]);
+
   const merged = useMemo(() => {
     const used = new Set();
     const findCrtMatch = (row) => {
@@ -614,26 +638,55 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         return rowNameKeys(c.participant_name).some(k => rKeys.includes(k));
       });
     };
+    const isExcludedRow = (r) => rowKeys(r).some(k => excludedClientKeys.has(k));
 
     const out = rows.map((r, i) => {
       const ci = findCrtMatch(r);
       let crt = null;
       if (ci >= 0 && !used.has(ci)) { crt = crtRows[ci]; used.add(ci); }
       return { id: `e${i}`, ...r, crt, is_new: false };
+    }).filter(r => !isExcludedRow(r));
+
+    // The review covers the entire master list — add any master-list client
+    // the uploaded workbooks don't already cover, with their CRT data attached
+    // when a CRT row matches.
+    const covered = new Set();
+    out.forEach(r => rowKeys(r).forEach(k => covered.add(k)));
+    masterReviewClients.forEach((c) => {
+      const name = `${c.first_name || ''} ${c.last_name || ''}`.trim();
+      const keys = [];
+      const h = normHsid(c.compass_hsid);
+      if (h) keys.push(`h:${h}`);
+      buildClientNameKeys(c).forEach(k => { if (k) keys.push(`n:${k}`); });
+      if (keys.some(k => covered.has(k))) return;
+      keys.forEach(k => covered.add(k));
+      const row = { client_name: name, hsid: c.compass_hsid || '' };
+      const ci = findCrtMatch(row);
+      let crt = null;
+      if (ci >= 0 && !used.has(ci)) { crt = crtRows[ci]; used.add(ci); }
+      out.push({
+        id: `m${c.id}`,
+        ...row,
+        status: '', edas_completed: '', extra_notes: '', source_sheet: '',
+        crt, is_new: false,
+      });
     });
+
     crtRows.forEach((c, i) => {
       if (used.has(i)) return;
-      out.push({
+      const row = {
         id: `n${i}`,
         client_name: c.participant_name,
         hsid: c.hsid,
         status: '', edas_completed: '', extra_notes: '',
         source_sheet: '',
         crt: c, is_new: true,
-      });
+      };
+      if (isExcludedRow(row)) return;
+      out.push(row);
     });
     return out;
-  }, [rows, crtRows]);
+  }, [rows, crtRows, masterReviewClients, excludedClientKeys]);
 
   const marchMap = useMemo(() => {
     const m = new Map();
@@ -974,6 +1027,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()} className="gap-1">
             <Upload className="w-4 h-4" /> Upload Status
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setResetReviewOpen(true)} className="gap-1">
+            <RotateCcw className="w-4 h-4" /> Reset Review
+          </Button>
         </div>
       </div>
 
@@ -1143,6 +1199,31 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => { justConfirmedRef.current = true; }}>
               Confirm change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={resetReviewOpen} onOpenChange={setResetReviewOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Start a fresh cross-reference review?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Everyone moves out of the Updated and Completed — No action needed sections back into the main
+              Cross-Reference Clients list. Removed clients, comments, and cell edits are kept as they are.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setUpdated(new Set());
+                setCompleted(new Set());
+                setResetReviewOpen(false);
+                toast.success('Review reset — everyone is back in the main cross-reference list');
+              }}
+            >
+              Reset Review
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
