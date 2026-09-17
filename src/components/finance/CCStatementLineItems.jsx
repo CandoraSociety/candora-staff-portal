@@ -64,7 +64,7 @@ function LineItemRow({ item, onDeleted }) {
 
   return (
     <tr className="hover:bg-muted/30">
-      <td className="px-3 py-1.5 text-center text-xs text-muted-foreground align-middle w-10">{item.line_number ?? '—'}</td>
+      <td className="px-3 py-1.5 text-center text-xs text-muted-foreground align-middle w-24 font-mono">{item.ref_number ?? '—'}</td>
       <td className="px-3 py-1.5 text-xs text-muted-foreground whitespace-nowrap align-middle">
         {item.date ? format(parseISO(item.date), 'MMM d') : '—'}
       </td>
@@ -146,9 +146,13 @@ export default function CCStatementLineItems({ statement }) {
   });
 
   // Display line items in the same order the statement prints them
+  const refOrder = v => {
+    const n = Number(v?.ref_number);
+    return String(v?.ref_number ?? '') !== '' && Number.isFinite(n) ? n : 1e9;
+  };
   const items = useMemo(
     () => [...rawItems].sort((a, b) =>
-      (a.line_number ?? 1e9) - (b.line_number ?? 1e9) ||
+      refOrder(a) - refOrder(b) ||
       new Date(a.created_date) - new Date(b.created_date)),
     [rawItems]);
 
@@ -164,15 +168,16 @@ export default function CCStatementLineItems({ statement }) {
           properties: {
             items: {
               type: 'array',
+              description: 'EVERY transaction line from the statement transaction table, in the order printed. For each one, read its REF # and Trans.Date from the statement columns — never leave them blank. If Trans.Date is printed like "SEP 04", convert it to YYYY-MM-DD using the statement year.',
               items: {
                 type: 'object',
                 properties: {
-                  line_number: { type: 'number', description: 'The line/sequence number of this transaction in the order it appears on the statement — starts at 1 and counts every transaction line, including interest and payment lines' },
-                  date: { type: 'string', description: 'The transaction date as printed on the statement, in YYYY-MM-DD format' },
+                  ref_number: { type: 'string', description: 'The REF # printed on the statement for this transaction, exactly as shown (keep any leading zeros)' },
+                  trans_date: { type: 'string', description: 'The Trans.Date printed on the statement for this transaction, in YYYY-MM-DD format' },
                   description: { type: 'string', description: 'The transaction/line item description exactly as printed on the statement' },
                   amount: { type: 'number', description: 'The transaction amount as a number' },
                 },
-                required: ['line_number', 'description', 'amount'],
+                required: ['ref_number', 'trans_date', 'description', 'amount'],
               },
             },
           },
@@ -185,8 +190,8 @@ export default function CCStatementLineItems({ statement }) {
         .filter(i => !EXCLUDED_LINE_RE.test(i.description))
         .map(i => ({
           statement_id: statementId,
-          line_number: typeof i.line_number === 'number' ? i.line_number : Number(String(i.line_number ?? '').replace(/[^0-9]/g, '')) || null,
-          date: typeof i.date === 'string' ? (i.date.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null) : null,
+          ref_number: i.ref_number != null && String(i.ref_number).trim() !== '' ? String(i.ref_number).trim() : null,
+          date: typeof (i.trans_date ?? i.date) === 'string' ? ((i.trans_date ?? i.date).match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null) : null,
           description: i.description.trim(),
           amount: typeof i.amount === 'number' ? i.amount : Number(String(i.amount ?? '').replace(/[^0-9.\-]/g, '')) || 0,
         }));
@@ -268,7 +273,7 @@ export default function CCStatementLineItems({ statement }) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/20">
             <tr>
-              <th className="text-center px-3 py-1.5 font-semibold w-10">Line</th>
+              <th className="text-center px-3 py-1.5 font-semibold w-24">REF #</th>
               <th className="text-left px-3 py-1.5 font-semibold">Date</th>
               <th className="text-left px-3 py-1.5 font-semibold">Description</th>
               <th className="text-left px-3 py-1.5 font-semibold">Amount</th>

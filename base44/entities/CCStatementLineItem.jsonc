@@ -6,14 +6,14 @@
       "type": "string",
       "description": "Reference to the CCStatement this line item belongs to"
     },
-    "line_number": {
-      "type": "number",
-      "description": "Line number as it appears on the statement itself \u2014 auto-populated when reading the statement, counting every transaction line including interest and payment lines"
+    "ref_number": {
+      "type": "string",
+      "description": "REF # as printed on the card statement for this transaction \u2014 auto-populated when reading the statement"
     },
     "date": {
       "type": "string",
       "format": "date",
-      "description": "Transaction date as printed on the statement \u2014 auto-populated when reading the statement"
+      "description": "Trans.Date as printed on the card statement \u2014 auto-populated when reading the statement"
     },
     "description": {
       "type": "string",
