@@ -19,6 +19,7 @@ import ReceiptsBundleButton from '@/components/reimbursements/ReceiptsBundleButt
 import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
 import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
+import { funderCostOf } from '@/components/reimbursements/reimbursementDocumentHtml';
 
 const STATUS_STYLES = {
   pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
@@ -369,12 +370,13 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="text-left text-muted-foreground uppercase">
+                                  <th className="px-2 py-1.5 font-semibold">#</th>
                                   <th className="px-2 py-1.5 font-semibold">Date</th>
-                                  <th className="px-2 py-1.5 font-semibold">Description</th>
                                   <th className="px-2 py-1.5 font-semibold">Supplier</th>
+                                  <th className="px-2 py-1.5 font-semibold">Description</th>
                                   <th className="px-2 py-1.5 font-semibold">Program</th>
+                                  <th className="px-2 py-1.5 font-semibold text-right">Total (with GST)</th>
                                   <th className="px-2 py-1.5 font-semibold text-right">GST</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right">Total</th>
                                   <th className="px-2 py-1.5 font-semibold text-right bg-muted">1/2 GST</th>
                                   <th className="px-2 py-1.5 font-semibold text-right bg-muted">Funder Cost</th>
                                   <th className="px-2 py-1.5 font-semibold bg-muted">Account #</th>
@@ -384,13 +386,13 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
                                 </tr>
                               </thead>
                               <tbody>
-                                {items.map(e => (
+                                {items.map((e, i) => (
                                   <tr key={e.id} className="border-t border-border">
+                                    <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
                                     <td className="px-2 py-1.5 whitespace-nowrap">{fmtDate(e.date_incurred)}</td>
-                                    <td className="px-2 py-1.5">{e.description}</td>
                                     <td className="px-2 py-1.5">{e.supplier || '—'}</td>
+                                    <td className="px-2 py-1.5">{e.description}</td>
                                     <td className="px-2 py-1.5">{programLabel(e)}</td>
-                                    <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
                                     <td className="px-2 py-1.5 text-right font-medium">
                                       {fmt(e.total_cost)}
                                       {e.excluded_amount > 0 && (
@@ -400,6 +402,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
                                         >✂ −{fmt(e.excluded_amount * 1.05)}</span>
                                       )}
                                     </td>
+                                    <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
                                     <FinanceEntryFundingCells entry={e} mode={mode} />
                                     <td className="px-2 py-1.5 text-center">
                                       {e.receipt_url ? (
@@ -410,8 +413,18 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
                                     </td>
                                   </tr>
                                 ))}
+                                {items.length > 0 && (
+                                  <tr className="border-t-2 border-foreground/40 font-semibold">
+                                    <td colSpan={5} className="px-2 py-1.5 text-right uppercase text-muted-foreground">Column Totals</td>
+                                    <td className="px-2 py-1.5 text-right">{fmt(items.reduce((s, e) => s + (e.total_cost || 0), 0))}</td>
+                                    <td className="px-2 py-1.5 text-right">{fmt(items.reduce((s, e) => s + (e.gst || 0), 0))}</td>
+                                    <td className="px-2 py-1.5 text-right bg-muted">{fmt(items.reduce((s, e) => s + (e.gst || 0), 0) / 2)}</td>
+                                    <td className="px-2 py-1.5 text-right bg-muted">{fmt(items.reduce((s, e) => s + funderCostOf(e), 0))}</td>
+                                    <td colSpan={4} className="bg-muted" />
+                                  </tr>
+                                )}
                                 {items.length === 0 && (
-                                  <tr><td colSpan={12} className="px-2 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
+                                  <tr><td colSpan={13} className="px-2 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
                                 )}
                               </tbody>
                             </table>

@@ -10,7 +10,7 @@ export default function FinanceMasterCard() {
   return (
     <div className="space-y-6">
       <CCStatementsPanel />
-      <FinanceReimbursements mode="cc" />
+      <FinanceReimbursements mode="cc" hideSummary />
     </div>
   );
 }
