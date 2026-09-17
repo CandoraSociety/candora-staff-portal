@@ -106,7 +106,7 @@ export default function CCStatementsPanel() {
             title="Card statement"
             className="w-full h-[55vh] bg-white"
           />
-          <CCStatementLineItems statementId={viewing.id} />
+          <CCStatementLineItems statement={viewing} />
         </div>
       )}
 

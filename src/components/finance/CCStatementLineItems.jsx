@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X } from 'lucide-react';
+import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X, FileScan } from 'lucide-react';
 
 // One line item row on a monthly card statement — description + amount are
 // editable inline, and each line can have its own receipt attached.
@@ -118,19 +118,68 @@ function LineItemRow({ item, onDeleted }) {
 }
 
 // Line-items section shown under a statement in the Finance MasterCard tab —
-// inline editable rows, one receipt per line, exactly like reimbursement entries.
-export default function CCStatementLineItems({ statementId }) {
+// reads the actual line items out of the uploaded statement PDF and turns
+// them into editable rows, each with its own attachable receipt.
+export default function CCStatementLineItems({ statement }) {
+  const statementId = statement?.id;
   const qc = useQueryClient();
   const { toast } = useToast();
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [adding, setAdding] = useState(false);
+  const [extracting, setExtracting] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['cc-statement-lines', statementId],
     queryFn: () => base44.entities.CCStatementLineItem.filter({ statement_id: statementId }, 'created_date', 500),
     enabled: !!statementId,
   });
+
+  // Read the statement's own line items straight from the uploaded PDF and
+  // create an editable copy of them — one row per statement line.
+  const extractFromStatement = async () => {
+    setExtracting(true);
+    try {
+      const res = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url: statement.file_url,
+        json_schema: {
+          type: 'object',
+          properties: {
+            items: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  description: { type: 'string', description: 'The transaction/line item description exactly as printed on the statement' },
+                  amount: { type: 'number', description: 'The transaction amount as a number' },
+                },
+                required: ['description', 'amount'],
+              },
+            },
+          },
+          required: ['items'],
+        },
+      });
+      const rows = (res?.output?.items || res?.items || [])
+        .filter(i => i && typeof i.description === 'string' && i.description.trim())
+        .map(i => ({
+          statement_id: statementId,
+          description: i.description.trim(),
+          amount: typeof i.amount === 'number' ? i.amount : Number(String(i.amount ?? '').replace(/[^0-9.\-]/g, '')) || 0,
+        }));
+      if (rows.length === 0) {
+        toast({ title: 'No line items found', description: 'Add them manually below instead.', variant: 'destructive' });
+        return;
+      }
+      await base44.entities.CCStatementLineItem.bulkCreate(rows);
+      qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
+      toast({ title: `Read ${rows.length} line item${rows.length === 1 ? '' : 's'} from the statement`, description: 'Edit any row and attach its receipt below.' });
+    } catch (err) {
+      toast({ title: 'Could not read the statement', description: err?.message || 'Try adding the line items manually instead.', variant: 'destructive' });
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const addLine = async () => {
     if (!newDesc.trim()) { toast({ title: 'Enter a description for the line item.', variant: 'destructive' }); return; }
@@ -166,6 +215,15 @@ export default function CCStatementLineItems({ statementId }) {
           </span>
         )}
       </div>
+
+      {items.length === 0 && !isLoading && (
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b bg-muted/10">
+          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={extractFromStatement} disabled={extracting}>
+            {extracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileScan className="w-4 h-4" />} Read Line Items from Statement
+          </Button>
+          <p className="text-xs text-muted-foreground">Scans the uploaded statement and creates an editable row for each line — then attach a receipt to each one below.</p>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="px-4 py-3 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading line items…</div>
