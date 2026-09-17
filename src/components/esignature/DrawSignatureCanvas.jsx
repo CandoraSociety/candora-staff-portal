@@ -46,8 +46,9 @@ function pathStroke(ctx, pts) {
 }
 
 function drawStroke(ctx, stroke, color, shadow) {
-  const pts = stroke.points;
-  if (!pts.length) return;
+  const raw = stroke.points;
+  if (!raw.length) return;
+  const pts = stroke.smoothed ? smoothPoints(raw) : raw;
   ctx.save();
   if (shadow) {
     ctx.shadowColor = 'rgba(15, 23, 42, 0.45)';
@@ -68,12 +69,16 @@ function drawStroke(ctx, stroke, color, shadow) {
     ctx.lineWidth = base * 2.2;
     pathStroke(ctx, pts);
   } else {
-    // Variable-width styles: slower strokes draw thicker, like a real nib
+    // Variable-width styles: slower strokes draw thicker, like a real nib.
+    // Width always comes from the RAW points (your original pen speed), so
+    // smoothing out a shaky line never flattens the nib character of the style.
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1];
       const b = pts[i];
-      const dt = Math.max((b.t - a.t) || 8, 4);
-      const v = Math.hypot(b.x - a.x, b.y - a.y) / dt; // px per ms
+      const ra = raw[i - 1];
+      const rb = raw[i];
+      const dt = Math.max((rb.t - ra.t) || 8, 4);
+      const v = Math.hypot(rb.x - ra.x, rb.y - ra.y) / dt; // px per ms
       let f = 1;
       let alpha = 1;
       if (stroke.style === 'quill') {
@@ -159,10 +164,9 @@ export default function DrawSignatureCanvas({ onChange }) {
   };
 
   const tidyUp = () => {
-    strokesRef.current = strokesRef.current.map((s) => ({
-      ...s,
-      points: smoothPoints(s.points),
-    }));
+    // Marks each stroke as smoothed — the shaky path is straightened while the
+    // original pen speeds (and so the nib-style width variation) are preserved.
+    strokesRef.current = strokesRef.current.map((s) => (s.smoothed ? s : { ...s, smoothed: true }));
     redraw();
     emit();
   };
