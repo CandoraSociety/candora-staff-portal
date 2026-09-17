@@ -4,8 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X, FileScan } from 'lucide-react';
+import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X, FileScan, UserCheck } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import CCStaffReceiptPickerDialog from '@/components/finance/CCStaffReceiptPickerDialog';
+import { useCCReceiptSelection } from '@/components/finance/CCReceiptSelectionContext';
 
 // Statement lines that aren't purchases — skipped when reading the statement
 // (interest charges and payments made onto the credit card aren't receiptable)
@@ -13,7 +15,7 @@ const EXCLUDED_LINE_RE = /\binterest\b|\bpayment\b/i;
 
 // One line item row on a monthly card statement — description + amount are
 // editable inline, and each line can have its own receipt attached.
-function LineItemRow({ item, onDeleted }) {
+function LineItemRow({ item, onDeleted, onPickReceipt }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [description, setDescription] = useState(item.description || '');
@@ -113,6 +115,13 @@ function LineItemRow({ item, onDeleted }) {
                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />} Attach Receipt
               </Button>
               <input id={`receipt-${item.id}`} type="file" className="hidden" accept="application/pdf,image/*" onChange={attachReceipt} />
+              <Button
+                size="sm" variant="outline" className="h-7 px-2 gap-1.5 text-xs whitespace-nowrap"
+                onClick={() => onPickReceipt?.(item)}
+                title="Attach one of the receipts checked in the Staff MasterCard Receipts section"
+              >
+                <UserCheck className="w-3.5 h-3.5" /> Add from Staff Receipts
+              </Button>
             </>
           )}
         </div>
@@ -138,6 +147,8 @@ export default function CCStatementLineItems({ statement }) {
   const [newDate, setNewDate] = useState('');
   const [adding, setAdding] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [picking, setPicking] = useState(null); // statement line the staff-receipt picker is open on
+  const { remove: unselectReceipt } = useCCReceiptSelection();
 
   const { data: rawItems = [], isLoading } = useQuery({
     queryKey: ['cc-statement-lines', statementId],
@@ -236,6 +247,26 @@ export default function CCStatementLineItems({ statement }) {
     }
   };
 
+  // Attach a staff-checked receipt (Staff MasterCard Receipts section) to the
+  // statement line the picker was opened on
+  const pickReceipt = async entry => {
+    const line = picking;
+    setPicking(null);
+    if (!line || !entry?.receipt_url) return;
+    try {
+      await base44.entities.CCStatementLineItem.update(line.id, {
+        receipt_url: entry.receipt_url,
+        receipt_file_name: entry.description || 'Staff receipt',
+      });
+      unselectReceipt(entry.id);
+      qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
+      qc.invalidateQueries({ queryKey: ['cc-statement-lines-all'] });
+      toast({ title: 'Receipt attached', description: `“${entry.description || 'Receipt'}” added to line${line.ref_number ? ` #${line.ref_number}` : ''}.` });
+    } catch (err) {
+      toast({ title: 'Could not attach receipt', description: err?.message, variant: 'destructive' });
+    }
+  };
+
   const withReceipt = items.filter(i => i.receipt_url).length;
 
   return (
@@ -282,7 +313,7 @@ export default function CCStatementLineItems({ statement }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {items.map(item => <LineItemRow key={item.id} item={item} />)}
+            {items.map(item => <LineItemRow key={item.id} item={item} onPickReceipt={setPicking} />)}
             <tr className="bg-muted/10">
               <td />
               <td className="px-3 py-1.5 w-32">
@@ -321,6 +352,8 @@ export default function CCStatementLineItems({ statement }) {
           </tbody>
         </table>
       )}
+
+      <CCStaffReceiptPickerDialog lineItem={picking} onClose={() => setPicking(null)} onPick={pickReceipt} />
     </div>
   );
 }

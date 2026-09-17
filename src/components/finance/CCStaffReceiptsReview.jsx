@@ -1,15 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Check, CheckCircle2, Paperclip, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Check, CheckCircle2, ChevronDown, ChevronRight, Paperclip, Users } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import ReceiptsBundleButton from '@/components/reimbursements/ReceiptsBundleButton';
+import { useCCReceiptSelection } from '@/components/finance/CCReceiptSelectionContext';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const fmtDate = d => d ? format(parseISO(d), 'MMM d, yyyy') : '—';
@@ -28,11 +30,20 @@ const STATUS_STYLES = {
 export default function CCStaffReceiptsReview() {
   const qc = useQueryClient();
   const { user } = useCurrentUser();
+  const { selected, toggle: toggleSelected } = useCCReceiptSelection();
+  const [expanded, setExpanded] = useState({});
 
   const { data: submissions = [], isLoading } = useQuery({
     queryKey: ['finance-cc-submissions'],
     queryFn: () => base44.entities.CCReceiptSubmission.list('-submitted_date', 200),
   });
+
+  // Line items across all statements — lets us flag receipts already attached to a statement
+  const { data: allLines = [] } = useQuery({
+    queryKey: ['cc-statement-lines-all'],
+    queryFn: () => base44.entities.CCStatementLineItem.list('-created_date', 1000),
+  });
+  const usedUrls = useMemo(() => new Set(allLines.map(l => l.receipt_url).filter(Boolean)), [allLines]);
 
   const { data: entries = [] } = useQuery({
     queryKey: ['finance-cc-entries'],
@@ -75,8 +86,11 @@ export default function CCStaffReceiptsReview() {
         <Users className="h-4 w-4 text-primary" />
         <h3 className="font-semibold text-sm">Staff MasterCard Receipts</h3>
         <p className="text-xs text-muted-foreground hidden md:block">
-          Receipts submitted by staff — check them off against the card statement above, then mark them reviewed.
+          Expand a submission and check the receipts, then press “Add from Staff Receipts” on a statement line item to attach them. Mark submissions reviewed once everything is in.
         </p>
+        {Object.keys(selected).length > 0 && (
+          <Badge className="bg-primary text-primary-foreground ml-auto">{Object.keys(selected).length} checked</Badge>
+        )}
       </div>
 
       {isLoading ? (
@@ -103,11 +117,18 @@ export default function CCStaffReceiptsReview() {
                 const items = entriesByForm[s.id] || [];
                 const count = s.entry_count || items.length;
                 const withFile = items.filter(e => e.receipt_url).length;
+                const open = !!expanded[s.id];
                 return (
-                  <tr key={s.id} className="hover:bg-muted/30">
+                  <React.Fragment key={s.id}>
+                  <tr className="hover:bg-muted/30">
                     <td className="px-4 py-2">
-                      <div className="font-medium">{s.requester_name || '—'}</div>
-                      <div className="text-xs text-muted-foreground">{s.requester_email || ''}</div>
+                      <button type="button" className="inline-flex items-start gap-2 text-left" onClick={() => setExpanded(x => ({ ...x, [s.id]: !x[s.id] }))} title={open ? 'Hide receipts' : 'Show receipts'}>
+                        {open ? <ChevronDown className="w-4 h-4 text-muted-foreground mt-0.5" /> : <ChevronRight className="w-4 h-4 text-muted-foreground mt-0.5" />}
+                        <span>
+                          <span className="block font-medium">{s.requester_name || '—'}</span>
+                          <span className="block text-xs text-muted-foreground">{s.requester_email || ''}</span>
+                        </span>
+                      </button>
                     </td>
                     <td className="px-4 py-2 font-mono text-xs whitespace-nowrap">{s.reference_code || '—'}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{fmtDate(s.submitted_date || s.date_requested)}</td>
@@ -135,6 +156,45 @@ export default function CCStaffReceiptsReview() {
                       </div>
                     </td>
                   </tr>
+                  {open && (
+                    <tr className="bg-muted/10">
+                      <td colSpan={7} className="px-10 py-3">
+                        {items.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No receipts found for this submission.</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {items.map(e => {
+                              const onStatement = !!e.receipt_url && usedUrls.has(e.receipt_url);
+                              const checked = !!selected[e.id];
+                              return (
+                                <label
+                                  key={e.id}
+                                  className={`flex items-center gap-3 rounded-md border px-3 py-1.5 ${checked ? 'border-primary bg-primary/5' : onStatement ? 'border-success/40 bg-success/5' : 'border-border'} ${onStatement ? '' : 'cursor-pointer'}`}
+                                >
+                                  <Checkbox checked={checked} disabled={onStatement} onCheckedChange={() => !onStatement && toggleSelected(e)} />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate" title={e.description}>{e.description || 'Receipt'}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {e.date_incurred ? format(parseISO(e.date_incurred), 'MMM d, yyyy') : 'No date'}
+                                    </p>
+                                  </div>
+                                  <span className="text-sm font-semibold whitespace-nowrap">{fmt(e.total_cost)}</span>
+                                  {onStatement ? (
+                                    <Badge className="bg-green-100 text-green-800 whitespace-nowrap"><CheckCircle2 className="w-3 h-3 mr-1" />On statement</Badge>
+                                  ) : e.receipt_url ? (
+                                    <a href={e.receipt_url} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline whitespace-nowrap">View</a>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">No file</span>
+                                  )}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
