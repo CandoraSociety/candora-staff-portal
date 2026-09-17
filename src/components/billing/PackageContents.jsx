@@ -617,7 +617,7 @@ export default function PackageContents({ pkg, onViewInvoice }) {
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {pkg.invoice_id ? (
                       <Button variant="outline" size="sm" onClick={onViewInvoice}>
-                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> View / Print PDF
+                        <ExternalLink className="h-3.5 w-3.5 mr-1" /> View / Download PDF
                       </Button>
                     ) : (
                       <span className="text-xs text-slate-500">Generate in the Invoices tab</span>

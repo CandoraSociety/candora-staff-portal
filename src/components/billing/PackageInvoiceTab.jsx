@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, AlertCircle, Printer, Hash } from 'lucide-react';
+import { Loader2, AlertCircle, Download, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import InvoiceDocument from './InvoiceDocument';
 import InvoiceNumberDialog from './InvoiceNumberDialog';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { displayInvoiceNumber } from './invoiceNumber';
+import { buildInvoicePdfFromNode, cleanFileName, downloadBlob } from './packageContentsHelpers';
 
 const monthFirst = (ym) => {
   const [y, m] = String(ym || '').split('-').map(Number);
@@ -32,6 +33,8 @@ export default function PackageInvoiceTab({ pkg }) {
     : null;
   const dataMonth = end || start;
   const [showNumberDialog, setShowNumberDialog] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const invoiceWrapRef = useRef(null);
 
   // Linked Invoice record from the Invoices tab.
   const { data: linkedInvoice } = useQuery({
@@ -59,35 +62,25 @@ export default function PackageInvoiceTab({ pkg }) {
   // Notes are saved on the linked Invoice record (Invoices tab) — use those so
   // the package invoice is an exact duplicate of the Invoices-tab invoice.
   const adjustmentNotes = linkedInvoice?.adjustment_notes || [];
-  const handlePrint = () => {
-    const node = document.querySelector('.invoice-document');
+
+  // Render the on-screen invoice document into a real PDF file and download it
+  // directly — no pop-up window involved (pop-up blockers were silently
+  // killing the old print-window flow).
+  const handleDownload = async () => {
+    const node = invoiceWrapRef.current?.querySelector('.invoice-document');
     if (!node) {
       toast.error('Invoice is still loading — try again in a moment.');
       return;
     }
-    const printWin = window.open('', '_blank', 'width=900,height=1100');
-    if (!printWin) {
-      toast.error('Pop-up blocked — allow pop-ups to download the invoice.');
-      return;
+    setDownloading(true);
+    try {
+      const blob = await buildInvoicePdfFromNode(node);
+      downloadBlob(blob, cleanFileName(`Invoice ${format(monthFirst(dataMonth), 'MMMM yyyy')}.pdf`));
+    } catch {
+      toast.error('Could not generate the invoice PDF.');
+    } finally {
+      setDownloading(false);
     }
-    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map((el) => el.outerHTML)
-      .join('\n');
-    printWin.document.write(
-      `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice</title>\n${styles}\n` +
-      `<style>\n` +
-      `@page { size: letter; margin: 0.75in; }\n` +
-      `html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }\n` +
-      `.invoice-document { width: 100% !important; max-width: 100% !important; margin: 0 !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; }\n` +
-      `.invoice-document img { height: 96px !important; margin: 0 !important; max-width: 45% !important; object-fit: contain !important; }\n` +
-      `* { box-shadow: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }\n` +
-      `p, h1, h2, h3, h4, table, tr, img { break-inside: avoid !important; }\n` +
-      `</style></head><body>${node.outerHTML}</body></html>`
-    );
-    printWin.document.close();
-    printWin.focus();
-    printWin.onload = () => setTimeout(() => printWin.print(), 250);
-    setTimeout(() => { if (!printWin.closed) printWin.print(); }, 800);
   };
 
   // Number currently shown on the package invoice — prefills the edit dialog.
@@ -111,8 +104,8 @@ export default function PackageInvoiceTab({ pkg }) {
           <Button variant="outline" size="sm" onClick={() => setShowNumberDialog(true)} disabled={!dataMonth}>
             <Hash className="h-4 w-4 mr-2" /> Edit Invoice #
           </Button>
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" /> Print / Save PDF
+          <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
+            {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />} Download PDF
           </Button>
         </div>
         <InvoiceNumberDialog
@@ -123,7 +116,7 @@ export default function PackageInvoiceTab({ pkg }) {
           currentNumber={shownNumber}
           invoiceId={pkg.invoice_id}
         />
-        <div className="invoice-viewer-card rounded-xl border bg-card shadow">
+        <div ref={invoiceWrapRef} className="invoice-viewer-card rounded-xl border bg-card shadow">
           <div className="invoice-viewer-content pt-6">
             <InvoiceDocument
               data={snap}
@@ -172,11 +165,11 @@ export default function PackageInvoiceTab({ pkg }) {
   return (
     <div className="space-y-3">
       <div className="flex justify-end no-print">
-        <Button variant="outline" size="sm" onClick={handlePrint}>
-          <Printer className="h-4 w-4 mr-2" /> Print / Save PDF
+        <Button variant="outline" size="sm" onClick={handleDownload} disabled={downloading}>
+          {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />} Download PDF
         </Button>
       </div>
-      <div className="invoice-viewer-card rounded-xl border bg-card shadow">
+      <div ref={invoiceWrapRef} className="invoice-viewer-card rounded-xl border bg-card shadow">
         <div className="invoice-viewer-content pt-6">
           <InvoiceDocument
             data={liveData}
