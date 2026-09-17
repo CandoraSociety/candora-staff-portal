@@ -7,9 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { CreditCard, Upload, Loader2, Eye, Trash2, Download } from 'lucide-react';
+import { CreditCard, Upload, Loader2, Eye, Trash2, Download, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import FloatingWindow from '@/components/shared/FloatingWindow';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 
@@ -84,6 +83,26 @@ export default function CCStatementsPanel() {
           <Upload className="w-4 h-4" /> Upload Statement
         </Button>
       </div>
+
+      {viewing && (
+        <div className="border-b bg-muted/20">
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+            <Eye className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">{viewing.label || fmtMonth(viewing.statement_month)} — Statement</span>
+            <a href={viewing.file_url} target="_blank" rel="noopener" download={viewing.file_name || undefined} className="ml-auto">
+              <Button size="sm" variant="ghost" className="h-7 px-2 gap-1.5"><Download className="w-4 h-4" /> Download</Button>
+            </a>
+            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setViewing(null)} title="Close viewer">
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          <iframe
+            src={viewing.file_url}
+            title="Card statement"
+            className="w-full h-[70vh] bg-white"
+          />
+        </div>
+      )}
 
       {isLoading ? (
         <div className="px-4 py-6 text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading statements…</div>
@@ -175,24 +194,6 @@ export default function CCStatementsPanel() {
         </DialogContent>
       </Dialog>
 
-      <FloatingWindow
-        open={!!viewing}
-        onClose={() => setViewing(null)}
-        title={`Statement — ${viewing?.label || ''}`}
-        toolbar={
-          <a href={viewing?.file_url} download={viewing?.file_name || undefined}>
-            <Button size="sm" variant="ghost" className="h-7 px-2 gap-1.5">
-              <Download className="w-3.5 h-3.5" /> Download
-            </Button>
-          </a>
-        }
-      >
-        <iframe
-          src={viewing?.file_url}
-          title="Card statement"
-          className="absolute inset-0 w-full h-full bg-white"
-        />
-      </FloatingWindow>
     </Card>
   );
 }
