@@ -1,0 +1,36 @@
+{
+  "name": "CCStatement",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Display label for the statement (e.g. September 2026)"
+    },
+    "statement_month": {
+      "type": "string",
+      "description": "Statement month as YYYY-MM"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded statement file URL (PDF or image)"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original uploaded file name"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Name of the finance staff member who uploaded the statement"
+    },
+    "uploaded_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the statement was uploaded"
+    }
+  },
+  "required": [
+    "label",
+    "statement_month",
+    "file_url"
+  ]
+}
