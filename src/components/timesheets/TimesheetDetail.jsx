@@ -114,11 +114,16 @@ export default function TimesheetDetail({ timesheet }) {
         <p className="text-xs"><span className="text-muted-foreground">Employee notes: </span>{t.employee_notes}</p>
       )}
       {t.status !== 'pending' && (
-        <p className="text-xs text-muted-foreground">
-          {t.status === 'approved'
-            ? `Approved by ${t.approved_by_name} on ${t.approved_date}`
-            : `Rejected by ${t.approved_by_name} on ${t.approved_date}${t.rejection_reason ? ` — ${t.rejection_reason}` : ''}`}
-        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <p className="text-xs text-muted-foreground">
+            {t.status === 'approved'
+              ? `Approved by ${t.approved_by_name} on ${t.approved_date}`
+              : `Rejected by ${t.approved_by_name} on ${t.approved_date}${t.rejection_reason ? ` — ${t.rejection_reason}` : ''}`}
+          </p>
+          {t.status === 'approved' && t.supervisor_signature_url && (
+            <img src={t.supervisor_signature_url} alt="Supervisor e-signature" className="h-10 object-contain" />
+          )}
+        </div>
       )}
     </div>
   );

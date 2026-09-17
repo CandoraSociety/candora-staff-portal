@@ -15,8 +15,8 @@ import { buildReimbursementDocumentHtml } from './reimbursementDocumentHtml';
 
 // "Open" button — shows the full reimbursement document in a viewer with
 // Save (print / save as PDF) and Share (email the document) options.
-// No signature prompt: signatures come from the form record when there is one,
-// and for unsubmitted compilations the opening staff member's name fills the signature line.
+// No signature prompt: signatures come from the form record when there is one —
+// the Staff e-Signature line stays blank until the form is actually signed at submission.
 // editable (finance) — Account # / Funder # become editable in the viewer and
 // a "Save Fields" action writes the typed values back to the receipt entries.
 export default function OpenReimbursementButton({ entries, form, mode = 'reimbursement', editable = false }) {
@@ -51,7 +51,6 @@ export default function OpenReimbursementButton({ entries, form, mode = 'reimbur
       mode,
       viewerName,
       etransferEmail,
-      staffSignature: form ? '' : displayName(user),
     }));
     setSentTo('');
     setShareError('');

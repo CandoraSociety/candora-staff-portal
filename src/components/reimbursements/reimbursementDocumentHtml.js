@@ -56,6 +56,14 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
   const halfGstTotal = gstTotal / 2;
   const funderCostTotal = sortedEntries.reduce((s, e) => s + funderCostOf(e), 0);
 
+  // Signature cell — renders the captured e-signature image (which embeds the
+  // verification ID and timestamp) when one was captured at signing, falling
+  // back to the typed name for legacy records.
+  const sigCell = (text, url, label) => `
+      <div class="line">${url
+        ? `<img class="sig-img" src="${escAttr(url)}" alt="e-Signature — ${escAttr(label)}" />`
+        : `<span class="signed">${esc(text || '')}</span>`}<div class="rule">${label}</div></div>`;
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -97,6 +105,7 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
     .sig .line { flex: 1; font-size: 8.5pt; color: #555; }
     .sig .rule { border-top: 1px solid #333; margin-top: 10px; padding-top: 4px; }
     .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; display: block; min-height: 26px; }
+    .sig .sig-img { height: 54px; max-width: 100%; object-fit: contain; display: block; }
     .footnote { margin-top: 22px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
 </head>
@@ -154,9 +163,9 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
   </div>
 
   <div class="sig">
-    <div class="line"><span class="signed">${esc(form?.staff_signature || staffSignature)}</span><div class="rule">Staff e-Signature</div></div>
-    <div class="line"><span class="signed">${esc(form?.supervisor_signature || form?.approved_by || '')}</span><div class="rule">Approved by</div></div>
-    <div class="line"><span class="signed">${esc(form?.finance_signature || '')}</span><div class="rule">Financial Officer Approval</div></div>
+    ${sigCell(form?.staff_signature || staffSignature, form?.staff_signature_url, 'Staff e-Signature')}
+    ${sigCell(form?.supervisor_signature || form?.approved_by || '', form?.supervisor_signature_url, 'Approved by')}
+    ${sigCell(form?.finance_signature || '', form?.finance_signature_url, 'Financial Officer Approval')}
   </div>
 
   <div class="footnote">

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { BellRing, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import TimesheetDetail from '@/components/timesheets/TimesheetDetail';
+import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
+import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { ymd } from '@/lib/payPeriods';
 
 // Highly visible banner on the main Dashboard for supervisors:
@@ -17,6 +19,7 @@ export default function SupervisorTimesheetAlerts({ user }) {
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState('');
   const [acting, setActing] = useState(false);
+  const [signTarget, setSignTarget] = useState(null); // timesheet awaiting the supervisor's e-signature
 
   const { data: pending = [] } = useQuery({
     queryKey: ['timesheets', 'pending'],
@@ -29,17 +32,18 @@ export default function SupervisorTimesheetAlerts({ user }) {
 
   if (!mine.length) return null;
 
-  const act = async (t, status) => {
+  const act = async (t, status, sigPatch = {}) => {
     setActing(true);
     try {
       await base44.entities.Timesheet.update(t.id, status === 'approved'
-        ? { status, approved_by_name: user.full_name, approved_by_email: user.email, approved_date: ymd(Date.now()) }
+        ? { status, approved_by_name: user.full_name, approved_by_email: user.email, approved_date: ymd(Date.now()), supervisor_signature: user.full_name, ...sigPatch }
         : { status, rejection_reason: reason });
       qc.invalidateQueries({ queryKey: ['timesheets'] });
       toast({ title: status === 'approved' ? 'Timesheet approved' : 'Timesheet rejected' });
       setRejectingId(null);
       setReason('');
       setExpandedId(null);
+      setSignTarget(null);
     } finally {
       setActing(false);
     }
@@ -86,12 +90,22 @@ export default function SupervisorTimesheetAlerts({ user }) {
             </div>
           ) : (
             <div className="flex gap-2">
-              <Button size="sm" disabled={acting} onClick={() => act(t, 'approved')}><Check className="w-4 h-4 mr-1" /> Approve</Button>
+              <Button size="sm" disabled={acting} onClick={() => setSignTarget(t)}><Check className="w-4 h-4 mr-1" /> Approve</Button>
               <Button size="sm" variant="outline" disabled={acting} onClick={() => setRejectingId(t.id)}>Reject</Button>
             </div>
           )}
         </div>
       ))}
+
+      <ESignatureCaptureDialog
+        open={!!signTarget}
+        onOpenChange={o => !o && setSignTarget(null)}
+        documentRef={`Timesheet approval — ${signTarget?.employee_name || ''} — ${signTarget?.pay_period_start || ''} → ${signTarget?.pay_period_end || ''}`}
+        onSigned={async ({ imageDataUrl }) => {
+          const url = await uploadSignatureImage(imageDataUrl);
+          await act(signTarget, 'approved', { supervisor_signature_url: url });
+        }}
+      />
     </div>
   );
 }

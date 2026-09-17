@@ -5,7 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Send, PenLine, X } from 'lucide-react';
+import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
+import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -18,9 +20,11 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
   const { user } = useCurrentUser();
   const [header, setHeader] = useState({
     payable_to: '', etransfer_email: '', requested_by: '',
-    date_requested: '', staff_signature: '',
+    date_requested: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [signOpen, setSignOpen] = useState(false);
+  const [signature, setSignature] = useState(null); // { log, imageDataUrl } from the e-signature verification
   const [error, setError] = useState('');
   const cfg = REIMBURSEMENT_MODES[mode];
   const entryEntity = base44.entities[cfg.entryEntity];
@@ -47,13 +51,13 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
   useEffect(() => {
     if (open) {
       setError('');
+      setSignature(null);
       const name = displayName(user);
       setHeader({
         payable_to: name,
         etransfer_email: user?.etransfer_email || user?.email || '',
         requested_by: name,
         date_requested: format(new Date(), 'yyyy-MM-dd'),
-        staff_signature: '',
       });
       // Pick up the latest saved e-transfer email from the profile
       base44.auth.me().then(u => {
@@ -72,7 +76,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
   const submit = async () => {
     setError('');
     if (!header.payable_to.trim()) { setError('Enter who the cheque is payable to.'); return; }
-    if (!header.staff_signature.trim()) { setError('Type your e-signature to submit.'); return; }
+    if (!signature) { setError('Add your e-signature before submitting.'); return; }
     setSubmitting(true);
     try {
       const form = await formEntity.create({
@@ -82,7 +86,8 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
         etransfer_email: header.etransfer_email,
         requested_by: header.requested_by || displayName(user),
         date_requested: header.date_requested || null,
-        staff_signature: header.staff_signature,
+        staff_signature: signature.log.signed_by || displayName(user),
+        staff_signature_url: await uploadSignatureImage(signature.imageDataUrl),
         entry_ids: sorted.map(e => e.id),
         entry_count: entries.length,
         amount: total,
@@ -100,6 +105,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
       qc.invalidateQueries({ queryKey: [cfg.myFormsKey] });
       qc.invalidateQueries({ queryKey: [cfg.financeFormsKey] });
       onOpenChange(false);
+      setSignature(null);
     } catch (err) {
       setError(err?.message || 'Failed to submit reimbursement.');
     } finally {
@@ -108,6 +114,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
@@ -158,8 +165,23 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
               <Input type="date" value={header.date_requested} onChange={e => setH('date_requested', e.target.value)} />
             </div>
             <div className="col-span-2">
-              <Label className="text-xs">e-Signature — type your full name *</Label>
-              <Input value={header.staff_signature} onChange={e => setH('staff_signature', e.target.value)} />
+              <Label className="text-xs">e-Signature *</Label>
+              {signature ? (
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2">
+                  <img src={signature.imageDataUrl} alt="Your e-signature" className="h-14 object-contain" />
+                  <div className="ml-auto flex items-center gap-1">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSignOpen(true)}>Re-sign</Button>
+                    <Button type="button" variant="ghost" size="sm" className="w-8 p-0" onClick={() => setSignature(null)}><X className="w-4 h-4" /></Button>
+                  </div>
+                </div>
+              ) : (
+                <Button type="button" variant="outline" className="gap-2" onClick={() => setSignOpen(true)}>
+                  <PenLine className="w-4 h-4" /> Sign with my e-Signature
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Verifies with your e-signature PIN/password — the signature stays off the form until you add it here.
+              </p>
             </div>
           </div>
 
@@ -194,5 +216,13 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ESignatureCaptureDialog
+      open={signOpen}
+      onOpenChange={setSignOpen}
+      documentRef={`${cfg.docTitle} — ${displayName(user)} — ${header.date_requested || format(new Date(), 'yyyy-MM-dd')}`}
+      onSigned={(res) => setSignature(res)}
+    />
+    </>
   );
 }

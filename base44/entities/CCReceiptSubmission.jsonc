@@ -29,11 +29,19 @@
     },
     "staff_signature": {
       "type": "string",
-      "description": "Staff e-Signature: typed name of the requesting staff member, captured at submission"
+      "description": "Staff e-Signature: name of the requesting staff member, captured at submission"
+    },
+    "staff_signature_url": {
+      "type": "string",
+      "description": "PNG image of the staff member's captured e-signature (with embedded verification ID and timestamp), printed on the Staff e-Signature line of the form"
     },
     "finance_signature": {
       "type": "string",
-      "description": "Finance e-Signature: typed name of the finance staff member who approved the form or confirmed payment \u2014 printed as 'Financial Officer Approval' on the downloadable form"
+      "description": "Finance e-Signature: name of the finance staff member who approved the form or confirmed payment \u2014 printed as 'Financial Officer Approval' on the downloadable form"
+    },
+    "finance_signature_url": {
+      "type": "string",
+      "description": "PNG image of the finance officer's captured e-signature \u2014 printed on the Financial Officer Approval line of the form"
     },
     "approved_by": {
       "type": "string",
@@ -122,7 +130,11 @@
     },
     "supervisor_signature": {
       "type": "string",
-      "description": "Supervisor e-Signature: typed name of the supervisor who approved the submission, captured at approval \u2014 printed on the Approved by line of the downloadable form"
+      "description": "Supervisor e-Signature: name of the supervisor who approved the submission, captured at approval \u2014 printed on the Approved by line of the downloadable form"
+    },
+    "supervisor_signature_url": {
+      "type": "string",
+      "description": "PNG image of the supervisor's captured e-signature \u2014 printed on the Approved by line of the downloadable form"
     },
     "supervisor_rejection_reason": {
       "type": "string",

@@ -15,6 +15,8 @@ import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
 import OpenReimbursementButton from '@/components/reimbursements/OpenReimbursementButton';
+import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
+import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
 
 const STATUS_STYLES = {
@@ -37,12 +39,12 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
-  const [approveTarget, setApproveTarget] = useState(null); // form pending e-signature approval
-  const [approveSig, setApproveSig] = useState('');
-  const [approveError, setApproveError] = useState('');
+  const [approveTarget, setApproveTarget] = useState(null); // form pending finance e-signature approval
   const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
   const [payApprover, setPayApprover] = useState(''); // approver recorded on the form when paid
-  const [paySig, setPaySig] = useState(''); // finance officer e-signature recorded when paid
+  const [paySignOpen, setPaySignOpen] = useState(false); // financial-officer e-sign dialog inside the pay flow
+  const [paySigUrl, setPaySigUrl] = useState(''); // uploaded finance officer signature image
+  const [paySigName, setPaySigName] = useState(''); // officer name captured with the signature
   const [payError, setPayError] = useState('');
   const [reverseTarget, setReverseTarget] = useState(null); // paid submission to reverse
   const cfg = REIMBURSEMENT_MODES[mode];
@@ -151,6 +153,8 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
     // Prefill from the form when it was already paid once (e.g. reversed and re-paid)
     setPayApprover(r.approved_by || '');
     setPayError('');
+    setPaySigUrl('');
+    setPaySigName('');
     setPayTarget(r);
   };
 
@@ -321,7 +325,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                             )}
                             {r.status === 'pending' && (
                               <>
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => { setApproveTarget(r); setApproveSig(''); setApproveError(''); }} title="Approve (e-sign)">
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setApproveTarget(r)} title="Approve (e-sign)">
                                   <Check className="w-4 h-4" />
                                 </Button>
                                 <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
@@ -414,41 +418,18 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
         </Card>
       )}
 
-      <Dialog open={!!approveTarget} onOpenChange={o => !o && setApproveTarget(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><PenLine className="w-4 h-4" />e-Sign the Approval</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Type your full name below to e-sign this reimbursement approval for {approveTarget?.requester_name}.
-              This signature will be recorded as the finance approval on the form.
-            </p>
-            <div>
-              <Label className="text-xs">e-Signature — type your full name *</Label>
-              <Input value={approveSig} onChange={e => { setApproveSig(e.target.value); setApproveError(''); }} placeholder={displayName(user)} />
-            </div>
-            {approveError && <p className="text-xs text-red-600">{approveError}</p>}
-          </div>
-          <DialogFooter>
-            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button
-              className="gap-2"
-              disabled={setStatus.isPending}
-              onClick={() => {
-                const sig = approveSig.trim();
-                if (!sig) { setApproveError('Type your full name to e-sign the approval.'); return; }
-                setStatus.mutate({ form: approveTarget, status: 'approved', patch: { finance_signature: sig } });
-                setApproveTarget(null);
-              }}
-            >
-              <Check className="w-4 h-4" />Approve &amp; Sign
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ESignatureCaptureDialog
+        open={!!approveTarget}
+        onOpenChange={o => !o && setApproveTarget(null)}
+        documentRef={`${cfg.docTitle} approval — ${approveTarget?.requester_name || ''}`}
+        onSigned={async ({ log, imageDataUrl }) => {
+          const url = await uploadSignatureImage(imageDataUrl);
+          setStatus.mutate({ form: approveTarget, status: 'approved', patch: { finance_signature: log.signed_by || displayName(user), finance_signature_url: url } });
+          setApproveTarget(null);
+        }}
+      />
 
-      <Dialog open={!!payTarget} onOpenChange={o => { if (!o) { setPayTarget(null); setPaySig(''); } }}>
+      <Dialog open={!!payTarget} onOpenChange={o => { if (!o) setPayTarget(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Banknote className="w-4 h-4" />Confirm Payment</DialogTitle>
@@ -466,13 +447,18 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
             </div>
             {payError && <p className="text-xs text-red-600">{payError}</p>}
             <div>
-              <Label className="xs">e-Signature — Financial Officer Approval *</Label>
-              <Input
-                value={paySig || payTarget?.finance_signature || ''}
-                onChange={e => { setPaySig(e.target.value); setPayError(''); }}
-                placeholder={displayName(user)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Typed name is printed on the Financial Officer Approval line of the form.</p>
+              <Label className="text-xs">e-Signature — Financial Officer Approval *</Label>
+              {paySigUrl ? (
+                <div className="flex items-center gap-2 rounded-lg border bg-white px-2 py-1">
+                  <img src={paySigUrl} alt="Financial Officer e-signature" className="h-12 object-contain" />
+                  <Button variant="ghost" size="sm" className="ml-auto" onClick={() => { setPaySigUrl(''); setPaySigName(''); setPayError(''); }}>Re-sign</Button>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setPaySignOpen(true)}>
+                  <PenLine className="w-4 h-4" /> Sign as Financial Officer
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">Verifies with your signature PIN/password and is printed on the Financial Officer Approval line of the form.</p>
             </div>
             <p className="text-sm text-muted-foreground">
               The Scotiabank window is open. Complete the e-transfer of{' '}
@@ -491,11 +477,11 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               disabled={setStatus.isPending}
               onClick={() => {
                 if (!payApprover) { setPayError('Select the approver.'); return; }
-                const sig = (paySig || payTarget?.finance_signature || '').trim();
-                if (!sig) { setPayError('Type your full name to e-sign as the Financial Officer.'); return; }
-                setStatus.mutate({ form: payTarget, status: 'paid', patch: { approved_by: payApprover, finance_signature: sig } });
+                if (!paySigUrl) { setPayError('Add your e-signature as the Financial Officer.'); return; }
+                setStatus.mutate({ form: payTarget, status: 'paid', patch: { approved_by: payApprover, finance_signature: paySigName, finance_signature_url: paySigUrl } });
                 setPayTarget(null);
-                setPaySig('');
+                setPaySigUrl('');
+                setPaySigName('');
               }}
             >
               <Check className="w-4 h-4" />OK — Mark as Paid
@@ -531,8 +517,19 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               <RotateCcw className="w-4 h-4" />Reverse to Processing
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+          </DialogContent>
+          </Dialog>
+
+          <ESignatureCaptureDialog
+          open={paySignOpen}
+          onOpenChange={setPaySignOpen}
+          documentRef={`${cfg.docTitle} payment — ${payTarget?.requester_name || ''}`}
+          onSigned={async ({ log, imageDataUrl }) => {
+          setPaySigUrl(await uploadSignatureImage(imageDataUrl));
+          setPaySigName(log.signed_by || displayName(user));
+          setPaySignOpen(false);
+          }}
+          />
+          </div>
+          );
+          }

@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Receipt, Check, X } from 'lucide-react';
 import OpenReimbursementButton from '@/components/reimbursements/OpenReimbursementButton';
+import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
+import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { ymd } from '@/lib/payPeriods';
 
 const MODES = [
@@ -23,9 +25,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
   const { toast } = useToast();
   const [rejectingId, setRejectingId] = useState(null);
   const [reason, setReason] = useState('');
-  const [approvingId, setApprovingId] = useState(null);
-  const [approveSig, setApproveSig] = useState('');
-  const [sigError, setSigError] = useState('');
+  const [signForm, setSignForm] = useState(null); // form awaiting the supervisor's e-signature
   const [acting, setActing] = useState(false);
 
   const { data: forms = [] } = useQuery({
@@ -64,7 +64,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
 
   if (!forms.length) return null;
 
-  const act = async (form, status, signature) => {
+  const act = async (form, status, signature, signatureUrl) => {
     setActing(true);
     try {
       const entity = base44.entities[form.formEntity];
@@ -74,6 +74,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
           supervisor_approved_date: ymd(Date.now()),
           supervisor_approved_by_name: user.full_name,
           supervisor_signature: signature,
+          supervisor_signature_url: signatureUrl || '',
         });
       } else {
         await entity.update(form.id, {
@@ -98,9 +99,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
       toast({ title: status === 'approved' ? 'Submission approved' : 'Submission rejected' });
       setRejectingId(null);
       setReason('');
-      setApprovingId(null);
-      setApproveSig('');
-      setSigError('');
+      setSignForm(null);
     } finally {
       setActing(false);
     }
@@ -138,23 +137,9 @@ export default function SupervisorReimbursementAlerts({ user }) {
                 <Button variant="destructive" size="sm" disabled={acting} onClick={() => act(f, 'rejected')}><X className="w-4 h-4 mr-1" /> Confirm rejection</Button>
                 <Button variant="ghost" size="sm" onClick={() => { setRejectingId(null); setReason(''); }}>Cancel</Button>
               </div>
-            ) : approvingId === f.id ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                  <Input className="flex-1" placeholder="e-Signature — type your full name" value={approveSig} onChange={e => { setApproveSig(e.target.value); setSigError(''); }} />
-                  <Button size="sm" disabled={acting} onClick={() => {
-                    const sig = approveSig.trim();
-                    if (!sig) { setSigError('Type your full name to e-sign the approval.'); return; }
-                    act(f, 'approved', sig);
-                  }}><Check className="w-4 h-4 mr-1" /> Sign &amp; Approve</Button>
-                  <Button variant="ghost" size="sm" onClick={() => { setApprovingId(null); setApproveSig(''); setSigError(''); }}>Cancel</Button>
-                </div>
-                {sigError && <p className="text-xs text-red-600">{sigError}</p>}
-                <p className="text-xs text-muted-foreground">Your e-signature is recorded on the Approved by line of the reimbursement form.</p>
-              </div>
             ) : (
               <div className="flex gap-2">
-                <Button size="sm" disabled={acting} onClick={() => setApprovingId(f.id)}><Check className="w-4 h-4 mr-1" /> Approve</Button>
+                <Button size="sm" disabled={acting} onClick={() => setSignForm(f)}><Check className="w-4 h-4 mr-1" /> Approve</Button>
                 <Button size="sm" variant="outline" disabled={acting} onClick={() => setRejectingId(f.id)}>Reject</Button>
               </div>
             )}
@@ -163,8 +148,19 @@ export default function SupervisorReimbursementAlerts({ user }) {
       })}
 
       <p className="text-xs text-muted-foreground">
-        Approving sends the submission on to the Finance portal. Finance cannot process a submission until you approve it.
+        Approving verifies your e-signature with your PIN/password and sends the submission on to the Finance portal. Finance cannot process a submission until you approve it.
       </p>
+
+      <ESignatureCaptureDialog
+        open={!!signForm}
+        onOpenChange={o => !o && setSignForm(null)}
+        documentRef={`${MODES.find(m => m.mode === signForm?.mode)?.label || 'Submission'} approval — ${signForm?.requester_name || ''}`}
+        onSigned={async ({ log, imageDataUrl }) => {
+          const url = await uploadSignatureImage(imageDataUrl);
+          await act(signForm, 'approved', user.full_name, url);
+          setSignForm(null);
+        }}
+      />
     </div>
   );
 }

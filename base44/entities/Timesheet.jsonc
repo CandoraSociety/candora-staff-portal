@@ -169,6 +169,14 @@
       "type": "string",
       "description": "Email of the supervisor who approved/rejected the timesheet"
     },
+    "supervisor_signature": {
+      "type": "string",
+      "description": "Supervisor e-Signature: name of the supervisor who approved the timesheet, captured at approval"
+    },
+    "supervisor_signature_url": {
+      "type": "string",
+      "description": "PNG image of the supervisor's captured e-signature (with embedded verification ID and timestamp), shown with the approval on the timesheet"
+    },
     "approved_date": {
       "type": "string",
       "format": "date",
