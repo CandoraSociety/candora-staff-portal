@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +14,23 @@ export default function FinancePathways() {
   const [tab, setTab] = useState('we');
   const [expandedPkg, setExpandedPkg] = useState(null);
   const [viewInvoicePkg, setViewInvoicePkg] = useState(null);
+  const invoiceViewRef = useRef(null);
+
+  // When the invoice view is toggled open it appears below the (tall) package
+  // contents table — bring it into view so the click visibly does something.
+  useEffect(() => {
+    if (viewInvoicePkg && invoiceViewRef.current) {
+      invoiceViewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [viewInvoicePkg]);
 
   // Finance only sees packages that have been approved or paid — earlier
-  // stages stay in Pathways Billing until they're finalized.
+  // stages stay in Pathways Billing until they're finalized. Distinct key —
+  // the Pathways Billing page uses ['invoice-packages'] with a different
+  // query, and this app keeps portals mounted in background tabs, so a
+  // shared key would let the two lists overwrite each other.
   const { data: packages = [], isLoading } = useQuery({
-    queryKey: ['invoice-packages'],
+    queryKey: ['invoice-packages', 'finance'],
     queryFn: () => base44.entities.InvoicePackage.filter({
       status: { $in: ['approved', 'paid'] },
     }, '-prepared_date', 50),
@@ -90,7 +102,11 @@ export default function FinancePathways() {
                         {isOpen && (
                           <div className="border-t p-4 bg-card space-y-4">
                             <PackageContents pkg={p} onViewInvoice={() => setViewInvoicePkg(viewInvoicePkg === p.id ? null : p.id)} />
-                            {viewInvoicePkg === p.id && <PackageInvoiceTab pkg={p} />}
+                            {viewInvoicePkg === p.id && (
+                              <div ref={invoiceViewRef}>
+                                <PackageInvoiceTab pkg={p} />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

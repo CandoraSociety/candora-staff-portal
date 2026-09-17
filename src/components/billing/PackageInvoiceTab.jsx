@@ -56,7 +56,11 @@ export default function PackageInvoiceTab({ pkg }) {
     enabled: !useSnapshot,
     staleTime: 0,
     gcTime: 0,
-    refetchOnMount: true,
+    // Reuse an in-flight / freshly fetched read (e.g. the one PackageContents
+    // starts in the Finance portal) instead of firing a second slow tracker
+    // read on mount. When no cached entry survives (gcTime 0, no observers),
+    // the mount still fetches fresh.
+    refetchOnMount: false,
   });
 
   // Notes are saved on the linked Invoice record (Invoices tab) — use those so
@@ -132,8 +136,9 @@ export default function PackageInvoiceTab({ pkg }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center gap-3 py-16">
         <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <p className="text-sm text-slate-500">Reading this month's invoice from the CRT tracker — this can take a few seconds…</p>
       </div>
     );
   }
