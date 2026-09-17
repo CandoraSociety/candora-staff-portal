@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Receipt, Search, Check, X, Banknote, ChevronDown, ChevronUp, ExternalLink, PenLine, CircleDollarSign, RotateCcw, Hourglass } from 'lucide-react';
+import { Receipt, Search, Check, X, Banknote, ExternalLink, PenLine, CircleDollarSign, RotateCcw, Hourglass } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
@@ -40,7 +40,6 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
   const { user } = useCurrentUser();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [expandedId, setExpandedId] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null); // form pending finance e-signature approval
   const [payTarget, setPayTarget] = useState(null); // submission awaiting payment confirmation
   const [payApprover, setPayApprover] = useState(''); // approver recorded on the form when paid
@@ -267,170 +266,146 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
               <thead className="border-b bg-muted/30">
                 <tr>
                   <th className="text-left px-3 py-2 font-semibold">Staff Member</th>
-                  <th className="text-left px-3 py-2 font-semibold">Reference</th>
-                  <th className="text-left px-3 py-2 font-semibold">Payable To</th>
-                  <th className="text-left px-3 py-2 font-semibold">Date Requested</th>
-                  <th className="text-center px-3 py-2 font-semibold">Entries</th>
-                  <th className="text-right px-3 py-2 font-semibold">Total Requested</th>
-                  <th className="text-center px-3 py-2 font-semibold">Status</th>
-                  <th className="text-center px-3 py-2 font-semibold">Action</th>
+                  <th className="text-left px-2 py-2 font-semibold w-8">#</th>
+                  <th className="text-left px-3 py-2 font-semibold">Date</th>
+                  <th className="text-left px-3 py-2 font-semibold">Supplier</th>
+                  <th className="text-left px-3 py-2 font-semibold min-w-[220px]">Description &amp; Receipt</th>
+                  <th className="text-left px-3 py-2 font-semibold">Program</th>
+                  <th className="text-right px-3 py-2 font-semibold">Total (with GST)</th>
+                  <th className="text-right px-3 py-2 font-semibold">GST</th>
+                  <th className="text-right px-2 py-2 font-semibold bg-muted">1/2 GST</th>
+                  <th className="text-right px-2 py-2 font-semibold bg-muted">Funder Cost</th>
+                  <th className="text-left px-2 py-2 font-semibold bg-muted">Account #</th>
+                  <th className="text-left px-2 py-2 font-semibold bg-muted">Funder #</th>
+                  <th className="text-center px-2 py-2 font-semibold bg-muted">Save</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filtered.map(r => {
                   const st = STATUS_STYLES[r.status] || STATUS_STYLES.pending;
-                  const items = entriesByForm[r.id] || [];
+                  // Entries laid out like the printed form — chronological, numbered per submission
+                  const items = [...(entriesByForm[r.id] || [])]
+                    .sort((a, b) => String(a.date_incurred || '').localeCompare(String(b.date_incurred || '')));
                   const count = r.entry_count || items.length;
-                  const expanded = expandedId === r.id;
+                  const total = items.reduce((s, e) => s + (e.total_cost || 0), 0);
+                  const gstTotal = items.reduce((s, e) => s + (e.gst || 0), 0);
+                  const funderTotal = items.reduce((s, e) => s + funderCostOf(e), 0);
                   return (
                     <React.Fragment key={r.id}>
-                      <tr className="hover:bg-muted/30">
-                        <td className="px-3 py-2">
-                          <div className="font-medium">{r.requester_name || '—'}</div>
-                          <div className="text-xs text-muted-foreground">{r.requester_email || ''}</div>
-                        </td>
-                        <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{r.reference_code || '—'}</td>
-                        <td className="px-3 py-2">
-                          <div className="font-medium">{r.payable_to || '—'}</div>
-                          {r.etransfer_email && <div className="text-xs text-muted-foreground">e-transfer: {r.etransfer_email}</div>}
-                        </td>
-                        <td className="px-3 py-2 whitespace-nowrap">{fmtDate(r.date_requested || r.submitted_date)}</td>
-                        <td className="px-3 py-2 text-center">
-                          <button
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                            onClick={() => setExpandedId(expanded ? null : r.id)}
-                          >
-                            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            {count} entr{count === 1 ? 'y' : 'ies'}
-                          </button>
-                        </td>
-                        <td className="px-3 py-2 text-right font-semibold">{fmt(r.amount)}</td>
-                        <td className="px-3 py-2 text-center"><Badge className={st.cls}>{st.label}</Badge></td>
-                        <td className="px-3 py-2 text-center">
-                          <div className="flex items-center justify-center gap-1 flex-wrap">
-                            {(r.status === 'pending' || r.status === 'processing') && (
-                              r.status === 'processing' ? (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-3 gap-1.5 font-semibold"
-                                  onClick={() => setStatus.mutate({ form: r, status: 'pending' })}
-                                  title="Remove from Processing — returns the submission to Pending so the staff member can edit it again"
-                                >
-                                  <RotateCcw className="w-4 h-4" />
-                                  Remove from Processing
+                      {/* Submission header — the form's identifying fields plus review actions */}
+                      <tr className="bg-muted/40">
+                        <td colSpan={13} className="px-3 py-2">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                            <span className="font-mono text-xs">{r.reference_code || '—'}</span>
+                            <span className="text-xs text-muted-foreground">
+                              Payable to <span className="font-medium text-foreground">{r.payable_to || '—'}</span>
+                              {r.etransfer_email && <> · e-transfer <span className="font-medium text-foreground">{r.etransfer_email}</span></>}
+                            </span>
+                            <span className="text-xs text-muted-foreground">Requested <span className="font-medium text-foreground">{fmtDate(r.date_requested || r.submitted_date)}</span></span>
+                            <span className="text-xs text-muted-foreground">{count} entr{count === 1 ? 'y' : 'ies'}</span>
+                            <span className="text-xs text-muted-foreground">Total Requested <span className="font-semibold text-foreground">{fmt(r.amount ?? total)}</span></span>
+                            <Badge className={st.cls}>{st.label}</Badge>
+                            <div className="ml-auto flex items-center gap-1 flex-wrap">
+                              {(r.status === 'pending' || r.status === 'processing') && (
+                                r.status === 'processing' ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-3 gap-1.5 font-semibold"
+                                    onClick={() => setStatus.mutate({ form: r, status: 'pending' })}
+                                    title="Remove from Processing — returns the submission to Pending so the staff member can edit it again"
+                                  >
+                                    <RotateCcw className="w-4 h-4" />
+                                    Remove from Processing
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    className="h-7 px-3 gap-1.5 font-semibold"
+                                    onClick={() => setStatus.mutate({ form: r, status: 'processing' })}
+                                    title="Mark as processing — locks the submission so the staff member can no longer edit it"
+                                  >
+                                    <CircleDollarSign className="w-4 h-4" />
+                                    Processing
+                                  </Button>
+                                )
+                              )}
+                              {r.status === 'pending' && (
+                                <>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setApproveTarget(r)} title="Approve (e-sign)">
+                                    <Check className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </>
+                              )}
+                              {(r.status === 'approved' || r.status === 'pending' || r.status === 'processing') && (
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => startPayment(r)} title="Pay — locks as Processing, opens Scotiabank, then confirm paid">
+                                  <Banknote className="w-4 h-4" /> Pay
                                 </Button>
-                              ) : (
-                                <Button
-                                  size="sm"
-                                  className="h-7 px-3 gap-1.5 font-semibold"
-                                  onClick={() => setStatus.mutate({ form: r, status: 'processing' })}
-                                  title="Mark as processing — locks the submission so the staff member can no longer edit it"
-                                >
-                                  <CircleDollarSign className="w-4 h-4" />
-                                  Processing
+                              )}
+                              {r.status === 'paid' && (
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-amber-700 hover:bg-amber-50" onClick={() => setReverseTarget(r)} title="Reverse paid status — returns the submission to Processing">
+                                  <RotateCcw className="w-4 h-4" /> Reverse
                                 </Button>
-                              )
-                            )}
-                            {r.status === 'pending' && (
-                              <>
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => setApproveTarget(r)} title="Approve (e-sign)">
-                                  <Check className="w-4 h-4" />
-                                </Button>
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ form: r, status: 'rejected', patch: { rejection_reason: 'Rejected by finance' } })} title="Reject">
-                                  <X className="w-4 h-4" />
-                                </Button>
-                              </>
-                            )}
-                            {(r.status === 'approved' || r.status === 'pending' || r.status === 'processing') && (
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-green-700 hover:bg-green-50" onClick={() => startPayment(r)} title="Pay — locks as Processing, opens Scotiabank, then confirm paid">
-                                <Banknote className="w-4 h-4" /> Pay
-                              </Button>
-                            )}
-                            {r.status === 'paid' && (
-                              <Button size="sm" variant="ghost" className="h-7 px-2 text-amber-700 hover:bg-amber-50" onClick={() => setReverseTarget(r)} title="Reverse paid status — returns the submission to Processing">
-                                <RotateCcw className="w-4 h-4" /> Reverse
-                              </Button>
-                            )}
-                            <OpenReimbursementButton entries={items} form={r} mode={mode} editable />
-                            <ReceiptsBundleButton entries={items} form={r} docTitle={cfg.docTitle} />
+                              )}
+                              <OpenReimbursementButton entries={items} form={r} mode={mode} editable />
+                              <ReceiptsBundleButton entries={items} form={r} docTitle={cfg.docTitle} />
+                            </div>
                           </div>
+                          {(r.finance_signature || r.approved_by) && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {r.approved_by && <>Approved by <span className="font-medium">{r.approved_by}</span></>}
+                              {r.approved_by && r.finance_signature && ' · '}
+                              {r.finance_signature && <>Finance e-Signature: <span className="font-medium italic">{r.finance_signature}</span></>}
+                            </p>
+                          )}
                         </td>
                       </tr>
-                      {expanded && (
-                        <tr className="bg-muted/20">
-                          <td colSpan={8} className="px-3 py-2">
-                            {(r.finance_signature || r.approved_by) && (
-                              <p className="text-xs text-muted-foreground mb-2">
-                                {r.approved_by && <>Approved by <span className="font-medium">{r.approved_by}</span></>}
-                                {r.approved_by && r.finance_signature && ' · '}
-                                {r.finance_signature && <>Finance e-Signature: <span className="font-medium italic">{r.finance_signature}</span></>}
-                              </p>
-                            )}
-                            <table className="w-full text-xs">
-                              <thead>
-                                <tr className="text-left text-muted-foreground uppercase">
-                                  <th className="px-2 py-1.5 font-semibold">#</th>
-                                  <th className="px-2 py-1.5 font-semibold">Date</th>
-                                  <th className="px-2 py-1.5 font-semibold">Supplier</th>
-                                  <th className="px-2 py-1.5 font-semibold">Description</th>
-                                  <th className="px-2 py-1.5 font-semibold">Program</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right">Total (with GST)</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right">GST</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted">1/2 GST</th>
-                                  <th className="px-2 py-1.5 font-semibold text-right bg-muted">Funder Cost</th>
-                                  <th className="px-2 py-1.5 font-semibold bg-muted">Account #</th>
-                                  <th className="px-2 py-1.5 font-semibold bg-muted">Funder #</th>
-                                  <th className="px-2 py-1.5 font-semibold text-center bg-muted">Save</th>
-                                  <th className="px-2 py-1.5 font-semibold text-center">Receipt</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {items.map((e, i) => (
-                                  <tr key={e.id} className="border-t border-border">
-                                    <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
-                                    <td className="px-2 py-1.5 whitespace-nowrap">{fmtDate(e.date_incurred)}</td>
-                                    <td className="px-2 py-1.5">{e.supplier || '—'}</td>
-                                    <td className="px-2 py-1.5">{e.description}</td>
-                                    <td className="px-2 py-1.5">{programLabel(e)}</td>
-                                    <td className="px-2 py-1.5 text-right font-medium">
-                                      {fmt(e.total_cost)}
-                                      {e.excluded_amount > 0 && (
-                                        <span
-                                          className="block text-[10px] font-normal text-amber-600"
-                                          title={e.excluded_description ? `Personal item excluded: ${e.excluded_description}` : 'Personal item excluded'}
-                                        >✂ −{fmt(e.excluded_amount * 1.05)}</span>
-                                      )}
-                                    </td>
-                                    <td className="px-2 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
-                                    <FinanceEntryFundingCells entry={e} mode={mode} />
-                                    <td className="px-2 py-1.5 text-center">
-                                      {e.receipt_url ? (
-                                        <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline">
-                                          <ExternalLink className="w-3 h-3" />View
-                                        </a>
-                                      ) : <span className="text-muted-foreground">—</span>}
-                                    </td>
-                                  </tr>
-                                ))}
-                                {items.length > 0 && (
-                                  <tr className="border-t-2 border-foreground/40 font-semibold">
-                                    <td colSpan={5} className="px-2 py-1.5 text-right uppercase text-muted-foreground">Column Totals</td>
-                                    <td className="px-2 py-1.5 text-right">{fmt(items.reduce((s, e) => s + (e.total_cost || 0), 0))}</td>
-                                    <td className="px-2 py-1.5 text-right">{fmt(items.reduce((s, e) => s + (e.gst || 0), 0))}</td>
-                                    <td className="px-2 py-1.5 text-right bg-muted">{fmt(items.reduce((s, e) => s + (e.gst || 0), 0) / 2)}</td>
-                                    <td className="px-2 py-1.5 text-right bg-muted">{fmt(items.reduce((s, e) => s + funderCostOf(e), 0))}</td>
-                                    <td colSpan={4} className="bg-muted" />
-                                  </tr>
-                                )}
-                                {items.length === 0 && (
-                                  <tr><td colSpan={13} className="px-2 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
-                                )}
-                              </tbody>
-                            </table>
+                      {items.map((e, i) => (
+                        <tr key={e.id} className="hover:bg-muted/30">
+                          <td className="px-3 py-1.5">
+                            <div className="font-medium">{r.requester_name || '—'}</div>
+                            <div className="text-xs text-muted-foreground">{r.requester_email || ''}</div>
                           </td>
+                          <td className="px-2 py-1.5 text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-1.5 whitespace-nowrap">{fmtDate(e.date_incurred)}</td>
+                          <td className="px-3 py-1.5">{e.supplier || '—'}</td>
+                          <td className="px-3 py-1.5">
+                            {e.description}
+                            {e.excluded_amount > 0 && (
+                              <span
+                                className="block text-[10px] text-amber-600"
+                                title={e.excluded_description ? `Personal item excluded: ${e.excluded_description}` : 'Personal item excluded'}
+                              >✂ {fmt(e.excluded_amount * 1.05)} personal item excluded{e.excluded_description ? ` (${e.excluded_description})` : ''}</span>
+                            )}
+                            {e.receipt_url ? (
+                              <a href={e.receipt_url} target="_blank" rel="noopener noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                                <ExternalLink className="w-3 h-3" />Receipt
+                              </a>
+                            ) : (
+                              <span className="block text-[10px] italic text-muted-foreground">No receipt attached</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-1.5">{programLabel(e) || '—'}</td>
+                          <td className="px-3 py-1.5 text-right font-medium">{fmt(e.total_cost)}</td>
+                          <td className="px-3 py-1.5 text-right">{e.gst ? fmt(e.gst) : '—'}</td>
+                          <FinanceEntryFundingCells entry={e} mode={mode} />
                         </tr>
+                      ))}
+                      {items.length === 0 && (
+                        <tr><td colSpan={13} className="px-3 py-2 text-center text-muted-foreground">No entry details available for this form.</td></tr>
                       )}
+                      {/* Column totals — same as the printed form */}
+                      <tr className="border-t-2 border-foreground/40 font-semibold">
+                        <td colSpan={6} className="px-3 py-1.5 text-right text-xs uppercase text-muted-foreground">Column Totals</td>
+                        <td className="px-3 py-1.5 text-right">{fmt(total)}</td>
+                        <td className="px-3 py-1.5 text-right">{fmt(gstTotal)}</td>
+                        <td className="px-2 py-1.5 text-right bg-muted">{fmt(gstTotal / 2)}</td>
+                        <td className="px-2 py-1.5 text-right bg-muted">{fmt(funderTotal)}</td>
+                        <td colSpan={3} className="bg-muted" />
+                      </tr>
                     </React.Fragment>
                   );
                 })}
