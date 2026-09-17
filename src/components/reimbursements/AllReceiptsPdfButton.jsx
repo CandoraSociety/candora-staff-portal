@@ -130,7 +130,15 @@ async function buildReceiptsPdf(entries, form, docTitle) {
 
   const bytes = await out.save();
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-  window.open(url, '_blank');
+  // window.open after async work gets silently blocked by popup blockers —
+  // an anchor click on the blob URL is not treated as a popup.
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
