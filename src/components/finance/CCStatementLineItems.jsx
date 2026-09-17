@@ -12,11 +12,12 @@ const EXCLUDED_LINE_RE = /\binterest\b|\bpayment\b/i;
 
 // One line item row on a monthly card statement — description + amount are
 // editable inline, and each line can have its own receipt attached.
-function LineItemRow({ item, index, onDeleted }) {
+function LineItemRow({ item, onDeleted }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [description, setDescription] = useState(item.description || '');
   const [amount, setAmount] = useState(item.amount ?? '');
+  const [lineNumber, setLineNumber] = useState(item.line_number ?? '');
   const [uploading, setUploading] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
@@ -36,6 +37,9 @@ function LineItemRow({ item, index, onDeleted }) {
   const saveField = () => {
     const patch = {};
     if (description !== (item.description || '')) patch.description = description;
+    const numLine = lineNumber === '' || lineNumber === null ? null : Number(lineNumber);
+    const origLine = item.line_number ?? null;
+    if (numLine !== origLine && !(Number.isNaN(numLine) && origLine === null)) patch.line_number = Number.isNaN(numLine) ? origLine : numLine;
     const numAmount = amount === '' || amount === null ? null : Number(amount);
     const origAmount = item.amount ?? null;
     if (numAmount !== origAmount && !(Number.isNaN(numAmount) && origAmount === null)) patch.amount = Number.isNaN(numAmount) ? origAmount : numAmount;
@@ -63,7 +67,17 @@ function LineItemRow({ item, index, onDeleted }) {
 
   return (
     <tr className="hover:bg-muted/30">
-      <td className="px-3 py-1.5 text-center text-xs text-muted-foreground align-middle w-10">{index}</td>
+      <td className="px-3 py-1.5 w-14">
+        <Input
+          className="h-8 text-sm text-center"
+          type="number"
+          value={lineNumber}
+          onChange={e => setLineNumber(e.target.value)}
+          onBlur={saveField}
+          title="Line number as printed on the statement"
+          placeholder="—"
+        />
+      </td>
       <td className="px-3 py-1.5">
         <Input
           className="h-8 text-sm"
@@ -131,6 +145,7 @@ export default function CCStatementLineItems({ statement }) {
   const { toast } = useToast();
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
+  const [newLineNumber, setNewLineNumber] = useState('');
   const [adding, setAdding] = useState(false);
   const [extracting, setExtracting] = useState(false);
 
@@ -155,10 +170,11 @@ export default function CCStatementLineItems({ statement }) {
               items: {
                 type: 'object',
                 properties: {
+                  line_number: { type: 'number', description: 'The line/sequence number of this transaction in the order it appears on the statement — starts at 1 and counts every transaction line, including interest and payment lines' },
                   description: { type: 'string', description: 'The transaction/line item description exactly as printed on the statement' },
                   amount: { type: 'number', description: 'The transaction amount as a number' },
                 },
-                required: ['description', 'amount'],
+                required: ['line_number', 'description', 'amount'],
               },
             },
           },
@@ -171,6 +187,7 @@ export default function CCStatementLineItems({ statement }) {
         .filter(i => !EXCLUDED_LINE_RE.test(i.description))
         .map(i => ({
           statement_id: statementId,
+          line_number: typeof i.line_number === 'number' ? i.line_number : Number(String(i.line_number ?? '').replace(/[^0-9]/g, '')) || null,
           description: i.description.trim(),
           amount: typeof i.amount === 'number' ? i.amount : Number(String(i.amount ?? '').replace(/[^0-9.\-]/g, '')) || 0,
         }));
@@ -199,11 +216,13 @@ export default function CCStatementLineItems({ statement }) {
     try {
       await base44.entities.CCStatementLineItem.create({
         statement_id: statementId,
+        line_number: newLineNumber === '' ? null : Number(newLineNumber),
         description: newDesc.trim(),
         amount: Number(newAmount),
       });
       setNewDesc('');
       setNewAmount('');
+      setNewLineNumber('');
       qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
     } catch (err) {
       toast({ title: 'Could not add line item', description: err?.message, variant: 'destructive' });
@@ -242,7 +261,7 @@ export default function CCStatementLineItems({ statement }) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/20">
             <tr>
-              <th className="text-center px-3 py-1.5 font-semibold w-10">#</th>
+              <th className="text-center px-3 py-1.5 font-semibold w-14">#</th>
               <th className="text-left px-3 py-1.5 font-semibold">Description</th>
               <th className="text-left px-3 py-1.5 font-semibold">Amount</th>
               <th className="text-left px-3 py-1.5 font-semibold">Receipt</th>
@@ -250,9 +269,18 @@ export default function CCStatementLineItems({ statement }) {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {items.map((item, idx) => <LineItemRow key={item.id} item={item} index={idx + 1} />)}
+            {items.map(item => <LineItemRow key={item.id} item={item} />)}
             <tr className="bg-muted/10">
-              <td />
+              <td className="px-3 py-1.5 w-14">
+                <Input
+                  className="h-8 text-sm text-center"
+                  type="number"
+                  placeholder="#"
+                  value={newLineNumber}
+                  onChange={e => setNewLineNumber(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addLine()}
+                />
+              </td>
               <td className="px-3 py-1.5">
                 <Input
                   className="h-8 text-sm"

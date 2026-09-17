@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Reference to the CCStatement this line item belongs to"
     },
+    "line_number": {
+      "type": "number",
+      "description": "Line number as it appears on the statement itself (the transaction's position in the statement's numbering), set automatically when reading the statement and editable per row"
+    },
     "description": {
       "type": "string",
       "description": "Line item description (transaction from the card statement)"
