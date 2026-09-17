@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Loader2 } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { useToast } from '@/components/ui/use-toast';
 
 // Fetch a receipt and return it either as normalized PNG image bytes (any
 // browser-renderable image format) or as the original PDF bytes.
@@ -42,7 +43,19 @@ async function fetchReceipt(url) {
 }
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
-const truncate = (s, n) => (s && s.length > n ? `${s.slice(0, n - 1)}…` : s || '');
+
+// pdf-lib's standard fonts can only encode WinAnsi characters — any smart
+// quotes/dashes/emoji in user-entered receipt text would throw and kill the
+// whole build, so normalize text before drawing it.
+const safe = s => (s || '')
+  .replace(/[\u2018\u2019\u201A\u2032]/g, "'")
+  .replace(/[\u201C\u201D\u201E]/g, '"')
+  .replace(/\u2026/g, '...')
+  .replace(/[\u2013\u2014\u2212]/g, '-')
+  .replace(/[\u00B7\u2022]/g, '-')
+  .replace(/[^\x00-\x7F\xA0-\xFF]/g, '');
+
+const truncate = (s, n) => (s && s.length > n ? `${s.slice(0, n - 1)}...` : s || '');
 
 // Builds one PDF containing every receipt attached to a reimbursement
 // submission — image receipts get their own letter page, PDF receipts are
@@ -89,7 +102,7 @@ async function buildReceiptsPdf(entries, form, docTitle) {
     const w = png.width * scale;
     const h = png.height * scale;
 
-    page.drawText(truncate(label, 110), {
+    page.drawText(safe(truncate(label, 110)), {
       x: margin, y: page.getHeight() - margin - 12,
       size: 11, font: boldFont, color: rgb(0.1, 0.1, 0.1), maxWidth: maxW,
     });
@@ -103,7 +116,7 @@ async function buildReceiptsPdf(entries, form, docTitle) {
     const margin = 40;
     page.drawText('Receipt not embedded', { x: margin, y: 720, size: 12, font: boldFont });
     page.drawText(
-      `Entry: ${truncate(`${e.description || '—'}${e.date_incurred ? ` (${e.date_incurred})` : ''}`, 80)}\nThis receipt file could not be fetched or read. Open the original from the reimbursement entry table in the portal.`,
+      safe(`Entry: ${truncate(`${e.description || '-'}${e.date_incurred ? ` (${e.date_incurred})` : ''}`, 80)}\nThis receipt file could not be fetched or read. Open the original from the reimbursement entry table in the portal.`),
       { x: margin, y: 695, size: 10, font, lineHeight: 15, maxWidth: 612 - margin * 2 }
     );
   }
@@ -111,7 +124,7 @@ async function buildReceiptsPdf(entries, form, docTitle) {
   // Submission summary strip on the first page footer.
   const summary = `${docTitle} — ${form.requester_name || ''} · ${fmt(form.amount)} · ${withReceipts.length} receipt${withReceipts.length === 1 ? '' : 's'}`;
   const firstPage = out.getPage(0);
-  firstPage.drawText(truncate(summary, 120), {
+  firstPage.drawText(safe(truncate(summary, 120)), {
     x: 30, y: 14, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
 
@@ -126,6 +139,7 @@ async function buildReceiptsPdf(entries, form, docTitle) {
 // merged in full).
 export default function AllReceiptsPdfButton({ entries = [], form, docTitle = 'Reimbursement' }) {
   const [busy, setBusy] = useState(false);
+  const { toast } = useToast();
   const count = entries.filter(e => e.receipt_url).length;
   if (count === 0) return null;
 
@@ -133,6 +147,13 @@ export default function AllReceiptsPdfButton({ entries = [], form, docTitle = 'R
     setBusy(true);
     try {
       await buildReceiptsPdf(entries, form, docTitle);
+    } catch (err) {
+      console.error('Receipts PDF failed', err);
+      toast({
+        title: 'Could not build receipts PDF',
+        description: err?.message || 'Something went wrong while bundling the receipts.',
+        variant: 'destructive',
+      });
     } finally {
       setBusy(false);
     }
