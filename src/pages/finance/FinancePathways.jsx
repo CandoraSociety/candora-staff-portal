@@ -13,9 +13,13 @@ export default function FinancePathways() {
   const [tab, setTab] = useState('we');
   const [expandedPkg, setExpandedPkg] = useState(null);
 
+  // Finance only sees packages that have been approved or paid — earlier
+  // stages stay in Pathways Billing until they're finalized.
   const { data: packages = [], isLoading } = useQuery({
     queryKey: ['invoice-packages'],
-    queryFn: () => base44.entities.InvoicePackage.list('-prepared_date', 50),
+    queryFn: () => base44.entities.InvoicePackage.filter({
+      status: { $in: ['approved', 'paid'] },
+    }, '-prepared_date', 50),
   });
 
   return (
@@ -58,7 +62,7 @@ export default function FinancePathways() {
                 <div className="text-sm text-muted-foreground">Loading...</div>
               ) : packages.length === 0 ? (
                 <div className="text-sm text-muted-foreground py-8 text-center">
-                  No invoice packages yet. Packages created in Pathways Billing will appear here automatically.
+                  No invoice packages yet. Packages appear here once they are approved (or paid) in Pathways Billing.
                 </div>
               ) : (
                 <div className="space-y-2">
