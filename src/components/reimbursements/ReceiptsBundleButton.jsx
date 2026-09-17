@@ -140,12 +140,14 @@ async function buildReceiptsPdf(entries, form, docTitle) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+  return { total: withReceipts.length, merged, failed: failed.length };
 }
 
 // Button shown on a finance reimbursement submission: opens every receipt
 // attached to it as a single PDF (image receipts one per page, PDF receipts
 // merged in full).
-export default function AllReceiptsPdfButton({ entries = [], form, docTitle = 'Reimbursement' }) {
+export default function ReceiptsBundleButton({ entries = [], form, docTitle = 'Reimbursement' }) {
   const [busy, setBusy] = useState(false);
   const { toast } = useToast();
   const count = entries.filter(e => e.receipt_url).length;
@@ -154,7 +156,11 @@ export default function AllReceiptsPdfButton({ entries = [], form, docTitle = 'R
   const handleClick = async () => {
     setBusy(true);
     try {
-      await buildReceiptsPdf(entries, form, docTitle);
+      const result = await buildReceiptsPdf(entries, form, docTitle);
+      toast({
+        title: 'Receipts PDF opened',
+        description: `${result.total} receipt${result.total === 1 ? '' : 's'} bundled (${result.merged} embedded${result.failed ? `, ${result.failed} failed` : ''}).`,
+      });
     } catch (err) {
       console.error('Receipts PDF failed', err);
       toast({

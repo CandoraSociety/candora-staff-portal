@@ -15,7 +15,7 @@ import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
 import OpenReimbursementButton from '@/components/reimbursements/OpenReimbursementButton';
-import AllReceiptsPdfButton from '@/components/reimbursements/AllReceiptsPdfButton';
+import ReceiptsBundleButton from '@/components/reimbursements/ReceiptsBundleButton';
 import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
 import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
@@ -222,7 +222,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <OpenReimbursementButton entries={entriesByForm[r.id] || []} form={r} mode={mode} />
-                        <AllReceiptsPdfButton entries={entriesByForm[r.id] || []} form={r} docTitle={cfg.docTitle} />
+                        <ReceiptsBundleButton entries={entriesByForm[r.id] || []} form={r} docTitle={cfg.docTitle} />
                       </div>
                     </td>
                   </tr>
@@ -348,7 +348,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                               </Button>
                             )}
                             <OpenReimbursementButton entries={items} form={r} mode={mode} editable />
-                            <AllReceiptsPdfButton entries={items} form={r} docTitle={cfg.docTitle} />
+                            <ReceiptsBundleButton entries={items} form={r} docTitle={cfg.docTitle} />
                           </div>
                         </td>
                       </tr>
