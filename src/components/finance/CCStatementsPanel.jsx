@@ -11,6 +11,7 @@ import { CreditCard, Upload, Loader2, Eye, Trash2, Download, X } from 'lucide-re
 import { format, parseISO } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
+import CCStatementLineItems from '@/components/finance/CCStatementLineItems';
 
 const fmtMonth = m => { try { return format(parseISO(m + '-01'), 'MMMM yyyy'); } catch { return m; } };
 
@@ -34,9 +35,13 @@ export default function CCStatementsPanel() {
   });
 
   const deleteStatement = useMutation({
-    mutationFn: s => base44.entities.CCStatement.delete(s.id),
+    mutationFn: async s => {
+      await base44.entities.CCStatementLineItem.deleteMany({ statement_id: s.id });
+      return base44.entities.CCStatement.delete(s.id);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cc-statements'] });
+      qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
       setConfirmId(null);
     },
   });
@@ -99,8 +104,9 @@ export default function CCStatementsPanel() {
           <iframe
             src={viewing.file_url}
             title="Card statement"
-            className="w-full h-[70vh] bg-white"
+            className="w-full h-[55vh] bg-white"
           />
+          <CCStatementLineItems statementId={viewing.id} />
         </div>
       )}
 
