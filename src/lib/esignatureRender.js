@@ -13,16 +13,17 @@ function loadImage(url) {
 
 export async function composeSignedImage(profile, log) {
   const canvas = document.createElement('canvas');
-  canvas.width = 640;
+  const W = 900;
+  canvas.width = W;
   canvas.height = 10; // placeholder — real height computed below
   let ctx = canvas.getContext('2d');
 
-  const VERIF_FONT = '10.5px Inter, sans-serif';
-  const VERIF_GAP = 5; // gap between signature ink and verification text
+  const VERIF_FONT = '20px Inter, sans-serif';
+  const VERIF_GAP = 10; // gap between signature ink and verification text
 
   const setTypedFont = (c) => {
     const family = profile.font_family || "'Great Vibes', cursive";
-    c.font = `${profile.italic ? 'italic ' : ''}${profile.bold ? '700 ' : ''}64px ${family}`;
+    c.font = `${profile.italic ? 'italic ' : ''}${profile.bold ? '700 ' : ''}110px ${family}`;
     c.fillStyle = profile.font_color || '#0f172a';
     try { c.letterSpacing = `${profile.letter_spacing || 0}px`; } catch {}
   };
@@ -34,31 +35,31 @@ export async function composeSignedImage(profile, log) {
   if (profile?.signature_type === 'typed' && profile.typed_text) {
     const family = profile.font_family || "'Great Vibes', cursive";
     const firstFamily = family.split(',')[0].replace(/['"]/g, '').trim();
-    try { await document.fonts.load(`64px "${firstFamily}"`); } catch {}
+    try { await document.fonts.load(`110px "${firstFamily}"`); } catch {}
     setTypedFont(ctx);
     const m = ctx.measureText(profile.typed_text);
-    const ascent = m.actualBoundingBoxAscent || 44;
-    const descent = m.actualBoundingBoxDescent || 16;
+    const ascent = m.actualBoundingBoxAscent || 76;
+    const descent = m.actualBoundingBoxDescent || 28;
     layout = { kind: 'typed', ascent, descent, width: m.width };
-    contentBottom = 8 + ascent + descent + (profile.underline ? 8 : 0);
+    contentBottom = 12 + ascent + descent + (profile.underline ? 10 : 0);
   } else if (profile?.signature_url) {
     const img = await loadImage(profile.signature_url);
-    const scale = Math.min(560 / img.width, 180 / img.height);
+    const scale = Math.min(760 / img.width, 320 / img.height);
     const w = img.width * scale;
     const h = img.height * scale;
     layout = { kind: 'image', img, w, h };
-    contentBottom = 8 + h;
+    contentBottom = 12 + h;
   } else {
-    ctx.font = 'italic 44px "Playfair Display", serif';
+    ctx.font = 'italic 72px "Playfair Display", serif';
     const m = ctx.measureText(profile?.user_name || 'Signature');
-    layout = { kind: 'fallback', ascent: m.actualBoundingBoxAscent || 30, descent: m.actualBoundingBoxDescent || 10 };
-    contentBottom = 8 + layout.ascent + layout.descent;
+    layout = { kind: 'fallback', ascent: m.actualBoundingBoxAscent || 50, descent: m.actualBoundingBoxDescent || 16 };
+    contentBottom = 12 + layout.ascent + layout.descent;
   }
 
   // Verification text: two tight lines right under the signature
-  const verifY1 = contentBottom + VERIF_GAP + 10;
-  const verifY2 = verifY1 + 13;
-  const canvasHeight = Math.ceil(verifY2 + 5);
+  const verifY1 = contentBottom + VERIF_GAP + 18;
+  const verifY2 = verifY1 + 26;
+  const canvasHeight = Math.ceil(verifY2 + 8);
   canvas.height = canvasHeight; // resets context state
   ctx = canvas.getContext('2d');
 
@@ -76,19 +77,19 @@ export async function composeSignedImage(profile, log) {
     }
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    const baseline = 8 + layout.ascent;
+    const baseline = 12 + layout.ascent;
     if (profile.outline) {
       ctx.strokeStyle = profile.font_color || '#0f172a';
-      ctx.lineWidth = 1.5;
-      ctx.strokeText(profile.typed_text, 320, baseline);
+      ctx.lineWidth = 2;
+      ctx.strokeText(profile.typed_text, W / 2, baseline);
     } else {
-      ctx.fillText(profile.typed_text, 320, baseline);
+      ctx.fillText(profile.typed_text, W / 2, baseline);
     }
     if (profile.underline) {
       ctx.beginPath();
-      ctx.moveTo(320 - layout.width / 2, baseline + layout.descent + 4);
-      ctx.lineTo(320 + layout.width / 2, baseline + layout.descent + 4);
-      ctx.lineWidth = 2;
+      ctx.moveTo(W / 2 - layout.width / 2, baseline + layout.descent + 6);
+      ctx.lineTo(W / 2 + layout.width / 2, baseline + layout.descent + 6);
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
     ctx.shadowColor = 'transparent';
@@ -97,13 +98,13 @@ export async function composeSignedImage(profile, log) {
     ctx.shadowBlur = 0;
     try { ctx.letterSpacing = '0px'; } catch {}
   } else if (layout.kind === 'image') {
-    ctx.drawImage(layout.img, (640 - layout.w) / 2, 8, layout.w, layout.h);
+    ctx.drawImage(layout.img, (W - layout.w) / 2, 12, layout.w, layout.h);
   } else {
-    ctx.font = 'italic 44px "Playfair Display", serif';
+    ctx.font = 'italic 72px "Playfair Display", serif';
     ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(profile?.user_name || 'Signature', 320, 8 + layout.ascent);
+    ctx.fillText(profile?.user_name || 'Signature', W / 2, 12 + layout.ascent);
   }
 
   // Verification info — small but readable, snug against the signature
@@ -111,8 +112,8 @@ export async function composeSignedImage(profile, log) {
   ctx.fillStyle = 'rgba(60, 65, 80, 0.85)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`ID: ${log.generated_id}`, 320, verifY1);
-  ctx.fillText(`${log.timestamp_utc}  •  ${log.verification_status}`, 320, verifY2);
+  ctx.fillText(`ID: ${log.generated_id}`, W / 2, verifY1);
+  ctx.fillText(`${log.timestamp_utc}  •  ${log.verification_status}`, W / 2, verifY2);
 
   return canvas.toDataURL('image/png');
 }

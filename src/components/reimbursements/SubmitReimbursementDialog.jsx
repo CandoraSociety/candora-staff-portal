@@ -168,7 +168,7 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
               <Label className="text-xs">e-Signature *</Label>
               {signature ? (
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2">
-                  <img src={signature.imageDataUrl} alt="Your e-signature" className="h-14 object-contain" />
+                  <img src={signature.imageDataUrl} alt="Your e-signature" className="h-24 object-contain" />
                   <div className="ml-auto flex items-center gap-1">
                     <Button type="button" variant="ghost" size="sm" onClick={() => setSignOpen(true)}>Re-sign</Button>
                     <Button type="button" variant="ghost" size="sm" className="w-8 p-0" onClick={() => setSignature(null)}><X className="w-4 h-4" /></Button>

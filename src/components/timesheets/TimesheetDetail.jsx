@@ -121,7 +121,7 @@ export default function TimesheetDetail({ timesheet }) {
               : `Rejected by ${t.approved_by_name} on ${t.approved_date}${t.rejection_reason ? ` — ${t.rejection_reason}` : ''}`}
           </p>
           {t.status === 'approved' && t.supervisor_signature_url && (
-            <img src={t.supervisor_signature_url} alt="Supervisor e-signature" className="h-10 object-contain" />
+            <img src={t.supervisor_signature_url} alt="Supervisor e-signature" className="h-24 object-contain" />
           )}
         </div>
       )}

@@ -105,7 +105,7 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
     .sig .line { flex: 1; font-size: 8.5pt; color: #555; }
     .sig .rule { border-top: 1px solid #333; margin-top: 10px; padding-top: 4px; }
     .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; display: block; min-height: 26px; }
-    .sig .sig-img { height: 54px; max-width: 100%; object-fit: contain; display: block; }
+    .sig .sig-img { height: 92px; max-width: 100%; object-fit: contain; display: block; }
     .footnote { margin-top: 22px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 6px; }
   </style>
 </head>

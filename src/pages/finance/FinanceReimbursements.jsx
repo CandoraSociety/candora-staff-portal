@@ -450,7 +450,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               <Label className="text-xs">e-Signature — Financial Officer Approval *</Label>
               {paySigUrl ? (
                 <div className="flex items-center gap-2 rounded-lg border bg-white px-2 py-1">
-                  <img src={paySigUrl} alt="Financial Officer e-signature" className="h-12 object-contain" />
+                  <img src={paySigUrl} alt="Financial Officer e-signature" className="h-24 object-contain" />
                   <Button variant="ghost" size="sm" className="ml-auto" onClick={() => { setPaySigUrl(''); setPaySigName(''); setPayError(''); }}>Re-sign</Button>
                 </div>
               ) : (
