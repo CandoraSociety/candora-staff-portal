@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Briefcase, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { Briefcase, FileText, FileCheck2, ChevronDown, ChevronRight } from 'lucide-react';
 import FinancePayablesSection from '@/components/finance/FinancePayablesSection';
 import PackageContents from '@/components/billing/PackageContents';
 import PackageInvoiceTab from '@/components/billing/PackageInvoiceTab';
@@ -84,9 +84,9 @@ export default function FinancePathways() {
                     const isOpen = expandedPkg === p.id;
                     return (
                       <div key={p.id} className="rounded-lg border overflow-hidden">
-                        <button
+                        <div
                           onClick={() => setExpandedPkg(isOpen ? null : p.id)}
-                          className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+                          className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/60 transition-colors text-left cursor-pointer select-none"
                         >
                           <div className="flex items-center gap-3">
                             {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -97,8 +97,21 @@ export default function FinancePathways() {
                             <span>{p.prepared_by_name || p.prepared_by || '—'}</span>
                             <Badge variant="outline">{p.status}</Badge>
                             {p.crt_included ? <Badge className="text-xs bg-green-100 text-green-800">CRT</Badge> : <Badge className="text-xs bg-slate-100 text-slate-600">No CRT</Badge>}
+                            {p.ariba_submission_url && (
+                              <a
+                                href={p.ariba_submission_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download={p.ariba_submission_name || true}
+                                onClick={e => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-medium text-foreground hover:bg-primary/20 transition-colors"
+                                title={`SAP Ariba submission confirmation${p.ariba_submission_name ? ` — ${p.ariba_submission_name}` : ''}`}
+                              >
+                                <FileCheck2 className="w-3.5 h-3.5 text-primary" /> Ariba Confirmation
+                              </a>
+                            )}
                           </div>
-                        </button>
+                        </div>
                         {isOpen && (
                           <div className="border-t p-4 bg-card space-y-4">
                             <PackageContents pkg={p} onViewInvoice={() => setViewInvoicePkg(viewInvoicePkg === p.id ? null : p.id)} />
