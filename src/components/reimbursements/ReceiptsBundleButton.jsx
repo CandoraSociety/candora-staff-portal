@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FileText, Loader2, Download, Printer } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -130,18 +131,8 @@ async function buildReceiptsPdf(entries, form, docTitle) {
 
   const bytes = await out.save();
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-  // window.open after async work gets silently blocked by popup blockers —
-  // an anchor click on the blob URL is not treated as a popup.
-  const link = document.createElement('a');
-  link.href = url;
-  link.target = '_blank';
-  link.rel = 'noopener';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
 
-  return { total: withReceipts.length, merged, failed: failed.length };
+  return { url, total: withReceipts.length, merged, failed: failed.length };
 }
 
 // Button shown on a finance reimbursement submission: opens every receipt
@@ -149,18 +140,22 @@ async function buildReceiptsPdf(entries, form, docTitle) {
 // merged in full).
 export default function ReceiptsBundleButton({ entries = [], form, docTitle = 'Reimbursement' }) {
   const [busy, setBusy] = useState(false);
+  const [pdf, setPdf] = useState(null); // { url, fileName }
   const { toast } = useToast();
   const count = entries.filter(e => e.receipt_url).length;
   if (count === 0) return null;
+
+  const closeViewer = () => {
+    if (pdf) URL.revokeObjectURL(pdf.url);
+    setPdf(null);
+  };
 
   const handleClick = async () => {
     setBusy(true);
     try {
       const result = await buildReceiptsPdf(entries, form, docTitle);
-      toast({
-        title: 'Receipts PDF opened',
-        description: `${result.total} receipt${result.total === 1 ? '' : 's'} bundled (${result.merged} embedded${result.failed ? `, ${result.failed} failed` : ''}).`,
-      });
+      const who = (form.requester_name || 'staff').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      setPdf({ url: result.url, fileName: `receipts-${who}.pdf` });
     } catch (err) {
       console.error('Receipts PDF failed', err);
       toast({
@@ -174,16 +169,43 @@ export default function ReceiptsBundleButton({ entries = [], form, docTitle = 'R
   };
 
   return (
-    <Button
-      size="sm"
-      variant="ghost"
-      className="h-7 px-2 gap-1.5"
-      onClick={handleClick}
-      disabled={busy}
-      title={`Open all ${count} receipt${count === 1 ? '' : 's'} attached to this submission as a single PDF`}
-    >
-      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-      Receipts PDF
-    </Button>
+    <>
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-7 px-2 gap-1.5"
+        onClick={handleClick}
+        disabled={busy}
+        title={`Open all ${count} receipt${count === 1 ? '' : 's'} attached to this submission as a single PDF`}
+      >
+        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+        Receipts PDF
+      </Button>
+
+      <Dialog open={!!pdf} onOpenChange={open => { if (!open) closeViewer(); }}>
+        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col">
+          <DialogHeader className="flex-row items-center justify-between space-y-0">
+            <DialogTitle>Receipts PDF — {count} receipt{count === 1 ? '' : 's'}</DialogTitle>
+            <div className="flex items-center gap-2">
+              <a href={pdf?.url} download={pdf?.fileName}>
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <Download className="w-4 h-4" /> Download
+                </Button>
+              </a>
+              <a href={pdf?.url} target="_blank" rel="noopener">
+                <Button size="sm" variant="outline" className="gap-1.5">
+                  <Printer className="w-4 h-4" /> Print / New Tab
+                </Button>
+              </a>
+            </div>
+          </DialogHeader>
+          <iframe
+            src={pdf?.url}
+            title="Receipts PDF"
+            className="flex-1 w-full rounded-md border bg-white"
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
