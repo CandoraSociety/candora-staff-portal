@@ -122,7 +122,7 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
   </div>
 
   <div class="fields">
-    <div class="field"><div class="lbl">Cheque Payable to</div><div class="val">${esc(payableTo)}</div></div>
+    <div class="field"><div class="lbl">Payable to</div><div class="val">${esc(payableTo)}</div></div>
     <div class="field"><div class="lbl">E-transfer Email</div><div class="val">${esc(etransferEmail)}</div></div>
     <div class="field"><div class="lbl">Requested by</div><div class="val">${esc(form?.requested_by || requesterName)}</div></div>
     <div class="field"><div class="lbl">Date Requested</div><div class="val">${esc(dateRequested)}</div></div>
