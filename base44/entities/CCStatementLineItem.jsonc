@@ -1,0 +1,35 @@
+{
+  "name": "CCStatementLineItem",
+  "type": "object",
+  "properties": {
+    "statement_id": {
+      "type": "string",
+      "description": "Reference to the CCStatement this line item belongs to"
+    },
+    "description": {
+      "type": "string",
+      "description": "Line item description (transaction from the card statement)"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Line item amount"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "Uploaded receipt file URL for this line item"
+    },
+    "receipt_file_name": {
+      "type": "string",
+      "description": "Original uploaded receipt file name"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this line item"
+    }
+  },
+  "required": [
+    "statement_id",
+    "description",
+    "amount"
+  ]
+}
