@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import FloatingWindow from '@/components/shared/FloatingWindow';
 import { FileText, Loader2, Download, Printer } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { useToast } from '@/components/ui/use-toast';
@@ -182,30 +182,31 @@ export default function ReceiptsBundleButton({ entries = [], form, docTitle = 'R
         Receipts PDF
       </Button>
 
-      <Dialog open={!!pdf} onOpenChange={open => { if (!open) closeViewer(); }}>
-        <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col">
-          <DialogHeader className="flex-row items-center justify-between space-y-0">
-            <DialogTitle>Receipts PDF — {count} receipt{count === 1 ? '' : 's'}</DialogTitle>
-            <div className="flex items-center gap-2">
-              <a href={pdf?.url} download={pdf?.fileName}>
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <Download className="w-4 h-4" /> Download
-                </Button>
-              </a>
-              <a href={pdf?.url} target="_blank" rel="noopener">
-                <Button size="sm" variant="outline" className="gap-1.5">
-                  <Printer className="w-4 h-4" /> Print / New Tab
-                </Button>
-              </a>
-            </div>
-          </DialogHeader>
-          <iframe
-            src={pdf?.url}
-            title="Receipts PDF"
-            className="flex-1 w-full rounded-md border bg-white"
-          />
-        </DialogContent>
-      </Dialog>
+      <FloatingWindow
+        open={!!pdf}
+        onClose={closeViewer}
+        title={`Receipts PDF — ${count} receipt${count === 1 ? '' : 's'}`}
+        toolbar={
+          <>
+            <a href={pdf?.url} download={pdf?.fileName}>
+              <Button size="sm" variant="ghost" className="h-7 px-2 gap-1.5">
+                <Download className="w-3.5 h-3.5" /> Download
+              </Button>
+            </a>
+            <a href={pdf?.url} target="_blank" rel="noopener">
+              <Button size="sm" variant="ghost" className="h-7 px-2 gap-1.5">
+                <Printer className="w-3.5 h-3.5" /> Print
+              </Button>
+            </a>
+          </>
+        }
+      >
+        <iframe
+          src={pdf?.url}
+          title="Receipts PDF"
+          className="absolute inset-0 w-full h-full bg-white"
+        />
+      </FloatingWindow>
     </>
   );
 }
