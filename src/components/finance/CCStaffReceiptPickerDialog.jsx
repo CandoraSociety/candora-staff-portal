@@ -1,18 +1,39 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { UserCheck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Search, UserCheck } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { useCCReceiptSelection } from '@/components/finance/CCReceiptSelectionContext';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
-// Lists the staff MasterCard receipts the finance user checked in the Staff
-// MasterCard Receipts section — picking one attaches it to the statement
-// line item the picker was opened on.
+// Lists staff-submitted MasterCard receipts that have a file and aren't
+// attached to a statement line yet — picking one attaches it as the receipt
+// for the statement line the picker was opened on.
 export default function CCStaffReceiptPickerDialog({ lineItem, onClose, onPick }) {
-  const { selected } = useCCReceiptSelection();
-  const receipts = Object.values(selected);
+  const [search, setSearch] = useState('');
+
+  const { data: entries = [] } = useQuery({
+    queryKey: ['cc-receipt-entries'],
+    queryFn: () => base44.entities.CCReceiptEntry.list('-created_date', 1000),
+  });
+
+  // Line items across all statements — receipts already attached are excluded
+  const { data: allLines = [] } = useQuery({
+    queryKey: ['cc-statement-lines-all'],
+    queryFn: () => base44.entities.CCStatementLineItem.list('-created_date', 1000),
+  });
+
+  const receipts = useMemo(() => {
+    const usedUrls = new Set(allLines.map(l => l.receipt_url).filter(Boolean));
+    const q = search.trim().toLowerCase();
+    return entries
+      .filter(e => e.receipt_url && e.status !== 'unsubmitted' && !usedUrls.has(e.receipt_url))
+      .filter(e => !q || [e.description, e.requester_name, e.supplier]
+        .some(v => String(v || '').toLowerCase().includes(q)));
+  }, [entries, allLines, search]);
 
   return (
     <Dialog open={!!lineItem} onOpenChange={o => { if (!o) onClose(); }}>
@@ -27,9 +48,18 @@ export default function CCStaffReceiptPickerDialog({ lineItem, onClose, onPick }
             <p className="text-xs text-muted-foreground">
               Line “{lineItem.description}”{lineItem.amount != null ? ` (${fmt(lineItem.amount)})` : ''} — picking a receipt attaches it as this line's receipt.
             </p>
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search receipts…"
+                className="pl-8 h-8 text-sm"
+              />
+            </div>
             {receipts.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4">
-                No receipts checked yet. Check the boxes beside the receipts in the Staff MasterCard Receipts section below, then press “Add from Staff Receipts” on this line again.
+                No staff receipts available. Receipts appear here once staff submit them on the Candora CC Receipts page.
               </p>
             ) : (
               <div className="max-h-[45vh] overflow-y-auto rounded-md border">

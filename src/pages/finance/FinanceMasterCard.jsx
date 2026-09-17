@@ -1,18 +1,16 @@
 import React from 'react';
 import CCStatementsPanel from '@/components/finance/CCStatementsPanel';
-import CCStaffReceiptsReview from '@/components/finance/CCStaffReceiptsReview';
-import { CCReceiptSelectionProvider } from '@/components/finance/CCReceiptSelectionContext';
+import FinanceReimbursements from './FinanceReimbursements';
 
 // Candora MasterCard tab — monthly card statements at the top (attach receipts
-// to their line items and mark the statement complete), plus the receipts
-// staff have submitted for review against those statements.
+// to their line items and mark the statement complete), plus the full finance
+// review of staff receipt submissions (same columns, editability and
+// automation as the Reimbursements tab, in MasterCard mode).
 export default function FinanceMasterCard() {
   return (
-    <CCReceiptSelectionProvider>
-      <div className="space-y-6">
-        <CCStatementsPanel />
-        <CCStaffReceiptsReview />
-      </div>
-    </CCReceiptSelectionProvider>
+    <div className="space-y-6">
+      <CCStatementsPanel />
+      <FinanceReimbursements mode="cc" />
+    </div>
   );
 }
