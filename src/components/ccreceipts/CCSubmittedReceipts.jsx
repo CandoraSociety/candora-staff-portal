@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import ReceiptsBundleButton from '@/components/reimbursements/ReceiptsBundleButton';
@@ -21,6 +23,7 @@ const STATUS_STYLES = {
 
 // Staff side — receipts once they've been submitted to the Finance portal
 export default function CCSubmittedReceipts() {
+  const qc = useQueryClient();
   const { user } = useCurrentUser();
 
   const { data: submissions = [], isLoading } = useQuery({
@@ -43,6 +46,23 @@ export default function CCSubmittedReceipts() {
     }
     return map;
   }, [entries]);
+
+  // Delete a submitted batch — its receipts move back to Not Submitted so they can be fixed and resubmitted
+  const del = useMutation({
+    mutationFn: async s => {
+      const items = entriesByForm[s.id] || [];
+      await base44.entities.CCReceiptSubmission.delete(s.id);
+      if (items.length > 0) {
+        await base44.entities.CCReceiptEntry.bulkUpdate(items.map(e => ({ id: e.id, status: 'unsubmitted', form_id: '' })));
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cc-submissions-mine'] });
+      qc.invalidateQueries({ queryKey: ['cc-receipts-mine'] });
+      toast.success('Submission deleted — its receipts are back in Not Submitted.');
+    },
+    onError: err => toast.error(err?.message || 'Could not delete the submission.'),
+  });
 
   return (
     <section className="space-y-3">
@@ -73,6 +93,7 @@ export default function CCSubmittedReceipts() {
                   <th className="px-3 py-2.5 font-semibold text-right">Total</th>
                   <th className="px-3 py-2.5 font-semibold">Status</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Receipts PDF</th>
+                  <th className="px-3 py-2.5" />
                 </tr>
               </thead>
               <tbody>
@@ -93,6 +114,18 @@ export default function CCSubmittedReceipts() {
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <ReceiptsBundleButton entries={items} form={s} docTitle="Candora MasterCard Receipts" />
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <Button
+                          size="sm" variant="ghost" className="h-7 px-2"
+                          title="Delete this submission — its receipts move back to Not Submitted"
+                          disabled={del.isPending}
+                          onClick={() => {
+                            if (window.confirm(`Delete this submission (${count} receipt${count === 1 ? '' : 's'}, ${fmt(s.amount)})? Its receipts will move back to Not Submitted.`)) del.mutate(s);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </td>
                     </tr>
                   );
