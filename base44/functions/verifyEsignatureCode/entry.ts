@@ -28,6 +28,18 @@ export default async function(req) {
       return Response.json({ verified: false, error: 'Incorrect PIN/password' }, { status: 401 });
     }
 
+    // Signer display name comes from the Employee file (first + last name),
+    // not the login-account name which can be email-derived ("graham.currie")
+    let properName = profile.user_name || user.full_name || '';
+    try {
+      const employees = await base44.entities.Employee.list(500);
+      const emp = employees.find((e) => !e.is_deleted && (e.email || '').toLowerCase() === (user.email || '').toLowerCase());
+      if (emp) properName = `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || properName;
+      if (profile.user_name !== properName) {
+        await base44.entities.ESignatureProfile.update(profile.id, { user_name: properName });
+      }
+    } catch {}
+
     const forwarded = req.headers.get('x-forwarded-for') || '';
     const ip = (forwarded.split(',')[0] || req.headers.get('cf-connecting-ip') || 'unknown').trim();
 
@@ -44,7 +56,7 @@ export default async function(req) {
 
     const log = await base44.entities.ESignatureLog.create({
       document_ref,
-      signed_by: profile.user_name || user.full_name || '',
+      signed_by: properName,
       signed_by_email: profile.user_email || user.email || '',
       timestamp_utc: timestampUtc,
       ip_address: ip,

@@ -60,7 +60,7 @@ export default function FinanceESignatures() {
                 <tr className="border-b bg-muted/50">
                   <th className="text-left px-4 py-3 font-semibold">Document Ref</th>
                   <th className="text-left px-4 py-3 font-semibold">Signed By</th>
-                  <th className="text-left px-4 py-3 font-semibold">Timestamp (UTC)</th>
+                  <th className="text-left px-4 py-3 font-semibold">Timestamp</th>
                   <th className="text-left px-4 py-3 font-semibold">IP Address</th>
                   <th className="text-left px-4 py-3 font-semibold">Verification Status</th>
                   <th className="text-left px-4 py-3 font-semibold">Generated ID</th>
