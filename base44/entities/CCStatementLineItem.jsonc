@@ -8,7 +8,12 @@
     },
     "line_number": {
       "type": "number",
-      "description": "Line number as it appears on the statement itself (the transaction's position in the statement's numbering), set automatically when reading the statement and editable per row"
+      "description": "Line number as it appears on the statement itself \u2014 auto-populated when reading the statement, counting every transaction line including interest and payment lines"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Transaction date as printed on the statement \u2014 auto-populated when reading the statement"
     },
     "description": {
       "type": "string",

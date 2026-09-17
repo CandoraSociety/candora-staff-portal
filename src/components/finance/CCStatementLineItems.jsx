@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Paperclip, Plus, Trash2, CheckCircle2, X, FileScan } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 // Statement lines that aren't purchases — skipped when reading the statement
 // (interest charges and payments made onto the credit card aren't receiptable)
@@ -17,7 +18,6 @@ function LineItemRow({ item, onDeleted }) {
   const { toast } = useToast();
   const [description, setDescription] = useState(item.description || '');
   const [amount, setAmount] = useState(item.amount ?? '');
-  const [lineNumber, setLineNumber] = useState(item.line_number ?? '');
   const [uploading, setUploading] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
@@ -37,9 +37,6 @@ function LineItemRow({ item, onDeleted }) {
   const saveField = () => {
     const patch = {};
     if (description !== (item.description || '')) patch.description = description;
-    const numLine = lineNumber === '' || lineNumber === null ? null : Number(lineNumber);
-    const origLine = item.line_number ?? null;
-    if (numLine !== origLine && !(Number.isNaN(numLine) && origLine === null)) patch.line_number = Number.isNaN(numLine) ? origLine : numLine;
     const numAmount = amount === '' || amount === null ? null : Number(amount);
     const origAmount = item.amount ?? null;
     if (numAmount !== origAmount && !(Number.isNaN(numAmount) && origAmount === null)) patch.amount = Number.isNaN(numAmount) ? origAmount : numAmount;
@@ -67,16 +64,9 @@ function LineItemRow({ item, onDeleted }) {
 
   return (
     <tr className="hover:bg-muted/30">
-      <td className="px-3 py-1.5 w-14">
-        <Input
-          className="h-8 text-sm text-center"
-          type="number"
-          value={lineNumber}
-          onChange={e => setLineNumber(e.target.value)}
-          onBlur={saveField}
-          title="Line number as printed on the statement"
-          placeholder="—"
-        />
+      <td className="px-3 py-1.5 text-center text-xs text-muted-foreground align-middle w-10">{item.line_number ?? '—'}</td>
+      <td className="px-3 py-1.5 text-xs text-muted-foreground whitespace-nowrap align-middle">
+        {item.date ? format(parseISO(item.date), 'MMM d') : '—'}
       </td>
       <td className="px-3 py-1.5">
         <Input
@@ -145,15 +135,22 @@ export default function CCStatementLineItems({ statement }) {
   const { toast } = useToast();
   const [newDesc, setNewDesc] = useState('');
   const [newAmount, setNewAmount] = useState('');
-  const [newLineNumber, setNewLineNumber] = useState('');
+  const [newDate, setNewDate] = useState('');
   const [adding, setAdding] = useState(false);
   const [extracting, setExtracting] = useState(false);
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data: rawItems = [], isLoading } = useQuery({
     queryKey: ['cc-statement-lines', statementId],
     queryFn: () => base44.entities.CCStatementLineItem.filter({ statement_id: statementId }, 'created_date', 500),
     enabled: !!statementId,
   });
+
+  // Display line items in the same order the statement prints them
+  const items = useMemo(
+    () => [...rawItems].sort((a, b) =>
+      (a.line_number ?? 1e9) - (b.line_number ?? 1e9) ||
+      new Date(a.created_date) - new Date(b.created_date)),
+    [rawItems]);
 
   // Read the statement's own line items straight from the uploaded PDF and
   // create an editable copy of them — one row per statement line.
@@ -171,6 +168,7 @@ export default function CCStatementLineItems({ statement }) {
                 type: 'object',
                 properties: {
                   line_number: { type: 'number', description: 'The line/sequence number of this transaction in the order it appears on the statement — starts at 1 and counts every transaction line, including interest and payment lines' },
+                  date: { type: 'string', description: 'The transaction date as printed on the statement, in YYYY-MM-DD format' },
                   description: { type: 'string', description: 'The transaction/line item description exactly as printed on the statement' },
                   amount: { type: 'number', description: 'The transaction amount as a number' },
                 },
@@ -188,6 +186,7 @@ export default function CCStatementLineItems({ statement }) {
         .map(i => ({
           statement_id: statementId,
           line_number: typeof i.line_number === 'number' ? i.line_number : Number(String(i.line_number ?? '').replace(/[^0-9]/g, '')) || null,
+          date: typeof i.date === 'string' ? (i.date.match(/\d{4}-\d{2}-\d{2}/)?.[0] ?? null) : null,
           description: i.description.trim(),
           amount: typeof i.amount === 'number' ? i.amount : Number(String(i.amount ?? '').replace(/[^0-9.\-]/g, '')) || 0,
         }));
@@ -196,6 +195,7 @@ export default function CCStatementLineItems({ statement }) {
         toast({ title: 'No line items found', description: 'Add them manually below instead.', variant: 'destructive' });
         return;
       }
+      if (rawItems.length > 0) await base44.entities.CCStatementLineItem.deleteMany({ statement_id: statementId });
       await base44.entities.CCStatementLineItem.bulkCreate(rows);
       qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
       toast({
@@ -216,13 +216,13 @@ export default function CCStatementLineItems({ statement }) {
     try {
       await base44.entities.CCStatementLineItem.create({
         statement_id: statementId,
-        line_number: newLineNumber === '' ? null : Number(newLineNumber),
+        date: newDate || null,
         description: newDesc.trim(),
         amount: Number(newAmount),
       });
       setNewDesc('');
       setNewAmount('');
-      setNewLineNumber('');
+      setNewDate('');
       qc.invalidateQueries({ queryKey: ['cc-statement-lines'] });
     } catch (err) {
       toast({ title: 'Could not add line item', description: err?.message, variant: 'destructive' });
@@ -246,12 +246,19 @@ export default function CCStatementLineItems({ statement }) {
         )}
       </div>
 
-      {items.length === 0 && !isLoading && (
+      {!isLoading && (
         <div className="flex flex-wrap items-center gap-3 px-4 py-3 border-b bg-muted/10">
-          <Button size="sm" variant="outline" className="h-8 gap-1.5" onClick={extractFromStatement} disabled={extracting}>
+          <Button
+            size="sm" variant="outline" className="h-8 gap-1.5"
+            disabled={extracting}
+            onClick={() => {
+              if (items.length > 0 && !window.confirm(`This will replace the ${items.length} existing line item(s) — including their attached receipts — with a fresh read of the statement. Continue?`)) return;
+              extractFromStatement();
+            }}
+          >
             {extracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileScan className="w-4 h-4" />} Read Line Items from Statement
           </Button>
-          <p className="text-xs text-muted-foreground">Scans the uploaded statement and creates an editable row for each line — then attach a receipt to each one below.</p>
+          <p className="text-xs text-muted-foreground">Scans the statement and auto-fills each line's number, date, description and amount — then attach a receipt to each one below.</p>
         </div>
       )}
 
@@ -261,7 +268,8 @@ export default function CCStatementLineItems({ statement }) {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/20">
             <tr>
-              <th className="text-center px-3 py-1.5 font-semibold w-14">#</th>
+              <th className="text-center px-3 py-1.5 font-semibold w-10">Line</th>
+              <th className="text-left px-3 py-1.5 font-semibold">Date</th>
               <th className="text-left px-3 py-1.5 font-semibold">Description</th>
               <th className="text-left px-3 py-1.5 font-semibold">Amount</th>
               <th className="text-left px-3 py-1.5 font-semibold">Receipt</th>
@@ -271,13 +279,13 @@ export default function CCStatementLineItems({ statement }) {
           <tbody className="divide-y">
             {items.map(item => <LineItemRow key={item.id} item={item} />)}
             <tr className="bg-muted/10">
-              <td className="px-3 py-1.5 w-14">
+              <td />
+              <td className="px-3 py-1.5 w-32">
                 <Input
-                  className="h-8 text-sm text-center"
-                  type="number"
-                  placeholder="#"
-                  value={newLineNumber}
-                  onChange={e => setNewLineNumber(e.target.value)}
+                  className="h-8 text-sm"
+                  type="date"
+                  value={newDate}
+                  onChange={e => setNewDate(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addLine()}
                 />
               </td>
