@@ -5,14 +5,23 @@ export default function ESignaturePreview({ signature }) {
     return <span className="text-sm text-muted-foreground">No signature yet</span>;
   }
   if (signature.signature_type === 'typed') {
+    const color = signature.font_color || '#0f172a';
     return (
       <span
         style={{
           fontFamily: signature.font_family || "'Great Vibes', cursive",
-          color: signature.font_color || '#0f172a',
+          color: signature.outline ? 'transparent' : color,
+          WebkitTextStroke: signature.outline ? `1.5px ${color}` : undefined,
           fontStyle: signature.italic ? 'italic' : 'normal',
           fontWeight: signature.bold ? '700' : '400',
-          textShadow: signature.shadow ? '2px 2px 3px rgba(0,0,0,0.25)' : 'none',
+          textDecoration: signature.underline ? 'underline' : 'none',
+          textUnderlineOffset: '6px',
+          textShadow: signature.glow
+            ? `0 0 12px ${color}`
+            : signature.shadow
+              ? '2px 2px 3px rgba(0,0,0,0.25)'
+              : 'none',
+          letterSpacing: signature.letter_spacing ? `${signature.letter_spacing}px` : undefined,
         }}
         className="text-4xl whitespace-nowrap"
       >

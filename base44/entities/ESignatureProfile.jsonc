@@ -66,6 +66,26 @@
       "default": false,
       "description": "Drop-shadow effect for typed signatures"
     },
+    "underline": {
+      "type": "boolean",
+      "default": false,
+      "description": "Underline effect for typed signatures"
+    },
+    "glow": {
+      "type": "boolean",
+      "default": false,
+      "description": "Glow effect for typed signatures"
+    },
+    "outline": {
+      "type": "boolean",
+      "default": false,
+      "description": "Hollow-outline effect for typed signatures"
+    },
+    "letter_spacing": {
+      "type": "number",
+      "default": 0,
+      "description": "Letter spacing in px for typed signatures (negative tightens, positive loosens)"
+    },
     "signature_url": {
       "type": "string",
       "description": "Uploaded image file URL for drawn/uploaded signatures"

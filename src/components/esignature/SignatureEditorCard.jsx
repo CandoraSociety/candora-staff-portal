@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +7,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import TypedSignatureEditor from './TypedSignatureEditor';
 import DrawSignatureCanvas from './DrawSignatureCanvas';
 import UploadSignatureEditor from './UploadSignatureEditor';
-import ESignaturePreview from './ESignaturePreview';
 import { SIGNATURE_FONTS } from '@/lib/esignature';
+import { composeSignedImage } from '@/lib/esignatureRender';
 import { PenTool, Save } from 'lucide-react';
 
 export default function SignatureEditorCard({ user, profile }) {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState(profile?.signature_type === 'drawn' || profile?.signature_type === 'upload' ? profile.signature_type : 'typed');
+  const [tab, setTab] = useState(
+    profile?.signature_type === 'drawn' || profile?.signature_type === 'upload' ? profile.signature_type : 'typed'
+  );
   const [typed, setTyped] = useState({
     typed_text: profile?.typed_text || user?.full_name || '',
     font_family: profile?.font_family || SIGNATURE_FONTS[0].value,
@@ -21,11 +23,16 @@ export default function SignatureEditorCard({ user, profile }) {
     bold: !!profile?.bold,
     italic: !!profile?.italic,
     shadow: !!profile?.shadow,
+    underline: !!profile?.underline,
+    glow: !!profile?.glow,
+    outline: !!profile?.outline,
+    letter_spacing: profile?.letter_spacing || 0,
   });
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   const signature =
     tab === 'typed'
@@ -33,6 +40,30 @@ export default function SignatureEditorCard({ user, profile }) {
       : { signature_type: tab, signature_url: imageDataUrl };
 
   const canSave = tab === 'typed' ? !!(typed.typed_text || '').trim() : !!imageDataUrl;
+
+  // Sample verification info so the preview shows exactly what a real
+  // signed image looks like (dummy ID, current time)
+  const dummyLog = useMemo(() => {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return {
+      generated_id: 'TX-00000-A',
+      timestamp_utc: `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())} UTC`,
+      verification_status: 'PIN Verified',
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canSave) {
+      setPreviewUrl(null);
+      return;
+    }
+    let cancelled = false;
+    composeSignedImage(signature, dummyLog)
+      .then((url) => { if (!cancelled) setPreviewUrl(url); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [canSave, tab, typed, imageDataUrl]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -54,6 +85,10 @@ export default function SignatureEditorCard({ user, profile }) {
         bold: typed.bold,
         italic: typed.italic,
         shadow: typed.shadow,
+        underline: typed.underline,
+        glow: typed.glow,
+        outline: typed.outline,
+        letter_spacing: typed.letter_spacing,
         signature_url,
       };
       if (profile) {
@@ -83,7 +118,8 @@ export default function SignatureEditorCard({ user, profile }) {
           {profile?.signature_type ? 'Your signature' : 'Step 2 — Create your signature'}
         </CardTitle>
         <CardDescription>
-          Type it with your choice of font and colour, draw it, or upload an image (the background is removed automatically).
+          Type it with your choice of font, colour and effects, draw it, or upload an image (the background is
+          removed automatically).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -104,9 +140,23 @@ export default function SignatureEditorCard({ user, profile }) {
           </TabsContent>
         </Tabs>
 
-        {/* Live preview */}
-        <div className="rounded-lg border bg-white p-6 min-h-[120px] flex items-center justify-center">
-          <ESignaturePreview signature={signature} />
+        {/* Final preview — exactly what the signed image will look like */}
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            Final preview (as it appears when signing)
+          </p>
+          <div className="rounded-lg border bg-white p-4 min-h-[160px] flex items-center justify-center">
+            {canSave && previewUrl ? (
+              <img src={previewUrl} alt="Signed signature preview" className="max-w-full" />
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                Your signature with its verification ID and timestamp will appear here
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Preview uses a sample verification ID — the real ID is generated when you sign a document.
+          </p>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

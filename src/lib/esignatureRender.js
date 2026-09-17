@@ -23,19 +23,44 @@ export async function composeSignedImage(profile, log) {
     try { await document.fonts.load(`64px "${firstFamily}"`); } catch {}
     ctx.font = `${profile.italic ? 'italic ' : ''}${profile.bold ? '700 ' : ''}64px ${family}`;
     ctx.fillStyle = profile.font_color || '#0f172a';
-    if (profile.shadow) {
+    try { ctx.letterSpacing = `${profile.letter_spacing || 0}px`; } catch {}
+
+    if (profile.glow) {
+      ctx.shadowColor = profile.font_color || '#0f172a';
+      ctx.shadowBlur = 14;
+    } else if (profile.shadow) {
       ctx.shadowColor = 'rgba(0,0,0,0.28)';
       ctx.shadowOffsetX = 2;
       ctx.shadowOffsetY = 2;
       ctx.shadowBlur = 3;
     }
+
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(profile.typed_text, 320, 95);
+
+    if (profile.outline) {
+      ctx.strokeStyle = profile.font_color || '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.strokeText(profile.typed_text, 320, 95);
+    } else {
+      ctx.fillText(profile.typed_text, 320, 95);
+    }
+
+    if (profile.underline) {
+      const m = ctx.measureText(profile.typed_text);
+      const uy = 95 + (m.fontBoundingBoxDescent || m.actualBoundingBoxDescent || 18) + 6;
+      ctx.beginPath();
+      ctx.moveTo(320 - m.width / 2, uy);
+      ctx.lineTo(320 + m.width / 2, uy);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
     ctx.shadowColor = 'transparent';
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 0;
+    try { ctx.letterSpacing = '0px'; } catch {}
   } else if (profile?.signature_url) {
     const img = await loadImage(profile.signature_url);
     const maxW = 560;
