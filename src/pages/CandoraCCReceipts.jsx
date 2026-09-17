@@ -1,9 +1,11 @@
 import React from 'react';
 import { CreditCard } from 'lucide-react';
-import UnsubmittedEntries from '@/components/reimbursements/UnsubmittedEntries';
-import ReimbursementFormsList from '@/components/reimbursements/ReimbursementFormsList';
-import EtransferEmailBar from '@/components/reimbursements/EtransferEmailBar';
+import CCReceiptsUploadSection from '@/components/ccreceipts/CCReceiptsUploadSection';
+import CCSubmittedReceipts from '@/components/ccreceipts/CCSubmittedReceipts';
 
+// Candora CC Receipts — staff upload receipts for purchases made on the
+// Candora MasterCard and submit them to Finance, which reviews them against
+// the monthly card statement in the Finance portal's Candora MasterCard tab.
 export default function CandoraCCReceipts() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -12,31 +14,12 @@ export default function CandoraCCReceipts() {
           <CreditCard className="w-6 h-6" />Candora CC Receipts
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Enter each Candora MasterCard purchase as it happens. When you're ready, submit your unsubmitted receipts — they go to the Candora MasterCard tab in the Finance portal.
+          Upload a receipt for each purchase made with the Candora MasterCard. Once submitted, Finance reviews them against the monthly card statement in the Candora MasterCard tab of the Finance portal.
         </p>
       </div>
 
-      <EtransferEmailBar />
-
-      <UnsubmittedEntries mode="cc" />
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Submitted</h2>
-        <ReimbursementFormsList
-          mode="cc"
-          statuses={['pending', 'processing', 'approved', 'rejected']}
-          emptyText="Nothing submitted yet. Use “Submit Receipts” to send your MasterCard receipts to Finance."
-        />
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Paid</h2>
-        <ReimbursementFormsList
-          mode="cc"
-          statuses={['paid']}
-          emptyText="Submissions processed by Finance will appear here."
-        />
-      </section>
+      <CCReceiptsUploadSection />
+      <CCSubmittedReceipts />
     </div>
   );
 }

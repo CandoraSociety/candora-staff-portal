@@ -1,15 +1,15 @@
 import React from 'react';
-import FinanceReimbursements from './FinanceReimbursements';
 import CCStatementsPanel from '@/components/finance/CCStatementsPanel';
+import CCStaffReceiptsReview from '@/components/finance/CCStaffReceiptsReview';
 
-// Candora MasterCard tab — the same review/approval workflow as Staff Reimbursements,
-// but listing Candora CC receipt submissions instead, with monthly card
-// statements uploaded and viewable at the top of the tab.
+// Candora MasterCard tab — monthly card statements at the top (attach receipts
+// to their line items and mark the statement complete), plus the receipts
+// staff have submitted for review against those statements.
 export default function FinanceMasterCard() {
   return (
     <div className="space-y-6">
       <CCStatementsPanel />
-      <FinanceReimbursements mode="cc" hideSummary />
+      <CCStaffReceiptsReview />
     </div>
   );
 }
