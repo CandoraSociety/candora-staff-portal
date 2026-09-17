@@ -375,20 +375,18 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         const me = await base44.auth.me();
         const s = me?.[SNAPSHOT_KEY];
         if (s && !cancelled) {
-          // Merge (union) localStorage with the server snapshot rather than
-          // preferring one over the other. The preview sandbox's localStorage
-          // can be partially wiped on restart; if we kept only the smaller
-          // local set we'd silently lose Done/Updated/Phase flags that the
-          // server still holds. Union both directions so the full state
-          // survives a partial local wipe — and the next save writes the
-          // merged set back, re-seeding the server.
-          setCompleted(prev => new Set([...prev, ...(s.completed || [])]));
-          setUpdated(prev => new Set([...prev, ...(s.updated || [])]));
-          setHidden(prev => new Set([...prev, ...(s.hidden || [])]));
-          setYellowResolved(prev => new Set([...prev, ...(s.yellowResolved || [])]));
-          setPhaseChange(prev => new Set([...prev, ...(s.phaseChange || [])]));
-          setComments(prev => ({ ...(s.comments || {}), ...prev }));
-          setCellEdits(prev => ({ ...(s.cellEdits || {}), ...prev }));
+          // The server snapshot is the source of truth — it's saved on every
+          // change, so on load it REPLACES whatever copy the browser's
+          // localStorage holds (a stale local copy could otherwise re-import
+          // flags that were cleared in a review reset). localStorage only
+          // seeds first-time use when no server snapshot exists yet.
+          setCompleted(new Set(s.completed || []));
+          setUpdated(new Set(s.updated || []));
+          setHidden(new Set(s.hidden || []));
+          setYellowResolved(new Set(s.yellowResolved || []));
+          setPhaseChange(new Set(s.phaseChange || []));
+          setComments(s.comments || {});
+          setCellEdits(s.cellEdits || {});
         }
       } catch { /* not logged in or no snapshot — fall back to localStorage */ }
       finally { if (!cancelled) hydratedRef.current = true; }
