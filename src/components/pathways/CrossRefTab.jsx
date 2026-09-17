@@ -274,6 +274,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     setPendingEdit(null);
   };
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [dateColumn, setDateColumn] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -745,6 +746,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const masterFiltered = filter === 'all' ? mainActiveRows : mainActiveRows.filter(r => filter === 'matched' ? isMatch(r) : !isMatch(r));
   const filteredActive = useMemo(() => {
     let list = masterFiltered;
+    if (search.trim()) {
+      const q = normName(search.trim());
+      list = list.filter(r => normName(r.client_name).includes(q));
+    }
     if (dateColumn) {
       const from = dateFrom ? new Date(dateFrom + 'T00:00:00') : null;
       const to = dateTo ? new Date(dateTo + 'T23:59:59') : null;
@@ -767,7 +772,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       });
     }
     return list;
-  }, [masterFiltered, dateColumn, dateFrom, dateTo, dateSort]);
+  }, [masterFiltered, search, dateColumn, dateFrom, dateTo, dateSort]);
 
   useEffect(() => {
     if (onCountsChange) onCountsChange({ all: activeRows.length, matched: matchedCount, unmatched: unmatchedCount });
@@ -1057,6 +1062,21 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       </div>
 
       <div className="flex items-center gap-3 flex-wrap bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by client name..."
+          className="h-8 text-sm rounded-md border border-slate-300 px-2 py-1 bg-white w-56 focus:outline-none focus:ring-1 focus:ring-blue-400"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="text-xs text-slate-500 hover:text-slate-700 underline"
+          >
+            Clear
+          </button>
+        )}
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Date</span>
         <select
           value={dateColumn}
