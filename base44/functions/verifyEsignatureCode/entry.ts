@@ -31,9 +31,15 @@ export default async function(req) {
     const forwarded = req.headers.get('x-forwarded-for') || '';
     const ip = (forwarded.split(',')[0] || req.headers.get('cf-connecting-ip') || 'unknown').trim();
 
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    const timestampUtc = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())} UTC`;
+    // Candora is in Mountain Time (America/Edmonton) — stamp signatures in local MT, not UTC
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Edmonton',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZoneName: 'short',
+    }).formatToParts(new Date());
+    const get = (t) => parts.find((p) => p.type === t)?.value || '';
+    const timestampUtc = `${get('year')}-${get('month')}-${get('day')} ${get('hour')}:${get('minute')} ${get('timeZoneName')}`;
     const generatedId = `TX-${Math.floor(10000 + Math.random() * 90000)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
 
     const log = await base44.entities.ESignatureLog.create({
