@@ -103,7 +103,6 @@ export default function CCStaffReceiptsReview() {
             <thead className="border-b bg-muted/20">
               <tr>
                 <th className="text-left px-4 py-2 font-semibold">Staff Member</th>
-                <th className="text-left px-4 py-2 font-semibold">Reference</th>
                 <th className="text-left px-4 py-2 font-semibold">Submitted</th>
                 <th className="text-center px-4 py-2 font-semibold">Receipts</th>
                 <th className="text-right px-4 py-2 font-semibold">Total</th>
@@ -130,7 +129,6 @@ export default function CCStaffReceiptsReview() {
                         </span>
                       </button>
                     </td>
-                    <td className="px-4 py-2 font-mono text-xs whitespace-nowrap">{s.reference_code || '—'}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{fmtDate(s.submitted_date || s.date_requested)}</td>
                     <td className="px-4 py-2 text-center whitespace-nowrap">
                       <span className="inline-flex items-center gap-1">

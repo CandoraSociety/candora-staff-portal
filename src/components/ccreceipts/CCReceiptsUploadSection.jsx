@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { extractReceiptDetails } from '@/lib/receiptDateExtraction';
-import { buildReferenceCode } from '@/lib/reimbursementReference';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
@@ -27,13 +26,6 @@ export default function CCReceiptsUploadSection() {
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ['cc-receipts-mine', user?.email],
     queryFn: () => base44.entities.CCReceiptEntry.filter({ requester_email: user?.email }),
-    enabled: !!user?.email,
-  });
-
-  // Prior submissions — used for the per-employee reference sequence number
-  const { data: mySubmissions = [] } = useQuery({
-    queryKey: ['cc-submissions-mine', user?.email],
-    queryFn: () => base44.entities.CCReceiptSubmission.filter({ requester_email: user.email }, '-submitted_date', 200),
     enabled: !!user?.email,
   });
 
@@ -111,7 +103,6 @@ export default function CCReceiptsUploadSection() {
         requester_name: displayName(user),
         requester_email: user?.email || '',
         payable_to: displayName(user),
-        reference_code: buildReferenceCode({ fullName: displayName(user), sequence: mySubmissions.length + 1, dateRequested: today }),
         entry_ids: unsubmitted.map(e => e.id),
         entry_count: unsubmitted.length,
         amount: +total.toFixed(2),

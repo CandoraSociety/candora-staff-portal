@@ -87,7 +87,6 @@ export default function CCSubmittedReceipts() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/60 text-left text-xs text-muted-foreground uppercase tracking-wide">
-                  <th className="px-3 py-2.5 font-semibold">Reference</th>
                   <th className="px-3 py-2.5 font-semibold">Submitted</th>
                   <th className="px-3 py-2.5 font-semibold text-center">Receipts</th>
                   <th className="px-3 py-2.5 font-semibold text-right">Total</th>
@@ -103,7 +102,6 @@ export default function CCSubmittedReceipts() {
                   const count = s.entry_count || items.length;
                   return (
                     <tr key={s.id} className="border-t border-border hover:bg-muted/30">
-                      <td className="px-3 py-2.5 font-mono text-xs whitespace-nowrap">{s.reference_code || '—'}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">{fmtDate(s.submitted_date || s.date_requested)}</td>
                       <td className="px-3 py-2.5 text-center">{count}</td>
                       <td className="px-3 py-2.5 text-right font-semibold">{fmt(s.amount)}</td>
