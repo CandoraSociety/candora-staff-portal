@@ -84,7 +84,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
       .filter(r => filterStatus === 'all' || r.status === filterStatus)
       .filter(r => {
         if (!q) return true;
-        return [r.requester_name, r.requester_email, r.payable_to, r.etransfer_email, r.notes]
+        return [r.requester_name, r.requester_email, r.reference_code, r.payable_to, r.etransfer_email, r.notes]
           .some(v => String(v || '').toLowerCase().includes(q));
       });
   }, [requests, filterStatus, search]);
@@ -264,6 +264,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
               <thead className="border-b bg-muted/30">
                 <tr>
                   <th className="text-left px-3 py-2 font-semibold">Staff Member</th>
+                  <th className="text-left px-3 py-2 font-semibold">Reference</th>
                   <th className="text-left px-3 py-2 font-semibold">Payable To</th>
                   <th className="text-left px-3 py-2 font-semibold">Date Requested</th>
                   <th className="text-center px-3 py-2 font-semibold">Entries</th>
@@ -285,6 +286,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                           <div className="font-medium">{r.requester_name || '—'}</div>
                           <div className="text-xs text-muted-foreground">{r.requester_email || ''}</div>
                         </td>
+                        <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{r.reference_code || '—'}</td>
                         <td className="px-3 py-2">
                           <div className="font-medium">{r.payable_to || '—'}</div>
                           {r.etransfer_email && <div className="text-xs text-muted-foreground">e-transfer: {r.etransfer_email}</div>}
@@ -354,7 +356,7 @@ export default function FinanceReimbursements({ mode = 'reimbursement' }) {
                       </tr>
                       {expanded && (
                         <tr className="bg-muted/20">
-                          <td colSpan={7} className="px-3 py-2">
+                          <td colSpan={8} className="px-3 py-2">
                             {(r.finance_signature || r.approved_by) && (
                               <p className="text-xs text-muted-foreground mb-2">
                                 {r.approved_by && <>Approved by <span className="font-medium">{r.approved_by}</span></>}

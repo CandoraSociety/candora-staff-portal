@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Email of the staff member who submitted the form"
     },
+    "reference_code": {
+      "type": "string",
+      "description": "Request reference code (e.g. GCurr-3-03-09-26) \u2014 initial + first 4 letters of last name + per-employee sequential submission number + date requested as DD-MM-YY. Stamped on the form footer, the receipts PDF watermark, and the Finance reference column."
+    },
     "payable_to": {
       "type": "string",
       "description": "Cheque Payable to: who the cheque should be made out to"

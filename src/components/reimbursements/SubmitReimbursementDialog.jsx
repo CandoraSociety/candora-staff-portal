@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { REIMBURSEMENT_MODES } from '@/lib/reimbursementMode';
+import { buildReferenceCode } from '@/lib/reimbursementReference';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
@@ -79,7 +80,16 @@ export default function SubmitReimbursementDialog({ open, onOpenChange, entries,
     if (!signature) { setError('Add your e-signature before submitting.'); return; }
     setSubmitting(true);
     try {
+      // Request reference code — initial + first 4 letters of last name + this
+      // employee's sequential request number + DD-MM-YY (e.g. GCurr-3-03-09-26)
+      const priorForms = await formEntity.filter({ requester_email: user?.email || '' });
+      const reference_code = buildReferenceCode({
+        fullName: displayName(user),
+        sequence: priorForms.length + 1,
+        dateRequested: header.date_requested || format(new Date(), 'yyyy-MM-dd'),
+      });
       const form = await formEntity.create({
+        reference_code,
         requester_name: displayName(user),
         requester_email: user?.email || '',
         payable_to: header.payable_to,

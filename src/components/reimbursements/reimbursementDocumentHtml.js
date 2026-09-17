@@ -107,6 +107,7 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
     .sig .signed { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: 15pt; color: #1a3a6b; display: block; min-height: 26px; }
     .sig .sig-img { height: 92px; max-width: 100%; object-fit: contain; display: block; }
     .footnote { margin-top: 22px; font-size: 8pt; color: #777; border-top: 1px solid #ddd; padding-top: 6px; }
+    .footnote .reqid { font-weight: bold; color: #333; font-size: 9pt; margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -169,6 +170,7 @@ export function buildReimbursementDocumentHtml({ entries, form, mode, viewerName
   </div>
 
   <div class="footnote">
+    ${form?.reference_code ? `<div class="reqid">Request ID: ${esc(form.reference_code)}</div>` : ''}
     ${form
       ? `${entries.length} receipt entr${entries.length === 1 ? 'y' : 'ies'} from the ${esc(cfg.formCardLabel)} submitted on ${esc(form.submitted_date || dateRequested)}. Receipt links above open the uploaded receipt files.`
       : `${entries.length} receipt entr${entries.length === 1 ? 'y' : 'ies'} compiled from the Not Submitted list. Receipt links above open the uploaded receipt files.`}

@@ -126,8 +126,24 @@ async function buildReceiptsPdf(entries, form, docTitle) {
   const summary = `${docTitle} — ${form.requester_name || ''} · ${fmt(form.amount)} · ${withReceipts.length} receipt${withReceipts.length === 1 ? '' : 's'}`;
   const firstPage = out.getPage(0);
   firstPage.drawText(safe(truncate(summary, 120)), {
-    x: 30, y: 14, size: 8, font, color: rgb(0.5, 0.5, 0.5),
+    x: 30, y: 26, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
+
+  // Reference-code watermark in the footer of EVERY page (including pages
+  // merged in from PDF-format receipts).
+  if (form?.reference_code) {
+    const refText = safe(`Request ID: ${form.reference_code}`);
+    for (const page of out.getPages()) {
+      const refW = font.widthOfTextAtSize(refText, 8);
+      page.drawText(refText, {
+        x: Math.max(20, page.getWidth() - refW - 30),
+        y: 14,
+        size: 8,
+        font,
+        color: rgb(0.45, 0.45, 0.45),
+      });
+    }
+  }
 
   const bytes = await out.save();
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
