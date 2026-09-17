@@ -7,11 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Briefcase, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import FinancePayablesSection from '@/components/finance/FinancePayablesSection';
 import PackageContents from '@/components/billing/PackageContents';
+import PackageInvoiceTab from '@/components/billing/PackageInvoiceTab';
 import { format } from 'date-fns';
 
 export default function FinancePathways() {
   const [tab, setTab] = useState('we');
   const [expandedPkg, setExpandedPkg] = useState(null);
+  const [viewInvoicePkg, setViewInvoicePkg] = useState(null);
 
   // Finance only sees packages that have been approved or paid — earlier
   // stages stay in Pathways Billing until they're finalized.
@@ -86,8 +88,9 @@ export default function FinancePathways() {
                           </div>
                         </button>
                         {isOpen && (
-                          <div className="border-t p-4 bg-card">
-                            <PackageContents pkg={p} />
+                          <div className="border-t p-4 bg-card space-y-4">
+                            <PackageContents pkg={p} onViewInvoice={() => setViewInvoicePkg(viewInvoicePkg === p.id ? null : p.id)} />
+                            {viewInvoicePkg === p.id && <PackageInvoiceTab pkg={p} />}
                           </div>
                         )}
                       </div>
