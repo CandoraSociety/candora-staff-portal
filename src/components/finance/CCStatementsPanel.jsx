@@ -21,7 +21,7 @@ export default function CCStatementsPanel() {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [month, setMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [month, setMonth] = useState('');
   const [file, setFile] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -42,7 +42,7 @@ export default function CCStatementsPanel() {
   });
 
   const openUpload = () => {
-    setMonth(format(new Date(), 'yyyy-MM'));
+    setMonth('');
     setFile(null);
     setError('');
     setUploadOpen(true);
