@@ -33,7 +33,7 @@ export default function CCSubmittedReceipts() {
   });
 
   const { data: entries = [] } = useQuery({
-    queryKey: ['cc-receipts-mine', user?.email],
+    queryKey: ['my-cc-receipt-entries', user?.email],
     queryFn: () => base44.entities.CCReceiptEntry.filter({ requester_email: user?.email }),
     enabled: !!user?.email,
   });
@@ -58,7 +58,7 @@ export default function CCSubmittedReceipts() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cc-submissions-mine'] });
-      qc.invalidateQueries({ queryKey: ['cc-receipts-mine'] });
+      qc.invalidateQueries({ queryKey: ['my-cc-receipt-entries'] });
       toast.success('Submission deleted — its receipts are back in Not Submitted.');
     },
     onError: err => toast.error(err?.message || 'Could not delete the submission.'),
