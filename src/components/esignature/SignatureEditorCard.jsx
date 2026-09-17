@@ -3,6 +3,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import TypedSignatureEditor from './TypedSignatureEditor';
 import DrawSignatureCanvas from './DrawSignatureCanvas';
@@ -11,22 +13,35 @@ import { SIGNATURE_FONTS } from '@/lib/esignature';
 import { composeSignedImage } from '@/lib/esignatureRender';
 import { PenTool, Save } from 'lucide-react';
 
-export default function SignatureEditorCard({ user, profile }) {
+const SIG_FIELDS = [
+  'signature_type', 'typed_text', 'font_family', 'font_color', 'bold', 'italic',
+  'shadow', 'underline', 'glow', 'outline', 'letter_spacing', 'signature_url',
+];
+
+// Extracts just the signature-design fields from a record
+export function signaturePayload(sig) {
+  return Object.fromEntries(SIG_FIELDS.map((k) => [k, sig[k] ?? null]));
+}
+
+export default function SignatureEditorCard({ user, profile, editingSig, nextIndex, onDone }) {
   const queryClient = useQueryClient();
+  const [name, setName] = useState(editingSig?.name || `Signature ${nextIndex}`);
   const [tab, setTab] = useState(
-    profile?.signature_type === 'drawn' || profile?.signature_type === 'upload' ? profile.signature_type : 'typed'
+    editingSig?.signature_type === 'drawn' || editingSig?.signature_type === 'upload'
+      ? editingSig.signature_type
+      : 'typed'
   );
   const [typed, setTyped] = useState({
-    typed_text: profile?.typed_text || user?.full_name || '',
-    font_family: profile?.font_family || SIGNATURE_FONTS[0].value,
-    font_color: profile?.font_color || '#0f172a',
-    bold: !!profile?.bold,
-    italic: !!profile?.italic,
-    shadow: !!profile?.shadow,
-    underline: !!profile?.underline,
-    glow: !!profile?.glow,
-    outline: !!profile?.outline,
-    letter_spacing: profile?.letter_spacing || 0,
+    typed_text: editingSig?.typed_text || user?.full_name || '',
+    font_family: editingSig?.font_family || SIGNATURE_FONTS[0].value,
+    font_color: editingSig?.font_color || '#0f172a',
+    bold: !!editingSig?.bold,
+    italic: !!editingSig?.italic,
+    shadow: !!editingSig?.shadow,
+    underline: !!editingSig?.underline,
+    glow: !!editingSig?.glow,
+    outline: !!editingSig?.outline,
+    letter_spacing: editingSig?.letter_spacing || 0,
   });
   const [imageDataUrl, setImageDataUrl] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -37,9 +52,13 @@ export default function SignatureEditorCard({ user, profile }) {
   const signature =
     tab === 'typed'
       ? { signature_type: 'typed', ...typed }
-      : { signature_type: tab, signature_url: imageDataUrl };
+      : { signature_type: tab, signature_url: imageDataUrl || editingSig?.signature_url };
 
-  const canSave = tab === 'typed' ? !!(typed.typed_text || '').trim() : !!imageDataUrl;
+  const canSave =
+    !!(name || '').trim() &&
+    (tab === 'typed'
+      ? !!(typed.typed_text || '').trim()
+      : !!(imageDataUrl || editingSig?.signature_url));
 
   // Sample verification info so the preview shows exactly what a real
   // signed image looks like (dummy ID, current time)
@@ -65,44 +84,55 @@ export default function SignatureEditorCard({ user, profile }) {
     return () => { cancelled = true; };
   }, [canSave, tab, typed, imageDataUrl]);
 
+  const applyToProfile = async (sigId, payload) => {
+    const fields = { active_signature_id: sigId, ...payload };
+    if (profile) {
+      await base44.entities.ESignatureProfile.update(profile.id, fields);
+    } else {
+      await base44.entities.ESignatureProfile.create({
+        user_id: user.id,
+        user_name: user.full_name,
+        user_email: user.email,
+        ...fields,
+      });
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError('');
     setSaved(false);
     try {
-      let signature_url = profile?.signature_url || null;
-      if (tab !== 'typed') {
+      let signature_url = editingSig?.signature_url || null;
+      if (tab !== 'typed' && imageDataUrl) {
         const blob = await (await fetch(imageDataUrl)).blob();
         const file = new File([blob], 'signature.png', { type: 'image/png' });
         const res = await base44.integrations.Core.UploadPublicFile({ file });
         signature_url = res.file_url;
       }
       const payload = {
-        signature_type: tab,
+        ...signaturePayload(signature),
         typed_text: tab === 'typed' ? typed.typed_text.trim() : null,
-        font_family: typed.font_family,
-        font_color: typed.font_color,
-        bold: typed.bold,
-        italic: typed.italic,
-        shadow: typed.shadow,
-        underline: typed.underline,
-        glow: typed.glow,
-        outline: typed.outline,
-        letter_spacing: typed.letter_spacing,
         signature_url,
       };
-      if (profile) {
-        await base44.entities.ESignatureProfile.update(profile.id, payload);
+      if (editingSig) {
+        await base44.entities.SavedESignature.update(editingSig.id, { name: name.trim(), ...payload });
+        // Keep the profile in sync if this is the active signature
+        if (profile?.active_signature_id === editingSig.id) {
+          await applyToProfile(editingSig.id, payload);
+        }
       } else {
-        await base44.entities.ESignatureProfile.create({
+        const created = await base44.entities.SavedESignature.create({
           user_id: user.id,
-          user_name: user.full_name,
-          user_email: user.email,
+          name: name.trim(),
           ...payload,
         });
+        await applyToProfile(created.id, payload);
       }
       setSaved(true);
       queryClient.invalidateQueries(['esignatureProfile', user?.id]);
+      queryClient.invalidateQueries(['savedSignatures', user?.id]);
+      onDone?.();
     } catch (e) {
       setError(e.message || 'Could not save your signature. Please try again.');
     } finally {
@@ -115,14 +145,19 @@ export default function SignatureEditorCard({ user, profile }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PenTool className="w-4 h-4 text-primary" />
-          {profile?.signature_type ? 'Your signature' : 'Step 2 — Create your signature'}
+          {editingSig ? `Edit — ${editingSig.name}` : 'Create a signature'}
         </CardTitle>
         <CardDescription>
           Type it with your choice of font, colour and effects, draw it, or upload an image (the background is
-          removed automatically).
+          removed automatically). Saving makes it your active signature.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-1.5 max-w-xs">
+          <Label>Signature name</Label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Primary" />
+        </div>
+
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="typed">Type</TabsTrigger>
@@ -164,7 +199,7 @@ export default function SignatureEditorCard({ user, profile }) {
 
         <Button onClick={handleSave} disabled={saving || !canSave}>
           <Save className="w-4 h-4" />
-          {saving ? 'Saving…' : 'Save signature'}
+          {saving ? 'Saving…' : editingSig ? 'Save changes' : 'Save signature'}
         </Button>
       </CardContent>
     </Card>

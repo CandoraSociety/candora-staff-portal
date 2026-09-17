@@ -1,34 +1,14 @@
 {
-  "name": "ESignatureProfile",
+  "name": "SavedESignature",
   "type": "object",
   "properties": {
     "user_id": {
       "type": "string",
-      "description": "Reference to the User this e-signature belongs to"
+      "description": "Reference to the User this saved signature belongs to"
     },
-    "user_name": {
+    "name": {
       "type": "string",
-      "description": "User's display name (denormalized for display)"
-    },
-    "user_email": {
-      "type": "string",
-      "description": "User's email (denormalized for display)"
-    },
-    "auth_type": {
-      "type": "string",
-      "enum": [
-        "pin",
-        "password"
-      ],
-      "description": "Whether the user protects their e-signature with a 4-digit PIN or a password"
-    },
-    "auth_salt": {
-      "type": "string",
-      "description": "Random salt used when hashing the PIN/password"
-    },
-    "auth_hash": {
-      "type": "string",
-      "description": "SHA-256 hash of salt:code \u2014 the PIN/password itself is never stored"
+      "description": "Display name for this saved signature (e.g. 'Primary', 'Initials')"
     },
     "signature_type": {
       "type": "string",
@@ -37,11 +17,11 @@
         "drawn",
         "upload"
       ],
-      "description": "How the active signature was created: typed text with styling, hand-drawn, or an uploaded image"
+      "description": "How the signature was created: typed text with styling, hand-drawn, or an uploaded image"
     },
     "typed_text": {
       "type": "string",
-      "description": "The text rendered for typed signatures (usually the user's name)"
+      "description": "The text rendered for typed signatures"
     },
     "font_family": {
       "type": "string",
@@ -84,18 +64,16 @@
     "letter_spacing": {
       "type": "number",
       "default": 0,
-      "description": "Letter spacing in px for typed signatures (negative tightens, positive loosens)"
+      "description": "Letter spacing in px for typed signatures"
     },
     "signature_url": {
       "type": "string",
-      "description": "Uploaded image file URL for drawn/uploaded signatures"
-    },
-    "active_signature_id": {
-      "type": "string",
-      "description": "ID of the SavedESignature the user has selected as their active signature"
+      "description": "Image file URL for drawn/uploaded signatures"
     }
   },
   "required": [
-    "user_id"
+    "user_id",
+    "name",
+    "signature_type"
   ]
 }

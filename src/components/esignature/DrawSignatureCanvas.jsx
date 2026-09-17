@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -45,17 +45,17 @@ function pathStroke(ctx, pts) {
   ctx.stroke();
 }
 
-function drawStroke(ctx, stroke) {
-  const pts = stroke.smoothing ? smoothPoints(stroke.points) : stroke.points;
+function drawStroke(ctx, stroke, color, shadow) {
+  const pts = stroke.points;
   if (!pts.length) return;
   ctx.save();
-  if (stroke.shadow) {
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 2;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 1;
+  if (shadow) {
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.45)';
+    ctx.shadowBlur = 3;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
   }
-  ctx.strokeStyle = stroke.color;
+  ctx.strokeStyle = color;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   const base = stroke.width;
@@ -103,7 +103,6 @@ export default function DrawSignatureCanvas({ onChange }) {
   const [color, setColor] = useState(PEN_COLORS[0]);
   const [width, setWidth] = useState(3);
   const [style, setStyle] = useState('ballpoint');
-  const [smoothing, setSmoothing] = useState(true);
   const [shadow, setShadow] = useState(false);
   const [hasInk, setHasInk] = useState(false);
 
@@ -112,9 +111,14 @@ export default function DrawSignatureCanvas({ onChange }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    strokesRef.current.forEach((s) => drawStroke(ctx, s));
-    if (currentRef.current) drawStroke(ctx, currentRef.current);
+    strokesRef.current.forEach((s) => drawStroke(ctx, s, color, shadow));
+    if (currentRef.current) drawStroke(ctx, currentRef.current, color, shadow);
   };
+
+  // Colour and shadow apply to the whole drawing live — change them any time
+  useEffect(() => {
+    redraw();
+  }, [color, shadow]);
 
   const getPos = (e) => {
     const canvas = canvasRef.current;
@@ -129,14 +133,7 @@ export default function DrawSignatureCanvas({ onChange }) {
   const emit = () => onChange(canvasRef.current.toDataURL('image/png'));
 
   const start = (e) => {
-    currentRef.current = {
-      points: [getPos(e)],
-      color,
-      width,
-      style,
-      smoothing,
-      shadow,
-    };
+    currentRef.current = { points: [getPos(e)], width, style };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -161,6 +158,15 @@ export default function DrawSignatureCanvas({ onChange }) {
     emit();
   };
 
+  const tidyUp = () => {
+    strokesRef.current = strokesRef.current.map((s) => ({
+      ...s,
+      points: smoothPoints(s.points),
+    }));
+    redraw();
+    emit();
+  };
+
   const undo = () => {
     strokesRef.current.pop();
     setHasInk(strokesRef.current.length > 0);
@@ -177,7 +183,7 @@ export default function DrawSignatureCanvas({ onChange }) {
 
   return (
     <div className="space-y-3">
-      {/* Colours */}
+      {/* Colours — live, applies to what's already drawn */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-muted-foreground">Colour</span>
         {PEN_COLORS.map((c) => (
@@ -225,12 +231,6 @@ export default function DrawSignatureCanvas({ onChange }) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Switch id="draw-smooth" checked={smoothing} onCheckedChange={setSmoothing} />
-          <Label htmlFor="draw-smooth" className="flex items-center gap-1 text-xs">
-            <Sparkles className="w-3.5 h-3.5 text-primary" /> AI smoothing
-          </Label>
-        </div>
-        <div className="flex items-center gap-2">
           <Switch id="draw-shadow" checked={shadow} onCheckedChange={setShadow} />
           <Label htmlFor="draw-shadow" className="text-xs">Shadow effect</Label>
         </div>
@@ -249,10 +249,13 @@ export default function DrawSignatureCanvas({ onChange }) {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          Draw your signature with your mouse, finger or stylus. AI smoothing tidies up shaky strokes — turn it
-          off for raw, precise lines.
+          Draw with your mouse, finger or stylus. Made a mess? Press <strong>Tidy up</strong> to smooth shaky
+          strokes. Colour and shadow apply any time — even after drawing.
         </p>
         <div className="flex gap-2 flex-shrink-0">
+          <Button variant="secondary" size="sm" onClick={tidyUp} disabled={!hasInk}>
+            <Sparkles className="w-3.5 h-3.5" /> Tidy up
+          </Button>
           <Button variant="outline" size="sm" onClick={undo} disabled={!hasInk}>
             <Undo2 className="w-3.5 h-3.5" /> Undo
           </Button>
