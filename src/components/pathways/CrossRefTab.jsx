@@ -7,6 +7,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import { PLACEMENT_OUTCOME_CODES, FOLLOWUP_90DAY_CODES, outcomeLabel } from '@/lib/crtCodes';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
 const DEFAULT_FILE_NAME = 'EmploymentprogramClientStatusV3.xlsx';
@@ -87,6 +88,23 @@ const CRT_COLUMNS = [
 const EDITABLE_CRT_KEYS = CRT_COLUMNS
   .filter(c => !['source_sheet', 'participant_name', 'hsid'].includes(c.key))
   .map(c => c.key);
+
+// CRT columns that carry a dropdown (data validation) list in the real CRT
+// workbook — mirrored from the Compass inline CRT editor so the cross-reference
+// cells only accept the values the workbook itself accepts.
+const YES_NO = ['Yes', 'No'];
+const OUTCOME_SELECT_KEYS = ['placement_outcome', 'day90_outcome'];
+const SELECT_OPTIONS = {
+  ceis_dea: YES_NO,
+  service_element: ['CEIS', 'WD'],
+  service_outcome: ['In Progress', 'Complete', 'Cancelled', 'Incomplete'],
+  placement_outcome: PLACEMENT_OUTCOME_CODES,
+  day90_outcome: FOLLOWUP_90DAY_CODES,
+  work_exposure: YES_NO,
+  wage_subsidy: YES_NO,
+  employed_ftpt: ['FT', 'PT'],
+  service_nav_support: YES_NO,
+};
 
 const DATE_COLUMNS = [
   { key: 'dea_start_date', label: 'DEA Start Date' },
@@ -943,7 +961,33 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                         />
                       ) : (
                       <div className="flex items-center gap-1">
-                      {editable ? (
+                      {editable && SELECT_OPTIONS[c.key] ? (
+                        (() => {
+                          // Dropdown fields mirror the CRT's own data-validation
+                          // lists. A value outside the list (e.g. legacy 'N') is
+                          // still shown so existing data isn't silently hidden.
+                          const baseOpts = SELECT_OPTIONS[c.key];
+                          const opts = val && !baseOpts.includes(val) ? [...baseOpts, val] : baseOpts;
+                          const isOutcome = OUTCOME_SELECT_KEYS.includes(c.key);
+                          return (
+                            <select
+                              value={val}
+                              onChange={(e) => {
+                                const next = e.target.value;
+                                if (next === val) return;
+                                setEdit(r, c.key, next);
+                                setPendingEdit({ row: r, key: c.key, label: c.label, original: val, value: next });
+                              }}
+                              className={`w-full min-w-[100px] h-8 text-xs rounded-md border border-slate-200 px-1 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer ${highlightYellow ? 'bg-yellow-200' : (updatedRow ? 'bg-blue-100' : 'bg-white')}`}
+                            >
+                              <option value="">—</option>
+                              {opts.map(opt => (
+                                <option key={opt} value={opt}>{isOutcome ? outcomeLabel(opt) : opt}</option>
+                              ))}
+                            </select>
+                          );
+                        })()
+                      ) : editable ? (
                         <input
                           type="text"
                           value={val}
