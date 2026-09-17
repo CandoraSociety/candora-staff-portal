@@ -1,0 +1,51 @@
+{
+  "name": "ESignatureLog",
+  "type": "object",
+  "properties": {
+    "document_ref": {
+      "type": "string",
+      "description": "Reference of the document/item that was signed (e.g. INV-2026-004, Reimbursement REQ-123)"
+    },
+    "signed_by": {
+      "type": "string",
+      "description": "Display name of the signer"
+    },
+    "signed_by_email": {
+      "type": "string",
+      "description": "Email of the signer"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "description": "Date/time the signature was applied, in UTC (e.g. '2026-09-16 21:24 UTC')"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP address the signature was made from"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "PIN Verified",
+        "Password Verified"
+      ],
+      "description": "How the signer was verified"
+    },
+    "auth_type": {
+      "type": "string",
+      "enum": [
+        "pin",
+        "password"
+      ],
+      "description": "The verification method used at signing time"
+    },
+    "generated_id": {
+      "type": "string",
+      "description": "Unique verification ID printed under the signature (e.g. TX-90812-A)"
+    }
+  },
+  "required": [
+    "document_ref",
+    "signed_by",
+    "generated_id"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "name": "ESignatureProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Reference to the User this e-signature belongs to"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "User's display name (denormalized for display)"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "User's email (denormalized for display)"
+    },
+    "auth_type": {
+      "type": "string",
+      "enum": [
+        "pin",
+        "password"
+      ],
+      "description": "Whether the user protects their e-signature with a 4-digit PIN or a password"
+    },
+    "auth_salt": {
+      "type": "string",
+      "description": "Random salt used when hashing the PIN/password"
+    },
+    "auth_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of salt:code \u2014 the PIN/password itself is never stored"
+    },
+    "signature_type": {
+      "type": "string",
+      "enum": [
+        "typed",
+        "drawn",
+        "upload"
+      ],
+      "description": "How the signature was created: typed text with styling, hand-drawn, or an uploaded image"
+    },
+    "typed_text": {
+      "type": "string",
+      "description": "The text rendered for typed signatures (usually the user's name)"
+    },
+    "font_family": {
+      "type": "string",
+      "description": "Font family used for typed signatures"
+    },
+    "font_color": {
+      "type": "string",
+      "description": "Colour used for typed signatures (hex)"
+    },
+    "bold": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bold effect for typed signatures"
+    },
+    "italic": {
+      "type": "boolean",
+      "default": false,
+      "description": "Italic effect for typed signatures"
+    },
+    "shadow": {
+      "type": "boolean",
+      "default": false,
+      "description": "Drop-shadow effect for typed signatures"
+    },
+    "signature_url": {
+      "type": "string",
+      "description": "Uploaded image file URL for drawn/uploaded signatures"
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

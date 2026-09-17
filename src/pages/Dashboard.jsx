@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import WelcomeWidget from '@/components/dashboard/WelcomeWidget';
 import QuickLinksWidget from '@/components/dashboard/QuickLinksWidget';
 import AnnouncementRibbon from '@/components/dashboard/AnnouncementRibbon';
+import ESignatureSetupReminder from '@/components/esignature/ESignatureSetupReminder';
 // LiveDataWidget moved to admin console
 import RecentActivityWidget from '@/components/dashboard/RecentActivityWidget';
 import EmployeeInfoCard from '@/components/dashboard/EmployeeInfoCard';
@@ -198,6 +199,9 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Announcement Ribbon */}
       <AnnouncementRibbon announcements={userAnnouncements} user={user} />
+
+      {/* E-signature setup reminder — until the user sets up their signature */}
+      <ESignatureSetupReminder />
 
       {/* Timesheets awaiting supervisor approval */}
       <SupervisorTimesheetAlerts user={user} />

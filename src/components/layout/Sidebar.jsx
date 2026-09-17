@@ -5,7 +5,8 @@ import {
   Building2, Shield, ChevronLeft, ChevronRight, LogOut,
   Megaphone, CheckCircle2, LayoutPanelLeft, Calendar, Receipt,
   ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
-  ClipboardList
+  ClipboardList,
+  PenTool
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { path: '/portal', label: 'Portals', icon: AppWindow, adminOnly: false },
   { path: '/meeting-manager', label: 'Meetings', icon: Calendar, adminOnly: false },
   { path: '/widget-customization', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
+  { path: '/e-signature', label: 'E-Signature', icon: PenTool, adminOnly: false },
 ];
 
 // Purchases — hover reveals the sub-tabs

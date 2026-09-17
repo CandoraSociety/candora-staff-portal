@@ -119,6 +119,7 @@ import CollectionDetail from '@/pages/filemanager/CollectionDetail';
 import SearchPage from '@/pages/filemanager/SearchPage';
 import DevTasks from '@/pages/DevTasks';
 import HowToAdmin from '@/pages/HowToAdmin';
+import ESignature from '@/pages/ESignature';
 
 // Grant / Proposal Manager
 import GrantsLayout from '@/components/grants/GrantsLayout';
@@ -348,6 +349,7 @@ import FinanceReimbursements from '@/pages/finance/FinanceReimbursements';
 import FinanceMasterCard from '@/pages/finance/FinanceMasterCard';
 import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
+import FinanceESignatures from '@/pages/finance/FinanceESignatures';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
@@ -449,6 +451,7 @@ const AuthenticatedApp = () => {
           <Route path="/time-off/sick-personal" element={<SickTimePersonalDay />} />
           <Route path="/time-off/timesheets" element={<Timesheets />} />
           <Route path="/time-off/team" element={<TeamSchedule />} />
+          <Route path="/e-signature" element={<ESignature />} />
         </Route>
 
         {/* Volunteer Manager - standalone layout */}
@@ -759,6 +762,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/mastercard" element={<FinanceMasterCard />} />
           <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
+          <Route path="/finance/e-signatures" element={<FinanceESignatures />} />
         </Route>
 
         {/* Dev Tasks - standalone page */}
