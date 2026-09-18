@@ -123,8 +123,6 @@ export default function PathwaysPublicIntake() {
   const [consents, setConsents] = useState({
     eligibility: false,
     accurate: false,
-    comply: false,
-    counsellor_discretion: false,
   });
   const [officeUse, setOfficeUse] = useState({
     english_proficiency: false,
@@ -629,8 +627,6 @@ export default function PathwaysPublicIntake() {
               {[
                 { key: 'eligibility', text: 'I understand that following submission of this form I will be assessed for eligibility for participation in the program. Submission of this form does not guarantee acceptance into the Pathways program.' },
                 { key: 'accurate', text: 'I acknowledge that everything in this form is accurate and true to the best of my knowledge.' },
-                { key: 'comply', text: 'I understand that if accepted into the Pathways program, I must comply with the expectations of the program and my personal Action Plan, which will be reviewed with a Candora Career Counsellor and mutually agreed upon if accepted into the program. Failure to comply may result in removal from the Pathways Program.' },
-                { key: 'counsellor_discretion', text: 'I understand that, if accepted into the program, the Career Counsellor will evaluate progress and program suitability. It is at the Career Counsellor\u2019s discretion at any time to determine if continuation in the program is appropriate. A Career Counsellor may determine that the Pathways program is not (or is no longer) a suitable option for a variety of reasons, including changes in life circumstances for the participant, participant challenges that make employability unfeasible, etc. This is not an exhaustive list. In the case that the Career Counsellor discontinues the program, they will attempt to work with participants to make referrals to appropriate program and service options.' },
               ].map(item => (
                 <div key={item.key} className="flex items-start gap-3">
                   <Checkbox
