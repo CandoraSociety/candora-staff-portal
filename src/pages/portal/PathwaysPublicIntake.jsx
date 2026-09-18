@@ -205,10 +205,17 @@ export default function PathwaysPublicIntake() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <header className="px-6 py-4" style={{ background: 'hsl(231,64%,20%)' }}>
-          <span style={{ fontFamily: "'Arial Black', 'Impact', sans-serif", fontSize: '20px' }}>
-            <span style={{ fontWeight: 900, color: 'hsl(42,100%,54%)' }}>CANDORA</span>
-            <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.85)', marginLeft: '6px' }}>Pathways</span>
-          </span>
+          <div className="max-w-3xl mx-auto flex items-center gap-3">
+            <img
+              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
+              alt="The Candora Society"
+              className="h-12 object-contain"
+            />
+            <div className="border-l border-[hsl(230,50%,40%)] pl-3">
+              <p className="text-[hsl(45,92%,53%)] font-display font-bold text-sm leading-tight">Pathways</p>
+              <p className="text-white/60 text-xs">Employment Program</p>
+            </div>
+          </div>
         </header>
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="max-w-md text-center">
@@ -229,11 +236,16 @@ export default function PathwaysPublicIntake() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="px-6 py-4" style={{ background: 'hsl(231,64%,20%)' }}>
-        <div className="max-w-3xl mx-auto">
-          <span style={{ fontFamily: "'Arial Black', 'Impact', sans-serif", fontSize: '20px' }}>
-            <span style={{ fontWeight: 900, color: 'hsl(42,100%,54%)' }}>CANDORA</span>
-            <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.85)', marginLeft: '6px' }}>Pathways</span>
-          </span>
+        <div className="max-w-3xl mx-auto flex items-center gap-3">
+          <img
+            src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
+            alt="The Candora Society"
+            className="h-12 object-contain"
+          />
+          <div className="border-l border-[hsl(230,50%,40%)] pl-3">
+            <p className="text-[hsl(45,92%,53%)] font-display font-bold text-sm leading-tight">Pathways</p>
+            <p className="text-white/60 text-xs">Employment Program</p>
+          </div>
         </div>
       </header>
 
