@@ -207,12 +207,12 @@ export default function PathwaysPublicIntake() {
         <header className="px-6 py-4" style={{ background: 'hsl(231,64%,20%)' }}>
           <div className="max-w-3xl mx-auto flex items-center gap-3">
             <img
-              src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
+              src="https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png"
               alt="The Candora Society"
-              className="h-12 object-contain"
+              className="h-20 w-20 object-contain"
             />
-            <div className="border-l border-[hsl(230,50%,40%)] pl-3">
-              <p className="text-[hsl(45,92%,53%)] font-display font-bold text-sm leading-tight">Pathways</p>
+            <div className="border-l border-[hsl(230,50%,40%)] pl-4">
+              <p className="text-[hsl(45,92%,53%)] font-display font-bold text-base leading-tight">Pathways</p>
               <p className="text-white/60 text-xs">Employment Program</p>
             </div>
           </div>
@@ -238,12 +238,12 @@ export default function PathwaysPublicIntake() {
       <header className="px-6 py-4" style={{ background: 'hsl(231,64%,20%)' }}>
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <img
-            src="https://media.base44.com/images/public/6a15e361478575d63a95c265/ded6d4d7a_Candoralogo_noanniversary.png"
+            src="https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png"
             alt="The Candora Society"
-            className="h-12 object-contain"
+            className="h-20 w-20 object-contain"
           />
-          <div className="border-l border-[hsl(230,50%,40%)] pl-3">
-            <p className="text-[hsl(45,92%,53%)] font-display font-bold text-sm leading-tight">Pathways</p>
+          <div className="border-l border-[hsl(230,50%,40%)] pl-4">
+            <p className="text-[hsl(45,92%,53%)] font-display font-bold text-base leading-tight">Pathways</p>
             <p className="text-white/60 text-xs">Employment Program</p>
           </div>
         </div>
