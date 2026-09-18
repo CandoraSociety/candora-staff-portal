@@ -1,0 +1,447 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "weekly_data_backup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "backup_pathways": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "pathways"
+            }
+          },
+          "then": "backup_rc",
+          "x-base44": {
+            "title": "Back up Pathways data",
+            "description": "Clients, billing, placements"
+          }
+        }
+      },
+      {
+        "backup_rc": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "rc"
+            }
+          },
+          "then": "backup_finance",
+          "x-base44": {
+            "title": "Back up Resource Centre data",
+            "description": "Clients, visits, cases"
+          }
+        }
+      },
+      {
+        "backup_finance": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "finance"
+            }
+          },
+          "then": "backup_nexushr",
+          "x-base44": {
+            "title": "Back up Finance data",
+            "description": "Reimbursements, statements, signatures"
+          }
+        }
+      },
+      {
+        "backup_nexushr": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "nexushr"
+            }
+          },
+          "then": "backup_reception",
+          "x-base44": {
+            "title": "Back up HR data",
+            "description": "Employees, timesheets, time off"
+          }
+        }
+      },
+      {
+        "backup_reception": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "reception"
+            }
+          },
+          "then": "backup_central_reg",
+          "x-base44": {
+            "title": "Back up Reception data",
+            "description": "Appointments, drop-ins"
+          }
+        }
+      },
+      {
+        "backup_central_reg": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "central-registration"
+            }
+          },
+          "then": "backup_frn",
+          "x-base44": {
+            "title": "Back up Central Registration data",
+            "description": "Registrations, self-registrations"
+          }
+        }
+      },
+      {
+        "backup_frn": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "frn"
+            }
+          },
+          "then": "backup_phac",
+          "x-base44": {
+            "title": "Back up FRN data",
+            "description": "Participants, sessions"
+          }
+        }
+      },
+      {
+        "backup_phac": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "phac"
+            }
+          },
+          "then": "backup_ell",
+          "x-base44": {
+            "title": "Back up PHAC data",
+            "description": "Programs, sessions, participants"
+          }
+        }
+      },
+      {
+        "backup_ell": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "ell"
+            }
+          },
+          "then": "backup_empoweru",
+          "x-base44": {
+            "title": "Back up ELL data",
+            "description": "Classes, learners, instructors"
+          }
+        }
+      },
+      {
+        "backup_empoweru": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "empoweru"
+            }
+          },
+          "then": "backup_digilit",
+          "x-base44": {
+            "title": "Back up EmpowerU data",
+            "description": "Cohorts, participants"
+          }
+        }
+      },
+      {
+        "backup_digilit": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "digilit"
+            }
+          },
+          "then": "backup_community",
+          "x-base44": {
+            "title": "Back up Digital Literacy data",
+            "description": "Sessions, evaluations"
+          }
+        }
+      },
+      {
+        "backup_community": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "community"
+            }
+          },
+          "then": "backup_childminding",
+          "x-base44": {
+            "title": "Back up Community Programs data",
+            "description": "Programs, sessions, evaluations"
+          }
+        }
+      },
+      {
+        "backup_childminding": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "childminding"
+            }
+          },
+          "then": "backup_volunteermgr",
+          "x-base44": {
+            "title": "Back up Childminding data",
+            "description": "Records, sessions"
+          }
+        }
+      },
+      {
+        "backup_volunteermgr": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "volunteermgr"
+            }
+          },
+          "then": "backup_lms",
+          "x-base44": {
+            "title": "Back up Volunteer Manager data",
+            "description": "Volunteers, events, time logs"
+          }
+        }
+      },
+      {
+        "backup_lms": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "lms"
+            }
+          },
+          "then": "backup_marketing",
+          "x-base44": {
+            "title": "Back up LMS data",
+            "description": "Modules, programs, certificates"
+          }
+        }
+      },
+      {
+        "backup_marketing": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "marketing"
+            }
+          },
+          "then": "backup_board",
+          "x-base44": {
+            "title": "Back up Marketing data",
+            "description": "Campaigns, donors, donations"
+          }
+        }
+      },
+      {
+        "backup_board": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "board"
+            }
+          },
+          "then": "backup_ed",
+          "x-base44": {
+            "title": "Back up Board data",
+            "description": "Members, meetings, documents"
+          }
+        }
+      },
+      {
+        "backup_ed": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "ed"
+            }
+          },
+          "then": "backup_grants",
+          "x-base44": {
+            "title": "Back up Executive Director data",
+            "description": "Org chart, budgets, projects"
+          }
+        }
+      },
+      {
+        "backup_grants": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "grants"
+            }
+          },
+          "then": "backup_reporting",
+          "x-base44": {
+            "title": "Back up Grants data",
+            "description": "Projects, funders, reports"
+          }
+        }
+      },
+      {
+        "backup_reporting": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "reporting"
+            }
+          },
+          "then": "backup_food",
+          "x-base44": {
+            "title": "Back up Reporting data",
+            "description": "Annual reports, generated reports"
+          }
+        }
+      },
+      {
+        "backup_food": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "food"
+            }
+          },
+          "then": "backup_eventsmgr",
+          "x-base44": {
+            "title": "Back up Food Services data",
+            "description": "Recipes, orders, bookings"
+          }
+        }
+      },
+      {
+        "backup_eventsmgr": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "eventsmgr"
+            }
+          },
+          "then": "backup_filemanager",
+          "x-base44": {
+            "title": "Back up Events Manager data",
+            "description": "Events, programs, contacts"
+          }
+        }
+      },
+      {
+        "backup_filemanager": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "filemanager"
+            }
+          },
+          "then": "backup_winter",
+          "x-base44": {
+            "title": "Back up File Manager data",
+            "description": "Files, collections, notes"
+          }
+        }
+      },
+      {
+        "backup_winter": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "winter-wonderland"
+            }
+          },
+          "then": "backup_archives",
+          "x-base44": {
+            "title": "Back up Winter Wonderland data",
+            "description": "Festival components, events"
+          }
+        }
+      },
+      {
+        "backup_archives": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "archives"
+            }
+          },
+          "then": "backup_general",
+          "x-base44": {
+            "title": "Back up Archives data",
+            "description": "Bios, stories, timeline"
+          }
+        }
+      },
+      {
+        "backup_general": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "backupAppDataToSharePoint",
+            "args": {
+              "group": "general"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Back up app administration data",
+            "description": "Announcements, cards, widgets, settings"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 3 * * 6",
+      "one_time_date": null,
+      "timezone": "America/Edmonton",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "name": "Weekly Data Backup to SharePoint",
+  "description": "Every Saturday at 3:00am, exports all app data (clients, billing, staff, every portal) to CSV files stored under the '_PRIVATE_ Data Backups' folder inside each portal's SharePoint folder. Each step backs up one portal's group."
+}
