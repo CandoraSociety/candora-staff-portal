@@ -3,11 +3,14 @@ import {
   BACKUP_GROUPS,
   BACKUP_ROOT_NAME,
   DRIVE_ID,
+  backupFile,
+  collectFileUrls,
   ensureFolderPath,
   findGroup,
   getGraphToken,
   sanitizeFolderName,
   toCsv,
+  MAX_FILES_PER_GROUP,
 } from "../../shared/appBackup.ts";
 
 // Fetch every record of an entity, paginating on updated_date so entities
@@ -77,6 +80,8 @@ Deno.serve(async (req) => {
     for (const group of groups) {
       const folderName = folderByModule[group.key] || group.fallbackFolder;
       const groupResult = { group: group.key, folder: folderName, backed_up: [], errors: [] };
+      const groupFiles = [];
+      const seenFileUrls = new Set();
 
       let backupPath;
       try {
@@ -90,6 +95,12 @@ Deno.serve(async (req) => {
       for (const entityName of group.entities) {
         try {
           const records = await fetchAllRecords(base44, entityName);
+          for (const foundFile of collectFileUrls(entityName, records)) {
+            if (!seenFileUrls.has(foundFile.url)) {
+              seenFileUrls.add(foundFile.url);
+              groupFiles.push(foundFile);
+            }
+          }
           if (!records.length) {
             groupResult.backed_up.push({ entity: entityName, count: 0, status: 'empty — no file created' });
             continue;
@@ -113,6 +124,28 @@ Deno.serve(async (req) => {
           groupResult.backed_up.push({ entity: entityName, count: records.length, file: fileName });
         } catch (err) {
           groupResult.errors.push(`${entityName}: ${err.message}`);
+        }
+      }
+      if (groupFiles.length) {
+        groupResult.files_found = groupFiles.length;
+        try {
+          const filesPath = await ensureFolderPath(accessToken, [folderName, BACKUP_ROOT_NAME, today, 'Uploaded Files']);
+          const toBackup = groupFiles.slice(0, MAX_FILES_PER_GROUP);
+          let copied = 0;
+          for (const file of toBackup) {
+            try {
+              await backupFile(accessToken, filesPath, file);
+              copied++;
+            } catch (err) {
+              groupResult.errors.push(`file ${file.name}: ${err.message}`);
+            }
+          }
+          groupResult.files_backed_up = copied;
+          if (groupFiles.length > toBackup.length) {
+            groupResult.files_skipped = groupFiles.length - toBackup.length;
+          }
+        } catch (err) {
+          groupResult.errors.push(`files folder: ${err.message}`);
         }
       }
       results.push(groupResult);

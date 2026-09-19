@@ -228,3 +228,58 @@ export async function ensureFolderPath(accessToken, segments) {
   }
   return path;
 }
+
+// ===== Uploaded-file backup (receipts, signature images, generated PDFs) =====
+
+// Only these file extensions are treated as uploaded files to copy.
+const FILE_EXTENSIONS = new Set([
+  'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'heic', 'pdf',
+  'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'csv', 'txt', 'md', 'ics',
+]);
+
+// Copy at most this many files per portal group per run, so a huge backlog
+// can't make a single run take forever.
+export const MAX_FILES_PER_GROUP = 500;
+
+// Scan entity records for uploaded-file URLs: any field whose name contains
+// "url" and whose value points at a file with a known extension. SharePoint
+// web URLs are skipped — those files already live in SharePoint.
+export function collectFileUrls(entityName, records) {
+  const found = [];
+  const seenUrls = new Set();
+  for (const record of records || []) {
+    for (const [field, value] of Object.entries(record)) {
+      if (typeof value !== 'string' || !/^https?:\/\//i.test(value)) continue;
+      if (!field.toLowerCase().includes('url')) continue;
+      if (/sharepoint\.com/i.test(value)) continue;
+      const clean = value.split('?')[0];
+      const ext = (clean.split('.').pop() || '').toLowerCase();
+      if (!FILE_EXTENSIONS.has(ext)) continue;
+      if (seenUrls.has(value)) continue;
+      seenUrls.add(value);
+      found.push({ url: value, ext, name: `${entityName}_${clean.split('/').pop()}` });
+    }
+  }
+  return found;
+}
+
+// Download an uploaded file from app storage and copy it into the backup folder.
+export async function backupFile(accessToken, filesPath, file) {
+  const downloadRes = await fetch(file.url);
+  if (!downloadRes.ok) {
+    throw new Error(`download failed (${downloadRes.status})`);
+  }
+  const bytes = new Uint8Array(await downloadRes.arrayBuffer());
+  const contentType = downloadRes.headers.get('content-type') || 'application/octet-stream';
+  const uploadRes = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:${filesPath}/${file.name}:/content`,
+    {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': contentType },
+      body: bytes,
+    }
+  );
+  if (!uploadRes.ok) {
+    throw new Error(`upload failed: ${(await uploadRes.text()).slice(0, 200)}`);
+  }
+}
