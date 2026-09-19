@@ -12,6 +12,19 @@
     "description": {
       "type": "string"
     },
+    "section": {
+      "type": "string",
+      "enum": [
+        "administration",
+        "business_arising",
+        "new_business",
+        "reports",
+        "adjournment",
+        "other"
+      ],
+      "default": "other",
+      "description": "Agenda section this item sits under \u2014 Administration, Business Arising, New Business, Reports, or Adjournment"
+    },
     "item_type": {
       "type": "string",
       "enum": [

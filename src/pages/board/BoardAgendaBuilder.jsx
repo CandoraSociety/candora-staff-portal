@@ -1,71 +1,153 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, GripVertical, ArrowLeft, ChevronUp, ChevronDown, Lock } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb } from "lucide-react";
 import { format } from "date-fns";
-import ActivitySuggestionsPanel from "@/components/shared/ActivitySuggestionsPanel";
-import { Lightbulb } from "lucide-react";
+import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
 
-const ITEM_TYPES = ["call_to_order","approval_of_agenda","approval_of_minutes","business_arising","new_business","reports","in_camera","adjournment","other"];
+const SECTIONS = [
+  { key: "administration", label: "Administration" },
+  { key: "business_arising", label: "Business Arising" },
+  { key: "new_business", label: "New Business" },
+  { key: "reports", label: "Reports" },
+  { key: "adjournment", label: "Adjournment" },
+  { key: "other", label: "Other" },
+];
+
+const SECTION_ITEM_TYPE = {
+  administration: "other",
+  business_arising: "business_arising",
+  new_business: "new_business",
+  reports: "reports",
+  adjournment: "adjournment",
+  other: "other",
+};
+
+// Fallback for items created before sections existed
+const TYPE_SECTION = {
+  call_to_order: "administration",
+  approval_of_agenda: "administration",
+  approval_of_minutes: "administration",
+  business_arising: "business_arising",
+  new_business: "new_business",
+  reports: "reports",
+  adjournment: "adjournment",
+};
+
+const sectionOf = (item) => item.section || TYPE_SECTION[item.item_type] || "other";
+
+// The standing core every board agenda is built on
+function buildCoreItems(previousMeeting) {
+  const minutesTitle = previousMeeting
+    ? `Approval of Previous Minutes — ${format(new Date(previousMeeting.meeting_date), "MMM d, yyyy")} (${previousMeeting.title})`
+    : "Approval of Previous Minutes";
+  return [
+    { title: "Call to Order / Quorum", section: "administration", item_type: "call_to_order", duration_minutes: 2 },
+    { title: "Approval of Agenda", section: "administration", item_type: "approval_of_agenda", duration_minutes: 2 },
+    { title: minutesTitle, section: "administration", item_type: "approval_of_minutes", duration_minutes: 5 },
+    { title: "Executive Director Report", section: "reports", item_type: "reports", duration_minutes: 15 },
+    { title: "Treasurer Report", section: "reports", item_type: "reports", duration_minutes: 10 },
+    { title: "Date of Next Meeting", section: "adjournment", item_type: "adjournment", duration_minutes: 1 },
+    { title: "Motion to Adjourn", section: "adjournment", item_type: "adjournment", duration_minutes: 1 },
+    { title: "Invitation to Visit", section: "adjournment", item_type: "adjournment", duration_minutes: 2 },
+  ];
+}
 
 export default function BoardAgendaBuilder() {
   const { id } = useParams();
   const [meeting, setMeeting] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", item_type: "other", presenter: "", duration_minutes: 10, description: "", is_in_camera: false });
+  const [formSection, setFormSection] = useState(null);
+  const [form, setForm] = useState({ title: "", item_type: "new_business", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.Meeting.filter({ id }),
-      base44.entities.AgendaItem.filter({ meeting_id: id }),
-    ]).then(([meetings, agendaItems]) => {
+    (async () => {
+      const [meetings, agendaItems] = await Promise.all([
+        base44.entities.Meeting.filter({ id }),
+        base44.entities.AgendaItem.filter({ meeting_id: id }),
+      ]);
       setMeeting(meetings[0]);
-      setItems(agendaItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
+      let current = agendaItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+
+      // Seed the standing core structure the first time this agenda is opened
+      if (current.length === 0) {
+        const allMeetings = await base44.entities.Meeting.list("-meeting_date", 50);
+        const previous = (allMeetings || []).find((m) => m.id !== id);
+        const core = buildCoreItems(previous).map((c, i) => ({
+          ...c,
+          meeting_id: id,
+          order_index: i,
+        }));
+        current = await base44.entities.AgendaItem.bulkCreate(core);
+      }
+      setItems(current);
       setLoading(false);
-    });
+    })();
   }, [id]);
+
+  const openForm = (sectionKey) => {
+    setFormSection(sectionKey);
+    setForm({ title: "", item_type: SECTION_ITEM_TYPE[sectionKey] || "other", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
+  };
 
   const handleAdd = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const saved = await base44.entities.AgendaItem.create({ ...form, meeting_id: id, order_index: items.length, duration_minutes: Number(form.duration_minutes) });
-    setItems(prev => [...prev, saved]);
-    setForm({ title: "", item_type: "other", presenter: "", duration_minutes: 10, description: "", is_in_camera: false });
-    setShowForm(false);
+    const saved = await base44.entities.AgendaItem.create({
+      ...form,
+      section: formSection,
+      meeting_id: id,
+      order_index: items.length,
+      duration_minutes: Number(form.duration_minutes),
+    });
+    setItems((prev) => [...prev, saved]);
+    setFormSection(null);
     setSaving(false);
   };
 
   const handleDelete = async (itemId) => {
     await base44.entities.AgendaItem.delete(itemId);
-    setItems(prev => prev.filter(i => i.id !== itemId));
+    setItems((prev) => prev.filter((i) => i.id !== itemId));
   };
 
-  const move = async (index, direction) => {
-    const newItems = [...items];
-    const swapIndex = index + direction;
-    if (swapIndex < 0 || swapIndex >= newItems.length) return;
-    [newItems[index], newItems[swapIndex]] = [newItems[swapIndex], newItems[index]];
-    const updated = newItems.map((item, i) => ({ ...item, order_index: i }));
-    setItems(updated);
-    await Promise.all(updated.map(item => base44.entities.AgendaItem.update(item.id, { order_index: item.order_index })));
-  };
-
-  const handleAddSuggestion = async (suggestion) => {
+  const handleAddSuggestion = async (s) => {
     const saved = await base44.entities.AgendaItem.create({
-      title: suggestion.title,
-      item_type: "reports",
-      description: suggestion.description || "",
+      title: s.title,
+      description: s.description,
+      section: s.section,
+      item_type: s.item_type,
       meeting_id: id,
       order_index: items.length,
-      duration_minutes: 10,
+      duration_minutes: s.duration_minutes || 5,
     });
-    setItems(prev => [...prev, saved]);
+    setItems((prev) => [...prev, saved]);
+  };
+
+  const move = async (sectionKey, idx, direction) => {
+    const sectionItems = items
+      .filter((i) => sectionOf(i) === sectionKey)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    const target = idx + direction;
+    if (target < 0 || target >= sectionItems.length) return;
+    const a = sectionItems[idx];
+    const b = sectionItems[target];
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === a.id ? { ...i, order_index: b.order_index ?? target }
+        : i.id === b.id ? { ...i, order_index: a.order_index ?? idx }
+        : i
+      )
+    );
+    await Promise.all([
+      base44.entities.AgendaItem.update(a.id, { order_index: b.order_index ?? target }),
+      base44.entities.AgendaItem.update(b.id, { order_index: a.order_index ?? idx }),
+    ]);
   };
 
   const totalDuration = items.reduce((s, i) => s + (i.duration_minutes || 0), 0);
+  const existingTitles = new Set(items.map((i) => i.title));
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
 
@@ -81,71 +163,98 @@ export default function BoardAgendaBuilder() {
 
       <div className="flex items-center justify-between mb-6 mt-4">
         <p className="text-sm text-muted-foreground">{items.length} items · {totalDuration} min total</p>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition">
-          <Plus size={15} /> Add Item
-        </button>
       </div>
 
-      {showForm && (
+      {/* Suggested Agenda Items — from organizational data */}
+      <div className="mb-6 bg-card border border-border rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Lightbulb className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold">Suggested Agenda Items</h3>
+          <span className="text-[10px] text-muted-foreground ml-1">Board-relevant items from the last agenda, ED reports, events, strategic goals & documents</span>
+        </div>
+        <BoardAgendaSuggestions meeting={meeting} existingTitles={existingTitles} onAdd={handleAddSuggestion} />
+      </div>
+
+      {/* Add item form */}
+      {formSection && (
         <form onSubmit={handleAdd} className="bg-card border border-border rounded-xl p-5 mb-6">
-          <h3 className="font-semibold mb-4">New Agenda Item</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">
+              Add to {SECTIONS.find((s) => s.key === formSection)?.label}
+            </h3>
+            <button type="button" onClick={() => setFormSection(null)} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
+          </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="text-sm font-medium mb-1.5 block">Title *</label><input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Type</label><select value={form.item_type} onChange={e => setForm({...form, item_type: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none">{ITEM_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}</select></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Presenter</label><input value={form.presenter} onChange={e => setForm({...form, presenter: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" /></div>
-            <div><label className="text-sm font-medium mb-1.5 block">Duration (min)</label><input type="number" value={form.duration_minutes} onChange={e => setForm({...form, duration_minutes: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" min="0" /></div>
-            <div className="sm:col-span-2"><label className="text-sm font-medium mb-1.5 block">Notes / Description</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none resize-none" /></div>
-            <div className="sm:col-span-2">
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={form.is_in_camera} onChange={e => setForm({...form, is_in_camera: e.target.checked})} className="w-4 h-4" />
-                In Camera (confidential)
-              </label>
-            </div>
+            <div><label className="text-sm font-medium mb-1.5 block">Presenter</label><input value={form.presenter} onChange={e => setForm({...form, presenter: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">Duration (min)</label><input type="number" value={form.duration_minutes} onChange={e => setForm({...form, duration_minutes: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" min="0" /></div>
+            <div><label className="text-sm font-medium mb-1.5 block">In Camera (confidential)</label><label className="flex items-center gap-2 text-sm cursor-pointer mt-2"><input type="checkbox" checked={form.is_in_camera} onChange={e => setForm({...form, is_in_camera: e.target.checked})} className="w-4 h-4" /> Confidential item</label></div>
+            <div className="sm:col-span-2"><label className="text-sm font-medium mb-1.5 block">Notes / Description</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none" /></div>
           </div>
           <div className="flex gap-3 mt-4">
-            <button type="button" onClick={() => setShowForm(false)} className="flex-1 border border-border rounded-lg py-2 text-sm hover:bg-muted transition">Cancel</button>
+            <button type="button" onClick={() => setFormSection(null)} className="flex-1 border border-border rounded-lg py-2 text-sm hover:bg-muted transition">Cancel</button>
             <button type="submit" disabled={saving} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-60">{saving ? "Saving..." : "Add Item"}</button>
           </div>
         </form>
       )}
 
-      {/* My Activity Suggestions */}
-      <div className="mb-6 bg-card border border-border rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Lightbulb className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">My Activity Suggestions</h3>
-          <span className="text-[10px] text-muted-foreground ml-1">From your notes, tasks, projects & priorities</span>
-        </div>
-        <ActivitySuggestionsPanel onAddSuggestion={handleAddSuggestion} />
-      </div>
-
-      <div className="space-y-2">
-        {items.map((item, idx) => (
-          <div key={item.id} className={`bg-card border rounded-xl p-4 flex items-center gap-3 group ${item.is_in_camera ? "border-amber-200 bg-amber-50/40" : "border-border"}`}>
-            <div className="flex flex-col gap-0.5">
-              <button onClick={() => move(idx, -1)} disabled={idx === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp size={14} /></button>
-              <button onClick={() => move(idx, 1)} disabled={idx === items.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown size={14} /></button>
-            </div>
-            <span className="text-xs text-muted-foreground w-5 text-right">{idx + 1}.</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-medium text-foreground">{item.title}</p>
-                {item.is_in_camera && <Lock size={12} className="text-amber-600" />}
-                <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">{item.item_type?.replace(/_/g, " ")}</span>
+      {/* Sections */}
+      <div className="space-y-3">
+        {SECTIONS.filter(({ key }) => key !== "other" || items.some((i) => sectionOf(i) === "other")).map(({ key, label }) => {
+          const sectionItems = items
+            .filter((i) => sectionOf(i) === key)
+            .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+          const sectionTotal = sectionItems.reduce((s, i) => s + (i.duration_minutes || 0), 0);
+          return (
+            <div key={key} className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold">{label}</h3>
+                  {sectionTotal > 0 && <span className="text-[10px] text-muted-foreground">{sectionTotal} min</span>}
+                </div>
+                <button onClick={() => openForm(key)} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+                  <Plus size={13} /> Add
+                </button>
               </div>
-              <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
-                {item.presenter && <span>{item.presenter}</span>}
-                {item.duration_minutes > 0 && <span>{item.duration_minutes} min</span>}
-              </div>
+              {sectionItems.length === 0 ? (
+                <div className="px-4 py-3 flex items-center justify-between gap-3">
+                  <p className="text-xs text-muted-foreground italic">
+                    {key === "business_arising" || key === "new_business"
+                      ? "Sub-items vary from meeting to meeting — add below or pick from the suggestions above."
+                      : "No items yet."}
+                  </p>
+                  <button onClick={() => openForm(key)} className="flex items-center gap-1 text-xs font-medium text-primary hover:underline shrink-0">
+                    <Plus size={13} /> Add
+                  </button>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {sectionItems.map((item, idx) => (
+                    <div key={item.id} className={`px-4 py-3 flex items-center gap-3 group ${item.is_in_camera ? "bg-amber-50/40" : ""}`}>
+                      <div className="flex flex-col gap-0.5">
+                        <button onClick={() => move(key, idx, -1)} disabled={idx === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronUp size={14} /></button>
+                        <button onClick={() => move(key, idx, 1)} disabled={idx === sectionItems.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-20"><ChevronDown size={14} /></button>
+                      </div>
+                      <span className="text-xs text-muted-foreground w-5 text-right">{idx + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-foreground">{item.title}</p>
+                          {item.is_in_camera && <Lock size={12} className="text-amber-600" />}
+                        </div>
+                        {item.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>}
+                        <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
+                          {item.presenter && <span>{item.presenter}</span>}
+                          {item.duration_minutes > 0 && <span>{item.duration_minutes} min</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
-          </div>
-        ))}
-        {items.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">No agenda items yet. Add the first item above.</p>
-          </div>
-        )}
+          );
+        })}
       </div>
     </div>
   );
