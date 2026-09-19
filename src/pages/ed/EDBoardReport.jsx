@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
-import { Plus, Trash2, FileText, Upload, CheckCircle2, X, Lightbulb, Calendar } from "lucide-react";
+import { Plus, Trash2, FileText, Upload, CheckCircle2, X, Sparkles, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useOrgSettings } from "@/lib/useOrgSettings";
-import ActivitySuggestionsPanel from "@/components/shared/ActivitySuggestionsPanel";
+import BoardReportAutoBuilder from "@/components/ed/BoardReportAutoBuilder";
 import BoardReportSectionEditor from "@/components/ed/BoardReportSectionEditor";
 import { generateBoardReportPdf } from "@/lib/generateBoardReportPdf";
 
@@ -106,9 +106,25 @@ export default function EDBoardReport() {
     });
   };
 
-  const handleAddSuggestion = (suggestion) => {
-    addSection(suggestion.title, suggestion.description || "");
-    toast({ title: "Added from suggestions", description: suggestion.title });
+  const addSections = (newSections) => {
+    const sections = selectedReport.sections || [];
+    const startIndex = sections.length;
+    const stamp = Date.now();
+    updateReport.mutate({
+      id: selectedReportId,
+      data: {
+        sections: [
+          ...sections,
+          ...newSections.map((s, i) => ({
+            id: `sec-${stamp}-${i}`,
+            title: s.title || "",
+            content: s.content || "",
+            order_index: startIndex + i,
+          })),
+        ],
+      },
+    });
+    toast({ title: `Added ${newSections.length} section${newSections.length === 1 ? "" : "s"} to the report` });
   };
 
   const handleCreateReport = (e) => {
@@ -175,7 +191,7 @@ export default function EDBoardReport() {
           <h1 className="font-heading text-2xl font-bold">Monthly Board Report</h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Generate monthly reports for the board with suggestions from your activity. Import completed PDFs directly to the Board Portal.
+          Generate monthly reports for the board, auto-drafted from real data across every portal. Import completed PDFs directly to the Board Portal.
         </p>
       </div>
 
@@ -325,7 +341,7 @@ export default function EDBoardReport() {
                 ))}
                 {sortedSections.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-                    <p className="text-sm">No sections yet. Add one below or use suggestions from your activity.</p>
+                    <p className="text-sm">No sections yet. Add one below or use Auto-Build from Organization Data.</p>
                   </div>
                 )}
               </div>
@@ -335,14 +351,14 @@ export default function EDBoardReport() {
                 <Plus className="w-4 h-4" /> Add Section
               </Button>
 
-              {/* Activity Suggestions */}
+              {/* Auto-Build from Organization Data */}
               <div className="bg-card border border-border rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold">My Activity Suggestions</h3>
-                  <span className="text-[10px] text-muted-foreground ml-1">From your notes, tasks, projects & priorities</span>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">Auto-Build from Organization Data</h3>
+                  <span className="text-[10px] text-muted-foreground ml-1">Real numbers from every portal, drafted into sections</span>
                 </div>
-                <ActivitySuggestionsPanel onAddSuggestion={handleAddSuggestion} />
+                <BoardReportAutoBuilder reportMonth={selectedReport.report_month} onAddSections={addSections} />
               </div>
 
               {/* Generate & Import */}
