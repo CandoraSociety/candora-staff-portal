@@ -370,7 +370,9 @@ import EmployerDashboard from '@/pages/employer-portal/EmployerDashboard';
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
-  const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/self-register'].includes(location);
+  const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/pathways-intake', '/self-register'].includes(location)
+    || location.startsWith('/catering-portal')
+    || location.startsWith('/employer-portal');
 
   // Only show loading spinner for protected routes, not public auth pages
   if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
