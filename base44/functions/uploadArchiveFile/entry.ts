@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { properUserName } from '../../shared/userName.ts';
 
 const DRIVE_ID = 'b!hxKx8kC6-E-Lnj84eAg_LC-uIFP5HdVPkWTwcDFuP1P7ca7jYKZ5Ra_M7gnd5aOy';
 const FOLDER_NAME = '_ARCHIVES_Candora_History';
@@ -111,7 +112,7 @@ Deno.serve(async (req) => {
       subcategory: subcategory || '',
       access_level: 'corporate',
       owner_email: user.email,
-      owner_name: user.full_name,
+      owner_name: properUserName(user),
       source_app: 'archives_portal'
     });
 

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { applySelfRegAction, todayStr } from '../../shared/selfReg.ts';
+import { properUserName } from '../../shared/userName.ts';
 
 // Registrar actions on self-registration requests (approve / reject / waitlist).
 // Requires an authenticated app user; the approval/waitlist creates the real
@@ -21,7 +22,7 @@ export default async function(req) {
     }
 
     const result = await applySelfRegAction(base44, request, action);
-    const reviewer = user.full_name || user.email || 'Staff';
+    const reviewer = properUserName(user);
     await base44.entities.SelfRegRequest.update(request_id, {
       status: action === 'approve' ? 'approved' : (action === 'waitlist' ? 'waitlisted' : 'rejected'),
       reviewed_by_name: reviewer,

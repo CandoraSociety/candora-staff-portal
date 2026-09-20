@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { properUserName } from '../../shared/userName.ts';
 
 // Marks a monthly CRT workbook open (resumes month-bound syncing) or closed
 // (freezes it as a snapshot — it will be skipped by future syncs). The reporting
@@ -21,7 +22,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const closedDate = status === 'closed' ? new Date().toISOString().slice(0, 10) : null;
-    const closedBy = status === 'closed' ? (user.full_name || user.email || '') : null;
+    const closedBy = status === 'closed' ? properUserName(user) : null;
 
     const recs = await base44.asServiceRole.entities.CrtWorkbook.filter({ file_name });
     if (recs.length) {

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { properUserName } from '../../shared/userName.ts';
 
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
@@ -30,7 +31,7 @@ export default async function(req) {
 
     // Signer display name comes from the Employee file (first + last name),
     // not the login-account name which can be email-derived ("graham.currie")
-    let properName = profile.user_name || user.full_name || '';
+    let properName = profile.user_name || properUserName(user);
     try {
       const employees = await base44.entities.Employee.list(500);
       const emp = employees.find((e) => !e.is_deleted && (e.email || '').toLowerCase() === (user.email || '').toLowerCase());

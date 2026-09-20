@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import JSZip from 'npm:jszip@3.10.1';
 import pptxgen from 'npm:pptxgenjs@3.12.0';
+import { properUserName } from '../../shared/userName.ts';
 
 const DRIVE_ID = 'b!hxKx8kC6-E-Lnj84eAg_LC-uIFP5HdVPkWTwcDFuP1P7ca7jYKZ5Ra_M7gnd5aOy';
 
@@ -243,7 +244,7 @@ Deno.serve(async (req) => {
       access_level: 'personal',
       category: 'other',
       owner_email: user.email,
-      owner_name: user.full_name,
+      owner_name: properUserName(user),
       source_app: 'office_ribbon'
     });
 

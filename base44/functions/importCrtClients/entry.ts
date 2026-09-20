@@ -3,6 +3,7 @@ import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW,
   getGraphToken, getActiveCrtWorkbook, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
+import { properUserName } from '../../shared/userName.ts';
 
 // Parse "Last, First" → { first_name, last_name }
 function parseName(fullName) {
@@ -122,7 +123,7 @@ export default async function(req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Get the user's name from Employee entity (fallback to user.full_name)
-    let workerName = user.full_name || user.email;
+    let workerName = properUserName(user);
     let workerEmail = user.email;
     try {
       const emp = await base44.entities.Employee.filter({ email: user.email });

@@ -4,6 +4,7 @@ import {
 } from '../../shared/crtWorkbook.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 import { syncOneClientIntoAllOpenWorkbooks } from '../../shared/crtSync.ts';
+import { properUserName } from '../../shared/userName.ts';
 
 // Push "Updated" cross-reference rows into the live CRT.
 //
@@ -229,7 +230,7 @@ export default async function(req: Request): Promise<Response> {
         item_key: 'crt_crossref_update',
         note: buildNoteText(cf, day90Date),
         logged_by: user?.email || '',
-        logged_by_name: user?.full_name || '',
+        logged_by_name: properUserName(user),
         compass_entered: false,
       };
       try {
@@ -278,7 +279,7 @@ export default async function(req: Request): Promise<Response> {
           item_key: 'crt_crossref_update',
           note: buildNoteText(cf, ''),
           logged_by: user?.email || '',
-          logged_by_name: user?.full_name || '',
+          logged_by_name: properUserName(user),
           compass_entered: false,
         };
         const payload = {
