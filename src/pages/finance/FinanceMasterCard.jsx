@@ -1,6 +1,5 @@
 import React from 'react';
 import CCStatementsPanel from '@/components/finance/CCStatementsPanel';
-import ExpenseClaimsSubTabs from '@/components/finance/ExpenseClaimsSubTabs';
 import FinanceReimbursements from './FinanceReimbursements';
 
 // Candora MasterCard tab — monthly card statements at the top (attach receipts
@@ -10,7 +9,6 @@ import FinanceReimbursements from './FinanceReimbursements';
 export default function FinanceMasterCard() {
   return (
     <div className="space-y-6">
-      <ExpenseClaimsSubTabs />
       <CCStatementsPanel />
       <FinanceReimbursements mode="cc" hideSummary />
     </div>

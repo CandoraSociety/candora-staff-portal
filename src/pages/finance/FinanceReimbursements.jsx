@@ -14,7 +14,6 @@ import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { programLabel } from '@/lib/reimbursementConstants';
 import FinanceEntryFundingCells from '@/components/reimbursements/FinanceEntryFundingCells';
-import ExpenseClaimsSubTabs from '@/components/finance/ExpenseClaimsSubTabs';
 import OpenReimbursementButton from '@/components/reimbursements/OpenReimbursementButton';
 import ReceiptsBundleButton from '@/components/reimbursements/ReceiptsBundleButton';
 import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
@@ -168,8 +167,6 @@ export default function FinanceReimbursements({ mode = 'reimbursement', hideSumm
           {cfg.financeSubtitle}
         </p>
       </div>
-
-      {mode === 'reimbursement' && <ExpenseClaimsSubTabs />}
 
       {!hideSummary && (
         <div className="grid grid-cols-3 gap-3">
