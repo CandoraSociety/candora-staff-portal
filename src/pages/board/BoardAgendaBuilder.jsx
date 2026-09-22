@@ -5,6 +5,7 @@ import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pe
 import { format } from "date-fns";
 import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
 import AgendaPrintButton from "@/components/board/AgendaPrintButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AGENDA_SECTIONS as SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 
 
@@ -36,6 +37,8 @@ export default function BoardAgendaBuilder() {
   const [saving, setSaving] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [locationDraft, setLocationDraft] = useState(null);
+  const [meetingList, setMeetingList] = useState([]);
+  const [minutesEdit, setMinutesEdit] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -46,10 +49,16 @@ export default function BoardAgendaBuilder() {
       setMeeting(meetings[0]);
       let current = agendaItems.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
+      // All meetings — used for the previous-minutes autofill and the picker
+      const list = await base44.entities.Meeting.list("-meeting_date", 50);
+      setMeetingList(list || []);
+
       // Seed the standing core structure the first time this agenda is opened
       if (current.length === 0) {
-        const allMeetings = await base44.entities.Meeting.list("-meeting_date", 50);
-        const previous = (allMeetings || []).find((m) => m.id !== id);
+        // Autofill from the most recent meeting BEFORE this one
+        const previous =
+          (list || []).find((m) => m.id !== id && meetings[0] && new Date(m.meeting_date) < new Date(meetings[0].meeting_date)) ||
+          (list || []).find((m) => m.id !== id);
         const core = buildCoreItems(previous).map((c, i) => ({
           ...c,
           meeting_id: id,
@@ -126,6 +135,22 @@ export default function BoardAgendaBuilder() {
     setLocationDraft(null);
   };
 
+  const handleSavePrevMinutes = async (e) => {
+    e.preventDefault();
+    let title;
+    const m = (meetingList || []).find((x) => x.id === minutesEdit.meetingId);
+    if (m) {
+      title = `Approval of Previous Minutes — ${format(new Date(m.meeting_date), "MMM d, yyyy")} (${m.title})`;
+    } else if (minutesEdit.custom) {
+      title = `Approval of Previous Minutes — ${format(new Date(minutesEdit.custom), "MMM d, yyyy")}`;
+    } else {
+      return;
+    }
+    const saved = await base44.entities.AgendaItem.update(minutesItem.id, { title });
+    setItems((prev) => prev.map((i) => (i.id === minutesItem.id ? { ...i, ...saved } : i)));
+    setMinutesEdit(null);
+  };
+
   const handleDelete = async (itemId) => {
     await base44.entities.AgendaItem.delete(itemId);
     setItems((prev) => prev.filter((i) => i.id !== itemId));
@@ -167,6 +192,10 @@ export default function BoardAgendaBuilder() {
 
   const totalDuration = items.reduce((s, i) => s + (i.duration_minutes || 0), 0);
   const existingTitles = new Set(items.map((i) => i.title));
+  const minutesItem = items.find((i) => i.item_type === "approval_of_minutes");
+  const prevMeeting = meeting
+    ? (meetingList || []).find((m) => m.id !== id && new Date(m.meeting_date) < new Date(meeting.meeting_date))
+    : null;
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
 
@@ -195,6 +224,47 @@ export default function BoardAgendaBuilder() {
                 <input autoFocus value={locationDraft} onChange={(e) => setLocationDraft(e.target.value)} placeholder="Meeting location or video link" className="border border-input rounded-lg px-2 py-1 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
                 <button type="submit" className="text-primary text-xs font-medium hover:underline">Save</button>
                 <button type="button" onClick={() => setLocationDraft(null)} className="text-xs text-muted-foreground hover:underline">Cancel</button>
+              </form>
+            )}
+          </div>
+        )}
+        {meeting && minutesItem && (
+          <div className="text-sm flex items-center gap-2 flex-wrap mt-1">
+            <span className="text-muted-foreground">Approval of previous minutes:</span>
+            {minutesEdit === null ? (
+              <span className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-medium text-foreground">{minutesItem.title}</span>
+                <button
+                  onClick={() => setMinutesEdit({ meetingId: prevMeeting?.id || "custom", custom: "" })}
+                  className="text-primary hover:underline inline-flex items-center gap-0.5"
+                >
+                  <Pencil size={11} /> Edit
+                </button>
+              </span>
+            ) : (
+              <form onSubmit={handleSavePrevMinutes} className="flex items-center gap-2 flex-wrap">
+                <Select value={minutesEdit.meetingId} onValueChange={(v) => setMinutesEdit({ ...minutesEdit, meetingId: v })}>
+                  <SelectTrigger className="w-[280px] h-8 text-sm"><SelectValue placeholder="Choose a meeting…" /></SelectTrigger>
+                  <SelectContent>
+                    {(meetingList || []).filter((m) => m.id !== id).map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.title} — {format(new Date(m.meeting_date), "MMM d, yyyy")}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="custom">Other date…</SelectItem>
+                  </SelectContent>
+                </Select>
+                {minutesEdit.meetingId === "custom" && (
+                  <input
+                    type="date"
+                    required
+                    value={minutesEdit.custom}
+                    onChange={(e) => setMinutesEdit({ ...minutesEdit, custom: e.target.value })}
+                    className="border border-input rounded-lg px-2 py-1 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                )}
+                <button type="submit" className="text-primary text-xs font-medium hover:underline">Save</button>
+                <button type="button" onClick={() => setMinutesEdit(null)} className="text-xs text-muted-foreground hover:underline">Cancel</button>
               </form>
             )}
           </div>
