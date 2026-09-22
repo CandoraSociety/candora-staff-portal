@@ -20,6 +20,7 @@ const MODES = [
 
 const STATUS_STYLES = {
   draft: { label: 'Draft', cls: 'bg-muted text-foreground' },
+  to_be_sent: { label: 'To Be Sent', cls: 'bg-amber-100 text-amber-800' },
   issued: { label: 'Sent / Issued', cls: 'bg-blue-100 text-blue-800' },
   paid: { label: 'Paid', cls: 'bg-green-100 text-green-800' },
   void: { label: 'Void', cls: 'bg-red-100 text-red-800' },
@@ -57,16 +58,6 @@ export default function FinanceInvoiceGenerator() {
     onSuccess: () => { refresh(); toast.success('Invoice deleted.'); },
   });
 
-  // Next sequential invoice number for the current year (shared by both types)
-  const year = new Date().getFullYear();
-  const nextNumber = useMemo(() => {
-    const seq = invoices.reduce((max, inv) => {
-      const m = String(inv.invoice_number || '').match(/CAND-INV-(\d{4})-(\d+)/);
-      return m && Number(m[1]) === year ? Math.max(max, Number(m[2])) : max;
-    }, 0);
-    return `CAND-INV-${year}-${String(seq + 1).padStart(4, '0')}`;
-  }, [invoices, year]);
-
   const modeInvoices = useMemo(() => invoices.filter(i => i.invoice_type === mode), [invoices, mode]);
 
   const filtered = useMemo(() => {
@@ -77,7 +68,7 @@ export default function FinanceInvoiceGenerator() {
         .some(v => String(v || '').toLowerCase().includes(q)));
   }, [modeInvoices, filterStatus, search]);
 
-  const totalDraft = modeInvoices.filter(i => i.status === 'draft').reduce((s, i) => s + (i.total || 0), 0);
+  const totalDraft = modeInvoices.filter(i => i.status === 'draft' || i.status === 'to_be_sent').reduce((s, i) => s + (i.total || 0), 0);
   const totalIssued = modeInvoices.filter(i => i.status === 'issued').reduce((s, i) => s + (i.total || 0), 0);
   const totalPaid = modeInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
 
@@ -113,7 +104,7 @@ export default function FinanceInvoiceGenerator() {
       <div className="grid grid-cols-3 gap-3">
         <Card className="border-border bg-muted/30">
           <CardContent className="p-3">
-            <div className="text-xs text-muted-foreground">Draft</div>
+            <div className="text-xs text-muted-foreground">Draft / To Be Sent</div>
             <div className="text-lg font-bold text-foreground">{fmt(totalDraft)}</div>
           </CardContent>
         </Card>
@@ -142,6 +133,7 @@ export default function FinanceInvoiceGenerator() {
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="to_be_sent">To Be Sent</SelectItem>
               <SelectItem value="issued">Sent / Issued</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="void">Void</SelectItem>
@@ -193,12 +185,12 @@ export default function FinanceInvoiceGenerator() {
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-center gap-1 flex-wrap">
                           <InvoiceViewButton invoice={r} />
-                          {r.status === 'draft' && (
+                          {(r.status === 'draft' || r.status === 'to_be_sent') && (
                             <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => { setEditing(r); setEditOpen(true); }} title="Edit">
                               <Pencil className="w-4 h-4" />
                             </Button>
                           )}
-                          {r.status === 'draft' && (
+                          {(r.status === 'draft' || r.status === 'to_be_sent') && (
                             <Button size="sm" className="h-7 px-3 gap-1.5 font-semibold" onClick={() => setStatus.mutate({ inv: r, status: 'issued' })}
                               title={mode === 'receivable' ? 'Mark as sent to the customer' : 'Submit for payment'}>
                               <Send className="w-4 h-4" />{mode === 'receivable' ? 'Mark Sent' : 'Issue for Payment'}
@@ -210,12 +202,12 @@ export default function FinanceInvoiceGenerator() {
                               <CheckCircle2 className="w-4 h-4" />Mark Paid
                             </Button>
                           )}
-                          {(r.status === 'draft' || r.status === 'issued') && (
+                          {(r.status === 'draft' || r.status === 'to_be_sent' || r.status === 'issued') && (
                             <Button variant="ghost" size="sm" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => setStatus.mutate({ inv: r, status: 'void' })} title="Void">
                               <Ban className="w-4 h-4" />
                             </Button>
                           )}
-                          {(r.status === 'draft' || r.status === 'void') && (
+                          {(r.status === 'draft' || r.status === 'to_be_sent' || r.status === 'void') && (
                             <Button variant="ghost" size="sm" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => { if (window.confirm(`Delete invoice ${r.invoice_number || ''}? This cannot be undone.`)) del.mutate(r.id); }} title="Delete">
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -236,7 +228,6 @@ export default function FinanceInvoiceGenerator() {
         onOpenChange={setEditOpen}
         invoice={editing}
         defaultType={mode}
-        nextNumber={nextNumber}
         onSaved={refresh}
       />
     </div>

@@ -95,6 +95,7 @@ export function buildInvoiceDocumentHtml({ invoice }) {
       <div><span class="lbl">Invoice #</span> <strong>${esc(invoice.invoice_number || '—')}</strong></div>
       <div><span class="lbl">Date</span> <strong>${esc(invoice.invoice_date || '—')}</strong></div>
       <div><span class="lbl">Due</span> <strong>${esc(invoice.due_date || '—')}</strong></div>
+      ${invoice.payment_terms ? `<div><span class="lbl">Terms</span> <strong>${esc(invoice.payment_terms)}</strong></div>` : ''}
     </div>
   </div>
 

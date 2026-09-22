@@ -1,0 +1,62 @@
+{
+  "name": "InvoiceCustomer",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Person or organization Candora invoices"
+    },
+    "email": {
+      "type": "string",
+      "description": "Contact email for invoices"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone"
+    },
+    "address": {
+      "type": "string",
+      "description": "Mailing address"
+    },
+    "invoice_prefix": {
+      "type": "string",
+      "description": "Invoicing convention \u2014 the first part of every invoice number for this customer, usually the initials of the org being billed (e.g. CCL)"
+    },
+    "next_invoice_seq": {
+      "type": "number",
+      "default": 1,
+      "description": "Next sequential number (4 digits) for this customer's invoices \u2014 increments each time an invoice is created (e.g. CCL-0001, CCL-0002\u2026)"
+    },
+    "payment_terms": {
+      "type": "string",
+      "default": "Payment due upon receipt",
+      "description": "Default payment terms printed on this customer's invoices"
+    },
+    "monthly_billing": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, an invoice is automatically created for this customer on the 1st of each month and categorized as To Be Sent"
+    },
+    "monthly_line_description": {
+      "type": "string",
+      "description": "Description of the recurring monthly charge (used as the auto-invoice's line item)"
+    },
+    "monthly_amount": {
+      "type": "number",
+      "description": "Recurring monthly charge amount"
+    },
+    "monthly_charge_gst": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether GST (5%) is charged on the recurring monthly invoice"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this customer"
+    }
+  },
+  "required": [
+    "name",
+    "invoice_prefix"
+  ]
+}

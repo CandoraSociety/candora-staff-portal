@@ -1,0 +1,44 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "monthly_invoice_generation",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "generate_invoices": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "generateMonthlyInvoices"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate monthly invoices",
+            "description": "Create To-Be-Sent invoices for monthly-billed customers"
+          }
+        }
+      }
+    ]
+  },
+  "description": "On the 1st of each month, automatically creates invoices for customers set up with monthly billing and categorizes them as To Be Sent",
+  "name": "Monthly Invoice Generation",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 1 * *",
+      "one_time_date": null,
+      "timezone": "America/Edmonton",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

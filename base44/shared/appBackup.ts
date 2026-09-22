@@ -26,7 +26,7 @@ export const BACKUP_GROUPS = [
   {
     key: "finance",
     fallbackFolder: "Finance",
-    entities: ["StaffReimbursementRequest", "CCReceiptSubmission", "ReimbursementEntry", "CCReceiptEntry", "CCStatement", "CCStatementLineItem", "ESignatureProfile", "SavedESignature", "ESignatureLog", "FinanceInvoice"],
+    entities: ["StaffReimbursementRequest", "CCReceiptSubmission", "ReimbursementEntry", "CCReceiptEntry", "CCStatement", "CCStatementLineItem", "ESignatureProfile", "SavedESignature", "ESignatureLog", "FinanceInvoice", "InvoiceCustomer"],
   },
   {
     key: "nexushr",

@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -13,25 +15,39 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useAuth';
 import { displayName } from '@/lib/userDisplayName';
 import { computeInvoiceTotals } from './invoiceDocumentHtml';
+import InvoiceCustomerDialog from './InvoiceCustomerDialog';
 
 const TYPES = [
   { value: 'receivable', label: 'Customer pays us', desc: 'An invoice we send to someone who owes Candora money (money in).' },
   { value: 'payable', label: 'On behalf of a vendor', desc: "An invoice we prepare for a service provider who doesn't issue their own — for our payables (e.g. musicians hired for events)." },
 ];
 
+const CREATE_MODES = [
+  { value: 'existing', label: 'Existing Customer', desc: 'Choose a customer already set up with an invoicing convention.' },
+  { value: 'new', label: 'New Customer', desc: 'Add a person or organization and set up their invoicing convention and monthly billing.' },
+  { value: 'adhoc', label: 'Ad Hoc Invoice', desc: 'A standalone invoice with a manually entered number — no customer record needed.' },
+];
+
+const DEFAULT_TERMS = 'Payment due upon receipt';
 const emptyItem = () => ({ description: '', quantity: 1, unit_price: '' });
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 
-// Create / edit dialog for a FinanceInvoice. invoice = null creates a new one,
-// with the type preselected from defaultType and the number prefilled with nextNumber.
-export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, defaultType = 'receivable', nextNumber = '', onSaved }) {
+// Create / edit dialog for a FinanceInvoice. invoice = null creates a new one:
+// for an existing or newly added customer the number follows that customer's
+// invoicing convention (PREFIX-####, sequential); ad hoc invoices get a manual number.
+export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, defaultType = 'receivable', onSaved }) {
   const { user } = useCurrentUser();
+  const qc = useQueryClient();
+  const [createMode, setCreateMode] = useState('existing');
   const [type, setType] = useState('receivable');
+  const [customerId, setCustomerId] = useState('');
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [number, setNumber] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState(DEFAULT_TERMS);
   const [reference, setReference] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [dueDate, setDueDate] = useState('');
@@ -40,15 +56,30 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['invoice-customers'],
+    queryFn: () => base44.entities.InvoiceCustomer.list('name', 500),
+    enabled: open,
+  });
+
+  const customer = customers.find(c => c.id === customerId);
+  const customerNumber = customer
+    ? `${customer.invoice_prefix}-${String(customer.next_invoice_seq || 1).padStart(4, '0')}`
+    : '';
+
   useEffect(() => {
     if (!open) return;
+    setCustomerDialogOpen(false);
     if (invoice) {
       setType(invoice.invoice_type || 'receivable');
+      setCreateMode('adhoc');
+      setCustomerId(invoice.customer_id || '');
       setNumber(invoice.invoice_number || '');
       setName(invoice.counterparty_name || '');
       setEmail(invoice.counterparty_email || '');
       setPhone(invoice.counterparty_phone || '');
       setAddress(invoice.counterparty_address || '');
+      setPaymentTerms(invoice.payment_terms || DEFAULT_TERMS);
       setReference(invoice.reference || '');
       setInvoiceDate(invoice.invoice_date || format(new Date(), 'yyyy-MM-dd'));
       setDueDate(invoice.due_date || '');
@@ -57,16 +88,30 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
       setChargeGst(!!invoice.charge_gst);
       setNotes(invoice.notes || '');
     } else {
+      setCreateMode('existing');
       setType(defaultType);
-      setNumber(nextNumber);
-      setName(''); setEmail(''); setPhone(''); setAddress(''); setReference('');
+      setCustomerId('');
+      setNumber('');
+      setName(''); setEmail(''); setPhone(''); setAddress('');
+      setPaymentTerms(DEFAULT_TERMS);
+      setReference('');
       setInvoiceDate(format(new Date(), 'yyyy-MM-dd'));
       setDueDate('');
       setItems([emptyItem()]);
       setChargeGst(false);
       setNotes('');
     }
-  }, [open, invoice, defaultType, nextNumber]);
+  }, [open, invoice, defaultType]);
+
+  const applyCustomer = (c) => {
+    setCustomerId(c.id);
+    setName(c.name || '');
+    setEmail(c.email || '');
+    setPhone(c.phone || '');
+    setAddress(c.address || '');
+    setPaymentTerms(c.payment_terms || DEFAULT_TERMS);
+    setType('receivable');
+  };
 
   const updateItem = (idx, field, value) => {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, [field]: value } : it));
@@ -89,10 +134,22 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
     if (lineItems.length === 0) { toast.error('Add at least one line item with a description.'); return; }
     if (!invoiceDate) { toast.error('Select the invoice date.'); return; }
 
+    const isCustomerMode = !invoice && createMode !== 'adhoc';
+    if (isCustomerMode && !customer) {
+      toast.error('Choose a customer — or use the Ad Hoc Invoice option for a standalone invoice.');
+      return;
+    }
+
+    const finalNumber = invoice
+      ? String(number || '').trim()
+      : isCustomerMode ? customerNumber : String(number || '').trim();
+    if (!finalNumber) { toast.error('Enter the invoice number.'); return; }
+
     const totals = computeInvoiceTotals({ line_items: lineItems, charge_gst: chargeGst });
     const payload = {
       invoice_type: type,
-      invoice_number: String(number || '').trim(),
+      invoice_number: finalNumber,
+      ...(isCustomerMode ? { customer_id: customer.id } : {}),
       counterparty_name: name.trim(),
       counterparty_email: email.trim(),
       counterparty_phone: phone.trim(),
@@ -103,6 +160,7 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
       line_items: lineItems,
       charge_gst: chargeGst,
       ...totals,
+      payment_terms: paymentTerms.trim() || DEFAULT_TERMS,
       notes: notes.trim(),
       prepared_by_name: invoice?.prepared_by_name || displayName(user),
     };
@@ -113,8 +171,13 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
         toast.success('Invoice updated.');
       } else {
         await base44.entities.FinanceInvoice.create(payload);
-        toast.success('Invoice created.');
+        if (isCustomerMode) {
+          // Advance the customer's sequential invoice number
+          await base44.entities.InvoiceCustomer.update(customer.id, { next_invoice_seq: (customer.next_invoice_seq || 1) + 1 });
+        }
+        toast.success(`Invoice ${finalNumber} created.`);
       }
+      qc.invalidateQueries({ queryKey: ['invoice-customers'] });
       onSaved?.();
       onOpenChange(false);
     } catch {
@@ -124,6 +187,9 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
     }
   };
 
+  const isCustomerMode = !invoice && createMode !== 'adhoc';
+  const showNumberField = invoice || createMode === 'adhoc';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -132,21 +198,75 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
         </DialogHeader>
         <div className="space-y-4">
           {!invoice && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {TYPES.map(t => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setType(t.value)}
-                  className={cn('text-left rounded-lg border p-3 transition-colors',
-                    type === t.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50')}
-                >
-                  <div className="text-sm font-semibold">{t.label}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{t.desc}</div>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {CREATE_MODES.map(m => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => { setCreateMode(m.value); if (m.value !== 'existing') setCustomerId(''); }}
+                    className={cn('text-left rounded-lg border p-3 transition-colors',
+                      createMode === m.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50')}
+                  >
+                    <div className="text-sm font-semibold">{m.label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{m.desc}</div>
+                  </button>
+                ))}
+              </div>
+
+              {createMode === 'existing' && (
+                <div>
+                  <Label className="text-xs">Customer</Label>
+                  {customers.length === 0 ? (
+                    <div className="text-sm text-muted-foreground rounded-lg border border-dashed p-3">
+                      No invoice customers set up yet — use the “New Customer” option above to add one.
+                    </div>
+                  ) : (
+                    <Select value={customerId} onValueChange={id => { const c = customers.find(x => x.id === id); if (c) applyCustomer(c); }}>
+                      <SelectTrigger className="w-full"><SelectValue placeholder="Choose a customer…" /></SelectTrigger>
+                      <SelectContent>
+                        {customers.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name} ({c.invoice_prefix})</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {createMode === 'new' && (
+                <div className="rounded-lg border border-dashed p-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-sm text-muted-foreground">
+                    Set up the person or organization being billed — name, invoicing convention, and optional monthly billing.
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-2 shrink-0" onClick={() => setCustomerDialogOpen(true)}>
+                    <Plus className="w-4 h-4" />New Customer…
+                  </Button>
+                </div>
+              )}
+
+              {isCustomerMode && customer && (
+                <div className="text-xs text-muted-foreground rounded-lg bg-primary/5 border border-primary/20 p-2.5">
+                  Invoice number will be <span className="font-mono font-semibold text-foreground">{customerNumber}</span> — {customer.invoice_prefix} convention, sequential 4-digit number.
+                </div>
+              )}
+            </>
           )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {TYPES.map(t => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setType(t.value)}
+                className={cn('text-left rounded-lg border p-3 transition-colors',
+                  type === t.value ? 'border-primary bg-primary/5' : 'border-border hover:bg-muted/50')}
+              >
+                <div className="text-sm font-semibold">{t.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{t.desc}</div>
+              </button>
+            ))}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
@@ -181,10 +301,15 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
               <Label className="text-xs">{type === 'payable' ? 'Service / Due Date' : 'Due Date'}</Label>
               <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
             </div>
+            {showNumberField && (
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Invoice Number</Label>
+                <Input value={number} onChange={e => setNumber(e.target.value)} placeholder="e.g. CCL-0001" />
+              </div>
+            )}
             <div className="sm:col-span-2">
-              <Label className="text-xs">Invoice Number</Label>
-              <Input value={number} onChange={e => setNumber(e.target.value)} placeholder={nextNumber || 'CAND-INV-2026-0001'} />
-              <p className="text-[11px] text-muted-foreground mt-1">Prefilled automatically — change it only if you need a different number.</p>
+              <Label className="text-xs">Payment Terms</Label>
+              <Input value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} placeholder="Payment due upon receipt" />
             </div>
           </div>
 
@@ -250,6 +375,16 @@ export default function InvoiceEditDialog({ open, onOpenChange, invoice = null, 
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <InvoiceCustomerDialog
+        open={customerDialogOpen}
+        onOpenChange={setCustomerDialogOpen}
+        onSaved={(c) => {
+          qc.invalidateQueries({ queryKey: ['invoice-customers'] });
+          setCreateMode('existing');
+          applyCustomer(c);
+        }}
+      />
     </Dialog>
   );
 }

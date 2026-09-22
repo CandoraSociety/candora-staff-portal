@@ -12,7 +12,11 @@
     },
     "invoice_number": {
       "type": "string",
-      "description": "Invoice number \u2014 auto-generated CAND-INV-YYYY-#### unless entered manually"
+      "description": "Invoice number \u2014 customer invoices use the customer's invoicing convention: prefix (initials of the org being billed) + sequential 4-digit number (e.g. CCL-0001); ad hoc invoices use a manually entered number"
+    },
+    "customer_id": {
+      "type": "string",
+      "description": "Reference to the InvoiceCustomer this invoice was created for \u2014 ad hoc invoices have none"
     },
     "counterparty_name": {
       "type": "string",
@@ -42,7 +46,11 @@
     "due_date": {
       "type": "string",
       "format": "date",
-      "description": "Payment due date (receivable) or service/due date (payable)"
+      "description": "Payment due date (receivable) or service/due date (payable) \u2014 blank when payment is due upon receipt"
+    },
+    "payment_terms": {
+      "type": "string",
+      "description": "Payment terms printed on the invoice (e.g. 'Payment due upon receipt')"
     },
     "line_items": {
       "type": "array",
@@ -88,12 +96,13 @@
       "type": "string",
       "enum": [
         "draft",
+        "to_be_sent",
         "issued",
         "paid",
         "void"
       ],
       "default": "draft",
-      "description": "draft = still being prepared; issued = sent to the customer / submitted for payment; paid = money settled; void = cancelled"
+      "description": "draft = still being prepared; to_be_sent = automatically generated (monthly billing), waiting to be sent out; issued = sent to the customer / submitted for payment; paid = money settled; void = cancelled"
     },
     "paid_date": {
       "type": "string",
@@ -102,7 +111,7 @@
     },
     "prepared_by_name": {
       "type": "string",
-      "description": "Candora staff member who prepared the invoice"
+      "description": "Candora staff member who prepared the invoice (or 'Automatic monthly billing' for auto-generated invoices)"
     }
   },
   "required": [
