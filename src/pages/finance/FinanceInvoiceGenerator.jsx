@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import InvoiceEditDialog from '@/components/finance/invoicegen/InvoiceEditDialog';
 import InvoiceViewButton from '@/components/finance/invoicegen/InvoiceViewButton';
 import CustomersTab from '@/components/finance/invoicegen/CustomersTab';
+import InvoiceDeleteDialog from '@/components/finance/invoicegen/InvoiceDeleteDialog';
 
 const MODES = [
   { value: 'receivable', label: 'Invoices to Customers', icon: ArrowDownToLine, desc: 'Create and send invoices to people who need to pay Candora.' },
@@ -38,6 +39,8 @@ export default function FinanceInvoiceGenerator() {
   const [view, setView] = useState('invoices'); // 'invoices' | 'customers'
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState(null); // invoice being edited, null = new
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(null); // invoice pending deletion
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['finance-invoices'],
@@ -53,11 +56,6 @@ export default function FinanceInvoiceGenerator() {
       await base44.entities.FinanceInvoice.update(inv.id, patch);
     },
     onSuccess: refresh,
-  });
-
-  const del = useMutation({
-    mutationFn: id => base44.entities.FinanceInvoice.delete(id),
-    onSuccess: () => { refresh(); toast.success('Invoice deleted.'); },
   });
 
   const modeInvoices = useMemo(() => invoices.filter(i => i.invoice_type === mode), [invoices, mode]);
@@ -226,7 +224,7 @@ export default function FinanceInvoiceGenerator() {
                             </Button>
                           )}
                           {(r.status === 'draft' || r.status === 'to_be_sent' || r.status === 'void') && (
-                            <Button variant="ghost" size="sm" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => { if (window.confirm(`Delete invoice ${r.invoice_number || ''}? This cannot be undone.`)) del.mutate(r.id); }} title="Delete">
+                            <Button variant="ghost" size="sm" className="h-7 px-2 text-red-700 hover:bg-red-50" onClick={() => { setDeleting(r); setDeleteOpen(true); }} title="Delete">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           )}
@@ -254,6 +252,13 @@ export default function FinanceInvoiceGenerator() {
         invoice={editing}
         defaultType={mode}
         onSaved={refresh}
+      />
+
+      <InvoiceDeleteDialog
+        invoice={deleting}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => { refresh(); qc.invalidateQueries({ queryKey: ['invoice-customers'] }); }}
       />
     </div>
   );

@@ -26,7 +26,7 @@ async function createThisMonthInvoice(customer, user) {
   const number = `${customer.invoice_prefix}-${String(seq).padStart(4, '0')}`;
   const subtotal = Number(customer.monthly_amount) || 0;
   const gst = customer.monthly_charge_gst ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
-  const description = (customer.monthly_line_description || 'Monthly services').trim();
+  const description = `${(customer.monthly_line_description || 'Monthly services').trim()} — ${format(new Date(), 'MMMM yyyy')}`;
   await base44.entities.FinanceInvoice.create({
     invoice_type: 'receivable',
     invoice_number: number,

@@ -36,7 +36,11 @@ Deno.serve(async (req) => {
       const number = `${c.invoice_prefix}-${String(seq).padStart(4, '0')}`;
       const subtotal = Number(c.monthly_amount) || 0;
       const gst = c.monthly_charge_gst ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
-      const description = (c.monthly_line_description || 'Monthly services').trim();
+      // Explicitly state the billing month and year on the invoice
+      const [yy, mm] = ym.split('-');
+      const monthLabel = new Date(Number(yy), Number(mm) - 1, 1)
+        .toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const description = `${(c.monthly_line_description || 'Monthly services').trim()} — ${monthLabel}`;
 
       await base44.asServiceRole.entities.FinanceInvoice.create({
         invoice_type: 'receivable',
