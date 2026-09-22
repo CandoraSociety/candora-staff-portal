@@ -3,9 +3,11 @@ import { ClipboardPaste, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function BoardReportPasteFormatter({ reportTitle, reportMonth, onAddSections }) {
   const [text, setText] = useState("");
+  const [keepWording, setKeepWording] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,11 +23,12 @@ export default function BoardReportPasteFormatter({ reportTitle, reportMonth, on
 Report title: ${reportTitle}
 Report month: ${monthStr}
 
-The user has pasted raw content below, which may range from just a couple of points to an entire report's worth of text. Clean it up and format it into report sections:
+The user has pasted raw content below, which may range from just a couple of points to an entire report's worth of text. Format it into report sections:
 - If it is only a few points, produce ONE section: a fitting title, with the points as a bulleted list.
 - If it is substantial, split it into logical sections (one per topic), each with a clear, professional title.
-- Preserve ALL information and facts exactly — do not invent, add, or drop any details.
-- Fix grammar, punctuation, and structure; use a professional board-report tone.
+${keepWording
+  ? `- CRITICAL: KEEP THE WORDING VERBATIM. Copy the body text word-for-word, exactly as written. Do NOT reword, paraphrase, polish, or "improve" anything — do not change grammar, spelling, capitalization, or phrasing. Your ONLY job is formatting: grouping the text into sections, giving each section a title, and marking it up as HTML. Every sentence in the output must appear in the input unchanged.`
+  : `- Preserve ALL information and facts exactly — do not invent, add, or drop any details.\n- Fix grammar, punctuation, and structure; use a professional board-report tone.`}
 - Each section's content must be HTML using ONLY these tags: <p>, <ul>, <ol>, <li>, <strong>, <em>, <br>. No headings, tables, images, or any other tags.
 
 PASTED CONTENT:
@@ -78,6 +81,16 @@ ${text}
         disabled={processing}
       />
       {error && <p className="text-xs text-destructive mt-2">{error}</p>}
+      <div className="flex items-center gap-2 mt-3">
+        <Checkbox
+          id="keep-wording"
+          checked={keepWording}
+          onCheckedChange={(v) => setKeepWording(!!v)}
+        />
+        <label htmlFor="keep-wording" className="text-xs text-muted-foreground select-none">
+          Keep my wording exactly — formatting only, no text changes
+        </label>
+      </div>
       <div className="flex items-center gap-3 mt-3">
         <Button size="sm" onClick={handleFormat} disabled={processing || !text.trim()} className="gap-1.5">
           {processing ? (
