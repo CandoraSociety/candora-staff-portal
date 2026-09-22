@@ -27,21 +27,21 @@ export default function InvoiceViewButton({ invoice }) {
   };
 
   const print = () => {
-    const w = iframeRef.current?.contentWindow;
-    if (!w) return;
-    // The browser names the saved PDF after the tab title — set it to the
-    // invoice file name while the print dialog is open, then restore it.
-    const prevTitle = document.title;
-    document.title = buildInvoiceFileName(invoice);
-    const restore = () => {
-      document.title = prevTitle;
-      window.removeEventListener('afterprint', restore);
-      clearTimeout(fallback);
-    };
-    window.addEventListener('afterprint', restore);
-    const fallback = setTimeout(restore, 120000);
-    w.focus();
-    w.print();
+    // Print from a real popup window instead of the preview iframe — the
+    // browser names the saved PDF after the printed window's document title,
+    // which is the invoice file name (e.g. Candora-Christcity_..._Invoice0001).
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) {
+      const iw = iframeRef.current?.contentWindow;
+      if (iw) { iw.focus(); iw.print(); }
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.document.title = buildInvoiceFileName(invoice);
+    w.addEventListener('afterprint', () => setTimeout(() => w.close(), 100));
+    setTimeout(() => { w.focus(); w.print(); }, 250);
   };
 
   const share = async () => {
