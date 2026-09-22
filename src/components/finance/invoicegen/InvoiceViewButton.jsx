@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileText, Loader2, Printer, Send, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { buildInvoiceDocumentHtml } from './invoiceDocumentHtml';
+import { buildInvoiceDocumentHtml, buildInvoiceFileName } from './invoiceDocumentHtml';
 
 // "Open" button — shows the printable Candora invoice in a viewer with
 // Save (print / save as PDF) and Share (email the document) options.
@@ -28,7 +28,20 @@ export default function InvoiceViewButton({ invoice }) {
 
   const print = () => {
     const w = iframeRef.current?.contentWindow;
-    if (w) { w.focus(); w.print(); }
+    if (!w) return;
+    // The browser names the saved PDF after the tab title — set it to the
+    // invoice file name while the print dialog is open, then restore it.
+    const prevTitle = document.title;
+    document.title = buildInvoiceFileName(invoice);
+    const restore = () => {
+      document.title = prevTitle;
+      window.removeEventListener('afterprint', restore);
+      clearTimeout(fallback);
+    };
+    window.addEventListener('afterprint', restore);
+    const fallback = setTimeout(restore, 120000);
+    w.focus();
+    w.print();
   };
 
   const share = async () => {
