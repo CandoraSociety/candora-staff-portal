@@ -38,7 +38,7 @@ export function buildInvoiceDocumentHtml({ invoice }) {
       ${p.email ? `<div class="sub">${esc(p.email)}</div>` : ''}
       ${p.phone ? `<div class="sub">${esc(p.phone)}</div>` : ''}`;
 
-  const candoraBlock = `<div class="party-name">Candora</div>`;
+  const candoraBlock = `<div class="party-name">Candora Society of Edmonton</div>`;
   const fromBlock = isPayable
     ? partyBlock({ name: invoice.counterparty_name, address: invoice.counterparty_address, email: invoice.counterparty_email, phone: invoice.counterparty_phone })
     : candoraBlock;
