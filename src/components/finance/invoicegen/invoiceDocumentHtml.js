@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const fmt = n => `$${Number(n || 0).toFixed(2)}`;
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -12,6 +12,20 @@ export function computeInvoiceTotals(invoice) {
   const subtotal = items.reduce((s, it) => s + (Number(it.quantity) || 0) * (Number(it.unit_price) || 0), 0);
   const gst = invoice?.charge_gst ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
   return { subtotal, gst, total: subtotal + gst };
+}
+
+// File name for saved/printed invoices:
+// Candora-{Customer}_{Reference}_{Month Year}_Invoice{number}
+// e.g. Candora-Christcity_Lighthouse_Sub_Lease_September_2026_InvoiceCCL-LEASE-0001
+export function buildInvoiceFileName(invoice) {
+  const sanitize = s => String(s ?? '').trim().replace(/\s+/g, '_').replace(/[\\/:*?"<>|]/g, '');
+  let name = 'Candora';
+  if (invoice.counterparty_name) name += `-${sanitize(invoice.counterparty_name)}`;
+  if (invoice.reference) name += `_${sanitize(invoice.reference)}`;
+  const date = invoice.invoice_date ? parseISO(invoice.invoice_date) : new Date();
+  name += `_${format(date, 'MMMM_yyyy')}`;
+  name += `_Invoice${invoice.invoice_number || ''}`;
+  return name;
 }
 
 // Builds the printable invoice document HTML.
@@ -49,7 +63,7 @@ export function buildInvoiceDocumentHtml({ invoice }) {
   return `<!DOCTYPE html>
 <html>
 <head>
-  <title>Invoice ${esc(invoice.invoice_number || '')} — ${esc(invoice.counterparty_name || '')}</title>
+  <title>${esc(buildInvoiceFileName(invoice))}</title>
   <style>
     @page { size: letter portrait; margin: 0.75in; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
