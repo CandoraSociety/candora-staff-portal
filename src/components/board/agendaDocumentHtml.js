@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { parseDateSmart } from "@/lib/dateUtils";
 
 const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -28,7 +29,7 @@ export const sectionOf = (item) => item.section || TYPE_SECTION[item.item_type] 
 
 // File name for the saved/printed agenda PDF
 export function buildAgendaFileName({ meeting, variant }) {
-  const date = meeting?.meeting_date ? new Date(meeting.meeting_date) : new Date();
+  const date = parseDateSmart(meeting?.meeting_date) || new Date();
   return `Candora-Agenda_${format(date, "MMM-d-yyyy")}${variant === "distribution" ? "_Distribution" : ""}`;
 }
 
@@ -96,7 +97,7 @@ export function buildAgendaDocumentHtml({ meeting, items, variant }) {
     <img src="${CANDORA_LOGO_URL}" alt="Candora" />
     <div class="org">Candora Society of Edmonton</div>
     <h1>${esc(meeting?.title || "Board Meeting")} — Agenda</h1>
-    <div class="when">${meeting?.meeting_date ? format(new Date(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a") : ""}</div>
+    <div class="when">${meeting?.meeting_date ? format(parseDateSmart(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a") : ""}</div>
     ${meeting?.location ? `<div class="where">${esc(meeting.location)}</div>` : ""}
   </div>
   ${sectionHtml}

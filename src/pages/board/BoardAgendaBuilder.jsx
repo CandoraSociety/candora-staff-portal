@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { parseDateSmart } from "@/lib/dateUtils";
 import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
 import AgendaPrintButton from "@/components/board/AgendaPrintButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +14,7 @@ import { AGENDA_SECTIONS as SECTIONS, sectionOf } from "@/components/board/agend
 // The standing core every board agenda is built on
 function buildCoreItems(previousMeeting) {
   const minutesTitle = previousMeeting
-    ? `Approval of Previous Minutes — ${format(new Date(previousMeeting.meeting_date), "MMM d, yyyy")} (${previousMeeting.title})`
+    ? `Approval of Previous Minutes — ${format(parseDateSmart(previousMeeting.meeting_date), "MMM d, yyyy")} (${previousMeeting.title})`
     : "Approval of Previous Minutes";
   return [
     { title: "Call to Order / Quorum", section: "administration", item_type: "call_to_order", duration_minutes: 2 },
@@ -57,7 +58,7 @@ export default function BoardAgendaBuilder() {
       if (current.length === 0) {
         // Autofill from the most recent meeting BEFORE this one
         const previous =
-          (list || []).find((m) => m.id !== id && meetings[0] && new Date(m.meeting_date) < new Date(meetings[0].meeting_date)) ||
+          (list || []).find((m) => m.id !== id && meetings[0] && parseDateSmart(m.meeting_date) < parseDateSmart(meetings[0].meeting_date)) ||
           (list || []).find((m) => m.id !== id);
         const core = buildCoreItems(previous).map((c, i) => ({
           ...c,
@@ -140,11 +141,9 @@ export default function BoardAgendaBuilder() {
     let title;
     const m = (meetingList || []).find((x) => x.id === minutesEdit.meetingId);
     if (m) {
-      title = `Approval of Previous Minutes — ${format(new Date(m.meeting_date), "MMM d, yyyy")} (${m.title})`;
+      title = `Approval of Previous Minutes — ${format(parseDateSmart(m.meeting_date), "MMM d, yyyy")} (${m.title})`;
     } else if (minutesEdit.custom) {
-      // Parse the date-only value at local midnight so it doesn't shift back a day (UTC parsing)
-      const [y, mo, d] = minutesEdit.custom.split("-").map(Number);
-      title = `Approval of Previous Minutes — ${format(new Date(y, mo - 1, d), "MMM d, yyyy")}`;
+      title = `Approval of Previous Minutes — ${format(parseDateSmart(minutesEdit.custom), "MMM d, yyyy")}`;
     } else {
       return;
     }
@@ -196,7 +195,7 @@ export default function BoardAgendaBuilder() {
   const existingTitles = new Set(items.map((i) => i.title));
   const minutesItem = items.find((i) => i.item_type === "approval_of_minutes");
   const prevMeeting = meeting
-    ? (meetingList || []).find((m) => m.id !== id && new Date(m.meeting_date) < new Date(meeting.meeting_date))
+    ? (meetingList || []).find((m) => m.id !== id && parseDateSmart(m.meeting_date) < parseDateSmart(meeting.meeting_date))
     : null;
 
   if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
@@ -209,7 +208,7 @@ export default function BoardAgendaBuilder() {
           <h1 className="font-heading text-2xl font-semibold">Agenda Builder</h1>
           {meeting && (
           <div className="text-muted-foreground text-sm flex items-center gap-3 flex-wrap">
-            <span>{meeting.title} · {format(new Date(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a")}</span>
+            <span>{meeting.title} · {format(parseDateSmart(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a")}</span>
             {locationDraft === null ? (
               <span className="flex items-center gap-1.5">
                 {meeting.location ? (
@@ -250,7 +249,7 @@ export default function BoardAgendaBuilder() {
                   <SelectContent>
                     {(meetingList || []).filter((m) => m.id !== id).map((m) => (
                       <SelectItem key={m.id} value={m.id}>
-                        {m.title} — {format(new Date(m.meeting_date), "MMM d, yyyy")}
+                        {m.title} — {format(parseDateSmart(m.meeting_date), "MMM d, yyyy")}
                       </SelectItem>
                     ))}
                     <SelectItem value="custom">Other date…</SelectItem>

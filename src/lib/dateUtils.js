@@ -15,6 +15,18 @@ export function parseDateLocal(dateStr) {
  * Today's date at LOCAL midnight — use as the "now" reference for
  * day-level comparisons (overdue, days-until-due, etc.).
  */
+/**
+ * Parse a date string that may be date-only ("YYYY-MM-DD") OR a full datetime.
+ * Date-only strings parse as LOCAL midnight (never UTC) so display and
+ * comparisons never shift by a day in negative-UTC timezones like Edmonton.
+ */
+export function parseDateSmart(dateStr) {
+  if (!dateStr) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return parseDateLocal(dateStr);
+  const d = new Date(dateStr);
+  return isNaN(d) ? null : d;
+}
+
 export function startOfTodayLocal() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
