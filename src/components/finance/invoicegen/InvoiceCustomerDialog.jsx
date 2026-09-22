@@ -19,7 +19,7 @@ export function initialsFromName(name) {
 
 // New invoice customer — sets up the person/org being billed, their invoicing
 // convention (prefix + sequential 4-digit numbers) and optional monthly billing.
-export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved }) {
+export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved, customer = null }) {
   const [name, setName] = useState('');
   const [prefix, setPrefix] = useState('');
   const [prefixTouched, setPrefixTouched] = useState(false);
@@ -35,11 +35,25 @@ export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved }) {
 
   useEffect(() => {
     if (!open) return;
-    setName(''); setPrefix(''); setPrefixTouched(false);
-    setEmail(''); setPhone(''); setAddress('');
-    setPaymentTerms('Payment due upon receipt');
-    setMonthly(false); setMonthlyDesc(''); setMonthlyAmount(''); setMonthlyGst(false);
-  }, [open]);
+    if (customer) {
+      setName(customer.name || '');
+      setPrefix(customer.invoice_prefix || '');
+      setPrefixTouched(true);
+      setEmail(customer.email || '');
+      setPhone(customer.phone || '');
+      setAddress(customer.address || '');
+      setPaymentTerms(customer.payment_terms || 'Payment due upon receipt');
+      setMonthly(!!customer.monthly_billing);
+      setMonthlyDesc(customer.monthly_line_description || '');
+      setMonthlyAmount(customer.monthly_amount || '');
+      setMonthlyGst(!!customer.monthly_charge_gst);
+    } else {
+      setName(''); setPrefix(''); setPrefixTouched(false);
+      setEmail(''); setPhone(''); setAddress('');
+      setPaymentTerms('Payment due upon receipt');
+      setMonthly(false); setMonthlyDesc(''); setMonthlyAmount(''); setMonthlyGst(false);
+    }
+  }, [open, customer]);
 
   const onNameChange = (v) => {
     setName(v);
@@ -51,23 +65,29 @@ export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved }) {
     const p = prefix.trim().toUpperCase();
     if (!p) { toast.error('Set the invoicing convention prefix — usually the initials of the org being billed.'); return; }
     if (monthly && !(Number(monthlyAmount) > 0)) { toast.error('Enter the monthly billing amount.'); return; }
+    const payload = {
+      name: name.trim(),
+      invoice_prefix: p,
+      email: email.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      payment_terms: paymentTerms.trim() || 'Payment due upon receipt',
+      monthly_billing: monthly,
+      monthly_line_description: monthlyDesc.trim(),
+      monthly_amount: monthly ? (Number(monthlyAmount) || 0) : 0,
+      monthly_charge_gst: monthly && monthlyGst,
+    };
     setSaving(true);
     try {
-      const customer = await base44.entities.InvoiceCustomer.create({
-        name: name.trim(),
-        invoice_prefix: p,
-        email: email.trim(),
-        phone: phone.trim(),
-        address: address.trim(),
-        payment_terms: paymentTerms.trim() || 'Payment due upon receipt',
-        monthly_billing: monthly,
-        monthly_line_description: monthlyDesc.trim(),
-        monthly_amount: monthly ? (Number(monthlyAmount) || 0) : 0,
-        monthly_charge_gst: monthly && monthlyGst,
-        next_invoice_seq: 1,
-      });
-      toast.success(`${customer.name} added as an invoice customer.`);
-      onSaved?.(customer);
+      if (customer) {
+        await base44.entities.InvoiceCustomer.update(customer.id, payload);
+        toast.success(`${payload.name} updated.`);
+        onSaved?.({ ...customer, ...payload });
+      } else {
+        const created = await base44.entities.InvoiceCustomer.create({ ...payload, next_invoice_seq: 1 });
+        toast.success(`${created.name} added as an invoice customer.`);
+        onSaved?.(created);
+      }
       onOpenChange(false);
     } catch {
       toast.error('Could not save the customer. Try again.');
@@ -80,7 +100,7 @@ export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New Invoice Customer</DialogTitle>
+          <DialogTitle>{customer ? 'Edit Customer' : 'New Invoice Customer'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -146,7 +166,7 @@ export default function InvoiceCustomerDialog({ open, onOpenChange, onSaved }) {
           <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
           <Button className="gap-2" disabled={saving} onClick={save}>
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            Add Customer
+            {customer ? 'Save Changes' : 'Add Customer'}
           </Button>
         </DialogFooter>
       </DialogContent>

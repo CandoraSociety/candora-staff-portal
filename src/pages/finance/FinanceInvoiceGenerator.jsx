@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import InvoiceEditDialog from '@/components/finance/invoicegen/InvoiceEditDialog';
 import InvoiceViewButton from '@/components/finance/invoicegen/InvoiceViewButton';
+import CustomersTab from '@/components/finance/invoicegen/CustomersTab';
 
 const MODES = [
   { value: 'receivable', label: 'Invoices to Customers', icon: ArrowDownToLine, desc: 'Create and send invoices to people who need to pay Candora.' },
@@ -34,6 +35,7 @@ export default function FinanceInvoiceGenerator() {
   const [mode, setMode] = useState('receivable');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [view, setView] = useState('invoices'); // 'invoices' | 'customers'
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState(null); // invoice being edited, null = new
 
@@ -74,13 +76,29 @@ export default function FinanceInvoiceGenerator() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><FileText className="h-6 w-6 text-primary" />Invoice Generator</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Create invoices to send to people who need to pay Candora, or prepare an invoice on behalf of a vendor who doesn't issue their own (payables).
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><FileText className="h-6 w-6 text-primary" />Invoice Generator</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Create invoices to send to people who need to pay Candora, or prepare an invoice on behalf of a vendor who doesn't issue their own (payables).
+          </p>
+        </div>
+        <div className="flex items-center gap-1 rounded-lg border p-1 bg-card">
+          {['invoices', 'customers'].map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={cn('px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
+                view === v ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              {v === 'invoices' ? 'Invoices' : 'Customers'}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {view === 'invoices' && (
+      <>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {MODES.map(m => (
           <button
@@ -221,6 +239,13 @@ export default function FinanceInvoiceGenerator() {
             </table>
           </div>
         </Card>
+      )}
+
+      </>
+      )}
+
+      {view === 'customers' && (
+        <CustomersTab />
       )}
 
       <InvoiceEditDialog
