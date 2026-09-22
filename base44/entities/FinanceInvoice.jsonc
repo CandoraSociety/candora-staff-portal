@@ -1,0 +1,113 @@
+{
+  "name": "FinanceInvoice",
+  "type": "object",
+  "properties": {
+    "invoice_type": {
+      "type": "string",
+      "enum": [
+        "receivable",
+        "payable"
+      ],
+      "description": "receivable = an invoice Candora sends to someone who must pay us; payable = an invoice prepared on behalf of a vendor/service provider who does not issue their own (e.g. musicians hired for events), for Candora's payables"
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "Invoice number \u2014 auto-generated CAND-INV-YYYY-#### unless entered manually"
+    },
+    "counterparty_name": {
+      "type": "string",
+      "description": "Receivable: the customer being billed (Bill To). Payable: the vendor/service provider the invoice is created on behalf of."
+    },
+    "counterparty_email": {
+      "type": "string",
+      "description": "Customer or vendor contact email"
+    },
+    "counterparty_phone": {
+      "type": "string",
+      "description": "Customer or vendor contact phone"
+    },
+    "counterparty_address": {
+      "type": "string",
+      "description": "Customer or vendor mailing address"
+    },
+    "reference": {
+      "type": "string",
+      "description": "What the invoice is for \u2014 event name, service, purchase order, etc."
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date on the invoice"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Payment due date (receivable) or service/due date (payable)"
+    },
+    "line_items": {
+      "type": "array",
+      "description": "Invoice line items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "default": 1
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "charge_gst": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether GST (5%) applies to this invoice"
+    },
+    "subtotal": {
+      "type": "number",
+      "description": "Sum of line item amounts (qty \u00d7 unit price)"
+    },
+    "gst": {
+      "type": "number",
+      "description": "GST charged (5% of subtotal when charge_gst is true)"
+    },
+    "total": {
+      "type": "number",
+      "description": "Subtotal + GST \u2014 the invoice total"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes printed on the invoice (payment instructions, event details, etc.)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "issued",
+        "paid",
+        "void"
+      ],
+      "default": "draft",
+      "description": "draft = still being prepared; issued = sent to the customer / submitted for payment; paid = money settled; void = cancelled"
+    },
+    "paid_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the invoice was paid"
+    },
+    "prepared_by_name": {
+      "type": "string",
+      "description": "Candora staff member who prepared the invoice"
+    }
+  },
+  "required": [
+    "invoice_type",
+    "counterparty_name",
+    "invoice_date"
+  ]
+}

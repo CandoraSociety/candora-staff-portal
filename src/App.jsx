@@ -350,6 +350,7 @@ import FinanceMasterCard from '@/pages/finance/FinanceMasterCard';
 import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import FinanceESignatures from '@/pages/finance/FinanceESignatures';
+import FinanceInvoiceGenerator from '@/pages/finance/FinanceInvoiceGenerator';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
@@ -765,6 +766,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
           <Route path="/finance/e-signatures" element={<FinanceESignatures />} />
+          <Route path="/finance/invoice-generator" element={<FinanceInvoiceGenerator />} />
         </Route>
 
         {/* Dev Tasks - standalone page */}
