@@ -15,16 +15,15 @@ export function computeInvoiceTotals(invoice) {
 }
 
 // File name for saved/printed invoices:
-// Candora-{Customer}_{Reference}_{Month Year}_Invoice{number}
-// e.g. Candora-Christcity_Lighthouse_Sub_Lease_September_2026_InvoiceCCL-LEASE-0001
+// Candora-{Customer}_{Month-Year}_{Invoice number}
+// e.g. Candora-Christcity_Lighthouse_Sept-26_CCL-LEASE-0001
 export function buildInvoiceFileName(invoice) {
   const sanitize = s => String(s ?? '').trim().replace(/\s+/g, '_').replace(/[\\/:*?"<>|]/g, '');
   let name = 'Candora';
   if (invoice.counterparty_name) name += `-${sanitize(invoice.counterparty_name)}`;
-  if (invoice.reference) name += `_${sanitize(invoice.reference)}`;
   const date = invoice.invoice_date ? parseISO(invoice.invoice_date) : new Date();
-  name += `_${format(date, 'MMMM_yyyy')}`;
-  name += `_Invoice${invoice.invoice_number || ''}`;
+  name += `_${format(date, 'MMM-yy').replace(/^Sep-/, 'Sept-')}`;
+  if (invoice.invoice_number) name += `_${invoice.invoice_number}`;
   return name;
 }
 
