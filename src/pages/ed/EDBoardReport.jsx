@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import BoardReportAutoBuilder from "@/components/ed/BoardReportAutoBuilder";
+import BoardReportPasteFormatter from "@/components/ed/BoardReportPasteFormatter";
 import BoardReportSectionEditor from "@/components/ed/BoardReportSectionEditor";
 import { generateBoardReportPdf } from "@/lib/generateBoardReportPdf";
 
@@ -360,6 +361,13 @@ export default function EDBoardReport() {
                 </div>
                 <BoardReportAutoBuilder reportMonth={selectedReport.report_month} onAddSections={addSections} />
               </div>
+
+              {/* Paste Content & Format */}
+              <BoardReportPasteFormatter
+                reportTitle={selectedReport.title}
+                reportMonth={selectedReport.report_month}
+                onAddSections={addSections}
+              />
 
               {/* Generate & Import */}
               <div className="flex items-center gap-3 pt-2 flex-wrap">
