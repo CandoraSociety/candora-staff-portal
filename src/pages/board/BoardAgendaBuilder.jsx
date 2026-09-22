@@ -142,7 +142,9 @@ export default function BoardAgendaBuilder() {
     if (m) {
       title = `Approval of Previous Minutes — ${format(new Date(m.meeting_date), "MMM d, yyyy")} (${m.title})`;
     } else if (minutesEdit.custom) {
-      title = `Approval of Previous Minutes — ${format(new Date(minutesEdit.custom), "MMM d, yyyy")}`;
+      // Parse the date-only value at local midnight so it doesn't shift back a day (UTC parsing)
+      const [y, mo, d] = minutesEdit.custom.split("-").map(Number);
+      title = `Approval of Previous Minutes — ${format(new Date(y, mo - 1, d), "MMM d, yyyy")}`;
     } else {
       return;
     }
