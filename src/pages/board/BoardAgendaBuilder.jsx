@@ -1,40 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
+import AgendaPrintButton from "@/components/board/AgendaPrintButton";
+import { AGENDA_SECTIONS as SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 
-const SECTIONS = [
-  { key: "administration", label: "Administration" },
-  { key: "business_arising", label: "Business Arising" },
-  { key: "new_business", label: "New Business" },
-  { key: "reports", label: "Reports" },
-  { key: "adjournment", label: "Adjournment" },
-  { key: "other", label: "Other" },
-];
 
-const SECTION_ITEM_TYPE = {
-  administration: "other",
-  business_arising: "business_arising",
-  new_business: "new_business",
-  reports: "reports",
-  adjournment: "adjournment",
-  other: "other",
-};
-
-// Fallback for items created before sections existed
-const TYPE_SECTION = {
-  call_to_order: "administration",
-  approval_of_agenda: "administration",
-  approval_of_minutes: "administration",
-  business_arising: "business_arising",
-  new_business: "new_business",
-  reports: "reports",
-  adjournment: "adjournment",
-};
-
-const sectionOf = (item) => item.section || TYPE_SECTION[item.item_type] || "other";
 
 // The standing core every board agenda is built on
 function buildCoreItems(previousMeeting) {
@@ -61,6 +34,8 @@ export default function BoardAgendaBuilder() {
   const [formSection, setFormSection] = useState(null);
   const [form, setForm] = useState({ title: "", item_type: "new_business", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
   const [saving, setSaving] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [locationDraft, setLocationDraft] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -87,24 +62,68 @@ export default function BoardAgendaBuilder() {
     })();
   }, [id]);
 
+  const SECTION_ITEM_TYPE = {
+    administration: "other",
+    business_arising: "business_arising",
+    new_business: "new_business",
+    reports: "reports",
+    adjournment: "adjournment",
+    other: "other",
+  };
+
   const openForm = (sectionKey) => {
+    setEditingItem(null);
     setFormSection(sectionKey);
     setForm({ title: "", item_type: SECTION_ITEM_TYPE[sectionKey] || "other", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
   };
 
-  const handleAdd = async (e) => {
+  const openEdit = (item) => {
+    setEditingItem(item);
+    setFormSection(sectionOf(item));
+    setForm({
+      title: item.title || "",
+      item_type: item.item_type || "other",
+      presenter: item.presenter || "",
+      duration_minutes: item.duration_minutes ?? 5,
+      description: item.description || "",
+      is_in_camera: !!item.is_in_camera,
+    });
+  };
+
+  const closeForm = () => {
+    setEditingItem(null);
+    setFormSection(null);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const saved = await base44.entities.AgendaItem.create({
-      ...form,
-      section: formSection,
-      meeting_id: id,
-      order_index: items.length,
-      duration_minutes: Number(form.duration_minutes),
-    });
-    setItems((prev) => [...prev, saved]);
-    setFormSection(null);
+    if (editingItem) {
+      const saved = await base44.entities.AgendaItem.update(editingItem.id, {
+        ...form,
+        duration_minutes: Number(form.duration_minutes),
+      });
+      setItems((prev) => prev.map((i) => (i.id === editingItem.id ? { ...i, ...saved } : i)));
+    } else {
+      const saved = await base44.entities.AgendaItem.create({
+        ...form,
+        section: formSection,
+        meeting_id: id,
+        order_index: items.length,
+        duration_minutes: Number(form.duration_minutes),
+      });
+      setItems((prev) => [...prev, saved]);
+    }
     setSaving(false);
+    closeForm();
+  };
+
+  const handleSaveLocation = async (e) => {
+    e.preventDefault();
+    const value = locationDraft.trim();
+    await base44.entities.Meeting.update(meeting.id, { location: value });
+    setMeeting((m) => ({ ...m, location: value }));
+    setLocationDraft(null);
   };
 
   const handleDelete = async (itemId) => {
@@ -157,12 +176,35 @@ export default function BoardAgendaBuilder() {
         <Link to="/board/meetings" className="text-muted-foreground hover:text-foreground"><ArrowLeft size={18} /></Link>
         <div>
           <h1 className="font-heading text-2xl font-semibold">Agenda Builder</h1>
-          {meeting && <p className="text-muted-foreground text-sm">{meeting.title} · {format(new Date(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a")}</p>}
+          {meeting && (
+          <div className="text-muted-foreground text-sm flex items-center gap-3 flex-wrap">
+            <span>{meeting.title} · {format(new Date(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a")}</span>
+            {locationDraft === null ? (
+              <span className="flex items-center gap-1.5">
+                {meeting.location ? (
+                  <>
+                    <MapPin size={12} className="shrink-0" /> {meeting.location}
+                    <button onClick={() => setLocationDraft(meeting.location)} className="text-primary hover:underline inline-flex items-center gap-0.5"><Pencil size={11} /> Edit</button>
+                  </>
+                ) : (
+                  <button onClick={() => setLocationDraft("")} className="text-primary hover:underline inline-flex items-center gap-1"><MapPin size={12} /> Add meeting location</button>
+                )}
+              </span>
+            ) : (
+              <form onSubmit={handleSaveLocation} className="flex items-center gap-2">
+                <input autoFocus value={locationDraft} onChange={(e) => setLocationDraft(e.target.value)} placeholder="Meeting location or video link" className="border border-input rounded-lg px-2 py-1 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+                <button type="submit" className="text-primary text-xs font-medium hover:underline">Save</button>
+                <button type="button" onClick={() => setLocationDraft(null)} className="text-xs text-muted-foreground hover:underline">Cancel</button>
+              </form>
+            )}
+          </div>
+        )}
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-6 mt-4">
         <p className="text-sm text-muted-foreground">{items.length} items · {totalDuration} min total</p>
+        <AgendaPrintButton meeting={meeting} items={items} />
       </div>
 
       {/* Suggested Agenda Items — from organizational data */}
@@ -177,12 +219,12 @@ export default function BoardAgendaBuilder() {
 
       {/* Add item form */}
       {formSection && (
-        <form onSubmit={handleAdd} className="bg-card border border-border rounded-xl p-5 mb-6">
+        <form onSubmit={handleSave} className="bg-card border border-border rounded-xl p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">
-              Add to {SECTIONS.find((s) => s.key === formSection)?.label}
+              {editingItem ? "Edit Item" : `Add to ${SECTIONS.find((s) => s.key === formSection)?.label}`}
             </h3>
-            <button type="button" onClick={() => setFormSection(null)} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
+            <button type="button" onClick={closeForm} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="text-sm font-medium mb-1.5 block">Title *</label><input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" /></div>
@@ -192,8 +234,8 @@ export default function BoardAgendaBuilder() {
             <div className="sm:col-span-2"><label className="text-sm font-medium mb-1.5 block">Notes / Description</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none" /></div>
           </div>
           <div className="flex gap-3 mt-4">
-            <button type="button" onClick={() => setFormSection(null)} className="flex-1 border border-border rounded-lg py-2 text-sm hover:bg-muted transition">Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-60">{saving ? "Saving..." : "Add Item"}</button>
+            <button type="button" onClick={closeForm} className="flex-1 border border-border rounded-lg py-2 text-sm hover:bg-muted transition">Cancel</button>
+            <button type="submit" disabled={saving} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-60">{saving ? "Saving..." : editingItem ? "Save Changes" : "Add Item"}</button>
           </div>
         </form>
       )}
@@ -247,7 +289,10 @@ export default function BoardAgendaBuilder() {
                           {item.duration_minutes > 0 && <span>{item.duration_minutes} min</span>}
                         </div>
                       </div>
-                      <button onClick={() => handleDelete(item.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive"><Trash2 size={14} /></button>
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onClick={() => openEdit(item)} className="text-muted-foreground hover:text-foreground" title="Edit item"><Pencil size={14} /></button>
+                        <button onClick={() => handleDelete(item.id)} className="text-muted-foreground hover:text-destructive" title="Delete item"><Trash2 size={14} /></button>
+                      </div>
                     </div>
                   ))}
                 </div>
