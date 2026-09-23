@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
+import { parseDateSmart } from "@/lib/dateUtils";
 
 // Candora brand — same logo and palette used on invoices and agendas
 const CANDORA_LOGO_URL =
@@ -8,7 +9,7 @@ const NAVY = [30, 47, 77];
 const GOLD = [245, 190, 25];
 const GRAY = [100, 100, 100];
 const LIGHT = [214, 220, 229];
-const MARGIN = 36; // ~0.5in — content-first, no huge margins
+const MARGIN = 26; // ~1/3in side margins — content-forward
 
 // Fetch the logo once and cache it (as a data URL for jsPDF); returns null if unavailable
 let logoPromise = null;
@@ -49,15 +50,6 @@ function htmlToLines(html) {
   return t.trim();
 }
 
-function fitText(doc, text, maxWidth, startSize, minSize = 8) {
-  let size = startSize;
-  doc.setFontSize(size);
-  while (size > minSize && doc.getTextWidth(text) > maxWidth) {
-    size -= 0.5;
-    doc.setFontSize(size);
-  }
-}
-
 export async function generateBoardReportPdf(report, orgName) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -65,48 +57,48 @@ export async function generateBoardReportPdf(report, orgName) {
   const contentWidth = pageWidth - MARGIN * 2;
   let y = MARGIN;
 
-  const monthStr = report.report_month ? format(new Date(report.report_month), "MMMM yyyy") : "";
+  const monthStr = report.report_month ? format(parseDateSmart(report.report_month), "MMMM yyyy") : "";
   const org = orgName || "Candora Society of Edmonton";
 
-  // ── Letterhead ────────────────────────────────────────
-  let textX = MARGIN;
+  // ── Navy letterhead band (logo + org name) with gold rule ──
+  const BAND_H = 60;
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageWidth, BAND_H, "F");
+  let nameX = 28;
   const logo = await getLogoDataUrl();
   if (logo) {
     try {
-      doc.addImage(logo, "PNG", MARGIN, MARGIN - 4, 44, 44);
-      textX = MARGIN + 54;
+      doc.addImage(logo, "PNG", 28, 12, 36, 36);
+      nameX = 28 + 46;
     } catch {
-      textX = MARGIN;
+      nameX = 28;
     }
   }
+  doc.setTextColor(255, 255, 255);
+  doc.setFont(undefined, "bold");
+  doc.setFontSize(17);
+  doc.text(org, nameX, BAND_H / 2 - 3);
+  doc.setFont(undefined, "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...GOLD);
+  doc.text("MONTHLY BOARD REPORT", nameX, BAND_H / 2 + 8);
+  doc.setFillColor(...GOLD);
+  doc.rect(0, BAND_H, pageWidth, 2.5, "F");
+
+  // ── Title + month ────────────────────────────────────
+  y = BAND_H + 2.5 + 24;
   doc.setTextColor(...NAVY);
   doc.setFont(undefined, "bold");
-  doc.setFontSize(19);
-  doc.text(org, textX, MARGIN + 12);
-  doc.setFont(undefined, "normal");
-  doc.setFontSize(10.5);
-  doc.setTextColor(...GRAY);
-  doc.text("Monthly Board Report", textX, MARGIN + 22);
-
-  y = MARGIN + 32;
-
-  // ── Navy title band with gold rule ───────────────────
-  doc.setFillColor(...NAVY);
-  doc.rect(0, y, pageWidth, 26, "F");
-  doc.setTextColor(255, 255, 255);
-  const monthLabel = monthStr || "";
-  const monthW = monthLabel ? doc.getTextWidth(monthLabel) + 4 : 0;
-  doc.setFont(undefined, "bold");
-  fitText(doc, report.title || "Board Report", contentWidth - monthW - 10, 11);
-  doc.text(report.title || "Board Report", MARGIN, y + 16.5);
-  if (monthLabel) {
-    doc.setFontSize(10);
+  doc.setFontSize(15);
+  doc.text(report.title || "Board Report", MARGIN, y);
+  if (monthStr) {
+    y += 9;
     doc.setFont(undefined, "normal");
-    doc.text(monthLabel, pageWidth - MARGIN, y + 16.5, { align: "right" });
+    doc.setFontSize(10.5);
+    doc.setTextColor(...GRAY);
+    doc.text(monthStr, MARGIN, y);
   }
-  doc.setFillColor(...GOLD);
-  doc.rect(0, y + 26, pageWidth, 2.5, "F");
-  y += 28.5 + 16;
+  y += 18;
 
   // ── Sections ─────────────────────────────────────────
   const sections = [...(report.sections || [])].sort(
