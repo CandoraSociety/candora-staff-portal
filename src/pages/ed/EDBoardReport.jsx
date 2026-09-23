@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useOrgSettings } from "@/lib/useOrgSettings";
+import { useCurrentUser } from "@/lib/useAuth";
+import { parseDateSmart } from "@/lib/dateUtils";
 import BoardReportAutoBuilder from "@/components/ed/BoardReportAutoBuilder";
 import BoardReportPasteFormatter from "@/components/ed/BoardReportPasteFormatter";
 import BoardReportSectionEditor from "@/components/ed/BoardReportSectionEditor";
@@ -30,6 +32,7 @@ export default function EDBoardReport() {
   const qc = useQueryClient();
   const { toast } = useToast();
   const { orgName } = useOrgSettings();
+  const { user } = useCurrentUser();
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [reportForm, setReportForm] = useState({ title: "", report_month: "" });
@@ -142,9 +145,9 @@ export default function EDBoardReport() {
   const handleGenerateAndImport = async () => {
     setGenerating(true);
     try {
-      const doc = await generateBoardReportPdf(selectedReport, orgName);
+      const doc = await generateBoardReportPdf(selectedReport, orgName, user?.full_name || "");
       const pdfBlob = doc.output("blob");
-      const monthStr = selectedReport.report_month ? format(new Date(selectedReport.report_month), "MMMM yyyy") : "";
+      const monthStr = selectedReport.report_month ? format(parseDateSmart(selectedReport.report_month), "MMMM yyyy") : "";
       const fileName = `${selectedReport.title}${monthStr ? " - " + monthStr : ""}.pdf`;
       const file = new File([pdfBlob], fileName, { type: "application/pdf" });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });

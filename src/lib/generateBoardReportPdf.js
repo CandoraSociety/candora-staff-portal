@@ -50,7 +50,7 @@ function htmlToLines(html) {
   return t.trim();
 }
 
-export async function generateBoardReportPdf(report, orgName) {
+export async function generateBoardReportPdf(report, orgName, preparedBy) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -60,33 +60,38 @@ export async function generateBoardReportPdf(report, orgName) {
   const monthStr = report.report_month ? format(parseDateSmart(report.report_month), "MMMM yyyy") : "";
   const org = orgName || "Candora Society of Edmonton";
 
-  // ── Navy letterhead band (logo + org name) with gold rule ──
-  const BAND_H = 60;
+  // ── Compact navy letterhead band with gold rule ──────
+  const BAND_H = 40;
   doc.setFillColor(...NAVY);
   doc.rect(0, 0, pageWidth, BAND_H, "F");
   let nameX = 28;
   const logo = await getLogoDataUrl();
   if (logo) {
     try {
-      doc.addImage(logo, "PNG", 28, 12, 36, 36);
-      nameX = 28 + 46;
+      doc.addImage(logo, "PNG", 28, 9, 22, 22);
+      nameX = 28 + 31;
     } catch {
       nameX = 28;
     }
   }
   doc.setTextColor(255, 255, 255);
   doc.setFont(undefined, "bold");
-  doc.setFontSize(17);
-  doc.text(org, nameX, BAND_H / 2 - 3);
+  doc.setFontSize(12.5);
+  doc.text(org, nameX, 19);
   doc.setFont(undefined, "normal");
-  doc.setFontSize(9.5);
+  doc.setFontSize(7);
   doc.setTextColor(...GOLD);
-  doc.text("MONTHLY BOARD REPORT", nameX, BAND_H / 2 + 8);
+  doc.text("MONTHLY BOARD REPORT", nameX, 27.5);
+  if (preparedBy) {
+    doc.setFontSize(8.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Prepared by: ${preparedBy}`, pageWidth - 28, 24, { align: "right" });
+  }
   doc.setFillColor(...GOLD);
-  doc.rect(0, BAND_H, pageWidth, 2.5, "F");
+  doc.rect(0, BAND_H, pageWidth, 2, "F");
 
   // ── Title + month ────────────────────────────────────
-  y = BAND_H + 2.5 + 24;
+  y = BAND_H + 2 + 22;
   doc.setTextColor(...NAVY);
   doc.setFont(undefined, "bold");
   doc.setFontSize(15);
