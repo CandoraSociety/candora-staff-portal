@@ -142,7 +142,7 @@ export default function EDBoardReport() {
   const handleGenerateAndImport = async () => {
     setGenerating(true);
     try {
-      const doc = generateBoardReportPdf(selectedReport, orgName);
+      const doc = await generateBoardReportPdf(selectedReport, orgName);
       const pdfBlob = doc.output("blob");
       const monthStr = selectedReport.report_month ? format(new Date(selectedReport.report_month), "MMMM yyyy") : "";
       const fileName = `${selectedReport.title}${monthStr ? " - " + monthStr : ""}.pdf`;
