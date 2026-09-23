@@ -108,10 +108,10 @@ export default function BoardDocuments() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map(doc => (
-            <div key={doc.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-sm transition group">
+            <div key={doc.id} onClick={() => doc.file_url && window.open(doc.file_url, "_blank")} className={`bg-card border border-border rounded-xl p-4 hover:shadow-sm transition group ${doc.file_url ? "cursor-pointer hover:border-primary/40" : ""}`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <span className="text-2xl">{TYPE_ICONS[doc.document_type] || "📄"}</span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
                   {doc.file_url && <a href={doc.file_url} target="_blank" rel="noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground rounded"><ExternalLink size={14} /></a>}
                   <button onClick={() => handleDelete(doc.id)} className="p-1.5 text-muted-foreground hover:text-destructive rounded"><Trash2 size={14} /></button>
                 </div>
@@ -123,6 +123,14 @@ export default function BoardDocuments() {
                 <span className="text-xs text-muted-foreground">{format(new Date(doc.created_date), "MMM d, yyyy")}</span>
               </div>
               {doc.file_name && <p className="text-xs text-muted-foreground mt-1 truncate">{doc.file_name}</p>}
+              {doc.file_url && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); window.open(doc.file_url, "_blank"); }}
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs font-medium border border-input rounded-lg py-1.5 hover:bg-muted transition"
+                >
+                  <FileText size={13} /> Open Document
+                </button>
+              )}
             </div>
           ))}
           {filtered.length === 0 && (
