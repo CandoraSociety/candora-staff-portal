@@ -6,6 +6,7 @@ import { parseDateSmart } from "@/lib/dateUtils";
 import { base44 } from "@/api/base44Client";
 import { AGENDA_SECTIONS, sectionOf, CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
 import { NOTES_TYPES, isCallToOrderItem, isApprovalOfAgendaItem, isApprovalOfMinutesItem, isNextMeetingItem, isAdjournMotionItem, isInvitationItem } from "@/components/board/minutesShared";
+import { buildFinalMinutesHtml } from "@/components/board/finalMinutesHtml";
 import MinutesFinalDoc from "@/components/board/MinutesFinalDoc";
 
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
@@ -317,6 +318,22 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
         content: [e.motion_verbiage, e.content].filter(Boolean).join("\n") || "(no text recorded)",
       }));
       if (inCameraRecords.length) await base44.entities.InCameraNote.bulkCreate(inCameraRecords);
+      // Store the finalized minutes in the Board Portal's Documents library (Minutes section)
+      const html = buildFinalMinutesHtml({
+        meeting, org, sections, members: active, present, guests, recorder, chair, entries,
+        data: { callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved },
+      });
+      const fileName = `${meeting.title || "Board Meeting"} - Minutes.html`;
+      const storedFile = new File([html], fileName, { type: "text/html" });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: storedFile });
+      const docTitle = `${meeting.title || "Board Meeting"} — Minutes`;
+      const existing = await base44.entities.BoardDocument.filter({ meeting_id: meeting.id, document_type: "minutes" });
+      if (existing.length) {
+        await base44.entities.BoardDocument.update(existing[0].id, { file_url, file_name: fileName, title: docTitle });
+      } else {
+        await base44.entities.BoardDocument.create({ title: docTitle, document_type: "minutes", meeting_id: meeting.id, file_url, file_name: fileName, description: "Finalized board minutes" });
+      }
+      toast.success("Final minutes saved to the Board Portal documents");
       // Stamp the generated motion IDs onto the local entries so the final document shows them
       if (Object.keys(idByEntry).length) {
         setEntries((prev) => {
@@ -348,7 +365,6 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
         chair={chair}
         entries={entries}
         data={{ callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved }}
-        canPersist={canPersist}
         onBack={() => setShowFinal(false)}
       />
     );

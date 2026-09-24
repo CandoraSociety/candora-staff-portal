@@ -36,10 +36,24 @@ export default function BoardDocuments() {
     setUploading(false);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (doc) => {
     if (!confirm("Delete this document?")) return;
-    await base44.entities.BoardDocument.delete(id);
-    setDocs(prev => prev.filter(d => d.id !== id));
+    // Finalized minutes are backed up to the restricted SharePoint "Deleted Minutes" folder first,
+    // so an accidental delete can always be recovered
+    if (doc.document_type === "minutes" && doc.file_url) {
+      try {
+        await base44.functions.invoke("archiveDeletedBoardMinutes", {
+          file_url: doc.file_url,
+          file_name: doc.file_name,
+          title: doc.title,
+        });
+      } catch {
+        alert("Could not back up this document to SharePoint, so it was not deleted. Please try again.");
+        return;
+      }
+    }
+    await base44.entities.BoardDocument.delete(doc.id);
+    setDocs(prev => prev.filter(d => d.id !== doc.id));
   };
 
   const filtered = docs.filter(d =>
@@ -113,7 +127,7 @@ export default function BoardDocuments() {
                 <span className="text-2xl">{TYPE_ICONS[doc.document_type] || "📄"}</span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition" onClick={(e) => e.stopPropagation()}>
                   {doc.file_url && <a href={doc.file_url} target="_blank" rel="noreferrer" className="p-1.5 text-muted-foreground hover:text-foreground rounded"><ExternalLink size={14} /></a>}
-                  <button onClick={() => handleDelete(doc.id)} className="p-1.5 text-muted-foreground hover:text-destructive rounded"><Trash2 size={14} /></button>
+                  <button onClick={() => handleDelete(doc)} className="p-1.5 text-muted-foreground hover:text-destructive rounded"><Trash2 size={14} /></button>
                 </div>
               </div>
               <h3 className="font-semibold text-sm text-foreground leading-tight mb-1">{doc.title}</h3>

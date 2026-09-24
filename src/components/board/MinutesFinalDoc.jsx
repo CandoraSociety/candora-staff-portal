@@ -1,11 +1,8 @@
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { ArrowLeft, Printer } from "lucide-react";
-import { toast } from "sonner";
-import { base44 } from "@/api/base44Client";
 import { CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
 import { NOTES_TYPES, isCallToOrderItem, isApprovalOfAgendaItem, isApprovalOfMinutesItem, isNextMeetingItem, isAdjournMotionItem, isInvitationItem, has, fmtTime } from "@/components/board/minutesShared";
-import { buildFinalMinutesHtml } from "@/components/board/finalMinutesHtml";
 
 // Red font for all filled-in entries on the final saved PDF
 const RED = "text-[#c1121f]";
@@ -65,7 +62,7 @@ function FinalEntry({ entry, minimalMotion }) {
 
 // Clean, flattened minutes document — only the filled-in information, entries in red,
 // motions shown as labeled blocks with their auto-generated ID, in-camera entries excluded.
-export default function MinutesFinalDoc({ meeting, org, sections, members, present, guests, recorder, chair, entries, data, canPersist = true, onBack }) {
+export default function MinutesFinalDoc({ meeting, org, sections, members, present, guests, recorder, chair, entries, data, onBack }) {
   const regrets = (members || []).filter((m) => !present.includes(m.full_name)).map((m) => m.full_name);
   const dateStr = meeting?.meeting_date ? format(parseDateSmart(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a") : "";
 
@@ -93,36 +90,7 @@ export default function MinutesFinalDoc({ meeting, org, sections, members, prese
     return out.filter(Boolean);
   };
 
-  const handlePrint = async () => {
-    if (canPersist && meeting?.id) {
-      const store = window.confirm("Store this version of the minutes in the Board Portal documents? (In-camera notes are kept out of this document and stored separately.)");
-      if (store) {
-        try {
-          const html = buildFinalMinutesHtml({ meeting, org, sections, members, present, guests, recorder, chair, entries, data });
-          const fileName = `${meeting?.title || "Board Meeting"} — Minutes.html`;
-          const file = new File([html], fileName, { type: "text/html" });
-          const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
-          const existing = await base44.entities.BoardDocument.filter({ meeting_id: meeting.id, document_type: "minutes" });
-          if (existing.length) {
-            await base44.entities.BoardDocument.update(existing[0].id, { file_url, file_name: fileName, title: `${meeting.title || "Board Meeting"} — Minutes` });
-          } else {
-            await base44.entities.BoardDocument.create({
-              title: `${meeting.title || "Board Meeting"} — Minutes`,
-              document_type: "minutes",
-              meeting_id: meeting.id,
-              file_url,
-              file_name: fileName,
-              description: "Finalized board minutes",
-            });
-          }
-          toast.success("Minutes stored in the Board Portal");
-        } catch (err) {
-          toast.error("Could not store the minutes in the portal", { description: err?.message || "Unknown error" });
-        }
-      }
-    }
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   return (
     <div className="fillable-minutes-overlay fixed inset-0 z-[100] overflow-auto bg-slate-200">
