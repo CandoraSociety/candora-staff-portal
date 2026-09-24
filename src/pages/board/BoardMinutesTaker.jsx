@@ -8,10 +8,27 @@ import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtm
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
 import MinutesAttendancePanel, { SEED_BOARD_MEMBERS, memberEmail } from "@/components/board/MinutesAttendancePanel";
+import MinutesAddAgendaItem from "@/components/board/MinutesAddAgendaItem";
 
 const ENTRY_TYPES = ["note","motion","resolution","action_item","discussion","information","dissent","abstention","in_camera"];
 const MOTION_RESULTS = ["","carried","defeated","tabled","withdrawn"];
 const EMPTY_FORM = { entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "", is_in_camera: false };
+
+// Per-item entry capabilities — each standing agenda item only records what it actually needs
+const titleMatch = (item, frag) => (item?.title || "").toLowerCase().includes(frag);
+const isCallToOrderItem = (item) => item?.item_type === "call_to_order" || titleMatch(item, "call to order");
+const isApprovalOfAgendaItem = (item) => item?.item_type === "approval_of_agenda" || titleMatch(item, "approval of agenda");
+const isApprovalOfMinutesItem = (item) => item?.item_type === "approval_of_minutes" || titleMatch(item, "approval of minutes");
+const isNextMeetingItem = (item) => titleMatch(item, "date of next meeting");
+const isAdjournMotionItem = (item) => titleMatch(item, "motion to adjourn");
+const isInvitationItem = (item) => titleMatch(item, "invitation to visit");
+
+function itemEntryCaps(item) {
+  if (isInvitationItem(item)) return { none: true };
+  if (isAdjournMotionItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: false, date: false, moverOnly: true };
+  if (isCallToOrderItem(item) || isNextMeetingItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: true, date: isNextMeetingItem(item) };
+  return { typeSelect: true, motion: true, inCamera: !(isApprovalOfAgendaItem(item) || isApprovalOfMinutesItem(item)) };
+}
 
 const ENTRY_COLORS = {
   motion: "border-l-4 border-l-blue-400 bg-blue-50/40",
@@ -35,8 +52,6 @@ export default function BoardMinutesTaker() {
   const [activeItemId, setActiveItemId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [showItemForm, setShowItemForm] = useState(false);
-  const [itemForm, setItemForm] = useState({ title: "", section: "new_business", presenter: "", duration_minutes: 5 });
 
   useEffect(() => {
     Promise.all([
@@ -75,13 +90,16 @@ export default function BoardMinutesTaker() {
     if (!activeItemId) return;
     setSaving(true);
     const itemEntries = entries.filter(e => e.agenda_item_id === activeItemId);
-    const { votes_in_favour, votes_opposed, votes_abstained, ...rest } = form;
+    const caps = itemEntryCaps(agendaItems.find(i => i.id === activeItemId));
+    const entryType = caps.moverOnly ? "motion" : (!caps.typeSelect ? "note" : form.entry_type);
+    const { entry_type, votes_in_favour, votes_opposed, votes_abstained, ...rest } = form;
     const saved = await base44.entities.MinuteEntry.create({
       ...rest,
+      entry_type: entryType,
       votes_in_favour: votes_in_favour === "" ? undefined : Number(votes_in_favour),
       votes_opposed: votes_opposed === "" ? undefined : Number(votes_opposed),
       votes_abstained: votes_abstained === "" ? undefined : Number(votes_abstained),
-      is_in_camera: form.entry_type === "in_camera",
+      is_in_camera: entryType === "in_camera",
       meeting_id: id,
       agenda_item_id: activeItemId,
       order_index: itemEntries.length,
@@ -91,20 +109,12 @@ export default function BoardMinutesTaker() {
     setSaving(false);
   };
 
-  const handleAddItem = async (e) => {
-    e.preventDefault();
-    const saved = await base44.entities.AgendaItem.create({
-      ...itemForm,
-      title: itemForm.title.trim(),
-      duration_minutes: Number(itemForm.duration_minutes) || 0,
-      meeting_id: id,
-      order_index: agendaItems.length,
-    });
+  const handleAddItem = async (payload) => {
+    const saved = await base44.entities.AgendaItem.create({ ...payload, meeting_id: id, order_index: agendaItems.length });
     setAgendaItems((prev) => [...prev, saved]);
     setActiveItemId(saved.id);
+    setForm(EMPTY_FORM);
     setExpandedItems((prev) => ({ ...prev, [saved.id]: true }));
-    setItemForm({ title: "", section: itemForm.section, presenter: "", duration_minutes: 5 });
-    setShowItemForm(false);
   };
 
   const handleDelete = async (entryId) => {
@@ -130,6 +140,7 @@ export default function BoardMinutesTaker() {
   const toggleItem = (itemId) => {
     setExpandedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
     setActiveItemId(itemId);
+    setForm(EMPTY_FORM);
   };
 
   const isMotion = ["motion","resolution"].includes(form.entry_type);
@@ -204,6 +215,7 @@ export default function BoardMinutesTaker() {
               const itemEntries = entries.filter(e => e.agenda_item_id === item.id);
               const expanded = expandedItems[item.id];
               const isActive = activeItemId === item.id;
+              const caps = itemEntryCaps(item);
               return (
                 <div key={item.id} className={`bg-card border rounded-xl overflow-hidden transition ${isActive ? "border-primary/40 shadow-sm" : "border-border"}`}>
                   <button onClick={() => toggleItem(item.id)} className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition text-left">
@@ -232,7 +244,7 @@ export default function BoardMinutesTaker() {
                                   <span>In favour: {entry.votes_in_favour ?? 0} · Opposed: {entry.votes_opposed ?? 0} · Abstained: {entry.votes_abstained ?? 0}</span>
                                 )}
                                 {entry.action_assigned_to && <span>Assigned: {entry.action_assigned_to}</span>}
-                                {entry.action_due_date && <span>Due: {format(new Date(entry.action_due_date), "MMM d, yyyy")}</span>}
+                                {entry.action_due_date && <span>{isNextMeetingItem(item) ? "Next meeting" : "Due"}: {format(new Date(entry.action_due_date), "MMM d, yyyy")}</span>}
                               </div>
                             </div>
                             <button onClick={() => handleDelete(entry.id)} className="opacity-0 group-hover:opacity-100 transition text-muted-foreground hover:text-destructive shrink-0"><Trash2 size={13} /></button>
