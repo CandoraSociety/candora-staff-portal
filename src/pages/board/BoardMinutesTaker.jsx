@@ -81,6 +81,7 @@ export default function BoardMinutesTaker() {
       votes_in_favour: votes_in_favour === "" ? undefined : Number(votes_in_favour),
       votes_opposed: votes_opposed === "" ? undefined : Number(votes_opposed),
       votes_abstained: votes_abstained === "" ? undefined : Number(votes_abstained),
+      is_in_camera: form.entry_type === "in_camera",
       meeting_id: id,
       agenda_item_id: activeItemId,
       order_index: itemEntries.length,
@@ -111,11 +112,12 @@ export default function BoardMinutesTaker() {
     setEntries(prev => prev.filter(e => e.id !== entryId));
   };
 
-  const handleDownloadMinutesPdf = async () => {
+  const handleDownloadPdf = async (inCameraOnly) => {
     setDownloadingPdf(true);
     try {
-      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance);
-      const file = new File([bytes], `${meeting?.title || "Board Meeting"} - Minutes.pdf`, { type: "application/pdf" });
+      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly });
+      const suffix = inCameraOnly ? "In Camera Minutes (Confidential)" : "Minutes";
+      const file = new File([bytes], `${meeting?.title || "Board Meeting"} - ${suffix}.pdf`, { type: "application/pdf" });
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       window.open(file_url, "_blank");
     } catch (err) {
@@ -132,6 +134,8 @@ export default function BoardMinutesTaker() {
 
   const isMotion = ["motion","resolution"].includes(form.entry_type);
   const isAction = form.entry_type === "action_item";
+  const isCamera = form.entry_type === "in_camera";
+  const hasInCamera = agendaItems.some(i => i.is_in_camera) || entries.some(e => e.is_in_camera || e.entry_type === "in_camera");
   const presentNames = attendance?.present_member_names || [];
   const guestNames = attendance?.guest_names || [];
   const attendeeOptions = presentNames.length > 0 ? [...presentNames, ...guestNames] : members.map(m => m.full_name);
@@ -157,13 +161,24 @@ export default function BoardMinutesTaker() {
           <h1 className="font-heading text-2xl font-semibold">Minutes Taker</h1>
           {meeting && <p className="text-muted-foreground text-sm">{meeting.title} · {format(new Date(meeting.meeting_date), "MMMM d, yyyy")}</p>}
         </div>
-        <button
-          onClick={handleDownloadMinutesPdf}
-          disabled={downloadingPdf}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50 shrink-0"
-        >
-          {downloadingPdf ? "Generating..." : "Download Fillable Minutes"}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => handleDownloadPdf(false)}
+            disabled={downloadingPdf}
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50 shrink-0"
+          >
+            {downloadingPdf ? "Generating..." : "Download Fillable Minutes"}
+          </button>
+          {hasInCamera && (
+            <button
+              onClick={() => handleDownloadPdf(true)}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 border border-red-300 text-red-700 bg-red-50 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-red-100 transition disabled:opacity-50 shrink-0"
+            >
+              {downloadingPdf ? "Generating..." : "Download In-Camera Minutes"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 space-y-5">
@@ -193,7 +208,10 @@ export default function BoardMinutesTaker() {
                 <div key={item.id} className={`bg-card border rounded-xl overflow-hidden transition ${isActive ? "border-primary/40 shadow-sm" : "border-border"}`}>
                   <button onClick={() => toggleItem(item.id)} className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition text-left">
                     <span className="text-xs font-semibold text-muted-foreground w-5">{idx + 1}.</span>
-                    <span className="flex-1 text-sm font-medium text-foreground">{item.title}</span>
+                    <span className="flex-1 text-sm font-medium text-foreground">
+                      {item.title}
+                      {item.is_in_camera && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium align-middle">In Camera</span>}
+                    </span>
                     <span className="text-xs text-muted-foreground">{itemEntries.length} entries</span>
                     {expanded ? <ChevronDown size={16} className="text-muted-foreground" /> : <ChevronRight size={16} className="text-muted-foreground" />}
                   </button>
@@ -234,7 +252,15 @@ export default function BoardMinutesTaker() {
                           >
                             + Motion
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setForm({...form, entry_type: "in_camera"})}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isCamera ? "bg-red-500 text-white border-red-500" : "border-border text-foreground hover:border-red-400"}`}
+                          >
+                            + In Camera
+                          </button>
                           <span className="text-xs text-muted-foreground">for "{item.title}"</span>
+                          {isCamera && <span className="text-[11px] text-red-600">Confidential — goes in the separate In-Camera Minutes for the Board Chair, not the regular minutes.</span>}
                         </div>
                         {isMotion && (
                           <input value={form.motion_verbiage} onChange={e => setForm({...form, motion_verbiage: e.target.value})} placeholder="Motion verbiage (e.g. Be it resolved that...)" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" />

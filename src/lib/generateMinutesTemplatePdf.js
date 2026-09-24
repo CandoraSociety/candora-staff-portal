@@ -17,7 +17,8 @@ const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
  * One set of fillable fields per agenda item: minutes/discussion notes,
  * motion verbiage, moved/seconded/result, and action-item assignee/due date.
  */
-export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, members = [], attendance = null) {
+export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, members = [], attendance = null, entries = [], { inCameraOnly = false } = {}) {
+  const BRAND = inCameraOnly ? rgb(0.45, 0.06, 0.08) : NAVY;
   const doc = await PDFDocument.create();
   const form = doc.getForm();
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -31,7 +32,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   const newPage = () => {
     page = doc.addPage([W, H]);
     y = H - 56;
-    page.drawText("Board Meeting Minutes (continued)", { x: M, y: y - 10, size: 8, font: bold, color: NAVY });
+    page.drawText(inCameraOnly ? "In Camera Minutes (continued) — Confidential" : "Board Meeting Minutes (continued)", { x: M, y: y - 10, size: 8, font: bold, color: BRAND });
     y -= 26;
   };
 
@@ -63,11 +64,24 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     y -= 20;
   };
 
+  // Simple word-wrap for plain-text notes
+  const wrap = (text, size, width) => {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+    for (const w of words) {
+      const t = line ? line + " " + w : w;
+      if (font.widthOfTextAtSize(t, size) > width && line) { lines.push(line); line = w; } else line = t;
+    }
+    if (line) lines.push(line);
+    return lines;
+  };
+
   // ── Branded header ──
-  page.drawRectangle({ x: 0, y: H - 40, width: W, height: 40, color: NAVY });
+  page.drawRectangle({ x: 0, y: H - 40, width: W, height: 40, color: BRAND });
   page.drawRectangle({ x: 0, y: H - 42, width: W, height: 2, color: GOLD });
   page.drawText(org, { x: M, y: H - 22, size: 12, font: bold, color: rgb(1, 1, 1) });
-  page.drawText("BOARD MEETING MINUTES", { x: M, y: H - 32, size: 7, font, color: GOLD });
+  page.drawText(inCameraOnly ? "IN CAMERA MINUTES — CONFIDENTIAL · BOARD CHAIR ONLY" : "BOARD MEETING MINUTES", { x: M, y: H - 32, size: 7, font, color: inCameraOnly ? rgb(1, 0.8, 0.82) : GOLD });
 
   // ── Meeting title + date ──
   y = H - 72;
@@ -109,10 +123,12 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   }
 
   // ── Agenda items grouped by section, each with fillable minute fields ──
+  const camItems = inCameraOnly ? agendaItems.filter((i) => i.is_in_camera) : agendaItems.filter((i) => !i.is_in_camera);
+  const itemById = new Map(agendaItems.map((i) => [i.id, i]));
   const sections = AGENDA_SECTIONS
     .map(({ key, label }) => ({
       label,
-      items: agendaItems
+      items: camItems
         .filter((i) => sectionOf(i) === key)
         .sort((a, b) => (a.order_index || 0) - (b.order_index || 0)),
     }))
@@ -121,7 +137,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   for (const s of sections) {
     ensureSpace(30);
     const label = s.label.toUpperCase();
-    page.drawText(label, { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
+    page.drawText(label, { x: M, y: y - 9, size: 9, font: bold, color: BRAND });
     const lw = bold.widthOfTextAtSize(label, 9) + 8;
     page.drawLine({ start: { x: M + lw, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
     y -= 22;
@@ -162,6 +178,53 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     });
   }
 
+  // ── Recorded in-camera entries — confidential document only ──
+  if (inCameraOnly) {
+    const camEntries = (entries || []).filter((e) => e.is_in_camera || e.entry_type === "in_camera");
+    if (camEntries.length > 0) {
+      ensureSpace(30);
+      page.drawText("RECORDED IN-CAMERA NOTES", { x: M, y: y - 9, size: 9, font: bold, color: BRAND });
+      const lw0 = bold.widthOfTextAtSize("RECORDED IN-CAMERA NOTES", 9) + 8;
+      page.drawLine({ start: { x: M + lw0, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
+      y -= 22;
+      for (const entry of camEntries) {
+        ensureSpace(36);
+        const itemTitle = itemById.get(entry.agenda_item_id)?.title || "General";
+        page.drawText(`${itemTitle} — ${String(entry.entry_type || "note").replace(/_/g, " ")}`, { x: M, y: y - 10, size: 9, font: bold, color: rgb(0.1, 0.1, 0.12) });
+        y -= 14;
+        if (entry.motion_verbiage) {
+          for (const l of wrap(`Motion: "${entry.motion_verbiage}"`, 8, W - 2 * M)) {
+            ensureSpace(12);
+            page.drawText(l, { x: M, y: y - 8, size: 8, font: bold, color: rgb(0.1, 0.1, 0.12) });
+            y -= 11;
+          }
+        }
+        if (entry.content) {
+          for (const l of wrap(entry.content, 8, W - 2 * M)) {
+            ensureSpace(12);
+            page.drawText(l, { x: M, y: y - 8, size: 8, font, color: rgb(0.2, 0.2, 0.22) });
+            y -= 11;
+          }
+        }
+        const hasVotes = entry.votes_in_favour != null || entry.votes_opposed != null || entry.votes_abstained != null;
+        const bits = [
+          entry.moved_by && `Moved: ${entry.moved_by}`,
+          entry.seconded_by && `Seconded: ${entry.seconded_by}`,
+          entry.motion_result && `Result: ${entry.motion_result}`,
+          hasVotes && `In favour: ${entry.votes_in_favour ?? 0} · Opposed: ${entry.votes_opposed ?? 0} · Abstained: ${entry.votes_abstained ?? 0}`,
+        ].filter(Boolean).join("    ");
+        if (bits) {
+          for (const l of wrap(bits, 7, W - 2 * M)) {
+            ensureSpace(12);
+            page.drawText(l, { x: M, y: y - 8, size: 7, font, color: GRAY });
+            y -= 11;
+          }
+        }
+        y -= 10;
+      }
+    }
+  }
+
   // General notes field at the end (or when there are no agenda items)
   ensureSpace(70);
   page.drawText("Additional Notes", { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
@@ -171,12 +234,12 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   // ── Footers ──
   const pages = doc.getPages();
   pages.forEach((p, i) => {
-    p.drawText(`${org} — Board Meeting Minutes`, { x: M, y: 28, size: 7, font, color: GRAY });
+    p.drawText(inCameraOnly ? `${org} — In Camera Minutes — CONFIDENTIAL · Board Chair only` : `${org} — Board Meeting Minutes`, { x: M, y: 28, size: 7, font, color: GRAY });
     const pn = `Page ${i + 1} of ${pages.length}`;
     p.drawText(pn, { x: W - M - font.widthOfTextAtSize(pn, 7), y: 28, size: 7, font, color: GRAY });
   });
 
-  doc.setTitle(`${title} — Minutes`);
-  doc.setSubject("Board meeting minutes (fillable)");
+  doc.setTitle(inCameraOnly ? `${title} — In Camera Minutes (Confidential)` : `${title} — Minutes`);
+  doc.setSubject(inCameraOnly ? "In-camera meeting minutes — confidential, for the Board Chair" : "Board meeting minutes (fillable)");
   return doc.save();
 }
