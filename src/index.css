@@ -135,6 +135,25 @@
   .reporting-portal-header {
     display: none !important;
   }
+  /* Fillable minutes overlay — print only the overlay document, hide everything else */
+  body.fillable-printing * { visibility: hidden !important; }
+  body.fillable-printing .fillable-minutes-overlay,
+  body.fillable-printing .fillable-minutes-overlay * { visibility: visible !important; }
+  body.fillable-printing .fillable-minutes-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body.fillable-printing .fillable-minutes-overlay .fillable-page {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
   body { 
     background: white !important;
     margin: 0 !important;

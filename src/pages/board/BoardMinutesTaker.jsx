@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
-import { buildMinutesFillableHtml } from "@/lib/minutesFillableHtml";
+import MinutesFillableOverlay from "@/components/board/MinutesFillableOverlay";
 import MinutesAttendancePanel, { SEED_BOARD_MEMBERS, memberEmail } from "@/components/board/MinutesAttendancePanel";
 import MinutesAddAgendaItem from "@/components/board/MinutesAddAgendaItem";
 
@@ -56,6 +56,7 @@ export default function BoardMinutesTaker() {
   const { orgName } = useOrgSettings();
   const [meeting, setMeeting] = useState(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [showFillable, setShowFillable] = useState(false);
   const [agendaItems, setAgendaItems] = useState([]);
   const [entries, setEntries] = useState([]);
   const [members, setMembers] = useState([]);
@@ -139,17 +140,9 @@ export default function BoardMinutesTaker() {
     setDownloadingPdf(true);
     try {
       if (!inCameraOnly && !completed) {
-        // Fillable minutes — an interactive template that mirrors the in-app form:
-        // pick an entry type and only that type's fields appear, with the type as the header.
-        const html = buildMinutesFillableHtml({ meeting, orgName, items: agendaItems, members });
-        const w = window.open("", "_blank");
-        if (!w) {
-          toast.error("Please allow pop-ups to open the fillable minutes.");
-          return;
-        }
-        w.document.open();
-        w.document.write(html);
-        w.document.close();
+        // Fillable minutes — an interactive in-app view that mirrors the Minutes Taker form.
+        // Opened inside the app (not a popup) because popup documents get their scripts blocked.
+        setShowFillable(true);
         return;
       }
       const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly, completed });
@@ -406,6 +399,16 @@ export default function BoardMinutesTaker() {
           <MinutesAddAgendaItem onAdd={handleAddItem} />
         )}
       </div>
+
+      {showFillable && (
+        <MinutesFillableOverlay
+          meeting={meeting}
+          orgName={orgName}
+          items={agendaItems}
+          members={members}
+          onClose={() => setShowFillable(false)}
+        />
+      )}
     </div>
   );
 }
