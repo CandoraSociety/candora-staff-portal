@@ -48,6 +48,7 @@ export default function FillableMinutesPublic() {
       items={data.items || []}
       members={data.members || []}
       onClose={() => setClosed(true)}
+      canPersist={false}
     />
   );
 }

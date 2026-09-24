@@ -1,23 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { FileCheck, Link2, Printer, X } from "lucide-react";
+import { FileCheck, Link2, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
+import { base44 } from "@/api/base44Client";
 import { AGENDA_SECTIONS, sectionOf, CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
+import { NOTES_TYPES, isCallToOrderItem, isApprovalOfAgendaItem, isApprovalOfMinutesItem, isNextMeetingItem, isAdjournMotionItem, isInvitationItem } from "@/components/board/minutesShared";
 import MinutesFinalDoc from "@/components/board/MinutesFinalDoc";
 
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
-const NOTES_TYPES = ["note", "discussion", "information", "dissent", "abstention"];
 const MOTION_RESULTS = ["Carried", "Defeated", "Tabled", "Withdrawn"];
 const GENERIC_TYPES = ["note", "motion", "resolution", "action_item", "discussion", "information", "dissent", "abstention", "in_camera"];
-
-const titleMatch = (item, frag) => (item?.title || "").toLowerCase().includes(frag);
-const isCallToOrderItem = (i) => i?.item_type === "call_to_order" || titleMatch(i, "call to order");
-const isApprovalOfAgendaItem = (i) => i?.item_type === "approval_of_agenda" || titleMatch(i, "approval of agenda");
-const isApprovalOfMinutesItem = (i) => i?.item_type === "approval_of_minutes" || titleMatch(i, "approval of minutes");
-const isNextMeetingItem = (i) => titleMatch(i, "date of next meeting");
-const isAdjournMotionItem = (i) => titleMatch(i, "motion to adjourn");
-const isInvitationItem = (i) => titleMatch(i, "invitation to visit");
 
 const FIELD = "border border-slate-300 bg-slate-50 rounded-md px-2.5 py-1.5 text-sm text-slate-900 focus:outline-none focus:border-slate-400";
 const CAP = "text-[11px] text-slate-600 inline-flex items-center gap-1.5";
@@ -27,10 +20,10 @@ const ADD_BTN = "border border-dashed border-slate-400 text-[#1e2f4d] rounded-md
 const EMPTY_ENTRY = { id: "", type: "", motion_verbiage: "", content: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "" };
 
 function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, minimalMotion }) {
-  const isMotion = ["motion", "resolution"].includes(entry.type);
+  const isMotion = entry.type === "motion";
   const isAction = entry.type === "action_item";
   const isCamera = entry.type === "in_camera";
-  const isNotes = NOTES_TYPES.includes(entry.type);
+  const isNotes = [...NOTES_TYPES, "resolution"].includes(entry.type);
   const voteOpts = Array.from({ length: 13 }, (_, n) => <option key={n}>{n}</option>);
   return (
     <div className="border border-dashed border-slate-300 rounded-lg p-3 my-2">
@@ -112,7 +105,7 @@ function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, mi
   );
 }
 
-export default function MinutesFillableOverlay({ meeting, orgName, items, members, onClose }) {
+export default function MinutesFillableOverlay({ meeting, orgName, items, members, onClose, canPersist = true }) {
   const org = orgName || "Candora Society of Edmonton";
   const active = (members || []).filter((m) => m.status !== "inactive");
   const voting = active.filter((m) => m.is_voting !== false);
@@ -146,6 +139,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [agendaApproved, setAgendaApproved] = useState(false);
   const [showFinal, setShowFinal] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
 
   const allPresent = active.length > 0 && active.every((m) => present.includes(m.full_name));
 
@@ -259,6 +253,73 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     );
   };
 
+  const handleFinalize = async () => {
+    if (!canPersist || !meeting?.id) { setShowFinal(true); return; }
+    setFinalizing(true);
+    try {
+      // Gather entries in agenda order so motion numbering is chronological
+      const itemById = {};
+      sections.forEach((s) => s.items.forEach((i) => { itemById[i.id] = i; }));
+      const ordered = [];
+      sections.forEach((s) => s.items.forEach((i) => (entries[i.id] || []).forEach((e) => ordered.push({ ...e, containerId: i.id }))));
+      const motions = ordered.filter((e) => e.type === "motion");
+      const inCamera = ordered.filter((e) => e.type === "in_camera");
+      // Replace previously saved records for this meeting
+      await base44.entities.BoardMotion.deleteMany({ meeting_id: meeting.id });
+      await base44.entities.InCameraNote.deleteMany({ meeting_id: meeting.id });
+      // Running 4-digit count across all motions — carried over meeting to meeting, year to year
+      const top = await base44.entities.BoardMotion.list("-seq", 1);
+      let seq = top?.[0]?.seq || 0;
+      const monthTag = format(parseDateSmart(meeting.meeting_date), "yyyy-MM");
+      const idByEntry = {};
+      const motionRecords = motions.map((e) => {
+        seq += 1;
+        const motionId = `M-${monthTag}-${String(seq).padStart(4, "0")}`;
+        idByEntry[e.id] = motionId;
+        return {
+          motion_id: motionId,
+          seq,
+          meeting_id: meeting.id,
+          meeting_date: meeting.meeting_date,
+          meeting_title: meeting.title || "",
+          agenda_item_title: itemById[e.containerId]?.title || "",
+          motion_verbiage: e.motion_verbiage || "",
+          moved_by: e.moved_by || "",
+          seconded_by: e.seconded_by || "",
+          motion_result: e.motion_result || "",
+          votes_in_favour: /^\d+$/.test(e.votes_in_favour) ? Number(e.votes_in_favour) : undefined,
+          votes_opposed: /^\d+$/.test(e.votes_opposed) ? Number(e.votes_opposed) : undefined,
+          votes_abstained: /^\d+$/.test(e.votes_abstained) ? Number(e.votes_abstained) : undefined,
+          content: e.content || "",
+        };
+      });
+      if (motionRecords.length) await base44.entities.BoardMotion.bulkCreate(motionRecords);
+      const inCameraRecords = inCamera.map((e) => ({
+        meeting_id: meeting.id,
+        meeting_date: meeting.meeting_date,
+        meeting_title: meeting.title || "",
+        agenda_item_title: itemById[e.containerId]?.title || "",
+        content: [e.motion_verbiage, e.content].filter(Boolean).join("\n") || "(no text recorded)",
+      }));
+      if (inCameraRecords.length) await base44.entities.InCameraNote.bulkCreate(inCameraRecords);
+      // Stamp the generated motion IDs onto the local entries so the final document shows them
+      if (Object.keys(idByEntry).length) {
+        setEntries((prev) => {
+          const next = {};
+          Object.entries(prev).forEach(([cid, list]) => {
+            next[cid] = (list || []).map((e) => (idByEntry[e.id] ? { ...e, motion_id: idByEntry[e.id] } : e));
+          });
+          return next;
+        });
+      }
+      setShowFinal(true);
+    } catch (err) {
+      toast.error("Could not prepare the final minutes", { description: err?.message || "Unknown error" });
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
   if (showFinal) {
     return (
       <MinutesFinalDoc
@@ -272,6 +333,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
         chair={chair}
         entries={entries}
         data={{ callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved }}
+        canPersist={canPersist}
         onBack={() => setShowFinal(false)}
       />
     );
@@ -281,8 +343,8 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     <div className="fillable-minutes-overlay fixed inset-0 z-[100] overflow-auto bg-slate-200">
       <div className="fillable-page max-w-[830px] mx-auto bg-white my-6 px-10 py-8 shadow-xl">
         <div className="no-print sticky top-0 z-10 flex items-center gap-3 -mx-4 px-4 py-2 bg-[#1e2f4d] rounded-lg text-white mb-4">
-          <button type="button" onClick={() => setShowFinal(true)} title="Produce the final minutes with only the filled-in information" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white font-bold px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
-            <FileCheck size={14} /> Generate Final PDF
+          <button type="button" onClick={handleFinalize} disabled={finalizing} title="Produce the final minutes with only the filled-in information" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white font-bold px-3 py-1.5 rounded-md text-sm hover:bg-white/20 disabled:opacity-50">
+            <FileCheck size={14} /> {finalizing ? "Generating..." : "Generate Final PDF"}
           </button>
           <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <Link2 size={14} /> Copy link

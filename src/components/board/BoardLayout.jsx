@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, Calendar, FolderOpen, Users, BookOpen, Target, MessageSquare, ChevronLeft, ChevronRight, Menu, LogOut, Home, ShieldOff } from "lucide-react";
+import { LayoutDashboard, Calendar, FolderOpen, Users, BookOpen, Target, MessageSquare, ChevronLeft, ChevronRight, Menu, LogOut, Home, ShieldOff, Gavel, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LogoutConfirmationDialog from "@/components/auth/LogoutConfirmationDialog";
 import { base44 } from "@/api/base44Client";
@@ -14,6 +14,8 @@ const navItems = [
   { path: "/board/members", label: "Board Members", icon: Users },
   { path: "/board/onboarding", label: "Onboarding", icon: BookOpen },
   { path: "/board/strategic-plan", label: "Strategic Plan", icon: Target },
+  { path: "/board/motions", label: "Motions", icon: Gavel },
+  { path: "/board/in-camera-notes", label: "In-Camera Notes", icon: ShieldAlert },
   { path: "/board/assistant", label: "Board Assistant", icon: MessageSquare },
 ];
 

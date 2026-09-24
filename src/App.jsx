@@ -200,6 +200,8 @@ import BoardAssistant from '@/pages/board/BoardAssistant';
 import BoardAgendaBuilder from '@/pages/board/BoardAgendaBuilder';
 import BoardMinutesTaker from '@/pages/board/BoardMinutesTaker';
 import BoardMinutesFillable from '@/pages/board/BoardMinutesFillable';
+import BoardMotions from '@/pages/board/BoardMotions';
+import BoardInCameraNotes from '@/pages/board/BoardInCameraNotes';
 
 // Outlook Portal
 import OutlookLayout from '@/components/outlook/OutlookLayout';
@@ -578,6 +580,8 @@ const AuthenticatedApp = () => {
           <Route path="/board/meetings/:id/agenda" element={<BoardAgendaBuilder />} />
           <Route path="/board/meetings/:id/minutes" element={<BoardMinutesTaker />} />
           <Route path="/board/meetings/:id/fillable-minutes" element={<BoardMinutesFillable />} />
+          <Route path="/board/motions" element={<BoardMotions />} />
+          <Route path="/board/in-camera-notes" element={<BoardInCameraNotes />} />
           <Route path="/board/documents" element={<BoardDocuments />} />
           <Route path="/board/members" element={<BoardMembers />} />
           <Route path="/board/onboarding" element={<BoardOnboarding />} />

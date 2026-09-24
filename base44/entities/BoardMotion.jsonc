@@ -1,0 +1,62 @@
+{
+  "name": "BoardMotion",
+  "type": "object",
+  "properties": {
+    "motion_id": {
+      "type": "string",
+      "description": "Auto-generated motion ID \u2014 M-YYYY-MM-NNNN (month/year of the meeting plus a 4-digit running count that carries over from meeting to meeting and year to year)"
+    },
+    "seq": {
+      "type": "number",
+      "description": "Running sequence number across all motions \u2014 drives the 4-digit component of motion_id and the chronological ordering in the Motions tab"
+    },
+    "meeting_id": {
+      "type": "string",
+      "description": "Reference to the Meeting this motion was recorded in"
+    },
+    "meeting_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date of the meeting the motion belongs to"
+    },
+    "meeting_title": {
+      "type": "string",
+      "description": "Title of the meeting the motion belongs to"
+    },
+    "agenda_item_title": {
+      "type": "string",
+      "description": "Agenda item the motion was recorded under"
+    },
+    "motion_verbiage": {
+      "type": "string",
+      "description": "Text of the motion"
+    },
+    "moved_by": {
+      "type": "string"
+    },
+    "seconded_by": {
+      "type": "string"
+    },
+    "motion_result": {
+      "type": "string",
+      "description": "Result of the motion (Carried / Defeated / Tabled / Withdrawn)"
+    },
+    "votes_in_favour": {
+      "type": "number"
+    },
+    "votes_opposed": {
+      "type": "number"
+    },
+    "votes_abstained": {
+      "type": "number"
+    },
+    "content": {
+      "type": "string",
+      "description": "Notes accompanying the motion"
+    }
+  },
+  "required": [
+    "motion_id",
+    "meeting_id"
+  ]
+}

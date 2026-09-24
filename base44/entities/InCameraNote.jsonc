@@ -1,0 +1,31 @@
+{
+  "name": "InCameraNote",
+  "type": "object",
+  "properties": {
+    "meeting_id": {
+      "type": "string",
+      "description": "Reference to the Meeting this in-camera note belongs to"
+    },
+    "meeting_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date of the meeting \u2014 in-camera notes are labeled with this date"
+    },
+    "meeting_title": {
+      "type": "string",
+      "description": "Title of the meeting"
+    },
+    "agenda_item_title": {
+      "type": "string",
+      "description": "Agenda item the in-camera note was recorded under"
+    },
+    "content": {
+      "type": "string",
+      "description": "Confidential in-camera note text \u2014 excluded from the regular minutes document and shown only in the In-Camera Notes tab"
+    }
+  },
+  "required": [
+    "meeting_id",
+    "content"
+  ]
+}
