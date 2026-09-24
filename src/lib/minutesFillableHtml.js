@@ -160,6 +160,7 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
 
   <div class="section">
     <h2>Attendance</h2>
+    <label class="cap no-print" style="margin-bottom:6px;"><input type="checkbox" id="att-selectall"> Select all</label>
     <div class="att-grid">${attendanceRows}</div>
     <div class="frow" style="margin-top:8px;">
       <label class="cap">Guests <input id="guest-input" class="f" placeholder="Guest name..."></label>
@@ -180,6 +181,12 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     var TEMPLATES = ${j(TEMPLATES)};
     var NOTES_TYPES = ['note', 'discussion', 'information', 'dissent', 'abstention'];
     var GROUP_OF = { motion: 'motion', resolution: 'motion', action_item: 'action_item', in_camera: 'in_camera' };
+
+    var attSel = document.getElementById('att-selectall');
+    attSel.addEventListener('change', function () {
+      var rows = document.querySelectorAll('.att-row input[type=checkbox]');
+      for (var i = 0; i < rows.length; i++) rows[i].checked = attSel.checked;
+    });
 
     function addEntry(containerId, allowInCamera) {
       var container = document.getElementById(containerId);

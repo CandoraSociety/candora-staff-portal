@@ -228,6 +228,7 @@ export default function BoardMinutesTaker() {
           onToggleMember={(name, present) => saveAttendance({ present_member_names: present ? [...presentNames, name] : presentNames.filter(n => n !== name) })}
           onAddGuest={(name) => saveAttendance({ guest_names: [...guestNames, name] })}
           onRemoveGuest={(name) => saveAttendance({ guest_names: guestNames.filter(n => n !== name) })}
+          onSelectAll={(names) => saveAttendance({ present_member_names: names })}
           onMemberAdded={(m) => {
             setMembers(prev => [...prev, m].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")));
             saveAttendance({ present_member_names: [...presentNames, m.full_name] });

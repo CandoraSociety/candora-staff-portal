@@ -11,7 +11,7 @@ export const SEED_BOARD_MEMBERS = [
   { full_name: "Melanie Lang", role: "Director" },
   { full_name: "Chaya McLauchlin", role: "Director" },
   { full_name: "Ron Fernandes", role: "Director" },
-  { full_name: "Graham Currie", role: "ED" },
+  { full_name: "Graham Currie", role: "ED", is_voting: false },
 ];
 
 const MEMBER_ROLES = ["Chair", "Vice-Chair", "Treasurer", "Secretary", "Director", "ED", "Observer"];
@@ -21,8 +21,9 @@ export function memberEmail(name) {
   return `${name.toLowerCase().replace(/[^a-z]+/g, ".")}@board.candora`;
 }
 
-export default function MinutesAttendancePanel({ members, presentNames, guestNames, onToggleMember, onAddGuest, onRemoveGuest, onMemberAdded }) {
+export default function MinutesAttendancePanel({ members, presentNames, guestNames, onToggleMember, onAddGuest, onRemoveGuest, onMemberAdded, onSelectAll }) {
   const [guestInput, setGuestInput] = useState("");
+  const allPresent = members.length > 0 && members.every((m) => presentNames.includes(m.full_name));
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMember, setNewMember] = useState({ full_name: "", role: "Director", is_voting: true });
   const [adding, setAdding] = useState(false);
@@ -54,7 +55,18 @@ export default function MinutesAttendancePanel({ members, presentNames, guestNam
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Attendance</h2>
-        <span className="text-xs text-muted-foreground">{presentNames.length + guestNames.length} present</span>
+        <div className="flex items-center gap-3">
+          {onSelectAll && members.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onSelectAll(allPresent ? [] : members.map((m) => m.full_name))}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {allPresent ? "Deselect all" : "Select all"}
+            </button>
+          )}
+          <span className="text-xs text-muted-foreground">{presentNames.length + guestNames.length} present</span>
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-1.5">
