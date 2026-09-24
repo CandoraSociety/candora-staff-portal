@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from "pdf-lib";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
@@ -50,6 +50,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     if (value) f.setText(String(value));
     f.setFontSize(9);
     f.updateAppearances(font, redTextAppearance);
+    // Text typed later in a PDF reader renders red at the same 9pt size
+    f.acroField.dict.set(PDFName.of("DA"), PDFString.of(`${RED.red.toFixed(6)} ${RED.green.toFixed(6)} ${RED.blue.toFixed(6)} rg /Helv 9 Tf`));
   };
 
   const dropdownField = (name, x, fy, w, h, options, value) => {
@@ -61,6 +63,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
     if (v !== "") f.select(v);
     f.setFontSize(8);
+    f.acroField.dict.set(PDFName.of("DA"), PDFString.of(`${RED.red.toFixed(6)} ${RED.green.toFixed(6)} ${RED.blue.toFixed(6)} rg /Helv 8 Tf`));
   };
 
   // Inline row of labelled fillable fields
