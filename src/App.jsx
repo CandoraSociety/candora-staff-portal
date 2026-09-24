@@ -15,6 +15,7 @@ import VolunteerPortal from '@/pages/portal/VolunteerPortal';
 import StaffPortal from '@/pages/portal/StaffPortal';
 import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 import SelfRegister from '@/pages/portal/SelfRegister';
+import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
 // Auth pages
 import Login from '@/pages/Login';
@@ -374,7 +375,8 @@ const AuthenticatedApp = () => {
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
   const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/pathways-intake', '/self-register'].includes(location)
     || location.startsWith('/catering-portal')
-    || location.startsWith('/employer-portal');
+    || location.startsWith('/employer-portal')
+    || location.startsWith('/fillable-minutes');
 
   // Only show loading spinner for protected routes, not public auth pages
   if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
@@ -408,6 +410,9 @@ const AuthenticatedApp = () => {
 
       {/* Public QR self-registration page — standalone, no auth, no app navigation */}
       <Route path="/self-register" element={<SelfRegister />} />
+
+      {/* Fillable minutes — public link, no login required */}
+      <Route path="/fillable-minutes/:id" element={<FillableMinutesPublic />} />
 
       {/* Employer Portal — isolated, employer-only (login is public) */}
       <Route path="/employer-portal/login" element={<EmployerLogin />} />

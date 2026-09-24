@@ -153,8 +153,8 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     setEntries((prev) => ({ ...prev, [containerId]: (prev[containerId] || []).filter((e) => e.id !== entryId) }));
 
   const copyLink = () => {
-    const url = `${window.location.origin}/board/meetings/${meeting?.id}/fillable-minutes`;
-    navigator.clipboard.writeText(url).then(() => toast.success("Link copied — anyone with board portal access can open the fillable minutes."));
+    const url = `${window.location.origin}/fillable-minutes/${meeting?.id}`;
+    navigator.clipboard.writeText(url).then(() => toast.success("Link copied — anyone with the link can open and fill in the minutes, no login needed."));
   };
 
   const addNewItem = (sectionKey) => {
