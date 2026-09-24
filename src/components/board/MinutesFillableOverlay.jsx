@@ -281,16 +281,13 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     <div className="fillable-minutes-overlay fixed inset-0 z-[100] overflow-auto bg-slate-200">
       <div className="fillable-page max-w-[830px] mx-auto bg-white my-6 px-10 py-8 shadow-xl">
         <div className="no-print sticky top-0 z-10 flex items-center gap-3 -mx-4 px-4 py-2 bg-[#1e2f4d] rounded-lg text-white mb-4">
-          <button type="button" onClick={() => window.print()} className="flex items-center gap-1.5 bg-[#f5c116] text-[#1e2f4d] font-bold px-3 py-1.5 rounded-md text-sm">
-            <Printer size={14} /> Print / Save as PDF
-          </button>
           <button type="button" onClick={() => setShowFinal(true)} title="Produce the final minutes with only the filled-in information" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white font-bold px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <FileCheck size={14} /> Generate Final PDF
           </button>
           <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <Link2 size={14} /> Copy link
           </button>
-          <span className="text-xs text-slate-200">Fill in the fields, then print or save as PDF.</span>
+          <span className="text-xs text-slate-200">Fill in the fields, then generate the final PDF.</span>
           <button type="button" onClick={onClose} className="ml-auto flex items-center gap-1 text-sm text-slate-300 hover:text-white">
             <X size={14} /> Close
           </button>
