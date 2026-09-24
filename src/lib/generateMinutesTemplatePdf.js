@@ -57,7 +57,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     f.acroField.dict.set(PDFName.of("DA"), PDFString.of(`${RED.red.toFixed(6)} ${RED.green.toFixed(6)} ${RED.blue.toFixed(6)} rg /Helv 9 Tf`));
   };
 
-  const dropdownField = (name, x, fy, w, h, options, value) => {
+  const dropdownField = (name, x, fy, w, h, options, value, changeJs) => {
     const f = form.createDropdown(name);
     let opts = options;
     const v = value != null ? String(value) : "";
@@ -67,6 +67,14 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     if (v !== "") f.select(v);
     f.setFontSize(8);
     f.acroField.dict.set(PDFName.of("DA"), PDFString.of(`${RED.red.toFixed(6)} ${RED.green.toFixed(6)} ${RED.blue.toFixed(6)} rg /Helv 8 Tf`));
+    // Optional on-change script — used by the fillable entry-type dropdown to show/hide the fields
+    // belonging to the selected type, the same way the in-app form does (runs in Adobe Acrobat;
+    // viewers that don't run PDF scripts simply keep every field visible).
+    if (changeJs) {
+      f.acroField.dict.set(PDFName.of("AA"), doc.context.obj({
+        V: doc.context.obj({ S: PDFName.of("JavaScript"), JS: PDFString.of(changeJs) }),
+      }));
+    }
   };
 
   // Inline row of labelled fillable fields
@@ -75,6 +83,30 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     let x = M;
     for (const c of cells) {
       page.drawText(c.label, { x, y: y - 9, size: 7, font, color: GRAY });
+      const labelW = font.widthOfTextAtSize(c.label, 7) + 5;
+      if (c.options) dropdownField(c.name, x + labelW, y - 13, c.w, 13, c.options, c.value, c.js);
+      else textField(c.name, x + labelW, y - 13, c.w, 13, false, c.value);
+      x += labelW + c.w + 12;
+    }
+    y -= 20;
+  };
+
+  // Read-only label rendered as a form field so the entry-type script can show/hide it together with its input
+  const labelField = (name, x, fy, text) => {
+    const f = form.createTextField(name);
+    f.addToPage(page, { x, y: fy, width: font.widthOfTextAtSize(text, 7) + 2, height: 11, borderWidth: 0, textColor: GRAY });
+    f.setFontSize(7);
+    f.setText(text);
+    f.enableReadOnly();
+    f.updateAppearances(font);
+  };
+
+  // Like row(), but labels are read-only fields so whole rows can be toggled by the entry-type script
+  const rowFieldLabels = (cells) => {
+    ensureSpace(20);
+    let x = M;
+    for (const c of cells) {
+      labelField(c.labelName, x, y - 10, c.label);
       const labelW = font.widthOfTextAtSize(c.label, 7) + 5;
       if (c.options) dropdownField(c.name, x + labelW, y - 13, c.w, 13, c.options, c.value);
       else textField(c.name, x + labelW, y - 13, c.w, 13, false, c.value);
@@ -246,11 +278,14 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
           );
           y -= 12;
         } else if (blankAll) {
-          // Entry type selector — the same choices as the in-app form (In Camera only where the app allows it)
+          // Entry type selector — the same choices as the in-app form (In Camera only where the app allows it).
+          // Picking a type shows only the fields that type uses, just like the app form.
           const typeOptions = ["Note", "Motion", "Resolution", "Action Item", "Discussion", "Information", "Dissent", "Abstention"];
           if (!(isApprovalOfAgendaItem(item) || isApprovalOfMinutesItem(item))) typeOptions.push("In Camera");
+          const p = `item${id}`;
+          const typeJs = `(function(){var t=(this.event.value||"").toString();var m=(t=="Motion"||t=="Resolution");var a=(t=="Action Item");var i,f,L;var G=["${p}_motion_hdr","${p}_motion","${p}_moved_lbl","${p}_moved_by","${p}_seconded_lbl","${p}_seconded_by","${p}_result_lbl","${p}_result","${p}_inf_lbl","${p}_in_favour","${p}_opp_lbl","${p}_opposed","${p}_abst_lbl","${p}_abstained"];var A=["${p}_act_lbl","${p}_action_to","${p}_due_lbl","${p}_action_due"];for(i=0,L=G.length;i<L;i++){f=this.getField(G[i]);if(f)f.display=m?display.visible:display.hidden;}for(i=0,L=A.length;i<L;i++){f=this.getField(A[i]);if(f)f.display=a?display.visible:display.hidden;}})()`;
           row([
-            { label: "Entry type:", name: `item${id}_type`, w: 110, options: typeOptions, value: "" },
+            { label: "Entry type:", name: `item${id}_type`, w: 110, options: typeOptions, value: "", js: typeJs },
           ]);
         }
 
@@ -260,7 +295,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
           const mlines = mv ? wrap(mv, 9, W - 2 * M - 8) : [""];
           const mh = Math.max(20, mlines.length * 11 + 7);
           ensureSpace(mh + 12);
-          page.drawText("Motion", { x: M, y: y - 8, size: 7, font, color: GRAY });
+          if (blankAll) labelField(`item${id}_motion_hdr`, M, y - 9, "Motion");
+          else page.drawText("Motion", { x: M, y: y - 8, size: 7, font, color: GRAY });
           y -= 10;
           textField(`item${id}_motion`, M, y - mh, W - 2 * M, mh, true, mv);
           y -= mh + 8;
@@ -276,26 +312,30 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
         textField(`item${id}_notes`, M, y - ch, W - 2 * M, ch, true, content);
         y -= ch + 8;
 
-        // Motion attribution, votes and result — recorded motion/resolution entries, and every blank block
+        // Motion attribution and result, then the vote counts — same order as the in-app form
         if (isM || blankAll) {
-          row([
-            { label: "Moved by:", name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
-            { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150, options: attendeeOpts, value: entry?.seconded_by },
-          ]);
-          row([
-            { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: ["All", ...NUMS], value: entry?.votes_in_favour },
-            { label: "Opposed:", name: `item${id}_opposed`, w: 40, options: NUMS, value: entry?.votes_opposed },
-            { label: "Abstained:", name: `item${id}_abstained`, w: 40, options: NUMS, value: entry?.votes_abstained },
-            { label: "Result:", name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"], value: entry?.motion_result ? String(entry.motion_result).charAt(0).toUpperCase() + String(entry.motion_result).slice(1) : "" },
-          ]);
+          const movedRow = [
+            { label: "Moved by:", labelName: `item${id}_moved_lbl`, name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
+            { label: "Seconded by:", labelName: `item${id}_seconded_lbl`, name: `item${id}_seconded_by`, w: 150, options: attendeeOpts, value: entry?.seconded_by },
+            { label: "Result:", labelName: `item${id}_result_lbl`, name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"], value: entry?.motion_result ? String(entry.motion_result).charAt(0).toUpperCase() + String(entry.motion_result).slice(1) : "" },
+          ];
+          const votesRow = [
+            { label: "In favour:", labelName: `item${id}_inf_lbl`, name: `item${id}_in_favour`, w: 40, options: ["All", ...NUMS], value: entry?.votes_in_favour },
+            { label: "Opposed:", labelName: `item${id}_opp_lbl`, name: `item${id}_opposed`, w: 40, options: NUMS, value: entry?.votes_opposed },
+            { label: "Abstained:", labelName: `item${id}_abst_lbl`, name: `item${id}_abstained`, w: 40, options: NUMS, value: entry?.votes_abstained },
+          ];
+          if (blankAll) { rowFieldLabels(movedRow); rowFieldLabels(votesRow); }
+          else { row(movedRow); row(votesRow); }
         }
 
         // Action item fields — recorded action_item entries, and every blank block
         if (isA || blankAll) {
-          row([
-            { label: "Action assigned to:", name: `item${id}_action_to`, w: 150, value: entry?.action_assigned_to },
-            { label: "Due date:", name: `item${id}_action_due`, w: 90, value: entry?.action_due_date },
-          ]);
+          const actionRow = [
+            { label: "Action assigned to:", labelName: `item${id}_act_lbl`, name: `item${id}_action_to`, w: 150, value: entry?.action_assigned_to },
+            { label: "Due date:", labelName: `item${id}_due_lbl`, name: `item${id}_action_due`, w: 90, value: entry?.action_due_date },
+          ];
+          if (blankAll) rowFieldLabels(actionRow);
+          else row(actionRow);
         }
         y -= 10;
       });
