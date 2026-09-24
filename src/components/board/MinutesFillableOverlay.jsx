@@ -142,6 +142,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
   const [nextDate, setNextDate] = useState("");
   const [nextNotes, setNextNotes] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [agendaApproved, setAgendaApproved] = useState(false);
 
   const allPresent = active.length > 0 && active.every((m) => present.includes(m.full_name));
 
@@ -219,14 +220,13 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
       );
     }
     if (isApprovalOfAgendaItem(item)) {
-      const cid = item.id;
       return (
         <div>
-          {(entries[cid] || []).map((e) => (
-            <EntryBlock key={e.id} entry={e} types={[]} fixedType voterNames={voterNames} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
-          ))}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button type="button" onClick={() => addEntryTo(cid, "motion")} className={ADD_BTN}>+ Motion</button>
+          <label className="flex items-center gap-2 text-sm mt-1">
+            <input type="checkbox" checked={agendaApproved} onChange={(e) => setAgendaApproved(e.target.checked)} />
+            Agenda approved as presented
+          </label>
+          <div className="flex items-center gap-2 flex-wrap mt-2">
             <button type="button" onClick={() => setShowItemForm((v) => !v)} className={ADD_BTN}>+ Add agenda item</button>
           </div>
           {showItemForm && (
