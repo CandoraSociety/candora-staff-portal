@@ -13,6 +13,8 @@ const RED = rgb(0.78, 0.08, 0.08);
 const NUMS = Array.from({ length: 13 }, (_, n) => String(n));
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
 const matchesTitle = (item, frag) => String(item?.title || "").toLowerCase().includes(frag);
+const isApprovalOfAgendaItem = (item) => item?.item_type === "approval_of_agenda" || matchesTitle(item, "approval of agenda");
+const isApprovalOfMinutesItem = (item) => item?.item_type === "approval_of_minutes" || matchesTitle(item, "approval of minutes");
 
 /**
  * Builds a fillable AcroForm PDF for taking board meeting minutes.
@@ -121,7 +123,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   const aw = bold.widthOfTextAtSize("ATTENDANCE", 9) + 8;
   page.drawLine({ start: { x: M + aw, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
   y -= 22;
-  if (attNames.length > 0) {
+  if (completed) {
     for (let i = 0; i < attNames.length; i += 2) {
       ensureSpace(16);
       for (const [idx, x] of [[i, M], [i + 1, M + 270]]) {
@@ -130,18 +132,28 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       }
       y -= 16;
     }
-  } else if (!completed) {
-    // Nothing marked yet — leave a fillable list
-    page.drawText("Present", { x: M, y: y - 8, size: 7, font, color: GRAY });
-    y -= 10;
-    textField("attendance_present", M, y - 44, W - 2 * M, 44, true);
-    y -= 52;
+  } else {
+    // Blank fillable attendance — a Present/Regret dropdown beside each permanent member, plus a guests field.
+    // Nothing recorded in the app is carried over: the fillable template starts empty.
+    const attMembers = (members || []).filter((m) => m.status !== "inactive");
+    for (let i = 0; i < attMembers.length; i += 2) {
+      ensureSpace(18);
+      for (const [idx, x] of [[i, M], [i + 1, M + 270]]) {
+        if (!attMembers[idx]) continue;
+        const m = attMembers[idx];
+        const label = `${m.full_name}${m.role ? ` (${ROLE_LABELS[m.role] || m.role})` : ""}`;
+        page.drawText(label, { x, y: y - 9, size: 8, font, color: rgb(0.15, 0.15, 0.18) });
+        dropdownField(`attendance_${idx}`, x + font.widthOfTextAtSize(label, 8) + 5, y - 13, 66, 13, ["", "Present", "Regret"], "");
+      }
+      y -= 17;
+    }
+    row([{ label: "Guests:", name: "attendance_guests", w: 300, value: "" }]);
   }
-  // Regrets — permanent members not marked present (once attendance has been taken)
+  // Regrets — permanent members not marked present; completed document only
   const regretNames = (members || [])
     .filter((m) => m.status !== "inactive" && !presentNames.includes(m.full_name))
     .map((m) => m.full_name);
-  if (presentNames.length > 0 && regretNames.length > 0) {
+  if (completed && presentNames.length > 0 && regretNames.length > 0) {
     for (const l of wrap(`Regrets:  ${regretNames.join("    ")}`, 9, W - 2 * M)) {
       ensureSpace(14);
       page.drawText(l, { x: M, y: y - 9, size: 9, font, color: GRAY });
@@ -196,8 +208,10 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       const isNextMeetingItem = matchesTitle(item, "date of next meeting");
       const isAdjournMotionItem = matchesTitle(item, "motion to adjourn");
 
-      // Completed document: only recorded entries, no blank boxes; fillable template: always at least one blank block
-      const blocks = completed ? itemEntries : (itemEntries.length > 0 ? itemEntries : [null]);
+      // Completed document: only the recorded entries, flattened.
+      // Fillable template: exactly one blank block per item carrying the full field set —
+      // nothing recorded in the app is included (that's what the completed document is for).
+      const blocks = completed ? itemEntries : [null];
       blocks.forEach((entry, bi) => {
         const id = fieldIdx++;
         let type = entry?.entry_type || "note";
@@ -206,6 +220,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
         const isM = ["motion", "resolution"].includes(type);
         const isA = type === "action_item";
         const isCam = entry && (entry.is_in_camera || entry.entry_type === "in_camera");
+        const blankAll = !completed && !notesOnly; // blank blocks carry every field the in-app form can use
 
         // Motion to Adjourn — only the name of the person moving to adjourn
         if (isAdjournMotionItem) {
@@ -223,15 +238,24 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
           ]);
         }
 
-        ensureSpace(30);
-        page.drawText(
-          `${String(type).replace(/_/g, " ").toUpperCase()}${blocks.length > 1 ? `  #${bi + 1}` : ""}${isCam ? "  — IN CAMERA" : ""}`,
-          { x: M, y: y - 8, size: 7, font: bold, color: isCam ? RED : GRAY }
-        );
-        y -= 12;
+        if (completed) {
+          ensureSpace(30);
+          page.drawText(
+            `${String(type).replace(/_/g, " ").toUpperCase()}${blocks.length > 1 ? `  #${bi + 1}` : ""}${isCam ? "  — IN CAMERA" : ""}`,
+            { x: M, y: y - 8, size: 7, font: bold, color: isCam ? RED : GRAY }
+          );
+          y -= 12;
+        } else if (blankAll) {
+          // Entry type selector — the same choices as the in-app form (In Camera only where the app allows it)
+          const typeOptions = ["Note", "Motion", "Resolution", "Action Item", "Discussion", "Information", "Dissent", "Abstention"];
+          if (!(isApprovalOfAgendaItem(item) || isApprovalOfMinutesItem(item))) typeOptions.push("In Camera");
+          row([
+            { label: "Entry type:", name: `item${id}_type`, w: 110, options: typeOptions, value: "" },
+          ]);
+        }
 
-        // Motion verbiage — only when the motion option is used
-        if (isM) {
+        // Motion verbiage — recorded motion/resolution entries, and every blank block
+        if (isM || blankAll) {
           const mv = entry?.motion_verbiage || "";
           const mlines = mv ? wrap(mv, 9, W - 2 * M - 8) : [""];
           const mh = Math.max(20, mlines.length * 11 + 7);
@@ -252,8 +276,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
         textField(`item${id}_notes`, M, y - ch, W - 2 * M, ch, true, content);
         y -= ch + 8;
 
-        // Motion attribution, votes and result — only for motion / resolution entries
-        if (isM) {
+        // Motion attribution, votes and result — recorded motion/resolution entries, and every blank block
+        if (isM || blankAll) {
           row([
             { label: "Moved by:", name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
             { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150, options: attendeeOpts, value: entry?.seconded_by },
@@ -266,8 +290,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
           ]);
         }
 
-        // Action item fields — only for action_item entries
-        if (isA) {
+        // Action item fields — recorded action_item entries, and every blank block
+        if (isA || blankAll) {
           row([
             { label: "Action assigned to:", name: `item${id}_action_to`, w: 150, value: entry?.action_assigned_to },
             { label: "Due date:", name: `item${id}_action_due`, w: 90, value: entry?.action_due_date },
