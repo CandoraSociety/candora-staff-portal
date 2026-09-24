@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
+import { buildMinutesFillableHtml } from "@/lib/minutesFillableHtml";
 import MinutesAttendancePanel, { SEED_BOARD_MEMBERS, memberEmail } from "@/components/board/MinutesAttendancePanel";
 import MinutesAddAgendaItem from "@/components/board/MinutesAddAgendaItem";
 
@@ -135,6 +136,13 @@ export default function BoardMinutesTaker() {
   const handleDownloadPdf = async (inCameraOnly, completed = false) => {
     setDownloadingPdf(true);
     try {
+      if (!inCameraOnly && !completed) {
+        // Fillable minutes — an interactive template that mirrors the in-app form:
+        // pick an entry type and only that type's fields appear, with the type as the header.
+        const html = buildMinutesFillableHtml({ meeting, orgName, items: agendaItems, members });
+        window.open(URL.createObjectURL(new Blob([html], { type: "text/html" })), "_blank");
+        return;
+      }
       const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly, completed });
       const suffix = inCameraOnly ? "In Camera Minutes (Confidential)" : completed ? "Completed Minutes" : "Minutes";
       const file = new File([bytes], `${meeting?.title || "Board Meeting"} - ${suffix}.pdf`, { type: "application/pdf" });
