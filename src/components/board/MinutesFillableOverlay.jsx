@@ -243,7 +243,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     return (
       <div>
         {(entries[cid] || []).map((e) => (
-          <EntryBlock key={e.id} entry={e} types={types} voterNames={voterNames} minimalMotion={isApprovalOfMinutesItem(item)} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
+          <EntryBlock key={e.id} entry={e} fixedType={isApprovalOfMinutesItem(item)} types={types} voterNames={voterNames} minimalMotion={isApprovalOfMinutesItem(item)} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
         ))}
         {isApprovalOfMinutesItem(item) && (
           <button type="button" onClick={() => addEntryTo(cid, "motion")} className={`${ADD_BTN} mr-2`}>+ Motion</button>
