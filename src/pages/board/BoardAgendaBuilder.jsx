@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin, Package } from "lucide-react";
+import MeetingPackageDialog from "@/components/board/MeetingPackageDialog";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
@@ -40,6 +41,7 @@ export default function BoardAgendaBuilder() {
   const [locationDraft, setLocationDraft] = useState(null);
   const [meetingList, setMeetingList] = useState([]);
   const [minutesEdit, setMinutesEdit] = useState(null);
+  const [showPackage, setShowPackage] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -273,9 +275,19 @@ export default function BoardAgendaBuilder() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-6 mt-4">
+      <div className="flex items-center justify-between mb-6 mt-4 flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{items.length} items · {totalDuration} min total</p>
-        <AgendaPrintButton meeting={meeting} items={items} />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPackage(true)}
+            disabled={!meeting || items.length === 0}
+            className="flex items-center gap-1.5 bg-[#1e2f4d] text-white rounded-lg px-3 py-2 text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
+          >
+            <Package size={14} /> Meeting Package
+          </button>
+          <AgendaPrintButton meeting={meeting} items={items} />
+        </div>
       </div>
 
       {/* Suggested Agenda Items — from organizational data */}
@@ -372,6 +384,10 @@ export default function BoardAgendaBuilder() {
           );
         })}
       </div>
+
+      {showPackage && meeting && (
+        <MeetingPackageDialog meeting={meeting} items={items} onClose={() => setShowPackage(false)} />
+      )}
     </div>
   );
 }
