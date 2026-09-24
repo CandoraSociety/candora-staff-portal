@@ -16,6 +16,16 @@ const matchesTitle = (item, frag) => String(item?.title || "").toLowerCase().inc
 const isApprovalOfAgendaItem = (item) => item?.item_type === "approval_of_agenda" || matchesTitle(item, "approval of agenda");
 const isApprovalOfMinutesItem = (item) => item?.item_type === "approval_of_minutes" || matchesTitle(item, "approval of minutes");
 
+// 24h "HH:MM" → readable "h:MM AM/PM" for printing
+const fmtTime = (t) => {
+  const m = String(t || "").match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return t || "";
+  let h = Number(m[1]);
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m[2]} ${ap}`;
+};
+
 /**
  * Builds a fillable AcroForm PDF for taking board meeting minutes.
  * One set of fillable fields per agenda item: minutes/discussion notes,
@@ -239,6 +249,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       const notesOnly = item.item_type === "call_to_order" || matchesTitle(item, "call to order") || matchesTitle(item, "date of next meeting");
       const isNextMeetingItem = matchesTitle(item, "date of next meeting");
       const isAdjournMotionItem = matchesTitle(item, "motion to adjourn");
+      const isCallToOrderTitle = item.item_type === "call_to_order" || matchesTitle(item, "call to order");
 
       // Completed document: only the recorded entries, flattened.
       // Fillable template: exactly one blank block per item carrying the full field set —
@@ -254,11 +265,13 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
         const isCam = entry && (entry.is_in_camera || entry.entry_type === "in_camera");
         const blankAll = !completed && !notesOnly; // blank blocks carry every field the in-app form can use
 
-        // Motion to Adjourn — only the name of the person moving to adjourn
+        // Motion to Adjourn — the person moving to adjourn, plus the adjournment time
         if (isAdjournMotionItem) {
-          row([
+          const adjournCells = [
             { label: "Moved to adjourn by:", name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
-          ]);
+          ];
+          if (!completed || entry?.event_time) adjournCells.push({ label: "Adjourned at:", name: `item${id}_time`, w: 70, value: completed ? fmtTime(entry?.event_time) : "" });
+          row(adjournCells);
           y -= 10;
           return;
         }
@@ -287,6 +300,11 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
           row([
             { label: "Entry type:", name: `item${id}_type`, w: 110, options: typeOptions, value: "", js: typeJs },
           ]);
+        }
+
+        // Call to Order — the time the meeting was called to order
+        if (isCallToOrderTitle && (!completed || entry?.event_time)) {
+          row([{ label: "Called to order:", name: `item${id}_time`, w: 70, value: completed ? fmtTime(entry?.event_time) : "" }]);
         }
 
         // Motion verbiage — recorded motion/resolution entries, and every blank block

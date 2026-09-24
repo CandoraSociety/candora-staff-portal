@@ -12,7 +12,17 @@ import MinutesAddAgendaItem from "@/components/board/MinutesAddAgendaItem";
 
 const ENTRY_TYPES = ["note","motion","resolution","action_item","discussion","information","dissent","abstention","in_camera"];
 const MOTION_RESULTS = ["","carried","defeated","tabled","withdrawn"];
-const EMPTY_FORM = { entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "", is_in_camera: false };
+const EMPTY_FORM = { entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "", event_time: "", is_in_camera: false };
+
+// 24h "HH:MM" → readable "h:MM AM/PM" for display
+const fmtTime = (t) => {
+  const m = String(t || "").match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return t || "";
+  let h = Number(m[1]);
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m[2]} ${ap}`;
+};
 
 // Per-item entry capabilities — each standing agenda item only records what it actually needs
 const titleMatch = (item, frag) => (item?.title || "").toLowerCase().includes(frag);
@@ -25,8 +35,8 @@ const isInvitationItem = (item) => titleMatch(item, "invitation to visit");
 
 function itemEntryCaps(item) {
   if (isInvitationItem(item)) return { none: true };
-  if (isAdjournMotionItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: false, date: false, moverOnly: true };
-  if (isCallToOrderItem(item) || isNextMeetingItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: true, date: isNextMeetingItem(item) };
+  if (isAdjournMotionItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: false, date: false, moverOnly: true, time: true };
+  if (isCallToOrderItem(item) || isNextMeetingItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: true, date: isNextMeetingItem(item), time: isCallToOrderItem(item) };
   return { typeSelect: true, motion: true, inCamera: !(isApprovalOfAgendaItem(item) || isApprovalOfMinutesItem(item)) };
 }
 
@@ -253,6 +263,7 @@ export default function BoardMinutesTaker() {
                                 {(entry.votes_in_favour != null || entry.votes_opposed != null || entry.votes_abstained != null) && (
                                   <span>In favour: {entry.votes_in_favour ?? 0} · Opposed: {entry.votes_opposed ?? 0} · Abstained: {entry.votes_abstained ?? 0}</span>
                                 )}
+                                {entry.event_time && <span>{isAdjournMotionItem(item) ? "Adjourned" : "Time"}: {fmtTime(entry.event_time)}</span>}
                                 {entry.action_assigned_to && <span>Assigned: {entry.action_assigned_to}</span>}
                                 {entry.action_due_date && <span>{isNextMeetingItem(item) ? "Next meeting" : "Due"}: {format(new Date(entry.action_due_date), "MMM d, yyyy")}</span>}
                               </div>
@@ -293,6 +304,12 @@ export default function BoardMinutesTaker() {
                         </div>
                         {isMotion && !caps.moverOnly && (
                           <input value={form.motion_verbiage} onChange={e => setForm({...form, motion_verbiage: e.target.value})} placeholder="Motion verbiage (e.g. Be it resolved that...)" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" />
+                        )}
+                        {caps.time && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{isAdjournMotionItem(item) ? "Adjourned at:" : "Called to order:"}</span>
+                            <input type="time" value={form.event_time} onChange={e => setForm({...form, event_time: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
+                          </div>
                         )}
                         {caps.notes && (
                           <textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} placeholder="Notes / details..." rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none resize-none" />
@@ -345,7 +362,7 @@ export default function BoardMinutesTaker() {
                             <input type="date" value={form.action_due_date} onChange={e => setForm({...form, action_due_date: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
                           </div>
                         )}
-                        <button type="submit" disabled={saving || (caps.moverOnly ? !form.moved_by : (!form.content && !form.motion_verbiage && !(caps.date && form.action_due_date)))} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50">
+                        <button type="submit" disabled={saving || (caps.moverOnly ? !form.moved_by : (!form.content && !form.motion_verbiage && !(caps.date && form.action_due_date) && !(caps.time && form.event_time)))} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50">
                           <Plus size={13} /> Add Entry
                         </button>
                       </form>

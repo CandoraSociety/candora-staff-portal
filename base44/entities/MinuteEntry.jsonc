@@ -64,6 +64,10 @@
       "type": "string",
       "format": "date"
     },
+    "event_time": {
+      "type": "string",
+      "description": "Time the meeting was called to order or adjourned (HH:mm 24h, captured from the time picker on Call to Order and Motion to Adjourn items)"
+    },
     "is_in_camera": {
       "type": "boolean",
       "default": false
