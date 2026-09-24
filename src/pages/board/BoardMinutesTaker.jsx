@@ -142,7 +142,14 @@ export default function BoardMinutesTaker() {
         // Fillable minutes — an interactive template that mirrors the in-app form:
         // pick an entry type and only that type's fields appear, with the type as the header.
         const html = buildMinutesFillableHtml({ meeting, orgName, items: agendaItems, members });
-        window.open(URL.createObjectURL(new Blob([html], { type: "text/html" })), "_blank");
+        const w = window.open("", "_blank");
+        if (!w) {
+          toast.error("Please allow pop-ups to open the fillable minutes.");
+          return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
         return;
       }
       const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly, completed });
