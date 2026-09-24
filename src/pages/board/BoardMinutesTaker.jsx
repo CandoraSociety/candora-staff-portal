@@ -122,11 +122,11 @@ export default function BoardMinutesTaker() {
     setEntries(prev => prev.filter(e => e.id !== entryId));
   };
 
-  const handleDownloadPdf = async (inCameraOnly) => {
+  const handleDownloadPdf = async (inCameraOnly, completed = false) => {
     setDownloadingPdf(true);
     try {
-      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly });
-      const suffix = inCameraOnly ? "In Camera Minutes (Confidential)" : "Minutes";
+      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance, entries, { inCameraOnly, completed });
+      const suffix = inCameraOnly ? "In Camera Minutes (Confidential)" : completed ? "Completed Minutes" : "Minutes";
       const file = new File([bytes], `${meeting?.title || "Board Meeting"} - ${suffix}.pdf`, { type: "application/pdf" });
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
       window.open(file_url, "_blank");
@@ -174,9 +174,16 @@ export default function BoardMinutesTaker() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => handleDownloadPdf(false)}
+            onClick={() => handleDownloadPdf(false, true)}
             disabled={downloadingPdf}
             className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50 shrink-0"
+          >
+            {downloadingPdf ? "Generating..." : "Download Completed Minutes"}
+          </button>
+          <button
+            onClick={() => handleDownloadPdf(false)}
+            disabled={downloadingPdf}
+            className="flex items-center gap-1.5 border border-border text-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-muted transition disabled:opacity-50 shrink-0"
           >
             {downloadingPdf ? "Generating..." : "Download Fillable Minutes"}
           </button>

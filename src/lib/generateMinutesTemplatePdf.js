@@ -19,7 +19,7 @@ const matchesTitle = (item, frag) => String(item?.title || "").toLowerCase().inc
  * One set of fillable fields per agenda item: minutes/discussion notes,
  * motion verbiage, moved/seconded/result, and action-item assignee/due date.
  */
-export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, members = [], attendance = null, entries = [], { inCameraOnly = false } = {}) {
+export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, members = [], attendance = null, entries = [], { inCameraOnly = false, completed = false } = {}) {
   const BRAND = inCameraOnly ? rgb(0.45, 0.06, 0.08) : NAVY;
   const doc = await PDFDocument.create();
   const form = doc.getForm();
@@ -130,7 +130,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       }
       y -= 16;
     }
-  } else {
+  } else if (!completed) {
     // Nothing marked yet — leave a fillable list
     page.drawText("Present", { x: M, y: y - 8, size: 7, font, color: GRAY });
     y -= 10;
@@ -184,8 +184,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       const isNextMeetingItem = matchesTitle(item, "date of next meeting");
       const isAdjournMotionItem = matchesTitle(item, "motion to adjourn");
 
-      // One block per recorded entry — any number of each category; a blank notes block when nothing is recorded yet
-      const blocks = itemEntries.length > 0 ? itemEntries : [null];
+      // Completed document: only recorded entries, no blank boxes; fillable template: always at least one blank block
+      const blocks = completed ? itemEntries : (itemEntries.length > 0 ? itemEntries : [null]);
       blocks.forEach((entry, bi) => {
         const id = fieldIdx++;
         let type = entry?.entry_type || "note";
@@ -314,11 +314,13 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     }
   }
 
-  // General notes field at the end (or when there are no agenda items)
-  ensureSpace(70);
-  page.drawText("Additional Notes", { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
-  y -= 22;
-  textField("additional_notes", M, y - 60, W - 2 * M, 60, true);
+  // General notes field at the end (or when there are no agenda items) — fillable template only
+  if (!completed) {
+    ensureSpace(70);
+    page.drawText("Additional Notes", { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
+    y -= 22;
+    textField("additional_notes", M, y - 60, W - 2 * M, 60, true);
+  }
 
   // ── Footers ──
   const pages = doc.getPages();
@@ -328,6 +330,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     p.drawText(pn, { x: W - M - font.widthOfTextAtSize(pn, 7), y: 28, size: 7, font, color: GRAY });
   });
 
+  // Completed document: flatten the form so the recorded entries become permanent page text
+  if (completed) form.flatten();
   doc.setTitle(inCameraOnly ? `${title} — In Camera Minutes (Confidential)` : `${title} — Minutes`);
   doc.setSubject(inCameraOnly ? "In-camera meeting minutes — confidential, for the Board Chair" : "Board meeting minutes (fillable)");
   return doc.save();
