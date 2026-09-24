@@ -12,6 +12,7 @@ const FIELD_BG = rgb(0.985, 0.985, 0.995);
 const RED = rgb(0.78, 0.08, 0.08);
 const NUMS = Array.from({ length: 13 }, (_, n) => String(n));
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
+const matchesTitle = (item, frag) => String(item?.title || "").toLowerCase().includes(frag);
 
 /**
  * Builds a fillable AcroForm PDF for taking board meeting minutes.
@@ -176,14 +177,39 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
         .filter((e) => inCameraOnly || !(e.is_in_camera || e.entry_type === "in_camera"))
         .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
+      // Per-item capabilities — Call to Order and Date of Next Meeting are notes-only,
+      // Motion to Adjourn needs only the mover's name, Invitation to Visit has no fields
+      if (matchesTitle(item, "invitation to visit")) { y -= 6; return; }
+      const notesOnly = item.item_type === "call_to_order" || matchesTitle(item, "call to order") || matchesTitle(item, "date of next meeting");
+      const isNextMeetingItem = matchesTitle(item, "date of next meeting");
+      const isAdjournMotionItem = matchesTitle(item, "motion to adjourn");
+
       // One block per recorded entry — any number of each category; a blank notes block when nothing is recorded yet
       const blocks = itemEntries.length > 0 ? itemEntries : [null];
       blocks.forEach((entry, bi) => {
         const id = fieldIdx++;
-        const type = entry?.entry_type || "note";
+        let type = entry?.entry_type || "note";
+        if (notesOnly) type = "note";
+        if (isAdjournMotionItem) type = "motion";
         const isM = ["motion", "resolution"].includes(type);
         const isA = type === "action_item";
         const isCam = entry && (entry.is_in_camera || entry.entry_type === "in_camera");
+
+        // Motion to Adjourn — only the name of the person moving to adjourn
+        if (isAdjournMotionItem) {
+          row([
+            { label: "Moved to adjourn by:", name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
+          ]);
+          y -= 10;
+          return;
+        }
+
+        // Date of Next Meeting — fillable date for the next meeting, plus a notes box
+        if (isNextMeetingItem) {
+          row([
+            { label: "Next meeting date:", name: `item${id}_next_meeting_date`, w: 90, value: entry?.action_due_date || "" },
+          ]);
+        }
 
         ensureSpace(30);
         page.drawText(
