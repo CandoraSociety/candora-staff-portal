@@ -1,0 +1,27 @@
+{
+  "name": "BoardMinutesAttendance",
+  "type": "object",
+  "properties": {
+    "meeting_id": {
+      "type": "string",
+      "description": "Reference to the Meeting this attendance record belongs to"
+    },
+    "present_member_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Names of permanent board members marked present at the meeting"
+    },
+    "guest_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Guest attendee names added for this meeting"
+    }
+  },
+  "required": [
+    "meeting_id"
+  ]
+}

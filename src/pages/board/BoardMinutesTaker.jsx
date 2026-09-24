@@ -6,9 +6,11 @@ import { format } from "date-fns";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
+import MinutesAttendancePanel, { SEED_BOARD_MEMBERS, memberEmail } from "@/components/board/MinutesAttendancePanel";
 
 const ENTRY_TYPES = ["note","motion","resolution","action_item","discussion","information","dissent","abstention","in_camera"];
 const MOTION_RESULTS = ["","carried","defeated","tabled","withdrawn"];
+const EMPTY_FORM = { entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "", is_in_camera: false };
 
 const ENTRY_COLORS = {
   motion: "border-l-4 border-l-blue-400 bg-blue-50/40",
@@ -26,10 +28,11 @@ export default function BoardMinutesTaker() {
   const [agendaItems, setAgendaItems] = useState([]);
   const [entries, setEntries] = useState([]);
   const [members, setMembers] = useState([]);
+  const [attendance, setAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState({});
   const [activeItemId, setActiveItemId] = useState(null);
-  const [form, setForm] = useState({ entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", action_assigned_to: "", action_due_date: "", is_in_camera: false });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
   const [itemForm, setItemForm] = useState({ title: "", section: "new_business", presenter: "", duration_minutes: 5 });
@@ -40,24 +43,49 @@ export default function BoardMinutesTaker() {
       base44.entities.AgendaItem.filter({ meeting_id: id }),
       base44.entities.MinuteEntry.filter({ meeting_id: id }),
       base44.entities.BoardMember.filter({ status: "active" }),
-    ]).then(([meetings, ai, me, bm]) => {
+      base44.entities.BoardMinutesAttendance.filter({ meeting_id: id }),
+    ]).then(async ([meetings, ai, me, bm, att]) => {
       setMeeting(meetings[0]);
       setAgendaItems(ai.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
       setEntries(me.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
-      setMembers(bm);
+      let memberList = bm;
+      if (bm.length === 0) {
+        memberList = await base44.entities.BoardMember.bulkCreate(
+          SEED_BOARD_MEMBERS.map((m) => ({ ...m, email: memberEmail(m.full_name), status: "active" }))
+        );
+      }
+      setMembers(memberList.sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")));
+      setAttendance(att[0] || null);
       if (ai.length > 0) { setActiveItemId(ai[0].id); setExpandedItems({ [ai[0].id]: true }); }
       setLoading(false);
     });
   }, [id]);
+
+  const saveAttendance = async (updates) => {
+    if (attendance) {
+      setAttendance(await base44.entities.BoardMinutesAttendance.update(attendance.id, updates));
+    } else {
+      setAttendance(await base44.entities.BoardMinutesAttendance.create({ meeting_id: id, present_member_names: [], guest_names: [], ...updates }));
+    }
+  };
 
   const handleAddEntry = async (e) => {
     e.preventDefault();
     if (!activeItemId) return;
     setSaving(true);
     const itemEntries = entries.filter(e => e.agenda_item_id === activeItemId);
-    const saved = await base44.entities.MinuteEntry.create({ ...form, meeting_id: id, agenda_item_id: activeItemId, order_index: itemEntries.length });
+    const { votes_in_favour, votes_opposed, votes_abstained, ...rest } = form;
+    const saved = await base44.entities.MinuteEntry.create({
+      ...rest,
+      votes_in_favour: votes_in_favour === "" ? undefined : Number(votes_in_favour),
+      votes_opposed: votes_opposed === "" ? undefined : Number(votes_opposed),
+      votes_abstained: votes_abstained === "" ? undefined : Number(votes_abstained),
+      meeting_id: id,
+      agenda_item_id: activeItemId,
+      order_index: itemEntries.length,
+    });
     setEntries(prev => [...prev, saved]);
-    setForm({ entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", action_assigned_to: "", action_due_date: "", is_in_camera: false });
+    setForm(EMPTY_FORM);
     setSaving(false);
   };
 
@@ -85,7 +113,7 @@ export default function BoardMinutesTaker() {
   const handleDownloadMinutesPdf = async () => {
     setDownloadingPdf(true);
     try {
-      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems);
+      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance);
       const blob = new Blob([bytes], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -105,6 +133,9 @@ export default function BoardMinutesTaker() {
 
   const isMotion = ["motion","resolution"].includes(form.entry_type);
   const isAction = form.entry_type === "action_item";
+  const presentNames = attendance?.present_member_names || [];
+  const guestNames = attendance?.guest_names || [];
+  const attendeeOptions = presentNames.length > 0 ? [...presentNames, ...guestNames] : members.map(m => m.full_name);
 
   // Group agenda items under their agenda sections, in section order
   const sectionsWithItems = AGENDA_SECTIONS
@@ -137,6 +168,18 @@ export default function BoardMinutesTaker() {
       </div>
 
       <div className="mt-6 space-y-5">
+        <MinutesAttendancePanel
+          members={members}
+          presentNames={presentNames}
+          guestNames={guestNames}
+          onToggleMember={(name, present) => saveAttendance({ present_member_names: present ? [...presentNames, name] : presentNames.filter(n => n !== name) })}
+          onAddGuest={(name) => saveAttendance({ guest_names: [...guestNames, name] })}
+          onRemoveGuest={(name) => saveAttendance({ guest_names: guestNames.filter(n => n !== name) })}
+          onMemberAdded={(m) => {
+            setMembers(prev => [...prev, m].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || "")));
+            saveAttendance({ present_member_names: [...presentNames, m.full_name] });
+          }}
+        />
         {sectionsWithItems.map(({ key, label, items }) => (
           <div key={key} className="space-y-3">
             <div className="flex items-center gap-3 pt-1">
@@ -168,6 +211,9 @@ export default function BoardMinutesTaker() {
                                 {entry.moved_by && <span>Moved: {entry.moved_by}</span>}
                                 {entry.seconded_by && <span>Seconded: {entry.seconded_by}</span>}
                                 {entry.motion_result && <span className={`font-medium ${entry.motion_result === "carried" ? "text-green-600" : entry.motion_result === "defeated" ? "text-red-600" : "text-amber-600"}`}>{entry.motion_result}</span>}
+                                {(entry.votes_in_favour != null || entry.votes_opposed != null || entry.votes_abstained != null) && (
+                                  <span>In favour: {entry.votes_in_favour ?? 0} · Opposed: {entry.votes_opposed ?? 0} · Abstained: {entry.votes_abstained ?? 0}</span>
+                                )}
                                 {entry.action_assigned_to && <span>Assigned: {entry.action_assigned_to}</span>}
                                 {entry.action_due_date && <span>Due: {format(new Date(entry.action_due_date), "MMM d, yyyy")}</span>}
                               </div>
@@ -190,10 +236,32 @@ export default function BoardMinutesTaker() {
                         <textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} placeholder="Notes / details..." rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none resize-none" />
                         {isMotion && (
                           <div className="grid grid-cols-3 gap-2">
-                            <input value={form.moved_by} onChange={e => setForm({...form, moved_by: e.target.value})} placeholder="Moved by" className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
-                            <input value={form.seconded_by} onChange={e => setForm({...form, seconded_by: e.target.value})} placeholder="Seconded by" className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
+                            <select value={form.moved_by} onChange={e => setForm({...form, moved_by: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              <option value="">— moved by —</option>
+                              {attendeeOptions.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <select value={form.seconded_by} onChange={e => setForm({...form, seconded_by: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              <option value="">— seconded by —</option>
+                              {attendeeOptions.map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
                             <select value={form.motion_result} onChange={e => setForm({...form, motion_result: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
                               {MOTION_RESULTS.map(r => <option key={r} value={r}>{r || "— result —"}</option>)}
+                            </select>
+                          </div>
+                        )}
+                        {isMotion && (
+                          <div className="grid grid-cols-3 gap-2">
+                            <select value={form.votes_in_favour} onChange={e => setForm({...form, votes_in_favour: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              <option value="">— in favour —</option>
+                              {Array.from({ length: 13 }, (_, n) => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <select value={form.votes_opposed} onChange={e => setForm({...form, votes_opposed: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              <option value="">— opposed —</option>
+                              {Array.from({ length: 13 }, (_, n) => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                            <select value={form.votes_abstained} onChange={e => setForm({...form, votes_abstained: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              <option value="">— abstained —</option>
+                              {Array.from({ length: 13 }, (_, n) => <option key={n} value={n}>{n}</option>)}
                             </select>
                           </div>
                         )}

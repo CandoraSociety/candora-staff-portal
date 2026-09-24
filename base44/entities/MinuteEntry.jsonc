@@ -35,6 +35,18 @@
     "seconded_by": {
       "type": "string"
     },
+    "votes_in_favour": {
+      "type": "number",
+      "description": "Number of attendees who voted in favour of the motion"
+    },
+    "votes_opposed": {
+      "type": "number",
+      "description": "Number of attendees who voted against the motion"
+    },
+    "votes_abstained": {
+      "type": "number",
+      "description": "Number of attendees who abstained from the vote"
+    },
     "motion_result": {
       "type": "string",
       "enum": [

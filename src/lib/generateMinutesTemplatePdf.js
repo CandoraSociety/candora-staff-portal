@@ -9,13 +9,15 @@ const GOLD = rgb(0.96, 0.75, 0.1);
 const GRAY = rgb(0.45, 0.47, 0.51);
 const LINE = rgb(0.75, 0.77, 0.8);
 const FIELD_BG = rgb(0.985, 0.985, 0.995);
+const NUMS = Array.from({ length: 13 }, (_, n) => String(n));
+const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
 
 /**
  * Builds a fillable AcroForm PDF for taking board meeting minutes.
  * One set of fillable fields per agenda item: minutes/discussion notes,
  * motion verbiage, moved/seconded/result, and action-item assignee/due date.
  */
-export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems) {
+export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, members = [], attendance = null) {
   const doc = await PDFDocument.create();
   const form = doc.getForm();
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -77,6 +79,35 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems) 
   if (sub) { page.drawText(sub, { x: M, y: y - 9, size: 9, font, color: GRAY }); y -= 16; }
   y -= 10;
 
+  // ── Attendance — checkboxes for permanent members + guests field ──
+  const sortedMembers = [...members].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+  if (sortedMembers.length > 0) {
+    ensureSpace(40);
+    page.drawText("ATTENDANCE", { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
+    const aw = bold.widthOfTextAtSize("ATTENDANCE", 9) + 8;
+    page.drawLine({ start: { x: M + aw, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
+    y -= 22;
+    const presentNames = attendance?.present_member_names || [];
+    for (let i = 0; i < sortedMembers.length; i += 2) {
+      ensureSpace(18);
+      for (const [idx, x] of [[i, M], [i + 1, M + 270]]) {
+        const m = sortedMembers[idx];
+        if (!m) continue;
+        const cb = form.createCheckBox(`attend_${idx}`);
+        cb.addToPage(page, { x, y: y - 11, width: 11, height: 11, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
+        if (presentNames.includes(m.full_name)) cb.check();
+        const role = m.role ? ` (${ROLE_LABELS[m.role] || m.role})` : "";
+        page.drawText(`${m.full_name}${role}`, { x: x + 17, y: y - 9, size: 8, font, color: rgb(0.15, 0.15, 0.18) });
+      }
+      y -= 18;
+    }
+    ensureSpace(34);
+    page.drawText("Guests", { x: M, y: y - 8, size: 7, font, color: GRAY });
+    y -= 10;
+    textField("attendance_guests", M, y - 22, W - 2 * M, 22, true);
+    y -= 30;
+  }
+
   // ── Agenda items grouped by section, each with fillable minute fields ──
   const sections = AGENDA_SECTIONS
     .map(({ key, label }) => ({
@@ -97,7 +128,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems) 
 
     s.items.forEach((item, i) => {
       const id = fieldIdx++;
-      ensureSpace(140);
+      ensureSpace(170);
 
       const itemTitle = `${i + 1}. ${item.title}`;
       page.drawText(itemTitle, { x: M, y: y - 10, size: 10, font: bold, color: rgb(0.1, 0.1, 0.12) });
@@ -114,8 +145,13 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems) 
 
       row([{ label: "Motion:", name: `item${id}_motion`, w: 300 }]);
       row([
-        { label: "Moved by:", name: `item${id}_moved_by`, w: 110 },
-        { label: "Seconded by:", name: `item${id}_seconded_by`, w: 110 },
+        { label: "Moved by:", name: `item${id}_moved_by`, w: 150 },
+        { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150 },
+      ]);
+      row([
+        { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: NUMS },
+        { label: "Opposed:", name: `item${id}_opposed`, w: 40, options: NUMS },
+        { label: "Abstained:", name: `item${id}_abstained`, w: 40, options: NUMS },
         { label: "Result:", name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"] },
       ]);
       row([
