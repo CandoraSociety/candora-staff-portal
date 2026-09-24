@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 import { useOrgSettings } from "@/lib/useOrgSettings";
 import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
@@ -114,13 +115,11 @@ export default function BoardMinutesTaker() {
     setDownloadingPdf(true);
     try {
       const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems, members, attendance);
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${meeting?.title || "Board Meeting"} - Minutes.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const file = new File([bytes], `${meeting?.title || "Board Meeting"} - Minutes.pdf`, { type: "application/pdf" });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      window.open(file_url, "_blank");
+    } catch (err) {
+      toast.error("Failed to generate minutes PDF", { description: err?.message || "Unknown error" });
     } finally {
       setDownloadingPdf(false);
     }
