@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
@@ -246,7 +246,8 @@ export default function BoardMinutesTaker() {
               const isActive = activeItemId === item.id;
               const caps = itemEntryCaps(item);
               return (
-                <div key={item.id} className={`bg-card border rounded-xl overflow-hidden transition ${isActive ? "border-primary/40 shadow-sm" : "border-border"}`}>
+                <Fragment key={item.id}>
+                <div className={`bg-card border rounded-xl overflow-hidden transition ${isActive ? "border-primary/40 shadow-sm" : "border-border"}`}>
                   <button onClick={() => toggleItem(item.id)} className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition text-left">
                     <span className="text-xs font-semibold text-muted-foreground w-5">{idx + 1}.</span>
                     <span className="flex-1 text-sm font-medium text-foreground">
@@ -379,11 +380,10 @@ export default function BoardMinutesTaker() {
                     </div>
                   )}
                 </div>
+                {isApprovalOfAgendaItem(item) && <MinutesAddAgendaItem defaultSection={key} onAdd={handleAddItem} />}
+                </Fragment>
               );
             })}
-            {items.some(isApprovalOfAgendaItem) && (
-              <MinutesAddAgendaItem defaultSection={key} onAdd={handleAddItem} />
-            )}
           </div>
         ))}
         {agendaItems.length === 0 && (

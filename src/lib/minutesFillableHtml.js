@@ -68,6 +68,8 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
       body = `<div class="frow"><label class="cap">Called to order <input type="time" class="f w80"></label></div><textarea class="f" rows="2" placeholder="Notes..."></textarea>`;
     } else if (isNextMeetingItem(item)) {
       body = `<div class="frow"><label class="cap">Next meeting date <input type="date" class="f"></label></div><textarea class="f" rows="2" placeholder="Notes..."></textarea>`;
+    } else if (isApprovalOfAgendaItem(item)) {
+      body = `<label class="cap" style="font-size:10pt;"><input type="checkbox"> Agenda approved as presented</label>`;
     } else {
       const allowInCamera = !isApprovalOfAgendaItem(item) && !isApprovalOfMinutesItem(item);
       body = `<div class="entries" id="entries-${esc(item.id)}"></div><button type="button" class="add-btn" onclick="addEntry('entries-${esc(item.id)}', ${allowInCamera ? "true" : "false"})">+ Add entry</button>`;
