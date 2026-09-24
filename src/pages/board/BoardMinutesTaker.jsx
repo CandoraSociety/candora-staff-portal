@@ -96,7 +96,7 @@ export default function BoardMinutesTaker() {
     const saved = await base44.entities.MinuteEntry.create({
       ...rest,
       entry_type: entryType,
-      votes_in_favour: votes_in_favour === "" ? undefined : Number(votes_in_favour),
+      votes_in_favour: votes_in_favour === "" ? undefined : votes_in_favour === "all" ? attendeeOptions.length : Number(votes_in_favour),
       votes_opposed: votes_opposed === "" ? undefined : Number(votes_opposed),
       votes_abstained: votes_abstained === "" ? undefined : Number(votes_abstained),
       is_in_camera: entryType === "in_camera",
@@ -326,6 +326,7 @@ export default function BoardMinutesTaker() {
                           <div className="grid grid-cols-3 gap-2">
                             <select value={form.votes_in_favour} onChange={e => setForm({...form, votes_in_favour: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
                               <option value="">— in favour —</option>
+                              <option value="all">All present</option>
                               {Array.from({ length: 13 }, (_, n) => <option key={n} value={n}>{n}</option>)}
                             </select>
                             <select value={form.votes_opposed} onChange={e => setForm({...form, votes_opposed: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">

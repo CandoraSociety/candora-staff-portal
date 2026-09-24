@@ -259,7 +259,7 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
             { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150, options: attendeeOpts, value: entry?.seconded_by },
           ]);
           row([
-            { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: NUMS, value: entry?.votes_in_favour },
+            { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: ["All", ...NUMS], value: entry?.votes_in_favour },
             { label: "Opposed:", name: `item${id}_opposed`, w: 40, options: NUMS, value: entry?.votes_opposed },
             { label: "Abstained:", name: `item${id}_abstained`, w: 40, options: NUMS, value: entry?.votes_abstained },
             { label: "Result:", name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"], value: entry?.motion_result ? String(entry.motion_result).charAt(0).toUpperCase() + String(entry.motion_result).slice(1) : "" },
