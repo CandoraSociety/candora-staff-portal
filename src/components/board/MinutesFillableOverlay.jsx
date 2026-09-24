@@ -340,6 +340,9 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
                   {idx + 1}. {item.title}
                   {item.is_in_camera && <span className="ml-2 text-amber-700 font-normal text-xs">(In Camera)</span>}
                   {item.presenter && <span className="ml-2 font-normal italic text-slate-500 text-xs">— {item.presenter}</span>}
+                  {String(item.id).startsWith("new-") && (
+                    <button type="button" onClick={() => setNewItems((prev) => prev.filter((n) => n.id !== item.id))} className="ml-2 text-[11px] font-normal text-slate-400 hover:text-red-600 underline">Remove</button>
+                  )}
                 </div>
                 {renderItemBody(item, { key })}
               </div>
