@@ -21,6 +21,11 @@
       ],
       "default": "Director"
     },
+    "is_voting": {
+      "type": "boolean",
+      "default": true,
+      "description": "Voting (true) or non-voting (false) member \u2014 non-voting members are excluded from motion, seconding and vote dropdowns"
+    },
     "phone": {
       "type": "string"
     },

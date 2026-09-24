@@ -149,7 +149,10 @@ export default function BoardMinutesTaker() {
   const hasInCamera = agendaItems.some(i => i.is_in_camera) || entries.some(e => e.is_in_camera || e.entry_type === "in_camera");
   const presentNames = attendance?.present_member_names || [];
   const guestNames = attendance?.guest_names || [];
-  const attendeeOptions = presentNames.length > 0 ? [...presentNames, ...guestNames] : members.map(m => m.full_name);
+  // Motion/seconding dropdowns list voting attendees only — guests and non-voting members are excluded
+  const votingMembers = members.filter(m => m.is_voting !== false);
+  const presentVoting = votingMembers.filter(m => presentNames.includes(m.full_name)).map(m => m.full_name);
+  const attendeeOptions = presentVoting.length > 0 ? presentVoting : votingMembers.map(m => m.full_name);
 
   // Group agenda items under their agenda sections, in section order
   const sectionsWithItems = AGENDA_SECTIONS

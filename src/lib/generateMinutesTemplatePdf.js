@@ -137,10 +137,22 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     textField("attendance_present", M, y - 44, W - 2 * M, 44, true);
     y -= 52;
   }
+  // Regrets — permanent members not marked present (once attendance has been taken)
+  const regretNames = (members || [])
+    .filter((m) => m.status !== "inactive" && !presentNames.includes(m.full_name))
+    .map((m) => m.full_name);
+  if (presentNames.length > 0 && regretNames.length > 0) {
+    for (const l of wrap(`Regrets:  ${regretNames.join("    ")}`, 9, W - 2 * M)) {
+      ensureSpace(14);
+      page.drawText(l, { x: M, y: y - 9, size: 9, font, color: GRAY });
+      y -= 13;
+    }
+  }
   y -= 8;
-  const attendeeOpts = (presentNames.length > 0 || attGuests.length > 0)
-    ? [...presentNames, ...attGuests]
-    : members.map((m) => m.full_name);
+  // Motion moved/seconded dropdowns list voting attendees only — guests and non-voting members are excluded
+  const votingMembers = (members || []).filter((m) => m.is_voting !== false);
+  const presentVoting = votingMembers.filter((m) => presentNames.includes(m.full_name)).map((m) => m.full_name);
+  const attendeeOpts = presentVoting.length > 0 ? presentVoting : votingMembers.map((m) => m.full_name);
 
   // ── Agenda items grouped by section, each with fillable minute fields ──
   const camItems = inCameraOnly ? agendaItems.filter((i) => i.is_in_camera) : agendaItems.filter((i) => !i.is_in_camera);

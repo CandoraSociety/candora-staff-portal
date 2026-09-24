@@ -24,7 +24,7 @@ export function memberEmail(name) {
 export default function MinutesAttendancePanel({ members, presentNames, guestNames, onToggleMember, onAddGuest, onRemoveGuest, onMemberAdded }) {
   const [guestInput, setGuestInput] = useState("");
   const [showAddMember, setShowAddMember] = useState(false);
-  const [newMember, setNewMember] = useState({ full_name: "", role: "Director" });
+  const [newMember, setNewMember] = useState({ full_name: "", role: "Director", is_voting: true });
   const [adding, setAdding] = useState(false);
 
   const addGuest = (e) => {
@@ -41,9 +41,9 @@ export default function MinutesAttendancePanel({ members, presentNames, guestNam
     if (!name || adding) return;
     setAdding(true);
     try {
-      const saved = await base44.entities.BoardMember.create({ full_name: name, role: newMember.role, email: memberEmail(name), status: "active" });
+      const saved = await base44.entities.BoardMember.create({ full_name: name, role: newMember.role, is_voting: newMember.is_voting !== false, email: memberEmail(name), status: "active" });
       onMemberAdded(saved);
-      setNewMember({ full_name: "", role: "Director" });
+      setNewMember({ full_name: "", role: "Director", is_voting: true });
       setShowAddMember(false);
     } finally {
       setAdding(false);
@@ -71,7 +71,10 @@ export default function MinutesAttendancePanel({ members, presentNames, guestNam
                 {present && <Check size={10} />}
               </span>
               <span className="flex-1 min-w-0 truncate text-sm text-foreground">{m.full_name}</span>
-              <span className="text-[10px] text-muted-foreground shrink-0">{ROLE_LABELS[m.role] || m.role}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                {ROLE_LABELS[m.role] || m.role}
+                {m.is_voting === false && <span className="ml-1 text-amber-600">· non-voting</span>}
+              </span>
             </button>
           );
         })}
@@ -106,6 +109,10 @@ export default function MinutesAttendancePanel({ members, presentNames, guestNam
             <input value={newMember.full_name} onChange={(e) => setNewMember({ ...newMember, full_name: e.target.value })} placeholder="Name" autoFocus required className="flex-1 min-w-[140px] border border-input rounded-lg px-2.5 py-1.5 text-xs bg-background focus:outline-none" />
             <select value={newMember.role} onChange={(e) => setNewMember({ ...newMember, role: e.target.value })} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
               {MEMBER_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r] || r}</option>)}
+            </select>
+            <select value={newMember.is_voting ? "voting" : "non_voting"} onChange={(e) => setNewMember({ ...newMember, is_voting: e.target.value === "voting" })} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+              <option value="voting">Voting</option>
+              <option value="non_voting">Non-voting</option>
             </select>
             <button type="submit" disabled={adding} className="flex items-center gap-1 bg-primary text-primary-foreground px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50">
               <Plus size={12} /> Add
