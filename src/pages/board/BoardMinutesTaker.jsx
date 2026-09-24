@@ -4,6 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
+import { useOrgSettings } from "@/lib/useOrgSettings";
+import { generateMinutesTemplatePdf } from "@/lib/generateMinutesTemplatePdf";
 
 const ENTRY_TYPES = ["note","motion","resolution","action_item","discussion","information","dissent","abstention","in_camera"];
 const MOTION_RESULTS = ["","carried","defeated","tabled","withdrawn"];
@@ -18,7 +20,9 @@ const ENTRY_COLORS = {
 
 export default function BoardMinutesTaker() {
   const { id } = useParams();
+  const { orgName } = useOrgSettings();
   const [meeting, setMeeting] = useState(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [agendaItems, setAgendaItems] = useState([]);
   const [entries, setEntries] = useState([]);
   const [members, setMembers] = useState([]);
@@ -78,6 +82,22 @@ export default function BoardMinutesTaker() {
     setEntries(prev => prev.filter(e => e.id !== entryId));
   };
 
+  const handleDownloadMinutesPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const bytes = await generateMinutesTemplatePdf(meeting, orgName, agendaItems);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${meeting?.title || "Board Meeting"} - Minutes.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   const toggleItem = (itemId) => {
     setExpandedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
     setActiveItemId(itemId);
@@ -103,10 +123,17 @@ export default function BoardMinutesTaker() {
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
         <Link to="/board/meetings" className="text-muted-foreground hover:text-foreground"><ArrowLeft size={18} /></Link>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="font-heading text-2xl font-semibold">Minutes Taker</h1>
           {meeting && <p className="text-muted-foreground text-sm">{meeting.title} · {format(new Date(meeting.meeting_date), "MMMM d, yyyy")}</p>}
         </div>
+        <button
+          onClick={handleDownloadMinutesPdf}
+          disabled={downloadingPdf}
+          className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50 shrink-0"
+        >
+          {downloadingPdf ? "Generating..." : "Download Fillable Minutes"}
+        </button>
       </div>
 
       <div className="mt-6 space-y-5">
