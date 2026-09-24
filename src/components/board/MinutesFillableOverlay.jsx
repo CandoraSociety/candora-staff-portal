@@ -134,6 +134,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
   const [entries, setEntries] = useState({});
   const [newItems, setNewItems] = useState([]);
   const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItemSection, setNewItemSection] = useState("new_business");
   const [showItemForm, setShowItemForm] = useState(false);
   const [adjournBy, setAdjournBy] = useState("");
   const [adjournTime, setAdjournTime] = useState("");
@@ -227,12 +228,15 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
             Agenda approved as presented
           </label>
           <div className="flex items-center gap-2 flex-wrap mt-2">
-            <button type="button" onClick={() => setShowItemForm((v) => !v)} className={ADD_BTN}>+ Add agenda item</button>
+            <button type="button" onClick={() => { setNewItemSection(section.key); setShowItemForm((v) => !v); }} className={ADD_BTN}>+ Add agenda item</button>
           </div>
           {showItemForm && (
             <div className="flex gap-2 mt-2 flex-wrap">
               <input className={`${FIELD} flex-1 min-w-[220px]`} placeholder="New agenda item title" value={newItemTitle} onChange={(e) => setNewItemTitle(e.target.value)} />
-              <button type="button" onClick={() => addNewItem(section.key)} className="bg-[#1e2f4d] text-white rounded-md px-3 py-1.5 text-sm">Add</button>
+              <select className={FIELD} value={newItemSection} onChange={(e) => setNewItemSection(e.target.value)}>
+                {AGENDA_SECTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+              <button type="button" onClick={() => addNewItem(newItemSection)} className="bg-[#1e2f4d] text-white rounded-md px-3 py-1.5 text-sm">Add</button>
             </div>
           )}
         </div>
