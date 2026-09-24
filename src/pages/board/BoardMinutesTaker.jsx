@@ -38,7 +38,9 @@ function itemEntryCaps(item) {
   if (isInvitationItem(item)) return { none: true };
   if (isAdjournMotionItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: false, date: false, moverOnly: true, time: true };
   if (isCallToOrderItem(item) || isNextMeetingItem(item)) return { typeSelect: false, motion: false, inCamera: false, notes: true, date: isNextMeetingItem(item), time: isCallToOrderItem(item) };
-  return { typeSelect: true, motion: true, inCamera: !(isApprovalOfAgendaItem(item) || isApprovalOfMinutesItem(item)) };
+  if (isApprovalOfAgendaItem(item)) return { typeSelect: false, motion: true, inCamera: false };
+  if (isApprovalOfMinutesItem(item)) return { typeSelect: true, motion: true, inCamera: false, typeOptions: ["note"] };
+  return { typeSelect: true, motion: true, inCamera: true };
 }
 
 const ENTRY_COLORS = {
@@ -102,7 +104,7 @@ export default function BoardMinutesTaker() {
     setSaving(true);
     const itemEntries = entries.filter(e => e.agenda_item_id === activeItemId);
     const caps = itemEntryCaps(agendaItems.find(i => i.id === activeItemId));
-    const entryType = caps.moverOnly ? "motion" : (!caps.typeSelect ? "note" : form.entry_type);
+    const entryType = caps.moverOnly ? "motion" : (!caps.typeSelect ? (caps.motion ? "motion" : "note") : form.entry_type);
     const { entry_type, votes_in_favour, votes_opposed, votes_abstained, ...rest } = form;
     const saved = await base44.entities.MinuteEntry.create({
       ...rest,
@@ -288,7 +290,7 @@ export default function BoardMinutesTaker() {
                         <div className="flex items-center gap-2 flex-wrap">
                           {caps.typeSelect && (
                             <select value={form.entry_type} onChange={e => setForm({...form, entry_type: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
-                              {ENTRY_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+                              {(caps.typeOptions || ENTRY_TYPES).map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
                             </select>
                           )}
                           {caps.motion && (

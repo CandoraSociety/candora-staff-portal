@@ -69,10 +69,13 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     } else if (isNextMeetingItem(item)) {
       body = `<div class="frow"><label class="cap">Next meeting date <input type="date" class="f"></label></div><textarea class="f" rows="2" placeholder="Notes..."></textarea>`;
     } else if (isApprovalOfAgendaItem(item)) {
-      body = `<label class="cap" style="font-size:10pt;"><input type="checkbox"> Agenda approved as presented</label>`;
+      body = `<div class="entries" id="entries-${esc(item.id)}"></div><button type="button" class="add-btn" onclick="addMotion('entries-${esc(item.id)}')">+ Motion</button>` +
+        `<div style="margin-top:4px;"><button type="button" class="add-btn" onclick="toggleAgendaForm(this)">+ Add agenda item</button>` +
+        `<div class="agenda-form" style="display:none"><input class="f" placeholder="New agenda item title"><button type="button" class="add-btn" onclick="addAgendaItem(this)">Add</button></div></div>`;
     } else {
-      const allowInCamera = !isApprovalOfAgendaItem(item) && !isApprovalOfMinutesItem(item);
-      body = `<div class="entries" id="entries-${esc(item.id)}"></div><button type="button" class="add-btn" onclick="addEntry('entries-${esc(item.id)}', ${allowInCamera ? "true" : "false"})">+ Add entry</button>`;
+      const notesOnly = isApprovalOfMinutesItem(item);
+      const allowInCamera = !notesOnly;
+      body = `<div class="entries" id="entries-${esc(item.id)}"></div><button type="button" class="add-btn" onclick="addEntry('entries-${esc(item.id)}', ${allowInCamera ? "true" : "false"}, ${notesOnly ? "true" : "false"})">+ Add entry</button>`;
     }
     return `<div class="item">${head}${body}</div>`;
   };
@@ -194,11 +197,13 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
       for (var i = 0; i < rows.length; i++) rows[i].checked = attSel.checked;
     });
 
-    function addEntry(containerId, allowInCamera) {
+    function addEntry(containerId, allowInCamera, notesOnly) {
       var container = document.getElementById(containerId);
       var block = document.createElement('div');
       block.className = 'entry-block';
-      var selHtml = '<option value="">— entry type —</option>' +
+      var selHtml = notesOnly
+        ? '<option value="note">Note</option>'
+        : ('<option value="">— entry type —</option>' +
         '<option value="motion">Motion</option>' +
         '<option value="resolution">Resolution</option>' +
         '<option value="action_item">Action Item</option>' +
@@ -207,7 +212,7 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
         '<option value="information">Information</option>' +
         '<option value="dissent">Dissent</option>' +
         '<option value="abstention">Abstention</option>' +
-        (allowInCamera ? '<option value="in_camera">In Camera</option>' : '');
+        (allowInCamera ? '<option value="in_camera">In Camera</option>' : ''));
       block.innerHTML =
         '<div class="entry-head">' +
           '<span class="entry-title">New entry</span>' +
@@ -234,6 +239,45 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
       block.querySelector('.remove-btn').addEventListener('click', function () {
         block.parentNode.removeChild(block);
       });
+    }
+
+    function addMotion(containerId) {
+      var container = document.getElementById(containerId);
+      var block = document.createElement('div');
+      block.className = 'entry-block';
+      block.innerHTML =
+        '<div class="entry-head">' +
+          '<span class="entry-title et-motion">MOTION</span>' +
+          '<button type="button" class="remove-btn no-print">Remove</button>' +
+        '</div>' +
+        TEMPLATES.motion;
+      container.appendChild(block);
+      block.querySelector('.remove-btn').addEventListener('click', function () {
+        block.parentNode.removeChild(block);
+      });
+    }
+
+    function toggleAgendaForm(btn) {
+      var form = btn.parentNode.querySelector('.agenda-form');
+      form.style.display = form.style.display === 'none' ? '' : 'none';
+    }
+
+    function addAgendaItem(btn) {
+      var form = btn.parentNode;
+      var input = form.querySelector('input');
+      var title = input.value.trim();
+      if (!title) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'item';
+      var n = (window.__agendaN = (window.__agendaN || 0) + 1);
+      var entriesId = 'entries-new-' + n;
+      wrap.innerHTML = '<div class="item-title"></div>' +
+        '<div class="entries" id="' + entriesId + '"></div>' +
+        '<button type="button" class="add-btn" onclick="addEntry(\'' + entriesId + '\', true, false)">+ Add entry</button>';
+      wrap.querySelector('.item-title').textContent = title;
+      form.closest('.section').appendChild(wrap);
+      input.value = '';
+      form.style.display = 'none';
     }
 
     function addGuest() {
