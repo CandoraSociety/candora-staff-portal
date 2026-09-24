@@ -25,7 +25,7 @@ const ADD_BTN = "border border-dashed border-slate-400 text-[#1e2f4d] rounded-md
 
 const EMPTY_ENTRY = { id: "", type: "", motion_verbiage: "", content: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "" };
 
-function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove }) {
+function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, minimalMotion }) {
   const isMotion = ["motion", "resolution"].includes(entry.type);
   const isAction = entry.type === "action_item";
   const isCamera = entry.type === "in_camera";
@@ -43,7 +43,7 @@ function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove }) 
         )}
         <button type="button" onClick={onRemove} className="text-[11px] text-slate-400 hover:text-red-600 underline">Remove</button>
       </div>
-      {isMotion && (
+      {isMotion && !minimalMotion && (
         <input className={`${FIELD} w-full mt-2`} placeholder="Motion verbiage (e.g. Be it resolved that...)" value={entry.motion_verbiage || ""} onChange={(e) => onPatch({ motion_verbiage: e.target.value })} />
       )}
       {isMotion && (
@@ -68,7 +68,7 @@ function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove }) 
           </label>
         </div>
       )}
-      {isMotion && (
+      {isMotion && !minimalMotion && (
         <div className="flex flex-wrap gap-x-6 gap-y-2 mt-1">
           <label className={CAP}>In favour
             <select className={FIELD} value={entry.votes_in_favour || ""} onChange={(e) => onPatch({ votes_in_favour: e.target.value })}>
@@ -247,7 +247,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     return (
       <div>
         {(entries[cid] || []).map((e) => (
-          <EntryBlock key={e.id} entry={e} types={types} voterNames={voterNames} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
+          <EntryBlock key={e.id} entry={e} types={types} voterNames={voterNames} minimalMotion={isApprovalOfMinutesItem(item)} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
         ))}
         {isApprovalOfMinutesItem(item) && (
           <button type="button" onClick={() => addEntryTo(cid, "motion")} className={`${ADD_BTN} mr-2`}>+ Motion</button>
