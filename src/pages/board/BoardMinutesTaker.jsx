@@ -27,6 +27,8 @@ export default function BoardMinutesTaker() {
   const [activeItemId, setActiveItemId] = useState(null);
   const [form, setForm] = useState({ entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", action_assigned_to: "", action_due_date: "", is_in_camera: false });
   const [saving, setSaving] = useState(false);
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [itemForm, setItemForm] = useState({ title: "", section: "new_business", presenter: "", duration_minutes: 5 });
 
   useEffect(() => {
     Promise.all([
@@ -53,6 +55,22 @@ export default function BoardMinutesTaker() {
     setEntries(prev => [...prev, saved]);
     setForm({ entry_type: "note", content: "", motion_verbiage: "", moved_by: "", seconded_by: "", motion_result: "", action_assigned_to: "", action_due_date: "", is_in_camera: false });
     setSaving(false);
+  };
+
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+    const saved = await base44.entities.AgendaItem.create({
+      ...itemForm,
+      title: itemForm.title.trim(),
+      duration_minutes: Number(itemForm.duration_minutes) || 0,
+      meeting_id: id,
+      order_index: agendaItems.length,
+    });
+    setAgendaItems((prev) => [...prev, saved]);
+    setActiveItemId(saved.id);
+    setExpandedItems((prev) => ({ ...prev, [saved.id]: true }));
+    setItemForm({ title: "", section: itemForm.section, presenter: "", duration_minutes: 5 });
+    setShowItemForm(false);
   };
 
   const handleDelete = async (entryId) => {
@@ -169,11 +187,38 @@ export default function BoardMinutesTaker() {
             })}
           </div>
         ))}
-        {agendaItems.length === 0 && (
+        {agendaItems.length === 0 && !showItemForm && (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">No agenda items found. <Link to={`/board/meetings/${id}/agenda`} className="text-primary hover:underline">Build the agenda first.</Link></p>
+            <p className="text-sm">No agenda items found. <Link to={`/board/meetings/${id}/agenda`} className="text-primary hover:underline">Build the agenda first</Link> — or add one below.</p>
           </div>
         )}
+
+        {/* Add agenda item mid-meeting */}
+        <div className="bg-card border border-border rounded-xl p-4">
+          {!showItemForm ? (
+            <button onClick={() => setShowItemForm(true)} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+              <Plus size={14} /> Add agenda item
+            </button>
+          ) : (
+            <form onSubmit={handleAddItem} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Add Agenda Item</h3>
+                <button type="button" onClick={() => setShowItemForm(false)} className="text-xs text-muted-foreground hover:underline">Cancel</button>
+              </div>
+              <input required autoFocus value={itemForm.title} onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })} placeholder="Item title" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
+              <div className="grid grid-cols-2 gap-2">
+                <select value={itemForm.section} onChange={(e) => setItemForm({ ...itemForm, section: e.target.value })} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                  {AGENDA_SECTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                </select>
+                <input type="number" min="0" value={itemForm.duration_minutes} onChange={(e) => setItemForm({ ...itemForm, duration_minutes: e.target.value })} placeholder="Minutes" className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
+              </div>
+              <input value={itemForm.presenter} onChange={(e) => setItemForm({ ...itemForm, presenter: e.target.value })} placeholder="Presenter (optional)" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" />
+              <button type="submit" className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition">
+                <Plus size={13} /> Add Item
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
