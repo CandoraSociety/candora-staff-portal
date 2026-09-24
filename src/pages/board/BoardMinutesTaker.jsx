@@ -227,6 +227,13 @@ export default function BoardMinutesTaker() {
                           <select value={form.entry_type} onChange={e => setForm({...form, entry_type: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
                             {ENTRY_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
                           </select>
+                          <button
+                            type="button"
+                            onClick={() => setForm({...form, entry_type: "motion"})}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isMotion ? "bg-blue-500 text-white border-blue-500" : "border-border text-foreground hover:border-blue-400"}`}
+                          >
+                            + Motion
+                          </button>
                           <span className="text-xs text-muted-foreground">for "{item.title}"</span>
                         </div>
                         {isMotion && (
