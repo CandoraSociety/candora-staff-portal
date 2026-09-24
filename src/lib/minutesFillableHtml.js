@@ -88,6 +88,9 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     .map((m) => `<label class="att-row"><input type="checkbox"> ${esc(m.full_name)} <span class="att-role">(${ROLE_LABELS[m.role] || m.role || ""}${m.is_voting === false ? " · non-voting" : ""})</span></label>`)
     .join("");
 
+  const allMemberOpts = ['<option value="">— select —</option>', ...active.map((m) => `<option>${esc(m.full_name)}</option>`)].join("");
+  const chairRow = `<div class="frow" style="margin:10px 0 0;"><label class="cap">Minutes recorded by <select class="f">${allMemberOpts}</select></label><label class="cap">Meeting Chair <select class="f">${allMemberOpts}</select></label></div>`;
+
   const title = meeting?.title || "Board Meeting";
   const dateStr = meeting?.meeting_date ? format(parseDateSmart(meeting.meeting_date), "MMMM d, yyyy 'at' h:mm a") : "";
 
@@ -157,6 +160,7 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     <div class="when">${dateStr}</div>
     ${meeting?.location ? `<div class="where">${esc(meeting.location)}</div>` : ""}
   </div>
+  ${chairRow}
 
   <div class="section">
     <h2>Attendance</h2>
