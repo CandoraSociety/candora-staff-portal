@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FileDown, Printer, X } from "lucide-react";
+import { FileDown, Link2, Printer, X } from "lucide-react";
+import { toast } from "sonner";
 import { buildMinutesFillableHtml } from "@/lib/minutesFillableHtml";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
@@ -166,6 +167,11 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     URL.revokeObjectURL(url);
   };
 
+  const copyLink = () => {
+    const url = `${window.location.origin}/board/meetings/${meeting?.id}/fillable-minutes`;
+    navigator.clipboard.writeText(url).then(() => toast.success("Link copied — anyone with board portal access can open the fillable minutes."));
+  };
+
   const addNewItem = (sectionKey) => {
     const title = newItemTitle.trim();
     if (!title) return;
@@ -268,6 +274,9 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
           </button>
           <button type="button" onClick={downloadFillableHtml} title="Saves a fillable copy — its buttons work once opened from your computer" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <FileDown size={14} /> Save fillable copy (.html)
+          </button>
+          <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
+            <Link2 size={14} /> Copy link
           </button>
           <span className="text-xs text-slate-200">Fill in the fields, then print or save as PDF.</span>
           <button type="button" onClick={onClose} className="ml-auto flex items-center gap-1 text-sm text-slate-300 hover:text-white">
