@@ -39,13 +39,17 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
 
   const ensureSpace = (h) => { if (y - h < 60) newPage(); };
 
+  // Red 9pt text inside every text field (box is placed on the page first,
+  // then styled — styling before placement breaks the field's appearance)
+  const redTextAppearance = (field, widget, fnt) => ({ backgroundColor: FIELD_BG, borderColor: LINE, borderWidth: 1, textColor: RED });
+
   const textField = (name, x, fy, w, h, multiline = false, value = "") => {
     const f = form.createTextField(name);
+    f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: FIELD_BG });
     if (multiline) f.enableMultiline();
     if (value) f.setText(String(value));
     f.setFontSize(9);
-    f.setTextColor(RED);
-    f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: FIELD_BG });
+    f.updateAppearances(font, redTextAppearance);
   };
 
   const dropdownField = (name, x, fy, w, h, options, value) => {
@@ -54,10 +58,9 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     const v = value != null ? String(value) : "";
     if (v !== "" && !opts.includes(v)) opts = [...opts, v];
     f.addOptions(opts);
+    f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
     if (v !== "") f.select(v);
     f.setFontSize(8);
-    f.setTextColor(RED);
-    f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
   };
 
   // Inline row of labelled fillable fields
