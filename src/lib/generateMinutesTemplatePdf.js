@@ -9,6 +9,7 @@ const GOLD = rgb(0.96, 0.75, 0.1);
 const GRAY = rgb(0.45, 0.47, 0.51);
 const LINE = rgb(0.75, 0.77, 0.8);
 const FIELD_BG = rgb(0.985, 0.985, 0.995);
+const RED = rgb(0.78, 0.08, 0.08);
 const NUMS = Array.from({ length: 13 }, (_, n) => String(n));
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
 
@@ -38,15 +39,24 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
 
   const ensureSpace = (h) => { if (y - h < 60) newPage(); };
 
-  const textField = (name, x, fy, w, h, multiline = false) => {
+  const textField = (name, x, fy, w, h, multiline = false, value = "") => {
     const f = form.createTextField(name);
     if (multiline) f.enableMultiline();
+    if (value) f.setText(String(value));
+    f.setFontSize(9);
+    f.setTextColor(RED);
     f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: FIELD_BG });
   };
 
-  const dropdownField = (name, x, fy, w, h, options) => {
+  const dropdownField = (name, x, fy, w, h, options, value) => {
     const f = form.createDropdown(name);
-    f.addOptions(options);
+    let opts = options;
+    const v = value != null ? String(value) : "";
+    if (v !== "" && !opts.includes(v)) opts = [...opts, v];
+    f.addOptions(opts);
+    if (v !== "") f.select(v);
+    f.setFontSize(8);
+    f.setTextColor(RED);
     f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
   };
 
@@ -57,8 +67,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     for (const c of cells) {
       page.drawText(c.label, { x, y: y - 9, size: 7, font, color: GRAY });
       const labelW = font.widthOfTextAtSize(c.label, 7) + 5;
-      if (c.options) dropdownField(c.name, x + labelW, y - 13, c.w, 13, c.options);
-      else textField(c.name, x + labelW, y - 13, c.w, 13);
+      if (c.options) dropdownField(c.name, x + labelW, y - 13, c.w, 13, c.options, c.value);
+      else textField(c.name, x + labelW, y - 13, c.w, 13, false, c.value);
       x += labelW + c.w + 12;
     }
     y -= 20;
@@ -93,34 +103,37 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
   if (sub) { page.drawText(sub, { x: M, y: y - 9, size: 9, font, color: GRAY }); y -= 16; }
   y -= 10;
 
-  // ── Attendance — checkboxes for permanent members + guests field ──
-  const sortedMembers = [...members].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
-  if (sortedMembers.length > 0) {
-    ensureSpace(40);
-    page.drawText("ATTENDANCE", { x: M, y: y - 9, size: 9, font: bold, color: NAVY });
-    const aw = bold.widthOfTextAtSize("ATTENDANCE", 9) + 8;
-    page.drawLine({ start: { x: M + aw, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
-    y -= 22;
-    const presentNames = attendance?.present_member_names || [];
-    for (let i = 0; i < sortedMembers.length; i += 2) {
-      ensureSpace(18);
+  // ── Attendance — only the names marked present (members + guests) ──
+  const presentNames = attendance?.present_member_names || [];
+  const attGuests = attendance?.guest_names || [];
+  const memberByName = new Map(members.map((m) => [m.full_name, m]));
+  const roleOf = (n) => { const m = memberByName.get(n); return m?.role ? ` (${ROLE_LABELS[m.role] || m.role})` : ""; };
+  const attNames = [...presentNames.map((n) => `${n}${roleOf(n)}`), ...attGuests.map((g) => `${g} (Guest)`)];
+  ensureSpace(40);
+  page.drawText("ATTENDANCE", { x: M, y: y - 9, size: 9, font: bold, color: BRAND });
+  const aw = bold.widthOfTextAtSize("ATTENDANCE", 9) + 8;
+  page.drawLine({ start: { x: M + aw, y: y - 6 }, end: { x: W - M, y: y - 6 }, thickness: 0.75, color: LINE });
+  y -= 22;
+  if (attNames.length > 0) {
+    for (let i = 0; i < attNames.length; i += 2) {
+      ensureSpace(16);
       for (const [idx, x] of [[i, M], [i + 1, M + 270]]) {
-        const m = sortedMembers[idx];
-        if (!m) continue;
-        const cb = form.createCheckBox(`attend_${idx}`);
-        cb.addToPage(page, { x, y: y - 11, width: 11, height: 11, borderWidth: 1, borderColor: LINE, backgroundColor: rgb(1, 1, 1) });
-        if (presentNames.includes(m.full_name)) cb.check();
-        const role = m.role ? ` (${ROLE_LABELS[m.role] || m.role})` : "";
-        page.drawText(`${m.full_name}${role}`, { x: x + 17, y: y - 9, size: 8, font, color: rgb(0.15, 0.15, 0.18) });
+        if (!attNames[idx]) continue;
+        page.drawText(attNames[idx], { x, y: y - 9, size: 9, font, color: rgb(0.15, 0.15, 0.18) });
       }
-      y -= 18;
+      y -= 16;
     }
-    ensureSpace(34);
-    page.drawText("Guests", { x: M, y: y - 8, size: 7, font, color: GRAY });
+  } else {
+    // Nothing marked yet — leave a fillable list
+    page.drawText("Present", { x: M, y: y - 8, size: 7, font, color: GRAY });
     y -= 10;
-    textField("attendance_guests", M, y - 22, W - 2 * M, 22, true);
-    y -= 30;
+    textField("attendance_present", M, y - 44, W - 2 * M, 44, true);
+    y -= 52;
   }
+  y -= 8;
+  const attendeeOpts = (presentNames.length > 0 || attGuests.length > 0)
+    ? [...presentNames, ...attGuests]
+    : members.map((m) => m.full_name);
 
   // ── Agenda items grouped by section, each with fillable minute fields ──
   const camItems = inCameraOnly ? agendaItems.filter((i) => i.is_in_camera) : agendaItems.filter((i) => !i.is_in_camera);
@@ -143,10 +156,8 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
     y -= 22;
 
     s.items.forEach((item, i) => {
-      const id = fieldIdx++;
-      ensureSpace(170);
-
       const itemTitle = `${i + 1}. ${item.title}`;
+      ensureSpace(40);
       page.drawText(itemTitle, { x: M, y: y - 10, size: 10, font: bold, color: rgb(0.1, 0.1, 0.12) });
       if (item.presenter) {
         const p = `Presenter: ${item.presenter}`;
@@ -154,33 +165,79 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
       }
       y -= 16;
 
-      page.drawText("Minutes / Discussion", { x: M, y: y - 8, size: 7, font, color: GRAY });
-      y -= 10;
-      textField(`item${id}_notes`, M, y - 42, W - 2 * M, 42, true);
-      y -= 48;
+      const itemEntries = (entries || [])
+        .filter((e) => e.agenda_item_id === item.id)
+        .filter((e) => inCameraOnly || !(e.is_in_camera || e.entry_type === "in_camera"))
+        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
-      row([{ label: "Motion:", name: `item${id}_motion`, w: 300 }]);
-      row([
-        { label: "Moved by:", name: `item${id}_moved_by`, w: 150 },
-        { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150 },
-      ]);
-      row([
-        { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: NUMS },
-        { label: "Opposed:", name: `item${id}_opposed`, w: 40, options: NUMS },
-        { label: "Abstained:", name: `item${id}_abstained`, w: 40, options: NUMS },
-        { label: "Result:", name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"] },
-      ]);
-      row([
-        { label: "Action assigned to:", name: `item${id}_action_to`, w: 150 },
-        { label: "Due date:", name: `item${id}_action_due`, w: 90 },
-      ]);
-      y -= 14;
+      // One block per recorded entry — any number of each category; a blank notes block when nothing is recorded yet
+      const blocks = itemEntries.length > 0 ? itemEntries : [null];
+      blocks.forEach((entry, bi) => {
+        const id = fieldIdx++;
+        const type = entry?.entry_type || "note";
+        const isM = ["motion", "resolution"].includes(type);
+        const isA = type === "action_item";
+        const isCam = entry && (entry.is_in_camera || entry.entry_type === "in_camera");
+
+        ensureSpace(30);
+        page.drawText(
+          `${String(type).replace(/_/g, " ").toUpperCase()}${blocks.length > 1 ? `  #${bi + 1}` : ""}${isCam ? "  — IN CAMERA" : ""}`,
+          { x: M, y: y - 8, size: 7, font: bold, color: isCam ? RED : GRAY }
+        );
+        y -= 12;
+
+        // Motion verbiage — only when the motion option is used
+        if (isM) {
+          const mv = entry?.motion_verbiage || "";
+          const mlines = mv ? wrap(mv, 9, W - 2 * M - 8) : [""];
+          const mh = Math.max(20, mlines.length * 11 + 7);
+          ensureSpace(mh + 12);
+          page.drawText("Motion", { x: M, y: y - 8, size: 7, font, color: GRAY });
+          y -= 10;
+          textField(`item${id}_motion`, M, y - mh, W - 2 * M, mh, true, mv);
+          y -= mh + 8;
+        }
+
+        // Notes / discussion — every entry; box sized to its recorded text, wraps when filled
+        const content = entry?.content || "";
+        const clines = content ? wrap(content, 9, W - 2 * M - 8) : [""];
+        const ch = Math.max(28, clines.length * 11 + 8);
+        ensureSpace(ch + 12);
+        page.drawText("Notes / Discussion", { x: M, y: y - 8, size: 7, font, color: GRAY });
+        y -= 10;
+        textField(`item${id}_notes`, M, y - ch, W - 2 * M, ch, true, content);
+        y -= ch + 8;
+
+        // Motion attribution, votes and result — only for motion / resolution entries
+        if (isM) {
+          row([
+            { label: "Moved by:", name: `item${id}_moved_by`, w: 150, options: attendeeOpts, value: entry?.moved_by },
+            { label: "Seconded by:", name: `item${id}_seconded_by`, w: 150, options: attendeeOpts, value: entry?.seconded_by },
+          ]);
+          row([
+            { label: "In favour:", name: `item${id}_in_favour`, w: 40, options: NUMS, value: entry?.votes_in_favour },
+            { label: "Opposed:", name: `item${id}_opposed`, w: 40, options: NUMS, value: entry?.votes_opposed },
+            { label: "Abstained:", name: `item${id}_abstained`, w: 40, options: NUMS, value: entry?.votes_abstained },
+            { label: "Result:", name: `item${id}_result`, w: 90, options: ["Carried", "Defeated", "Tabled", "Withdrawn"], value: entry?.motion_result ? String(entry.motion_result).charAt(0).toUpperCase() + String(entry.motion_result).slice(1) : "" },
+          ]);
+        }
+
+        // Action item fields — only for action_item entries
+        if (isA) {
+          row([
+            { label: "Action assigned to:", name: `item${id}_action_to`, w: 150, value: entry?.action_assigned_to },
+            { label: "Due date:", name: `item${id}_action_due`, w: 90, value: entry?.action_due_date },
+          ]);
+        }
+        y -= 10;
+      });
+      y -= 6;
     });
   }
 
   // ── Recorded in-camera entries — confidential document only ──
   if (inCameraOnly) {
-    const camEntries = (entries || []).filter((e) => e.is_in_camera || e.entry_type === "in_camera");
+    const camEntries = (entries || []).filter((e) => (e.is_in_camera || e.entry_type === "in_camera") && !itemById.get(e.agenda_item_id)?.is_in_camera);
     if (camEntries.length > 0) {
       ensureSpace(30);
       page.drawText("RECORDED IN-CAMERA NOTES", { x: M, y: y - 9, size: 9, font: bold, color: BRAND });
