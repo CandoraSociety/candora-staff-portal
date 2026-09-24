@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link2, Printer, X } from "lucide-react";
+import { FileCheck, Link2, Printer, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { AGENDA_SECTIONS, sectionOf, CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
+import MinutesFinalDoc from "@/components/board/MinutesFinalDoc";
 
 const ROLE_LABELS = { ED: "Executive Director", "Vice-Chair": "Vice Chair" };
 const NOTES_TYPES = ["note", "discussion", "information", "dissent", "abstention"];
@@ -144,6 +145,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
   const [nextNotes, setNextNotes] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [agendaApproved, setAgendaApproved] = useState(false);
+  const [showFinal, setShowFinal] = useState(false);
 
   const allPresent = active.length > 0 && active.every((m) => present.includes(m.full_name));
 
@@ -257,12 +259,33 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     );
   };
 
+  if (showFinal) {
+    return (
+      <MinutesFinalDoc
+        meeting={meeting}
+        org={org}
+        sections={sections}
+        members={active}
+        present={present}
+        guests={guests}
+        recorder={recorder}
+        chair={chair}
+        entries={entries}
+        data={{ callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved }}
+        onBack={() => setShowFinal(false)}
+      />
+    );
+  }
+
   return (
     <div className="fillable-minutes-overlay fixed inset-0 z-[100] overflow-auto bg-slate-200">
       <div className="fillable-page max-w-[830px] mx-auto bg-white my-6 px-10 py-8 shadow-xl">
         <div className="no-print sticky top-0 z-10 flex items-center gap-3 -mx-4 px-4 py-2 bg-[#1e2f4d] rounded-lg text-white mb-4">
           <button type="button" onClick={() => window.print()} className="flex items-center gap-1.5 bg-[#f5c116] text-[#1e2f4d] font-bold px-3 py-1.5 rounded-md text-sm">
             <Printer size={14} /> Print / Save as PDF
+          </button>
+          <button type="button" onClick={() => setShowFinal(true)} title="Produce the final minutes with only the filled-in information" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white font-bold px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
+            <FileCheck size={14} /> Generate Final PDF
           </button>
           <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <Link2 size={14} /> Copy link
