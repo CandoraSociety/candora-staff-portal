@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { FileDown, Link2, Printer, X } from "lucide-react";
+import { Link2, Printer, X } from "lucide-react";
 import { toast } from "sonner";
-import { buildMinutesFillableHtml } from "@/lib/minutesFillableHtml";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { AGENDA_SECTIONS, sectionOf, CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
@@ -153,20 +152,6 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
   const removeEntry = (containerId, entryId) =>
     setEntries((prev) => ({ ...prev, [containerId]: (prev[containerId] || []).filter((e) => e.id !== entryId) }));
 
-  // Saves a standalone fillable copy of the template — opened from the user's
-  // computer its buttons work (the script block only hits app-opened documents).
-  const downloadFillableHtml = () => {
-    const html = buildMinutesFillableHtml({ meeting, orgName, items, members });
-    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(meeting?.title || "Board Meeting").replace(/[\\/:*?"<>|]+/g, "")} — Fillable Minutes.html`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
   const copyLink = () => {
     const url = `${window.location.origin}/board/meetings/${meeting?.id}/fillable-minutes`;
     navigator.clipboard.writeText(url).then(() => toast.success("Link copied — anyone with board portal access can open the fillable minutes."));
@@ -271,9 +256,6 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
         <div className="no-print sticky top-0 z-10 flex items-center gap-3 -mx-4 px-4 py-2 bg-[#1e2f4d] rounded-lg text-white mb-4">
           <button type="button" onClick={() => window.print()} className="flex items-center gap-1.5 bg-[#f5c116] text-[#1e2f4d] font-bold px-3 py-1.5 rounded-md text-sm">
             <Printer size={14} /> Print / Save as PDF
-          </button>
-          <button type="button" onClick={downloadFillableHtml} title="Saves a fillable copy — its buttons work once opened from your computer" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
-            <FileDown size={14} /> Save fillable copy (.html)
           </button>
           <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <Link2 size={14} /> Copy link
