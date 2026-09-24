@@ -19,11 +19,23 @@ const ADD_BTN = "border border-dashed border-slate-400 text-[#1e2f4d] rounded-md
 
 const EMPTY_ENTRY = { id: "", type: "", motion_verbiage: "", content: "", moved_by: "", seconded_by: "", motion_result: "", votes_in_favour: "", votes_opposed: "", votes_abstained: "", action_assigned_to: "", action_due_date: "" };
 
-function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, minimalMotion }) {
+function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, minimalMotion, maxVotes }) {
   const isMotion = entry.type === "motion";
   const isAction = entry.type === "action_item";
   const isCamera = entry.type === "in_camera";
   const isNotes = [...NOTES_TYPES, "resolution"].includes(entry.type);
+
+  // Votes across the three categories can never exceed the number of voting members in attendance
+  const applyVotePatch = (patch) => {
+    const next = { ...entry, ...patch };
+    const num = (v) => (/^\d+$/.test(String(v)) ? Number(v) : 0);
+    const total = num(next.votes_in_favour) + num(next.votes_opposed) + num(next.votes_abstained);
+    if (maxVotes != null && total > maxVotes) {
+      toast.error(`Votes can't exceed the ${maxVotes} voting member${maxVotes === 1 ? "" : "s"} in attendance.`);
+      return;
+    }
+    onPatch(patch);
+  };
   const voteOpts = Array.from({ length: 13 }, (_, n) => <option key={n}>{n}</option>);
   return (
     <div className="border border-dashed border-slate-300 rounded-lg p-3 my-2">
@@ -65,20 +77,20 @@ function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, mi
       {isMotion && !minimalMotion && (
         <div className="flex flex-wrap gap-x-6 gap-y-2 mt-1">
           <label className={CAP}>In favour
-            <select className={FIELD} value={entry.votes_in_favour || ""} onChange={(e) => onPatch({ votes_in_favour: e.target.value })}>
+            <select className={FIELD} value={entry.votes_in_favour || ""} onChange={(e) => applyVotePatch({ votes_in_favour: e.target.value })}>
               <option value="">—</option>
               <option>All present</option>
               {voteOpts}
             </select>
           </label>
           <label className={CAP}>Opposed
-            <select className={FIELD} value={entry.votes_opposed || ""} onChange={(e) => onPatch({ votes_opposed: e.target.value })}>
+            <select className={FIELD} value={entry.votes_opposed || ""} onChange={(e) => applyVotePatch({ votes_opposed: e.target.value })}>
               <option value="">—</option>
               {voteOpts}
             </select>
           </label>
           <label className={CAP}>Abstained
-            <select className={FIELD} value={entry.votes_abstained || ""} onChange={(e) => onPatch({ votes_abstained: e.target.value })}>
+            <select className={FIELD} value={entry.votes_abstained || ""} onChange={(e) => applyVotePatch({ votes_abstained: e.target.value })}>
               <option value="">—</option>
               {voteOpts}
             </select>
@@ -240,10 +252,13 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     }
     const cid = item.id;
     const types = isApprovalOfMinutesItem(item) ? ["note"] : GENERIC_TYPES;
+    // Vote counts can't exceed the voting members in attendance (all voting members if attendance isn't marked yet)
+    const presentVoters = voting.filter((m) => present.includes(m.full_name)).length;
+    const voteLimit = presentVoters > 0 ? presentVoters : voting.length;
     return (
       <div>
         {(entries[cid] || []).map((e) => (
-          <EntryBlock key={e.id} entry={e} fixedType={isApprovalOfMinutesItem(item)} types={types} voterNames={voterNames} minimalMotion={isApprovalOfMinutesItem(item)} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
+          <EntryBlock key={e.id} entry={e} fixedType={isApprovalOfMinutesItem(item)} types={types} voterNames={voterNames} minimalMotion={isApprovalOfMinutesItem(item)} maxVotes={voteLimit} onPatch={(p) => patchEntry(cid, e.id, p)} onRemove={() => removeEntry(cid, e.id)} />
         ))}
         {isApprovalOfMinutesItem(item) && (
           <button type="button" onClick={() => addEntryTo(cid, "motion")} className={`${ADD_BTN} mr-2`}>+ Motion</button>
