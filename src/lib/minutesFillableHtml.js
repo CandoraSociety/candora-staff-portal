@@ -108,7 +108,6 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     .toolbar { position: fixed; top: 10px; right: 12px; display: flex; gap: 10px; align-items: center; background: #1e2f4d; color: #fff; padding: 8px 12px; border-radius: 8px; z-index: 10; }
     .toolbar button { background: #f5c116; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
     .toolbar .hint { font-size: 9pt; color: #dbe4f0; }
-    .no-print { display: none !important; }
     .head { text-align: center; border-bottom: 3px solid #1e2f4d; padding: 8px 0 14px; margin-bottom: 4px; }
     .head img { height: 64px; }
     .head .org { font-size: 12pt; font-weight: bold; color: #1e2f4d; }
@@ -145,6 +144,7 @@ export function buildMinutesFillableHtml({ meeting, orgName, items, members }) {
     .add-btn:hover { background: #eef1f6; }
     .confidential { font-size: 9pt; color: #dc2626; margin: 4px 0; }
     @media print {
+      .no-print { display: none !important; }
       body { padding: 0; }
       select, input, textarea { color: #111; }
     }
