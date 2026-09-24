@@ -252,48 +252,67 @@ export default function BoardMinutesTaker() {
                         </div>
                       ))}
 
+                      {!caps.none && (
                       <form onSubmit={handleAddEntry} className="bg-muted/40 rounded-xl p-4 space-y-3 border border-dashed border-border">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <select value={form.entry_type} onChange={e => setForm({...form, entry_type: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
-                            {ENTRY_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => setForm({...form, entry_type: "motion"})}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isMotion ? "bg-blue-500 text-white border-blue-500" : "border-border text-foreground hover:border-blue-400"}`}
-                          >
-                            + Motion
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setForm({...form, entry_type: "in_camera"})}
-                            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isCamera ? "bg-red-500 text-white border-red-500" : "border-border text-foreground hover:border-red-400"}`}
-                          >
-                            + In Camera
-                          </button>
+                          {caps.typeSelect && (
+                            <select value={form.entry_type} onChange={e => setForm({...form, entry_type: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                              {ENTRY_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+                            </select>
+                          )}
+                          {caps.motion && (
+                            <button
+                              type="button"
+                              onClick={() => setForm({...form, entry_type: "motion"})}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isMotion ? "bg-blue-500 text-white border-blue-500" : "border-border text-foreground hover:border-blue-400"}`}
+                            >
+                              + Motion
+                            </button>
+                          )}
+                          {caps.inCamera && (
+                            <button
+                              type="button"
+                              onClick={() => setForm({...form, entry_type: "in_camera"})}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition shrink-0 ${isCamera ? "bg-red-500 text-white border-red-500" : "border-border text-foreground hover:border-red-400"}`}
+                            >
+                              + In Camera
+                            </button>
+                          )}
                           <span className="text-xs text-muted-foreground">for "{item.title}"</span>
-                          {isCamera && <span className="text-[11px] text-red-600">Confidential — goes in the separate In-Camera Minutes for the Board Chair, not the regular minutes.</span>}
+                          {isCamera && caps.inCamera && <span className="text-[11px] text-red-600">Confidential — goes in the separate In-Camera Minutes for the Board Chair, not the regular minutes.</span>}
                         </div>
-                        {isMotion && (
+                        {isMotion && !caps.moverOnly && (
                           <input value={form.motion_verbiage} onChange={e => setForm({...form, motion_verbiage: e.target.value})} placeholder="Motion verbiage (e.g. Be it resolved that...)" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" />
                         )}
-                        <textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} placeholder="Notes / details..." rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none resize-none" />
-                        {isMotion && (
-                          <div className="grid grid-cols-3 gap-2">
+                        {caps.notes && (
+                          <textarea value={form.content} onChange={e => setForm({...form, content: e.target.value})} placeholder="Notes / details..." rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none resize-none" />
+                        )}
+                        {caps.date && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Next meeting date:</span>
+                            <input type="date" value={form.action_due_date} onChange={e => setForm({...form, action_due_date: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
+                          </div>
+                        )}
+                        {(isMotion || caps.moverOnly) && (
+                          <div className={caps.moverOnly ? "flex items-center gap-2" : "grid grid-cols-3 gap-2"}>
                             <select value={form.moved_by} onChange={e => setForm({...form, moved_by: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
                               <option value="">— moved by —</option>
                               {attendeeOptions.map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
-                            <select value={form.seconded_by} onChange={e => setForm({...form, seconded_by: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
-                              <option value="">— seconded by —</option>
-                              {attendeeOptions.map(n => <option key={n} value={n}>{n}</option>)}
-                            </select>
-                            <select value={form.motion_result} onChange={e => setForm({...form, motion_result: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
-                              {MOTION_RESULTS.map(r => <option key={r} value={r}>{r || "— result —"}</option>)}
-                            </select>
+                            {!caps.moverOnly && (
+                              <select value={form.seconded_by} onChange={e => setForm({...form, seconded_by: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                                <option value="">— seconded by —</option>
+                                {attendeeOptions.map(n => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            )}
+                            {!caps.moverOnly && (
+                              <select value={form.motion_result} onChange={e => setForm({...form, motion_result: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
+                                {MOTION_RESULTS.map(r => <option key={r} value={r}>{r || "— result —"}</option>)}
+                              </select>
+                            )}
                           </div>
                         )}
-                        {isMotion && (
+                        {isMotion && !caps.moverOnly && (
                           <div className="grid grid-cols-3 gap-2">
                             <select value={form.votes_in_favour} onChange={e => setForm({...form, votes_in_favour: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
                               <option value="">— in favour —</option>
@@ -309,55 +328,37 @@ export default function BoardMinutesTaker() {
                             </select>
                           </div>
                         )}
-                        {isAction && (
+                        {caps.typeSelect && isAction && (
                           <div className="grid grid-cols-2 gap-2">
                             <input value={form.action_assigned_to} onChange={e => setForm({...form, action_assigned_to: e.target.value})} placeholder="Assigned to" className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
                             <input type="date" value={form.action_due_date} onChange={e => setForm({...form, action_due_date: e.target.value})} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
                           </div>
                         )}
-                        <button type="submit" disabled={saving || (!form.content && !form.motion_verbiage)} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50">
+                        <button type="submit" disabled={saving || (caps.moverOnly ? !form.moved_by : (!form.content && !form.motion_verbiage && !(caps.date && form.action_due_date)))} className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition disabled:opacity-50">
                           <Plus size={13} /> Add Entry
                         </button>
                       </form>
+                      )}
                     </div>
                   )}
                 </div>
               );
             })}
+            {items.some(isApprovalOfAgendaItem) && (
+              <MinutesAddAgendaItem defaultSection={key} onAdd={handleAddItem} />
+            )}
           </div>
         ))}
-        {agendaItems.length === 0 && !showItemForm && (
+        {agendaItems.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             <p className="text-sm">No agenda items found. <Link to={`/board/meetings/${id}/agenda`} className="text-primary hover:underline">Build the agenda first</Link> — or add one below.</p>
           </div>
         )}
 
-        {/* Add agenda item mid-meeting */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          {!showItemForm ? (
-            <button onClick={() => setShowItemForm(true)} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-              <Plus size={14} /> Add agenda item
-            </button>
-          ) : (
-            <form onSubmit={handleAddItem} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Add Agenda Item</h3>
-                <button type="button" onClick={() => setShowItemForm(false)} className="text-xs text-muted-foreground hover:underline">Cancel</button>
-              </div>
-              <input required autoFocus value={itemForm.title} onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })} placeholder="Item title" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" />
-              <div className="grid grid-cols-2 gap-2">
-                <select value={itemForm.section} onChange={(e) => setItemForm({ ...itemForm, section: e.target.value })} className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none">
-                  {AGENDA_SECTIONS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                </select>
-                <input type="number" min="0" value={itemForm.duration_minutes} onChange={(e) => setItemForm({ ...itemForm, duration_minutes: e.target.value })} placeholder="Minutes" className="border border-input rounded-lg px-2 py-1.5 text-xs bg-background focus:outline-none" />
-              </div>
-              <input value={itemForm.presenter} onChange={(e) => setItemForm({ ...itemForm, presenter: e.target.value })} placeholder="Presenter (optional)" className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none" />
-              <button type="submit" className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 transition">
-                <Plus size={13} /> Add Item
-              </button>
-            </form>
-          )}
-        </div>
+        {/* Add agenda item mid-meeting — shown in the Approval of Agenda section when it exists, otherwise here */}
+        {!sectionsWithItems.some(s => s.items.some(isApprovalOfAgendaItem)) && (
+          <MinutesAddAgendaItem onAdd={handleAddItem} />
+        )}
       </div>
     </div>
   );
