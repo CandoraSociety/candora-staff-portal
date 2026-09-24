@@ -1,0 +1,39 @@
+{
+  "name": "BoardOrientationDoc",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Document title as shown in the Board Orientation Package"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded document file URL"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original uploaded file name \u2014 used as the file name inside the shared/downloaded ZIP"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of the document"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "parked"
+      ],
+      "default": "active",
+      "description": "active = included in the orientation package (ZIP/share); parked = set aside but kept for later"
+    },
+    "order_index": {
+      "type": "number",
+      "description": "Display order in the package"
+    }
+  },
+  "required": [
+    "title",
+    "file_url"
+  ]
+}

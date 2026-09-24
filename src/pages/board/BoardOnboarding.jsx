@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, BookOpen, CheckCircle, Circle, Trash2, ExternalLink, Upload } from "lucide-react";
+import OrientationPackageTab from "@/components/board/OrientationPackageTab";
 
 const CATEGORIES = ["governance","financial_oversight","legal_compliance","strategic_planning","board_culture","nonprofit_law","orientation","other"];
 const RESOURCE_TYPES = ["document","video","link","policy","checklist"];
@@ -68,10 +69,10 @@ export default function BoardOnboarding() {
       </div>
 
       <div className="flex gap-2 mb-6">
-        {["resources", "members"].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === tab ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted"}`}>
-            {tab === "resources" ? "Training Resources" : "Member Progress"}
-          </button>
+        {["resources", "package", "members"].map(tab => (
+        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === tab ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted"}`}>
+          {tab === "resources" ? "Training Resources" : tab === "package" ? "Orientation Package" : "Member Progress"}
+        </button>
         ))}
       </div>
 
@@ -105,6 +106,8 @@ export default function BoardOnboarding() {
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>
+      ) : activeTab === "package" ? (
+        <OrientationPackageTab />
       ) : activeTab === "resources" ? (
         <div className="space-y-6">
           {Object.entries(grouped).map(([category, items]) => (
