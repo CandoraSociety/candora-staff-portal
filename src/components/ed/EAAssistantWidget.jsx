@@ -4,8 +4,10 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw } from "lucide-react";
+import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw, TrendingUp } from "lucide-react";
 import RecoveryScanner from "./EARecoveryScanner";
+import EACashFlowPanel from "./EACashFlowPanel";
+import { buildProjectionSummary, buildAssumptionLines } from "@/lib/cashFlow/assistant";
 
 function greeting() {
   const h = new Date().getHours();
@@ -27,7 +29,7 @@ function formatDueLabel(dateStr) {
 
 function buildContext({ user, tasks, projects, objectives, notes, organizer, kpis, budgets,
   grantProjects, grantReports, employees, volunteers, clients, announcements,
-  edProjects, compassTasks, events, programs, marketingCampaigns, invoices }) {
+  edProjects, compassTasks, events, programs, marketingCampaigns, invoices, cashFlow }) {
   const firstName = user?.full_name?.split(" ")[0] || "Director";
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
 
@@ -99,6 +101,17 @@ ${marketingCampaigns.filter(c => c.status === "active").slice(0, 4).map(c => `- 
 === INVOICES / BILLING (${pendingInvoices.length} pending) ===
 ${pendingInvoices.map(i => `- ${i.title || i.invoice_number || "Invoice"} — $${(i.total_amount || 0).toLocaleString()} [${i.status}]`).join("\n") || "No pending invoices."}
 
+=== CASH FLOW PROJECTION (official — from the Finance Portal, authoritative) ===
+${cashFlow ? `${buildProjectionSummary(cashFlow)}
+
+Assumptions:
+${buildAssumptionLines(cashFlow.assumptions) || "None."}
+
+Recent changes:
+${(cashFlow.change_log || []).slice(-5).map(c => `- ${c.date} by ${c.by_name || "—"}: ${c.summary}`).join("\n") || "None recorded."}
+
+When asked anything about cash flow, projected balances, lowest cash point, assumed revenue/expenses or payroll dates, answer ONLY from the numbers in this section — never recalculate or estimate on your own.` : "No cash flow projection has been set up yet (it can be created in the Finance Portal)."}
+
 === ANNOUNCEMENTS (${announcements.filter(a => a.is_active).length} active) ===
 ${announcements.filter(a => a.is_active).slice(0, 3).map(a => `- "${a.title}" — ${a.message?.slice(0, 80) || ""}`).join("\n") || "No active announcements."}
 
@@ -121,6 +134,7 @@ ${recentNotes.slice(0, 5).map(n => `- "${n.title}"${n.note_type ? ` [${n.note_ty
 - /ed/opsp — Objectives / Strategic Plan
 - /ed/kpis — KPI Tracker
 - /ed/budgets — Budget Management
+- /finance/cash-flow — Cash Flow Projection (Finance Portal)
 - /ed/org — Org Chart
 - /ed/notes — Notes
 - /nexushr — Staff HR Portal (employees, reviews, onboarding, etc.)
@@ -147,6 +161,7 @@ Executive Director of Candora — a non-profit organization. Responsibilities: s
 const PROACTIVE_PROMPTS = [
   "What should I focus on today?",
   "Anything urgent I should know about?",
+  "What's our cash flow outlook?",
   "Help me draft a quick status update",
   "Prepare me for my week ahead",
   "What tasks are overdue or at risk?",
@@ -207,6 +222,8 @@ export default function EAAssistantWidget() {
   const { data: marketingCampaigns = [] } = useQuery({ queryKey: ["marketing-campaigns"], queryFn: () => base44.entities.MarketingCampaign.list() });
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list() });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => base44.entities.Announcement.list() });
+  const { data: cashFlowCurrent } = useQuery({ queryKey: ["cashflow-current"], queryFn: () => base44.entities.CashFlowProjection.filter({ kind: "current" }).then(r => r[0] || null) });
+  const [cashFlowOpen, setCashFlowOpen] = useState(false);
 
   const firstName = user?.full_name?.split(" ")[0] || "Director";
 
@@ -267,6 +284,7 @@ export default function EAAssistantWidget() {
     kpis, budgets, grantProjects, grantReports,
     employees, volunteers, clients, compassTasks,
     events, programs, marketingCampaigns, invoices, announcements,
+    cashFlow: cashFlowCurrent,
   });
 
   const sendMessage = async (text) => {
@@ -420,6 +438,25 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
               </div>
             )}
           </div>
+
+          {/* Cash Flow — official projection from the Finance Portal */}
+          {cashFlowCurrent && (
+            <div style={{ borderBottom: "1px solid hsl(230,50%,18%)" }}>
+              <button
+                className="w-full flex items-center justify-between px-4 py-2 text-xs transition-colors hover:opacity-80"
+                style={{ background: "hsl(230,65%,11%)", color: "hsl(45,70%,70%)" }}
+                onClick={() => setCashFlowOpen(o => !o)}
+              >
+                <span className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  <span className="font-semibold">Cash Flow</span>
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}>Current Projection</span>
+                </span>
+                <span style={{ color: "hsl(230,30%,55%)" }}>{cashFlowOpen ? "▲ hide" : "▼ open"}</span>
+              </button>
+              {cashFlowOpen && <EACashFlowPanel projection={cashFlowCurrent} />}
+            </div>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 300, maxHeight: 480 }}>

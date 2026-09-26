@@ -355,6 +355,7 @@ import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
 import FinanceESignatures from '@/pages/finance/FinanceESignatures';
 import FinanceInvoiceGenerator from '@/pages/finance/FinanceInvoiceGenerator';
+import FinanceCashFlow from '@/pages/finance/FinanceCashFlow';
 import ReceptionDashboard from '@/pages/reception/ReceptionDashboard';
 import ReceptionAppointments from '@/pages/reception/ReceptionAppointments';
 import ReceptionDropIns from '@/pages/reception/ReceptionDropIns';
@@ -774,6 +775,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/pathways" element={<FinancePathways />} />
           <Route path="/finance/reimbursements" element={<FinanceReimbursements />} />
           <Route path="/finance/mastercard" element={<FinanceMasterCard />} />
+          <Route path="/finance/cash-flow" element={<FinanceCashFlow />} />
           <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
           <Route path="/finance/e-signatures" element={<FinanceESignatures />} />

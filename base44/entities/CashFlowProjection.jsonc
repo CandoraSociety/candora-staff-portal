@@ -1,0 +1,154 @@
+{
+  "name": "CashFlowProjection",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Projection or scenario name"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "current",
+        "scenario",
+        "archived"
+      ],
+      "default": "scenario",
+      "description": "current = the organization's official working projection (only one at a time); scenario = an independently modifiable copy (never affects the current projection); archived = a former current projection preserved as version history"
+    },
+    "parent_id": {
+      "type": "string",
+      "description": "Reference to the projection this scenario was created from \u2014 used to show which assumptions differ from its parent"
+    },
+    "opening_balance": {
+      "type": "number",
+      "description": "Opening bank balance"
+    },
+    "opening_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the opening balance applies (start of the projection period)"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "End of the projection period"
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "Structured cash-flow assumptions \u2014 the authoritative model the deterministic engine calculates from",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "description": "One of: Revenue, Grants/Funding, Donations, Social Enterprise, Other Inflows, Payroll, Rent, Benefits, IT, Utilities, Insurance, Program Expenses, Contract Expenses, Other Expenses"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "inflow",
+              "outflow"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "one_time",
+              "weekly",
+              "biweekly",
+              "semi_monthly",
+              "monthly",
+              "quarterly",
+              "annually",
+              "custom"
+            ],
+            "description": "Biweekly means every 14 days (never twice per month); semi_monthly = 1st and 15th; custom = every custom_interval_days"
+          },
+          "custom_interval_days": {
+            "type": "number"
+          },
+          "anchor_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Defining occurrence \u2014 actual transaction dates are generated forward and backward from this date"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "description": "First date this assumption is active (optional)"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Last date this assumption is active (optional)"
+          },
+          "description": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "estimate",
+              "conservative_estimate"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "ai",
+              "imported",
+              "system"
+            ]
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "change_log": {
+      "type": "array",
+      "description": "History of assumption changes for review",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "by_name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "updated_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
