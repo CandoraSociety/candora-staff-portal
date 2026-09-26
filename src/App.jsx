@@ -148,6 +148,7 @@ import EDAgendaMaker from '@/pages/ed/EDAgendaMaker';
 import EDBoardReport from '@/pages/ed/EDBoardReport';
 import EDTrainingPlanner from '@/pages/ed/EDTrainingPlanner';
 import EDScheduleMaker from '@/pages/ed/EDScheduleMaker';
+import EDCashFlow from '@/pages/ed/EDCashFlow';
 
 // Reports Portal
 import ReportingLayout from '@/components/reporting/ReportingLayout';
@@ -529,6 +530,7 @@ const AuthenticatedApp = () => {
           <Route path="/ed/opsp" element={<EDOPSP />} />
           <Route path="/ed/kpis" element={<EDKPIs />} />
           <Route path="/ed/budgets" element={<EDBudgets />} />
+          <Route path="/ed/cash-flow" element={<EDCashFlow />} />
           <Route path="/ed/org" element={<EDOrgChart />} />
           <Route path="/ed/notes" element={<EDNotes />} />
           <Route path="/ed/agendas" element={<EDAgendaMaker />} />

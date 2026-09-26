@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid, Menu, X, ListChecks, FileText, GraduationCap, CalendarDays } from "lucide-react";
+import { LayoutDashboard, FolderKanban, Target, BarChart2, DollarSign, Network, StickyNote, ChevronLeft, LayoutGrid, Menu, X, ListChecks, FileText, GraduationCap, CalendarDays, TrendingUp } from "lucide-react";
 import EDWidgetSettings from "./EDWidgetSettings";
 import EAFloatingWidget from "./EAFloatingWidget";
 
@@ -11,6 +11,7 @@ const NAV = [
   { label: "OPSP", path: "/ed/opsp", icon: Target },
   { label: "KPIs", path: "/ed/kpis", icon: BarChart2 },
   { label: "Budgets", path: "/ed/budgets", icon: DollarSign },
+  { label: "Cash Flow", path: "/ed/cash-flow", icon: TrendingUp },
   { label: "Org Chart", path: "/ed/org", icon: Network },
   { label: "Notes", path: "/ed/notes", icon: StickyNote },
   { label: "Schedule Maker", path: "/ed/schedule", icon: CalendarDays },

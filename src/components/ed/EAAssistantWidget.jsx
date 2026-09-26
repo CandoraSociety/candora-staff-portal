@@ -4,9 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw, TrendingUp } from "lucide-react";
+import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw } from "lucide-react";
 import RecoveryScanner from "./EARecoveryScanner";
-import EACashFlowPanel from "./EACashFlowPanel";
 import { buildProjectionSummary, buildAssumptionLines } from "@/lib/cashFlow/assistant";
 
 function greeting() {
@@ -223,7 +222,6 @@ export default function EAAssistantWidget() {
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list() });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => base44.entities.Announcement.list() });
   const { data: cashFlowCurrent } = useQuery({ queryKey: ["cashflow-current"], queryFn: () => base44.entities.CashFlowProjection.filter({ kind: "current" }).then(r => r[0] || null) });
-  const [cashFlowOpen, setCashFlowOpen] = useState(false);
 
   const firstName = user?.full_name?.split(" ")[0] || "Director";
 
@@ -438,25 +436,6 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
               </div>
             )}
           </div>
-
-          {/* Cash Flow — official projection from the Finance Portal */}
-          {cashFlowCurrent && (
-            <div style={{ borderBottom: "1px solid hsl(230,50%,18%)" }}>
-              <button
-                className="w-full flex items-center justify-between px-4 py-2 text-xs transition-colors hover:opacity-80"
-                style={{ background: "hsl(230,65%,11%)", color: "hsl(45,70%,70%)" }}
-                onClick={() => setCashFlowOpen(o => !o)}
-              >
-                <span className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span className="font-semibold">Cash Flow</span>
-                  <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}>Current Projection</span>
-                </span>
-                <span style={{ color: "hsl(230,30%,55%)" }}>{cashFlowOpen ? "▲ hide" : "▼ open"}</span>
-              </button>
-              {cashFlowOpen && <EACashFlowPanel projection={cashFlowCurrent} />}
-            </div>
-          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 300, maxHeight: 480 }}>
