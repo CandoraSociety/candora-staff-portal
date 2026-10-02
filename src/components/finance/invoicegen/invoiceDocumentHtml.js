@@ -142,6 +142,15 @@ export function buildInvoiceDocumentHtml({ invoice }) {
     <div class="row grand"><span>${isPayable ? 'Total Payable' : 'Total Due'}</span><span>${fmt(total)}</span></div>
   </div>
 
+  ${!isPayable ? `<div class="payment">
+    <span class="lbl">Payment Instructions</span>
+    <div class="body">
+      Please remit payment to <strong>Candora Society of Edmonton</strong> by:<br/>
+      • E-transfer: <strong>jim.cunningham@candorasociety.com</strong><br/>
+      • Cheque: payable to <strong>Candora Society of Edmonton</strong>
+    </div>
+  </div>` : ''}
+
   ${invoice.notes ? `<div class="notes"><div class="lbl">Notes</div><div class="body">${esc(invoice.notes)}</div></div>` : ''}
 
   <div class="foot">
