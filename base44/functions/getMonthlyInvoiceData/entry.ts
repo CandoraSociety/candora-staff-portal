@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { DRIVE_ID, CLIENT_DATA_SHEET, getGraphToken, getActiveCrtWorkbook } from '../../shared/crtWorkbook.ts';
 import { findInvoiceTrackerSheet, readInvoiceTracker, findMonthRow, billingMonthToKey, cellToMonthKey } from '../../shared/invoiceTracker.ts';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 // Reads everything needed to render a single month's auto-generated invoice
 // from the ACTIVE CRT workbook:
@@ -46,7 +47,7 @@ function colIndex(letter) {
 }
 
 function currentMonthEdmonton() {
-  const s = new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric' });
+  const s = new Date().toLocaleString('en-US', { timeZone: AB_TIME_ZONE, month: '2-digit', year: 'numeric' });
   const [mon, yr] = s.split('/');
   return `${yr}-${mon}`;
 }

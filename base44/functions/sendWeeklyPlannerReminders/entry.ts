@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -36,7 +37,7 @@ Deno.serve(async (req) => {
           try {
             const dateStr = scheduledDate.toLocaleString('en-CA', {
               weekday: 'long', month: 'long', day: 'numeric',
-              hour: 'numeric', minute: '2-digit', timeZone: 'America/Edmonton'
+              hour: 'numeric', minute: '2-digit', timeZone: AB_TIME_ZONE
             });
             base44.asServiceRole.integrations.Core.SendEmail({
               to: record.user_email,

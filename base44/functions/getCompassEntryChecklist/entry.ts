@@ -3,6 +3,7 @@ import {
   DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW,
   getGraphToken, getActiveCrtWorkbook, listCrtFiles, parseCrtDate
 } from '../../shared/crtWorkbook.ts';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 // Reads the CRT Client Data sheet for the selected billing month(s) and returns
 // every client who had activity in any selected month — recognized by ANY date
@@ -41,7 +42,7 @@ const DATE_COL_INDICES = COLUMNS.filter((c) => c.date).map((c) => c.idx);
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 function currentMonthEdmonton() {
-  const s = new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric' });
+  const s = new Date().toLocaleString('en-US', { timeZone: AB_TIME_ZONE, month: '2-digit', year: 'numeric' });
   const [mon, yr] = s.split('/');
   return `${yr}-${mon}`;
 }

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CheckCircle, XCircle, Clock, UserPlus, Edit, AlertCircle, Building2, X } from 'lucide-react';
 import moment from 'moment-timezone';
+import { AB_TIME_ZONE } from '@/lib/abTime';
 import { toast } from 'sonner';
 import RejectionDialog from '@/components/volunteermgr/RejectionDialog';
 import WaitlistDialog from '@/components/volunteermgr/WaitlistDialog';
@@ -440,7 +441,7 @@ export default function VolunteerMgrApprovals() {
           {req.skills_or_focus && <p><strong>Skills:</strong> {req.skills_or_focus}</p>}
           {req.motivation && <p><strong>Motivation:</strong> {req.motivation}</p>}
         </div>
-        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz(AB_TIME_ZONE).format('MMM D, YYYY h:mm A')}</p>
 
         {req.status === 'pending' && (
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'cohort', data: req }); }}>
@@ -539,7 +540,7 @@ export default function VolunteerMgrApprovals() {
           <Badge className={`text-xs border shrink-0 ${statusColors[req.status]}`}>{req.status}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">{req.description}</p>
-        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz(AB_TIME_ZONE).format('MMM D, YYYY h:mm A')}</p>
 
         {req.status === 'pending' && (
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'practicum', data: req }); }}>
@@ -669,7 +670,7 @@ export default function VolunteerMgrApprovals() {
         <p className="text-sm text-muted-foreground">
           <strong>Changes requested:</strong> {change.change_summary}
         </p>
-        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(change.submitted_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+        <p className="text-xs text-muted-foreground">Submitted: {moment.utc(change.submitted_date).tz(AB_TIME_ZONE).format('MMM D, YYYY h:mm A')}</p>
 
         {change.status === 'pending' && (
           <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'profile', data: change }); }}>
@@ -740,7 +741,7 @@ export default function VolunteerMgrApprovals() {
             <Badge className={`text-xs border shrink-0 ${statusColors[req.status]}`}>{req.status}</Badge>
           </div>
           <p className="text-sm text-muted-foreground">{req.description}</p>
-          <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz('America/Edmonton').format('MMM D, YYYY h:mm A')}</p>
+          <p className="text-xs text-muted-foreground">Submitted: {moment.utc(req.created_date).tz(AB_TIME_ZONE).format('MMM D, YYYY h:mm A')}</p>
 
           {req.status === 'pending' && (
             <Button size="sm" variant="outline" className="w-full mt-2" onClick={(e) => { e.stopPropagation(); setSelectedRequest({ type: 'approval', data: req }); }}>
@@ -1166,7 +1167,7 @@ export default function VolunteerMgrApprovals() {
 
               {/* Submission Date */}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                <p>Submitted: {moment(selectedRequest.data.created_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>
               </div>
             </div>
           )}
@@ -1283,8 +1284,8 @@ export default function VolunteerMgrApprovals() {
 
               {/* Submission Date */}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
+                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>}
               </div>
             </div>
           )}
@@ -1308,7 +1309,7 @@ export default function VolunteerMgrApprovals() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment.utc(selectedRequest.data.submitted_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
+                <p>Submitted: {moment.utc(selectedRequest.data.submitted_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>
                 {selectedRequest.data.reviewed_by && <p>Reviewed by: {selectedRequest.data.reviewed_by}</p>}
               </div>
             </div>
@@ -1514,8 +1515,8 @@ export default function VolunteerMgrApprovals() {
               )}
 
               <div className="text-xs text-muted-foreground pt-4 border-t mt-6">
-                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>
-                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz('America/Edmonton').format('MMMM D, YYYY [at] h:mm A z')}</p>}
+                <p>Submitted: {moment.utc(selectedRequest.data.created_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>
+                {selectedRequest.data.review_date && <p>Reviewed: {moment.utc(selectedRequest.data.review_date).tz(AB_TIME_ZONE).format('MMMM D, YYYY [at] h:mm A [ABT]')}</p>}
               </div>
             </div>
           )}

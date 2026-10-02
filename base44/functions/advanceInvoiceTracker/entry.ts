@@ -4,6 +4,7 @@ import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell
 } from '../../shared/invoiceTracker.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 // Advances the monthly columns of the Invoice Tracker sheet inside the active
 // CRT workbook up to and including the current reporting month:
@@ -45,7 +46,7 @@ const SUFFIXES_2026 = { '2026-04': 3, '2026-05': 2, '2026-06': 3, '2026-07': 3 }
 
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
-    timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric'
+    timeZone: AB_TIME_ZONE, month: '2-digit', year: 'numeric'
   });
   const [mon, yr] = s.split('/');
   return { year: parseInt(yr, 10), month: parseInt(mon, 10) - 1 };

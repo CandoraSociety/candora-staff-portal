@@ -5,12 +5,13 @@ import {
 } from '../../shared/crtWorkbook.ts';
 import { excelSerial, patchWithRetry, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
 import { syncAllOpenWorkbooks } from '../../shared/crtSync.ts';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function currentMtMonth() {
   const now = new Date();
-  const mt = new Date(now.toLocaleString('en-US', { timeZone: 'America/Edmonton' }));
+  const mt = new Date(now.toLocaleString('en-US', { timeZone: AB_TIME_ZONE }));
   return { year: mt.getFullYear(), monthIdx: mt.getMonth() };
 }
 

@@ -9,14 +9,15 @@ import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { AB_TIME_ZONE } from '@/lib/abTime';
 
-// Today's date in the org's Mountain (America/Edmonton) timezone as YYYY-MM-DD.
+// Today's date in the org's Alberta (ABT, fixed UTC-6) timezone as YYYY-MM-DD.
 // `new Date().toISOString()` is UTC, which can land on the wrong calendar day
 // relative to Edmonton — so format explicitly in the local zone.
 const edmontonToday = () => {
   try {
     return new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Edmonton',
+      timeZone: AB_TIME_ZONE,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

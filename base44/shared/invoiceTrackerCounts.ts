@@ -78,11 +78,13 @@ const DOLLAR_INDICES = Object.fromEntries(
   Object.entries(DOLLAR_COLUMNS).map(([k, c]) => [k, colIndex(c)])
 );
 
+import { AB_TIME_ZONE } from './abTimeZone.ts';
+
 function rank(k) { return k.year * 12 + k.month; }
 
 function currentMonthEdmonton() {
   const s = new Date().toLocaleString('en-US', {
-    timeZone: 'America/Edmonton', month: '2-digit', year: 'numeric'
+    timeZone: AB_TIME_ZONE, month: '2-digit', year: 'numeric'
   });
   const [mon, yr] = s.split('/');
   return { year: parseInt(yr, 10), month: parseInt(mon, 10) - 1 };

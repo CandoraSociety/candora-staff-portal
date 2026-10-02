@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { properUserName } from '../../shared/userName.ts';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
@@ -44,9 +45,9 @@ export default async function(req) {
     const forwarded = req.headers.get('x-forwarded-for') || '';
     const ip = (forwarded.split(',')[0] || req.headers.get('cf-connecting-ip') || 'unknown').trim();
 
-    // Candora is in Mountain Time (America/Edmonton) — stamp signatures in local MT, not UTC
+    // Candora is in Alberta (ABT, fixed UTC-6) — stamp signatures in local time, not UTC
     const parts = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Edmonton',
+      timeZone: AB_TIME_ZONE,
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit', hour12: false,
       timeZoneName: 'short',

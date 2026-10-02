@@ -1,3 +1,5 @@
+import { AB_TIME_ZONE } from '@/lib/abTime';
+
 // Parse a "YYYY-MM" billing month as a local date (avoids UTC-offset shifting it back a month)
 export const parseBillingMonth = (ym) => {
   const [y, m] = ym.split('-').map(Number);
@@ -9,7 +11,7 @@ export const parseBillingMonth = (ym) => {
 // browser's local timezone — no fragile Date-string round-tripping.
 export const currentBillingMonth = () => {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Edmonton',
+    timeZone: AB_TIME_ZONE,
     year: 'numeric',
     month: '2-digit',
   }).formatToParts(new Date());

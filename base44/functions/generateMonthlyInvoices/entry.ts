@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { base44 } from 'npm:@base44/sdk@0.8.49';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 // Monthly billing — runs on the 1st of each month. For every InvoiceCustomer
 // with monthly_billing enabled, creates this month's FinanceInvoice using the
@@ -11,7 +12,7 @@ Deno.serve(async (req) => {
 
     // Current month in Candora's timezone — en-CA gives YYYY-MM
     const ym = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Edmonton', year: 'numeric', month: '2-digit',
+      timeZone: AB_TIME_ZONE, year: 'numeric', month: '2-digit',
     }).format(new Date());
     const invoiceDate = `${ym}-01`;
 

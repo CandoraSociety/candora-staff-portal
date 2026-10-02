@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { AB_TIME_ZONE } from '../../shared/abTimeZone.ts';
 
 const OUTLOOK_CONNECTOR_ID = '6a43f36f28e8ea04989eb603';
 
@@ -84,8 +85,8 @@ Deno.serve(async (req) => {
         const event = {
           subject,
           body: { contentType: 'HTML', content: eventBody || '' },
-          start: { dateTime: start, timeZone: 'America/Edmonton' },
-          end: { dateTime: end, timeZone: 'America/Edmonton' },
+          start: { dateTime: start, timeZone: AB_TIME_ZONE },
+          end: { dateTime: end, timeZone: AB_TIME_ZONE },
           location: location ? { displayName: location } : undefined,
         };
         const data = await graphRequest(accessToken, '/me/events', {
