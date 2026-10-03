@@ -381,7 +381,8 @@ const AuthenticatedApp = () => {
   const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/pathways-intake', '/self-register'].includes(location)
     || location.startsWith('/catering-portal')
     || location.startsWith('/employer-portal')
-    || location.startsWith('/fillable-minutes');
+    || location.startsWith('/fillable-minutes')
+    || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
   if ((isLoadingPublicSettings || isLoadingAuth) && !isPublicRoute) {
@@ -415,6 +416,9 @@ const AuthenticatedApp = () => {
 
       {/* Public QR self-registration page — standalone, no auth, no app navigation */}
       <Route path="/self-register" element={<SelfRegister />} />
+
+      {/* EmpowerU cohort application form — public link, no login required, no portal access */}
+      <Route path="/empoweru-apply/:cohortId" element={<EmpowerUPublicApplication />} />
 
       {/* Fillable minutes — public link, no login required */}
       <Route path="/fillable-minutes/:id" element={<FillableMinutesPublic />} />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Inbox, Check, X, ListOrdered } from 'lucide-react';
 import { REG_AREA_LABELS, REG_AREA_COLORS } from '@/lib/centralRegConstants';
+import EmpowerUApplicationsPanel from '@/components/empoweru/EmpowerUApplicationsPanel';
 
 const STATUS_BADGES = {
   pending: { label: 'Pending review', cls: 'bg-warning/10 text-warning' },
@@ -112,6 +113,12 @@ export default function CentralRegSelfRegRequests() {
           )}
         </div>
       )}
+
+      <div className="pt-4 border-t border-border">
+        <h2 className="text-lg font-heading font-bold text-foreground mb-1">EmpowerU Cohort Applications</h2>
+        <p className="text-muted-foreground text-sm mb-4">Applications submitted from the EmpowerU cohort registration links. Approving builds the participant profile, adds them to the cohort, and syncs them to the central database.</p>
+        <EmpowerUApplicationsPanel />
+      </div>
     </div>
   );
 }

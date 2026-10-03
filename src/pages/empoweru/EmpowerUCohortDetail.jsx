@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/rc/StatusBadge';
 import CohortFormDialog from '@/components/empoweru/CohortFormDialog';
 import RegistrationDialog from '@/components/empoweru/RegistrationDialog';
+import EmpowerUApplicationsPanel from '@/components/empoweru/EmpowerUApplicationsPanel';
 import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS, ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
 
 export default function EmpowerUCohortDetail() {
@@ -77,6 +78,8 @@ export default function EmpowerUCohortDetail() {
           {cohort.location && <p className="text-xs text-muted-foreground mt-2">Location: {cohort.location}</p>}
         </CardContent>
       </Card>
+
+      <EmpowerUApplicationsPanel cohort={cohort} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
