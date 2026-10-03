@@ -15,6 +15,9 @@ export default function EmpowerUPublicApplication() {
   const urlParams = new URLSearchParams(window.location.search);
   const prefillFirst = urlParams.get("first") || null;
   const prefillLast = urlParams.get("last") || null;
+  // Personal waitlist link (?wl=<registrationId>): ties the submission back to
+  // the waitlist entry so it moves off the waitlist on submit.
+  const waitlistRegId = urlParams.get("wl") || null;
   const [cohort, setCohort] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -51,7 +54,7 @@ export default function EmpowerUPublicApplication() {
       const response = await fetch(`/api/apps/${appParams.appId}/functions/publicEmpowerUIntake`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, cohort_id: cohortId }),
+        body: JSON.stringify({ ...form, cohort_id: cohortId, waitlist_reg_id: waitlistRegId }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
@@ -101,7 +104,13 @@ export default function EmpowerUPublicApplication() {
             <p className="text-sm text-muted-foreground">Please contact the Candora office at 780.474.5011 for more information.</p>
           </div>
         ) : (
-          <EmpowerUApplicationForm cohort={cohort} submitting={submitting} error={error} onSubmit={handleSubmit} prefilledName={prefillFirst || prefillLast ? { first: prefillFirst, last: prefillLast } : null} />
+          <EmpowerUApplicationForm cohort={cohort} submitting={submitting} error={error} onSubmit={handleSubmit} prefilledName={prefillFirst || prefillLast ? { first: prefillFirst, last: prefillLast } : null} prefill={{
+            dob: urlParams.get("dob"), gender: urlParams.get("gender"), marital: urlParams.get("marital"),
+            identify: urlParams.get("identify"), citizen: urlParams.get("citizen"), arrival: urlParams.get("arrival"),
+            origin: urlParams.get("origin"), language: urlParams.get("language"), hs: urlParams.get("hs"),
+            address: urlParams.get("address"), phone: urlParams.get("phone"), email: urlParams.get("email"),
+            emergency: urlParams.get("emergency"),
+          }} />
         )}
       </main>
     </div>

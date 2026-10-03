@@ -35,6 +35,28 @@ export default async function(req) {
       return Response.json({ ok: true, status: 'rejected' });
     }
 
+    // Approving a waitlist applicant: their participant profile and cohort
+    // registration already exist (linked via application_id) — reuse them
+    // instead of creating duplicates.
+    const existingRes = await base44.entities.EmpowerURegistration.filter({ application_id: application_id });
+    const existingList = Array.isArray(existingRes) ? existingRes : (existingRes.items || []);
+    const existingReg = existingList.find(r => r.participant_id) || null;
+
+    if (existingReg) {
+      await base44.entities.EmpowerURegistration.update(existingReg.id, {
+        status: 'registered',
+        cp_registration_form: true,
+      });
+      await base44.entities.EmpowerUApplication.update(application_id, {
+        status: 'approved',
+        participant_id: existingReg.participant_id,
+        reviewed_by_name: reviewer,
+        reviewed_date: today,
+        review_notes: review_notes || null,
+      });
+      return Response.json({ ok: true, status: 'approved', participant_id: existingReg.participant_id });
+    }
+
     // Approve: build the participant profile from the application
     const participant = await base44.entities.EmpowerUParticipant.create({
       first_name: application.first_name,

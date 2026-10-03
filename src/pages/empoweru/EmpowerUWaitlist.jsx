@@ -36,6 +36,7 @@ export default function EmpowerUWaitlist() {
       date_added: r.registration_date || null,
       phone: participant?.phone,
       email: participant?.email,
+      participant,
     };
   });
 
@@ -50,7 +51,22 @@ export default function EmpowerUWaitlist() {
       toast({ title: 'This waitlist entry has no cohort — link unavailable', variant: 'destructive' });
       return;
     }
-    const url = `${window.location.origin}/empoweru-apply/${entry.cohort_id}?first=${encodeURIComponent(entry.first_name)}&last=${encodeURIComponent(entry.last_name)}`;
+    // Personal link: everything already on file is pre-filled on the form, and
+    // the name is locked so a forwarded link can only ever be used by this
+    // person. The wl token ties the submission back to this waitlist entry.
+    const p = entry.participant || {};
+    const params = new URLSearchParams();
+    params.set('first', entry.first_name);
+    params.set('last', entry.last_name);
+    params.set('wl', entry.id);
+    const prefillFields = [
+      ['dob', p.date_of_birth], ['gender', p.gender], ['marital', p.marital_status],
+      ['identify', p.self_identification], ['citizen', p.citizenship], ['arrival', p.arrival_canada],
+      ['origin', p.country_of_origin], ['language', p.family_language], ['hs', p.high_school_completed],
+      ['address', p.address], ['phone', p.phone], ['email', p.email], ['emergency', p.emergency_contact],
+    ];
+    prefillFields.forEach(([key, value]) => { if (value) params.set(key, value); });
+    const url = `${window.location.origin}/empoweru-apply/${entry.cohort_id}?${params.toString()}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(entry.id);

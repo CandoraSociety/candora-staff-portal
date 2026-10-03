@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Denormalized cohort name"
     },
+    "application_id": {
+      "type": "string",
+      "description": "Reference to the EmpowerUApplication submitted via the participant's personal waitlist registration link \u2014 set when the application moves the registration off the waitlist; used at approval to avoid creating a duplicate participant and registration"
+    },
     "registration_date": {
       "type": "string",
       "format": "date",

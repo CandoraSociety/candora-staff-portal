@@ -102,13 +102,28 @@ function Question({ number, title, required, children }) {
 // sent out to participants. Used by the public registration link (mode:
 // live submit) and by the staff preview dialogs in the EmpowerU and Central
 // Registration portals (mode: preview).
-export default function EmpowerUApplicationForm({ cohort, previewMode = false, submitting = false, error = null, onSubmit, prefilledName = null }) {
+export default function EmpowerUApplicationForm({ cohort, previewMode = false, submitting = false, error = null, onSubmit, prefilledName = null, prefill = null }) {
   const [form, setForm] = useState(() => ({
     application_date: new Date().toISOString().split("T")[0],
     consent_agreed: false,
     website: "",
     first_name: prefilledName?.first || "",
     last_name: prefilledName?.last || "",
+    // Pre-filled from the participant's record via their personal waitlist
+    // link — editable, unlike the locked name fields.
+    date_of_birth: prefill?.dob || "",
+    gender: prefill?.gender || "",
+    marital_status: prefill?.marital || "",
+    self_identification: prefill?.identify || "",
+    citizenship: prefill?.citizen || "",
+    arrival_canada: prefill?.arrival || "",
+    country_of_origin: prefill?.origin || "",
+    family_language: prefill?.language || "",
+    high_school_completed: prefill?.hs || "",
+    address: prefill?.address || "",
+    phone: prefill?.phone || "",
+    email: prefill?.email || "",
+    emergency_contact: prefill?.emergency || "",
   }));
   const [validationError, setValidationError] = useState(null);
   const update = (field, value) => setForm(p => ({ ...p, [field]: value }));

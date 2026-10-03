@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (!cohort || !cohort.id) return Response.json({ error: 'This registration link is no longer valid' }, { status: 400 });
     if (!cohort.registration_open) return Response.json({ error: 'Registration for this cohort is currently closed' }, { status: 400 });
 
-    await base44.asServiceRole.entities.EmpowerUApplication.create({
+    const application = await base44.asServiceRole.entities.EmpowerUApplication.create({
       cohort_id: cohort.id,
       cohort_name: cohort.name || null,
       status: 'pending',
@@ -49,6 +49,34 @@ Deno.serve(async (req) => {
       photo_consent: data.photo_consent || null,
       learned_about_candora: data.learned_about_candora || null,
     });
+
+    // Personal waitlist link: move the matching waitlist entry off the
+    // waitlist the moment the form is submitted — the application becomes
+    // pending and the registration is marked as having applied. The waitlist
+    // entry is only moved when the submitted (locked) name matches, so a
+    // forwarded or tampered link can't pull someone else off the waitlist.
+    const submittedName = `${data.first_name.trim()} ${data.last_name.trim()}`.toLowerCase();
+    const nameMatches = (r) => (r.participant_name || '').trim().toLowerCase() === submittedName;
+
+    let waitlistReg = null;
+    if (data.waitlist_reg_id) {
+      const candidate = await base44.asServiceRole.entities.EmpowerURegistration.get(data.waitlist_reg_id).catch(() => null);
+      if (candidate && candidate.status === 'waitlisted' && nameMatches(candidate)) waitlistReg = candidate;
+    }
+    if (!waitlistReg) {
+      // Fallback for links without the token (or a mismatched token): match by cohort + name
+      const res = await base44.asServiceRole.entities.EmpowerURegistration.filter({ cohort_id: cohort.id, status: 'waitlisted' });
+      const list = Array.isArray(res) ? res : (res.items || []);
+      waitlistReg = list.find(nameMatches) || null;
+    }
+
+    if (waitlistReg) {
+      await base44.asServiceRole.entities.EmpowerURegistration.update(waitlistReg.id, {
+        status: 'registered',
+        application_id: application.id,
+        intake_notes: `${waitlistReg.intake_notes ? `${waitlistReg.intake_notes} ` : ''}Moved from waitlist — application submitted via the personal registration link.`,
+      });
+    }
 
     return Response.json({ success: true });
   } catch (error) {
