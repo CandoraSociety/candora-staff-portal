@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Layers, Users, Landmark, Hourglass, Menu, X, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, Layers, Users, Landmark, Hourglass, FolderOpen, Menu, X, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { path: '/empoweru/participants', label: 'Participants', icon: Users },
   { path: '/empoweru/waitlist', label: 'Waitlist', icon: Hourglass },
   { path: '/empoweru/account-setup', label: 'Account Setup', icon: Landmark },
+  { path: '/empoweru/documents', label: 'Program Documents', icon: FolderOpen },
 ];
 
 export default function EmpowerULayout() {

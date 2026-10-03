@@ -1,0 +1,62 @@
+{
+  "name": "EmpowerUDocument",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Document title shown in lists"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "participant",
+        "program"
+      ],
+      "description": "participant = a participant-specific document; program = program-wide forms and reference sheets (e.g. United Way facilitator submission, admin reference sheets)"
+    },
+    "doc_type": {
+      "type": "string",
+      "description": "Free-text document type / label (e.g. 'United Way facilitator form', 'ID copy', 'Assessment')"
+    },
+    "participant_id": {
+      "type": "string",
+      "description": "Reference to EmpowerUParticipant (participant documents only)"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Denormalized participant name"
+    },
+    "cohort_id": {
+      "type": "string",
+      "description": "Optional reference to EmpowerUCohort"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "file_uri": {
+      "type": "string",
+      "description": "Private storage URI of the uploaded file"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original uploaded file name"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Staff member who uploaded the document"
+    },
+    "uploaded_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "file_uri"
+  ]
+}

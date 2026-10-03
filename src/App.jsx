@@ -291,6 +291,7 @@ import EmpowerUParticipants from '@/pages/empoweru/EmpowerUParticipants';
 import EmpowerUWaitlist from '@/pages/empoweru/EmpowerUWaitlist';
 import EmpowerUParticipantDetail from '@/pages/empoweru/EmpowerUParticipantDetail';
 import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
+import EmpowerUDocuments from '@/pages/empoweru/EmpowerUDocuments';
 
 // Childminding Portal
 import ChildmindingLayout from '@/components/childminding/ChildmindingLayout';
@@ -690,6 +691,7 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/waitlist" element={<EmpowerUWaitlist />} />
           <Route path="/empoweru/participants/:id" element={<EmpowerUParticipantDetail />} />
           <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
+          <Route path="/empoweru/documents" element={<EmpowerUDocuments />} />
         </Route>
 
         {/* Digital Literacy Portal - standalone layout */}
