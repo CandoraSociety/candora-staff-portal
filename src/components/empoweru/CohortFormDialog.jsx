@@ -13,10 +13,22 @@ import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 
 const EMPTY = { name: '', start_date: '', end_date: '', delivery_mode: 'virtual', room: 'virtual', location: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: false, registration_deadline: '', status: 'planning', notes: '' };
 
+// Cohort names are always "EmpowerU (date range)", derived from the start/end dates.
+const fmt = (d, withYear = true) => new Date(d).toLocaleDateString('en-CA', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
+const cohortNameFromDates = (start, end) => {
+  if (!start && !end) return 'EmpowerU (dates TBD)';
+  if (start && end) {
+    const sameYear = new Date(start).getFullYear() === new Date(end).getFullYear();
+    return sameYear ? `EmpowerU (${fmt(start, false)} – ${fmt(end)})` : `EmpowerU (${fmt(start)} – ${fmt(end)})`;
+  }
+  return `EmpowerU (${fmt(start || end)})`;
+};
+
 export default function CohortFormDialog({ open, onOpenChange, cohort, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const autoName = cohortNameFromDates(form.start_date, form.end_date);
 
   useEffect(() => { setForm(cohort ? { ...cohort, ...(cohort.delivery_mode === 'virtual' ? { room: 'virtual' } : {}) } : EMPTY); }, [open, cohort]);
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
@@ -25,11 +37,12 @@ export default function CohortFormDialog({ open, onOpenChange, cohort, onSaved }
   const changeDeliveryMode = (v) => setForm(p => ({ ...p, delivery_mode: v, room: v === 'virtual' ? 'virtual' : (p.room === 'virtual' ? '' : p.room) }));
 
   const handleSave = async () => {
-    if (!form.name) { toast({ title: 'Name is required', variant: 'destructive' }); return; }
+    if (!form.start_date) { toast({ title: 'Start date is required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
-      if (cohort) await base44.entities.EmpowerUCohort.update(cohort.id, form);
-      else await base44.entities.EmpowerUCohort.create(form);
+      const payload = { ...form, name: autoName };
+      if (cohort) await base44.entities.EmpowerUCohort.update(cohort.id, payload);
+      else await base44.entities.EmpowerUCohort.create(payload);
       toast({ title: cohort ? 'Cohort updated' : 'Cohort created' });
       onSaved?.();
     } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
@@ -41,9 +54,13 @@ export default function CohortFormDialog({ open, onOpenChange, cohort, onSaved }
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{cohort ? 'Edit Cohort' : 'New Cohort'}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5 col-span-2"><Label>Cohort Name *</Label><Input value={form.name || ''} onChange={(e) => update('name', e.target.value)} placeholder="e.g. EmpowerU Fall 2026" /></div>
-          <div className="space-y-1.5"><Label>Start Date</Label><Input type="date" value={form.start_date || ''} onChange={(e) => update('start_date', e.target.value)} /></div>
+          <div className="space-y-1.5"><Label>Start Date *</Label><Input type="date" value={form.start_date || ''} onChange={(e) => update('start_date', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>End Date</Label><Input type="date" value={form.end_date || ''} onChange={(e) => update('end_date', e.target.value)} /></div>
+          <div className="space-y-1.5 col-span-2">
+            <Label>Cohort Name</Label>
+            <div className="text-sm font-medium text-foreground bg-muted rounded-md px-3 py-2">{autoName}</div>
+            <p className="text-xs text-muted-foreground">Set automatically from the dates.</p>
+          </div>
           <div className="space-y-1.5"><Label>Delivery Mode</Label><Select value={form.delivery_mode || 'virtual'} onValueChange={changeDeliveryMode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DELIVERY_MODE_OPTIONS.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Capacity</Label><Input type="number" min="1" value={form.capacity ?? 15} onChange={(e) => update('capacity', parseInt(e.target.value) || 15)} /></div>
           <div className="space-y-1.5 col-span-2"><Label>Location / Meeting Link</Label><Input value={form.location || ''} onChange={(e) => update('location', e.target.value)} /></div>
