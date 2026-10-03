@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, ClipboardPlus, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Phone, Mail, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { REGISTRATION_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
@@ -9,7 +8,7 @@ import { REGISTRATION_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib
 // One participant card for the Active/Past sections on the Participants tab.
 // Shows contact info, per-cohort program status, and the admin/progress items
 // that need attention (account setup status, pending service follow-ups).
-export default function ParticipantCard({ participant, registrations, accountSetup, followUpsNeeded, onLogService, onOpenAccountSetup }) {
+export default function ParticipantCard({ participant, registrations, accountSetup, followUpsNeeded, onOpenAccountSetup }) {
   const fullName = `${participant.first_name} ${participant.last_name}`;
   const initials = `${participant.first_name?.[0] || ''}${participant.last_name?.[0] || ''}`;
 
@@ -35,9 +34,6 @@ export default function ParticipantCard({ participant, registrations, accountSet
               </div>
             </div>
           </Link>
-          <Button size="sm" variant="outline" className="h-7 flex-shrink-0 ml-2" onClick={() => onLogService(participant, fullName)}>
-            <ClipboardPlus className="h-3.5 w-3.5" /> Log Service
-          </Button>
         </div>
 
         <div className="space-y-1">

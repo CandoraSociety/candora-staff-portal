@@ -6,7 +6,6 @@ import TestParticipantsDialog from '@/components/empoweru/TestParticipantsDialog
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import ServiceLogDialog from '@/components/empoweru/ServiceLogDialog';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
 import ParticipantCard from '@/components/empoweru/ParticipantCard';
 
@@ -18,7 +17,6 @@ const CLOSED_STATUSES = ['completed', 'withdrawn', 'declined'];
 export default function EmpowerUParticipants() {
   const [search, setSearch] = useState('');
   const [testDialogOpen, setTestDialogOpen] = useState(false);
-  const [serviceDialog, setServiceDialog] = useState(null); // { id, name }
   const [accountSetupRecord, setAccountSetupRecord] = useState(null);
   const queryClient = useQueryClient();
 
@@ -42,8 +40,6 @@ export default function EmpowerUParticipants() {
     queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] });
   };
 
-  const openLogService = (p, fullName) => setServiceDialog({ id: p.id, name: fullName });
-
   const renderCard = (p) => (
     <ParticipantCard
       key={p.id}
@@ -51,7 +47,6 @@ export default function EmpowerUParticipants() {
       registrations={regsFor(p.id)}
       accountSetup={setupFor(p.id)}
       followUpsNeeded={followUpsFor(p.id)}
-      onLogService={openLogService}
       onOpenAccountSetup={setAccountSetupRecord}
     />
   );
@@ -95,15 +90,6 @@ export default function EmpowerUParticipants() {
 
       <TestParticipantsDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} participants={participants} />
 
-      {serviceDialog && (
-        <ServiceLogDialog
-          open
-          onOpenChange={(o) => !o && setServiceDialog(null)}
-          participantId={serviceDialog.id}
-          participantName={serviceDialog.name}
-          onSaved={() => { setServiceDialog(null); invalidateAll(); }}
-        />
-      )}
       {accountSetupRecord && (
         <AccountSetupDialog
           open
