@@ -289,9 +289,7 @@ import EmpowerUCohorts from '@/pages/empoweru/EmpowerUCohorts';
 import EmpowerUCohortDetail from '@/pages/empoweru/EmpowerUCohortDetail';
 import EmpowerUParticipants from '@/pages/empoweru/EmpowerUParticipants';
 import EmpowerUParticipantDetail from '@/pages/empoweru/EmpowerUParticipantDetail';
-import EmpowerUIntake from '@/pages/empoweru/EmpowerUIntake';
 import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
-import EmpowerUServiceNav from '@/pages/empoweru/EmpowerUServiceNav';
 
 // Childminding Portal
 import ChildmindingLayout from '@/components/childminding/ChildmindingLayout';
@@ -689,9 +687,7 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/cohorts/:id" element={<EmpowerUCohortDetail />} />
           <Route path="/empoweru/participants" element={<EmpowerUParticipants />} />
           <Route path="/empoweru/participants/:id" element={<EmpowerUParticipantDetail />} />
-          <Route path="/empoweru/intake" element={<EmpowerUIntake />} />
           <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
-          <Route path="/empoweru/service-nav" element={<EmpowerUServiceNav />} />
         </Route>
 
         {/* Digital Literacy Portal - standalone layout */}
