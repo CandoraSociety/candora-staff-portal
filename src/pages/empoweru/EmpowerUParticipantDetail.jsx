@@ -6,7 +6,7 @@ import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Landmark } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import StatusBadge from '@/components/rc/StatusBadge';
 import ParticipantFormCore from '@/components/empoweru/ParticipantFormCore';
@@ -106,13 +106,11 @@ export default function EmpowerUParticipantDetail() {
       </Tabs>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setEditOpen(false)}>
-          <div className="bg-card rounded-lg max-w-2xl max-h-[90vh] overflow-y-auto w-full p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold mb-4">Edit Participant</h2>
-            <ParticipantFormCore form={editForm || {}} update={update} />
-            <div className="flex justify-end gap-2 mt-4"><Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button><Button onClick={handleSaveEdit}>Save</Button></div>
-          </div>
-        </div>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Participant</DialogTitle></DialogHeader>
+          <ParticipantFormCore form={editForm || {}} update={update} />
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button><Button onClick={handleSaveEdit}>Save</Button></div>
+        </DialogContent>
       </Dialog>
 
       <ServiceLogDialog open={serviceOpen} onOpenChange={setServiceOpen} participantId={id} participantName={fullName} onSaved={() => { setServiceOpen(false); invalidateAll(); }} />
