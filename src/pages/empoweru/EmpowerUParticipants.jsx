@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Users, History } from 'lucide-react';
+import { Search, Users, History, TestTube2 } from 'lucide-react';
+import TestParticipantsDialog from '@/components/empoweru/TestParticipantsDialog';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ServiceLogDialog from '@/components/empoweru/ServiceLogDialog';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
@@ -15,6 +17,7 @@ const CLOSED_STATUSES = ['completed', 'withdrawn', 'declined'];
 
 export default function EmpowerUParticipants() {
   const [search, setSearch] = useState('');
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const [serviceDialog, setServiceDialog] = useState(null); // { id, name }
   const [accountSetupRecord, setAccountSetupRecord] = useState(null);
   const queryClient = useQueryClient();
@@ -68,9 +71,12 @@ export default function EmpowerUParticipants() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-heading font-bold text-foreground">Participants</h1>
-        <p className="text-muted-foreground text-sm mt-1">All active and past EmpowerU participants, with program status and progress items. New profiles are created from the Intake tab.</p>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Participants</h1>
+          <p className="text-muted-foreground text-sm mt-1">All active and past EmpowerU participants, with program status and progress items. New profiles are created from the Intake tab.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setTestDialogOpen(true)}><TestTube2 className="h-4 w-4" /> Test Participants</Button>
       </div>
 
       <div className="relative max-w-md">
@@ -86,6 +92,8 @@ export default function EmpowerUParticipants() {
             'No past participants yet.', pastFiltered)}
         </>
       )}
+
+      <TestParticipantsDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} participants={participants} />
 
       {serviceDialog && (
         <ServiceLogDialog
