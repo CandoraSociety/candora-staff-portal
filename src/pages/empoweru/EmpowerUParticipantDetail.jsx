@@ -13,6 +13,7 @@ import ParticipantFormCore from '@/components/empoweru/ParticipantFormCore';
 import ServiceLogDialog from '@/components/empoweru/ServiceLogDialog';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
 import { REGISTRATION_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS, SERVICE_TYPE_LABELS } from '@/lib/empoweruConstants';
+import { formatDate, parseDateSmart } from '@/lib/dateUtils';
 
 export default function EmpowerUParticipantDetail() {
   const { id } = useParams();
@@ -74,7 +75,7 @@ export default function EmpowerUParticipantDetail() {
             <CardContent>{registrations.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No registrations</p> : (
               <div className="space-y-2">{registrations.map(r => (
                 <div key={r.id} className="flex items-center justify-between p-2 rounded-md border border-border/50">
-                  <div><Link to={`/empoweru/cohorts/${r.cohort_id}`} className="text-sm font-medium text-foreground hover:text-primary">{r.cohort_name}</Link><p className="text-xs text-muted-foreground">Registered: {new Date(r.registration_date).toLocaleDateString()}</p></div>
+                  <div><Link to={`/empoweru/cohorts/${r.cohort_id}`} className="text-sm font-medium text-foreground hover:text-primary">{r.cohort_name}</Link><p className="text-xs text-muted-foreground">Registered: {formatDate(r.registration_date)}</p></div>
                   <StatusBadge status={r.status} options={REGISTRATION_STATUS_OPTIONS} />
                 </div>
               ))}</div>
@@ -86,7 +87,7 @@ export default function EmpowerUParticipantDetail() {
             <CardContent>{accountSetups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setup records</p> : (
               <div className="space-y-2">{accountSetups.map(a => (
                 <div key={a.id} className="flex items-center justify-between p-3 rounded-md border border-border/50">
-                  <div><p className="text-sm font-medium text-foreground">{a.cohort_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.appointment_date ? ` · Appt: ${new Date(a.appointment_date).toLocaleDateString()}` : ''}</p></div>
+                  <div><p className="text-sm font-medium text-foreground">{a.cohort_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.appointment_date ? ` · Appt: ${formatDate(a.appointment_date)}` : ''}</p></div>
                   <StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
                 </div>
               ))}</div>
@@ -96,8 +97,8 @@ export default function EmpowerUParticipantDetail() {
         <TabsContent value="services">
           <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Service History</CardTitle><Button size="sm" onClick={() => setServiceOpen(true)}><Plus className="h-4 w-4" /> Log Service</Button></CardHeader>
             <CardContent>{serviceLogs.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No services logged</p> : (
-              <div className="space-y-2">{serviceLogs.sort((a, b) => new Date(b.service_date) - new Date(a.service_date)).map(s => (
-                <div key={s.id} className="p-3 rounded-md border border-border/50"><div className="flex items-center justify-between mb-1"><p className="text-sm font-medium text-foreground">{SERVICE_TYPE_LABELS[s.service_type] || s.service_type || 'Service'}</p><span className="text-xs text-muted-foreground">{new Date(s.service_date).toLocaleDateString()}</span></div>{s.description && <p className="text-sm text-muted-foreground">{s.description}</p>}</div>
+              <div className="space-y-2">{serviceLogs.sort((a, b) => parseDateSmart(b.service_date) - parseDateSmart(a.service_date)).map(s => (
+                <div key={s.id} className="p-3 rounded-md border border-border/50"><div className="flex items-center justify-between mb-1"><p className="text-sm font-medium text-foreground">{SERVICE_TYPE_LABELS[s.service_type] || s.service_type || 'Service'}</p><span className="text-xs text-muted-foreground">{formatDate(s.service_date)}</span></div>{s.description && <p className="text-sm text-muted-foreground">{s.description}</p>}</div>
               ))}</div>
             )}</CardContent>
           </Card>

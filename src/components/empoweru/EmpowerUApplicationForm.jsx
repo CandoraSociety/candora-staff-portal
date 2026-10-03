@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, Send, AlertCircle } from "lucide-react";
 import { DELIVERY_MODE_LABELS } from "@/lib/empoweruConstants";
+import { formatDate } from "@/lib/dateUtils";
 
 export const GENDER_OPTIONS = [
   { value: "female", label: "Female" },
@@ -141,7 +142,7 @@ export default function EmpowerUApplicationForm({ cohort, previewMode = false, s
           <h1 className="text-lg font-heading font-bold text-foreground">EmpowerU Application/Registration Form</h1>
           <p className="text-sm font-medium text-primary">{cohort?.name || "EmpowerU Program"}</p>
           <p className="text-sm text-muted-foreground">
-            {cohort?.start_date ? new Date(cohort.start_date).toLocaleDateString() : "TBD"} → {cohort?.end_date ? new Date(cohort.end_date).toLocaleDateString() : "TBD"}
+            {cohort?.start_date ? formatDate(cohort.start_date) : "TBD"} → {cohort?.end_date ? formatDate(cohort.end_date) : "TBD"}
             {cohort?.delivery_mode ? ` · ${DELIVERY_MODE_LABELS[cohort.delivery_mode] || cohort.delivery_mode}` : ""}
             {cohort?.location ? ` · ${cohort.location}` : ""}
           </p>

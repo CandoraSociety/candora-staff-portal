@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { Phone } from 'lucide-react';
 import { ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
+import { formatDate } from '@/lib/dateUtils';
 
 export default function AccountSetupDialog({ open, onOpenChange, record, onSaved }) {
   const { toast } = useToast();
@@ -76,7 +77,7 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
           {record && (
             <div className="col-span-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm font-medium text-amber-900">Contact Tracking</p><p className="text-xs text-amber-700">Attempts: {form.follow_up_attempts || 0}{form.last_contact_attempt_date ? ` · Last: ${new Date(form.last_contact_attempt_date).toLocaleDateString()}` : ' · Never contacted'}</p></div>
+                <div><p className="text-sm font-medium text-amber-900">Contact Tracking</p><p className="text-xs text-amber-700">Attempts: {form.follow_up_attempts || 0}{form.last_contact_attempt_date ? ` · Last: ${formatDate(form.last_contact_attempt_date)}` : ' · Never contacted'}</p></div>
                 <Button size="sm" variant="outline" onClick={handleLogContact}><Phone className="h-4 w-4" /> Log Contact</Button>
               </div>
             </div>

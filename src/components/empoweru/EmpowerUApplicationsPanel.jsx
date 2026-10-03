@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import { Link2, Copy, Eye, Check, X, Inbox } from "lucide-react";
 import EmpowerUApplicationForm from "./EmpowerUApplicationForm";
+import { formatDate } from "@/lib/dateUtils";
 
 const APP_STATUSES = {
   pending: { label: "Awaiting approval", cls: "bg-warning/10 text-warning" },
@@ -77,7 +78,7 @@ export default function EmpowerUApplicationsPanel({ cohort }) {
           <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
             {a.phone && <span>{a.phone}</span>}
             {a.email && <span>{a.email}</span>}
-            <span>Applied {a.application_date ? new Date(a.application_date).toLocaleDateString() : ""}</span>
+            <span>Applied {a.application_date ? formatDate(a.application_date) : ""}</span>
             {a.status !== "pending" && a.reviewed_by_name && <span>Reviewed by {a.reviewed_by_name}</span>}
           </div>
         </div>

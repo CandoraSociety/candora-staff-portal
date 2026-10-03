@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import StatusBadge from '@/components/rc/StatusBadge';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
 import { ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
+import { formatDate, parseDateSmart } from '@/lib/dateUtils';
 
 export default function EmpowerUAccountSetup() {
   const [cohortFilter, setCohortFilter] = useState('all');
@@ -29,7 +30,7 @@ export default function EmpowerUAccountSetup() {
   const counts = ACCOUNT_SETUP_STATUS_OPTIONS.map(s => ({ ...s, count: accountSetups.filter(a => a.status === s.value).length }));
   const needsAttention = accountSetups.filter(a => {
     if (['completed', 'declined'].includes(a.status)) return false;
-    if (a.next_action_date && new Date(a.next_action_date) < now) return true;
+    if (a.next_action_date && parseDateSmart(a.next_action_date) < now) return true;
     if ((a.follow_up_attempts || 0) >= 3 && a.status === 'contacting') return true;
     return false;
   });
@@ -72,11 +73,11 @@ export default function EmpowerUAccountSetup() {
       (
         <div className="space-y-2">
           {filtered.sort((a, b) => {
-            const aDate = a.next_action_date ? new Date(a.next_action_date) : new Date(9999, 0, 1);
-            const bDate = b.next_action_date ? new Date(b.next_action_date) : new Date(9999, 0, 1);
+            const aDate = parseDateSmart(a.next_action_date) || new Date(9999, 0, 1);
+            const bDate = parseDateSmart(b.next_action_date) || new Date(9999, 0, 1);
             return aDate - bDate;
           }).map(a => {
-            const isOverdue = a.next_action_date && new Date(a.next_action_date) < now && !['completed', 'declined'].includes(a.status);
+            const isOverdue = a.next_action_date && parseDateSmart(a.next_action_date) < now && !['completed', 'declined'].includes(a.status);
             const isHighAttempts = (a.follow_up_attempts || 0) >= 3 && a.status === 'contacting';
             return (
               <Card key={a.id} className={`hover:shadow-sm transition-shadow ${(isOverdue || isHighAttempts) ? 'border-amber-300' : ''}`}>
@@ -86,9 +87,9 @@ export default function EmpowerUAccountSetup() {
                     <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
                       <span>{a.cohort_name}</span>
                       {a.follow_up_attempts > 0 && <span className="flex items-center gap-0.5" style={{ color: getAttemptsColor(a.follow_up_attempts) }}><Phone className="h-3 w-3" /> {a.follow_up_attempts} attempts</span>}
-                      {a.last_contact_attempt_date && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {new Date(a.last_contact_attempt_date).toLocaleDateString()}</span>}
-                      {a.next_action_date && <span className={isOverdue ? 'text-red-600 font-medium' : ''}>Due: {new Date(a.next_action_date).toLocaleDateString()}</span>}
-                      {a.appointment_date && <span>Appt: {new Date(a.appointment_date).toLocaleDateString()}</span>}
+                      {a.last_contact_attempt_date && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {formatDate(a.last_contact_attempt_date)}</span>}
+                      {a.next_action_date && <span className={isOverdue ? 'text-red-600 font-medium' : ''}>Due: {formatDate(a.next_action_date)}</span>}
+                      {a.appointment_date && <span>Appt: {formatDate(a.appointment_date)}</span>}
                     </div>
                   </div>
                   <Button size="icon" variant="ghost" className="h-7 w-7 flex-shrink-0" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>

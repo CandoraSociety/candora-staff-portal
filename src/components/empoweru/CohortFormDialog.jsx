@@ -10,15 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { COHORT_STATUS_OPTIONS, DELIVERY_MODE_OPTIONS } from '@/lib/empoweruConstants';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import { parseDateSmart } from '@/lib/dateUtils';
 
 const EMPTY = { name: '', start_date: '', end_date: '', delivery_mode: 'virtual', room: 'virtual', location: '', facilitator_name: '', facilitator_email: '', facilitator_phone: '', capacity: 15, registration_open: false, registration_deadline: '', status: 'planning', notes: '' };
 
 // Cohort names are always "EmpowerU (date range)", derived from the start/end dates.
-const fmt = (d, withYear = true) => new Date(d).toLocaleDateString('en-CA', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
+const fmt = (d, withYear = true) => { const dt = parseDateSmart(d); return dt ? dt.toLocaleDateString('en-CA', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) }) : 'TBD'; };
 const cohortNameFromDates = (start, end) => {
   if (!start && !end) return 'EmpowerU (dates TBD)';
   if (start && end) {
-    const sameYear = new Date(start).getFullYear() === new Date(end).getFullYear();
+    const sameYear = parseDateSmart(start)?.getFullYear() === parseDateSmart(end)?.getFullYear();
     return sameYear ? `EmpowerU (${fmt(start, false)} – ${fmt(end)})` : `EmpowerU (${fmt(start)} – ${fmt(end)})`;
   }
   return `EmpowerU (${fmt(start || end)})`;

@@ -6,6 +6,7 @@ import { Layers, Users, UserPlus, Landmark, AlertCircle, ArrowRight, Clock } fro
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { COHORT_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
+import { formatDate, parseDateSmart } from '@/lib/dateUtils';
 
 export default function EmpowerUDashboard() {
   const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
@@ -20,7 +21,7 @@ export default function EmpowerUDashboard() {
   const now = new Date();
   const needsAttention = accountSetups.filter(a => {
     if (['completed', 'declined'].includes(a.status)) return false;
-    if (a.next_action_date && new Date(a.next_action_date) < now) return true;
+    if (a.next_action_date && parseDateSmart(a.next_action_date) < now) return true;
     if ((a.follow_up_attempts || 0) >= 3 && a.status === 'contacting') return true;
     return false;
   });
@@ -66,9 +67,9 @@ export default function EmpowerUDashboard() {
           <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Active &amp; Upcoming Cohorts</CardTitle><Link to="/empoweru/cohorts" className="text-xs text-primary flex items-center gap-1 hover:underline">View all <ArrowRight className="h-3 w-3" /></Link></CardHeader>
           <CardContent>
             {activeCohorts.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No active cohorts</p> : (
-              <div className="space-y-2">{activeCohorts.sort((a, b) => new Date(a.start_date || '9999') - new Date(b.start_date || '9999')).slice(0, 5).map(c => (
+              <div className="space-y-2">{activeCohorts.sort((a, b) => (parseDateSmart(a.start_date)?.getTime() ?? Infinity) - (parseDateSmart(b.start_date)?.getTime() ?? Infinity)).slice(0, 5).map(c => (
                 <Link key={c.id} to={`/empoweru/cohorts/${c.id}`} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                  <div><p className="text-sm font-medium text-foreground">{c.name}</p><p className="text-xs text-muted-foreground">{c.start_date ? new Date(c.start_date).toLocaleDateString() : 'TBD'} · {c.facilitator_name || 'No facilitator'}</p></div>
+                  <div><p className="text-sm font-medium text-foreground">{c.name}</p><p className="text-xs text-muted-foreground">{c.start_date ? formatDate(c.start_date) : 'TBD'} · {c.facilitator_name || 'No facilitator'}</p></div>
                   <StatusBadge status={c.status} options={COHORT_STATUS_OPTIONS} />
                 </Link>
               ))}</div>
@@ -81,7 +82,7 @@ export default function EmpowerUDashboard() {
             {apptsInProgress.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setups in progress</p> : (
               <div className="space-y-2">{apptsInProgress.slice(0, 5).map(a => (
                 <div key={a.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                  <div><p className="text-sm font-medium text-foreground">{a.participant_name}</p><p className="text-xs text-muted-foreground flex items-center gap-1">{a.follow_up_attempts > 0 && <><Clock className="h-3 w-3" /> {a.follow_up_attempts} attempts</>}{a.next_action_date && <span className={new Date(a.next_action_date) < now ? 'text-red-600 font-medium' : ''}>Due: {new Date(a.next_action_date).toLocaleDateString()}</span>}</p></div>
+                  <div><p className="text-sm font-medium text-foreground">{a.participant_name}</p><p className="text-xs text-muted-foreground flex items-center gap-1">{a.follow_up_attempts > 0 && <><Clock className="h-3 w-3" /> {a.follow_up_attempts} attempts</>}{a.next_action_date && <span className={parseDateSmart(a.next_action_date) < now ? 'text-red-600 font-medium' : ''}>Due: {formatDate(a.next_action_date)}</span>}</p></div>
                   <StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
                 </div>
               ))}</div>

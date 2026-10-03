@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ServiceLogDialog from '@/components/empoweru/ServiceLogDialog';
 import { SERVICE_TYPE_OPTIONS, SERVICE_TYPE_LABELS } from '@/lib/empoweruConstants';
+import { formatDate } from '@/lib/dateUtils';
 
 export default function EmpowerUServiceNav() {
   const [search, setSearch] = useState('');
@@ -38,10 +39,10 @@ export default function EmpowerUServiceNav() {
       (
         <div className="space-y-2">{filtered.map(l => (
           <Card key={l.id} className="hover:shadow-sm transition-shadow"><CardContent className="p-3">
-            <div className="flex items-center justify-between mb-1"><p className="font-medium text-sm text-foreground">{l.participant_name}</p><span className="text-xs text-muted-foreground">{new Date(l.service_date).toLocaleDateString()}</span></div>
+            <div className="flex items-center justify-between mb-1"><p className="font-medium text-sm text-foreground">{l.participant_name}</p><span className="text-xs text-muted-foreground">{formatDate(l.service_date)}</span></div>
             <p className="text-xs text-muted-foreground mb-1">{SERVICE_TYPE_LABELS[l.service_type] || l.service_type}{l.worker_name ? ` · ${l.worker_name}` : ''}{l.cohort_name ? ` · ${l.cohort_name}` : ''}</p>
             {l.description && <p className="text-sm text-foreground">{l.description}</p>}
-            {l.follow_up_needed && <p className="text-xs text-amber-600 mt-1">Follow-up needed{l.follow_up_date ? `: ${new Date(l.follow_up_date).toLocaleDateString()}` : ''}</p>}
+            {l.follow_up_needed && <p className="text-xs text-amber-600 mt-1">Follow-up needed{l.follow_up_date ? `: ${formatDate(l.follow_up_date)}` : ''}</p>}
           </CardContent></Card>
         ))}</div>
       )}

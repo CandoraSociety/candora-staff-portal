@@ -12,6 +12,7 @@ import CohortFormDialog from '@/components/empoweru/CohortFormDialog';
 import RegistrationDialog from '@/components/empoweru/RegistrationDialog';
 import EmpowerUApplicationsPanel from '@/components/empoweru/EmpowerUApplicationsPanel';
 import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS, ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
+import { formatDate } from '@/lib/dateUtils';
 
 export default function EmpowerUCohortDetail() {
   const { id } = useParams();
@@ -66,7 +67,7 @@ export default function EmpowerUCohortDetail() {
       <Card>
         <CardContent className="p-5">
           <div className="flex items-start justify-between mb-3">
-            <div><h1 className="text-xl font-heading font-bold text-foreground">{cohort.name}</h1><p className="text-sm text-muted-foreground mt-0.5">{cohort.start_date ? new Date(cohort.start_date).toLocaleDateString() : 'TBD'} → {cohort.end_date ? new Date(cohort.end_date).toLocaleDateString() : 'TBD'}</p></div>
+            <div><h1 className="text-xl font-heading font-bold text-foreground">{cohort.name}</h1><p className="text-sm text-muted-foreground mt-0.5">{cohort.start_date ? formatDate(cohort.start_date) : 'TBD'} → {cohort.end_date ? formatDate(cohort.end_date) : 'TBD'}</p></div>
             <StatusBadge status={cohort.status} options={COHORT_STATUS_OPTIONS} />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -89,7 +90,7 @@ export default function EmpowerUCohortDetail() {
           {registrations.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No registrations yet</p> : (
             <div className="space-y-2">{registrations.map(r => (
               <div key={r.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                <Link to={`/empoweru/participants/${r.participant_id}`} className="flex-1 min-w-0"><p className="text-sm font-medium text-foreground hover:text-primary truncate">{r.participant_name}</p><p className="text-xs text-muted-foreground">Registered: {new Date(r.registration_date).toLocaleDateString()}{r.accommodation_needs ? ` · ${r.accommodation_needs}` : ''}</p></Link>
+                <Link to={`/empoweru/participants/${r.participant_id}`} className="flex-1 min-w-0"><p className="text-sm font-medium text-foreground hover:text-primary truncate">{r.participant_name}</p><p className="text-xs text-muted-foreground">Registered: {formatDate(r.registration_date)}{r.accommodation_needs ? ` · ${r.accommodation_needs}` : ''}</p></Link>
                 <Select value={r.status} onValueChange={(v) => handleStatusChange(r.id, v)}>
                   <SelectTrigger className="w-32 h-7 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>{REGISTRATION_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
@@ -109,7 +110,7 @@ export default function EmpowerUCohortDetail() {
           {accountSetups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setup records. Click "Generate Missing" to create them for enrolled participants.</p> : (
             <div className="space-y-2">{accountSetups.map(a => (
               <Link key={a.id} to="/empoweru/account-setup" className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                <div><p className="text-sm font-medium text-foreground">{a.participant_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.next_action_date ? ` · Due: ${new Date(a.next_action_date).toLocaleDateString()}` : ''}</p></div>
+                <div><p className="text-sm font-medium text-foreground">{a.participant_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.next_action_date ? ` · Due: ${formatDate(a.next_action_date)}` : ''}</p></div>
                 <StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
               </Link>
             ))}</div>

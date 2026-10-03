@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import CohortFormDialog from '@/components/empoweru/CohortFormDialog';
 import { COHORT_STATUS_OPTIONS, DELIVERY_MODE_LABELS } from '@/lib/empoweruConstants';
+import { formatDate } from '@/lib/dateUtils';
 
 export default function EmpowerUCohorts() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -41,7 +42,7 @@ export default function EmpowerUCohorts() {
                   <div className="flex items-center gap-1 ml-2"><StatusBadge status={c.status} options={COHORT_STATUS_OPTIONS} /><Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(c)}><Pencil className="h-3 w-3" /></Button></div>
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  <p>{c.start_date ? new Date(c.start_date).toLocaleDateString() : 'TBD'} → {c.end_date ? new Date(c.end_date).toLocaleDateString() : 'TBD'}</p>
+                  <p>{c.start_date ? formatDate(c.start_date) : 'TBD'} → {c.end_date ? formatDate(c.end_date) : 'TBD'}</p>
                   <p>{DELIVERY_MODE_LABELS[c.delivery_mode] || c.delivery_mode}{c.location ? ` · ${c.location}` : ''}</p>
                   {c.facilitator_name && <p>Facilitator: {c.facilitator_name}</p>}
                   <p>Enrolled: {getRegCount(c.id, 'enrolled')} / {c.capacity} · Waitlist: {getRegCount(c.id, 'waitlisted')} · Registered: {getRegCount(c.id, 'registered')}</p>

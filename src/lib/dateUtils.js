@@ -42,3 +42,13 @@ export function daysUntilDueLocal(dueDateStr) {
   const today = startOfTodayLocal();
   return Math.round((due - today) / (1000 * 60 * 60 * 24));
 }
+
+/**
+ * Format a date-only ("YYYY-MM-DD") or datetime string for display.
+ * Parsed as LOCAL time (never UTC) so date-only values never shift
+ * by a day in negative-UTC timezones like Edmonton.
+ */
+export function formatDate(dateStr, opts) {
+  const d = parseDateSmart(dateStr);
+  return d ? d.toLocaleDateString(undefined, opts) : '';
+}
