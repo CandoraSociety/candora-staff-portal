@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Layers, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,7 @@ export default function EmpowerUCohorts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: cohorts = [], isLoading } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list('-start_date') });
   const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations'], queryFn: () => base44.entities.EmpowerURegistration.list() });
@@ -35,11 +36,11 @@ export default function EmpowerUCohorts() {
       (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {cohorts.map(c => (
-            <Card key={c.id} className="hover:shadow-md transition-shadow">
+            <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/empoweru/cohorts/${c.id}`)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <Link to={`/empoweru/cohorts/${c.id}`} className="min-w-0 flex-1"><p className="font-medium text-sm text-foreground hover:text-primary truncate">{c.name}</p></Link>
-                  <div className="flex items-center gap-1 ml-2"><StatusBadge status={c.status} options={COHORT_STATUS_OPTIONS} /><Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(c)}><Pencil className="h-3 w-3" /></Button></div>
+                  <p className="min-w-0 flex-1 font-medium text-sm text-foreground truncate">{c.name}</p>
+                  <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}><StatusBadge status={c.status} options={COHORT_STATUS_OPTIONS} /><Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(c)}><Pencil className="h-3 w-3" /></Button></div>
                 </div>
                 <div className="space-y-1 text-xs text-muted-foreground">
                   <p>{c.start_date ? formatDate(c.start_date) : 'TBD'} → {c.end_date ? formatDate(c.end_date) : 'TBD'}</p>
