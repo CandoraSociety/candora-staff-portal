@@ -67,6 +67,9 @@ export default async function(req) {
       registration_date: today,
       status: 'registered',
       intake_notes: 'Registered via the public application form.',
+      // The Registration Form completion checkpoint is automatically satisfied —
+      // the participant entered through the cohort registration form.
+      cp_registration_form: true,
     });
 
     await base44.entities.EmpowerUApplication.update(application_id, {

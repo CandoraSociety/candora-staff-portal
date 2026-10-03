@@ -60,6 +60,95 @@
     },
     "notes": {
       "type": "string"
+    },
+    "cp_registration_form": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Registration Form (auto-marked complete when a public-link application is approved)"
+    },
+    "cp_qualtrics": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Qualtrics: mandatory United Way/EmpowerU online registration/data-entry step completed before the participant begins the program"
+    },
+    "cp_binder": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Binder received/set up"
+    },
+    "cp_pre_asset_map": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Pre-Asset Map completed"
+    },
+    "cp_post_asset_map": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Post-Asset Map completed"
+    },
+    "cp_post_questionnaire": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Post-Questionnaire completed"
+    },
+    "cp_completion_form": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Program Completion Form completed"
+    },
+    "cp_asset_description": {
+      "type": "boolean",
+      "default": false,
+      "description": "Completion checkpoint \u2014 Asset Description Form completed"
+    },
+    "ambassador_name": {
+      "type": "string",
+      "description": "Informational \u2014 assigned one-to-one financial coach / EmpowerU ambassador"
+    },
+    "bank_account_opened": {
+      "type": "boolean",
+      "default": false,
+      "description": "Informational \u2014 savings bank account opened"
+    },
+    "bank_representative": {
+      "type": "string",
+      "description": "Informational \u2014 bank representative name"
+    },
+    "bank_representative_phone": {
+      "type": "string",
+      "description": "Informational \u2014 bank representative phone"
+    },
+    "bank_representative_email": {
+      "type": "string",
+      "description": "Informational \u2014 bank representative email"
+    },
+    "bank": {
+      "type": "string",
+      "description": "Informational \u2014 bank/branch"
+    },
+    "account_type": {
+      "type": "string",
+      "description": "Informational \u2014 account type"
+    },
+    "savings_goal": {
+      "type": "string",
+      "description": "Informational \u2014 participant's savings goal"
+    },
+    "atb_amount": {
+      "type": "number",
+      "description": "Informational \u2014 $ ATB (manually edited; meaning not yet formally defined)"
+    },
+    "saved_amount": {
+      "type": "number",
+      "description": "Informational \u2014 $ Saved (manually edited)"
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "Informational \u2014 Total (manually edited; not auto-calculated until the relationship between $ ATB, $ Saved and Total is formally defined)"
+    },
+    "progress_notes": {
+      "type": "string",
+      "description": "Participant-specific operational notes, outstanding issues, exceptions or follow-up information for this cohort"
     }
   },
   "required": [
