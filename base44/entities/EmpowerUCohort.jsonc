@@ -24,7 +24,7 @@
         "hybrid"
       ],
       "default": "virtual",
-      "description": "How the program is delivered"
+      "description": "How the program is delivered \u2014 when 'virtual', the room is always set to Virtual automatically"
     },
     "location": {
       "type": "string",
@@ -41,7 +41,7 @@
         "virtual",
         "other"
       ],
-      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Echo Valley, Virtual, or Other space)"
+      "description": "Assigned room (Large Classroom, Small Classroom, Employment Classroom, ARC, Echo Valley, Virtual, or Other space) \u2014 always 'virtual' when delivery mode is Virtual"
     },
     "facilitator_name": {
       "type": "string",
@@ -61,7 +61,7 @@
     "registration_open": {
       "type": "boolean",
       "default": false,
-      "description": "Whether registration is currently open"
+      "description": "Whether registration is currently open \u2014 the single toggle that opens/closes the public registration link (there is no separate 'Registration Open' status)"
     },
     "registration_deadline": {
       "type": "string",
@@ -72,7 +72,6 @@
       "type": "string",
       "enum": [
         "planning",
-        "registration_open",
         "in_progress",
         "completed",
         "cancelled"

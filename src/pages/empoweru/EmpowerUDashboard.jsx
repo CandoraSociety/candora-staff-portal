@@ -12,7 +12,7 @@ export default function EmpowerUDashboard() {
   const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations'], queryFn: () => base44.entities.EmpowerURegistration.list() });
   const { data: accountSetups = [] } = useQuery({ queryKey: ['empoweru-account-setups'], queryFn: () => base44.entities.EmpowerUAccountSetup.list() });
 
-  const activeCohorts = cohorts.filter(c => ['registration_open', 'in_progress'].includes(c.status));
+  const activeCohorts = cohorts.filter(c => c.registration_open || c.status === 'in_progress');
   const waitlisted = registrations.filter(r => r.status === 'waitlisted');
   const enrolled = registrations.filter(r => r.status === 'enrolled');
   const apptsInProgress = accountSetups.filter(a => !['completed', 'declined', 'participant_unresponsive'].includes(a.status));

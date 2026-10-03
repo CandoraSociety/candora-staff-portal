@@ -1,6 +1,5 @@
 export const COHORT_STATUS_OPTIONS = [
   { value: 'planning', label: 'Planning', color: '#64748b' },
-  { value: 'registration_open', label: 'Registration Open', color: '#22c55e' },
   { value: 'in_progress', label: 'In Progress', color: '#3b82f6' },
   { value: 'completed', label: 'Completed', color: '#8b5cf6' },
   { value: 'cancelled', label: 'Cancelled', color: '#ef4444' },
