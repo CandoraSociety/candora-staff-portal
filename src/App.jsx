@@ -14,6 +14,7 @@ import { TabProvider } from '@/lib/tabContext';
 import VolunteerPortal from '@/pages/portal/VolunteerPortal';
 import StaffPortal from '@/pages/portal/StaffPortal';
 import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
+import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication';
 import SelfRegister from '@/pages/portal/SelfRegister';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 

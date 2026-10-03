@@ -1,14 +1,42 @@
 {
-  "name": "EmpowerUParticipant",
+  "name": "EmpowerUApplication",
   "type": "object",
   "properties": {
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to the EmpowerUCohort this application was submitted for (via the cohort's public registration link)"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "pending = submitted via the public link, awaiting staff approval; approved = participant profile built and added to the cohort (synced to the central database); rejected = declined"
+    },
+    "application_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Today's date entered by the applicant"
+    },
+    "consent_agreed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Applicant read and accepted the Release of Information disclosure (FOIP / HIA)"
+    },
     "first_name": {
       "type": "string",
-      "description": "Participant's first name"
+      "description": "First name (as shown in ID)"
     },
     "last_name": {
       "type": "string",
-      "description": "Participant's last name"
+      "description": "Last name (as shown in ID)"
     },
     "date_of_birth": {
       "type": "string",
@@ -42,7 +70,7 @@
         "person_with_disabilities",
         "na"
       ],
-      "description": "Identifies as: Indigenous / Immigrant / Person with disabilities / N/A"
+      "description": "I identify myself as: Indigenous / Immigrant / Person with disabilities / N/A"
     },
     "citizenship": {
       "type": "string",
@@ -79,33 +107,19 @@
         "prefer_not_to_answer"
       ]
     },
+    "address": {
+      "type": "string",
+      "description": "Full address including unit/house number, street, city and postal code"
+    },
     "phone": {
       "type": "string"
     },
     "email": {
       "type": "string"
     },
-    "address": {
-      "type": "string"
-    },
-    "city": {
-      "type": "string"
-    },
-    "postal_code": {
-      "type": "string"
-    },
-    "preferred_language": {
-      "type": "string"
-    },
     "emergency_contact": {
       "type": "string",
-      "description": "Emergency contact name and number (from application form)"
-    },
-    "emergency_contact_name": {
-      "type": "string"
-    },
-    "emergency_contact_phone": {
-      "type": "string"
+      "description": "Emergency contact name and number"
     },
     "referral_organization": {
       "type": "string",
@@ -129,19 +143,24 @@
         "referred_by_agency"
       ]
     },
-    "application_id": {
+    "participant_id": {
       "type": "string",
-      "description": "Reference to the EmpowerUApplication this profile was built from (if registered via the public form)"
+      "description": "Reference to the EmpowerUParticipant created when the application was approved"
     },
-    "referral_source": {
+    "reviewed_by_name": {
       "type": "string",
-      "description": "How they heard about EmpowerU"
+      "description": "Staff member who approved/rejected the application"
     },
-    "notes": {
+    "reviewed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "review_notes": {
       "type": "string"
     }
   },
   "required": [
+    "cohort_id",
     "first_name",
     "last_name"
   ]
