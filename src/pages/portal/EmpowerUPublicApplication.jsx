@@ -10,6 +10,11 @@ const CANDORA_LOGO_URL = "https://media.base44.com/images/public/6a249282cb49657
 // link. Completely standalone: no login, no navigation into the portal.
 export default function EmpowerUPublicApplication() {
   const { cohortId } = useParams();
+  // Personal link pre-fill (?first=&last=): the name is locked so a forwarded
+  // link can only ever submit the intended person's application.
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefillFirst = urlParams.get("first") || null;
+  const prefillLast = urlParams.get("last") || null;
   const [cohort, setCohort] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -96,7 +101,7 @@ export default function EmpowerUPublicApplication() {
             <p className="text-sm text-muted-foreground">Please contact the Candora office at 780.474.5011 for more information.</p>
           </div>
         ) : (
-          <EmpowerUApplicationForm cohort={cohort} submitting={submitting} error={error} onSubmit={handleSubmit} />
+          <EmpowerUApplicationForm cohort={cohort} submitting={submitting} error={error} onSubmit={handleSubmit} prefilledName={prefillFirst || prefillLast ? { first: prefillFirst, last: prefillLast } : null} />
         )}
       </main>
     </div>

@@ -288,6 +288,7 @@ import EmpowerUDashboard from '@/pages/empoweru/EmpowerUDashboard';
 import EmpowerUCohorts from '@/pages/empoweru/EmpowerUCohorts';
 import EmpowerUCohortDetail from '@/pages/empoweru/EmpowerUCohortDetail';
 import EmpowerUParticipants from '@/pages/empoweru/EmpowerUParticipants';
+import EmpowerUWaitlist from '@/pages/empoweru/EmpowerUWaitlist';
 import EmpowerUParticipantDetail from '@/pages/empoweru/EmpowerUParticipantDetail';
 import EmpowerUAccountSetup from '@/pages/empoweru/EmpowerUAccountSetup';
 
@@ -686,6 +687,7 @@ const AuthenticatedApp = () => {
           <Route path="/empoweru/cohorts" element={<EmpowerUCohorts />} />
           <Route path="/empoweru/cohorts/:id" element={<EmpowerUCohortDetail />} />
           <Route path="/empoweru/participants" element={<EmpowerUParticipants />} />
+          <Route path="/empoweru/waitlist" element={<EmpowerUWaitlist />} />
           <Route path="/empoweru/participants/:id" element={<EmpowerUParticipantDetail />} />
           <Route path="/empoweru/account-setup" element={<EmpowerUAccountSetup />} />
         </Route>

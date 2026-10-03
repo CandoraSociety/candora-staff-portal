@@ -102,8 +102,14 @@ function Question({ number, title, required, children }) {
 // sent out to participants. Used by the public registration link (mode:
 // live submit) and by the staff preview dialogs in the EmpowerU and Central
 // Registration portals (mode: preview).
-export default function EmpowerUApplicationForm({ cohort, previewMode = false, submitting = false, error = null, onSubmit }) {
-  const [form, setForm] = useState(() => ({ application_date: new Date().toISOString().split("T")[0], consent_agreed: false, website: "" }));
+export default function EmpowerUApplicationForm({ cohort, previewMode = false, submitting = false, error = null, onSubmit, prefilledName = null }) {
+  const [form, setForm] = useState(() => ({
+    application_date: new Date().toISOString().split("T")[0],
+    consent_agreed: false,
+    website: "",
+    first_name: prefilledName?.first || "",
+    last_name: prefilledName?.last || "",
+  }));
   const [validationError, setValidationError] = useState(null);
   const update = (field, value) => setForm(p => ({ ...p, [field]: value }));
 
@@ -174,10 +180,10 @@ export default function EmpowerUApplicationForm({ cohort, previewMode = false, s
               <Input type="date" value={form.date_of_birth || ""} onChange={e => update("date_of_birth", e.target.value)} />
             </Question>
             <Question number={3} title="First Name (as shown in your ID)" required>
-              <Input value={form.first_name || ""} onChange={e => update("first_name", e.target.value)} placeholder="First name" />
+              <Input value={form.first_name || ""} onChange={e => update("first_name", e.target.value)} placeholder="First name" readOnly={!!prefilledName} className={prefilledName ? "bg-muted cursor-not-allowed" : ""} />
             </Question>
             <Question number={4} title="Last name (as shown in your ID)" required>
-              <Input value={form.last_name || ""} onChange={e => update("last_name", e.target.value)} placeholder="Last name" />
+              <Input value={form.last_name || ""} onChange={e => update("last_name", e.target.value)} placeholder="Last name" readOnly={!!prefilledName} className={prefilledName ? "bg-muted cursor-not-allowed" : ""} />
             </Question>
           </div>
 
