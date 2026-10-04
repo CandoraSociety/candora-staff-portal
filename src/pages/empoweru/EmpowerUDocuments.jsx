@@ -13,23 +13,27 @@ import DocumentUploadDialog from '@/components/empoweru/DocumentUploadDialog';
 //  - Participant Documents: participant-specific files (ID copies, assessments, forms)
 //  - Program Forms: program-wide documents like the United Way facilitator
 //    submission and reference sheets for admin staff.
+const itemsOf = (res) => Array.isArray(res) ? res : (res?.items || []);
+
 export default function EmpowerUDocuments() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('participant');
   const [search, setSearch] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const { data: participants = [] } = useQuery({ queryKey: ['empoweru-participants-all'], queryFn: () => base44.entities.EmpowerUParticipant.filter({}, { limit: 200, sort: 'last_name' }) });
-  const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.filter({}, { limit: 100, sort: '-created_date' }) });
+  const { data: participantsData } = useQuery({ queryKey: ['empoweru-participants-all'], queryFn: () => base44.entities.EmpowerUParticipant.filter({}, { limit: 200, sort: 'last_name' }) });
+  const { data: cohortsData } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.filter({}, { limit: 100, sort: '-created_date' }) });
+  const participants = itemsOf(participantsData);
+  const cohorts = itemsOf(cohortsData);
 
-  const docQuery = (category) => {
+  const docQuery = async (category) => {
     const q = { category };
     const term = search.trim();
     if (term) {
       const rx = { $regex: term, $options: 'i' };
       q.$or = [{ title: rx }, { doc_type: rx }, { file_name: rx }, { participant_name: rx }, { cohort_name: rx }];
     }
-    return base44.entities.EmpowerUDocument.filter(q, { sort: '-created_date', limit: 100 });
+    return itemsOf(await base44.entities.EmpowerUDocument.filter(q, { sort: '-created_date', limit: 100 }));
   };
 
   const participantDocs = useQuery({ queryKey: ['empoweru-documents', 'participant', search], queryFn: () => docQuery('participant') });
