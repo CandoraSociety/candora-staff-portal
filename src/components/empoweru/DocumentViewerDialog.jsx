@@ -50,16 +50,23 @@ export default function DocumentViewerDialog({ doc, open, onOpenChange }) {
     if (IMAGE_EXTS.includes(ext)) {
       return <img src={url} alt={doc.title} className="mx-auto max-w-full max-h-[70dvh] object-contain" />;
     }
-    const officeSrc = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
-    const fallbackSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-    const src = OFFICE_EXTS.includes(ext) ? officeSrc : fallbackSrc;
+    if (ext === 'pdf') {
+      // Browsers render PDFs natively — no external viewer needed
+      return <iframe src={url} title={doc.title} className="w-full h-[70dvh] rounded-md border bg-white" />;
+    }
+    if (OFFICE_EXTS.includes(ext)) {
+      // Microsoft's embedded Office viewer — no sandbox attribute: it nests
+      // frames and postMessages that a sandboxed iframe silently blocks
+      const src = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+      return <iframe src={src} title={doc.title} className="w-full h-[70dvh] rounded-md border bg-white" />;
+    }
     return (
-      <iframe
-        src={src}
-        title={doc.title}
-        className="w-full h-[70dvh] rounded-md border bg-white"
-        sandbox="allow-scripts allow-same-origin allow-popups"
-      />
+      <div className="flex flex-col items-center gap-3 py-10 text-center">
+        <p className="text-sm text-muted-foreground">This file type can't be previewed in the app.</p>
+        <Button variant="outline" size="sm" className="gap-1" onClick={() => window.open(url, '_blank')}>
+          <Download className="h-4 w-4" /> Download file
+        </Button>
+      </div>
     );
   };
 
