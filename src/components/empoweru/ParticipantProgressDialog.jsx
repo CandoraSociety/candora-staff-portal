@@ -30,11 +30,12 @@ function CheckpointRow({ label, done, onToggle }) {
 }
 
 // Informational (non-milestone) text/currency field — inline input, saves on blur.
-function InfoField({ label, field, type = 'text', form, onCommit }) {
+function InfoField({ label, hint, field, type = 'text', form, onCommit }) {
   const value = form?.[field];
   return (
     <div className="space-y-1">
       <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      {hint && <p className="text-[10px] leading-tight text-muted-foreground/80 -mt-0.5">{hint}</p>}
       <div className="relative">
         {type === 'currency' && <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>}
         <Input
@@ -144,9 +145,9 @@ export default function ParticipantProgressDialog({ open, onOpenChange, registra
             <span className="text-sm text-foreground">Bank Account Opened</span>
           </button>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <InfoField label="Ambassador Name" field="ambassador_name" form={form} onCommit={commitInfo} />
-            <InfoField label="Savings Goal" field="savings_goal" form={form} onCommit={commitInfo} />
             <InfoField label="Bank Representative" field="bank_representative" form={form} onCommit={commitInfo} />
+            <InfoField label="Ambassador Name" hint="ATB/EmpowerU Ambassador for the participant's banking and matched-savings setup" field="ambassador_name" form={form} onCommit={commitInfo} />
+            <InfoField label="Savings Goal" field="savings_goal" form={form} onCommit={commitInfo} />
             <InfoField label="Bank" field="bank" form={form} onCommit={commitInfo} />
             <InfoField label="Bank Rep Phone" field="bank_representative_phone" form={form} onCommit={commitInfo} />
             <InfoField label="Account Type" field="account_type" form={form} onCommit={commitInfo} />

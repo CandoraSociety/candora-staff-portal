@@ -107,7 +107,7 @@
     },
     "ambassador_name": {
       "type": "string",
-      "description": "Informational \u2014 assigned one-to-one financial coach / EmpowerU ambassador"
+      "description": "Informational \u2014 ATB/EmpowerU Ambassador associated with the participant's banking and matched-savings setup (not the participant's financial coach)"
     },
     "bank_account_opened": {
       "type": "boolean",
@@ -140,7 +140,7 @@
     },
     "atb_amount": {
       "type": "number",
-      "description": "Informational \u2014 $ ATB (manually edited; meaning not yet formally defined)"
+      "description": "Informational \u2014 $ ATB (manually edited; exact operational meaning not yet confirmed)"
     },
     "saved_amount": {
       "type": "number",
@@ -148,7 +148,7 @@
     },
     "total_amount": {
       "type": "number",
-      "description": "Informational \u2014 Total (manually edited; not auto-calculated until the relationship between $ ATB, $ Saved and Total is formally defined)"
+      "description": "Informational \u2014 Total (manually edited; not auto-calculated until the relationship between $ ATB, $ Saved and Total is confirmed)"
     },
     "progress_notes": {
       "type": "string",
