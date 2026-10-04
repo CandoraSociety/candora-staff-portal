@@ -571,11 +571,15 @@ export async function syncRegistrationsToWorkbook(token, wbRecord, registrations
       writeCol(map.cp_asset_description, ck(reg.cp_asset_description));
       writeCol(map.notes, reg.progress_notes || "");
 
+      // Write starting at the used range's actual first column — hardcoding "A"
+      // would shift the whole row left whenever the sheet's used range doesn't
+      // begin at column A (this template keeps column A entirely empty).
+      const startColLetters = indexToColLetters(sheet.startCol);
       await patchRangeValues(
         token,
         wbRecord.workbook_file_id,
         tracker.name,
-        `A${excelRow}:${indexToColLetters(colCount - 1)}${excelRow}`,
+        `${startColLetters}${excelRow}:${indexToColLetters(sheet.startCol + colCount - 1)}${excelRow}`,
         [out]
       );
       results.push({
