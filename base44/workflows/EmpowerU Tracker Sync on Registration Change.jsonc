@@ -1,0 +1,41 @@
+{
+  "name": "EmpowerU Tracker Sync on Registration Change",
+  "description": "Keeps the cohort's official funder-reporting Excel workbook (SharePoint) in step with participant progress \u2014 fires whenever an enrolled/completed EmpowerU participant's registration changes.",
+  "trigger": {
+    "condition": "${ .trigger.data.status == \"enrolled\" or .trigger.data.status == \"completed\" }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "EmpowerURegistration"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "empoweru_tracker_sync_registration",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_tracker_row": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncEmpowerUParticipantToTracker",
+            "args": {
+              "registration_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync participant to official tracker",
+            "description": "Updates the cohort Excel workbook"
+          }
+        }
+      }
+    ]
+  }
+}
