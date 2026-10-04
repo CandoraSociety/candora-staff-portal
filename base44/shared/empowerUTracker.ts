@@ -192,7 +192,10 @@ export async function readSheet(token, fileId, sheetName) {
   );
   if (!res.ok) throw new Error(`Could not read worksheet '${sheetName}': ` + (await res.text()).slice(0, 200));
   const data = await res.json();
-  const m = String(data.address || "A1").match(/^([A-Z]+)(\d+)/);
+  // Address arrives as "Sheet1!A2:Y31" (sheet-prefixed) or "A2:Y31" — take the
+  // top-left cell of the range. A failed parse would silently offset every
+  // matrix→Excel row conversion, so match the segment before the colon.
+  const m = String(data.address || "A1").match(/([A-Z]+)(\d+):/);
   return {
     values: data.values || [],
     formulas: data.formulas || [],
@@ -315,16 +318,30 @@ export async function getTrackerSheet(token, fileId) {
   throw new Error("Could not find the participant tracker worksheet — the workbook's structure does not match the official template");
 }
 
+// The official template carries its cohort date range in the top area of the
+// tracker (the template's date-range cell(s)). Update every matching cell so
+// both of the template's date lines reflect the cohort range.
+export async function writeAllDateRangeCells(token, fileId, sheetName, sheet, dateRangeStr) {
+  let updated = false;
+  for (let r = 0; r < Math.min(sheet.values.length, 8); r++) {
+    const row = sheet.values[r] || [];
+    for (let c = 0; c < row.length; c++) {
+      if (isDateRangeString(row[c]) && String(row[c]).trim() !== dateRangeStr) {
+        await patchSheetCellByIndex(token, fileId, sheetName, sheet, r, c, dateRangeStr);
+        updated = true;
+      }
+    }
+  }
+  return updated;
+}
+
 // Prepares a freshly copied cohort workbook: writes the cohort's date range
-// into the same cell the template used, and clears any binder-list names
+// into the same cell(s) the template used, and clears any binder-list names
 // carried over from the master so each cohort starts clean (numbering kept).
 export async function initCohortWorkbook(token, fileId, dateRangeStr) {
   const names = await listWorksheetNames(token, fileId);
   const tracker = await getTrackerSheet(token, fileId);
-  const cell = findDateRangeCell(tracker.sheet.values);
-  if (cell) {
-    await patchSheetCellByIndex(token, fileId, tracker.name, tracker.sheet, cell.row, cell.col, dateRangeStr);
-  }
+  await writeAllDateRangeCells(token, fileId, tracker.name, tracker.sheet, dateRangeStr);
   for (const n of names) {
     if (n === tracker.name) continue;
     const s = await readSheet(token, fileId, n);
@@ -348,11 +365,10 @@ export async function initCohortWorkbook(token, fileId, dateRangeStr) {
 // Never re-creates the workbook for a date change.
 export async function refreshCohortDateRange(token, fileId, dateRangeStr) {
   const tracker = await getTrackerSheet(token, fileId);
-  const cell = findDateRangeCell(tracker.sheet.values);
-  if (!cell) throw new Error("Date-range cell not found in the cohort workbook — structure may have changed");
-  if (String(cell.value).trim() === dateRangeStr) return false;
-  await patchSheetCellByIndex(token, fileId, tracker.name, tracker.sheet, cell.row, cell.col, dateRangeStr);
-  return true;
+  if (!findDateRangeCell(tracker.sheet.values)) {
+    throw new Error("Date-range cell not found in the cohort workbook — structure may have changed");
+  }
+  return writeAllDateRangeCells(token, fileId, tracker.name, tracker.sheet, dateRangeStr);
 }
 
 export async function fileItemToBase64(token, fileId) {
@@ -480,12 +496,14 @@ export async function syncRegistrationsToWorkbook(token, wbRecord, registrations
         rowIdx = entry.row_number - sheet.startRow;
         excelRow = entry.row_number;
       } else {
-        // claim the first available numbered/empty data row
+        // claim the first available numbered/empty data row — never the header
+        // row or above, even if a stale/offset read shifts the indices
         for (let r = dataStartIdx; r < sheet.values.length; r++) {
           const row = sheet.values[r] || [];
           const nameV = row[map.name] ?? "";
           const noV = row[map.no] ?? "";
           const excel = sheet.startRow + r;
+          if (r <= headerIdx) continue;
           if (!String(nameV).trim() && (noV === "" || !isNaN(Number(noV))) && !mappedExcelRows.has(excel)) {
             rowIdx = r;
             excelRow = excel;
