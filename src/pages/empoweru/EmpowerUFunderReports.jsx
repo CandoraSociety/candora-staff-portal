@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { FileSpreadsheet, Eye, Download, RefreshCw, AlertTriangle, CheckCircle2, Clock, Loader2, PlusCircle } from 'lucide-react';
+import { FileSpreadsheet, Eye, Download, RefreshCw, AlertTriangle, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import TrackerViewerDialog from '@/components/empoweru/TrackerViewerDialog';
 
 // Funder Reports — access to each cohort's official EmpowerU Excel tracker
@@ -68,18 +68,13 @@ export default function EmpowerUFunderReports() {
     loadRecord(id);
   };
 
-  const createWorkbook = async () => {
-    if (!cohortId) return;
-    setBusy(true);
-    try {
-      await base44.functions.invoke('createEmpowerUCohortWorkbook', { cohort_id: cohortId });
-      toast({ title: 'Official workbook created' });
-      await loadRecord(cohortId);
-    } catch (err) {
-      toast({ title: 'Workbook creation failed', description: err?.message, variant: 'destructive' });
-      await loadRecord(cohortId);
-    } finally { setBusy(false); }
-  };
+  // The official workbook is created automatically in the background for every
+  // cohort — if it hasn't appeared yet, keep checking while the page is open.
+  useEffect(() => {
+    if (!cohortId || record) return;
+    const t = setInterval(() => loadRecord(cohortId), 15000);
+    return () => clearInterval(t);
+  }, [cohortId, record, loadRecord]);
 
   const retrySync = async () => {
     if (!cohortId) return;
@@ -165,10 +160,10 @@ export default function EmpowerUFunderReports() {
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FileSpreadsheet className="h-4 w-4" /> {cohort.name}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm text-muted-foreground">Program date range: <span className="font-medium text-foreground">{fmtRange(cohort.start_date, cohort.end_date)}</span></div>
-            <p className="text-sm text-muted-foreground">No official Excel workbook is associated with this cohort yet.</p>
-            <Button onClick={createWorkbook} disabled={busy}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />} Create Official Workbook
-            </Button>
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              The official Excel workbook is created automatically for every cohort — it will appear here shortly.
+            </p>
           </CardContent>
         </Card>
       )}

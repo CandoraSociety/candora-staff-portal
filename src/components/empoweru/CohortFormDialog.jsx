@@ -42,17 +42,8 @@ export default function CohortFormDialog({ open, onOpenChange, cohort, onSaved }
     setSaving(true);
     try {
       const payload = { ...form, name: autoName };
-      const saved = cohort
-        ? await base44.entities.EmpowerUCohort.update(cohort.id, payload)
-        : await base44.entities.EmpowerUCohort.create(payload);
-      // Official funder-reporting workbook: created with new cohorts, date range
-      // refreshed on edits. A workbook failure never blocks the saved cohort —
-      // staff can retry from the Funder Reports tab.
-      try {
-        await base44.functions.invoke('createEmpowerUCohortWorkbook', { cohort_id: saved.id });
-      } catch {
-        toast({ title: 'Funder tracker needs attention', description: 'The cohort was saved, but its official Excel tracker could not be created or updated. Retry from the EmpowerU Funder Reports tab.', variant: 'destructive' });
-      }
+      if (cohort) await base44.entities.EmpowerUCohort.update(cohort.id, payload);
+      else await base44.entities.EmpowerUCohort.create(payload);
       toast({ title: cohort ? 'Cohort updated' : 'Cohort created' });
       onSaved?.();
     } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }

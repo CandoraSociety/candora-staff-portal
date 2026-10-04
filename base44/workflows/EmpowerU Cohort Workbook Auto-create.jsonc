@@ -1,0 +1,41 @@
+{
+  "name": "EmpowerU Cohort Workbook Auto-create",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "EmpowerUCohort"
+    }
+  },
+  "description": "Automatically creates every new EmpowerU cohort's official funder-reporting Excel workbook on SharePoint, and refreshes the date range when cohort dates change.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "empoweru_cohort_workbook_auto_create",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "create_workbook": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "createEmpowerUCohortWorkbook",
+            "args": {
+              "cohort_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Create or refresh cohort workbook",
+            "description": "Creates the official Excel tracker for new cohorts; updates the date range for existing ones"
+          }
+        }
+      }
+    ]
+  }
+}
