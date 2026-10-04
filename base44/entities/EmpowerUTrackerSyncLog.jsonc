@@ -1,0 +1,44 @@
+{
+  "name": "EmpowerUTrackerSyncLog",
+  "type": "object",
+  "properties": {
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to the EmpowerUCohort the sync relates to"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Participant affected by the sync, where applicable"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "create_workbook",
+        "update_dates",
+        "sync_participants",
+        "retry"
+      ],
+      "description": "create_workbook = cohort workbook created from the master template; update_dates = cohort date range refreshed; sync_participants = mapped participant rows written; retry = manual retry from Funder Reports"
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "success",
+        "error"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Sync outcome summary or error detail"
+    }
+  },
+  "required": [
+    "cohort_id",
+    "action",
+    "result"
+  ]
+}

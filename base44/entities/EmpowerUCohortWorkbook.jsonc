@@ -1,0 +1,80 @@
+{
+  "name": "EmpowerUCohortWorkbook",
+  "type": "object",
+  "properties": {
+    "cohort_id": {
+      "type": "string",
+      "description": "Reference to the EmpowerUCohort this official workbook belongs to \u2014 the stable cohort-to-workbook relationship key"
+    },
+    "cohort_name": {
+      "type": "string",
+      "description": "Denormalized cohort name"
+    },
+    "workbook_file_id": {
+      "type": "string",
+      "description": "SharePoint (Graph) drive item id of the cohort's official Excel tracker workbook"
+    },
+    "workbook_file_name": {
+      "type": "string",
+      "description": "File name of the cohort workbook stored in the EmpowerU Funder Reports SharePoint folder"
+    },
+    "date_range": {
+      "type": "string",
+      "description": "Cohort program date range written into the workbook \u2014 Month D, YYYY to Month D, YYYY"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "error"
+      ],
+      "default": "ready",
+      "description": "Creation/synchronization health of this cohort workbook"
+    },
+    "participant_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of participants currently represented in the workbook"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last successful participant synchronization"
+    },
+    "last_sync_result": {
+      "type": "string",
+      "description": "Result of the last synchronization (created / success / error)"
+    },
+    "last_sync_error": {
+      "type": "string",
+      "description": "Most recent synchronization error, if any \u2014 shown in Funder Reports so staff can retry"
+    },
+    "row_map": {
+      "type": "array",
+      "description": "Backend participant-to-workbook-row relationship (the official workbook carries no ID column) \u2014 one entry per participant row managed in the cohort workbook",
+      "items": {
+        "type": "object",
+        "properties": {
+          "registration_id": {
+            "type": "string",
+            "description": "EmpowerURegistration id \u2014 the stable sync key"
+          },
+          "participant_id": {
+            "type": "string",
+            "description": "EmpowerUParticipant id"
+          },
+          "participant_name": {
+            "type": "string"
+          },
+          "row_number": {
+            "type": "number",
+            "description": "1-based Excel row in the tracker sheet"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "cohort_id"
+  ]
+}
