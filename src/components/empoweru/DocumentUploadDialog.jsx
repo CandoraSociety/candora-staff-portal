@@ -11,8 +11,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Upload } from 'lucide-react';
 
 // Shared upload dialog for EmpowerU Program Documents — 'participant' documents
-// are linked to a specific participant; 'program' documents are program-wide
-// forms and reference sheets. Files go to private storage.
+// are general participant-related files (optionally linked to one participant);
+// 'program' documents are program-wide forms and reference sheets.
 export default function DocumentUploadDialog({ open, onOpenChange, category, participants = [], cohorts = [], onSaved }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -29,7 +29,6 @@ export default function DocumentUploadDialog({ open, onOpenChange, category, par
 
   const submit = async () => {
     if (!form.title || !file || busy) return;
-    if (category === 'participant' && !form.participant_id) { toast({ title: 'Select a participant', variant: 'destructive' }); return; }
     setBusy(true);
     try {
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
@@ -74,10 +73,11 @@ export default function DocumentUploadDialog({ open, onOpenChange, category, par
           </div>
           {category === 'participant' && (
             <div className="space-y-1.5">
-              <Label>Participant *</Label>
-              <Select value={form.participant_id || ''} onValueChange={v => setForm(f => ({ ...f, participant_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Select participant" /></SelectTrigger>
+              <Label>Participant (optional)</Label>
+              <Select value={form.participant_id || 'none'} onValueChange={v => setForm(f => ({ ...f, participant_id: v === 'none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="General (no specific participant)" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">General (no specific participant)</SelectItem>
                   {participants.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}
                 </SelectContent>
               </Select>
