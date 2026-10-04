@@ -106,8 +106,9 @@ export default function EmpowerUFunderReports() {
       a.download = file_name || 'EmpowerU Tracker.xlsx';
       document.body.appendChild(a);
       a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      // Keep the object URL alive briefly — revoking immediately after click
+      // cancels the download before it starts on some mobile/slow browsers.
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 30000);
       if (warnings && warnings.length) {
         toast({
           title: 'Downloaded — but not fully current',
