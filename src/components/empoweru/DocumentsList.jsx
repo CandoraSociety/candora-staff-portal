@@ -2,26 +2,17 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Download, Trash2, FileText, Loader2 } from 'lucide-react';
+import { Eye, Trash2, FileText } from 'lucide-react';
 import { formatDate } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
+import DocumentViewerDialog from '@/components/empoweru/DocumentViewerDialog';
 
-// List of EmpowerU documents — view/download opens a time-limited signed URL
-// (files live in private storage); delete removes the record.
+// List of EmpowerU documents — Eye opens an in-app viewer (private storage,
+// time-limited signed URL); delete removes the record.
 export default function DocumentsList({ documents, loading, emptyMessage, onDeleted, showParticipant = false }) {
   const { toast } = useToast();
   const [busyId, setBusyId] = useState(null);
-
-  const openFile = async (doc) => {
-    setBusyId(doc.id);
-    try {
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: doc.file_uri, expires_in: 300 });
-      window.open(signed_url, '_blank');
-    } catch (err) {
-      toast({ title: 'Could not open document', description: err.message, variant: 'destructive' });
-    }
-    setBusyId(null);
-  };
+  const [viewing, setViewing] = useState(null);
 
   const remove = async (doc) => {
     if (busyId) return;
@@ -55,8 +46,8 @@ export default function DocumentsList({ documents, loading, emptyMessage, onDele
             </p>
           </div>
           <div className="flex gap-1 flex-shrink-0">
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => openFile(doc)} disabled={busyId === doc.id} title="View / download">
-              {busyId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setViewing(doc)} title="Open">
+              <Eye className="h-4 w-4" />
             </Button>
             <Button size="icon" variant="ghost" className={cn('h-8 w-8 text-muted-foreground hover:text-destructive')} onClick={() => remove(doc)} disabled={busyId === doc.id} title="Delete">
               <Trash2 className="h-4 w-4" />
@@ -64,6 +55,12 @@ export default function DocumentsList({ documents, loading, emptyMessage, onDele
           </div>
         </div>
       ))}
+
+      <DocumentViewerDialog
+        doc={viewing}
+        open={!!viewing}
+        onOpenChange={(o) => !o && setViewing(null)}
+      />
     </div>
   );
 }
