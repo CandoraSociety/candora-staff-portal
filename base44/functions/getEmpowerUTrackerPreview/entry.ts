@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import {
   getGraphToken, getWorkbookRecord, getTrackerSheet, listWorksheetNames,
-  readSheet, findTrackerHeaderRow, findDateRangeCell, formatWrittenDateRange,
+  readSheet, findTrackerHeaderRow, findDateRangeCell, isDateRangeString,
+  formatWrittenDateRange,
 } from '../../shared/empowerUTracker.ts';
 
 // Read-only viewer data for the Funder Reports tab: returns the actual current
