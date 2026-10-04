@@ -40,7 +40,7 @@ export default function EmpowerUFunderReports() {
   const loadRecord = useCallback(async (id) => {
     if (!id) { setRecord(null); return; }
     try {
-      const page = await base44.entities.EmpowerUCohortWorkbook.filter({ cohort_id: id });
+      const page = await base44.entities.EmpowerUCohortWorkbook.filter({ cohort_id: id }, { limit: 1 });
       setRecord((page.items || [])[0] || null);
     } catch { setRecord(null); }
   }, []);
