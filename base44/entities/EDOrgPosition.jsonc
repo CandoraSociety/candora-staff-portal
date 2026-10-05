@@ -78,6 +78,11 @@
       "type": "boolean",
       "default": false
     },
+    "is_inactive": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, the position stays on the org chart but is excluded from all payroll and staffing calculations"
+    },
     "notes": {
       "type": "string"
     },

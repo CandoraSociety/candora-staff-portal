@@ -25,7 +25,7 @@ export default function OrgNode({
 
   const branchSalary = (function sum(pos) {
     const kids = all.filter(p => p.reports_to_id === pos.id);
-    return (pos.salary || 0) + kids.reduce((s, c) => s + sum(c), 0);
+    return (pos.is_inactive ? 0 : pos.salary || 0) + kids.reduce((s, c) => s + sum(c), 0);
   })(position);
 
   // Determine if changed vs original (scenario mode only)
@@ -48,7 +48,8 @@ export default function OrgNode({
   const isDropTarget = draggingId && draggingId !== position.id;
 
   let borderClass = "border-border bg-card shadow-sm";
-  if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
+  if (position.is_inactive) borderClass = "border-muted-foreground/40 bg-muted/40 opacity-60";
+  else if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
   else if (isScenario && isChanged) borderClass = "border-orange-400 bg-orange-50/50";
   else if (isScenario && !isChanged) borderClass = "border-blue-300 bg-card shadow-sm";
 
@@ -78,6 +79,7 @@ export default function OrgNode({
         {position.tier && <p className="text-[10px] text-muted-foreground/60 italic">{TIERS.find(t => t.value === position.tier)?.label}</p>}
         {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
         {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
+        {position.is_inactive && <Badge variant="outline" className="text-xs mt-1 text-slate-500 border-slate-400">Inactive</Badge>}
         {showSalary && position.salary > 0 && <p className="text-xs text-muted-foreground mt-0.5">${position.salary.toLocaleString()}</p>}
         {isScenario && isChanged && <div className="absolute -top-1.5 -left-1.5 w-3 h-3 rounded-full bg-orange-400 border-2 border-white" title="Modified" />}
 

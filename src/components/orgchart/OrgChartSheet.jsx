@@ -54,7 +54,8 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
   const isDropTarget = draggingId && draggingId !== position.id;
 
   let borderClass = "border-border bg-card shadow-sm";
-  if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
+  if (position.is_inactive) borderClass = "border-muted-foreground/40 bg-muted/40 opacity-60";
+  else if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
   else if (isScenario && isChanged) borderClass = "border-orange-400 bg-orange-50/50";
   else if (isScenario && !isChanged) borderClass = "border-blue-300 bg-card shadow-sm";
 
@@ -74,6 +75,7 @@ function PositionCard({ position, originalPositions, onEdit, onDelete, showSalar
       {showNames && position.person_name && <p className="text-xs text-muted-foreground">{position.person_name}</p>}
       {position.department && <p className="text-xs text-muted-foreground/70">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-xs mt-1">Vacant</Badge>}
+      {position.is_inactive && <Badge variant="outline" className="text-xs mt-1 text-slate-500 border-slate-400">Inactive</Badge>}
       {showSalary && (() => {
         const origId = position.original_id || position.id;
         const canonical = originalPositions?.find(o => o.id === origId)
@@ -361,11 +363,11 @@ export default function OrgChartSheet({
           {/* Always show totals, even when collapsed */}
           <div className="flex items-center gap-3 text-sm">
             <span className="font-semibold text-foreground">
-              {working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} staff
+              {working.filter(p => !p.is_inactive && !["practicum_placement", "skilled_volunteer"].includes(p.tier)).length} staff
             </span>
             <span className="text-muted-foreground/40">|</span>
             <span className="font-semibold text-foreground">
-              Total: ${Math.round(working.filter(p => !["practicum_placement", "skilled_volunteer"].includes(p.tier)).reduce((s, p) => s + (p.salary || 0), 0)).toLocaleString()}/yr
+              Total: ${Math.round(working.filter(p => !p.is_inactive && !["practicum_placement", "skilled_volunteer"].includes(p.tier)).reduce((s, p) => s + (p.salary || 0), 0)).toLocaleString()}/yr
             </span>
           </div>
           {/* Full breakdown when expanded */}

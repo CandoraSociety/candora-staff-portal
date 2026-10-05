@@ -55,16 +55,18 @@ export default function OrgChartCompare({ sheets, onClose, showSalary, showNames
 
   // Calculate totals for each sheet
   const sheetTotals = sheets.map(s => {
-    const annual = s.positions.reduce((sum, p) => {
+    // Inactive positions stay visible but are excluded from calculations
+    const active = s.positions.filter(p => !p.is_inactive);
+    const annual = active.reduce((sum, p) => {
       if (p.hourly_rate && p.hours_per_week && p.weeks_per_year) {
         return sum + (parseFloat(p.hourly_rate) * parseFloat(p.hours_per_week) * parseFloat(p.weeks_per_year));
       }
       return sum + (p.salary || 0);
     }, 0);
     return {
-      positions: s.positions.length,
-      filled: s.positions.filter(p => !p.is_vacant).length,
-      vacant: s.positions.filter(p => p.is_vacant).length,
+      positions: active.length,
+      filled: active.filter(p => !p.is_vacant).length,
+      vacant: active.filter(p => p.is_vacant).length,
       annual,
       monthly: annual / 12,
       biweekly: annual / 26,

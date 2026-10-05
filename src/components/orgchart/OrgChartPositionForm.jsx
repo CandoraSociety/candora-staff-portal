@@ -28,7 +28,7 @@ export const EMPTY_POS = {
   tier: "", row_number: "", reports_to_id: null, dotted_line_reports_to_id: null, 
   salary: "", hourly_rate: "", hours_per_week: "", weeks_per_year: "",
   has_summer_hours: false, summer_hours_per_week: "", summer_weeks: "",
-  is_vacant: false, notes: "",
+  is_vacant: false, is_inactive: false, notes: "",
   team_ids: []
 };
 
@@ -485,6 +485,10 @@ export default function OrgChartPositionForm({ open, onOpenChange, form, setForm
           <div className="flex items-center gap-2">
             <Switch checked={!!form.is_vacant} onCheckedChange={v => setForm({ ...form, is_vacant: v })} />
             <span className="text-sm">Mark as vacant</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch checked={!!form.is_inactive} onCheckedChange={v => setForm({ ...form, is_inactive: v })} />
+            <span className="text-sm">Inactive <span className="text-xs text-muted-foreground">— stays on the chart, excluded from calculations</span></span>
           </div>
           <Input
             placeholder="Notes"

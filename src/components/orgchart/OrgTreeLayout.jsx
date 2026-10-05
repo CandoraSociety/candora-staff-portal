@@ -157,7 +157,8 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
   }
 
   let borderClass = "border-border bg-card shadow-sm";
-  if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
+  if (position.is_inactive) borderClass = "border-muted-foreground/40 bg-muted/40 opacity-60";
+  else if (position.is_vacant) borderClass = "border-dashed border-muted-foreground/40 bg-muted/20";
   else if (isDropTarget) borderClass = "border-primary bg-primary/5 shadow-lg";
   else if (isScenario && isChanged) borderClass = "border-orange-400 bg-orange-50/50";
   else if (isScenario) borderClass = "border-blue-300 bg-card shadow-sm";
@@ -192,6 +193,7 @@ function NodeCard({ position, absX, absY, originalPositions, isScenario, showSal
       {showNames && position.person_name && <p className="text-[10px] text-muted-foreground truncate">{position.person_name}</p>}
       {position.department && <p className="text-[10px] text-muted-foreground/60 truncate">{position.department}</p>}
       {position.is_vacant && <Badge variant="outline" className="text-[10px] mt-0.5 px-1">Vacant</Badge>}
+      {position.is_inactive && <Badge variant="outline" className="text-[10px] mt-0.5 px-1 text-slate-500 border-slate-400">Inactive</Badge>}
       {showSalary && (() => {
         // Fall back to canonical record if scenario snapshot has zeroed pay fields
         const origId = position.original_id || position.id;

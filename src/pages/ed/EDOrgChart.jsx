@@ -125,6 +125,7 @@ export default function EDOrgChart() {
         summer_hours_per_week: p.summer_hours_per_week,
         summer_weeks: p.summer_weeks,
         is_vacant: p.is_vacant,
+        is_inactive: p.is_inactive,
         notes: p.notes,
       }));
     } else if (newSheetSource === "blank") {
@@ -187,6 +188,8 @@ export default function EDOrgChart() {
 
   // ---- Current sheet ----
   const currentScenario = activeTab > 0 ? scenarios[activeTab - 1] : null;
+  const currentSheetPositions = activeTab === 0 ? positions : (currentScenario?.positions || []);
+  const inactivePositions = currentSheetPositions.filter(p => p.is_inactive);
 
   // ---- PDF export ----
   const handleExportPDF = () => {
@@ -357,6 +360,16 @@ export default function EDOrgChart() {
               <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-orange-400 inline-block" /> Modified</span>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Inactive positions note — top of the page, only when any exist */}
+      {mode === "chart" && inactivePositions.length > 0 && (
+        <div className="flex items-start gap-2 px-6 py-2 bg-muted/60 border-b border-muted-foreground/20 text-sm shrink-0 flex-wrap">
+          <span className="font-medium text-muted-foreground shrink-0">Inactive (excluded from calculations):</span>
+          <span className="text-muted-foreground">
+            {inactivePositions.map(p => `${p.title}${p.person_name ? ` (${p.person_name})` : ""}`).join(" · ")}
+          </span>
         </div>
       )}
 

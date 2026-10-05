@@ -50,7 +50,9 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
 
   // Separate unpaid tiers (practicum + skilled volunteer) from paid staff
   const unpaidTiers = ["practicum_placement", "skilled_volunteer"];
-  const paidPositions = positions.filter(p => !unpaidTiers.includes(p.tier));
+  // Inactive positions stay on the chart but are excluded from all calculations
+  const activePositions = positions.filter(p => !p.is_inactive);
+  const paidPositions = activePositions.filter(p => !unpaidTiers.includes(p.tier));
 
   // Always use the stored salary field as the source of truth (exclude practicums — always $0)
   const annual = paidPositions.reduce((s, p) => s + (p.salary || 0), 0);
@@ -78,7 +80,7 @@ export default function PayrollSummary({ positions, showSalary, basePositions })
   const wcbAnnual = annual * (WCB_RATE_PER_100 / 100);
 
   // Base comparisons also exclude unpaid tiers
-  const basePaidPositions = basePositions?.filter(p => !unpaidTiers.includes(p.tier)) || [];
+  const basePaidPositions = basePositions?.filter(p => !p.is_inactive && !unpaidTiers.includes(p.tier)) || [];
 
   // Calculate differences vs base positions (if provided)
   let diffPositions = 0;
