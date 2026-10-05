@@ -1,0 +1,41 @@
+{
+  "name": "EmpowerU Account Setup Auto-create",
+  "description": "Automatically creates an ATB account-setup chase record (participant and cohort details auto-populated) whenever a participant becomes enrolled in or completes a cohort \u2014 staff never create them by hand.",
+  "trigger": {
+    "condition": "${ .trigger.data.status == \"enrolled\" or .trigger.data.status == \"completed\" }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "EmpowerURegistration"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "empoweru_account_setup_auto_create",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "ensure_setup_record": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "ensureEmpowerUAccountSetups",
+            "args": {
+              "registration_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Create account setup record",
+            "description": "Auto-populates participant & cohort details"
+          }
+        }
+      }
+    ]
+  }
+}

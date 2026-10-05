@@ -13,7 +13,7 @@ import RegistrationDialog from '@/components/empoweru/RegistrationDialog';
 import EmpowerUApplicationsPanel from '@/components/empoweru/EmpowerUApplicationsPanel';
 import ParticipantProgressDialog from '@/components/empoweru/ParticipantProgressDialog';
 import { ALL_CHECKPOINTS, progressOf, outstandingPreProgram, isPreProgramComplete } from '@/lib/empoweruProgress';
-import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS, ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
+import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
 import { formatDate } from '@/lib/dateUtils';
 
 export default function EmpowerUCohortDetail() {
@@ -45,19 +45,13 @@ export default function EmpowerUCohortDetail() {
   };
 
   const handleGenerateAccountSetups = async () => {
-    const enrolled = registrations.filter(r => r.status === 'enrolled' || r.status === 'completed');
-    const existingIds = new Set(accountSetups.map(a => a.participant_id));
-    const missing = enrolled.filter(r => !existingIds.has(r.participant_id));
-    if (missing.length === 0) { toast({ title: 'All enrolled participants already have account setup records' }); return; }
     try {
-      await base44.entities.EmpowerUAccountSetup.bulkCreate(missing.map(r => ({
-        participant_id: r.participant_id, participant_name: r.participant_name, participant_email: '', participant_phone: '',
-        cohort_id: id, cohort_name: cohort?.name || '', status: 'not_started', savings_amount: DEFAULT_SAVINGS_AMOUNT,
-        follow_up_attempts: 0,
-      })));
-      toast({ title: `Created ${missing.length} account setup record(s)` });
-      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups', id] });
+      const res = await base44.functions.invoke('ensureEmpowerUAccountSetups', { cohort_id: id });
+      const created = res.data?.created || 0;
+      toast({ title: created > 0 ? `Created ${created} account setup record(s)` : 'All enrolled participants already have account setup records' });
       queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] });
+      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-attention'] });
     } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
   };
 

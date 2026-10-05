@@ -17,27 +17,41 @@ export default function EmpowerUAccountSetup() {
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: accountSetups = [], isLoading } = useQuery({ queryKey: ['empoweru-account-setups'], queryFn: () => base44.entities.EmpowerUAccountSetup.list() });
+  const { data: accountSetups = [], isLoading } = useQuery({
+    queryKey: ['empoweru-account-setups', cohortFilter, statusFilter],
+    queryFn: async () => {
+      const query = {};
+      if (cohortFilter !== 'all') query.cohort_id = cohortFilter;
+      if (statusFilter !== 'all') query.status = statusFilter;
+      const page = await base44.entities.EmpowerUAccountSetup.filter(query, { limit: 200 });
+      return page.items || [];
+    }
+  });
   const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
+  const { data: statusCounts = {} } = useQuery({
+    queryKey: ['empoweru-account-setup-counts'],
+    queryFn: async () => {
+      const res = await base44.entities.EmpowerUAccountSetup.aggregate({ groupBy: 'status' });
+      return Object.fromEntries((res.rows || []).map(r => [r.status, r.count]));
+    }
+  });
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: attentionCount = 0 } = useQuery({
+    queryKey: ['empoweru-account-setup-attention', today],
+    queryFn: () => base44.entities.EmpowerUAccountSetup.count({ status: { $nin: ['completed', 'declined'] }, $or: [{ next_action_date: { $lt: today } }, { follow_up_attempts: { $gte: 3 }, status: 'contacting' }] })
+  });
 
   const now = new Date();
-  const filtered = accountSetups.filter(a => {
-    const matchCohort = cohortFilter === 'all' || a.cohort_id === cohortFilter;
-    const matchStatus = statusFilter === 'all' || a.status === statusFilter;
-    return matchCohort && matchStatus;
-  });
-
-  const counts = ACCOUNT_SETUP_STATUS_OPTIONS.map(s => ({ ...s, count: accountSetups.filter(a => a.status === s.value).length }));
-  const needsAttention = accountSetups.filter(a => {
-    if (['completed', 'declined'].includes(a.status)) return false;
-    if (a.next_action_date && parseDateSmart(a.next_action_date) < now) return true;
-    if ((a.follow_up_attempts || 0) >= 3 && a.status === 'contacting') return true;
-    return false;
-  });
+  const counts = ACCOUNT_SETUP_STATUS_OPTIONS.map(s => ({ ...s, count: statusCounts[s.value] || 0 }));
 
   const openEdit = (r) => { setEditing(r); setDialogOpen(true); };
   const openNew = () => { setEditing(null); setDialogOpen(true); };
-  const onSaved = () => { setDialogOpen(false); queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] }); };
+  const onSaved = () => {
+    setDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] });
+    queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-counts'] });
+    queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-attention'] });
+  };
 
   const getAttemptsColor = (n) => n === 0 ? '#64748b' : n <= 2 ? '#f59e0b' : '#ef4444';
 
@@ -48,8 +62,8 @@ export default function EmpowerUAccountSetup() {
         <Button onClick={openNew}><Plus className="h-4 w-4" /> New</Button>
       </div>
 
-      {needsAttention.length > 0 && (
-        <Card className="border-amber-300 bg-amber-50"><CardContent className="p-3 flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-600" /><p className="text-sm text-amber-900"><span className="font-medium">{needsAttention.length}</span> need attention — overdue follow-ups or 3+ contact attempts</p></CardContent></Card>
+      {attentionCount > 0 && (
+        <Card className="border-amber-300 bg-amber-50"><CardContent className="p-3 flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-600" /><p className="text-sm text-amber-900"><span className="font-medium">{attentionCount}</span> need attention — overdue follow-ups or 3+ contact attempts</p></CardContent></Card>
       )}
 
       <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
@@ -69,10 +83,10 @@ export default function EmpowerUAccountSetup() {
       </div>
 
       {isLoading ? <div className="text-center py-8 text-muted-foreground">Loading...</div> :
-       filtered.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{accountSetups.length === 0 ? 'No account setup records yet.' : 'No records match your filters.'}</CardContent></Card> :
+       accountSetups.length === 0 ? <Card><CardContent className="p-8 text-center text-muted-foreground">{(cohortFilter !== 'all' || statusFilter !== 'all') ? 'No records match your filters.' : 'No account setup records yet — one is created automatically when a participant is enrolled in a cohort.'}</CardContent></Card> :
       (
         <div className="space-y-2">
-          {filtered.sort((a, b) => {
+          {accountSetups.slice().sort((a, b) => {
             const aDate = parseDateSmart(a.next_action_date) || new Date(9999, 0, 1);
             const bDate = parseDateSmart(b.next_action_date) || new Date(9999, 0, 1);
             return aDate - bDate;

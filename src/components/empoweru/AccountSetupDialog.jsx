@@ -12,6 +12,9 @@ import { Phone } from 'lucide-react';
 import { ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
 import { formatDate } from '@/lib/dateUtils';
 
+// Statuses that mark a milestone — the matching date auto-fills when set
+const STATUS_DATE_FIELDS = { forms_sent: 'forms_sent_date', forms_completed: 'forms_completed_date', account_opened: 'account_opened_date', completed: 'account_opened_date' };
+
 export default function AccountSetupDialog({ open, onOpenChange, record, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -19,6 +22,7 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
 
   const { data: participants = [] } = useQuery({ queryKey: ['empoweru-participants'], queryFn: () => base44.entities.EmpowerUParticipant.list(), enabled: open && !record });
   const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list(), enabled: open && !record });
+  const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations'], queryFn: async () => (await base44.entities.EmpowerURegistration.filter({ status: { $nin: ['withdrawn', 'declined'] } }, { limit: 500 })).items || [], enabled: open && !record });
 
   useEffect(() => {
     if (record) setForm({ ...record });
@@ -27,8 +31,28 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
 
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
 
-  const handleParticipantChange = (id) => { const p = participants.find(x => x.id === id); update('participant_id', id); update('participant_name', p ? `${p.first_name} ${p.last_name}` : ''); update('participant_email', p?.email || ''); update('participant_phone', p?.phone || ''); };
+  const handleParticipantChange = (id) => {
+    const p = participants.find(x => x.id === id);
+    update('participant_id', id);
+    update('participant_name', p ? `${p.first_name} ${p.last_name}` : '');
+    update('participant_email', p?.email || '');
+    update('participant_phone', p?.phone || '');
+    // Auto-fill the cohort from the participant's active registration
+    const reg = registrations.find(r => r.participant_id === id && r.cohort_id);
+    if (reg) {
+      const c = cohorts.find(x => x.id === reg.cohort_id);
+      update('cohort_id', reg.cohort_id);
+      update('cohort_name', c?.name || reg.cohort_name || '');
+    }
+  };
   const handleCohortChange = (id) => { const c = cohorts.find(x => x.id === id); update('cohort_id', id); update('cohort_name', c?.name || ''); };
+
+  const handleStatusChange = (v) => setForm(p => {
+    const next = { ...p, status: v };
+    const dateField = STATUS_DATE_FIELDS[v];
+    if (dateField && !next[dateField]) next[dateField] = new Date().toISOString().slice(0, 10);
+    return next;
+  });
 
   const handleLogContact = async () => {
     if (!record) return;
@@ -72,7 +96,7 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
               <p className="text-xs text-muted-foreground">{form.participant_phone} {form.participant_email ? `· ${form.participant_email}` : ''}</p>
             </div>
           )}
-          <div className="space-y-1.5 col-span-2"><Label>Status</Label><Select value={form.status || 'not_started'} onValueChange={(v) => update('status', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ACCOUNT_SETUP_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
+          <div className="space-y-1.5 col-span-2"><Label>Status</Label><Select value={form.status || 'not_started'} onValueChange={handleStatusChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ACCOUNT_SETUP_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
 
           {record && (
             <div className="col-span-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
