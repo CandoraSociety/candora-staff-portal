@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Pencil, Landmark, UserPlus, Sparkles, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Pencil, UserPlus, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,7 +13,7 @@ import RegistrationDialog from '@/components/empoweru/RegistrationDialog';
 import EmpowerUApplicationsPanel from '@/components/empoweru/EmpowerUApplicationsPanel';
 import ParticipantProgressDialog from '@/components/empoweru/ParticipantProgressDialog';
 import { ALL_CHECKPOINTS, progressOf, outstandingPreProgram, isPreProgramComplete } from '@/lib/empoweruProgress';
-import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
+import { COHORT_STATUS_OPTIONS, REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_LABELS } from '@/lib/empoweruConstants';
 import { formatDate } from '@/lib/dateUtils';
 
 export default function EmpowerUCohortDetail() {
@@ -26,7 +26,6 @@ export default function EmpowerUCohortDetail() {
 
   const { data: cohort } = useQuery({ queryKey: ['empoweru-cohort', id], queryFn: () => base44.entities.EmpowerUCohort.get(id) });
   const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations', id], queryFn: () => base44.entities.EmpowerURegistration.filter({ cohort_id: id }) });
-  const { data: accountSetups = [] } = useQuery({ queryKey: ['empoweru-account-setups', id], queryFn: () => base44.entities.EmpowerUAccountSetup.filter({ cohort_id: id }) });
   const participantIds = registrations.map(r => r.participant_id).filter(Boolean);
   const { data: cohortParticipants = [] } = useQuery({ queryKey: ['empoweru-participants-by-ids', participantIds], queryFn: () => base44.entities.EmpowerUParticipant.filter({ id: { $in: participantIds } }), enabled: participantIds.length > 0 });
   const participantMap = Object.fromEntries(cohortParticipants.map(p => [p.id, p]));
@@ -41,17 +40,6 @@ export default function EmpowerUCohortDetail() {
     try {
       await base44.entities.EmpowerURegistration.update(regId, { status: newStatus });
       queryClient.invalidateQueries({ queryKey: ['empoweru-registrations', id] });
-    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-  };
-
-  const handleGenerateAccountSetups = async () => {
-    try {
-      const res = await base44.functions.invoke('ensureEmpowerUAccountSetups', { cohort_id: id });
-      const created = res.data?.created || 0;
-      toast({ title: created > 0 ? `Created ${created} account setup record(s)` : 'All enrolled participants already have account setup records' });
-      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] });
-      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-counts'] });
-      queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-attention'] });
     } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
   };
 
@@ -133,23 +121,6 @@ export default function EmpowerUCohortDetail() {
                 </div>
               );
             })}</div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2"><Landmark className="h-4 w-4" /> Account Setup Progress ({accountSetups.length})</CardTitle>
-          <Button size="sm" variant="outline" onClick={handleGenerateAccountSetups}><Sparkles className="h-4 w-4" /> Generate Missing</Button>
-        </CardHeader>
-        <CardContent>
-          {accountSetups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setup records. Click "Generate Missing" to create them for enrolled participants.</p> : (
-            <div className="space-y-2">{accountSetups.map(a => (
-              <Link key={a.id} to="/empoweru/account-setup" className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
-                <div><p className="text-sm font-medium text-foreground">{a.participant_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.next_action_date ? ` · Due: ${formatDate(a.next_action_date)}` : ''}</p></div>
-                <StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
-              </Link>
-            ))}</div>
           )}
         </CardContent>
       </Card>

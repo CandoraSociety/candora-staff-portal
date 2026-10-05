@@ -22,7 +22,7 @@ export default function EmpowerUParticipantDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [serviceOpen, setServiceOpen] = useState(false);
-  const [acctOpen, setAcctOpen] = useState(false);
+  const [editingSetup, setEditingSetup] = useState(null);
 
   const { data: participant } = useQuery({ queryKey: ['empoweru-participant', id], queryFn: () => base44.entities.EmpowerUParticipant.get(id) });
   const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations-by-participant', id], queryFn: () => base44.entities.EmpowerURegistration.filter({ participant_id: id }) });
@@ -83,10 +83,10 @@ export default function EmpowerUParticipantDetail() {
           </Card>
         </TabsContent>
         <TabsContent value="account">
-          <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle className="text-base">Account Setup</CardTitle><Button size="sm" onClick={() => setAcctOpen(true)}><Plus className="h-4 w-4" /> Add</Button></CardHeader>
-            <CardContent>{accountSetups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setup records</p> : (
+          <Card><CardHeader><CardTitle className="text-base">Account Setup</CardTitle></CardHeader>
+            <CardContent>{accountSetups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No account setup records — one is created automatically when the participant is enrolled in a cohort</p> : (
               <div className="space-y-2">{accountSetups.map(a => (
-                <div key={a.id} className="flex items-center justify-between p-3 rounded-md border border-border/50">
+                <div key={a.id} className="flex items-center justify-between p-3 rounded-md border border-border/50 cursor-pointer hover:bg-muted/50" onClick={() => setEditingSetup(a)} title="Click to edit">
                   <div><p className="text-sm font-medium text-foreground">{a.cohort_name}</p><p className="text-xs text-muted-foreground">{a.follow_up_attempts > 0 ? `${a.follow_up_attempts} contact attempts` : 'No contact yet'}{a.appointment_date ? ` · Appt: ${formatDate(a.appointment_date)}` : ''}</p></div>
                   <StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
                 </div>
@@ -114,7 +114,7 @@ export default function EmpowerUParticipantDetail() {
       </Dialog>
 
       <ServiceLogDialog open={serviceOpen} onOpenChange={setServiceOpen} participantId={id} participantName={fullName} onSaved={() => { setServiceOpen(false); invalidateAll(); }} />
-      <AccountSetupDialog open={acctOpen} onOpenChange={setAcctOpen} onSaved={() => { setAcctOpen(false); invalidateAll(); }} />
+      <AccountSetupDialog open={!!editingSetup} onOpenChange={(o) => !o && setEditingSetup(null)} record={editingSetup} onSaved={() => { setEditingSetup(null); invalidateAll(); }} />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,37 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { ACCOUNT_SETUP_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_DATE_FIELDS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
 
+// Edits an existing account setup record. Records are created automatically
+// when a participant is enrolled in a cohort — there is no manual add.
 export default function AccountSetupDialog({ open, onOpenChange, record, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(null);
 
-  const { data: participants = [] } = useQuery({ queryKey: ['empoweru-participants'], queryFn: () => base44.entities.EmpowerUParticipant.list(), enabled: open && !record });
-  const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list(), enabled: open && !record });
-  const { data: registrations = [] } = useQuery({ queryKey: ['empoweru-registrations'], queryFn: async () => (await base44.entities.EmpowerURegistration.filter({ status: { $nin: ['withdrawn', 'declined'] } }, { limit: 500 })).items || [], enabled: open && !record });
-
   useEffect(() => {
     if (record) setForm({ ...record });
-    else setForm({ participant_id: '', participant_name: '', participant_email: '', participant_phone: '', cohort_id: '', cohort_name: '', status: 'not_started', atb_branch_location: '', appointment_date: '', forms_sent_date: '', forms_completed_date: '', account_opened_date: '', savings_amount: DEFAULT_SAVINGS_AMOUNT, atb_contact_name: '', atb_contact_phone: '', atb_contact_email: '', follow_up_attempts: 0, last_contact_attempt_date: '', next_action_date: '', notes: '' });
   }, [open, record]);
 
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
-
-  const handleParticipantChange = (id) => {
-    const p = participants.find(x => x.id === id);
-    update('participant_id', id);
-    update('participant_name', p ? `${p.first_name} ${p.last_name}` : '');
-    update('participant_email', p?.email || '');
-    update('participant_phone', p?.phone || '');
-    // Auto-fill the cohort from the participant's active registration
-    const reg = registrations.find(r => r.participant_id === id && r.cohort_id);
-    if (reg) {
-      const c = cohorts.find(x => x.id === reg.cohort_id);
-      update('cohort_id', reg.cohort_id);
-      update('cohort_name', c?.name || reg.cohort_name || '');
-    }
-  };
-  const handleCohortChange = (id) => { const c = cohorts.find(x => x.id === id); update('cohort_id', id); update('cohort_name', c?.name || ''); };
 
   const handleStatusChange = (v) => setForm(p => {
     const next = { ...p, status: v };
@@ -50,37 +30,28 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
   });
 
   const handleSave = async () => {
-    if (!form.participant_id || !form.cohort_id) { toast({ title: 'Participant and cohort are required', variant: 'destructive' }); return; }
+    if (!record || !form) return;
     setSaving(true);
     try {
-      if (record) await base44.entities.EmpowerUAccountSetup.update(record.id, form);
-      else await base44.entities.EmpowerUAccountSetup.create(form);
-      toast({ title: record ? 'Account setup updated' : 'Account setup created' });
+      await base44.entities.EmpowerUAccountSetup.update(record.id, form);
+      toast({ title: 'Account setup updated' });
       onSaved?.();
     } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
     finally { setSaving(false); }
   };
 
-  if (!form) return null;
+  if (!record || !form) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{record ? 'Edit Account Setup' : 'New Account Setup'}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Edit Account Setup</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          {!record && (
-            <>
-              <div className="space-y-1.5 col-span-2"><Label>Participant *</Label><Select value={form.participant_id} onValueChange={handleParticipantChange}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent>{participants.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-1.5 col-span-2"><Label>Cohort *</Label><Select value={form.cohort_id} onValueChange={handleCohortChange}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent>{cohorts.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-            </>
-          )}
-          {record && (
-            <div className="col-span-2 p-3 rounded-lg bg-muted/50">
-              <p className="font-medium text-sm">{form.participant_name}</p>
-              <p className="text-xs text-muted-foreground">{form.cohort_name}</p>
-              <p className="text-xs text-muted-foreground">{form.participant_phone} {form.participant_email ? `· ${form.participant_email}` : ''}</p>
-            </div>
-          )}
+          <div className="col-span-2 p-3 rounded-lg bg-muted/50">
+            <p className="font-medium text-sm">{form.participant_name}</p>
+            <p className="text-xs text-muted-foreground">{form.cohort_name}</p>
+            <p className="text-xs text-muted-foreground">{form.participant_phone} {form.participant_email ? `· ${form.participant_email}` : ''}</p>
+          </div>
           <div className="space-y-1.5 col-span-2"><Label>Status</Label><Select value={form.status || 'not_started'} onValueChange={handleStatusChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ACCOUNT_SETUP_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
 
           <div className="space-y-1.5"><Label>Next Action Date</Label><Input type="date" value={form.next_action_date || ''} onChange={(e) => update('next_action_date', e.target.value)} /></div>

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
@@ -44,7 +43,6 @@ export default function EmpowerUAccountSetup() {
   const counts = ACCOUNT_SETUP_STATUS_OPTIONS.map(s => ({ ...s, count: statusCounts[s.value] || 0 }));
 
   const openEdit = (r) => { setEditing(r); setDialogOpen(true); };
-  const openNew = () => { setEditing(null); setDialogOpen(true); };
   const onSaved = () => {
     setDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: ['empoweru-account-setups'] });
@@ -54,9 +52,9 @@ export default function EmpowerUAccountSetup() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-heading font-bold text-foreground">ATB Account Setup</h1><p className="text-muted-foreground text-sm mt-1">Track savings account setup for each participant</p></div>
-        <Button onClick={openNew}><Plus className="h-4 w-4" /> New</Button>
+      <div>
+        <h1 className="text-2xl font-heading font-bold text-foreground">ATB Account Setup</h1>
+        <p className="text-muted-foreground text-sm mt-1">Track savings account setup for each participant</p>
       </div>
 
       {attentionCount > 0 && (

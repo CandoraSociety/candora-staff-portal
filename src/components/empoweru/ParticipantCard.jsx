@@ -8,7 +8,7 @@ import { REGISTRATION_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib
 // One participant card for the Active/Past sections on the Participants tab.
 // Shows contact info, per-cohort program status, and the admin/progress items
 // that need attention (account setup status, pending service follow-ups).
-export default function ParticipantCard({ participant, registrations, accountSetup, followUpsNeeded, onOpenAccountSetup }) {
+export default function ParticipantCard({ participant, registrations, accountSetup, followUpsNeeded }) {
   const fullName = `${participant.first_name} ${participant.last_name}`;
   const initials = `${participant.first_name?.[0] || ''}${participant.last_name?.[0] || ''}`;
 
@@ -44,10 +44,10 @@ export default function ParticipantCard({ participant, registrations, accountSet
         {(accountSetup || followUpsNeeded > 0) && (
           <div className="flex flex-wrap items-center gap-2 mt-3">
             {accountSetup && (
-              <button type="button" onClick={() => onOpenAccountSetup(accountSetup)} className="inline-flex items-center gap-1.5 hover:opacity-80">
+              <span className="inline-flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground">Account setup:</span>
                 <StatusBadge status={accountSetup.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
-              </button>
+              </span>
             )}
             {followUpsNeeded > 0 && (
               <span className="inline-flex items-center gap-1 text-xs text-warning-foreground bg-warning rounded-full px-2 py-0.5">

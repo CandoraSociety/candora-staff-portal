@@ -6,7 +6,6 @@ import TestParticipantsDialog from '@/components/empoweru/TestParticipantsDialog
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
 import ParticipantCard from '@/components/empoweru/ParticipantCard';
 
 // Registration statuses that mean the participant is still active in the program.
@@ -17,7 +16,6 @@ const CLOSED_STATUSES = ['completed', 'withdrawn', 'declined'];
 export default function EmpowerUParticipants() {
   const [search, setSearch] = useState('');
   const [testDialogOpen, setTestDialogOpen] = useState(false);
-  const [accountSetupRecord, setAccountSetupRecord] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: participants = [], isLoading } = useQuery({ queryKey: ['empoweru-participants'], queryFn: () => base44.entities.EmpowerUParticipant.list() });
@@ -47,7 +45,6 @@ export default function EmpowerUParticipants() {
       registrations={regsFor(p.id)}
       accountSetup={setupFor(p.id)}
       followUpsNeeded={followUpsFor(p.id)}
-      onOpenAccountSetup={setAccountSetupRecord}
     />
   );
 
@@ -89,15 +86,6 @@ export default function EmpowerUParticipants() {
       )}
 
       <TestParticipantsDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} participants={participants} />
-
-      {accountSetupRecord && (
-        <AccountSetupDialog
-          open
-          onOpenChange={(o) => !o && setAccountSetupRecord(null)}
-          record={accountSetupRecord}
-          onSaved={() => { setAccountSetupRecord(null); invalidateAll(); }}
-        />
-      )}
     </div>
   );
 }
