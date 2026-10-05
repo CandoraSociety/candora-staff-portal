@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import ContactAttemptDialog from '@/components/empoweru/ContactAttemptDialog';
 import { MoreHorizontal, Phone, Clock, ArrowRight, Pencil, Check } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { ACCOUNT_SETUP_STATUS_OPTIONS, ACCOUNT_SETUP_PIPELINE, ACCOUNT_SETUP_STATUS_DATE_FIELDS, nextAccountSetupStatus } from '@/lib/empoweruConstants';
@@ -11,13 +14,17 @@ import { formatDate, parseDateSmart } from '@/lib/dateUtils';
 
 const STEP_LABELS = { not_started: 'Not Started', contacting: 'Contacting', appointment_scheduled: 'Appt Booked', forms_sent: 'Forms Sent', forms_completed: 'Forms Done', account_opened: 'Opened', completed: 'Done' };
 const STATUS_COLORS = Object.fromEntries(ACCOUNT_SETUP_STATUS_OPTIONS.map(s => [s.value, s.color]));
+const DATE_FIELD_LABELS = { forms_sent_date: 'forms sent date', forms_completed_date: 'forms completed date', account_opened_date: 'account opened date', appointment_date: 'appointment date' };
+const statusLabel = (v) => (ACCOUNT_SETUP_STATUS_OPTIONS.find(s => s.value === v) || {}).label || v;
 
 // One participant's ATB account-setup chase, shown as a progress flow:
-// an "advance" button for the next pipeline step plus a menu for
-// exceptions (status overrides, contact logging, full edit).
+// a confirmed "advance" button for the next pipeline step, a Log Contact
+// button with full attempt details, and a menu for exceptions.
 export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const now = new Date();
 
   const isOverdue = record.next_action_date && parseDateSmart(record.next_action_date) < now && !['completed', 'declined'].includes(record.status);
@@ -25,7 +32,10 @@ export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) 
   const stepIndex = ACCOUNT_SETUP_PIPELINE.indexOf(record.status);
   const isPipeline = stepIndex >= 0;
   const next = nextAccountSetupStatus(record.status);
+  const attempts = record.contact_attempts || [];
+  const legacyCount = Math.max(0, (record.follow_up_attempts || 0) - attempts.length);
   const attemptsColor = record.follow_up_attempts === 0 ? '#64748b' : record.follow_up_attempts <= 2 ? '#f59e0b' : '#ef4444';
+  const confirmDateField = next ? ACCOUNT_SETUP_STATUS_DATE_FIELDS[next] : null;
 
   const patch = async (changes, message) => {
     setBusy(true);
@@ -43,14 +53,8 @@ export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) 
     const changes = { status };
     const dateField = ACCOUNT_SETUP_STATUS_DATE_FIELDS[status];
     if (dateField && !record[dateField]) changes[dateField] = new Date().toISOString().slice(0, 10);
-    const label = (ACCOUNT_SETUP_STATUS_OPTIONS.find(s => s.value === status) || {}).label || status;
-    patch(changes, `Status set to ${label}`);
+    patch(changes, `Status set to ${statusLabel(status)}`);
   };
-
-  const logContact = () => patch({
-    follow_up_attempts: (record.follow_up_attempts || 0) + 1,
-    last_contact_attempt_date: new Date().toISOString(),
-  }, `Contact attempt logged (${(record.follow_up_attempts || 0) + 1} total)`);
 
   return (
     <Card className={`hover:shadow-sm transition-shadow ${(isOverdue || isHighAttempts) ? 'border-amber-300' : ''}`}>
@@ -61,17 +65,45 @@ export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) 
               <p className="font-medium text-sm text-foreground truncate">{record.participant_name}</p>
               <StatusBadge status={record.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} />
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               <span>{record.cohort_name}</span>
-              {record.follow_up_attempts > 0 && <span className="flex items-center gap-0.5" style={{ color: attemptsColor }}><Phone className="h-3 w-3" /> {record.follow_up_attempts} attempts</span>}
+              {(attempts.length > 0 || legacyCount > 0) && (
+                <span className="flex items-center gap-1 flex-wrap">
+                  {attempts.map((att, i) => (
+                    <Popover key={i}>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border hover:bg-muted transition-colors"
+                          style={{ color: attemptsColor }}
+                          title={`Attempt ${i + 1} — ${formatDate(att.date_time)}`}
+                        >
+                          <Phone className="h-3 w-3" />{i + 1}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 space-y-1.5" align="start">
+                        <p className="text-sm font-medium">Attempt {i + 1} — {formatDate(att.date_time)}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {(att.methods || []).map(m => (
+                            <span key={m} className="px-1.5 py-0.5 rounded bg-muted text-[11px]">{m}</span>
+                          ))}
+                        </div>
+                        {att.comments && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{att.comments}</p>}
+                      </PopoverContent>
+                    </Popover>
+                  ))}
+                  {legacyCount > 0 && <span className="text-[11px]" style={{ color: attemptsColor }}>+{legacyCount} earlier</span>}
+                </span>
+              )}
               {record.last_contact_attempt_date && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {formatDate(record.last_contact_attempt_date)}</span>}
               {record.next_action_date && <span className={isOverdue ? 'text-red-600 font-medium' : ''}>Due: {formatDate(record.next_action_date)}</span>}
               {record.appointment_date && <span>Appt: {formatDate(record.appointment_date)}</span>}
             </div>
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
+            <Button size="sm" variant="outline" onClick={() => setContactOpen(true)}><Phone className="h-3.5 w-3.5" /> Log Contact</Button>
             {next && (
-              <Button size="sm" onClick={() => changeStatus(next)} disabled={busy}>
+              <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={busy}>
                 {STEP_LABELS[next]} <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             )}
@@ -80,8 +112,6 @@ export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) 
                 <Button size="icon" variant="ghost" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={logContact}>Log contact attempt</DropdownMenuItem>
-                <DropdownMenuSeparator />
                 {ACCOUNT_SETUP_STATUS_OPTIONS.map(s => (
                   <DropdownMenuItem key={s.value} onClick={() => changeStatus(s.value)} className="justify-between">
                     {s.label}
@@ -108,6 +138,24 @@ export default function AccountSetupProgressCard({ record, onUpdated, onEdit }) 
           })}
         </div>
       </CardContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Advance {record.participant_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Status will move from <span className="font-medium text-foreground">{statusLabel(record.status)}</span> to <span className="font-medium text-foreground">{statusLabel(next)}</span>.
+              {confirmDateField ? ` The ${DATE_FIELD_LABELS[confirmDateField]} will be stamped with today's date automatically.` : ''}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setConfirmOpen(false); changeStatus(next); }}>Advance to {statusLabel(next)}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <ContactAttemptDialog open={contactOpen} onOpenChange={setContactOpen} record={record} onSaved={onUpdated} />
     </Card>
   );
 }

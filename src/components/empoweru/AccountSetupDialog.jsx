@@ -8,9 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { Phone } from 'lucide-react';
 import { ACCOUNT_SETUP_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_DATE_FIELDS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
-import { formatDate } from '@/lib/dateUtils';
 
 export default function AccountSetupDialog({ open, onOpenChange, record, onSaved }) {
   const { toast } = useToast();
@@ -51,16 +49,6 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
     return next;
   });
 
-  const handleLogContact = async () => {
-    if (!record) return;
-    try {
-      const updated = { ...form, follow_up_attempts: (form.follow_up_attempts || 0) + 1, last_contact_attempt_date: new Date().toISOString() };
-      await base44.entities.EmpowerUAccountSetup.update(record.id, { follow_up_attempts: updated.follow_up_attempts, last_contact_attempt_date: updated.last_contact_attempt_date });
-      setForm(updated);
-      toast({ title: 'Contact attempt logged', description: `${updated.follow_up_attempts} total attempts` });
-    } catch (err) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
-  };
-
   const handleSave = async () => {
     if (!form.participant_id || !form.cohort_id) { toast({ title: 'Participant and cohort are required', variant: 'destructive' }); return; }
     setSaving(true);
@@ -95,14 +83,6 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
           )}
           <div className="space-y-1.5 col-span-2"><Label>Status</Label><Select value={form.status || 'not_started'} onValueChange={handleStatusChange}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ACCOUNT_SETUP_STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>
 
-          {record && (
-            <div className="col-span-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
-              <div className="flex items-center justify-between">
-                <div><p className="text-sm font-medium text-amber-900">Contact Tracking</p><p className="text-xs text-amber-700">Attempts: {form.follow_up_attempts || 0}{form.last_contact_attempt_date ? ` · Last: ${formatDate(form.last_contact_attempt_date)}` : ' · Never contacted'}</p></div>
-                <Button size="sm" variant="outline" onClick={handleLogContact}><Phone className="h-4 w-4" /> Log Contact</Button>
-              </div>
-            </div>
-          )}
           <div className="space-y-1.5"><Label>Next Action Date</Label><Input type="date" value={form.next_action_date || ''} onChange={(e) => update('next_action_date', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Savings Amount ($)</Label><Input type="number" value={form.savings_amount ?? DEFAULT_SAVINGS_AMOUNT} onChange={(e) => update('savings_amount', parseFloat(e.target.value) || 0)} /></div>
           <div className="col-span-2 mt-1"><p className="text-sm font-medium text-foreground">ATB Appointment</p></div>

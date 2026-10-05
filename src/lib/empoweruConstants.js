@@ -58,3 +58,5 @@ export const nextAccountSetupStatus = (status) => {
 };
 // Statuses that mark a milestone — the matching date auto-fills when set
 export const ACCOUNT_SETUP_STATUS_DATE_FIELDS = { forms_sent: 'forms_sent_date', forms_completed: 'forms_completed_date', account_opened: 'account_opened_date', completed: 'account_opened_date', appointment_scheduled: 'appointment_date' };
+// Contact methods available when logging an account-setup contact attempt
+export const ACCOUNT_SETUP_CONTACT_METHODS = ['Phone Call', 'Email', 'Text Message', 'In Person', 'Other'];

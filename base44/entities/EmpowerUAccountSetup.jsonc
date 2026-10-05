@@ -91,6 +91,31 @@
       "format": "date-time",
       "description": "When staff last tried to reach the participant"
     },
+    "contact_attempts": {
+      "type": "array",
+      "description": "Log of contact attempts \u2014 each entry captures when, how and any comments; shown as clickable chips on the Account Setup card",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the attempt happened"
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Contact method(s) used \u2014 phone call, email, text message, in person, other"
+          },
+          "comments": {
+            "type": "string",
+            "description": "Notes about the attempt"
+          }
+        }
+      }
+    },
     "next_action_date": {
       "type": "string",
       "format": "date",
