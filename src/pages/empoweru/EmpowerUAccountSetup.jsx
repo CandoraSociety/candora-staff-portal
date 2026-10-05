@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Phone, Clock, AlertCircle, Pencil } from 'lucide-react';
+import { Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import StatusBadge from '@/components/rc/StatusBadge';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
+import AccountSetupProgressCard from '@/components/empoweru/AccountSetupProgressCard';
 import { ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
-import { formatDate, parseDateSmart } from '@/lib/dateUtils';
+import { parseDateSmart } from '@/lib/dateUtils';
 
 export default function EmpowerUAccountSetup() {
   const [cohortFilter, setCohortFilter] = useState('all');
@@ -41,7 +41,6 @@ export default function EmpowerUAccountSetup() {
     queryFn: () => base44.entities.EmpowerUAccountSetup.count({ status: { $nin: ['completed', 'declined'] }, $or: [{ next_action_date: { $lt: today } }, { follow_up_attempts: { $gte: 3 }, status: 'contacting' }] })
   });
 
-  const now = new Date();
   const counts = ACCOUNT_SETUP_STATUS_OPTIONS.map(s => ({ ...s, count: statusCounts[s.value] || 0 }));
 
   const openEdit = (r) => { setEditing(r); setDialogOpen(true); };
@@ -52,8 +51,6 @@ export default function EmpowerUAccountSetup() {
     queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-counts'] });
     queryClient.invalidateQueries({ queryKey: ['empoweru-account-setup-attention'] });
   };
-
-  const getAttemptsColor = (n) => n === 0 ? '#64748b' : n <= 2 ? '#f59e0b' : '#ef4444';
 
   return (
     <div className="space-y-4">
@@ -90,27 +87,9 @@ export default function EmpowerUAccountSetup() {
             const aDate = parseDateSmart(a.next_action_date) || new Date(9999, 0, 1);
             const bDate = parseDateSmart(b.next_action_date) || new Date(9999, 0, 1);
             return aDate - bDate;
-          }).map(a => {
-            const isOverdue = a.next_action_date && parseDateSmart(a.next_action_date) < now && !['completed', 'declined'].includes(a.status);
-            const isHighAttempts = (a.follow_up_attempts || 0) >= 3 && a.status === 'contacting';
-            return (
-              <Card key={a.id} className={`hover:shadow-sm transition-shadow ${(isOverdue || isHighAttempts) ? 'border-amber-300' : ''}`}>
-                <CardContent className="p-3 flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1"><p className="font-medium text-sm text-foreground truncate">{a.participant_name}</p><StatusBadge status={a.status} options={ACCOUNT_SETUP_STATUS_OPTIONS} /></div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                      <span>{a.cohort_name}</span>
-                      {a.follow_up_attempts > 0 && <span className="flex items-center gap-0.5" style={{ color: getAttemptsColor(a.follow_up_attempts) }}><Phone className="h-3 w-3" /> {a.follow_up_attempts} attempts</span>}
-                      {a.last_contact_attempt_date && <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" /> {formatDate(a.last_contact_attempt_date)}</span>}
-                      {a.next_action_date && <span className={isOverdue ? 'text-red-600 font-medium' : ''}>Due: {formatDate(a.next_action_date)}</span>}
-                      {a.appointment_date && <span>Appt: {formatDate(a.appointment_date)}</span>}
-                    </div>
-                  </div>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 flex-shrink-0" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
-                </CardContent>
-              </Card>
-            );
-          })}
+          }).map(a => (
+            <AccountSetupProgressCard key={a.id} record={a} onUpdated={onSaved} onEdit={() => openEdit(a)} />
+          ))}
         </div>
       )}
       <AccountSetupDialog open={dialogOpen} onOpenChange={setDialogOpen} record={editing} onSaved={onSaved} />

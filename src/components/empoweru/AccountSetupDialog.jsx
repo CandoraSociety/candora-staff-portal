@@ -9,11 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Phone } from 'lucide-react';
-import { ACCOUNT_SETUP_STATUS_OPTIONS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
+import { ACCOUNT_SETUP_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_DATE_FIELDS, DEFAULT_SAVINGS_AMOUNT } from '@/lib/empoweruConstants';
 import { formatDate } from '@/lib/dateUtils';
-
-// Statuses that mark a milestone — the matching date auto-fills when set
-const STATUS_DATE_FIELDS = { forms_sent: 'forms_sent_date', forms_completed: 'forms_completed_date', account_opened: 'account_opened_date', completed: 'account_opened_date' };
 
 export default function AccountSetupDialog({ open, onOpenChange, record, onSaved }) {
   const { toast } = useToast();
@@ -49,7 +46,7 @@ export default function AccountSetupDialog({ open, onOpenChange, record, onSaved
 
   const handleStatusChange = (v) => setForm(p => {
     const next = { ...p, status: v };
-    const dateField = STATUS_DATE_FIELDS[v];
+    const dateField = ACCOUNT_SETUP_STATUS_DATE_FIELDS[v];
     if (dateField && !next[dateField]) next[dateField] = new Date().toISOString().slice(0, 10);
     return next;
   });

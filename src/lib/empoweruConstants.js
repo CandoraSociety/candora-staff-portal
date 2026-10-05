@@ -49,3 +49,12 @@ export const SERVICE_TYPE_OPTIONS = [
 export const SERVICE_TYPE_LABELS = Object.fromEntries(SERVICE_TYPE_OPTIONS.map(s => [s.value, s.label]));
 
 export const DEFAULT_SAVINGS_AMOUNT = 300;
+
+// Main happy-path pipeline for ATB account setup — drives the progress flow on the Account Setup tab
+export const ACCOUNT_SETUP_PIPELINE = ['not_started', 'contacting', 'appointment_scheduled', 'forms_sent', 'forms_completed', 'account_opened', 'completed'];
+export const nextAccountSetupStatus = (status) => {
+  const i = ACCOUNT_SETUP_PIPELINE.indexOf(status);
+  return i >= 0 && i < ACCOUNT_SETUP_PIPELINE.length - 1 ? ACCOUNT_SETUP_PIPELINE[i + 1] : null;
+};
+// Statuses that mark a milestone — the matching date auto-fills when set
+export const ACCOUNT_SETUP_STATUS_DATE_FIELDS = { forms_sent: 'forms_sent_date', forms_completed: 'forms_completed_date', account_opened: 'account_opened_date', completed: 'account_opened_date', appointment_scheduled: 'appointment_date' };
