@@ -72,6 +72,10 @@
           "is_vacant": {
             "type": "boolean"
           },
+          "is_inactive": {
+            "type": "boolean",
+            "description": "Inactive positions stay on the chart but are excluded from calculations"
+          },
           "notes": {
             "type": "string"
           }
