@@ -1,26 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Hourglass, Link2, Check, CalendarClock, ArrowDownAZ, Phone, Mail, Pencil, BellRing } from 'lucide-react';
+import { Hourglass, CalendarClock, ArrowDownAZ } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import { formatDate } from '@/lib/dateUtils';
 import { WAITLIST_STATUS_OPTIONS } from '@/lib/empoweruConstants';
 import WaitlistEntryDialog from '@/components/empoweru/WaitlistEntryDialog';
-
-const todayISO = () => new Date().toISOString().slice(0, 10);
-
-function StatusChip({ status }) {
-  const opt = WAITLIST_STATUS_OPTIONS.find((o) => o.value === status) || WAITLIST_STATUS_OPTIONS[0];
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2 py-0.5 text-xs text-foreground">
-      <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
-      {opt.label}
-    </span>
-  );
-}
+import WaitlistEntryCard from '@/components/empoweru/WaitlistEntryCard';
 
 // EmpowerU waitlist — every registration with status 'waitlisted', ordered by
 // date added (oldest first) with an alphabetical toggle. Light contact tracking:
@@ -31,6 +19,7 @@ export default function EmpowerUWaitlist() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [copiedId, setCopiedId] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,6 +43,11 @@ export default function EmpowerUWaitlist() {
       phone: participant?.phone,
       email: participant?.email,
       waitlist_status: r.waitlist_status || 'waiting',
+      waitlist_position: r.waitlist_position,
+      preferred_delivery_mode: r.preferred_delivery_mode,
+      accommodation_needs: r.accommodation_needs,
+      intake_notes: r.intake_notes,
+      notes: r.notes,
       last_contact_note: r.last_contact_note,
       last_contacted_date: r.last_contacted_date,
       follow_up_date: r.follow_up_date,
@@ -135,49 +129,18 @@ export default function EmpowerUWaitlist() {
         <Card><CardContent className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2"><Hourglass className="h-5 w-5" /> No one is on the waitlist right now.</CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {visible.map((entry) => {
-            const overdue = entry.follow_up_date && entry.follow_up_date < todayISO();
-            return (
-              <Card key={entry.id}><CardContent className="p-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-sm text-foreground truncate">{entry.full_name}</p>
-                      <span className="text-xs text-muted-foreground">#{positionById.get(entry.id)}</span>
-                      <StatusChip status={entry.waitlist_status} />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {entry.cohort_name || 'No cohort'}{entry.date_added ? ` · Added ${formatDate(entry.date_added)}` : ''}
-                    </p>
-                    {(entry.phone || entry.email) && (
-                      <p className="text-xs text-muted-foreground/80 mt-0.5 flex items-center gap-3 flex-wrap">
-                        {entry.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{entry.phone}</span>}
-                        {entry.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{entry.email}</span>}
-                      </p>
-                    )}
-                    {(entry.last_contact_note || entry.last_contacted_date) && (
-                      <p className="text-xs text-muted-foreground/80 mt-0.5 flex items-center gap-1.5 flex-wrap">
-                        {entry.last_contacted_date && <span className="whitespace-nowrap">Last contact {formatDate(entry.last_contacted_date)}</span>}
-                        {entry.last_contact_note && <span>· {entry.last_contact_note}</span>}
-                      </p>
-                    )}
-                    {entry.follow_up_date && (
-                      <p className={cn('text-xs mt-0.5 flex items-center gap-1', overdue ? 'text-destructive font-medium' : 'text-muted-foreground/80')}>
-                        <BellRing className="h-3 w-3" /> Follow up {formatDate(entry.follow_up_date)}{overdue ? ' — overdue' : ''}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(entry)}><Pencil className="h-3.5 w-3.5" /> Update</Button>
-                    <Button size="sm" variant="outline" onClick={() => copyLink(entry)} disabled={!entry.first_name || !entry.cohort_id} className={cn(copiedId === entry.id && 'text-success border-success')}>
-                      {copiedId === entry.id ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-                      {copiedId === entry.id ? 'Copied' : 'Copy Registration Link'}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent></Card>
-            );
-          })}
+          {visible.map((entry) => (
+            <WaitlistEntryCard
+              key={entry.id}
+              entry={entry}
+              position={positionById.get(entry.id)}
+              expanded={expandedId === entry.id}
+              onToggle={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
+              onEdit={() => setEditing(entry)}
+              onCopyLink={() => copyLink(entry)}
+              copied={copiedId === entry.id}
+            />
+          ))}
         </div>
       )}
 
