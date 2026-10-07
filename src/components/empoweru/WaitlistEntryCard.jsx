@@ -40,12 +40,12 @@ function Detail({ label, value }) {
 // One waitlist entry: collapsed shows name, status chip, cohort, contact info and
 // follow-up; clicking the header expands a full profile panel with everything on
 // file for the participant and their waitlist tracking details.
-export default function WaitlistEntryCard({ entry, position, expanded, onToggle, onEdit, onCopyLink, copied, otherWaitlists }) {
+export default function WaitlistEntryCard({ entry, position, expanded, onToggle, onEdit, onCopyLink, copied, otherWaitlists, shaded }) {
   const p = entry.participant || {};
   const overdue = entry.follow_up_date && entry.follow_up_date < todayISO();
 
   return (
-    <Card><CardContent className="p-3">
+    <Card className={cn(shaded && 'bg-muted/50')}><CardContent className="p-3">
       <button type="button" onClick={onToggle} className="w-full text-left" aria-expanded={expanded}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
@@ -58,6 +58,11 @@ export default function WaitlistEntryCard({ entry, position, expanded, onToggle,
             <p className="text-xs text-muted-foreground mt-0.5">
               {entry.cohort_name || 'No cohort'}{entry.date_added ? ` · Added ${formatDate(entry.date_added)}` : ''}
             </p>
+            {(p.country_of_origin || p.preferred_language) && (
+              <p className="text-xs text-muted-foreground/80 mt-0.5">
+                {[p.preferred_language && `Speaks ${p.preferred_language}`, p.country_of_origin && `From ${p.country_of_origin}`].filter(Boolean).join(' · ')}
+              </p>
+            )}
             {(entry.phone || entry.email) && (
               <p className="text-xs text-muted-foreground/80 mt-0.5 flex items-center gap-3 flex-wrap">
                 {entry.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{entry.phone}</span>}

@@ -131,10 +131,11 @@ export default function EmpowerUWaitlist() {
         <Card><CardContent className="p-6 text-center text-sm text-muted-foreground flex flex-col items-center gap-2"><Hourglass className="h-5 w-5" /> No one is on the waitlist right now.</CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {visible.map((entry) => (
+          {visible.map((entry, idx) => (
             <WaitlistEntryCard
               key={entry.id}
               entry={entry}
+              shaded={idx % 2 === 1}
               position={positionById.get(entry.id)}
               expanded={expandedId === entry.id}
               onToggle={() => setExpandedId(expandedId === entry.id ? null : entry.id)}

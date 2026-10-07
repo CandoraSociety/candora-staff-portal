@@ -32,11 +32,11 @@ function Detail({ label, value }) {
 // One ELL waitlist entry — mirrors the EmpowerU WaitlistEntryCard: collapsed
 // shows name, status chip, waitlist info, contact info and follow-up; clicking
 // the header expands a full profile panel with everything on file.
-export default function ELLWaitlistCard({ entry, position, expanded, onToggle, onEdit, otherWaitlists }) {
+export default function ELLWaitlistCard({ entry, position, expanded, onToggle, onEdit, otherWaitlists, shaded }) {
   const overdue = entry.follow_up_date && entry.follow_up_date < todayISO();
 
   return (
-    <Card><CardContent className="p-3">
+    <Card className={cn(shaded && 'bg-muted/50')}><CardContent className="p-3">
       <button type="button" onClick={onToggle} className="w-full text-left" aria-expanded={expanded}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="min-w-0 flex-1">
@@ -47,8 +47,13 @@ export default function ELLWaitlistCard({ entry, position, expanded, onToggle, o
               <CrossWaitlistBadges otherWaitlists={otherWaitlists} />
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {entry.clb_label ? `Level ${entry.clb_label}` : 'Level not assessed'}{entry.date_added ? ` · Waiting since ${formatDate(entry.date_added)}` : ''}
+              {entry.clb_label ? `Level ${entry.clb_label}` : 'Level not assessed'}{entry.date_added ? ` · Waiting since ${formatDate(entry.date_added)}` : ''}{entry.interested_course_name ? ` · Wants: ${entry.interested_course_name}` : ''}
             </p>
+            {(entry.first_language || entry.country_of_origin) && (
+              <p className="text-xs text-muted-foreground/80 mt-0.5">
+                {[entry.first_language && `Speaks ${entry.first_language}`, entry.country_of_origin && `From ${entry.country_of_origin}`].filter(Boolean).join(' · ')}
+              </p>
+            )}
             {(entry.phone || entry.email) && (
               <p className="text-xs text-muted-foreground/80 mt-0.5 flex items-center gap-3 flex-wrap">
                 {entry.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{entry.phone}</span>}
