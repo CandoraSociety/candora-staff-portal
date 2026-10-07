@@ -5,15 +5,12 @@ import { Users, Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { useEllRosters, LearnerRosterTable } from "@/components/ell/ELLLearnerRosterTabs";
-
-const CLB_LEVELS = ["not_assessed", "clb_1", "clb_2", "clb_3", "clb_4", "clb_5", "clb_6", "clb_7", "clb_8", "clb_9", "clb_10", "clb_11", "clb_12"];
+import LearnerFormDialog from "@/components/ell/LearnerFormDialog";
 
 const statusColors = {
   prospective: "bg-muted text-muted-foreground",
@@ -23,140 +20,6 @@ const statusColors = {
   completed: "bg-accent/10 text-accent-foreground",
   withdrawn: "bg-destructive/10 text-destructive-foreground",
 };
-
-function LearnerFormDialog({ learner, onClose }) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [open, setOpen] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    first_name: learner?.first_name || "",
-    last_name: learner?.last_name || "",
-    date_of_birth: learner?.date_of_birth || "",
-    phone: learner?.phone || "",
-    email: learner?.email || "",
-    country_of_origin: learner?.country_of_origin || "",
-    first_language: learner?.first_language || "",
-    clb_level: learner?.clb_level || "not_assessed",
-    enrollment_status: learner?.enrollment_status || "prospective",
-    intake_date: learner?.intake_date || new Date().toISOString().split("T")[0],
-    referral_source: learner?.referral_source || "",
-    notes: learner?.notes || "",
-  });
-
-  const handleSave = async () => {
-    if (!form.first_name || !form.last_name) {
-      toast({ title: "First and last name are required", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    const payload = { ...form };
-    // Track when a learner is newly placed on the waitlist (drives "days waitlisted").
-    if (form.enrollment_status === "waitlisted" && learner?.enrollment_status !== "waitlisted") {
-      payload.waitlist_date = new Date().toISOString().split("T")[0];
-    }
-    try {
-      if (learner) {
-        await base44.entities.ELLLearner.update(learner.id, payload);
-        toast({ title: "Learner updated" });
-      } else {
-        await base44.entities.ELLLearner.create(payload);
-        toast({ title: "Learner added" });
-      }
-      queryClient.invalidateQueries(["ellLearners"]);
-      setOpen(false);
-      onClose?.();
-    } catch (e) {
-      toast({ title: e.message, variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose?.(); setOpen(v); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{learner ? "Edit Learner" : "Add Learner"}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>First Name *</Label>
-              <Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
-            </div>
-            <div>
-              <Label>Last Name *</Label>
-              <Input value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Date of Birth</Label>
-              <Input type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} />
-            </div>
-            <div>
-              <Label>Phone</Label>
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </div>
-          </div>
-          <div>
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Country of Origin</Label>
-              <Input value={form.country_of_origin} onChange={(e) => setForm({ ...form, country_of_origin: e.target.value })} />
-            </div>
-            <div>
-              <Label>First Language</Label>
-              <Input value={form.first_language} onChange={(e) => setForm({ ...form, first_language: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>CLB Level</Label>
-              <Select value={form.clb_level} onValueChange={(v) => setForm({ ...form, clb_level: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CLB_LEVELS.map((l) => <SelectItem key={l} value={l}>{l.replace("_", " ").toUpperCase()}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Enrollment Status</Label>
-              <Select value={form.enrollment_status} onValueChange={(v) => setForm({ ...form, enrollment_status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["prospective", "waitlisted", "enrolled", "active", "completed", "withdrawn"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Intake Date</Label>
-              <Input type="date" value={form.intake_date} onChange={(e) => setForm({ ...form, intake_date: e.target.value })} />
-            </div>
-            <div>
-              <Label>Referral Source</Label>
-              <Input value={form.referral_source} onChange={(e) => setForm({ ...form, referral_source: e.target.value })} />
-            </div>
-          </div>
-          <div>
-            <Label>Notes</Label>
-            <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          </div>
-        </div>
-        <DialogFooter>
-          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function DeleteConfirmDialog({ learner, onClose }) {
   const { toast } = useToast();

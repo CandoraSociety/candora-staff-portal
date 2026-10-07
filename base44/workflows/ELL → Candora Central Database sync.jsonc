@@ -1,0 +1,41 @@
+{
+  "name": "ELL \u2192 Candora Central Database sync",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ell_candora_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_learner": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncELLLearnerToCentralDb",
+            "args": {
+              "learner_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync ELL learner to Central Database",
+            "description": "Link or create the client file and add the ELL program indicator"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "ELLLearner"
+    }
+  },
+  "description": "Auto-create/update a Candora Central Database (RCClient) record from an ELL learner \u2014 uses the central file staff linked at intake when one exists, otherwise matches or creates one \u2014 and maintains an ELL program-participation indicator."
+}

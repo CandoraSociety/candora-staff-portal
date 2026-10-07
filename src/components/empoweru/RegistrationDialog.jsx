@@ -7,10 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { REGISTRATION_STATUS_OPTIONS, DELIVERY_MODE_OPTIONS } from '@/lib/empoweruConstants';
 
-const EMPTY = { participant_id: '', participant_name: '', cohort_id: '', cohort_name: '', registration_date: '', status: 'registered', waitlist_position: 0, preferred_delivery_mode: 'no_preference', accommodation_needs: '', intake_notes: '', notes: '' };
+const EMPTY = { participant_id: '', participant_name: '', cohort_id: '', cohort_name: '', registration_date: '', status: 'waitlisted', waitlist_position: 0, preferred_delivery_mode: 'no_preference', accommodation_needs: '', intake_notes: '', notes: '' };
 
 export default function RegistrationDialog({ open, onOpenChange, registration, onSaved }) {
   const { toast } = useToast();
@@ -43,6 +44,18 @@ export default function RegistrationDialog({ open, onOpenChange, registration, o
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{registration ? 'Edit Registration' : 'New Registration'}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
+          {/* Waitlist checkbox — visible, at the top, on by default for new registrations */}
+          <label className="col-span-2 flex items-start gap-3 rounded-lg border-2 border-warning/60 bg-warning/10 p-3 cursor-pointer">
+            <Checkbox
+              checked={form.status === 'waitlisted'}
+              onCheckedChange={(v) => update('status', v ? 'waitlisted' : 'registered')}
+              className="mt-0.5"
+            />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Waitlist this person</p>
+              <p className="text-xs text-muted-foreground">They don't have a spot in the cohort yet — they'll be tracked on the waitlist until one opens up.</p>
+            </div>
+          </label>
           <div className="space-y-1.5 col-span-2"><Label>Participant *</Label><Select value={form.participant_id} onValueChange={handleParticipantChange}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent>{participants.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5 col-span-2"><Label>Cohort *</Label><Select value={form.cohort_id} onValueChange={handleCohortChange}><SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger><SelectContent>{cohorts.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
           <div className="space-y-1.5"><Label>Registration Date *</Label><Input type="date" value={form.registration_date || ''} onChange={(e) => update('registration_date', e.target.value)} /></div>

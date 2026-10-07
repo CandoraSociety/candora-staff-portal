@@ -127,6 +127,10 @@
       "type": "string",
       "description": "How the learner heard about the program"
     },
+    "linked_rc_client_id": {
+      "type": "string",
+      "description": "Central Database (RCClient) record this learner is linked to \u2014 set when staff pick an existing client file at intake; the central DB sync uses it instead of auto-matching"
+    },
     "progress_notes": {
       "type": "string",
       "description": "Notes on learner progress"
