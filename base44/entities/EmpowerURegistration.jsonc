@@ -44,6 +44,32 @@
       "type": "number",
       "description": "Position on the waitlist (if waitlisted)"
     },
+    "waitlist_status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "contacted",
+        "form_sent",
+        "not_interested",
+        "next_session"
+      ],
+      "default": "waiting",
+      "description": "Light waitlist tracking \u2014 contact state while this registration is waitlisted (waiting = no contact yet; contacted = left message/reached; form_sent = application form emailed; not_interested = not interested or no answer; next_session = registered but for a future session)"
+    },
+    "last_contacted_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When staff last contacted this waitlist entry"
+    },
+    "last_contact_note": {
+      "type": "string",
+      "description": "Note from the most recent contact with this waitlist entry"
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When to follow up with this waitlist entry next"
+    },
     "preferred_delivery_mode": {
       "type": "string",
       "enum": [

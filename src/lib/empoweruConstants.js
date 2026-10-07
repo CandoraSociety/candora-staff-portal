@@ -24,6 +24,17 @@ export const REGISTRATION_STATUS_OPTIONS = [
 ];
 export const REGISTRATION_STATUS_LABELS = Object.fromEntries(REGISTRATION_STATUS_OPTIONS.map(s => [s.value, s.label]));
 
+// Light waitlist tracking — contact state while a registration is waitlisted
+export const WAITLIST_STATUS_OPTIONS = [
+  { value: 'waiting', label: 'Waiting', color: '#94a3b8' },
+  { value: 'contacted', label: 'Left Message / Contacted', color: '#f59e0b' },
+  { value: 'form_sent', label: 'Application Form Sent', color: '#a855f7' },
+  { value: 'not_interested', label: 'Not Interested / No Answer', color: '#ef4444' },
+  { value: 'next_session', label: 'Registered — Next Session', color: '#3b82f6' },
+];
+export const WAITLIST_STATUS_LABELS = Object.fromEntries(WAITLIST_STATUS_OPTIONS.map(s => [s.value, s.label]));
+export const WAITLIST_STATUS_COLORS = Object.fromEntries(WAITLIST_STATUS_OPTIONS.map(s => [s.value, s.color]));
+
 export const ACCOUNT_SETUP_STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not Started', color: '#64748b' },
   { value: 'contacting', label: 'Contacting', color: '#f59e0b' },
