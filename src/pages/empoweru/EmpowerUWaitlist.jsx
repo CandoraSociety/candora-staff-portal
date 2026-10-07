@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { WAITLIST_STATUS_OPTIONS } from '@/lib/empoweruConstants';
 import WaitlistEntryDialog from '@/components/empoweru/WaitlistEntryDialog';
 import WaitlistEntryCard from '@/components/empoweru/WaitlistEntryCard';
+import { useCrossWaitlistIndex, findOtherWaitlists } from '@/lib/waitlistCrossRef';
 
 // EmpowerU waitlist — every registration with status 'waitlisted', ordered by
 // date added (oldest first) with an alphabetical toggle. Light contact tracking:
@@ -26,6 +27,7 @@ export default function EmpowerUWaitlist() {
   const { data: registrations = [], isLoading } = useQuery({ queryKey: ['empoweru-registrations'], queryFn: () => base44.entities.EmpowerURegistration.list() });
   const { data: participants = [] } = useQuery({ queryKey: ['empoweru-participants'], queryFn: () => base44.entities.EmpowerUParticipant.list() });
   const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
+  const { data: wlIndex = [] } = useCrossWaitlistIndex();
 
   const waitlisted = registrations.filter(r => r.status === 'waitlisted').map(r => {
     const participant = participants.find(p => p.id === r.participant_id);
@@ -139,6 +141,7 @@ export default function EmpowerUWaitlist() {
               onEdit={() => setEditing(entry)}
               onCopyLink={() => copyLink(entry)}
               copied={copiedId === entry.id}
+              otherWaitlists={findOtherWaitlists(entry, wlIndex, 'empoweru')}
             />
           ))}
         </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route, ClipboardList, StickyNote } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, Pencil, Plus, Calendar, Baby, Route, ClipboardList, StickyNote, Hourglass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,7 @@ import ClientNotesSection from '@/components/rc/ClientNotesSection';
 import ReferralDialog from '@/components/rc/ReferralDialog';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
 import ClientActionButtons from '@/components/rc/ClientActionButtons';
+import { useCrossWaitlistIndex, findOtherWaitlists } from '@/lib/waitlistCrossRef';
 import ExternalReferralDialog from '@/components/rc/ExternalReferralDialog';
 import { buildDefaultStages } from '@/components/rc/intensive/caseConstants';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMENT_STATUS_OPTIONS, REFERRAL_STATUS_OPTIONS, REFERRAL_DIRECTION_LABELS, IS_PHAC } from '@/lib/rcConstants';
@@ -61,6 +62,7 @@ export default function RCClientDetail() {
   const [extRefOpen, setExtRefOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
+  const { data: wlIndex = [] } = useCrossWaitlistIndex();
 
   const { data: client, isLoading } = useQuery({ queryKey: ['rc-client', id], queryFn: () => base44.entities.RCClient.get(id) });
   const { data: serviceLogs = [] } = useQuery({ queryKey: ['rc-service-logs', id], queryFn: () => base44.entities.RCServiceLog.filter({ client_id: id }) });
@@ -208,6 +210,19 @@ export default function RCClientDetail() {
               </div>
             );
           })}
+          {(() => {
+            const matches = findOtherWaitlists({ first_name: client.first_name, last_name: client.last_name, phone: client.phone, email: client.email }, wlIndex, null);
+            if (!matches.length) return null;
+            return (
+              <div className="mt-3 p-3 rounded-lg border flex flex-wrap items-center gap-1.5" style={{ backgroundColor: '#fef3c7', borderColor: '#fcd34d' }}>
+                <Hourglass className="h-4 w-4 text-amber-600" />
+                <span className="text-xs font-medium text-amber-800">On waitlist for:</span>
+                {matches.map((m) => (
+                  <span key={m.area} className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${m.color}20`, color: m.color }}>{m.label}</span>
+                ))}
+              </div>
+            );
+          })()}
           {phac && (
             <div className="mt-3 p-3 rounded-lg bg-sky-50 border border-sky-200">
               <p className="text-sm font-medium text-sky-900 flex items-center gap-1.5"><Baby className="h-4 w-4" /> PHAC Caregiver Capacity</p>

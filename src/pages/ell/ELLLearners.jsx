@@ -271,7 +271,7 @@ export default function ELLLearners() {
               <CardContent className="p-0">
                 <div className="divide-y">
                   {filtered?.map((learner) => (
-                    <div key={learner.id} className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors">
+                    <div key={learner.id} onClick={() => { setEditLearner(learner); setShowForm(true); }} className="flex items-center justify-between p-4 hover:bg-accent/5 transition-colors cursor-pointer">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-sm">
                           {learner.first_name?.[0]}{learner.last_name?.[0]}
@@ -289,10 +289,10 @@ export default function ELLLearners() {
                         <Badge className={statusColors[learner.enrollment_status] || "bg-muted text-muted-foreground"}>
                           {learner.enrollment_status}
                         </Badge>
-                        <Button size="icon" variant="ghost" onClick={() => { setEditLearner(learner); setShowForm(true); }}>
+                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditLearner(learner); setShowForm(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button size="icon" variant="ghost" onClick={() => setDeleteLearner(learner)}>
+                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setDeleteLearner(learner); }}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

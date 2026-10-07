@@ -247,6 +247,7 @@ import ELLClassDetail from '@/pages/ell/ELLClassDetail';
 import ELLSchedule from '@/pages/ell/ELLSchedule';
 import ELLInstructors from '@/pages/ell/ELLInstructors';
 import ELLAssessments from '@/pages/ell/ELLAssessments';
+import ELLWaitlist from '@/pages/ell/ELLWaitlist';
 
 // Candora Archives
 import ArchivesLayout from '@/components/archives/ArchivesLayout';
@@ -643,6 +644,7 @@ const AuthenticatedApp = () => {
           <Route path="/ell/schedule" element={<ELLSchedule />} />
           <Route path="/ell/instructors" element={<ELLInstructors />} />
           <Route path="/ell/assessments" element={<ELLAssessments />} />
+          <Route path="/ell/waitlist" element={<ELLWaitlist />} />
         </Route>
 
         {/* Candora Archives - standalone layout */}
