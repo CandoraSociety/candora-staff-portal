@@ -26,6 +26,10 @@
     "emergency_contact_phone": {
       "type": "string"
     },
+    "linked_rc_client_id": {
+      "type": "string",
+      "description": "Central Database (RCClient) record this participant is linked to \u2014 set when staff pick an existing client file at registration; the central DB sync uses it instead of auto-matching"
+    },
     "notes": {
       "type": "string"
     }

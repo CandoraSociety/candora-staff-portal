@@ -29,9 +29,12 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [overrideCode, setOverrideCode] = useState('');
+  // Existing Central Database file the staff member picked — the central sync
+  // updates this exact file instead of auto-matching.
+  const [linkedClient, setLinkedClient] = useState(null);
 
   useEffect(() => {
-    if (open) { setForm({ ...EMPTY }); setOverrideCode(''); }
+    if (open) { setForm({ ...EMPTY }); setOverrideCode(''); setLinkedClient(null); }
   }, [open]);
 
   // A full program/area still allows a confirmed registration with the override code.
@@ -45,9 +48,10 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
     setSaving(true);
     try {
       const name = `${form.first_name} ${form.last_name}`;
+      const linked_rc_client_id = linkedClient?.id || null;
       if (area === 'community') {
         isWaitlistedRef.current = forced;
-        const participant = await base44.entities.CommunityParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes });
+        const participant = await base44.entities.CommunityParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes, linked_rc_client_id });
         await base44.entities.CommunityRegistration.create({ participant_id: participant.id, participant_name: name, program_id: program.id, program_name: program.name, registration_date: today(), status: forced ? 'waitlisted' : 'registered', notes: form.notes });
       } else if (area === 'empoweru') {
         const regs = await base44.entities.EmpowerURegistration.filter({ cohort_id: program.id });
@@ -55,7 +59,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         const waitlistedCount = regs.filter(r => r.status === 'waitlisted').length;
         const isFull = (program.capacity && active >= program.capacity) || forced;
         isWaitlistedRef.current = !!isFull;
-        const participant = await base44.entities.EmpowerUParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes });
+        const participant = await base44.entities.EmpowerUParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: form.notes, linked_rc_client_id });
         await base44.entities.EmpowerURegistration.create({
           participant_id: participant.id, participant_name: name, cohort_id: program.id, cohort_name: program.name,
           registration_date: today(), status: isFull ? 'waitlisted' : 'registered',
@@ -74,7 +78,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         const waitlisting = !!form.waitlist || forced;
         isWaitlistedRef.current = waitlisting;
         await base44.entities.ELLLearner.create({
-          first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email,
+          first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, linked_rc_client_id,
           intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective',
           notes: [program?.name && program.name !== 'ELL Program' ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
           waitlist_date: waitlisting ? today() : null,
@@ -83,10 +87,10 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         });
       } else if (area === 'digilit') {
         isWaitlistedRef.current = forced;
-        await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: forced ? 'waitlisted' : 'registered', notes: form.notes });
+        await base44.entities.DigiLitParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, registration_date: today(), status: forced ? 'waitlisted' : 'registered', notes: form.notes, linked_rc_client_id });
       } else if (area === 'frn') {
         isWaitlistedRef.current = forced;
-        await base44.entities.FRNParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n') });
+        await base44.entities.FRNParticipant.create({ first_name: form.first_name, last_name: form.last_name, phone: form.phone, email: form.email, linked_rc_client_id, notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n') });
         await base44.entities.ProgramRegistration.create({
           participant_first_name: form.first_name, participant_last_name: form.last_name, participant_name: name,
           participant_phone: form.phone, participant_email: form.email,
@@ -118,7 +122,13 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         <div className="grid grid-cols-2 gap-3">
           {!isChild && (
             <div className="col-span-2">
-              <ExistingClientToggle onSelect={(c) => setForm(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' }))} />
+              <ExistingClientToggle onSelect={(c) => { setLinkedClient(c); setForm(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' })); }} />
+              {linkedClient && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Linked to central file: <span className="font-medium text-foreground">{linkedClient.first_name} {linkedClient.last_name}</span>
+                  <button type="button" className="ml-2 underline hover:text-foreground" onClick={() => setLinkedClient(null)}>Remove link</button>
+                </p>
+              )}
             </div>
           )}
           <div className="space-y-1.5"><Label>{isChild ? "Child's First Name *" : 'First Name *'}</Label><Input value={form.first_name || ''} onChange={(e) => update('first_name', e.target.value)} /></div>

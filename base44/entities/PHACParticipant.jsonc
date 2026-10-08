@@ -62,6 +62,10 @@
       "default": "registered",
       "description": "Registration status \u2014 set to 'waitlisted' when the program is full"
     },
+    "linked_rc_client_id": {
+      "type": "string",
+      "description": "Central Database (RCClient) record this child is linked to \u2014 set when staff pick an existing client file at registration; the central DB sync uses it instead of auto-matching"
+    },
     "notes": {
       "type": "string",
       "description": "Allergies, special needs, or other notes"

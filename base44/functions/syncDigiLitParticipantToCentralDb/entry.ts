@@ -1,13 +1,13 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { syncParticipantToCentralDb } from '../../shared/centralDbSync.ts';
 
-// Entity-triggered sync: when an EmpowerU participant (or one of their cohort
-// registrations) is created/updated, mirror a CONDENSED profile into the
-// Candora Central Database (RCClient) and maintain an EmpowerU participation
-// indicator listing each cohort and whether they're waitlisted.
+// Entity-triggered sync: when a Digital Literacy participant is created or
+// updated, mirror a CONDENSED profile into the Candora Central Database
+// (RCClient) and maintain a Digital Literacy participation indicator
+// reflecting the participant's current status (including waitlisted).
 // A staff-linked central file (linked_rc_client_id) always wins over
 // auto-matching. See base44/shared/centralDbSync.ts for matching rules.
-export default async function syncEmpowerUParticipantToCentralDb(req: Request): Promise<Response> {
+export default async function syncDigiLitParticipantToCentralDb(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     try { await base44.auth.me(); } catch { /* entity automation — service role */ }
@@ -17,26 +17,26 @@ export default async function syncEmpowerUParticipantToCentralDb(req: Request): 
     const participantId = payload?.participant_id || payload?.event?.entity_id || payload?.data?.id;
     if (!participantId) return Response.json({ error: 'No participant id provided.' }, { status: 400 });
 
-    const svc = base44.asServiceRole.entities;
-    const p = await svc.EmpowerUParticipant.get(participantId);
+    const p = await base44.asServiceRole.entities.DigiLitParticipant.get(participantId);
     if (!p || !p.id) return Response.json({ status: 'not_found' });
 
-    const regs = await svc.EmpowerURegistration.filter({ participant_id: p.id });
-    const label = (r: any) => r.status === 'waitlisted'
-      ? `waitlisted for ${r.cohort_name || 'a cohort'}`
-      : `${r.cohort_name || 'cohort'}${r.status && r.status !== 'registered' ? ` (${r.status})` : ''}`;
-    const indicator = regs.length
-      ? `EmpowerU: ${regs.map(label).join(', ')}.`
-      : 'Registered in the EmpowerU program.';
+    const indicator = p.status === 'waitlisted'
+      ? 'On the Digital Literacy program waitlist.'
+      : p.status === 'started'
+        ? 'Active in the Digital Literacy program.'
+        : p.status === 'completed'
+          ? 'Completed the Digital Literacy program.'
+          : p.status === 'withdrawn'
+            ? 'Withdrew from the Digital Literacy program.'
+            : 'Registered in the Digital Literacy program.';
 
     const result = await syncParticipantToCentralDb(base44, {
-      program: 'empoweru',
+      program: 'digilit',
       linkedId: p.id,
       indicator,
       personal: {
         first_name: p.first_name,
         last_name: p.last_name,
-        date_of_birth: p.date_of_birth,
         phone: p.phone,
         email: p.email,
       },
