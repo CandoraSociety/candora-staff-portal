@@ -1,0 +1,41 @@
+{
+  "name": "Community Registration & Waitlist \u2192 Candora Central Database sync",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "CommunityRegistration"
+    }
+  },
+  "description": "When a Community program registration is created or its status changes (e.g. waitlisted \u2192 registered), refresh the Community indicator on the participant's Central Database file.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "community_registration_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_registration": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncCommunityParticipantToCentralDb",
+            "args": {
+              "participant_id": "${ .trigger.data.participant_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Update Community status on Central Database",
+            "description": "Programs and waitlists"
+          }
+        }
+      }
+    ]
+  }
+}

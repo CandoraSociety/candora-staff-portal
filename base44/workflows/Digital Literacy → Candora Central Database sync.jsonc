@@ -1,0 +1,41 @@
+{
+  "name": "Digital Literacy \u2192 Candora Central Database sync",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "DigiLitParticipant"
+    }
+  },
+  "description": "Auto-create/update a Candora Central Database record from a Digital Literacy participant \u2014 uses a staff-linked central file when one exists, otherwise matches or creates one \u2014 and maintains the Digital Literacy indicator (including waitlisted).",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "digilit_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_participant": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncDigiLitParticipantToCentralDb",
+            "args": {
+              "participant_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync Digital Literacy participant to Central Database",
+            "description": "Link or create the client file"
+          }
+        }
+      }
+    ]
+  }
+}

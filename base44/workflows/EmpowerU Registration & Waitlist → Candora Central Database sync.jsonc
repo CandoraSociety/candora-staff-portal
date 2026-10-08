@@ -1,0 +1,51 @@
+{
+  "name": "EmpowerU Registration & Waitlist \u2192 Candora Central Database sync",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "EmpowerURegistration"
+    }
+  },
+  "description": "When an EmpowerU cohort registration is created or its status changes (e.g. waitlisted \u2192 registered), refresh the EmpowerU indicator on the participant's Central Database file.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "empoweru_registration_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "let_participant_sync_first": {
+          "wait": "PT15S",
+          "then": "sync_registration",
+          "x-base44": {
+            "title": "Wait for participant sync",
+            "description": "Avoids creating a duplicate file"
+          }
+        }
+      },
+      {
+        "sync_registration": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncEmpowerUParticipantToCentralDb",
+            "args": {
+              "participant_id": "${ .trigger.data.participant_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Update EmpowerU status on Central Database",
+            "description": "Cohorts and waitlists"
+          }
+        }
+      }
+    ]
+  }
+}

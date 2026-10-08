@@ -1,0 +1,41 @@
+{
+  "name": "FRN \u2192 Candora Central Database sync",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "FRNParticipant"
+    }
+  },
+  "description": "Auto-create/update a Candora Central Database record from an FRN participant \u2014 uses the central file staff linked at registration when one exists, otherwise matches or creates one \u2014 and maintains the FRN participation indicator.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "frn_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_participant": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncFRNParticipantToCentralDb",
+            "args": {
+              "participant_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync FRN participant to Central Database",
+            "description": "Link or create the client file"
+          }
+        }
+      }
+    ]
+  }
+}

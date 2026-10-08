@@ -1,0 +1,51 @@
+{
+  "name": "Community \u2192 Candora Central Database sync",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "CommunityParticipant"
+    }
+  },
+  "description": "Auto-create/update a Candora Central Database record from a Community Programs participant \u2014 uses a staff-linked central file when one exists, otherwise matches or creates one \u2014 and maintains the Community indicator.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "community_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "let_registration_sync_first": {
+          "wait": "PT15S",
+          "then": "sync_participant",
+          "x-base44": {
+            "title": "Wait for registration sync",
+            "description": "Avoids creating a duplicate file"
+          }
+        }
+      },
+      {
+        "sync_participant": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncCommunityParticipantToCentralDb",
+            "args": {
+              "participant_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Sync Community participant to Central Database",
+            "description": "Link or create the client file"
+          }
+        }
+      }
+    ]
+  }
+}

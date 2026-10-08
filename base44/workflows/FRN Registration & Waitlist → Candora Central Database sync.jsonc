@@ -1,0 +1,51 @@
+{
+  "name": "FRN Registration & Waitlist \u2192 Candora Central Database sync",
+  "description": "When an FRN registration is created or its status changes (e.g. waitlisted \u2192 registered), refresh the FRN indicator on the participant's Central Database file.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "ProgramRegistration",
+      "events": [
+        "create",
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.program_portal == \"frn\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "frn_registration_central_database_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "let_participant_sync_first": {
+          "wait": "PT15S",
+          "then": "sync_registration",
+          "x-base44": {
+            "title": "Wait for participant sync",
+            "description": "Avoids creating a duplicate file"
+          }
+        }
+      },
+      {
+        "sync_registration": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncFRNParticipantToCentralDb",
+            "args": {
+              "registration_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Update FRN status on Central Database",
+            "description": "Registered or waitlisted"
+          }
+        }
+      }
+    ]
+  }
+}
