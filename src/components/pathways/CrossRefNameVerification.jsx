@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Check, RotateCcw, BadgeCheck } from 'lucide-react';
+import { Check, RotateCcw, BadgeCheck, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CollapsibleSection, rowIdentityKeys, rowStorageKey } from './CrossRefTab';
 
@@ -10,6 +10,7 @@ import { CollapsibleSection, rowIdentityKeys, rowStorageKey } from './CrossRefTa
 const SNAPSHOT_KEY = 'cross_ref_name_verification';
 const VERIFIED_LOCAL = 'crossRefNameVerified';
 const NOTES_LOCAL = 'crossRefNameNotes';
+const NAMES_LOCAL = 'crossRefNameCorrected';
 
 // Sub-tab of the Cross-Reference tab: a name-verification checklist covering
 // every client in the cross-reference list. Staff record the client's correct
@@ -22,7 +23,12 @@ export default function CrossRefNameVerification({ rows }) {
   const [notes, setNotes] = useState(() => {
     try { return JSON.parse(localStorage.getItem(NOTES_LOCAL) || '{}'); } catch { return {}; }
   });
+  // Corrected names pushed to the CRT / client file: storage key → corrected name
+  const [names, setNames] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(NAMES_LOCAL) || '{}'); } catch { return {}; }
+  });
   const [search, setSearch] = useState('');
+  const [savingName, setSavingName] = useState(null);
   const [ready, setReady] = useState(false);
 
   // Hydrate from the server snapshot — it is the source of truth, saved on
@@ -36,6 +42,7 @@ export default function CrossRefNameVerification({ rows }) {
         if (s && !cancelled) {
           setVerified(new Set(s.verified || []));
           setNotes(s.notes || {});
+          setNames(s.names || {});
         }
       } catch { /* not logged in or no snapshot — fall back to localStorage */ }
       finally { if (!cancelled) setReady(true); }
@@ -50,12 +57,13 @@ export default function CrossRefNameVerification({ rows }) {
     if (!ready) return; // don't overwrite the server before we've read it
     localStorage.setItem(VERIFIED_LOCAL, JSON.stringify([...verified]));
     localStorage.setItem(NOTES_LOCAL, JSON.stringify(notes));
+    localStorage.setItem(NAMES_LOCAL, JSON.stringify(names));
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      base44.auth.updateMe({ [SNAPSHOT_KEY]: { verified: [...verified], notes } }).catch(() => {});
+      base44.auth.updateMe({ [SNAPSHOT_KEY]: { verified: [...verified], notes, names } }).catch(() => {});
     }, 800);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [verified, notes, ready]);
+  }, [verified, notes, names, ready]);
 
   const entries = useMemo(() => rows
     .map(r => ({ row: r, keys: rowIdentityKeys(r), sk: rowStorageKey(r), name: (r.client_name || '').trim() }))
@@ -74,6 +82,30 @@ export default function CrossRefNameVerification({ rows }) {
   };
   const setNote = (e, v) => setNotes(prev => ({ ...prev, [e.sk]: v }));
 
+  // Push the corrected name to the client file and every open CRT workbook.
+  const updateName = async (e) => {
+    const corrected = String(notes[e.sk] || '').trim();
+    if (!corrected) { toast.error('Enter the correct name in the Compass name field first'); return; }
+    if (corrected === (names[e.sk] || e.name)) { toast.message('This name is already up to date'); return; }
+    setSavingName(e.sk);
+    try {
+      const res = await base44.functions.invoke('correctCrossRefClientName', {
+        hsid: e.row.hsid || '',
+        current_name: e.row.client_name || '',
+        corrected_name: corrected,
+      });
+      const d = res.data || {};
+      if (d.status !== 'success') throw new Error(d.error || 'Update failed');
+      setNames(prev => ({ ...prev, [e.sk]: corrected }));
+      if (d.matched) toast.success(`${corrected} — client file and CRT workbooks updated`);
+      else toast.success(`${corrected} — updated in ${d.workbooks_patched} CRT workbook(s)`);
+    } catch (err) {
+      toast.error('Name update failed: ' + (err.message || 'please try again'));
+    } finally {
+      setSavingName(null);
+    }
+  };
+
   const q = search.trim().toLowerCase();
   const matchesSearch = (e) => !q
     || e.name.toLowerCase().includes(q)
@@ -81,6 +113,23 @@ export default function CrossRefNameVerification({ rows }) {
     || (notes[e.sk] || '').toLowerCase().includes(q);
   const pending = entries.filter(e => !isVerified(e) && matchesSearch(e));
   const verifiedEntries = entries.filter(e => isVerified(e) && matchesSearch(e));
+
+  const nameCell = (e) => (
+    <div>
+      <div className={names[e.sk] ? 'line-through text-slate-400 font-normal' : ''}>{e.name || '—'}</div>
+      {names[e.sk] && <div className="text-emerald-700">{names[e.sk]}</div>}
+    </div>
+  );
+
+  const updateNameButton = (e) => (
+    <button
+      onClick={() => updateName(e)}
+      disabled={savingName === e.sk}
+      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap disabled:opacity-50"
+    >
+      {savingName === e.sk ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Update Name
+    </button>
+  );
 
   const noteField = (e, placeholder) => (
     <input
@@ -126,16 +175,19 @@ export default function CrossRefNameVerification({ rows }) {
             <tbody className="divide-y divide-slate-200">
               {pending.map(e => (
                 <tr key={e.row.id} className="hover:bg-slate-50">
-                  <td className="px-3 py-2.5 font-medium text-slate-800">{e.name || '—'}</td>
+                  <td className="px-3 py-2.5 font-medium text-slate-800">{nameCell(e)}</td>
                   <td className="px-3 py-2.5 text-slate-600">{e.row.hsid || '—'}</td>
                   <td className="px-3 py-2.5">{noteField(e, 'Correct name according to Compass...')}</td>
                   <td className="px-3 py-2.5">
-                    <button
-                      onClick={() => markVerified(e)}
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
-                    >
-                      <Check className="w-3.5 h-3.5" /> Mark Verified
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => markVerified(e)}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Mark Verified
+                      </button>
+                      {updateNameButton(e)}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -170,18 +222,21 @@ export default function CrossRefNameVerification({ rows }) {
                   <td className="px-3 py-2.5 font-medium text-slate-800">
                     <div className="flex items-center gap-1.5">
                       <BadgeCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      {e.name || '—'}
+                      {nameCell(e)}
                     </div>
                   </td>
                   <td className="px-3 py-2.5 text-slate-600">{e.row.hsid || '—'}</td>
                   <td className="px-3 py-2.5">{noteField(e, 'Correct name according to Compass...')}</td>
                   <td className="px-3 py-2.5">
-                    <button
-                      onClick={() => undoVerified(e)}
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors whitespace-nowrap"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" /> Undo
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {updateNameButton(e)}
+                      <button
+                        onClick={() => undoVerified(e)}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors whitespace-nowrap"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> Undo
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
