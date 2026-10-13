@@ -114,16 +114,16 @@ export default function CrossRefNameVerification({ rows }) {
         subtitle={`${entries.length - verifiedCount} not yet verified`}
       >
         <div className="overflow-auto max-h-[60vh]">
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-30">
+          <table className="w-full text-sm border-separate border-spacing-0">
+            <thead>
               <tr>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Correct Name per Compass</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Action</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Client Name</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">HSID#</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Correct Name per Compass</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-300">
+            <tbody className="divide-y divide-slate-200">
               {pending.map(e => (
                 <tr key={e.row.id} className="hover:bg-slate-50">
                   <td className="px-3 py-2.5 font-medium text-slate-800">{e.name || '—'}</td>
@@ -155,16 +155,16 @@ export default function CrossRefNameVerification({ rows }) {
         defaultOpen={false}
       >
         <div className="overflow-auto max-h-[60vh]">
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-30">
+          <table className="w-full text-sm border-separate border-spacing-0">
+            <thead>
               <tr>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Correct Name per Compass</th>
-                <th className="text-left px-3 py-3 font-semibold text-slate-600">Action</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Client Name</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">HSID#</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Correct Name per Compass</th>
+                <th className="text-left px-3 py-2.5 font-semibold text-slate-600 bg-slate-50 border-b border-slate-200 sticky top-0 z-30">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-300">
+            <tbody className="divide-y divide-slate-200">
               {verifiedEntries.map(e => (
                 <tr key={e.row.id} className="bg-emerald-50/50 hover:bg-emerald-50">
                   <td className="px-3 py-2.5 font-medium text-slate-800">
