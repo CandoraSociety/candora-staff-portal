@@ -86,6 +86,7 @@ export default function PathwaysMasterList() {
   const [showStaffManager, setShowStaffManager] = useState(false);
   const [switchClient, setSwitchClient] = useState(null);
   const [viewAll, setViewAll] = useState(false);
+  const [activeOneList, setActiveOneList] = useState(false);
   const [crossRefCounts, setCrossRefCounts] = useState({ all: 0, matched: 0, unmatched: 0 });
 
   useEffect(() => {
@@ -291,6 +292,31 @@ export default function PathwaysMasterList() {
               sortKey={sortKey} onSort={setSortKey}
               workers={workers}
             />
+            <div className="flex items-center justify-end gap-2 mb-3">
+              <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => setActiveOneList(false)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${!activeOneList ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Grouped Sections
+                </button>
+                <button
+                  onClick={() => setActiveOneList(true)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${activeOneList ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  One List
+                </button>
+              </div>
+            </div>
+            {activeOneList ? (
+              <MasterListFlatTable
+                rows={displayed}
+                onRowClick={(c) => navigate(`/pathways/client/${c.id}`)}
+                onSwitchClient={setSwitchClient}
+                onReassign={setReassignClient}
+              />
+            ) : (
+              <>
             <CollapsibleClientSections clients={displayed} renderTable={renderClientTable} alwaysShowExtras activeSearch={search} />
             {snClients.length > 0 && (
               <>
@@ -300,6 +326,8 @@ export default function PathwaysMasterList() {
                   <div className="flex-1 h-px bg-slate-300" />
                 </div>
                 <ServiceNavigationSections clients={snClients} renderTable={renderSnTable} activeSearch={search} />
+              </>
+            )}
               </>
             )}
           </>

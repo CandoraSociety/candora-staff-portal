@@ -8,6 +8,7 @@ import {
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { PLACEMENT_OUTCOME_CODES, FOLLOWUP_90DAY_CODES, outcomeLabel } from '@/lib/crtCodes';
+import CrossRefNameVerification from './CrossRefNameVerification';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
 const DEFAULT_FILE_NAME = 'EmploymentprogramClientStatusV3.xlsx';
@@ -178,13 +179,24 @@ const canonicalNameKey = (name) => {
   if (tokens.length >= 2) return `${tokens[tokens.length - 1]} ${tokens[0]}`;
   return n;
 };
-const rowStorageKey = (r) => {
+export const rowStorageKey = (r) => {
   const h = normHsid(r.hsid);
   if (h) return `h:${h}`;
   return `n:${canonicalNameKey(r.client_name)}`;
 };
 
-function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
+// All identity keys for a row (HSID + every normalized name spelling) — the
+// Name Verification sub-tab uses the same identity scheme as the review so a
+// verification/note recorded in one sub-tab sticks across workbook re-uploads.
+export const rowIdentityKeys = (r) => {
+  const keys = [];
+  const h = normHsid(r.hsid);
+  if (h) keys.push(`h:${h}`);
+  rowNameKeys(r.client_name).forEach(k => keys.push(`n:${k}`));
+  return keys;
+};
+
+export function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
@@ -205,6 +217,7 @@ function CollapsibleSection({ title, count, badgeClass, subtitle, defaultOpen = 
 }
 
 export default function CrossRefTab({ activeClients, onCountsChange }) {
+  const [subTab, setSubTab] = useState('review');
   const [rows, setRows] = useState([]);
   const [crtRows, setCrtRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1046,6 +1059,27 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
 
   return (
     <div className="space-y-4">
+      {/* Sub-tabs: the cross-reference review and the name verification checklist */}
+      <div className="flex gap-1 border-b border-slate-200">
+        {[
+          { id: 'review', label: 'Cross-Reference Review' },
+          { id: 'names', label: 'Name Verification' },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setSubTab(t.id)}
+            className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
+              subTab === t.id ? 'font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+            style={subTab === t.id ? { color: 'hsl(231,64%,20%)', borderColor: '#2b2de8' } : {}}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {subTab === 'review' ? (
+      <>
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="text-sm text-slate-600">
           Status source: <span className="font-medium text-slate-800">{fileName}</span> · {rows.length} rows ·{' '}
@@ -1226,6 +1260,11 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             </CollapsibleSection>
           )}
         </div>
+      )}
+
+      </>
+      ) : (
+        <CrossRefNameVerification rows={visibleRows} />
       )}
 
       <AlertDialog open={!!pendingHide} onOpenChange={(open) => { if (!open) setPendingHide(null); }}>
