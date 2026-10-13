@@ -97,10 +97,11 @@ export default function CrossRefNameVerification({ rows }) {
       const d = res.data || {};
       if (d.status !== 'success') throw new Error(d.error || 'Update failed');
       setNames(prev => ({ ...prev, [e.sk]: corrected }));
-      if (d.matched) toast.success(`${corrected} — client file and CRT workbooks updated`);
+      if (d.matched) toast.success(`${corrected} — client file updated, CRT syncs automatically`);
       else toast.success(`${corrected} — updated in ${d.workbooks_patched} CRT workbook(s)`);
     } catch (err) {
-      toast.error('Name update failed: ' + (err.message || 'please try again'));
+      const detail = err?.response?.data?.error || err?.message || 'please try again';
+      toast.error('Name update failed: ' + detail);
     } finally {
       setSavingName(null);
     }
