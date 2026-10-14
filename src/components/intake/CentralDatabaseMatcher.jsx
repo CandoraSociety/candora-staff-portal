@@ -23,6 +23,13 @@ export default function CentralDatabaseMatcher({ client, onLinked }) {
   const clientId = client?.id;
   const linkedId = client?.linked_rc_client_id || null;
 
+  // A central record whose Pathways participation points back at THIS client
+  // is the client's own auto-synced central file — not a prior profile. Showing
+  // it as a "match" (or linking it as one) confuses the duplicate-prevention
+  // flow, so candidates must only be OTHER people's records.
+  const isOwnRecord = (c) =>
+    (c?.program_participations || []).some((p) => p.program === 'pathways' && p.linked_id === clientId);
+
   // Auto-suggest from the client's identity fields.
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +44,7 @@ export default function CentralDatabaseMatcher({ client, onLinked }) {
         const map = new Map();
         results.flat().forEach((c) => { if (c?.id) map.set(c.id, c); });
         const scored = Array.from(map.values())
+          .filter((c) => !isOwnRecord(c))
           .map((c) => ({ c, ...matchReasons(c, client) }))
           .filter((s) => s.reasons.length > 0)
           .sort((a, b) => (b.strength - a.strength) || (b.sim - a.sim));
@@ -71,6 +79,7 @@ export default function CentralDatabaseMatcher({ client, onLinked }) {
       const list = await base44.entities.RCClient.list('-updated_date', 300);
       const ql = q.toLowerCase();
       const filtered = (list || []).filter((c) => {
+        if (isOwnRecord(c)) return false;
         const hay = `${fullName(c)} ${c.email || ''} ${c.phone || ''}`.toLowerCase();
         return hay.includes(ql);
       }).map((c) => ({ c, ...matchReasons(c, client) }));
