@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, LogOut, ClipboardCheck, UserCheck, XCircle, Clock } from 'lucide-react';
+import { PlusCircle, LogOut, ClipboardCheck, UserCheck, XCircle, Clock, FlaskConical } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import DuplicateWarningDialog from '@/components/intake/DuplicateWarningDialog';
 import ClientListControls, { applyFiltersAndSort } from '@/components/lists/ClientListControls';
 import { createCompassTask, taskNewClient } from '@/lib/compassTasks';
 import DeterminationAssignmentDialog from '@/components/pathways/DeterminationAssignmentDialog';
+import { generateTestClientName } from '@/lib/rcTestClients';
 
 const EMPTY_FILTERS = {
   service_type: '', program_status: '', employment_status: '',
@@ -49,6 +50,7 @@ export default function PathwaysIntake() {
   const [pendingData, setPendingData] = useState(null);
   const [duplicates, setDuplicates] = useState([]);
   const [assignClientId, setAssignClientId] = useState(null);
+  const [creatingTest, setCreatingTest] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -123,6 +125,26 @@ export default function PathwaysIntake() {
     setEditingClient(null);
     setPendingData(null);
     setDuplicates([]);
+  };
+
+  // Quick test client — lands directly in Awaiting Assessment (no assigned
+  // worker, status 'new'), same shape the Cross-Reference send-to-intake uses.
+  const handleCreateTestClient = async () => {
+    setCreatingTest(true);
+    try {
+      const created = await base44.entities.Client.create({
+        ...generateTestClientName(),
+        status: 'new',
+        self_registered: false,
+        intake_date: new Date().toISOString().split('T')[0],
+      });
+      setClients(prev => [created, ...prev]);
+      toast.success(`Test client created — ${created.first_name} ${created.last_name}`);
+    } catch (err) {
+      toast.error('Failed to create test client');
+    } finally {
+      setCreatingTest(false);
+    }
   };
 
   const handleDeterminationAssign = async ({ service_type, worker }) => {
@@ -221,6 +243,9 @@ export default function PathwaysIntake() {
               <PlusCircle className="w-4 h-4" /> New Client
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={handleCreateTestClient} disabled={creatingTest} className="gap-2">
+            <FlaskConical className="w-4 h-4" /> {creatingTest ? 'Creating...' : 'Test Client'}
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => base44.auth.logout('/login')}>
             <LogOut className="w-4 h-4" />
           </Button>
