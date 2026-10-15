@@ -1311,7 +1311,9 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             <AlertDialogTitle>Start a fresh cross-reference review?</AlertDialogTitle>
             <AlertDialogDescription>
               Everyone moves out of the Updated and Completed — No action needed sections back into the main
-              Cross-Reference Clients list. Removed clients, comments, and cell edits are kept as they are.
+              Cross-Reference Clients list. Previously removed clients are restored so the list repopulates with
+              ALL Pathways clients, and phase-change flags and resolved highlights are cleared.
+              Comments and cell edits are kept as they are.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1320,8 +1322,11 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
               onClick={() => {
                 setUpdated(new Set());
                 setCompleted(new Set());
+                setHidden(new Set());
+                setPhaseChange(new Set());
+                setYellowResolved(new Set());
                 setResetReviewOpen(false);
-                toast.success('Review reset — everyone is back in the main cross-reference list');
+                toast.success('Review reset — all Pathways clients are back in the main cross-reference list');
               }}
             >
               Reset Review
