@@ -191,7 +191,7 @@ export default function PathwaysClientProfile() {
         style={{ background: 'hsl(44,100%,88%)', borderColor: 'hsl(42,100%,70%)' }}
       >
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} style={{ color: 'hsl(231,64%,20%)' }}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/pathways/master')} title="Back to the Pathways master list" style={{ color: 'hsl(231,64%,20%)' }}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
