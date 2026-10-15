@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { PLACEMENT_OUTCOME_CODES, FOLLOWUP_90DAY_CODES, outcomeLabel } from '@/lib/crtCodes';
 import CrossRefNameVerification from './CrossRefNameVerification';
+import CrossRefPhaseDialog, { PHASE_LABELS, PHASE_BADGE_CLASS } from './CrossRefPhaseDialog';
+import { classifyClient } from '@/lib/clientClassification';
 
 const DEFAULT_FILE_URL = 'https://media.base44.com/files/public/6a249282cb496579542673b7/e1cca0072_EmploymentprogramClientStatusV3.xlsx';
 const DEFAULT_FILE_NAME = 'EmploymentprogramClientStatusV3.xlsx';
@@ -257,6 +259,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   const [resetReviewOpen, setResetReviewOpen] = useState(false);
   const [sendingId, setSendingId] = useState(null);
   const [pendingEdit, setPendingEdit] = useState(null);
+  // Program-phase dialog (legacy clients) + locally-updated client records so
+  // the phase column refreshes immediately after a save.
+  const [phaseDialog, setPhaseDialog] = useState(null);
+  const [phaseOverrides, setPhaseOverrides] = useState({});
 
   // Parse "Last, First" (or "First Last") into first/last name for intake.
   const parseName = (name) => {
@@ -545,6 +551,28 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return rowNameKeys(row.client_name).some(k => nameKeys.has(k));
   };
 
+  // Master-list client lookup (HSID + name aliases, same identity scheme the
+  // review uses) so each cross-reference row can find its client profile for
+  // the program-phase column.
+  const clientByKey = useMemo(() => {
+    const m = new Map();
+    (activeClients || []).forEach(c => {
+      const h = normHsid(c.compass_hsid);
+      if (h) m.set(`h:${h}`, c);
+      buildClientNameKeys(c).forEach(k => { if (k && !m.has(`n:${k}`)) m.set(`n:${k}`, c); });
+    });
+    return m;
+  }, [activeClients]);
+
+  const findRowClient = (r) => {
+    const h = normHsid(r.hsid);
+    if (h && clientByKey.has(`h:${h}`)) return clientByKey.get(`h:${h}`);
+    for (const k of rowNameKeys(r.client_name)) {
+      if (clientByKey.has(`n:${k}`)) return clientByKey.get(`n:${k}`);
+    }
+    return null;
+  };
+
   // Match a row against the completed set using ALL of its identifiers
   // (HSID + every normalized name spelling) so the Done state survives
   // minor HSID/name format drift between workbook versions.
@@ -818,6 +846,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Client Name</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">HSID#</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Status</th>
+            <th className="text-left px-3 py-3 font-semibold text-slate-600 whitespace-nowrap">Program Phase</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">EDAS Completed</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Extra Notes</th>
             <th className="text-left px-3 py-3 font-semibold text-slate-600">Comments</th>
@@ -861,6 +890,39 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 </td>
                 <td className="px-3 py-2.5 text-slate-600">{r.hsid || '—'}</td>
                 <td className="px-3 py-2.5 text-slate-600">{r.status || '—'}</td>
+                <td className="px-3 py-2.5">
+                  {(() => {
+                    const base = findRowClient(r);
+                    if (!base) return (
+                      <span className="text-[10px] text-slate-400" title="This row has no Pathways client profile — use Send to Intake first">
+                        No profile — send to intake first
+                      </span>
+                    );
+                    const c = phaseOverrides[base.id] || base;
+                    const phaseKey = classifyClient(c);
+                    return (
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${PHASE_BADGE_CLASS[phaseKey] || PHASE_BADGE_CLASS.not_started}`}>
+                          {PHASE_LABELS[phaseKey] || 'Not Started'}
+                        </span>
+                        {(c.completion_date || c.followup_90day_date) && (
+                          <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                            {c.completion_date ? `Done ${c.completion_date}` : ''}
+                            {c.completion_date && c.followup_90day_date ? ' · ' : ''}
+                            {c.followup_90day_date ? `90-day ${c.followup_90day_date}` : ''}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => setPhaseDialog({ row: r, client: c })}
+                          title="Set this legacy client's program phase (updates their Pathways profile)"
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-violet-300 text-violet-700 hover:bg-violet-50 transition-colors whitespace-nowrap"
+                        >
+                          Set Phase
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </td>
                 <td className="px-3 py-2.5 text-slate-600">{r.edas_completed || '—'}</td>
                 <td className="px-3 py-2.5 text-slate-500 max-w-xs truncate">{r.extra_notes || '—'}</td>
                 <td className="px-3 py-2.5">
@@ -1050,7 +1112,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
             );
           })}
           {list.length === 0 && (
-            <tr><td colSpan={11 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
+            <tr><td colSpan={12 + CRT_COLUMNS.length} className="text-center py-10 text-slate-400">No clients in this section.</td></tr>
           )}
         </tbody>
       </table>
@@ -1304,6 +1366,16 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CrossRefPhaseDialog
+        row={phaseDialog?.row}
+        client={phaseDialog?.client}
+        onClose={() => setPhaseDialog(null)}
+        onSaved={(updated) => {
+          setPhaseOverrides(prev => ({ ...prev, [updated.id]: updated }));
+          setPhaseDialog(null);
+        }}
+      />
 
       <AlertDialog open={resetReviewOpen} onOpenChange={setResetReviewOpen}>
         <AlertDialogContent>
