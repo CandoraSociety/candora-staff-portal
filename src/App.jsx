@@ -134,6 +134,7 @@ import GrantsProposals from '@/pages/grants/GrantsProposals';
 import GrantsSubmissions from '@/pages/grants/GrantsSubmissions';
 import GrantsReports from '@/pages/grants/GrantsReports';
 import GrantsFiles from '@/pages/grants/GrantsFiles';
+import GrantsKnowledgeBase from '@/pages/grants/GrantsKnowledgeBase';
 
 // Executive Director Portal
 import EDLayout from '@/components/ed/EDLayout';
@@ -527,6 +528,7 @@ const AuthenticatedApp = () => {
           <Route path="/grants/proposals" element={<GrantsSubmissions />} />
           <Route path="/grants/reports" element={<GrantsReports />} />
           <Route path="/grants/files" element={<GrantsFiles />} />
+          <Route path="/grants/knowledge" element={<GrantsKnowledgeBase />} />
         </Route>
 
         {/* Executive Director Portal */}

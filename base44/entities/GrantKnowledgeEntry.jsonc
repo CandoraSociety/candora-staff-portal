@@ -1,0 +1,65 @@
+{
+  "name": "GrantKnowledgeEntry",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short title describing this knowledge entry"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full retained knowledge text \u2014 notes, document summary, AI conversation transcript, or grant record details"
+    },
+    "entry_type": {
+      "type": "string",
+      "enum": [
+        "note",
+        "document",
+        "conversation",
+        "grant_record"
+      ],
+      "default": "note",
+      "description": "note = general note/info; document = knowledge extracted from an uploaded document; conversation = an AI conversation transcript worth remembering; grant_record = details about a specific grant"
+    },
+    "related_funder": {
+      "type": "string",
+      "description": "Funder this knowledge relates to (free text)"
+    },
+    "related_project_id": {
+      "type": "string",
+      "description": "Reference to Project if this knowledge is tied to one"
+    },
+    "related_project_name": {
+      "type": "string",
+      "description": "Project name (denormalized for display)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Freeform tags for retrieval"
+    },
+    "source_file_url": {
+      "type": "string",
+      "description": "Uploaded source document this entry was extracted from"
+    },
+    "source_file_name": {
+      "type": "string",
+      "description": "Original file name of the source document"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the knowledge/event dates from (optional)"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who added this entry"
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}

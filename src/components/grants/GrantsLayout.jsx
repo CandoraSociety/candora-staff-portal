@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
-import { LayoutDashboard, FolderOpen, FileText, Bell, Archive, CheckSquare, Database } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, FileText, Bell, Archive, CheckSquare, Database, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { path: '/grants/funding-db',   label: 'Funder Database', icon: Database },
   { path: '/grants/reports',      label: 'Reports',        icon: FileText },
   { path: '/grants/files',        label: 'Files',          icon: Archive },
+  { path: '/grants/knowledge',    label: 'Knowledge Base', icon: Brain },
 ];
 
 export default function GrantsLayout() {
