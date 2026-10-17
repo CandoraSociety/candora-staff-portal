@@ -71,7 +71,7 @@ export default function KnowledgeEntryList({
           <BookOpen className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
           <p className="text-sm font-medium">Nothing stored yet</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Add notes, paste AI conversations, or import old grant documents — the portal will remember them all.
+            Add notes, paste AI conversations, or import any document — notes, screenshots, reports, grant docs — the portal will remember them all.
           </p>
         </div>
       ) : (

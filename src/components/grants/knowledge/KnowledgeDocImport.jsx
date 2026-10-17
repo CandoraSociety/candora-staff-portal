@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Loader2, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Import an old grant document: the file is uploaded, the AI reads it and
-// extracts everything grant-relevant into organized notes, then the entry
-// dialog opens pre-filled so staff can title/tag it before it's retained.
+// Import any document (grant doc, notes, screenshot, email, report, etc.):
+// the file is uploaded, the AI reads it and extracts everything worth
+// remembering into organized notes, then the entry dialog opens pre-filled
+// so staff can title/tag it before it's retained.
 export default function KnowledgeDocImport({ open, onClose, onExtracted }) {
   const [file, setFile] = useState(null);
   const [stage, setStage] = useState('');
@@ -29,7 +30,7 @@ export default function KnowledgeDocImport({ open, onClose, onExtracted }) {
       setStage('The AI is reading the document and extracting the key information...');
       const signed = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: file_uri, expires_in: 900 });
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: 'Extract ALL substantive information from this document into organized notes for a grant knowledge base. Capture every grant-relevant detail: funder names, grant/program names, amounts, dates, deadlines, requirements, eligibility criteria, decisions and outcomes, commitments, reporting obligations, contact people, and any other notable content. Organize with clear headings and bullet points, and preserve specific names, numbers and dates exactly.',
+        prompt: 'Extract ALL substantive information from this document into organized notes for a grant team knowledge base. The document could be anything: a grant document, funder correspondence, meeting notes, a report, a screenshot, an email, a form, etc. Capture everything worth remembering: key points, decisions and outcomes, funder/grant/program names if present, amounts, dates, deadlines, requirements, commitments, reporting obligations, contact people, action items, and any other notable content. Organize with clear headings and bullet points, and preserve specific names, numbers and dates exactly.',
         file_urls: [signed.signed_url],
         response_json_schema: {
           type: 'object',
@@ -61,9 +62,9 @@ export default function KnowledgeDocImport({ open, onClose, onExtracted }) {
     <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Import a Grant Document</DialogTitle>
+          <DialogTitle>Import a Document</DialogTitle>
           <DialogDescription>
-            Upload an old grant document (PDF, Word, Excel, text or image). The AI reads it and turns it into a knowledge entry the portal can draw from later.
+            Upload any document — a grant doc, notes, a report, a screenshot or an image. The AI reads it and turns it into a knowledge entry the portal can draw from later.
           </DialogDescription>
         </DialogHeader>
 
