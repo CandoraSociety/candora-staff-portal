@@ -1,6 +1,7 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { normalizeUser } from '@/lib/userDisplayName';
+import { isTestMode, installTestModeInterceptor } from '@/lib/testMode/sandbox';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
@@ -31,3 +32,9 @@ for (const method of ['list', 'filter', 'get']) {
 
 const originalMe = base44.auth.me.bind(base44.auth);
 base44.auth.me = async (...args) => normalizeUser(await originalMe(...args));
+
+// ── Test Mode ──────────────────────────────────────────────────────────────
+// When Test Mode is on (in-app toggle), all data layers of this client are
+// swapped for the in-memory sandbox: reads return simulated demo records,
+// writes and live-service calls are simulated and never reach the backend.
+if (isTestMode()) installTestModeInterceptor(base44);

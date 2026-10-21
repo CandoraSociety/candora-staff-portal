@@ -263,8 +263,8 @@ body.has-ms-ribbon {
 }
 
 /* ===== Global Tab Bar ===== */
-body.has-tabbar .sticky.top-0:not(.global-tabbar),
-body.has-tabbar .fixed.top-0:not(.global-tabbar) {
+body.has-tabbar .sticky.top-0:not(.global-tabbar):not(.global-testmode-ribbon),
+body.has-tabbar .fixed.top-0:not(.global-tabbar):not(.global-testmode-ribbon) {
   top: 36px !important;
 }
 body.has-tabbar aside.fixed.top-0.h-screen {
@@ -283,6 +283,21 @@ body.has-tabbar aside.fixed.top-0.h-screen {
 .global-tabbar-scroll {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--sidebar-border)) transparent;
+}
+
+/* ===== Test Mode ribbon ===== */
+body.has-testmode .global-tabbar { top: 36px !important; }
+body.has-testmode .sticky.top-0:not(.global-tabbar):not(.global-testmode-ribbon),
+body.has-testmode .fixed.top-0:not(.global-tabbar):not(.global-testmode-ribbon) {
+  top: 36px !important;
+}
+body.has-testmode.has-tabbar .global-tabbar { top: 36px !important; }
+body.has-testmode.has-tabbar .sticky.top-0:not(.global-tabbar):not(.global-testmode-ribbon),
+body.has-testmode.has-tabbar .fixed.top-0:not(.global-tabbar):not(.global-testmode-ribbon) {
+  top: 72px !important;
+}
+body.has-testmode.has-tabbar aside.fixed.top-0.h-screen {
+  height: calc(100vh - 72px) !important;
 }
 
 /* ===== Announcement Ribbon Marquee ===== */

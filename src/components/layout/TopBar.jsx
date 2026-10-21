@@ -11,6 +11,7 @@ import { ROLES } from '@/lib/constants';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 import { displayName, displayInitials } from '@/lib/userDisplayName';
+import { TestModeSwitch } from '@/components/shared/TestModeControls';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile, className }) {
   const initials = displayInitials(user);
@@ -36,6 +37,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile, classNa
       </div>
 
       <div className="flex items-center gap-3">
+        <TestModeSwitch className="mr-1" />
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5 text-muted-foreground" />
         </Button>

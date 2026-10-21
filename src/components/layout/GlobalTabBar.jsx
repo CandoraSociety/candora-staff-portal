@@ -4,6 +4,7 @@ import { X, Plus } from 'lucide-react';
 import { useTabs, PORTAL_REGISTRY } from '@/lib/tabContext';
 import { AppWindow } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TestModeSwitch } from '@/components/shared/TestModeControls';
 
 export default function GlobalTabBar() {
   const { tabs, activeTab, openTab, closeTab } = useTabs();
@@ -64,6 +65,9 @@ export default function GlobalTabBar() {
             </div>
           );
         })}
+      </div>
+      <div className="flex items-center px-3 border-l border-sidebar-border flex-shrink-0">
+        <TestModeSwitch className="text-sidebar-foreground/80" />
       </div>
       <button
         onClick={() => openTab('/portal')}
