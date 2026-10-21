@@ -8,6 +8,8 @@
 // stored and disappears when Test Mode is turned off (the toggle reloads
 // the app so no live data stays cached).
 
+import { PRIORITY_DEMO } from './demoDataPriority';
+
 const SESSION_KEY = 'candora-test-mode';
 
 export const isTestMode = () => {
@@ -33,7 +35,7 @@ const D = (daysAgo = 0) => new Date(Date.now() - daysAgo * 86400000).toISOString
 // blank. Anything not listed here starts empty and is created in-memory as
 // you use Test Mode.
 function demoData() {
-  return {
+  const base = {
     Announcement: [
       { title: 'Welcome to Test Mode', content: 'You are viewing simulated data. Nothing here is real, and nothing you change is saved to the live portal.', category: 'general', priority: 'high', is_active: true, publish_date: D(0) },
       { title: 'Staff lunch on Friday', content: 'Demo announcement for Test Mode.', category: 'event', priority: 'low', is_active: true, publish_date: D(2) },
@@ -204,6 +206,14 @@ function demoData() {
       { title: 'Finance', description: 'Finance portal (demo card)', is_enabled: true, order_index: 4, path: '/finance' },
     ],
   };
+  // Merge in the richer priority-portal seeds (Pathways, Central Database,
+  // ELL, Central Registration). Records with a supplied `id` keep it, so
+  // cross-entity references resolve inside Test Mode.
+  const merged = { ...base };
+  for (const [entity, rows] of Object.entries(PRIORITY_DEMO)) {
+    merged[entity] = [...(merged[entity] || []), ...rows];
+  }
+  return merged;
 }
 
 function seedEntity(entity) {
