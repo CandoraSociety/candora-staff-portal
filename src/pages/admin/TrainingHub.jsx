@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { TRAINING_MODULES, getTrainingModule } from "@/lib/training/trainingModules";
 import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
+import ConfirmDialog from "@/components/training/ConfirmDialog";
 import { GraduationCap, RefreshCw, RotateCcw, Presentation, Users, PlayCircle, FileText } from "lucide-react";
 
 export default function TrainingHub() {
@@ -12,6 +13,7 @@ export default function TrainingHub() {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState(TRAINING_MODULES[0].key);
   const [showRunSheet, setShowRunSheet] = useState(false);
+  const [resetTarget, setResetTarget] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -57,11 +59,15 @@ export default function TrainingHub() {
     return { label: "In progress", color: "hsl(45, 85%, 60%)", bg: "hsl(45, 60%, 18%)" };
   };
 
-  const resetProgress = async (p) => {
-    if (window.confirm(`Reset training progress for ${p.user_name || p.user_email}? They can take the module again from scratch.`)) {
-      await base44.entities.TrainingProgress.delete(p.id);
-      queryClient.invalidateQueries({ queryKey: ["training-progress"] });
-    }
+  // Confirmation goes through the in-app dialog — the native window.confirm
+  // is blocked in the preview frame and would silently swallow the click.
+  const resetProgress = (p) => setResetTarget(p);
+  const confirmResetProgress = async () => {
+    const p = resetTarget;
+    setResetTarget(null);
+    if (!p) return;
+    await base44.entities.TrainingProgress.delete(p.id);
+    queryClient.invalidateQueries({ queryKey: ["training-progress"] });
   };
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["training-progress"] });
@@ -206,6 +212,16 @@ export default function TrainingHub() {
       </p>
 
       <FacilitatorRunSheet module={module} open={showRunSheet} onClose={() => setShowRunSheet(false)} />
+
+      <ConfirmDialog
+        open={!!resetTarget}
+        onOpenChange={(o) => !o && setResetTarget(null)}
+        title={`Reset training progress for ${resetTarget?.user_name || resetTarget?.user_email || ""}?`}
+        description="Their progress for this module will be cleared so they can take it again from scratch."
+        confirmLabel="Reset"
+        destructive
+        onConfirm={confirmResetProgress}
+      />
     </div>
   );
 }
