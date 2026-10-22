@@ -167,7 +167,7 @@ export default function OutlookDashboard() {
   // Not connected — show connect screen
   if (!connected) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
+      <div data-tour="outlook-connect" className="flex flex-col items-center justify-center py-20">
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
           <Mail className="w-8 h-8 text-primary" />
         </div>
@@ -219,7 +219,7 @@ export default function OutlookDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b">
+      <div data-tour="outlook-tabs" className="flex gap-1 border-b">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           return (

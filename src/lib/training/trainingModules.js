@@ -77,14 +77,37 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="dashboard-howto"]' }
       },
       {
-        title: "Setting up your e-signature",
-        body: "Candora signs documents digitally. In the E-Signature portal you set up your signature once — draw it with your mouse, type it, or upload an image — and it's then used whenever a document needs your signature. Until you've set it up, a reminder appears on your dashboard.",
+        title: "Set up your e-signature — protect it first",
+        body: "Candora signs documents digitally, so let's actually set yours up now. In the E-Signature portal, choose a 4-digit PIN or a password, type it into both fields, and press Save & continue. This is the code you'll enter every time you sign a timesheet approval, reimbursement or document — so pick something you'll remember.",
         path: "/e-signature",
-        target: { selector: "main h1" }
+        target: { selector: '[data-tour="esign-security"]' }
       },
       {
-        title: "Connecting Outlook and Teams",
-        body: "Your Candora email, calendar and Teams chats can appear right inside the portal through the Outlook portal and the Teams widget. An administrator connects the organization account the first time — once that's set up, open Outlook from your portals list to read email and see your calendar without leaving the app."
+        title: "Now create your signature",
+        body: "Right below, give your signature a name, then choose how to make it: type your name and try the fonts, colours and effects; draw it with your mouse; or upload an image — the background is removed automatically. The preview shows exactly what it will look like on a signed document, verification ID and all. Go ahead and make one now.",
+        target: { selector: '[data-tour="esign-editor"]' }
+      },
+      {
+        title: "Save it and make it active",
+        body: "Press Save signature. Saving also makes it your active signature — it appears in My signatures with the Active badge, and that's the one used whenever something needs your approval. You can create as many as you like and switch the active one anytime. Until this is done, a reminder to set up your signature stays on your dashboard.",
+        target: { selector: '[data-tour="esign-save"]' }
+      },
+      {
+        title: "Connect your Outlook account",
+        body: "Next, connect your Candora email. On the Outlook page, click Connect Outlook and complete the Microsoft sign-in in the window that opens — the page refreshes on its own once you're done. If your administrator hasn't enabled the Microsoft connection for the organization yet, the button will tell you; just come back and do this step once it's switched on.",
+        path: "/outlook",
+        target: { selector: '[data-tour="outlook-connect"]' }
+      },
+      {
+        title: "Your inbox, calendar and compose",
+        body: "Once connected, everything lives under these tabs: Inbox to read and reply, Calendar for the next two weeks of events, and Compose to send. Try it — send yourself a quick test email so you've been through the whole flow.",
+        target: { selector: '[data-tour="outlook-tabs"]' }
+      },
+      {
+        title: "Teams, one click away",
+        body: "Teams chats and channels are always at hand in the ribbon docked to the right edge of the screen. Click the Teams button here, then press Connect Teams in the panel that slides out — the same Microsoft sign-in as Outlook, so you only do it once each. After that, this button is your way into Teams from any page.",
+        path: "/",
+        target: { selector: '[data-tour="ms-ribbon-teams"]' }
       },
       {
         title: "Time to practice",

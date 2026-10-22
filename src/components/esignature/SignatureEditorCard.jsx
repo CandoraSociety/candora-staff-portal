@@ -141,7 +141,7 @@ export default function SignatureEditorCard({ user, profile, editingSig, nextInd
   };
 
   return (
-    <Card>
+    <Card data-tour="esign-editor">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <PenTool className="w-4 h-4 text-primary" />
@@ -159,7 +159,7 @@ export default function SignatureEditorCard({ user, profile, editingSig, nextInd
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
+          <TabsList data-tour="esign-tabs">
             <TabsTrigger value="typed">Type</TabsTrigger>
             <TabsTrigger value="drawn">Draw</TabsTrigger>
             <TabsTrigger value="upload">Upload</TabsTrigger>
@@ -197,7 +197,7 @@ export default function SignatureEditorCard({ user, profile, editingSig, nextInd
         {error && <p className="text-sm text-destructive">{error}</p>}
         {saved && <p className="text-sm text-success">Signature saved.</p>}
 
-        <Button onClick={handleSave} disabled={saving || !canSave}>
+        <Button data-tour="esign-save" onClick={handleSave} disabled={saving || !canSave}>
           <Save className="w-4 h-4" />
           {saving ? 'Saving…' : editingSig ? 'Save changes' : 'Save signature'}
         </Button>

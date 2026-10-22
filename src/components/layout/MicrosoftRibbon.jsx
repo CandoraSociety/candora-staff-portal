@@ -61,6 +61,7 @@ export default function MicrosoftRibbon() {
                 key={app.id}
                 onClick={() => togglePanel(app.id)}
                 title={app.label}
+                data-tour={`ms-ribbon-${app.id}`}
                 className={cn(
                   'flex items-center justify-center w-9 h-9 rounded-lg transition-all',
                   isActive

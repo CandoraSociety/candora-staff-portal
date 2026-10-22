@@ -70,7 +70,7 @@ export default function ESignatureSecurityCard({ user, profile }) {
   const isPin = authType === 'pin';
 
   return (
-    <Card>
+    <Card data-tour="esign-security">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lock className="w-4 h-4 text-primary" />
