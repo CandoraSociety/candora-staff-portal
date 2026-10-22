@@ -4,6 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, ArrowLeft, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
+import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
+import FacilitatorSession from "@/components/training/FacilitatorSession";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 
@@ -54,6 +56,31 @@ export default function TrainingPill() {
   }, [module?.key]);
 
   if (!user) return null;
+
+  // A facilitated session (started from the Training Hub) takes over from the
+  // normal learner UI: the facilitator gets the tour, talking points and
+  // practice controls instead of personal training progress.
+  const fSession = readFacilitatorSession();
+  if (fSession) {
+    const fm = getTrainingModule(fSession.portal);
+    if (module && fSession.portal === module.key) {
+      return <FacilitatorSession module={module} />;
+    }
+    return (
+      <div className="fixed bottom-4 left-4 z-[60] print:hidden">
+        <button
+          onClick={() => navigate(fm?.path || "/")}
+          className="flex items-center gap-2 rounded-full border shadow-lg px-4 py-2 transition-transform hover:scale-[1.02]"
+          style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}
+        >
+          <GraduationCap className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} />
+          <span className="text-xs font-semibold" style={{ color: "hsl(45, 60%, 85%)" }}>
+            Facilitated session — back to {fm?.shortTitle || "training"}
+          </span>
+        </button>
+      </div>
+    );
+  }
 
   const updateProgress = async (fields) => {
     if (!user?.email || !module) return;

@@ -22,7 +22,7 @@ function findTarget(target) {
   return null;
 }
 
-export default function SpotlightTour({ open, module, progress, updateProgress, onClose }) {
+export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [index, setIndex] = useState(0);
@@ -31,14 +31,23 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
 
   const steps = module?.steps || [];
   const step = steps[index];
+  // Facilitator tours keep their own step position so running a session never
+  // disturbs the facilitator's own learner progress for the same module.
+  const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
+  const presentationKey = facilitator ? "candora-tour-presentation-f" : "candora-tour-presentation";
+
+  // Report the current step to the facilitator's talking-points panel
+  useEffect(() => {
+    if (open) onStepChange?.(index);
+  }, [open, index]);
 
   // Restore position + presentation preference when the tour opens
   useEffect(() => {
     if (!open || !module) return;
     try {
-      const saved = Number(sessionStorage.getItem(`candora-tour-step-${module.key}`)) || 0;
+      const saved = Number(sessionStorage.getItem(stepKey)) || 0;
       setIndex(saved < steps.length ? saved : 0);
-      setPresentation(sessionStorage.getItem("candora-tour-presentation") === "1");
+      setPresentation(facilitator ? sessionStorage.getItem(presentationKey) !== "0" : sessionStorage.getItem(presentationKey) === "1");
     } catch { /* ignore */ }
   }, [open, module?.key]);
 
@@ -100,7 +109,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   if (!open || !module || !step) return null;
 
   const saveStep = (i) => {
-    try { sessionStorage.setItem(`candora-tour-step-${module.key}`, String(i)); } catch { /* ignore */ }
+    try { sessionStorage.setItem(stepKey, String(i)); } catch { /* ignore */ }
   };
 
   const next = async () => {
@@ -109,7 +118,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
       saveStep(i);
       setIndex(i);
     } else {
-      try { sessionStorage.removeItem(`candora-tour-step-${module.key}`); } catch { /* ignore */ }
+      try { sessionStorage.removeItem(stepKey); } catch { /* ignore */ }
       await updateProgress({ tour_done: true, tour_step_index: 0 });
       onClose(true);
     }
@@ -124,7 +133,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const togglePresentation = () => {
     const v = !presentation;
     setPresentation(v);
-    try { sessionStorage.setItem("candora-tour-presentation", v ? "1" : "0"); } catch { /* ignore */ }
+    try { sessionStorage.setItem(presentationKey, v ? "1" : "0"); } catch { /* ignore */ }
   };
 
   const pad = 8;

@@ -135,6 +135,26 @@
   .reporting-portal-header {
     display: none !important;
   }
+  /* Facilitator run-sheet — print only the run-sheet document */
+  body.runsheet-printing * { visibility: hidden !important; }
+  body.runsheet-printing .facilitator-runsheet,
+  body.runsheet-printing .facilitator-runsheet * { visibility: visible !important; }
+  body.runsheet-printing .facilitator-runsheet {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+  }
+  body.runsheet-printing .facilitator-runsheet .runsheet-card {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0.25in 0.5in !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
   /* Fillable minutes overlay — print only the overlay document, hide everything else */
   body.fillable-printing * { visibility: hidden !important; }
   body.fillable-printing .fillable-minutes-overlay,

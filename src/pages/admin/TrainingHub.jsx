@@ -3,12 +3,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { TRAINING_MODULES, getTrainingModule } from "@/lib/training/trainingModules";
-import { GraduationCap, RefreshCw, RotateCcw, Presentation, Users } from "lucide-react";
+import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
+import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
+import { GraduationCap, RefreshCw, RotateCcw, Presentation, Users, PlayCircle, FileText } from "lucide-react";
 
 export default function TrainingHub() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState(TRAINING_MODULES[0].key);
+  const [showRunSheet, setShowRunSheet] = useState(false);
 
   const isAdmin = user?.role === "admin";
 
@@ -114,6 +117,35 @@ export default function TrainingHub() {
         </div>
       </div>
 
+      {/* Facilitate this module — run a live session / print the run-sheet */}
+      <div className="rounded-2xl border bg-card p-5">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-lg font-bold">Facilitate: {module.title}</h2>
+            <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              Run a live session: the portal opens on simulated data with the tour already in presentation
+              mode for the projector, and your own talking-points panel beside it — your personal training
+              progress is never touched.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={() => startFacilitatedSession(module)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-colors hover:opacity-90"
+              style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}
+            >
+              <PlayCircle className="w-4 h-4" /> Start facilitated session
+            </button>
+            <button
+              onClick={() => setShowRunSheet(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-accent"
+            >
+              <FileText className="w-4 h-4" /> Run-sheet
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Staff table */}
       <div className="rounded-2xl border bg-card overflow-hidden">
         <table className="w-full text-sm">
@@ -172,6 +204,8 @@ export default function TrainingHub() {
         Note: progress records staff create appear here in real time — refresh to see the latest. Each module's tour and
         practice run on simulated data, so training never touches live client records.
       </p>
+
+      <FacilitatorRunSheet module={module} open={showRunSheet} onClose={() => setShowRunSheet(false)} />
     </div>
   );
 }
