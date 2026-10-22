@@ -20,6 +20,7 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import DashboardNotifications from '@/components/dashboard/DashboardNotifications';
+import TrainingCatalogWidget from '@/components/dashboard/TrainingCatalogWidget';
 import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
@@ -263,6 +264,9 @@ export default function Dashboard() {
         </div>
       </div>
       
+      {/* Staff Training — one visible place to start or resume any portal's training */}
+      <TrainingCatalogWidget user={user} />
+
       {/* Live data moved to Admin > Users & Access */}
 
       {/* Full-width Personal Organizer */}

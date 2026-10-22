@@ -4,19 +4,13 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, ArrowLeft, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
+import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 
-const SESSION_KEY = "candora-training-session";
 
-function readSession() {
-  try {
-    const s = sessionStorage.getItem(SESSION_KEY);
-    return s ? JSON.parse(s) : null;
-  } catch { return null; }
-}
 
 export default function TrainingPill() {
   const { user } = useAuth();
@@ -118,11 +112,7 @@ export default function TrainingPill() {
       try { if (rec) await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
     }
     try { sessionStorage.removeItem(`candora-tour-step-${module?.key}`); } catch { /* ignore */ }
-    try {
-      sessionStorage.setItem("candora-test-mode", "1");
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ portal: module.key, autoStart: true, startedAt: Date.now() }));
-    } catch { /* ignore */ }
-    window.location.reload();
+    startTrainingSession(module.key);
   };
 
   const exitTraining = () => {

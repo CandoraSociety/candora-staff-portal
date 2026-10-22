@@ -83,6 +83,10 @@ export const TRAINING_MODULES = [
         target: { selector: "main h1" }
       },
       {
+        title: "Connecting Outlook and Teams",
+        body: "Your Candora email, calendar and Teams chats can appear right inside the portal through the Outlook portal and the Teams widget. An administrator connects the organization account the first time — once that's set up, open Outlook from your portals list to read email and see your calendar without leaving the app."
+      },
+      {
         title: "Time to practice",
         body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real. When you finish this module, there's a Part 2 — Time & Money — covering time off, timesheets, receipts and reimbursements."
       }
