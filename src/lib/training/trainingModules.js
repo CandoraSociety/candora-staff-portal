@@ -61,14 +61,16 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Your personal organizer",
-        body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device. (Don't see it? Turn it on from the widget customization page.)",
+        body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device.",
         path: "/",
+        revealWidget: "organizer",
         target: { selector: '[data-tour="dashboard-organizer"]' }
       },
       {
         title: "How-To knowledge base",
         body: "Anywhere in the app, ask the How-To search how to do something — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language.",
         path: "/",
+        revealWidget: "howto",
         target: { selector: '[data-tour="dashboard-howto"]' }
       },
       {

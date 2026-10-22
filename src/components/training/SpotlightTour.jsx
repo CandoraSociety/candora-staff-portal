@@ -4,11 +4,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
 import useSpotlightTarget from "@/components/training/useSpotlightTarget";
 import { spotlightPath } from "@/components/training/spotlightTarget";
+import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 
 
 export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setRevealedWidget } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
 
@@ -20,6 +22,12 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
   const presentationKey = facilitator ? "candora-tour-presentation-f" : "candora-tour-presentation";
+
+  // Optional widgets must exist on screen before the spotlight can measure them.
+  useEffect(() => {
+    setRevealedWidget(open ? step?.revealWidget || null : null);
+    return () => setRevealedWidget(null);
+  }, [open, step?.revealWidget, setRevealedWidget]);
 
   // Report the current step to the facilitator's talking-points panel
   useEffect(() => {
@@ -88,12 +96,22 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   } : null;
 
   const cardW = presentation ? 580 : 440;
-  const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", zIndex: 100 };
+  const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto", zIndex: 100 };
   if (rect) {
-    const below = rect.top + rect.height < window.innerHeight * 0.58;
+    const below = window.innerHeight - rect.top - rect.height - 20;
+    const above = rect.top - 20;
+    const needed = presentation ? 400 : 300;
     cardStyle.left = Math.min(Math.max(16, rect.left), Math.max(16, window.innerWidth - cardW - 16));
-    if (below) cardStyle.top = rect.top + rect.height + 20;
-    else cardStyle.bottom = window.innerHeight - rect.top + 20;
+    if (below >= needed) {
+      cardStyle.top = rect.top + rect.height + 20;
+      cardStyle.maxHeight = below - 16;
+    } else if (above >= needed) {
+      cardStyle.bottom = window.innerHeight - rect.top + 20;
+      cardStyle.maxHeight = above - 16;
+    } else {
+      // Tall sections leave no room above or below; keep the slide controls on screen.
+      cardStyle.bottom = 16;
+    }
   } else {
     cardStyle.left = "50%";
     cardStyle.top = "50%";

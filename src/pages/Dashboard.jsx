@@ -26,6 +26,7 @@ import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAle
 import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAlerts';
 import EdBriefingAlerts from '@/components/dashboard/EdBriefingAlerts';
 import FinanceFileApprovalWidget from '@/components/ed/FinanceFileApprovalWidget';
+import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
@@ -102,6 +103,7 @@ function PinnedPortalBanner({ card, onUnpin }) {
 export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
   const queryClient = useQueryClient();
+  const { revealedWidget } = useTrainingTour();
 
   const { data: cards = [] } = useQuery({
     queryKey: ['portalCards'],
@@ -141,8 +143,9 @@ export default function Dashboard() {
 
   const lockedWidgetIds = dbWidgets.filter(w => w.locked_to_dashboard).map(w => w.widget_id);
 
+  // A guided slide can temporarily reveal its optional widget without saving preferences.
   const isWidgetActive = (id) =>
-    lockedWidgetIds.includes(id) || (userPreferences?.enabled_widgets?.includes(id) ?? false);
+    revealedWidget === id || lockedWidgetIds.includes(id) || (userPreferences?.enabled_widgets?.includes(id) ?? false);
 
   // Derive module ID from card URL (e.g. "/filemanager" → "filemanager")
   const getModuleIdFromCard = (card) => {
