@@ -50,10 +50,18 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     (async () => {
       if (step.path && !window.location.pathname.startsWith(step.path)) {
         navigate(step.path);
-        await new Promise(r => setTimeout(r, 700));
+        await new Promise(r => setTimeout(r, 400));
       }
       if (cancelled) return;
-      const el = findTarget(step.target);
+      // Keep looking for the target for a few seconds — after a navigation the
+      // page may still be mounting widgets or loading its data.
+      let el = null;
+      for (let i = 0; i < 16 && !cancelled; i++) {
+        el = step.target ? findTarget(step.target) : null;
+        if (el) break;
+        await new Promise(r => setTimeout(r, 250));
+      }
+      if (cancelled) return;
       if (el) {
         el.scrollIntoView({ block: "center", behavior: "smooth" });
         await new Promise(r => setTimeout(r, 400));

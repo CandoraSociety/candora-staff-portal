@@ -26,7 +26,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to your Candora portal",
-        body: "This training runs in Training Mode: every record you see and touch is simulated demo data, so explore freely — nothing you change affects real client or staff information. This main page is your home base every time you sign in."
+        body: "This training runs in Training Mode: every record you see and touch is simulated demo data, so explore freely — nothing you change affects real client or staff information. This main page is your home base every time you sign in.",
+        target: { selector: '[data-tour="dashboard-hero"]' }
       },
       {
         title: "Announcements",
@@ -44,9 +45,9 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="dashboard-pin"]' }
       },
       {
-        title: "Your employee card",
-        body: "This card shows your position and contact details as the organization has them on file. The Customize button (top right of the page) opens your settings, where you can update your profile, photo and personal preferences.",
-        target: { selector: '[data-tour="dashboard-employee"]' }
+        title: "Your employee card and settings",
+        body: "This card shows your position and contact details as the organization has them on file. The highlighted Customize button opens your settings, where you can update your profile, photo and personal preferences.",
+        target: { selector: 'a[href="/user/settings"]' }
       },
       {
         title: "Notifications and approvals",
@@ -54,8 +55,9 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Turning widgets on and off",
-        body: "Your dashboard is customizable. Use this page to turn widgets like the Personal Organizer, the How-To knowledge base and the translator on or off, so your home page shows exactly what you use.",
-        path: "/widget-customization"
+        body: "Your dashboard is customizable. On this page, click any widget to turn it on or off — like the Personal Organizer, the How-To knowledge base and the translator — so your home page shows exactly what you use.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour="widget-list"]' }
       },
       {
         title: "Your personal organizer",

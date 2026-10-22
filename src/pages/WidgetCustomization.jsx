@@ -125,7 +125,7 @@ export default function WidgetCustomization() {
         </div>
 
         {/* Widget Visibility */}
-        <Card>
+        <Card data-tour="widget-list">
           <CardHeader>
             <CardTitle>Home Widgets</CardTitle>
             <CardDescription>Choose which widgets appear on your home dashboard — click to toggle on or off</CardDescription>
