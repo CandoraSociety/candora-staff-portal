@@ -6,7 +6,8 @@ import {
   Megaphone, CheckCircle2, LayoutPanelLeft, Calendar, Receipt,
   ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
   ClipboardList,
-  PenTool
+  PenTool,
+  GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -50,6 +51,7 @@ const ADMIN_ITEMS = [
   { path: '/admin/widgets', label: 'Manage Widgets', icon: LayoutDashboard, adminOnly: true },
   { path: '/admin/users', label: 'Users & Access', icon: Users, adminOnly: true },
   { path: '/admin/announcements', label: 'Announcements', icon: Megaphone, adminOnly: true },
+  { path: '/admin/training', label: 'Training Hub', icon: GraduationCap, adminOnly: true },
   { path: '/admin/settings', label: 'Org Settings', icon: Settings, adminOnly: true },
   { path: '/dev-tasks', label: 'Dev Tasks', icon: CheckCircle2, adminOnly: true },
 ];
