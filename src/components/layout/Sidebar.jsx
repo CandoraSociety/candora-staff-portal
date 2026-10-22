@@ -15,6 +15,7 @@ import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
+import SidebarNavGroup from '@/components/layout/SidebarNavGroup';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
 
 // Purchases — hover reveals the sub-tabs
 const PURCHASES = {
+  tourId: 'sidebar-purchases',
   label: 'Purchases',
   icon: ShoppingBag,
   children: [
@@ -36,6 +38,7 @@ const PURCHASES = {
 
 // Time & Attendance — hover reveals the sub-tabs
 const TIME_ATTENDANCE = {
+  tourId: 'sidebar-time-attendance',
   label: 'Time & Attendance',
   icon: CalendarClock,
   children: [
@@ -117,9 +120,9 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
 
-          <NavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
+          <SidebarNavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
 
-          <NavGroup item={TIME_ATTENDANCE} collapsed={collapsed} active={TIME_ATTENDANCE.children.some(c => isActive(c.path))} />
+          <SidebarNavGroup item={TIME_ATTENDANCE} collapsed={collapsed} active={TIME_ATTENDANCE.children.some(c => isActive(c.path))} />
 
           {isAdmin && (
             <>
@@ -186,64 +189,5 @@ function NavItem({ item, collapsed, active }) {
       </TooltipTrigger>
       {collapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
     </Tooltip>
-  );
-}
-
-// Nav item with hover-revealed sub-tabs (e.g. Purchases)
-function NavGroup({ item, collapsed, active }) {
-  const location = useLocation();
-  const Icon = item.icon;
-  const childActive = (path) => location.pathname.startsWith(path);
-  // The flyout is fixed-positioned at the row's edge — the nav's scroll
-  // container would clip an absolutely-positioned flyout (overflow-y:auto
-  // also clips on the x axis), which is why plain CSS positioning failed.
-  const [pos, setPos] = useState(null); // { top, left } while hovering
-  const open = (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    setPos({ top: r.top, left: r.right });
-  };
-
-  return (
-    <div onMouseEnter={open} onMouseLeave={() => setPos(null)}>
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer",
-          collapsed && "justify-center px-0",
-          active
-            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-            : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        )}
-      >
-        <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/70")} />
-        {!collapsed && <span>{item.label}</span>}
-      </div>
-      {pos && (
-        <div
-          style={{ top: pos.top, left: pos.left }}
-          className="fixed z-50 min-w-[220px] rounded-lg border border-sidebar-border bg-sidebar py-1.5 px-1.5 shadow-xl"
-        >
-          {item.children.map(child => {
-            const ChildIcon = child.icon;
-            const isChildActive = childActive(child.path);
-            return (
-              <Link
-                key={child.path}
-                to={child.path}
-                onClick={() => setPos(null)}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  isChildActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
-              >
-                <ChildIcon className="w-4 h-4 flex-shrink-0" />
-                <span className="whitespace-nowrap">{child.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }

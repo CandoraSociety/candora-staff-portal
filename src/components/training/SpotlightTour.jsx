@@ -5,14 +5,17 @@ import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
 import useSpotlightTarget from "@/components/training/useSpotlightTarget";
 import { spotlightPath } from "@/components/training/spotlightTarget";
 import { useTrainingTour } from "@/components/training/TrainingTourProvider";
+import SpotlightOverlay from "@/components/training/SpotlightOverlay";
+import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 
 export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setRevealedWidget } = useTrainingTour();
+  const { setRevealedWidget, setRevealedNavPath } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
+  const drag = useTrainingWindowDrag(open, module?.key);
 
   const steps = module?.steps || [];
   const step = steps[index];
@@ -28,6 +31,12 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     setRevealedWidget(open ? step?.revealWidget || null : null);
     return () => setRevealedWidget(null);
   }, [open, step?.revealWidget, setRevealedWidget]);
+
+  // Keep hover-only sidebar sub-tabs visible while their tour step is open.
+  useEffect(() => {
+    setRevealedNavPath(open ? step?.revealNav || null : null);
+    return () => setRevealedNavPath(null);
+  }, [open, step?.revealNav, setRevealedNavPath]);
 
   // Report the current step to the facilitator's talking-points panel
   useEffect(() => {
@@ -80,21 +89,6 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     try { sessionStorage.setItem(presentationKey, v ? "1" : "0"); } catch { /* ignore */ }
   };
 
-  const pad = 8;
-  const spotlightStyle = rect ? {
-    position: "fixed",
-    top: rect.top - pad,
-    left: rect.left - pad,
-    width: rect.width + pad * 2,
-    height: rect.height + pad * 2,
-    borderRadius: 14,
-    border: "2px solid hsl(45, 92%, 53%)",
-    boxShadow: "0 0 0 9999px rgba(2, 6, 23, 0.74)",
-    transition: "all 300ms ease",
-    pointerEvents: "none",
-    zIndex: 98,
-  } : null;
-
   const cardW = presentation ? 580 : 440;
   const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto", zIndex: 100 };
   if (rect) {
@@ -102,7 +96,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     const above = rect.top - 20;
     const needed = presentation ? 400 : 300;
     cardStyle.left = Math.min(Math.max(16, rect.left), Math.max(16, window.innerWidth - cardW - 16));
-    if (below >= needed) {
+    if (step.revealNav && window.innerWidth - rect.left - rect.width - 36 >= cardW) {
+      cardStyle.left = rect.left + rect.width + 20;
+      cardStyle.top = Math.max(16, Math.min(rect.top, window.innerHeight - needed - 16));
+      cardStyle.maxHeight = window.innerHeight - cardStyle.top - 16;
+    } else if (below >= needed) {
       cardStyle.top = rect.top + rect.height + 20;
       cardStyle.maxHeight = below - 16;
     } else if (above >= needed) {
@@ -120,11 +118,10 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
 
   return createPortal(
     <div data-training-tour className="print:hidden">
-      {!rect && <div className="fixed inset-0 z-[97] bg-slate-950/75" />}
-      {spotlightStyle && <div style={spotlightStyle} />}
-      <div style={cardStyle}>
+      <SpotlightOverlay rect={rect} />
+      <div ref={drag.ref} style={{ ...cardStyle, ...drag.style }}>
         <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
-          <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
+          <div {...drag.handleProps} className="flex items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}>
                 {module.shortTitle || module.title}

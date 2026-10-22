@@ -151,48 +151,55 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to Part 2",
-        body: "This is Part 2 of the main page training. It covers the everyday admin tasks: booking time off, logging sick or personal days, submitting timesheets, uploading Candora MasterCard receipts, and getting paid back for out-of-pocket expenses. As before, you're in Training Mode — nothing you submit here is real."
+        body: "This is Part 2 of the main page training. It covers the everyday admin tasks: booking time off, logging sick or personal days, submitting timesheets, uploading Candora MasterCard receipts, and getting paid back for out-of-pocket expenses. As before, you're in Training Mode — nothing you submit here is real.",
+        target: { selector: '[data-tour="sidebar-time-attendance"]' }
       },
       {
         title: "Booking time off",
         body: "Request vacation or other time off here. Fill in your dates, submit, and the request goes straight to your supervisor for approval — you'll see its status move from pending to approved right on this page.",
-        target: { selector: "main h1" },
+        revealNav: "/time-off/vacation-request",
+        target: { selector: '[data-tour="sidebar-time-attendance"]', additionalSelectors: ['[data-tour-path="/time-off/vacation-request"]'] },
         path: "/time-off/vacation-request"
       },
       {
         title: "Sick time and personal days",
         body: "Sick days and personal days are logged here instead of a vacation request. They follow the same approval flow and feed the same balances, so your time-off record stays accurate in one place.",
-        target: { selector: "main h1" },
+        revealNav: "/time-off/sick-personal",
+        target: { selector: '[data-tour="sidebar-time-attendance"]', additionalSelectors: ['[data-tour-path="/time-off/sick-personal"]'] },
         path: "/time-off/sick-personal"
       },
       {
         title: "Submitting your timesheet",
         body: "Your hours go in here each pay period. Fill out the form and submit — your supervisor approves it, and Finance uses these submissions to run payroll, so a late or missing timesheet means a late paycheque.",
-        target: { selector: "main h1" },
+        revealNav: "/time-off/timesheets",
+        target: { selector: '[data-tour="sidebar-time-attendance"]', additionalSelectors: ['[data-tour-path="/time-off/timesheets"]'] },
         path: "/time-off/timesheets"
       },
       {
         title: "The team schedule",
         body: "Want to know who's off before you book your own time off? The team schedule shows everyone's approved absences side by side — plan your requests around coverage instead of guessing.",
-        target: { selector: "main h1" },
+        target: { selector: '[data-tour="sidebar-time-attendance"]' },
         path: "/time-off/team"
       },
       {
         title: "Reimbursements — getting paid back",
         body: "Paid for something out of pocket? Add each expense as an entry, attach the receipt, then submit them together as one reimbursement request. It travels to your supervisor and then Finance, who e-transfer you the total once it's paid.",
-        target: { selector: "main h1" },
+        revealNav: "/reimbursement-requests",
+        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/reimbursement-requests"]'] },
         path: "/reimbursement-requests"
       },
       {
         title: "Candora MasterCard receipts",
         body: "If you made a purchase on the Candora MasterCard, upload the receipt here — each one is matched against the monthly card statement so Finance can reconcile the card without chasing people for paperwork.",
-        target: { selector: "main h1" },
+        revealNav: "/candora-cc-receipts",
+        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/candora-cc-receipts"]'] },
         path: "/candora-cc-receipts"
       },
       {
         title: "Where approvals and payments show up",
         body: "You don't need to check any of these pages for updates: when a supervisor approves your timesheet or time off, or Finance pays your reimbursement, a notification appears automatically on your main dashboard.",
-        target: { selector: '[data-tour="dashboard-hero"]' },
+        revealWidget: "notifications",
+        target: { selector: '[data-tour="dashboard-notifications"]' },
         path: "/"
       },
       {

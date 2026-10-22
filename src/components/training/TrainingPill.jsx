@@ -9,6 +9,7 @@ import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
+import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 
 
@@ -31,6 +32,7 @@ export default function TrainingPill() {
     || moduleForPath(location.pathname);
   const samePortalSession = session && module && session.portal === module.key ? session : null;
   const otherPortalSession = session && (!module || session.portal !== module.key) ? session : null;
+  const controlsDrag = useTrainingWindowDrag(!!samePortalSession, module?.key);
 
   // Load this user's progress for the current module
   useEffect(() => {
@@ -154,8 +156,8 @@ export default function TrainingPill() {
     <>
       {/* Active training session on this portal */}
       {samePortalSession && (
-        <div className="fixed bottom-4 left-4 z-[60] print:hidden">
-          <div className="rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)]" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
+        <div ref={controlsDrag.ref} style={controlsDrag.style} className="fixed bottom-4 left-4 z-[60] print:hidden">
+          <div {...controlsDrag.handleProps} className="rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)] cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
             <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "hsl(45, 60%, 85%)" }}>
               <GraduationCap className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} /> Training Mode
             </span>

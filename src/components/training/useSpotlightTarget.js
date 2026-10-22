@@ -13,8 +13,18 @@ export default function useSpotlightTarget(enabled, target, stepKey) {
         current = element;
         element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
       }
-      const bounds = element?.getBoundingClientRect();
-      const rect = bounds ? { top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height } : null;
+      const elements = element ? [element, ...(target.additionalSelectors || []).map(selector => findSpotlightTarget({ selector })).filter(Boolean)] : [];
+      const regions = elements.map(node => {
+        const bounds = node.getBoundingClientRect();
+        return { top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height };
+      });
+      const top = Math.min(...regions.map(region => region.top));
+      const left = Math.min(...regions.map(region => region.left));
+      const rect = regions.length ? { top, left,
+        width: Math.max(...regions.map(region => region.left + region.width)) - left,
+        height: Math.max(...regions.map(region => region.top + region.height)) - top,
+        regions,
+      } : null;
       setFocus(previous => {
         if (previous?.stepKey === stepKey && JSON.stringify(previous.rect) === JSON.stringify(rect)) return previous;
         return { stepKey, rect };

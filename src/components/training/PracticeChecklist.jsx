@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { X, CheckCircle2, Circle, RefreshCw, PartyPopper, ExternalLink } from "lucide-react";
+import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 const snapKey = (key) => `candora-training-snapshots-${key}`;
 
@@ -26,6 +27,7 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
   const [done, setDone] = useState([]);
   const [checking, setChecking] = useState(false);
   const [snaps, setSnaps] = useState({});
+  const drag = useTrainingWindowDrag(open, module?.key);
 
   useEffect(() => {
     if (!open || !module) return;
@@ -63,9 +65,9 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[80] w-[360px] max-w-[calc(100vw-32px)] print:hidden">
+    <div ref={drag.ref} style={drag.style} className="fixed bottom-4 right-4 z-[80] w-[360px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-y-auto print:hidden">
       <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
+        <div {...drag.handleProps} className="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
           <div>
             <p className="text-sm font-bold" style={{ color: "hsl(45, 92%, 65%)" }}>Practice — {module.shortTitle || module.title}</p>
             <p className="text-[11px]" style={{ color: "hsl(230, 30%, 60%)" }}>
