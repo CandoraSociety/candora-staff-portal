@@ -23,7 +23,7 @@ export const FACILITATOR_GUIDE = {
       "Your personal organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
       "How-To knowledge base": "Common question: 'What if it doesn't know the answer?' — it falls back to AI in plain language, and every question is logged so the preset answers keep improving.",
       "Setting up your e-signature": "Everyone must complete this before signing real documents — it's also a practice task, so don't do it for them here. Mention all three methods (draw, type, upload) and that the reminder disappears once it's set.",
-      "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup is the must-do. Circulate while they work.",
+      "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup is the must-do. Circulate while they work. Mention Part 2 — Time & Money — as the natural next module.",
     },
     practiceNotes: {
       "dash-pin": "Watch that people find the pin — it only appears on hover.",
@@ -34,6 +34,37 @@ export const FACILITATOR_GUIDE = {
     tips: [
       "Have everyone signed in on their own device before you start the tour — the tour is better watched on the projector, practice is done on their screen.",
       "Keep the talking-points panel on your own laptop and mirror only the tour screen.",
+    ],
+  },
+
+  staffadmin: {
+    duration: "About 40 minutes (5 intro · 15 tour · 15 practice · 5 wrap-up)",
+    objectives: [
+      "Staff can request time off and log sick/personal days",
+      "Staff can submit a timesheet without help",
+      "Staff know the MasterCard receipt and reimbursement flows, and where approvals show up",
+    ],
+    stepNotes: {
+      "Welcome to Part 2": "Position it as the everyday-admin half of the main page training. Repeat the Training Mode message: every request they submit today is simulated and disappears when they exit.",
+      "Booking time off": "Walk one request end to end on the projector: dates, submit, pending status. Common question: 'Who approves it?' — their supervisor, and they'll see the status change right on this page.",
+      "Sick time and personal days": "The common mistake is booking sick days as vacation — show the difference and mention both feed the same balances.",
+      "Submitting your timesheet": "Stress the payroll link: a late or missing timesheet means a late paycheque. Deadlines beat perfection here.",
+      "The team schedule": "Practical tip to give the room: check this before requesting time off, so requests don't bounce off a week where coverage is thin.",
+      "Reimbursements — getting paid back": "Show the two-part habit: add entries as you spend, then submit them together. Receipts attached at entry time save everyone hunting later.",
+      "Candora MasterCard receipts": "Clarify the split: out-of-pocket goes to reimbursements, purchases on the org card go here. Finance reconciles the card statement from these uploads.",
+      "Where approvals and payments show up": "The reassurance step: nobody needs to poll these pages — approvals and payment notices arrive as dashboard notifications on their own.",
+      "Time to practice": "Hands-on: everyone submits a time-off request, a timesheet, a receipt and a reimbursement. Circulate — timesheet period dates are where people hesitate.",
+    },
+    practiceNotes: {
+      "tm-vacation": "Auto-checked. Have them pick a real future date so the form behaves like it will in real life.",
+      "tm-sick": "Self-marked — remind them it's logged, not requested, but still reviewed.",
+      "tm-timesheet": "Auto-checked. The must-do of this module: verify everyone submitted before the session ends.",
+      "tm-reimb": "Auto-checked. Encourage attaching a demo receipt — the habit that saves Finance the most time.",
+      "tm-cc": "Auto-checked. Any image file works for the demo upload; the point is seeing the confirmation flow.",
+    },
+    tips: [
+      "Run this session close to a pay period start — timesheet habits stick best when the real one is due soon.",
+      "Have the payroll deadline dates handy; it's the first question every group asks.",
     ],
   },
 

@@ -26,8 +26,15 @@ export default function TrainingPill() {
   const [tourOpen, setTourOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
 
-  const module = moduleForPath(location.pathname);
   const session = readSession();
+  const fSession = readFacilitatorSession();
+  // While a training session (learner or facilitated) is active, the module
+  // stays pinned to that session's portal — tours like Time & Money walk
+  // across several pages (time off, receipts, the dashboard), and the pill
+  // must not flip to a different module mid-tour.
+  const module = (session && getTrainingModule(session.portal))
+    || (fSession && getTrainingModule(fSession.portal))
+    || moduleForPath(location.pathname);
   const samePortalSession = session && module && session.portal === module.key ? session : null;
   const otherPortalSession = session && (!module || session.portal !== module.key) ? session : null;
 
@@ -60,7 +67,6 @@ export default function TrainingPill() {
   // A facilitated session (started from the Training Hub) takes over from the
   // normal learner UI: the facilitator gets the tour, talking points and
   // practice controls instead of personal training progress.
-  const fSession = readFacilitatorSession();
   if (fSession) {
     const fm = getTrainingModule(fSession.portal);
     if (module && fSession.portal === module.key) {

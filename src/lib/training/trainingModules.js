@@ -77,7 +77,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real."
+        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real. When you finish this module, there's a Part 2 — Time & Money — covering time off, timesheets, receipts and reimbursements."
       }
     ],
     tasks: [
@@ -105,6 +105,102 @@ export const TRAINING_MODULES = [
         body: "Open the E-Signature portal and create your demo signature — draw it, type it, or upload an image. This is how you'll sign real documents later.",
         path: "/e-signature",
         verify: { kind: "self" }
+      }
+    ]
+  },
+  {
+    key: "staffadmin",
+    title: "Main Page — Part 2: Time & Money",
+    shortTitle: "Time & Money",
+    blurb: "Part 2 of the main page training: booking time off, sick/personal days, timesheets, Candora MasterCard receipts and reimbursements.",
+    path: "/time-off/vacation-request",
+    steps: [
+      {
+        title: "Welcome to Part 2",
+        body: "This is Part 2 of the main page training. It covers the everyday admin tasks: booking time off, logging sick or personal days, submitting timesheets, uploading Candora MasterCard receipts, and getting paid back for out-of-pocket expenses. As before, you're in Training Mode — nothing you submit here is real."
+      },
+      {
+        title: "Booking time off",
+        body: "Request vacation or other time off here. Fill in your dates, submit, and the request goes straight to your supervisor for approval — you'll see its status move from pending to approved right on this page.",
+        target: { selector: 'a[href="/time-off/vacation-request"]' },
+        path: "/time-off/vacation-request"
+      },
+      {
+        title: "Sick time and personal days",
+        body: "Sick days and personal days are logged here instead of a vacation request. They follow the same approval flow and feed the same balances, so your time-off record stays accurate in one place.",
+        target: { selector: 'a[href="/time-off/sick-personal"]' },
+        path: "/time-off/sick-personal"
+      },
+      {
+        title: "Submitting your timesheet",
+        body: "Your hours go in here each pay period. Fill out the form and submit — your supervisor approves it, and Finance uses these submissions to run payroll, so a late or missing timesheet means a late paycheque.",
+        target: { selector: 'a[href="/time-off/timesheets"]' },
+        path: "/time-off/timesheets"
+      },
+      {
+        title: "The team schedule",
+        body: "Want to know who's off before you book your own time off? The team schedule shows everyone's approved absences side by side — plan your requests around coverage instead of guessing.",
+        target: { selector: 'a[href="/time-off/team"]' },
+        path: "/time-off/team"
+      },
+      {
+        title: "Reimbursements — getting paid back",
+        body: "Paid for something out of pocket? Add each expense as an entry, attach the receipt, then submit them together as one reimbursement request. It travels to your supervisor and then Finance, who e-transfer you the total once it's paid.",
+        target: { selector: 'a[href="/reimbursement-requests"]' },
+        path: "/reimbursement-requests"
+      },
+      {
+        title: "Candora MasterCard receipts",
+        body: "If you made a purchase on the Candora MasterCard, upload the receipt here — each one is matched against the monthly card statement so Finance can reconcile the card without chasing people for paperwork.",
+        target: { selector: 'a[href="/candora-cc-receipts"]' },
+        path: "/candora-cc-receipts"
+      },
+      {
+        title: "Where approvals and payments show up",
+        body: "You don't need to check any of these pages for updates: when a supervisor approves your timesheet or time off, or Finance pays your reimbursement, a notification appears automatically on your main dashboard.",
+        target: { selector: '[data-tour="dashboard-hero"]' },
+        path: "/"
+      },
+      {
+        title: "Time to practice",
+        body: "That's the tour! Now try it yourself: request a day off, submit a timesheet, upload a MasterCard receipt, and put in a reimbursement — all on simulated data."
+      }
+    ],
+    tasks: [
+      {
+        id: "tm-vacation",
+        title: "Request time off",
+        body: "Submit a vacation or time-off request for a future date.",
+        path: "/time-off/vacation-request",
+        verify: { kind: "created", entity: "TimeOffRecord" }
+      },
+      {
+        id: "tm-sick",
+        title: "Log a sick or personal day",
+        body: "Record a sick time or personal day entry for yourself.",
+        path: "/time-off/sick-personal",
+        verify: { kind: "self" }
+      },
+      {
+        id: "tm-timesheet",
+        title: "Submit a timesheet",
+        body: "Fill out and submit a timesheet for the current pay period.",
+        path: "/time-off/timesheets",
+        verify: { kind: "created", entity: "Timesheet" }
+      },
+      {
+        id: "tm-reimb",
+        title: "Submit a reimbursement",
+        body: "Add an expense entry (attach a receipt if you like) and submit a reimbursement request for it.",
+        path: "/reimbursement-requests",
+        verify: { kind: "created", entity: "StaffReimbursementRequest" }
+      },
+      {
+        id: "tm-cc",
+        title: "Upload a MasterCard receipt",
+        body: "Upload a receipt for a purchase made on the Candora MasterCard.",
+        path: "/candora-cc-receipts",
+        verify: { kind: "created", entity: "CCReceiptSubmission" }
       }
     ]
   },
@@ -432,6 +528,9 @@ export const moduleForPath = (pathname) => {
   }
   const prefixes = [
     ["/e-signature", "dashboard"],
+    ["/time-off", "staffadmin"],
+    ["/reimbursement-requests", "staffadmin"],
+    ["/candora-cc-receipts", "staffadmin"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],
