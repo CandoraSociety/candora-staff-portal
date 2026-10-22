@@ -24,6 +24,21 @@ export default function StaffPortalTraining() {
 
   const completedCount = modules.filter(m => progress.find(p => p.portal_key === m.key)?.is_completed).length;
 
+  // Retaking a completed module clears its saved progress (record + tour step)
+  // so the training genuinely starts over from the first step.
+  const handleStart = async (m, rec) => {
+    if (rec?.is_completed) {
+      const ok = window.confirm(
+        `Start the ${m.shortTitle || m.title} training over from scratch? ` +
+        "Your previous progress for this module will be cleared."
+      );
+      if (!ok) return;
+      try { await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
+      try { sessionStorage.removeItem(`candora-tour-step-${m.key}`); } catch { /* ignore */ }
+    }
+    startTrainingSession(m.key);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -70,7 +85,7 @@ export default function StaffPortalTraining() {
                 </p>
               </div>
               <button
-                onClick={() => startTrainingSession(m.key)}
+                onClick={() => handleStart(m, rec)}
                 className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors hover:opacity-90 bg-primary text-primary-foreground mt-auto"
               >
                 {completed
