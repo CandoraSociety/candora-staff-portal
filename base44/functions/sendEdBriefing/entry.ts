@@ -90,6 +90,7 @@ export default async function(req) {
         svc.entities.Invoice.list('-created_date', 200),
         svc.entities.Announcement.list('-created_date', 50),
         svc.entities.CompassTask.list('-created_date', 300),
+        svc.entities.PurchaseRequest.list('-created_date', 100),
       ]),
       Promise.allSettled([
         svc.entities.CashFlowProjection.filter({ kind: 'current' }),
@@ -111,6 +112,7 @@ export default async function(req) {
     const invoices = got(g2, 3);
     const announcements = got(g2, 4);
     const compassTasks = got(g2, 5);
+    const purchaseRequests = got(g2, 6);
     const cashRows = got(g3, 0);
     const volunteers = got(g3, 1);
     const employees = got(g3, 2);
@@ -136,6 +138,88 @@ export default async function(req) {
     const activeVolunteers = volunteers.filter(v => v.status === 'active');
     const activeClients = clients.filter(c => c.status === 'active' || c.status === 'employed');
     const activePrograms = programs.filter(p => p.status === 'active').slice(0, 5);
+
+    // ── Interactive items: checklist, decisions, assistant offers ──
+    // Built deterministically from real records so every action can write back.
+    const items = [];
+    let itemSeq = 0;
+    const nextId = () => `item_${++itemSeq}`;
+    const checklistTaskIds = new Set();
+    for (const t of urgent.slice(0, 5)) {
+      checklistTaskIds.add(t.id);
+      items.push({
+        id: nextId(), kind: 'checklist', text: `${t.title}${dueLabel(t.due_date, todayStr)}`,
+        entity_type: 'EDTask', entity_id: t.id, action: 'complete_ed_task',
+      });
+    }
+    if (organizer) {
+      (organizer.tasks || []).forEach((task, idx) => {
+        if (task && !task.done && items.filter(i => i.kind === 'checklist').length < 8) {
+          items.push({
+            id: nextId(), kind: 'checklist', text: task.text || 'To-do',
+            entity_type: 'PersonalOrganizer', entity_id: organizer.id, task_index: idx, action: 'complete_todo',
+          });
+        }
+      });
+    }
+    for (const p of purchaseRequests.filter(p => p.status === 'pending').slice(0, 3)) {
+      const label = p.request_type === 'exposure_course'
+        ? (p.course_type === 'Other' && p.course_type_other ? p.course_type_other : p.course_type)
+        : (p.support_type || p.description);
+      items.push({
+        id: nextId(), kind: 'decision',
+        text: `${p.request_type === 'exposure_course' ? 'Exposure course' : 'Purchase'} request: ${label || 'support for client'} — est. $${(p.estimated_amount || 0).toFixed(2)}${p.client_name ? ` (${p.client_name})` : ''}`,
+        context: `Requested by ${p.requested_by_name || p.requested_by || 'staff'}${p.requested_date ? ` on ${String(p.requested_date).slice(0, 10)}` : ''}. Full approval (actual cost + receipt) is done in Pathways.`,
+        entity_type: 'PurchaseRequest', entity_id: p.id, link: '/pathways/dashboard',
+        actions: [
+          { key: 'acknowledge_purchase', label: "I'll handle it" },
+          { key: 'reject_purchase', label: 'Reject' },
+        ],
+      });
+    }
+    for (const t of openTasks) {
+      if (items.filter(i => i.kind === 'decision').length >= 3) break;
+      const due = String(t.due_date || '').slice(0, 10);
+      if (!t.due_date || due >= todayStr || checklistTaskIds.has(t.id)) continue;
+      items.push({
+        id: nextId(), kind: 'decision',
+        text: `Overdue task: ${t.title}`,
+        context: `Was due ${due} (priority ${t.priority || 'medium'}).`,
+        entity_type: 'EDTask', entity_id: t.id,
+        actions: [
+          { key: 'reschedule_task', label: 'Push +1 week' },
+          { key: 'deprioritize_task', label: 'Lower priority' },
+        ],
+      });
+    }
+    const reportWindowEnd = new Date(abtNow.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+    for (const r of reportsDue) {
+      if (items.filter(i => i.kind === 'offer').length >= 2) break;
+      const due = String(r.due_date).slice(0, 10);
+      if (!r.title || due > reportWindowEnd) continue;
+      const alreadyTracked = openTasks.some(t => (t.title || '').toLowerCase().includes(r.title.toLowerCase().slice(0, 12)) && r.title.length > 3);
+      if (alreadyTracked) continue;
+      items.push({
+        id: nextId(), kind: 'offer', offer_type: 'create_task',
+        text: `Add a task to prepare "${r.title}" (due ${due})`,
+        payload: { title: `Prepare ${r.title}`, description: `Grant report due ${due}. Added from briefing.`, due_date: due, priority: 'high' },
+      });
+    }
+    items.push({
+      id: nextId(), kind: 'offer', offer_type: 'metrics_summary',
+      text: 'Compile a 30-second organization metrics snapshot',
+      payload: { snapshot: {
+        date: todayStr,
+        activeStaff: activeEmployees.length, activeVolunteers: activeVolunteers.length,
+        activeClients: activeClients.length, openEdTasks: openTasks.length, urgentEdTasks: urgent.length,
+        activeProjects: activeProjects.length,
+        projectsAtRisk: activeProjects.filter(p => p.risk_level === 'high' || p.risk_level === 'critical').length,
+        grantReportsDue: reportsDue.length, overdueCompassTasks: overdueCompass.length,
+        pendingInvoices: pendingInvoices.length,
+        cashOpeningBalance: cashFlow?.opening_balance ?? null, cashAsOf: cashFlow?.opening_date || null,
+        upcomingEvents: upcomingEvents.map(e => e.name || e.title).slice(0, 3),
+      } },
+    });
 
     const firstName = (ed.first_name || 'Graham').split(' ')[0];
 
@@ -218,6 +302,7 @@ export default async function(req) {
       kind: 'ed_briefing',
       title,
       message: briefing.trim(),
+      items,
       link: '/ed',
     });
 
