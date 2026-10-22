@@ -620,6 +620,17 @@ export const TRAINING_MODULES = [
   }
 ];
 
+// Which portal a training module belongs to — used to show each staff member
+// only the training for portals they can actually access (null = everyone).
+export const TRAINING_MODULE_ACCESS = {
+  dashboard: null,
+  staffadmin: null,
+  pathways: "pathways",
+  rc: "rc",
+  ell: "ell",
+  centralreg: "central-registration",
+};
+
 export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === key) || null;
 
 export const moduleForPath = (pathname) => {

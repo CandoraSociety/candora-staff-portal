@@ -85,6 +85,7 @@ import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
 import TrainingHub from '@/pages/admin/TrainingHub';
 import UserSettings from '@/pages/UserSettings';
+import StaffPortalTraining from '@/pages/StaffPortalTraining';
 import ReimbursementRequests from '@/pages/ReimbursementRequests';
 import CandoraCCReceipts from '@/pages/CandoraCCReceipts';
 import VacationTimeOffRequest from '@/pages/VacationTimeOffRequest';
@@ -477,6 +478,7 @@ const AuthenticatedApp = () => {
           <Route path="/time-off/timesheets" element={<Timesheets />} />
           <Route path="/time-off/team" element={<TeamSchedule />} />
           <Route path="/e-signature" element={<ESignature />} />
+          <Route path="/staff-training" element={<StaffPortalTraining />} />
         </Route>
 
         {/* Volunteer Manager - standalone layout */}

@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { path: '/meeting-manager', label: 'Meetings', icon: Calendar, adminOnly: false },
   { path: '/widget-customization', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
   { path: '/e-signature', label: 'E-Signature', icon: PenTool, adminOnly: false },
+  { path: '/staff-training', label: 'Staff Portal Training', icon: GraduationCap, adminOnly: false },
 ];
 
 // Purchases — hover reveals the sub-tabs
