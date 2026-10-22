@@ -216,6 +216,30 @@ function demoData() {
   return merged;
 }
 
+// Seeded records carry the demo worker identity (Terry Tester / test.user@…).
+// To make "my" dashboards (assigned-worker lists, tasks, requests...) show
+// demo data for whoever is testing, the seeds are rewritten to the signed-in
+// user's real name/email before the first read.
+const DEMO_EMAIL = 'test.user@candora.ca';
+const DEMO_NAME = 'Terry Tester';
+let realEmail = '';
+let realName = '';
+
+function personalize(value) {
+  if (typeof value === 'string') {
+    if (value === DEMO_EMAIL) return realEmail || value;
+    if (value === DEMO_NAME) return realName || value;
+    return value;
+  }
+  if (Array.isArray(value)) return value.map(personalize);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) out[k] = personalize(v);
+    return out;
+  }
+  return value;
+}
+
 function seedEntity(entity) {
   const map = demoData();
   const seeds = map[entity] || [];
@@ -224,7 +248,7 @@ function seedEntity(entity) {
     created_date: now(),
     updated_date: now(),
     created_by_id: 'test-user',
-    ...fields,
+    ...personalize(fields),
   })));
 }
 
@@ -305,8 +329,14 @@ function makeCollection(entity) {
       const sorted = typeof a === 'string' ? sortRecords(recs, a) : recs;
       return typeof b === 'number' ? sorted.slice(0, b) : sorted;
     },
-    async filter(query, opts) {
+    async filter(query, opts, maybeLimit) {
       const matched = rowsOf(entity).filter((r) => matches(r, query));
+      // Legacy call shape filter(query, sort, limit) → plain array (the real
+      // SDK supports this; callers like PathwaysWorkerDashboard do .find on it)
+      if (opts && typeof opts !== 'object') {
+        const sorted = sortRecords(matched, opts);
+        return typeof maybeLimit === 'number' ? sorted.slice(0, maybeLimit) : sorted;
+      }
       return opts ? paginate(matched, opts) : matched;
     },
     async get(id) {
@@ -510,6 +540,19 @@ export function installTestModeInterceptor(client) {
     functions: { invoke: invokeSim },
     auth: client.auth,
   });
+  // Capture the signed-in user's identity so seeded demo records can be
+  // reassigned to them ("my clients/tasks" dashboards).
+  try {
+    const origMe = client.auth.me.bind(client.auth);
+    client.auth.me = async () => {
+      const me = await origMe();
+      if (me) {
+        realEmail = (me.email || '').toLowerCase();
+        realName = me.full_name || '';
+      }
+      return me;
+    };
+  } catch { /* leave as-is */ }
   // Profile edits in Test Mode must not touch the real account.
   try {
     client.auth.updateMe = async () => {

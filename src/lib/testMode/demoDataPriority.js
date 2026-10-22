@@ -16,6 +16,10 @@ export const PRIORITY_DEMO = {
     { id: 'test_pc_grace', first_name: 'Grace', last_name: 'Kim', compass_hsid: '10015', phone: '780-555-1105', email: 'grace.kim@example.ca', service_type: 'pathways', program_status: 'in_progress', status: 'active', service_start_date: D(35), assigned_worker_name: 'Dana Demo', residency_status: 'permanent_resident', clb_level: 'clb_7', employment_status: 'UE-S', internal_placement: 'cleaning_arc', placement_start_date: D(14), placement_schedule: 'Mon/Wed/Fri mornings', highest_education: 'high_school_diploma', legally_entitled_to_work: 'yes', referral_source: 'external_agency', barrier_1: 'Canadian work experience', barrier_1_status: 'in_progress', barrier_1_action_steps: 'Internal training placement at ARC', intake_date: D(37), is_waitlisted: false },
     { id: 'test_pc_leo', first_name: 'Leo', last_name: 'Fontaine', compass_hsid: '10016', phone: '780-555-1106', service_type: 'pathways', program_status: 'in_progress', status: 'new', assigned_worker_name: '', residency_status: 'work_permit', employment_status: 'UE', referral_source: 'school', intake_date: D(1), is_waitlisted: true, waitlist_date: D(1) },
   ],
+  PathwaysStaff: [
+    { name: 'Terry Tester', email: 'test.user@candora.ca', role: 'career_counsellor', is_active: true },
+    { name: 'Dana Demo', email: 'test.admin@candora.ca', role: 'manager', is_active: true },
+  ],
   CompassTask: [
     { client_id: 'test_pc_maria', client_name: 'Maria Rivera', compass_hsid: '10011', task_type: 'assessment', title: 'Complete CLB reassessment booking', instructions: 'Book CLB reassessment and record result on the client profile.', assigned_worker_name: 'Terry Tester', status: 'pending' },
     { client_id: 'test_pc_ahmed', client_name: 'Ahmed Hassan', compass_hsid: '10012', task_type: 'follow_up', title: 'Check in after first workshop', instructions: 'Call two days after the Resume Basics workshop.', assigned_worker_name: 'Terry Tester', status: 'pending' },
