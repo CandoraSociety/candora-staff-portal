@@ -51,7 +51,10 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Notifications and approvals",
-        body: "Alerts — like timesheets waiting for your approval, or reimbursement updates — appear at the top of your dashboard so nothing slips by unnoticed."
+        body: "Alerts — like timesheets waiting for your approval, or reimbursement updates — appear at the top of your dashboard so nothing slips by unnoticed.",
+        path: "/",
+        revealWidget: "notifications",
+        target: { selector: '[data-tour="dashboard-notifications"]' }
       },
       {
         title: "Turning widgets on and off",

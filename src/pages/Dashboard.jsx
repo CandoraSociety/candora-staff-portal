@@ -19,13 +19,7 @@ import PortalTransition from '@/components/PortalTransition';
 import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
-import SupervisorTimesheetAlerts from '@/components/timesheets/SupervisorTimesheetAlerts';
-import SupervisorReimbursementAlerts from '@/components/reimbursements/SupervisorReimbursementAlerts';
-
-import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAlerts';
-import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAlerts';
-import EdBriefingAlerts from '@/components/dashboard/EdBriefingAlerts';
-import FinanceFileApprovalWidget from '@/components/ed/FinanceFileApprovalWidget';
+import DashboardNotifications from '@/components/dashboard/DashboardNotifications';
 import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
@@ -208,23 +202,7 @@ export default function Dashboard() {
       {/* E-signature setup reminder — until the user sets up their signature */}
       <ESignatureSetupReminder />
 
-      {/* Timesheets awaiting supervisor approval */}
-      <SupervisorTimesheetAlerts user={user} />
-          <SupervisorReimbursementAlerts user={user} />
-
-      {/* Vacation requests awaiting supervisor approval */}
-      <SupervisorVacationAlerts user={user} />
-
-      {/* Payment notifications — reimbursements / MasterCard receipts marked paid */}
-      <PaidReimbursementAlerts user={user} />
-
-      {/* ED scheduled briefings — morning / midday / end-of-day / Sunday week-ahead */}
-      <EdBriefingAlerts user={user} />
-
-      {/* Finance Files access requests — Executive Director approval */}
-      {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (
-        <FinanceFileApprovalWidget />
-      )}
+      <DashboardNotifications user={user} />
 
       {/* Employee Info Card */}
       <EmployeeInfoCard user={user} />
