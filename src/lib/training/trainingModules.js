@@ -162,6 +162,21 @@ export const TRAINING_MODULES = [
         path: "/time-off/vacation-request"
       },
       {
+        title: "Fill in your vacation request",
+        body: "Here's the actual form. Pick your first and last day off (the last day auto-follows the first if you leave it), and set hours per day — it defaults to 8. If your supervisor is on file they're already selected to approve it; if you have no supervisor on file, the request is recorded automatically with no approval needed. Add a note if there's anything they should know.",
+        target: { selector: '[data-tour="vacation-form"]' }
+      },
+      {
+        title: "Submit it",
+        body: "Press Submit Request when the dates look right. The request lands with your supervisor as pending — you'll get a notification on your dashboard the moment it's approved.",
+        target: { text: "Submit Request" }
+      },
+      {
+        title: "Track it under My Requests",
+        body: "Below the form, every request you've made is listed with its status — pending, approved or declined. Once a request is approved, those days automatically fill into the Paid Leave column of your timesheet for that pay period, so you never enter vacation hours by hand on a timesheet.",
+        target: { text: "My Requests" }
+      },
+      {
         title: "Sick time and personal days",
         body: "Sick days and personal days are logged here instead of a vacation request. They follow the same approval flow and feed the same balances, so your time-off record stays accurate in one place.",
         revealNav: "/time-off/sick-personal",
@@ -169,11 +184,36 @@ export const TRAINING_MODULES = [
         path: "/time-off/sick-personal"
       },
       {
+        title: "Log a sick day or personal day",
+        body: "Pick the type — Sick Time or Personal Day — then the date, and an Until date if it spans several days. Set hours per day if it's not a full 8. Unlike vacation, these need no approval: press Record and they're logged immediately for HR, and they fill into the Paid Leave column of your timesheet for that pay period. Your recent records are listed below the form.",
+        target: { selector: '[data-tour="sick-form"]' }
+      },
+      {
         title: "Submitting your timesheet",
         body: "Your hours go in here each pay period. Fill out the form and submit — your supervisor approves it, and Finance uses these submissions to run payroll, so a late or missing timesheet means a late paycheque.",
         revealNav: "/time-off/timesheets",
         target: { selector: '[data-tour="sidebar-time-attendance"]', additionalSelectors: ['[data-tour-path="/time-off/timesheets"]'] },
         path: "/time-off/timesheets"
+      },
+      {
+        title: "The pay period and your supervisor",
+        body: "The pay period is filled in for you automatically, and your supervisor comes from your employee file's Reports To. Submissions through the Wednesday after a period ends still count for that period — that's the real deadline to keep in mind.",
+        target: { text: "Pay Period" }
+      },
+      {
+        title: "Enter your regular hours",
+        body: "Each day of the pay period has its own row. Type your Start Time and End Time plus any Break, and the Total Paid Hours calculates itself — you can also type the total by hand if your shift doesn't fit the pattern. Totals add up at the bottom as you go.",
+        target: { text: "Regular Scheduled Hours" }
+      },
+      {
+        title: "Vacation, sick and personal columns",
+        body: "You don't type in these three columns: any approved vacation, sick time or personal day for that date is filled in automatically and highlighted — notice it matches the time off you just practiced requesting. The small numbers under each header show how many hours you still have available.",
+        target: { text: "Vacation" }
+      },
+      {
+        title: "Additional hours and submitting",
+        body: "Hours beyond your regular schedule — an evening event, an extra shift — go in the Additional Hours table; use Add Row for each one. Then press Submit Timesheet: it goes to your supervisor as pending, and everything you've submitted is listed below under My Submissions.",
+        target: { text: "Submit Timesheet" }
       },
       {
         title: "The team schedule",
@@ -189,11 +229,31 @@ export const TRAINING_MODULES = [
         path: "/reimbursement-requests"
       },
       {
+        title: "Add a receipt entry",
+        body: "Click Add Receipt Entry and a row opens. Attach your receipt with the paperclip — the app reads it and fills in the date, supplier and total for you. Then choose the program it relates to, answer Food yes or no, and enter the total with GST. If the receipt included something personal, use the scissors control to subtract it from the claim. Save with the check mark, and repeat for each receipt.",
+        target: { text: "Add Receipt Entry" }
+      },
+      {
+        title: "Submit them for reimbursement",
+        body: "When your entries are ready, press Submit for Reimbursement and they go together as one form — the total at the bottom of the table is what you're claiming. It travels to your supervisor, then Finance. You can watch its progress on this page under Submitted Reimbursements, and it moves to Paid once Finance has e-transferred you.",
+        target: { text: "Submit for Reimbursement" }
+      },
+      {
         title: "Candora MasterCard receipts",
         body: "If you made a purchase on the Candora MasterCard, upload the receipt here — each one is matched against the monthly card statement so Finance can reconcile the card without chasing people for paperwork.",
         revealNav: "/candora-cc-receipts",
         target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/candora-cc-receipts"]'] },
         path: "/candora-cc-receipts"
+      },
+      {
+        title: "Enter each card receipt",
+        body: "The entry form works exactly like a reimbursement: Add Receipt Entry, attach the receipt photo or PDF with the paperclip so the details fill in automatically, pick the program, answer the food question and enter the total with GST. You're not claiming this money back — it was spent on the organization's card — so what matters is that each receipt is recorded accurately for the statement reconciliation.",
+        target: { text: "Add Receipt Entry" }
+      },
+      {
+        title: "Send them to Finance",
+        body: "Press Submit Receipts to Finance when your entries are done — they go as one monthly batch. Finance then matches each receipt against the MasterCard statement line by line, so a missing receipt here is what holds up the card reconciliation.",
+        target: { text: "Submit Receipts to Finance" }
       },
       {
         title: "Where approvals and payments show up",

@@ -52,7 +52,7 @@ export default function SickDayForm({ user, onSubmitted }) {
   };
 
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-4">
+    <div data-tour="sick-form" className="rounded-xl border bg-card p-4 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label>Type</Label>

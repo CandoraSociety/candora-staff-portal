@@ -91,7 +91,7 @@ export default function VacationRequestForm({ user, onSubmitted, fixedSupervisor
   };
 
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-4">
+    <div data-tour="vacation-form" className="rounded-xl border bg-card p-4 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label>First day of vacation</Label>
