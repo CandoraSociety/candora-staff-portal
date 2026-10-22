@@ -44,7 +44,7 @@ export default function SupervisorVacationAlerts({ user }) {
   };
 
   return (
-    <div className="rounded-2xl border-2 border-warning bg-warning/10 p-4 space-y-3">
+    <div data-tour="supervisor-timeoff-alerts" className="rounded-2xl border-2 border-warning bg-warning/10 p-4 space-y-3">
       <div className="flex items-center gap-2">
         <PlaneTakeoff className="h-5 w-5 text-warning animate-pulse" />
         <h2 className="font-bold text-warning">

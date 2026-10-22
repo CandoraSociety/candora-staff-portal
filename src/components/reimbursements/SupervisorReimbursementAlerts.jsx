@@ -106,7 +106,7 @@ export default function SupervisorReimbursementAlerts({ user }) {
   };
 
   return (
-    <div className="rounded-2xl border-2 border-warning bg-warning/10 p-4 space-y-3">
+    <div data-tour="supervisor-reimbursement-alerts" className="rounded-2xl border-2 border-warning bg-warning/10 p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Receipt className="h-5 w-5 text-warning animate-pulse" />
         <h2 className="font-bold text-warning">

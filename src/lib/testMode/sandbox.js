@@ -54,6 +54,7 @@ function demoData() {
     Employee: [
       { first_name: 'Terry', last_name: 'Tester', email: 'test.user@candora.ca', position: 'Frontline Staff', department: 'Programs', org_tier: 'frontline_staff', is_active: true, hire_date: D(400) },
       { first_name: 'Dana', last_name: 'Demo', email: 'test.admin@candora.ca', position: 'Program Manager', department: 'Administration', org_tier: 'manager', is_active: true, hire_date: D(800) },
+      { first_name: 'Sam', last_name: 'Staff', email: 'sam.staff@candora.ca', position: 'Program Staff', department: 'Programs', org_tier: 'frontline_staff', is_active: true, hire_date: D(200), manager_email: 'test.user@candora.ca' },
     ],
     Client: [
       { first_name: 'Casey', last_name: 'Sample', compass_hsid: '10001', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(30), counsellor_name: 'Terry Tester', phone: '780-555-0101', email: 'casey.sample@example.ca' },
@@ -150,13 +151,16 @@ function demoData() {
     Timesheet: [
       { employee_name: 'Terry Tester', employee_email: 'test.user@candora.ca', period_start: D(13), period_end: D(7), status: 'submitted', total_hours: 32 },
       { employee_name: 'Dana Demo', employee_email: 'test.admin@candora.ca', period_start: D(13), period_end: D(7), status: 'approved', total_hours: 40 },
+      { employee_name: 'Sam Staff', employee_email: 'sam.staff@candora.ca', period_start: D(13), period_end: D(7), status: 'pending', total_hours: 36, supervisor_email: 'test.user@candora.ca' },
     ],
     TimeOffRecord: [
       { employee_name: 'Terry Tester', employee_email: 'test.user@candora.ca', type: 'vacation', start_date: D(-10), end_date: D(-5), status: 'pending' },
       { employee_name: 'Dana Demo', employee_email: 'test.admin@candora.ca', type: 'sick', start_date: D(3), end_date: D(3), status: 'approved' },
+      { employee_name: 'Sam Staff', employee_email: 'sam.staff@candora.ca', type: 'vacation', start_date: D(-3), end_date: D(-1), status: 'pending', supervisor_email: 'test.user@candora.ca' },
     ],
     StaffReimbursementRequest: [
       { staff_name: 'Terry Tester', staff_email: 'test.user@candora.ca', amount: 42.5, status: 'submitted', submitted_date: D(5), description: 'Demo supplies (Test Mode)' },
+      { staff_name: 'Sam Staff', staff_email: 'sam.staff@candora.ca', amount: 68.2, status: 'submitted', supervisor_status: 'pending', supervisor_email: 'test.user@candora.ca', submitted_date: D(2), description: 'Demo team supplies (Test Mode)' },
     ],
     InvoiceCustomer: [
       { name: 'Demo Customer Org', email: 'billing@democustomer.ca', phone: '780-555-0901', address: '123 Example St, Edmonton, AB' },

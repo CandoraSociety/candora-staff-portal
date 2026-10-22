@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { GraduationCap, CheckCircle2, PlayCircle, RotateCcw } from 'lucide-react';
 import { TRAINING_MODULES, TRAINING_MODULE_ACCESS } from '@/lib/training/trainingModules';
 import { startTrainingSession } from '@/lib/training/trainingSession';
+import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import ConfirmDialog from '@/components/training/ConfirmDialog';
 
 // Sidebar tab listing every training module the signed-in staff member can
@@ -19,10 +20,15 @@ export default function StaffPortalTraining() {
     enabled: !!user?.email,
   });
 
-  // Only the training for portals this user can actually access
+  const { isSupervisor } = useSupervisorAccess();
+
+  // Only the training for portals this user can actually access; optional
+  // supervisor add-ons appear only for staff who actually supervise someone
   const modules = TRAINING_MODULES.filter(m => {
     const requiredPortal = TRAINING_MODULE_ACCESS[m.key];
-    return !requiredPortal || access?.canAccessModule?.(requiredPortal);
+    if (requiredPortal && !access?.canAccessModule?.(requiredPortal)) return false;
+    if (m.supervisorOnly && !isSupervisor) return false;
+    return true;
   });
 
   const completedCount = modules.filter(m => progress.find(p => p.portal_key === m.key)?.is_completed).length;

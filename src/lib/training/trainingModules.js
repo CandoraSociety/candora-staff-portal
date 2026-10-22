@@ -306,6 +306,94 @@ export const TRAINING_MODULES = [
     ]
   },
   {
+    key: "staffadmin_supervisor",
+    title: "Time & Money — Supervisor Add-On",
+    shortTitle: "Supervising",
+    blurb: "Optional add-on for supervisors: the other side of the Time & Money flows — approving your team's time off, timesheets, receipts and reimbursements from your dashboard.",
+    path: "/",
+    supervisorOnly: true,
+    steps: [
+      {
+        title: "Welcome to the supervisor add-on",
+        body: "This optional module is for anyone who supervises staff. Part 2 showed how your team requests time off, submits timesheets and claims expenses — this tour shows where those land for you, and how to review and approve them. You're still in Training Mode: the pending requests you see are simulated, so practice freely.",
+        target: { selector: '[data-tour="dashboard-notifications"]' },
+        path: "/"
+      },
+      {
+        title: "Where approvals arrive",
+        body: "You never have to hunt for requests: when a direct report submits something that needs your sign-off, a banner appears right here on your main dashboard. Banners only show while something is actually waiting — when your queue is empty, they disappear.",
+        target: { selector: '[data-tour="supervisor-timeoff-alerts"]' },
+        path: "/"
+      },
+      {
+        title: "Approve or decline time off",
+        body: "Each request shows who's asking and which days. Approve it and the time off is booked; their Paid Leave column fills in automatically on the next timesheet — no double entry. If coverage doesn't work, press Reject and give a short reason: it goes straight back to them.",
+        target: { selector: '[data-tour="supervisor-timeoff-alerts"]' },
+        path: "/"
+      },
+      {
+        title: "Approving timesheets",
+        body: "Submitted timesheets wait here with the hours already totalled. Approving signs off the pay period with your e-signature, and Finance uses your approval to run payroll — so a timesheet sitting unanswered here is what delays someone's paycheque. Reject with a reason if hours look wrong.",
+        target: { selector: '[data-tour="supervisor-timesheet-alerts"]' },
+        path: "/"
+      },
+      {
+        title: "Approving reimbursements",
+        body: "Expense submissions — reimbursements and Candora MasterCard receipts — wait for your approval before Finance can process them. Open the details, check the entries against the receipts, then Approve with your e-signature. Once you approve a reimbursement, Finance takes it from there and e-transfers your staff member.",
+        target: { selector: '[data-tour="supervisor-reimbursement-alerts"]' },
+        path: "/"
+      },
+      {
+        title: "Check coverage before you decide",
+        body: "Before approving time off, glance at the team schedule: it shows everyone's approved absences side by side, so you can see whether the team can cover the days being requested.",
+        revealNav: "/time-off/team",
+        target: { selector: '[data-tour="sidebar-time-attendance"]', additionalSelectors: ['[data-tour-path="/time-off/team"]'] },
+        path: "/time-off/team"
+      },
+      {
+        title: "What happens after you approve",
+        body: "You're the first step, not the last: approved time off and timesheet hours flow straight into payroll records, approved expenses continue on to Finance, and your staff member gets a dashboard notification the moment you act. Nothing else is needed from you.",
+        revealWidget: "notifications",
+        target: { selector: '[data-tour="dashboard-notifications"]' },
+        path: "/"
+      },
+      {
+        title: "Time to practice",
+        body: "That's the tour! Now try the supervisor side yourself: approve a time-off request, sign off a timesheet, and approve a reimbursement — all on simulated data."
+      }
+    ],
+    tasks: [
+      {
+        id: "sup-timeoff",
+        title: "Approve a pending time-off request",
+        body: "From your dashboard, approve (or reject with a reason) the pending time-off request from your demo staff member.",
+        path: "/",
+        verify: { kind: "self" }
+      },
+      {
+        id: "sup-timesheet",
+        title: "Approve a submitted timesheet",
+        body: "Review the pending timesheet and approve it with your e-signature.",
+        path: "/",
+        verify: { kind: "self" }
+      },
+      {
+        id: "sup-reimb",
+        title: "Approve an expense submission",
+        body: "Open the pending reimbursement, check its entries, and approve it with your e-signature.",
+        path: "/",
+        verify: { kind: "self" }
+      },
+      {
+        id: "sup-team",
+        title: "Check the team schedule",
+        body: "Open the team schedule and see who's off around the time-off request you just reviewed.",
+        path: "/time-off/team",
+        verify: { kind: "self" }
+      }
+    ]
+  },
+  {
     key: "pathways",
     title: "Pathways Case Management",
     shortTitle: "Pathways",
@@ -625,6 +713,7 @@ export const TRAINING_MODULES = [
 export const TRAINING_MODULE_ACCESS = {
   dashboard: null,
   staffadmin: null,
+  staffadmin_supervisor: null,
   pathways: "pathways",
   rc: "rc",
   ell: "ell",
