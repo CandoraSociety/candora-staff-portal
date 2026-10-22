@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { GraduationCap, CheckCircle2, PlayCircle, RotateCcw } from 'lucide-react';
 import { TRAINING_MODULES, TRAINING_MODULE_ACCESS } from '@/lib/training/trainingModules';
 import { startTrainingSession } from '@/lib/training/trainingSession';
+import ConfirmDialog from '@/components/training/ConfirmDialog';
 
 // Sidebar tab listing every training module the signed-in staff member can
 // take — modules for portals they don't have access to are not shown.
 export default function StaffPortalTraining() {
   const { user, access } = useOutletContext();
+  const [retakeModule, setRetakeModule] = useState(null);
 
   const { data: progress = [] } = useQuery({
     queryKey: ['trainingProgress', user?.email],
@@ -25,18 +28,23 @@ export default function StaffPortalTraining() {
   const completedCount = modules.filter(m => progress.find(p => p.portal_key === m.key)?.is_completed).length;
 
   // Retaking a completed module clears its saved progress (record + tour step)
-  // so the training genuinely starts over from the first step.
-  const handleStart = async (m, rec) => {
-    if (rec?.is_completed) {
-      const ok = window.confirm(
-        `Start the ${m.shortTitle || m.title} training over from scratch? ` +
-        "Your previous progress for this module will be cleared."
-      );
-      if (!ok) return;
-      try { await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
-      try { sessionStorage.removeItem(`candora-tour-step-${m.key}`); } catch { /* ignore */ }
-    }
+  // so the training genuinely starts over from the first step. Confirmation
+  // goes through the in-app dialog — the native confirm is blocked in the
+  // preview frame and would silently swallow the click.
+  const handleStart = (m, rec) => {
+    if (rec?.is_completed) { setRetakeModule(m); return; }
     startTrainingSession(m.key);
+  };
+
+  const confirmRetake = async () => {
+    const m = retakeModule;
+    setRetakeModule(null);
+    try {
+      const rec = progress.find(p => p.portal_key === m?.key);
+      if (rec) await base44.entities.TrainingProgress.delete(rec.id);
+    } catch { /* ignore */ }
+    try { sessionStorage.removeItem(`candora-tour-step-${m?.key}`); } catch { /* ignore */ }
+    startTrainingSession(m?.key);
   };
 
   return (
@@ -98,6 +106,15 @@ export default function StaffPortalTraining() {
           );
         })}
       </div>
+
+      <ConfirmDialog
+        open={!!retakeModule}
+        onOpenChange={(o) => !o && setRetakeModule(null)}
+        title={`Start the ${retakeModule?.shortTitle || retakeModule?.title || ""} training over from scratch?`}
+        description="Your previous progress for this module will be cleared."
+        confirmLabel="Start over"
+        onConfirm={confirmRetake}
+      />
     </div>
   );
 }

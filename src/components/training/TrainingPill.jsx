@@ -7,6 +7,7 @@ import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
+import ConfirmDialog from "@/components/training/ConfirmDialog";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
@@ -20,6 +21,8 @@ export default function TrainingPill() {
   const [rec, setRec] = useState(undefined); // undefined = loading, null = none
   const [tourOpen, setTourOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
 
   const session = readSession();
   const fSession = readFacilitatorSession();
@@ -102,29 +105,30 @@ export default function TrainingPill() {
   };
 
   // Start a training session. When `resetProgress` is true, the user's saved
-  // progress for this module is cleared first so the training starts over
-  // from scratch (used by the Retake and Start over buttons).
-  const startTraining = async (resetProgress = false) => {
-    if (resetProgress) {
-      const ok = window.confirm(
-        `Start the ${module?.shortTitle || module?.title || ""} training over from scratch? ` +
-        "Your previous progress for this module will be cleared."
-      );
-      if (!ok) return;
-      try { if (rec) await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
-    }
+  // progress for this module is cleared first (after an in-app confirmation —
+  // the native window.confirm is blocked in the preview frame) so the training
+  // starts over from scratch (used by the Retake and Start over buttons).
+  const startTraining = (resetProgress = false) => {
+    if (resetProgress) { setConfirmReset(true); return; }
     try { sessionStorage.removeItem(`candora-tour-step-${module?.key}`); } catch { /* ignore */ }
     startTrainingSession(module.key);
   };
 
-  const exitTraining = () => {
-    if (window.confirm("Exit Training Mode? Your training progress is saved; any demo data you created is discarded.")) {
-      try {
-        sessionStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem("candora-test-mode");
-      } catch { /* ignore */ }
-      window.location.reload();
-    }
+  const confirmStartOver = async () => {
+    setConfirmReset(false);
+    try { if (rec) await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
+    try { sessionStorage.removeItem(`candora-tour-step-${module?.key}`); } catch { /* ignore */ }
+    startTrainingSession(module.key);
+  };
+
+  const exitTraining = () => setConfirmExit(true);
+  const confirmExitTraining = () => {
+    setConfirmExit(false);
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem("candora-test-mode");
+    } catch { /* ignore */ }
+    window.location.reload();
   };
 
   const totalTasks = module?.tasks?.length || 0;
@@ -235,6 +239,24 @@ export default function TrainingPill() {
         progress={rec || null}
         updateProgress={updateProgress}
         onClose={() => setChecklistOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmReset}
+        onOpenChange={(o) => !o && setConfirmReset(false)}
+        title={`Start the ${module?.shortTitle || module?.title || ""} training over from scratch?`}
+        description="Your previous progress for this module will be cleared."
+        confirmLabel="Start over"
+        onConfirm={confirmStartOver}
+      />
+      <ConfirmDialog
+        open={confirmExit}
+        onOpenChange={(o) => !o && setConfirmExit(false)}
+        title="Exit Training Mode?"
+        description="Your training progress is saved; any demo data you created is discarded."
+        confirmLabel="Exit"
+        destructive
+        onConfirm={confirmExitTraining}
       />
     </>
   );

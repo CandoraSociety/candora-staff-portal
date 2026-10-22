@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GraduationCap, ListChecks, Map, LogOut, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
+import ConfirmDialog from "@/components/training/ConfirmDialog";
 import { getFacilitatorGuide } from "@/lib/training/facilitatorGuide";
 import { endFacilitatedSession } from "@/lib/training/facilitatorSession";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
@@ -19,6 +20,7 @@ export default function FacilitatorSession({ module }) {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [notesOpen, setNotesOpen] = useState(true);
+  const [confirmExit, setConfirmExit] = useState(false);
   const notesDrag = useTrainingWindowDrag(notesOpen, module.key);
   const controlsDrag = useTrainingWindowDrag(true, module.key);
 
@@ -26,11 +28,7 @@ export default function FacilitatorSession({ module }) {
   const step = module.steps[stepIndex];
   const stepNote = guide?.stepNotes?.[step?.title] || "No extra talking points for this step — follow the on-screen text.";
 
-  const exit = () => {
-    if (window.confirm("End the facilitated session? Demo data created during the session is discarded.")) {
-      endFacilitatedSession();
-    }
-  };
+  const exit = () => setConfirmExit(true);
 
   return (
     <>
@@ -129,6 +127,16 @@ export default function FacilitatorSession({ module }) {
         progress={null}
         updateProgress={noopUpdate}
         onClose={() => setChecklistOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmExit}
+        onOpenChange={(o) => !o && setConfirmExit(false)}
+        title="End the facilitated session?"
+        description="Demo data created during the session is discarded."
+        confirmLabel="End session"
+        destructive
+        onConfirm={endFacilitatedSession}
       />
     </>
   );
