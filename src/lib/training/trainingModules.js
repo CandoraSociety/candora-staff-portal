@@ -94,7 +94,8 @@ export const TRAINING_MODULES = [
       {
         id: "dash-note",
         title: "Capture a quick note",
-        body: "Use the floating notes button to capture a note — great for jotting things down during the day.",
+        body: "Open the File Manager portal from your portal cards, then use the floating + button in the bottom-right corner to jot down a quick note. (This button lives in the File Manager, not on the main page.)",
+        path: "/filemanager",
         verify: { kind: "created", entity: "Note" }
       },
       {
