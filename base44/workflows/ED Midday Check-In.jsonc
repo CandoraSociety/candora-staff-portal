@@ -1,0 +1,47 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ed_midday_checkin",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "brief": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendEdBriefing",
+            "args": {
+              "briefing_type": "midday"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate midday check-in",
+            "description": "Posts to the ED Dashboard"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Every weekday at midday, generates a short midday check-in briefing for the Executive Director and posts it to their main Dashboard.",
+  "name": "ED Midday Check-In",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "30 12 * * 1-5",
+      "one_time_date": null,
+      "timezone": "Etc/GMT+6",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

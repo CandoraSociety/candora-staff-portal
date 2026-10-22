@@ -15,10 +15,11 @@
       "enum": [
         "reimbursement_paid",
         "cc_receipts_paid",
+        "ed_briefing",
         "other"
       ],
       "default": "other",
-      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, other)"
+      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, other)"
     },
     "related_form_id": {
       "type": "string",

@@ -24,6 +24,7 @@ import SupervisorReimbursementAlerts from '@/components/reimbursements/Superviso
 
 import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAlerts';
 import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAlerts';
+import EdBriefingAlerts from '@/components/dashboard/EdBriefingAlerts';
 import FinanceFileApprovalWidget from '@/components/ed/FinanceFileApprovalWidget';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
@@ -212,6 +213,9 @@ export default function Dashboard() {
 
       {/* Payment notifications — reimbursements / MasterCard receipts marked paid */}
       <PaidReimbursementAlerts user={user} />
+
+      {/* ED scheduled briefings — morning / midday / end-of-day / Sunday week-ahead */}
+      <EdBriefingAlerts user={user} />
 
       {/* Finance Files access requests — Executive Director approval */}
       {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (

@@ -1,0 +1,47 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ed_weekly_prep",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "brief": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendEdBriefing",
+            "args": {
+              "briefing_type": "weekly"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate week-ahead prep",
+            "description": "Posts to the ED Dashboard"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Every Sunday evening, generates the Executive Director's week-ahead preparation briefing and posts it to their main Dashboard.",
+  "name": "ED Sunday Week-Ahead Prep",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 18 * * 0",
+      "one_time_date": null,
+      "timezone": "Etc/GMT+6",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

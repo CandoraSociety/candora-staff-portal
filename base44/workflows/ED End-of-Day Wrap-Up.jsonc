@@ -1,0 +1,47 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ed_endofday_wrapup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "brief": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendEdBriefing",
+            "args": {
+              "briefing_type": "eod"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate end-of-day wrap-up",
+            "description": "Posts to the ED Dashboard"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Every weekday at end of day, generates the Executive Director's wrap-up briefing (with an end-of-week review on Fridays) and posts it to their main Dashboard.",
+  "name": "ED End-of-Day Wrap-Up",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "30 16 * * 1-5",
+      "one_time_date": null,
+      "timezone": "Etc/GMT+6",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

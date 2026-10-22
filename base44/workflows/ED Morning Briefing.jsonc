@@ -1,0 +1,47 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "ed_morning_briefing",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "brief": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendEdBriefing",
+            "args": {
+              "briefing_type": "morning"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Generate morning briefing",
+            "description": "Posts to the ED Dashboard"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Every weekday morning, generates the Executive Director's morning briefing (with a midweek check-in on Wednesdays) and posts it to their main Dashboard.",
+  "name": "ED Morning Briefing",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "30 7 * * 1-5",
+      "one_time_date": null,
+      "timezone": "Etc/GMT+6",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}
