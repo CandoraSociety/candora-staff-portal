@@ -66,7 +66,7 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
 
   return (
     <div ref={drag.ref} style={drag.style} className="fixed bottom-4 right-4 z-[80] w-[360px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-y-auto print:hidden">
-      <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
+      <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
         <div {...drag.handleProps} className="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
           <div>
             <p className="text-sm font-bold" style={{ color: "hsl(45, 92%, 65%)" }}>Practice — {module.shortTitle || module.title}</p>

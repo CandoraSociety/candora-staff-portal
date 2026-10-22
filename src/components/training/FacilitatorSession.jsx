@@ -36,7 +36,7 @@ export default function FacilitatorSession({ module }) {
     <>
       {/* Facilitator control bar */}
       <div ref={controlsDrag.ref} style={controlsDrag.style} className="fixed bottom-4 left-4 z-[60] print:hidden">
-        <div {...controlsDrag.handleProps} className="rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)] cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
+        <div {...controlsDrag.handleProps} className="training-window-glow rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)] cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
           <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "hsl(45, 60%, 85%)" }}>
             <GraduationCap className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} /> Facilitating
           </span>
@@ -75,7 +75,7 @@ export default function FacilitatorSession({ module }) {
       {/* Talking points — private to the facilitator, never projected */}
       {notesOpen && (
         <div ref={notesDrag.ref} style={notesDrag.style} className="fixed top-4 right-4 z-[99] w-[330px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-y-auto print:hidden">
-          <div className="rounded-2xl border shadow-2xl overflow-hidden" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
+          <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
             <div {...notesDrag.handleProps} className="flex items-center gap-2 px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
               <Lightbulb className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} />
               <span className="text-xs font-bold" style={{ color: "hsl(45, 60%, 85%)" }}>Your talking points</span>
