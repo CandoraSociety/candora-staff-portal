@@ -94,13 +94,6 @@ export const TRAINING_MODULES = [
         verify: { kind: "self" }
       },
       {
-        id: "dash-note",
-        title: "Capture a quick note",
-        body: "Open the File Manager portal from your portal cards, then use the floating + button in the bottom-right corner to jot down a quick note. (This button lives in the File Manager, not on the main page.)",
-        path: "/filemanager",
-        verify: { kind: "created", entity: "Note" }
-      },
-      {
         id: "dash-howto",
         title: "Search the How-To knowledge base",
         body: "Ask the How-To search: \"How do I submit a timesheet?\"",

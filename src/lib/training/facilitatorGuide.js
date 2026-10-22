@@ -23,12 +23,11 @@ export const FACILITATOR_GUIDE = {
       "Your personal organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
       "How-To knowledge base": "Common question: 'What if it doesn't know the answer?' — it falls back to AI in plain language, and every question is logged so the preset answers keep improving.",
       "Setting up your e-signature": "Everyone must complete this before signing real documents — it's also a practice task, so don't do it for them here. Mention all three methods (draw, type, upload) and that the reminder disappears once it's set.",
-      "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup and a quick note in the File Manager are the must-dos. Circulate while they work.",
+      "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup is the must-do. Circulate while they work.",
     },
     practiceNotes: {
       "dash-pin": "Watch that people find the pin — it only appears on hover.",
       "dash-todo": "A quick early win; the organizer is on by default.",
-      "dash-note": "Most common confusion: the + note button lives in the File Manager portal, not on the dashboard.",
       "dash-howto": "Invite people to ask a real question they actually have.",
       "dash-esign": "Must-complete before the session ends — verify each person's signature exists.",
     },
