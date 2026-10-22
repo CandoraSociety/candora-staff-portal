@@ -47,7 +47,7 @@ export const TRAINING_MODULES = [
       {
         title: "Your employee card and settings",
         body: "This card shows your position and contact details as the organization has them on file. The highlighted Customize button opens your settings, where you can update your profile, photo and personal preferences.",
-        target: { selector: 'a[href="/user/settings"]' }
+        target: { selector: '[data-tour="dashboard-employee"]' }
       },
       {
         title: "Notifications and approvals",
@@ -62,18 +62,20 @@ export const TRAINING_MODULES = [
       {
         title: "Your personal organizer",
         body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device. (Don't see it? Turn it on from the widget customization page.)",
+        path: "/",
         target: { selector: '[data-tour="dashboard-organizer"]' }
       },
       {
         title: "How-To knowledge base",
         body: "Anywhere in the app, ask the How-To search how to do something — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language.",
+        path: "/",
         target: { selector: '[data-tour="dashboard-howto"]' }
       },
       {
         title: "Setting up your e-signature",
         body: "Candora signs documents digitally. In the E-Signature portal you set up your signature once — draw it with your mouse, type it, or upload an image — and it's then used whenever a document needs your signature. Until you've set it up, a reminder appears on your dashboard.",
         path: "/e-signature",
-        target: { text: "E-Signature" }
+        target: { selector: "main h1" }
       },
       {
         title: "Time to practice",
@@ -122,37 +124,37 @@ export const TRAINING_MODULES = [
       {
         title: "Booking time off",
         body: "Request vacation or other time off here. Fill in your dates, submit, and the request goes straight to your supervisor for approval — you'll see its status move from pending to approved right on this page.",
-        target: { selector: 'a[href="/time-off/vacation-request"]' },
+        target: { selector: "main h1" },
         path: "/time-off/vacation-request"
       },
       {
         title: "Sick time and personal days",
         body: "Sick days and personal days are logged here instead of a vacation request. They follow the same approval flow and feed the same balances, so your time-off record stays accurate in one place.",
-        target: { selector: 'a[href="/time-off/sick-personal"]' },
+        target: { selector: "main h1" },
         path: "/time-off/sick-personal"
       },
       {
         title: "Submitting your timesheet",
         body: "Your hours go in here each pay period. Fill out the form and submit — your supervisor approves it, and Finance uses these submissions to run payroll, so a late or missing timesheet means a late paycheque.",
-        target: { selector: 'a[href="/time-off/timesheets"]' },
+        target: { selector: "main h1" },
         path: "/time-off/timesheets"
       },
       {
         title: "The team schedule",
         body: "Want to know who's off before you book your own time off? The team schedule shows everyone's approved absences side by side — plan your requests around coverage instead of guessing.",
-        target: { selector: 'a[href="/time-off/team"]' },
+        target: { selector: "main h1" },
         path: "/time-off/team"
       },
       {
         title: "Reimbursements — getting paid back",
         body: "Paid for something out of pocket? Add each expense as an entry, attach the receipt, then submit them together as one reimbursement request. It travels to your supervisor and then Finance, who e-transfer you the total once it's paid.",
-        target: { selector: 'a[href="/reimbursement-requests"]' },
+        target: { selector: "main h1" },
         path: "/reimbursement-requests"
       },
       {
         title: "Candora MasterCard receipts",
         body: "If you made a purchase on the Candora MasterCard, upload the receipt here — each one is matched against the monthly card statement so Finance can reconcile the card without chasing people for paperwork.",
-        target: { selector: 'a[href="/candora-cc-receipts"]' },
+        target: { selector: "main h1" },
         path: "/candora-cc-receipts"
       },
       {

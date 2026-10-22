@@ -57,7 +57,12 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     let cancelled = false;
     setRect(null);
     (async () => {
-      if (step.path && !window.location.pathname.startsWith(step.path)) {
+      // A path of "/" must match exactly — every pathname "starts with" "/",
+      // so a root-path step would otherwise never navigate back.
+      const onPath = step.path === "/"
+        ? window.location.pathname === "/"
+        : window.location.pathname.startsWith(step.path);
+      if (step.path && !onPath) {
         navigate(step.path);
         await new Promise(r => setTimeout(r, 400));
       }
