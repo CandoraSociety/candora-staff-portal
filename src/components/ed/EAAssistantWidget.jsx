@@ -4,8 +4,9 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { format, isToday, isTomorrow, parseISO, isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw } from "lucide-react";
+import { Send, Sparkles, ChevronDown, ChevronUp, Lightbulb, RefreshCw, BookOpen, Check, X, RotateCcw, ListTodo } from "lucide-react";
 import RecoveryScanner from "./EARecoveryScanner";
+import EAAssistantTodos from "./EAAssistantTodos";
 import { buildProjectionSummary, buildAssumptionLines } from "@/lib/cashFlow/assistant";
 
 function greeting() {
@@ -170,7 +171,7 @@ const STORAGE_KEY = "ea_assistant_messages_v1";
 const BACKUP_KEY = "ea_assistant_messages_backup_v1";
 const MEMORY_KEY = "ea_assistant_memory_v1";
 
-export default function EAAssistantWidget() {
+export default function EAAssistantWidget({ onLayoutChange }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState(() => {
     try {
@@ -187,15 +188,68 @@ export default function EAAssistantWidget() {
     try { return localStorage.getItem(MEMORY_KEY) || ""; } catch { return ""; }
   });
   const [memoryDraft, setMemoryDraft] = useState("");
+  const [autoMemory, setAutoMemory] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [serverLoaded, setServerLoaded] = useState(false);
+  const threadRef = useRef(null);
+  const autoMemoryRef = useRef([]);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Persist messages to localStorage whenever they change
+  // Persist messages to localStorage whenever they change (quick local cache)
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     } catch {}
   }, [messages]);
+
+  // ── Server-side thread persistence — history survives closing the app ──
+  const persistThread = async (fields) => {
+    try {
+      if (threadRef.current) {
+        await base44.entities.EAChatThread.update(threadRef.current.id, fields);
+      } else if (user?.email) {
+        threadRef.current = await base44.entities.EAChatThread.create({ user_email: user.email, ...fields });
+      }
+    } catch (e) { console.warn("EA chat thread save failed", e); }
+  };
+
+  const updateAutoMemory = (list) => { autoMemoryRef.current = list; setAutoMemory(list); };
+
+  useEffect(() => {
+    if (!user?.email) return;
+    let cancelled = false;
+    (async () => {
+      const existing = await base44.entities.EAChatThread.filter({ user_email: user.email });
+      if (cancelled) return;
+      const rec = existing[0];
+      if (rec) {
+        threadRef.current = rec;
+        if (Array.isArray(rec.messages) && rec.messages.length > 0) setMessages(rec.messages);
+        setMemory(rec.manual_memory || "");
+        updateAutoMemory(rec.auto_memory || []);
+      } else {
+        // First server sync — migrate whatever history/memory exists locally
+        let localMsgs = []; let localMem = "";
+        try {
+          localMsgs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          localMem = localStorage.getItem(MEMORY_KEY) || "";
+        } catch {}
+        threadRef.current = await base44.entities.EAChatThread.create({
+          user_email: user.email,
+          messages: localMsgs.slice(-100),
+          manual_memory: localMem,
+          auto_memory: [],
+        });
+        setMemory(localMem);
+      }
+      setServerLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email]);
+
+  // Let the floating window widen when the to-do sidebar is open
+  useEffect(() => { onLayoutChange?.(sidebarOpen); }, [sidebarOpen]);
 
   // EA Portal data
   const { data: tasks = [] } = useQuery({ queryKey: ["ed-tasks"], queryFn: () => base44.entities.EDTask.list() });
@@ -232,7 +286,7 @@ export default function EAAssistantWidget() {
 
   // Initial greeting only if there are no existing messages
   useEffect(() => {
-    if (initialized || !user || tasks === undefined) return;
+    if (initialized || !serverLoaded || !user || tasks === undefined) return;
     setInitialized(true);
     if (messages.length > 0) return; // already have a conversation — don't overwrite
 
@@ -275,7 +329,8 @@ export default function EAAssistantWidget() {
     brief += `\nWhat would you like to tackle first? I'm here to help you get through the day.`;
 
     setMessages([{ role: "assistant", content: brief }]);
-  }, [user, tasks, edProjects, objectives, organizer, grantReports, compassTasks, invoices, initialized]);
+    persistThread({ messages: [{ role: "assistant", content: brief }] });
+  }, [user, tasks, edProjects, objectives, organizer, grantReports, compassTasks, invoices, initialized, serverLoaded]);
 
   const systemContext = buildContext({
     user, tasks, edProjects, objectives, notes, organizer,
@@ -293,16 +348,18 @@ export default function EAAssistantWidget() {
     const newMessages = [...messages, { role: "user", content: msg }];
     setMessages(newMessages);
     setLoading(true);
+    persistThread({ messages: newMessages.slice(-100) });
 
     const history = newMessages.slice(-12); // last 12 messages for context
     const conversationText = history
       .map(m => `${m.role === "user" ? firstName : "Assistant"}: ${m.content}`)
       .join("\n\n");
 
-    const savedMemory = (() => { try { return localStorage.getItem(MEMORY_KEY) || ""; } catch { return ""; } })();
+    const savedMemory = memory;
+    const autoLines = autoMemoryRef.current.map(f => `- ${f}`).join("\n");
 
     const prompt = `${systemContext}
-${savedMemory ? `\n=== PERMANENT MEMORY (key context Graham has provided — always keep this in mind) ===\n${savedMemory}\n` : ""}
+${(savedMemory || autoLines) ? `\n=== PERMANENT MEMORY (always keep in mind across conversations) ===\n${savedMemory}${autoLines ? `\nAutomatically remembered from past conversations:\n${autoLines}\n` : ""}` : ""}
 === CONVERSATION HISTORY ===
 ${conversationText}
 
@@ -310,8 +367,28 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
 
     const response = await base44.integrations.Core.InvokeLLM({ prompt, model: "claude_sonnet_4_6" });
     const reply = typeof response === "string" ? response : response?.text || "I'm here — what do you need?";
-    setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    const withReply = [...newMessages, { role: "assistant", content: reply }];
+    setMessages(withReply);
+    persistThread({ messages: withReply.slice(-100) });
     setLoading(false);
+    maybeLearn(msg, reply);
+  };
+
+  // Auto-memory: quietly extract durable facts from the exchange and keep them permanently
+  const maybeLearn = async (userText, assistantText) => {
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        model: "gemini_3_flash",
+        response_json_schema: { type: "object", properties: { facts: { type: "array", items: { type: "string" } } } },
+        prompt: `You maintain the permanent memory of an executive assistant for the Executive Director of Candora, a non-profit.\n\nFacts already remembered:\n${autoMemoryRef.current.map((f, i) => `${i + 1}. ${f}`).join("\n") || "(none yet)"}\n\nLatest exchange:\nDirector: ${userText}\nAssistant: ${assistantText.slice(0, 1200)}\n\nList any NEW durable facts worth remembering permanently — the Director's preferences, standing decisions, key relationships, ongoing situations, deadlines. Exclude trivial chatter and anything already covered. Max 3 short sentences. Return an empty list if nothing new.`,
+      });
+      const facts = (res?.facts || []).filter(f => typeof f === "string" && f.trim());
+      if (facts.length) {
+        const next = [...autoMemoryRef.current, ...facts.map(f => f.trim())].slice(-40);
+        updateAutoMemory(next);
+        persistThread({ auto_memory: next });
+      }
+    } catch { /* best-effort — never disrupt the chat */ }
   };
 
   const handleKeyDown = (e) => {
@@ -329,6 +406,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
     } catch {}
     setInitialized(false);
     setMessages([]);
+    persistThread({ messages: [] });
   };
 
   const restoreConversation = () => {
@@ -339,6 +417,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
       localStorage.setItem(STORAGE_KEY, backup);
       setMessages(parsed);
       setInitialized(true);
+      persistThread({ messages: parsed.slice(-100) });
     } catch {}
   };
 
@@ -347,7 +426,11 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
   });
 
   return (
-    <div className="flex flex-col rounded-2xl border shadow-lg" style={{ background: "hsl(230,70%,9%)", borderColor: "hsl(230,50%,18%)" }}>
+    <div className="flex rounded-2xl border shadow-lg overflow-hidden" style={{ background: "hsl(230,70%,9%)", borderColor: "hsl(230,50%,18%)" }}>
+      {/* Collapsible to-dos & priorities sidebar */}
+      {sidebarOpen && <EAAssistantTodos user={user} onClose={() => setSidebarOpen(false)} />}
+
+      <div className="flex flex-col flex-1 min-w-0">
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
@@ -371,7 +454,15 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
           )}
         </div>
         <div className="flex items-center gap-2">
-          <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); }} headerMode />
+          <button
+            onClick={(e) => { e.stopPropagation(); setSidebarOpen(o => !o); }}
+            className="p-1.5 rounded-lg transition-colors hover:opacity-70"
+            style={{ color: sidebarOpen ? "hsl(45,92%,53%)" : "hsl(230,30%,60%)" }}
+            title="To-dos & priorities"
+          >
+            <ListTodo className="w-3.5 h-3.5" />
+          </button>
+          <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); persistThread({ messages: msgs.slice(-100) }); }} headerMode />
           <button
             onClick={(e) => { e.stopPropagation(); resetConversation(); }}
             className="p-1.5 rounded-lg transition-colors hover:opacity-70"
@@ -396,7 +487,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
               <span className="flex items-center gap-1.5">
                 <BookOpen className="w-3.5 h-3.5" />
                 <span className="font-semibold">Permanent Memory</span>
-                {memory && <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}>Active</span>}
+                {(memory || autoMemory.length > 0) && <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}>Active{autoMemory.length > 0 ? ` · ${autoMemory.length}` : ""}</span>}
               </span>
               <span style={{ color: "hsl(230,30%,55%)" }}>{memoryOpen ? "▲ close" : "▼ edit"}</span>
             </button>
@@ -413,6 +504,24 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
                   className="w-full resize-y rounded-lg px-3 py-2 text-xs outline-none"
                   style={{ background: "hsl(230,55%,14%)", border: "1px solid hsl(230,45%,22%)", color: "hsl(45,50%,90%)" }}
                 />
+                {autoMemory.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "hsl(45,60%,65%)" }}>Automatically remembered</p>
+                    {autoMemory.map((f, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 rounded-lg px-2 py-1.5" style={{ background: "hsl(230,55%,14%)", border: "1px solid hsl(230,45%,22%)" }}>
+                        <p className="flex-1 text-[11px] leading-snug" style={{ color: "hsl(45,50%,85%)" }}>{f}</p>
+                        <button
+                          onClick={() => { const next = autoMemory.filter((_, i) => i !== idx); updateAutoMemory(next); persistThread({ auto_memory: next }); }}
+                          className="shrink-0 hover:opacity-70"
+                          style={{ color: "hsl(230,30%,55%)" }}
+                          title="Forget this"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setMemoryOpen(false)}
@@ -426,6 +535,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
                       try { localStorage.setItem(MEMORY_KEY, memoryDraft); } catch {}
                       setMemory(memoryDraft);
                       setMemoryOpen(false);
+                      persistThread({ manual_memory: memoryDraft });
                     }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors hover:opacity-80"
                     style={{ background: "hsl(45,92%,53%)", color: "hsl(230,70%,10%)" }}
@@ -454,7 +564,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
                     </button>
                   </>
                 )}
-                <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); }} />
+                <RecoveryScanner onRestore={(msgs) => { setMessages(msgs); setInitialized(true); persistThread({ messages: msgs.slice(-100) }); }} />
               </div>
             )}
             {messages.map((m, i) => (
@@ -539,6 +649,7 @@ Now respond as the Executive Assistant. Be helpful, warm, and specific. Use mark
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

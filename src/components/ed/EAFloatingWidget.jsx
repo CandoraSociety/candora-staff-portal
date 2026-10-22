@@ -23,6 +23,7 @@ function isAuthorized(user) {
 export default function EAFloatingWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [wide, setWide] = useState(false);
   const { pos, onPointerDown, wasDragged, isDragging } = useDraggableButton('ea-chat-btn-pos', { bottom: 144, right: 16 });
 
   if (!isAuthorized(user)) return null;
@@ -32,8 +33,8 @@ export default function EAFloatingWidget() {
       {/* Floating chat window */}
       {open && (
         <div
-          className="fixed z-[9999] w-[420px] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl"
-          style={{ maxHeight: "calc(100vh - 120px)", bottom: pos.bottom + 64, right: pos.right }}
+          className="fixed z-[9999] max-w-[calc(100vw-2rem)] shadow-2xl rounded-2xl transition-[width] duration-200"
+          style={{ maxHeight: "calc(100vh - 120px)", bottom: pos.bottom + 64, right: pos.right, width: wide ? 760 : 420 }}
         >
           <div className="relative">
             <button
@@ -44,7 +45,7 @@ export default function EAFloatingWidget() {
             >
               <X className="w-3.5 h-3.5" />
             </button>
-            <EAAssistantWidget />
+            <EAAssistantWidget onLayoutChange={setWide} />
           </div>
         </div>
       )}

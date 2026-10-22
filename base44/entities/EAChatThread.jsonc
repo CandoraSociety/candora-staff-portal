@@ -1,0 +1,88 @@
+{
+  "name": "EAChatThread",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the staff user this Executive Assistant conversation belongs to"
+    },
+    "messages": {
+      "type": "array",
+      "description": "Persistent Executive Assistant chat history \u2014 the last 100 messages, synced to the server after every exchange",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "manual_memory": {
+      "type": "string",
+      "description": "Permanent memory the user wrote by hand in the assistant's Memory panel"
+    },
+    "auto_memory": {
+      "type": "array",
+      "description": "Durable facts the assistant extracted automatically from conversations (preferences, standing decisions, relationships, ongoing situations)",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
