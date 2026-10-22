@@ -1,36 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
+import useSpotlightTarget from "@/components/training/useSpotlightTarget";
+import { spotlightPath } from "@/components/training/spotlightTarget";
 
-// Find the element to spotlight. Falls back to null (centered card) so a
-// tour never breaks when the UI shifts.
-function findTarget(target) {
-  if (!target) return null;
-  const visible = (el) => el && el.getClientRects().length > 0;
-  for (const selector of [].concat(target.selector || [])) {
-    try {
-      const el = document.querySelector(selector);
-      if (visible(el)) return el;
-    } catch { /* invalid selector — ignore */ }
-  }
-  if (target.text) {
-    const nodes = [...document.querySelectorAll("a,button,h1,h2,h3,th,label,span,div")]
-      .filter(el => visible(el) && (el.textContent || "").trim().startsWith(target.text));
-    nodes.sort((a, b) => (a.textContent || "").trim().length - (b.textContent || "").trim().length);
-    return nodes[0] || null;
-  }
-  return null;
-}
 
 export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [index, setIndex] = useState(0);
-  const [rect, setRect] = useState(null);
   const [presentation, setPresentation] = useState(false);
 
   const steps = module?.steps || [];
   const step = steps[index];
+  const path = spotlightPath(module, index);
+  const rect = useSpotlightTarget(open && location.pathname === path, step?.target, `${module?.key}:${index}`);
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
@@ -51,65 +36,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     } catch { /* ignore */ }
   }, [open, module?.key]);
 
-  // Navigate + spotlight the current step's target
+  // Slides without their own route inherit the last route in the module,
+  // not whichever page happened to be open when training was started.
   useEffect(() => {
-    if (!open || !step) return;
-    let cancelled = false;
-    setRect(null);
-    (async () => {
-      // A path of "/" must match exactly — every pathname "starts with" "/",
-      // so a root-path step would otherwise never navigate back.
-      const onPath = step.path === "/"
-        ? window.location.pathname === "/"
-        : window.location.pathname.startsWith(step.path);
-      if (step.path && !onPath) {
-        navigate(step.path);
-        await new Promise(r => setTimeout(r, 400));
-      }
-      if (cancelled) return;
-      // Keep looking for the target for a few seconds — after a navigation the
-      // page may still be mounting widgets or loading its data.
-      let el = null;
-      for (let i = 0; i < 16 && !cancelled; i++) {
-        el = step.target ? findTarget(step.target) : null;
-        if (el) break;
-        await new Promise(r => setTimeout(r, 250));
-      }
-      if (cancelled) return;
-      if (el) {
-        el.scrollIntoView({ block: "center", behavior: "smooth" });
-        await new Promise(r => setTimeout(r, 400));
-      }
-      if (cancelled) return;
-      const el2 = step.target ? findTarget(step.target) : null;
-      if (el2) {
-        const r = el2.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-      } else {
-        setRect(null);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [open, index, location.pathname]);
-
-  // Keep the spotlight glued to the target while scrolling/resizing
-  useEffect(() => {
-    if (!open) return;
-    const update = () => {
-      const s = steps[index];
-      const el = s && s.target ? findTarget(s.target) : null;
-      if (el) {
-        const r = el.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-      }
-    };
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
-  }, [open, index]);
+    if (open && step && location.pathname !== path) navigate(path);
+  }, [open, step, path, location.pathname, navigate]);
 
   if (!open || !module || !step) return null;
 
@@ -169,8 +100,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     cardStyle.transform = "translate(-50%, -50%)";
   }
 
-  return (
-    <>
+  return createPortal(
+    <div data-training-tour className="print:hidden">
       {!rect && <div className="fixed inset-0 z-[97] bg-slate-950/75" />}
       {spotlightStyle && <div style={spotlightStyle} />}
       <div style={cardStyle}>
@@ -243,6 +174,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
           </div>
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }

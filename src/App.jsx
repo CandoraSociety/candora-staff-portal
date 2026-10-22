@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import KeepAliveOutlet from '@/components/KeepAliveOutlet';
+import TrainingPill from '@/components/training/TrainingPill';
 import { TabProvider } from '@/lib/tabContext';
 
 // Public portal pages
@@ -454,7 +455,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<KeepAliveOutlet />}>
+        <Route element={<><KeepAliveOutlet /><TrainingPill /></>}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/portal" element={<Portal />} />
