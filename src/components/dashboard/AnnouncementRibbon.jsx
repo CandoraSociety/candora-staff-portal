@@ -60,7 +60,7 @@ export default function AnnouncementRibbon({ announcements = [], user }) {
     savePrefs({ cleared_announcement_ids: [...new Set([...cleared, ...active.map(a => a.id)])] });
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-tour="dashboard-announcements">
       {/* Ribbon bar */}
       <div
         role="button"

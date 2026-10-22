@@ -30,35 +30,48 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Announcements",
-        body: "Organization-wide announcements from admin scroll across this ribbon. Hover over it to pause and read the full message — new ones appear here first.",
-        target: { selector: ".ann-marquee" }
+        body: "Organization-wide announcements live in this ribbon. The bell shows how many you haven't seen yet, and new titles scroll across it. Click the ribbon to open the full list, and use the Clear button to mark everything as seen.",
+        target: { selector: '[data-tour="dashboard-announcements"]' }
       },
       {
         title: "Your portals",
         body: "These cards are your doorways into each portal you have access to — Pathways, the Resource Centre, Finance, and so on. Only portals relevant to your role appear. Click one to jump straight into it.",
-        target: { selector: 'a[href="/pathways"]' }
+        target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
         title: "Pinning your favourites",
-        body: "Use the pin on any portal card to keep your most-used portals at the top of your dashboard, so they're always one click away."
+        body: "Hover over any portal card and a pin appears in its corner — use it to pin your most-used portal, and it gets a banner right at the top of your dashboard so it's always one click away.",
+        target: { selector: '[data-tour="dashboard-pin"]' }
+      },
+      {
+        title: "Your employee card",
+        body: "This card shows your position and contact details as the organization has them on file. The Customize button (top right of the page) opens your settings, where you can update your profile, photo and personal preferences.",
+        target: { selector: '[data-tour="dashboard-employee"]' }
       },
       {
         title: "Notifications and approvals",
         body: "Alerts — like timesheets waiting for your approval, or reimbursement updates — appear at the top of your dashboard so nothing slips by unnoticed."
       },
       {
+        title: "Turning widgets on and off",
+        body: "Your dashboard is customizable. Use this page to turn widgets like the Personal Organizer, the How-To knowledge base and the translator on or off, so your home page shows exactly what you use.",
+        path: "/widget-customization"
+      },
+      {
         title: "Your personal organizer",
-        body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device."
+        body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device. (Don't see it? Turn it on from the widget customization page.)",
+        target: { selector: '[data-tour="dashboard-organizer"]' }
       },
       {
         title: "How-To knowledge base",
-        body: "Anywhere in the app, ask the How-To search how to do something — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language."
+        body: "Anywhere in the app, ask the How-To search how to do something — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language.",
+        target: { selector: '[data-tour="dashboard-howto"]' }
       },
       {
-        title: "Your settings",
-        body: "Update your profile, photo and personal preferences here at any time.",
-        target: { selector: 'a[href="/user/settings"]' },
-        path: "/user/settings"
+        title: "Setting up your e-signature",
+        body: "Candora signs documents digitally. In the E-Signature portal you set up your signature once — draw it with your mouse, type it, or upload an image — and it's then used whenever a document needs your signature. Until you've set it up, a reminder appears on your dashboard.",
+        path: "/e-signature",
+        target: { text: "E-Signature" }
       },
       {
         title: "Time to practice",
@@ -88,6 +101,13 @@ export const TRAINING_MODULES = [
         id: "dash-howto",
         title: "Search the How-To knowledge base",
         body: "Ask the How-To search: \"How do I submit a timesheet?\"",
+        verify: { kind: "self" }
+      },
+      {
+        id: "dash-esign",
+        title: "Set up your e-signature",
+        body: "Open the E-Signature portal and create your demo signature — draw it, type it, or upload an image. This is how you'll sign real documents later.",
+        path: "/e-signature",
         verify: { kind: "self" }
       }
     ]
@@ -415,6 +435,7 @@ export const moduleForPath = (pathname) => {
     return getTrainingModule("dashboard");
   }
   const prefixes = [
+    ["/e-signature", "dashboard"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

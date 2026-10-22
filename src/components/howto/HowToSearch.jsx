@@ -99,7 +99,7 @@ export default function HowToSearch({ user }) {
 
   if (isCollapsed) {
     return (
-      <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-sky-500 to-blue-600 p-4">
+      <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-sky-500 to-blue-600 p-4" data-tour="dashboard-howto">
         <button onClick={() => setIsCollapsed(false)} className="flex items-center justify-between w-full text-white">
           <div className="flex items-center gap-3">
             <BookOpen className="w-5 h-5" />
@@ -112,7 +112,7 @@ export default function HowToSearch({ user }) {
   }
 
   return (
-    <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-sky-500 to-blue-600 p-6">
+    <div className="rounded-2xl border-2 border-border bg-gradient-to-br from-sky-500 to-blue-600 p-6" data-tour="dashboard-howto">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3 text-white">
           <BookOpen className="w-6 h-6" />

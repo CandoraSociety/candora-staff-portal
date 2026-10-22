@@ -20,7 +20,7 @@ export default function EmployeeInfoCard({ user }) {
   const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg p-6 flex items-center gap-5 min-h-[120px]">
+    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg p-6 flex items-center gap-5 min-h-[120px]" data-tour="dashboard-employee">
       {/* Decorative circles */}
       <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/5 pointer-events-none" />
       <div className="absolute -bottom-6 -right-4 w-24 h-24 rounded-full bg-white/5 pointer-events-none" />

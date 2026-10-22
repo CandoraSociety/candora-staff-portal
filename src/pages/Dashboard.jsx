@@ -42,6 +42,7 @@ function PortalCard({ card, pinned, onPin }) {
     <div className="group relative w-52 p-5 rounded-2xl border-2 border-border hover:border-primary/50 bg-card hover:shadow-lg transition-all cursor-pointer">
       {/* Pin toggle button */}
       <button
+        data-tour="dashboard-pin"
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPin(card.id); }}
         title={pinned ? 'Unpin from top' : 'Pin to top'}
         className={`absolute top-2 right-2 p-1 rounded-md transition-all ${pinned ? 'text-primary opacity-100' : 'text-muted-foreground opacity-0 group-hover:opacity-100'} hover:bg-muted`}
@@ -265,7 +266,7 @@ export default function Dashboard() {
       )}
 
       {/* Portal Quick Links — horizontal scrolling row */}
-      <div className="overflow-x-auto pb-2 -mx-1 px-1">
+      <div className="overflow-x-auto pb-2 -mx-1 px-1" data-tour="dashboard-portals">
         <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
           {displayCards.filter(c => c.is_enabled).map(card => (
             card.is_external ? (

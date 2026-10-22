@@ -201,10 +201,11 @@ function demoData() {
       { title: 'Demo organizer task', category: 'task', is_completed: false, due_date: D(-1) },
     ],
     PortalCard: [
-      { title: 'Pathways', description: 'Case management (demo card)', is_enabled: true, order_index: 1, path: '/pathways' },
-      { title: 'Grants', description: 'Grant & proposal manager (demo card)', is_enabled: true, order_index: 2, path: '/grants' },
-      { title: 'Resource Centre', description: 'Central database (demo card)', is_enabled: true, order_index: 3, path: '/rc' },
-      { title: 'Finance', description: 'Finance portal (demo card)', is_enabled: true, order_index: 4, path: '/finance' },
+      { name: 'Pathways', description: 'Case management', is_enabled: true, order_index: 1, url: '/pathways', icon: 'Briefcase' },
+      { name: 'Grants', description: 'Grant & proposal manager', is_enabled: true, order_index: 2, url: '/grants', icon: 'FileText' },
+      { name: 'Resource Centre', description: 'Central client database', is_enabled: true, order_index: 3, url: '/rc', icon: 'Users' },
+      { name: 'Finance', description: 'Finance portal', is_enabled: true, order_index: 4, url: '/finance', icon: 'BarChart2' },
+      { name: 'E-Signature', description: 'Sign documents digitally', is_enabled: true, order_index: 5, url: '/e-signature', icon: 'FileText' },
     ],
   };
   // Merge in the richer priority-portal seeds (Pathways, Central Database,
