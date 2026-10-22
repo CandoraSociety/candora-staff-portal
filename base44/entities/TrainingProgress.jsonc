@@ -1,0 +1,92 @@
+{
+  "name": "TrainingProgress",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the staff member this training progress belongs to"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Display name (denormalized for the Training Hub)"
+    },
+    "portal_key": {
+      "type": "string",
+      "description": "Training module key (dashboard, pathways, rc, ell, centralreg...)"
+    },
+    "portal_name": {
+      "type": "string",
+      "description": "Training module title (denormalized)"
+    },
+    "tour_done": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the guided spotlight tour has been completed"
+    },
+    "tour_step_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Last tour step the learner reached (for resuming)"
+    },
+    "tasks_done": {
+      "type": "array",
+      "description": "Ids of the practice checklist tasks the learner has completed",
+      "items": {
+        "type": "string"
+      }
+    },
+    "started_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the learner first started this module"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When both the tour and all practice tasks were completed"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the whole module (tour + practice) is complete"
+    }
+  },
+  "required": [
+    "user_email",
+    "portal_key"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

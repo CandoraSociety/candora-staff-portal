@@ -23,6 +23,7 @@ export const setTestMode = (on) => {
 };
 
 let realClient = null;
+let realEntitiesRef = null;
 
 // ── In-memory database ─────────────────────────────────────────────────────
 const db = new Map();
@@ -428,6 +429,10 @@ function makeCollection(entity) {
 const entitiesProxy = new Proxy({}, {
   get(target, name) {
     if (typeof name !== 'string') return undefined;
+    // Training progress always persists to the REAL database, even while the
+    // rest of the app runs on simulated Test Mode data — so completed
+    // training survives the end of a training session.
+    if (name === 'TrainingProgress' && realEntitiesRef?.TrainingProgress) return realEntitiesRef.TrainingProgress;
     if (!target[name]) target[name] = makeCollection(name);
     return target[name];
   },
@@ -522,6 +527,7 @@ const analyticsSim = { track: () => {} };
 // ── Installer ──────────────────────────────────────────────────────────────
 export function installTestModeInterceptor(client) {
   realClient = client;
+  realEntitiesRef = client.entities;
   const swap = (prop, value) => {
     try {
       Object.defineProperty(client, prop, { get: () => value, configurable: true });

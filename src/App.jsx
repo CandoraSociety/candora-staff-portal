@@ -81,6 +81,7 @@ import ManageWidgets from '@/pages/admin/ManageWidgets';
 import UsersAccess from '@/pages/admin/UsersAccess';
 import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
+import TrainingHub from '@/pages/admin/TrainingHub';
 import UserSettings from '@/pages/UserSettings';
 import ReimbursementRequests from '@/pages/ReimbursementRequests';
 import CandoraCCReceipts from '@/pages/CandoraCCReceipts';
@@ -465,6 +466,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/users" element={<UsersAccess />} />
           <Route path="/admin/announcements" element={<Announcements />} />
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
+          <Route path="/admin/training" element={<TrainingHub />} />
           <Route path="/user/settings" element={<UserSettings />} />
           <Route path="/reimbursement-requests" element={<ReimbursementRequests />} />
           <Route path="/candora-cc-receipts" element={<CandoraCCReceipts />} />

@@ -11,6 +11,7 @@ import NDAGate from '@/components/onboarding/NDAGate';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
 import { useOnboarding } from '@/lib/useOnboarding';
+import TrainingPill from '@/components/training/TrainingPill';
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -111,6 +112,7 @@ export default function AppLayout() {
         </main>
       </div>
       <EAFloatingWidget />
+      <TrainingPill />
 
       {/* Onboarding Wizard */}
       {showWizard && onboardingTemplates.length > 0 && (
