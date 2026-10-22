@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, ArrowLeft } from "lucide-react";
+import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, ArrowLeft, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
@@ -72,7 +72,19 @@ export default function TrainingPill() {
     setRec(next);
   };
 
-  const startTraining = () => {
+  // Start a training session. When `resetProgress` is true, the user's saved
+  // progress for this module is cleared first so the training starts over
+  // from scratch (used by the Retake and Start over buttons).
+  const startTraining = async (resetProgress = false) => {
+    if (resetProgress) {
+      const ok = window.confirm(
+        `Start the ${module?.shortTitle || module?.title || ""} training over from scratch? ` +
+        "Your previous progress for this module will be cleared."
+      );
+      if (!ok) return;
+      try { if (rec) await base44.entities.TrainingProgress.delete(rec.id); } catch { /* ignore */ }
+    }
+    try { sessionStorage.removeItem(`candora-tour-step-${module?.key}`); } catch { /* ignore */ }
     try {
       sessionStorage.setItem("candora-test-mode", "1");
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ portal: module.key, autoStart: true, startedAt: Date.now() }));
@@ -142,6 +154,14 @@ export default function TrainingPill() {
               <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
             </button>
             <button
+              onClick={() => startTraining(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
+              style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
+              title="Clear your progress and take this training again from the beginning"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Start over
+            </button>
+            <button
               onClick={exitTraining}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
               style={{ background: "hsl(0, 45%, 28%)", color: "hsl(0, 0%, 95%)" }}
@@ -166,7 +186,7 @@ export default function TrainingPill() {
               {rec?.is_completed ? `${module.shortTitle} training complete` : `New to ${module.shortTitle || module.title}?`}
             </span>
             <button
-              onClick={startTraining}
+              onClick={() => startTraining(rec?.is_completed)}
               className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors hover:opacity-80"
               style={{ background: rec ? "hsl(230, 55%, 20%)" : "hsl(45, 92%, 53%)", color: rec ? "hsl(45, 60%, 85%)" : "hsl(230, 70%, 10%)" }}
             >
