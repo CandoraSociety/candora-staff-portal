@@ -675,7 +675,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Intake — the Job Lab: what the client sees",
-        body: "Here's the first way an intake happens: the client fills the form in themselves. This is the external intake portal — the exact page a job seeker sees on the job lab computers. Notice it's nothing like the staff portal: a plain public page with just the Candora logo and one long registration form, no case-management tools in sight. We'll walk down it section by section, the way the client fills it in.",
+        body: "Here's the first way an intake happens: the client fills the form in themselves. This is the external intake portal — the page job seekers open on the job lab computers to register with the Pathways program. The client works down the page section by section, entering their details themselves, and once the form is submitted the registration arrives in the Pathways portal as a New Intake, awaiting assessment. We'll walk down the form the same way the client does.",
         path: "/pathways/intake-portal",
         target: { selector: '[data-tour="pw-ext-hero"]' }
       },
