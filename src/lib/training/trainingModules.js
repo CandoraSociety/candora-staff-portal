@@ -658,12 +658,12 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to the Client Journey",
-        body: "Press Play to meet the Pathways Client Journey module and its three routes. Each scene stays on screen until its narration finishes. When you're ready, press Next to start walking the road.",
+        body: "Press Play to meet the Pathways Client Journey module and three sample journeys. Each scene stays on screen until its narration finishes. When you're ready, press Next to start walking the road.",
         introExplainer: true
       },
       {
-        title: "One intake, three roads",
-        body: "Every journey in Pathways starts the same way administratively: intake, then barriers and an action plan. But from there the roads diverge, because the program has different trajectories a client can follow. One road is DEA, Direct to Employment. Two run on WD, Workforce Development: one with an internal placement, and one with a work exposure placement. This module walks all three, each one from intake to outcome.",
+        title: "One intake, many roads",
+        body: "Every journey in Pathways starts the same way administratively: intake, then barrier identification, the employment readiness assessment, and a determination. But from there the roads diverge, because the program has different trajectories a client can follow. This module walks three sample journeys — the DEA road, the WD road with an internal placement, and the WD road with a work exposure placement — but they're examples, not the only routes: each client's journey takes its own shape.",
         target: { selector: '[data-tour="pw-dash-tabs"]' },
         path: "/pathways/dashboard"
       },
@@ -674,22 +674,35 @@ export const TRAINING_MODULES = [
         path: "/pathways/intake"
       },
       {
-        title: "Barriers and the action plan",
-        body: "The next steps are shared too. Open the Program Flow tab in Casey Sample's file: barrier identification comes first, then the employment action plan. Keeping this roadmap current is what lets any teammate pick up the file, and it sets up the route the client will follow.",
+        title: "Barrier Identification — the Service Navigator",
+        body: "The first step after intake is Barrier Identification, and it's done by the Service Navigator. Open the Program Flow tab in Casey Sample's file to see it: the barriers the navigator records set the direction of everything that follows, and keeping this record current is what lets any teammate pick up the file.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-flow"]' }
       },
       {
+        title: "The Employment Readiness Assessment (ERA)",
+        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. It isn't done in the portal; it's completed outside. But once it's done, you verify it complete in Compass, so the file shows the step was passed. You'll find ERA among the Compass tasks for Casey in the Compass queue.",
+        target: { selector: '[data-tour-path="/pathways/compass"]' },
+        path: "/pathways/compass"
+      },
+      {
+        title: "The determination: WD, DEA or not eligible",
+        body: "With the barriers and the ERA in hand, the Service Navigator makes the determination: WD, Workforce Development; DEA, Direct to Employment; or not eligible for the program — and not eligible usually means the client can still access Candora's resources as a casual client. Once the determination is made, the Service Navigator assigns the client to a career counsellor, who takes over the file and builds the employment action plan from there.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-profile-tabs"]' }
+      },
+      {
         title: "Route 1 — the DEA road: meet Jordan Example",
-        body: "Jordan Example came in through Direct to Employment: the fast track, for clients ready to move straight into work. His determination at intake assigned him the DEA stream, so his road skips the placement stretch entirely — a short action plan, then straight to employment.",
+        body: "Jordan Example came in through Direct to Employment: the fast track, for clients ready to move straight into work. His determination assigned him the DEA stream, so his road skips the placement stretch entirely — a short action plan, then straight to employment.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
       },
       {
-        title: "Jordan's employment and determination",
-        body: "On the DEA road the Employment tab does the heavy lifting: employer, job title, start date, hours and wage are all recorded there. Then the journey ends the way every journey ends, with a determination. Jordan's file shows the completed program and the completion date, and it keeps its full history for anyone who opens it later.",
+        title: "Jordan's employment and completion",
+        body: "On the DEA road the Employment tab does the heavy lifting: employer, job title, start date, hours and wage are all recorded there. Then the journey ends the way every journey ends: the program is marked complete, with the completion date recorded on the file — and the file keeps its full history for anyone who opens it later.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
         target: { selector: '[data-tour="pw-tab-overview"]' }
@@ -748,8 +761,8 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-tab-switches"]', additionalSelectors: ['[data-tour="pw-tab-bit"]'] }
       },
       {
-        title: "Three roads, one map",
-        body: "Put the three together: Jordan took the DEA road straight to employment and a completed determination. Sam is on the WD road with an internal placement inside Candora. Casey is on the WD road with a work exposure placement, Compass tasks and purchase requests in motion. Administratively the same steps — but three genuinely different journeys.",
+        title: "Three sample journeys, one map",
+        body: "Put the three together: Jordan took the DEA road straight to employment and a completed program. Sam is on the WD road with an internal placement inside Candora. Casey is on the WD road with a work exposure placement, Compass tasks and purchase requests in motion. They're three sample journeys, not the only pathways — but administratively the steps are the same, and every file tells its own version of this map.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-casey"
       },
