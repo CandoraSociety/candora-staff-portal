@@ -723,10 +723,9 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Barrier Identification — the Service Navigator",
-        body: "Once intake is done, the client sits in the Intake section until the Service Navigator does the Barrier Identification — recording the barriers that set the direction of everything that follows. The tool for it is the BIT, the Barrier Identification Tool, and it lives on the client's file: open Casey's profile and click the BIT / ERA tab highlighted here. Casey's file shows it filled in — her confirmed barriers, the challenges behind each one, and the actions attached to them. Keeping this record current is what lets any teammate pick up the file later.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-bit"]' }
+        body: "Once intake is done, the client sits right here, in the New Intake — Awaiting Assessment list, until the Service Navigator does the Barrier Identification — recording the barriers that set the direction of everything that follows. The tool for it is the BIT, the Barrier Identification Tool, and this is where it's first completed: press Assess beside the client's name to open the assessment, where the barriers, the challenges behind each one and the actions attached to them are recorded. Once it's done, the record lives on the client's file under the BIT / ERA tab — Casey's profile shows one filled in — and keeping it current is what lets any teammate pick up the file later.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-assessment"]', additionalSelectors: ['[data-tour="pw-intake-general"]'] }
       },
       {
         title: "The Employment Readiness Assessment (ERA)",

@@ -270,7 +270,7 @@ export default function PathwaysIntake() {
 
             {/* Section 1: Awaiting Assessment */}
             <div className="mb-8 space-y-5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" data-tour="pw-intake-assessment">
                 <ClipboardCheck className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-bold text-slate-800">New Intake — Awaiting Assessment</h2>
                 <span className="text-sm text-slate-400">({assessmentPending.length})</span>
