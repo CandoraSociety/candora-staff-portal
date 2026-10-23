@@ -48,9 +48,10 @@ const SECTION_STARTS = {
   },
   pathways_journey: {
     "Welcome to the Client Journey": "How the journey works",
-    "Scenario 1 — meet Casey Sample": "Scenario 1 — Casey's DEA journey",
-    "Scenario 2 — meet Jordan Example": "Scenario 2 — Jordan's fast track",
-    "Scenario 3 — meet Sam Specimen": "Scenario 3 — Sam's waitlist",
+    "Every journey starts at Intake": "The shared first steps",
+    "Route 1 — the DEA road: meet Jordan Example": "Route 1 — Jordan's DEA journey",
+    "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Route 2 — Sam's internal placement",
+    "Route 3 — the WD road with a work exposure placement: meet Casey Sample": "Route 3 — Casey's work exposure",
     "Time to practice": "Practice",
   },
   rc: {

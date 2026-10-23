@@ -75,9 +75,9 @@ function demoData() {
       { first_name: 'Sam', last_name: 'Staff', email: 'sam.staff@candora.ca', position: 'Program Staff', department: 'Programs', org_tier: 'frontline_staff', is_active: true, hire_date: D(200), manager_email: 'test.user@candora.ca' },
     ],
     Client: [
-      { id: 'demo-pw-casey', first_name: 'Casey', last_name: 'Sample', compass_hsid: '10001', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(30), counsellor_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester', phone: '780-555-0101', email: 'casey.sample@example.ca' },
-      { id: 'demo-pw-jordan', first_name: 'Jordan', last_name: 'Example', compass_hsid: '10002', service_type: 'direct_to_employment', program_status: 'complete', status: 'new', service_start_date: D(120), eda_completion_date: D(20), counsellor_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester', phone: '780-555-0102', email: 'jordan.example@example.ca' },
-      { id: 'demo-pw-sam', first_name: 'Sam', last_name: 'Specimen', compass_hsid: '10003', service_type: 'pathways', program_status: 'waitlisted', status: 'new', counsellor_name: '', phone: '780-555-0103', email: 'sam.specimen@example.ca' },
+      { id: 'demo-pw-casey', first_name: 'Casey', last_name: 'Sample', compass_hsid: '10001', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(30), counsellor_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester', phone: '780-555-0101', email: 'casey.sample@example.ca', exposure_course: true, external_employer: true, employment_supports: true },
+      { id: 'demo-pw-jordan', first_name: 'Jordan', last_name: 'Example', compass_hsid: '10002', service_type: 'direct_to_employment', program_status: 'complete', status: 'new', service_start_date: D(120), eda_completion_date: D(20), counsellor_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester', phone: '780-555-0102', email: 'jordan.example@example.ca', employer_name: 'Sample Solutions Ltd.', job_title: 'Warehouse Associate', job_start_date: D(35), job_wage: 18.5, employed_ftpt: 'FT' },
+      { id: 'demo-pw-sam', first_name: 'Sam', last_name: 'Specimen', compass_hsid: '10003', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(45), counsellor_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester', phone: '780-555-0103', email: 'sam.specimen@example.ca', internal_placement: 'cleaning_arc', internal_placement_details: 'Cleaning crew at the ARC — building workplace routines and references', placement_start_date: D(15), placement_supervisor: 'Dana Demo', placement_schedule: 'Mon/Wed/Fri mornings' },
     ],
     CompassTask: [
       { client_id: 'demo-pw-casey', client_name: 'Casey Sample', compass_hsid: '10001', title: 'Enter Casey into Compass', instructions: "Create the Compass entry for Casey Sample and confirm the HSID matches the file.", status: 'pending', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester' },
@@ -85,6 +85,9 @@ function demoData() {
     ],
     PurchaseRequest: [
       { client_id: 'demo-pw-casey', client_name: 'Casey Sample', request_type: 'employment_supports', support_type: 'Work Clothes', description: "Safety boots and work clothes for Casey's work exposure placement", estimated_amount: 180, requested_date: D(5), requested_by: 'test.user@candora.ca', requested_by_name: 'Terry Tester', assigned_worker: 'test.user@candora.ca', status: 'pending' },
+    ],
+    WorkExposurePlacement: [
+      { client_id: 'demo-pw-casey', client_name: 'Casey Sample', business_name: 'Riverside Logistics', location: 'Edmonton', position_type: 'Warehouse', expected_hours_per_week: 20, hourly_rate: 15, start_date: D(10), status: 'in_progress', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester' },
     ],
     RCClient: [
       { first_name: 'Riley', last_name: 'Rehearsal', phone: '780-555-0201', email: 'riley@example.ca', status: 'active', notes: 'Demo client for Test Mode' },

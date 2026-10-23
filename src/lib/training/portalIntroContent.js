@@ -152,20 +152,20 @@ const INTRO_SCENES_BY_MODULE = {
     {
       kicker: 'Pathways Client Journey',
       title: 'Welcome to the Client Journey.',
-      body: "Welcome to the Client Journey. This is the supplementary Pathways module. It follows the road every client travels, from first contact to a recorded outcome, and it walks that road with real demo files.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/22c62e905_speech.mp3',
+      body: "Welcome to the Pathways Client Journey. This is the supplementary Pathways module. Every journey starts the same way, but the program has different trajectories, and this module walks three of them from intake to outcome, inside real demo files.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/c2eb211b8_speech.mp3',
     },
     {
       kicker: 'Pathways Client Journey',
-      title: 'Three clients, three situations.',
-      body: "You will follow Casey Sample, partway along the DEA stream. Jordan Example, who finished the Direct to Employment fast track. And Sam Specimen, waiting to start. The same map, at three very different points.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2baac28b7_speech.mp3',
+      title: 'Three routes, one starting point.',
+      body: "You will follow Jordan Example on the DEA road, the fast track straight to employment. Sam Specimen on the WD road, with an internal placement inside Candora. And Casey Sample on the WD road, with a work exposure placement at an external employer. All three begin at intake.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/cd85a7a96_speech.mp3',
     },
     {
       kicker: 'Pathways Client Journey',
       title: 'How this module works.',
-      body: "Each scenario opens that client's demo file and walks the stage they are at. Click along inside the file as you go. The tour follows you, and nothing you touch is real data.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/4215a8f14_speech.mp3',
+      body: "Each route opens that client's demo file and walks it from intake onward. Click along inside the file as you go. The tour follows you, and nothing you touch is real data.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/6372a3dfb_speech.mp3',
     },
   ],
   rc: [
