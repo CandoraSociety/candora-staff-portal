@@ -7,7 +7,7 @@ const INTRO_SCENES_BY_MODULE = {
   dashboard: [
     {
       kicker: 'Candora Staff Portal',
-      title: 'This is where your workday begins.',
+      title: 'Welcome to the Candora Staff Portal.',
       body: 'Welcome to the Candora Staff Portal. This is the place you will log into at the beginning of your workday, your starting point for the tools, information, and administrative work you need.',
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/bd9cda51d_speech.mp3',
     },
@@ -39,9 +39,9 @@ const INTRO_SCENES_BY_MODULE = {
   dashboard_widgets: [
     {
       kicker: 'Dashboard Widgets',
-      title: 'Your home page, your choice.',
-      body: 'The main page is made of widgets: optional panels you turn on or off yourself. A few are always there, like announcements, recent activity and upcoming events. The rest are entirely up to you.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/8b20196ed_speech.mp3',
+      title: 'Welcome to Dashboard Widgets.',
+      body: 'Welcome to Dashboard Widgets. Your main page is made of widgets: optional panels you turn on or off yourself. A few are always there, like announcements, recent activity and upcoming events. The rest are entirely up to you.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/f3745a22f_speech.mp3',
     },
     {
       kicker: 'The Add Functions page',
@@ -90,19 +90,19 @@ const INTRO_SCENES_BY_MODULE = {
   ],
   staffadmin_money: [
     {
-      kicker: 'Time & Money — Mini-Module 2',
-      title: 'Getting paid back.',
-      body: 'This module walks through a complete sample submission: uploading a receipt, checking what the autofill reads for you, and fixing anything it gets wrong by hand.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/7f1c9ae32_speech.mp3',
+      kicker: 'Time & Money — Receipts & Reimbursements',
+      title: 'Welcome back to Time & Money.',
+      body: "Welcome back to Time and Money. This module walks through a complete sample submission: uploading a receipt, checking what the autofill reads for you, and fixing anything it gets wrong by hand.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/36c2f97d9_speech.mp3',
     },
     {
-      kicker: 'Time & Money — Mini-Module 2',
+      kicker: 'Time & Money — Receipts & Reimbursements',
       title: 'Two kinds of claims.',
       body: "Reimbursements cover expenses you paid out of pocket. MasterCard receipts record purchases made on the organization's card, which Finance matches against the monthly statement.",
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/9720d5929_speech.mp3',
     },
     {
-      kicker: 'Time & Money — Mini-Module 2',
+      kicker: 'Time & Money — Receipts & Reimbursements',
       title: 'The details matter.',
       body: 'Every entry needs the right program so the expense is paid from the right funding pot. The tour covers that, and the GST rules for food, step by step.',
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/1b5bc6db2_speech.mp3',
@@ -111,9 +111,9 @@ const INTRO_SCENES_BY_MODULE = {
   staffadmin_supervisor: [
     {
       kicker: 'Time & Money — Supervisor Add-On',
-      title: 'The other side of the counter.',
-      body: "This optional module is for anyone who supervises staff. It shows where your team's requests and submissions land, and how to review and approve them.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/c58b1ebe7_speech.mp3',
+      title: 'Welcome to the Supervisor add-on.',
+      body: "Welcome to the Time and Money Supervisor add-on. This optional module is for anyone who supervises staff. It shows where your team's requests and submissions land, and how to review and approve them.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/4e4fa3f56_speech.mp3',
     },
     {
       kicker: 'Time & Money — Supervisor Add-On',
@@ -131,9 +131,9 @@ const INTRO_SCENES_BY_MODULE = {
   pathways: [
     {
       kicker: 'Pathways Case Management',
-      title: 'Employment case management.',
-      body: "Pathways is Candora's employment portal. Everything about a client's journey lives here, from intake and barriers to action plans, placements and employment outcomes.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/c5ada96fd_speech.mp3',
+      title: 'Welcome to Pathways.',
+      body: "Welcome to Pathways Case Management. Pathways is Candora's employment portal. Everything about a client's journey lives here, from intake and barriers to action plans, placements and employment outcomes.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/6256fdf84_speech.mp3',
     },
     {
       kicker: 'Pathways Case Management',
@@ -151,9 +151,9 @@ const INTRO_SCENES_BY_MODULE = {
   rc: [
     {
       kicker: 'Resource Centre',
-      title: 'The central client database.',
-      body: "The Resource Centre holds Candora's central client database, the single source of truth for who our clients are and how the organization has supported them.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/3d5c96272_speech.mp3',
+      title: 'Welcome to the Resource Centre.',
+      body: "Welcome to the Resource Centre. The Resource Centre holds Candora's central client database, the single source of truth for who our clients are and how the organization has supported them.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/05e0fdab1_speech.mp3',
     },
     {
       kicker: 'Resource Centre',
@@ -171,9 +171,9 @@ const INTRO_SCENES_BY_MODULE = {
   ell: [
     {
       kicker: 'English Language Learning',
-      title: 'The ELL portal.',
-      body: 'The ELL portal manages the whole program: learner rosters, classes and courses, the waitlist, and CLB assessments.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2ec7de445_speech.mp3',
+      title: 'Welcome to ELL.',
+      body: 'Welcome to English Language Learning. The ELL portal manages the whole program: learner rosters, classes and courses, the waitlist, and CLB assessments.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/006f84ea2_speech.mp3',
     },
     {
       kicker: 'English Language Learning',
@@ -191,9 +191,9 @@ const INTRO_SCENES_BY_MODULE = {
   centralreg: [
     {
       kicker: 'Central Registration',
-      title: 'One place to register.',
-      body: 'Central Registration signs participants into any Candora program from one place, so every program\u2019s roster and waitlist stay consistent.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/65404d5bd_speech.mp3',
+      title: 'Welcome to Central Registration.',
+      body: 'Welcome to Central Registration. Central Registration signs participants into any Candora program from one place, so every program\u2019s roster and waitlist stay consistent.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/7a0f62b19_speech.mp3',
     },
     {
       kicker: 'Central Registration',
