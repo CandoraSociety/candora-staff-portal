@@ -729,7 +729,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The Employment Readiness Assessment (ERA)",
-        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. It isn't done in the portal; it's completed outside. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you verify it complete in Compass, so the file shows the step was passed. You'll find ERA among the Compass tasks for Casey in the Compass queue.",
+        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. Like the Barrier Identification, the ERA is completed in Compass. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you mark it complete in Compass, so the file shows the step was passed. You'll find ERA among the Compass tasks for Casey in the Compass queue.",
         target: { selector: '[data-tour-path="/pathways/compass"]' },
         path: "/pathways/compass"
       },
