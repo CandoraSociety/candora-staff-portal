@@ -303,7 +303,7 @@ export default function PathwaysIntake() {
 
             {/* Section 2: Assessment Complete — Awaiting Assignment */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3" data-tour="pw-intake-determination">
                 <UserCheck className="w-5 h-5 text-green-600" />
                 <h2 className="text-lg font-bold text-slate-800">Assessment Complete — Awaiting Assignment</h2>
                 <span className="text-sm text-slate-400">({assessmentComplete.length})</span>

@@ -729,16 +729,15 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The Employment Readiness Assessment (ERA)",
-        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. The BIT you just saw is completed in the portal, but the ERA is completed in Compass. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you mark it complete in Compass, so the file shows the step was passed. You'll find ERA among the Compass tasks for Casey in the Compass queue.",
+        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. The BIT you just saw is completed in the portal, but the ERA is completed in Compass. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you mark it complete in Compass. Once the BIT is completed and the ERA is marked complete, the client file moves out of Awaiting Assessment and into the Assessment Complete — Awaiting Determination section of the Intake page, ready for the next step.",
         target: { selector: '[data-tour-path="/pathways/compass"]' },
         path: "/pathways/compass"
       },
       {
         title: "The determination: WD, DEA or not eligible",
-        body: "With the barriers and the ERA in hand, the Service Navigator makes the determination: WD, Workforce Development; DEA, Direct to Employment; or not eligible for the program — and not eligible usually means the client can still access Candora's resources as a casual client. Once the determination is made, the Service Navigator assigns the client to a career counsellor, who takes over the file and builds the employment action plan from there.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-profile-tabs"]' }
+        body: "With the barriers and the ERA in hand, the Service Navigator makes the determination right here on the Intake page: WD, Workforce Development; DEA, Direct to Employment; or not eligible for the program — and not eligible usually means the client can still access Candora's resources as a casual client. Press the Determination/Assignment button beside the client's name to record it, and once the determination is made, assign the client to a career counsellor in the same step — the counsellor takes over the file and builds the employment action plan from there.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-determination"]' }
       },
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
