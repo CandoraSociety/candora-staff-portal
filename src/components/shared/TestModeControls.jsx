@@ -1,18 +1,25 @@
 import { useEffect } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { isTestMode, setTestMode } from '@/lib/testMode/sandbox';
+import { isTestMode, setTestMode, isTrainingSessionActive } from '@/lib/testMode/sandbox';
 import { cn } from '@/lib/utils';
 
 // Small labelled toggle used in the top bar and the global tab bar so Test
 // Mode can be flipped from anywhere. Toggling reloads the app so the data
 // layer switches cleanly between real data and the in-memory sandbox.
+// While a training session is active the switch is locked ON — training runs
+// on simulated data, and flipping it off would drop a learner into the live
+// portal without realizing it.
 export function TestModeSwitch({ className }) {
+  const training = isTrainingSessionActive();
   return (
-    <label className={cn('flex items-center gap-2 cursor-pointer select-none', className)}>
+    <label
+      className={cn('flex items-center gap-2 select-none', training ? 'cursor-not-allowed opacity-60' : 'cursor-pointer', className)}
+      title={training ? 'Test Mode stays on while training is in progress — exit training to turn it off' : undefined}
+    >
       <FlaskConical className="w-4 h-4 shrink-0" />
       <span className="text-xs font-medium whitespace-nowrap">Test Mode</span>
-      <Switch checked={isTestMode()} onCheckedChange={setTestMode} aria-label="Toggle Test Mode" />
+      <Switch checked={isTestMode()} onCheckedChange={setTestMode} disabled={training} aria-label="Toggle Test Mode" />
     </label>
   );
 }
@@ -40,9 +47,12 @@ export function TestModeRibbon() {
       <span className="hidden md:inline text-[11px] text-red-700/80 whitespace-nowrap">
         Simulated data only — nothing you do here reaches the live portal
       </span>
-      <label className="ml-2 flex items-center gap-1.5 cursor-pointer shrink-0">
+      <label
+        className={cn('ml-2 flex items-center gap-1.5 shrink-0', isTrainingSessionActive() ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}
+        title={isTrainingSessionActive() ? 'Test Mode stays on while training is in progress — exit training to turn it off' : undefined}
+      >
         <span className="text-[11px] font-semibold text-red-700">Exit</span>
-        <Switch checked onCheckedChange={setTestMode} aria-label="Exit Test Mode" />
+        <Switch checked onCheckedChange={setTestMode} disabled={isTrainingSessionActive()} aria-label="Exit Test Mode" />
       </label>
     </div>
   );

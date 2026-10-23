@@ -9,8 +9,16 @@
 // the app so no live data stays cached).
 
 import { PRIORITY_DEMO } from './demoDataPriority';
+import { readSession } from '../training/trainingSession';
+import { readFacilitatorSession } from '../training/facilitatorSession';
 
 const SESSION_KEY = 'candora-test-mode';
+
+// A learner or facilitated training session keeps the app safely on simulated
+// data. While one is active, Test Mode cannot be switched off — someone mid-tour
+// must not be able to flip the toggle and land in the live portal unnoticed.
+// (Exits clear the session keys directly, so ending training is unaffected.)
+export const isTrainingSessionActive = () => !!(readSession() || readFacilitatorSession());
 
 export const isTestMode = () => {
   try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch { return false; }
@@ -18,6 +26,7 @@ export const isTestMode = () => {
 
 // Toggling reloads the app so no live data remains in memory or query caches.
 export const setTestMode = (on) => {
+  if (!on && isTrainingSessionActive()) return; // blocked while training runs
   try { sessionStorage.setItem(SESSION_KEY, on ? '1' : '0'); } catch { /* ignore */ }
   window.location.reload();
 };
