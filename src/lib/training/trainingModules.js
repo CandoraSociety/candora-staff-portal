@@ -36,7 +36,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What's a portal?",
-        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Pathways, the Resource Centre, ELL and Finance are all individual portals inside this app. Each has its own pages, tools and records for a particular area of work. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
+        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
