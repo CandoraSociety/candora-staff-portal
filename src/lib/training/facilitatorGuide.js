@@ -14,6 +14,7 @@ export const FACILITATOR_GUIDE = {
     ],
     stepNotes: {
       "Welcome to your Candora portal": "Introduce yourself and the plan for the session. Repeat the key message twice: Training Mode means nothing they click can damage real data, so explore freely. Ask who has signed in before to gauge the room.",
+      "What is the Candora Staff Portal?": "Play the video on the projector with sound. Keep the explanation grounded: ERP just means one central system for the organization's day-to-day work instead of a pile of separate programs. Reassure the room that a few functions are still being built — nobody's expected to know every portal today.",
       "Announcements": "Point at the unseen-count and the scrolling titles. Common question: 'How do I make an announcement go away?' — clicking the ribbon opens the list and Clear marks everything seen; announcements also expire on their own.",
       "What's a portal?": "Clear up the naming confusion out loud: the whole app is the Candora Staff Portal, and the areas inside it are also portals. Analogy that lands: portals are like separate apps inside one staff portal, each one a workspace for a different part of the job.",
       "Opening a portal": "Demonstrate both entry points: Portals in the sidebar, and the + on the tab bar. Emphasize that the picker only shows the portals each person's role gives them — that's why neighbours may see different lists.",
