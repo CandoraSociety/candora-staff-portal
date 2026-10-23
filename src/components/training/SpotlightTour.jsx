@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
@@ -74,9 +74,17 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
 
   // Slides without their own route inherit the last route in the module,
   // not whichever page happened to be open when training was started.
+  // The tour routes only when the step changes — once the slide's page is
+  // open, the learner can click around freely (the slides invite them to)
+  // without the tour snapping them back to the slide's route.
+  const routedStep = useRef(null);
   useEffect(() => {
-    if (open && step && location.pathname !== path) navigate(path);
-  }, [open, step, path, location.pathname, navigate]);
+    if (!open || !step || location.pathname === path) return;
+    const stepId = `${module?.key}:${index}`;
+    if (routedStep.current === stepId) return;
+    routedStep.current = stepId;
+    navigate(path);
+  }, [open, step, path, index, location.pathname, navigate]);
 
   if (!open || !module || !step) return null;
 
