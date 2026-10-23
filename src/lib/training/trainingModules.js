@@ -36,13 +36,19 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What's a portal?",
-        body: "One naming point is worth clearing up before it causes confusion: the word \"portal\" is used twice around here. The whole app you're in right now is called the Candora Staff Portal — and each area of work inside it is also called a portal: Pathways, the Resource Centre, ELL, Finance and so on. So when someone says \"open the portal,\" they almost always mean one of these areas, not the whole app. Think of each one as a self-contained workspace for one part of your job, with its own pages, tools and records. You only ever see the portals your role gives you access to, so your list won't necessarily match a co-worker's.",
+        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Pathways, the Resource Centre, ELL and Finance are all individual portals inside this app. Each has its own pages, tools and records for a particular area of work. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
         title: "Opening a portal",
         body: "To open any portal, click Portals in the sidebar, or the + button at the right end of the tab bar at the top of the screen. Either one takes you to the portal picker: every portal you have access to, shown as a card. Click a card and that portal opens — there's nothing to install or set up first.",
         target: { selector: '[data-tour="tabbar-add"]', additionalSelectors: ['[data-tour-path="/portal"]'] }
+      },
+      {
+        title: "Inside the Portals tab",
+        body: "This is the Portals tab: the full list of tools and workspaces available to your account, not just the shortcut cards on your main page. Each card shows its name, a short description and its category. Use Search tools to find one, or choose a category to narrow the list. Select a card to open it: internal portals open in the tab bar at the top, while external tools open in a separate browser tab. Your list depends on your access permissions.",
+        path: "/portal",
+        target: { selector: '[data-tour="portal-filters"]', additionalSelectors: ['[data-tour="portal-cards"]'] }
       },
       {
         title: "Portals open like browser tabs",
@@ -52,6 +58,7 @@ export const TRAINING_MODULES = [
       {
         title: "Your portal shortcuts",
         body: "Back on your home page: these shortcut cards are the portals you've picked as favourites — you choose them on the Add Functions page (your dashboard's Customize button takes you there), and you can change your selection anytime. They're just shortcuts though: every portal you have access to is always available from the portal picker, even the ones you don't keep here. Click any card to jump straight into that portal.",
+        path: "/",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {

@@ -53,7 +53,7 @@ export default function Portal() {
         <p className="text-sm text-muted-foreground">Access your tools, modules, and platforms</p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div data-tour="portal-filters" className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -80,7 +80,7 @@ export default function Portal() {
           ))}
         </div>
       ) : accessibleCards.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div data-tour="portal-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {accessibleCards.map(card => (
             <PortalCardItem key={card.id} card={card} />
           ))}
