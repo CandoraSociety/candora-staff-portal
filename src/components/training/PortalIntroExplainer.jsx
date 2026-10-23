@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PortalIntroScene from '@/components/training/PortalIntroScene';
+import useIntroPlaybackClock from '@/components/training/useIntroPlaybackClock';
 import { getModuleIntroScenes } from '@/lib/training/portalIntroContent';
 
 export default function PortalIntroExplainer({ moduleKey }) {
@@ -11,15 +12,18 @@ export default function PortalIntroExplainer({ moduleKey }) {
   const [replay, setReplay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const audioRef = useRef(null);
+  const playbackKey = `${moduleKey}:${index}:${replay}`;
+  const time = useIntroPlaybackClock(audioRef, playbackKey);
   if (!scenes) return null;
   const scene = scenes[index];
   const advance = () => index < scenes.length - 1 ? setIndex(index + 1) : setStarted(false);
   return (
     <section aria-label="Module introduction" className="mb-3 rounded-xl border border-sidebar-border overflow-hidden">
-      <PortalIntroScene scene={scene} index={index} total={scenes.length} />
+      <PortalIntroScene scene={scene} index={index} total={scenes.length} time={time} />
       <div className="bg-sidebar-accent text-sidebar-foreground p-3 space-y-3">
         <audio
-          key={`${index}:${replay}`} controls playsInline autoPlay={started} preload="metadata"
+          ref={audioRef} key={playbackKey} controls playsInline autoPlay={started} preload="metadata"
           src={scene.audioUrl} aria-label={`Female narration: ${scene.title}`} className="w-full"
           onPlay={() => setStarted(true)} onEnded={advance}
           onLoadStart={() => { setLoading(true); setFailed(false); }}

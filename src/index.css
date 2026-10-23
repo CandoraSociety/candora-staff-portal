@@ -142,6 +142,23 @@
   from { transform: translate(0, 0) scale(1); }
   to { transform: translate(-26px, 20px) scale(1.08); }
 }
+/* Scrub these reveals with the narration instead of running on page load. */
+.portal-intro-text-reveal,
+.portal-intro-divider-reveal {
+  animation: portal-intro-text-appear 0.5s both paused;
+  animation-delay: calc(var(--intro-time, 0s) + var(--intro-start, 0s));
+}
+.portal-intro-divider-reveal {
+  animation-name: portal-intro-divider-appear;
+}
+@keyframes portal-intro-text-appear {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes portal-intro-divider-appear {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: scaleX(1); }
+}
 .portal-intro-logo {
   animation: portal-intro-float 7s ease-in-out infinite;
 }
