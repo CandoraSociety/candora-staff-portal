@@ -149,7 +149,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   };
 
   const cardW = step.introExplainer ? 760 : presentation ? 660 : 560;
-  const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto", zIndex: 100 };
+  const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", display: "flex", flexDirection: "column", overflowY: "hidden", zIndex: 100 };
   if (rect) {
     const below = window.innerHeight - rect.top - rect.height - 20;
     const above = rect.top - 20;
@@ -179,8 +179,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     <div data-training-tour className="print:hidden">
       <SpotlightOverlay rect={rect} />
       <div ref={drag.ref} style={{ ...cardStyle, ...drag.style }}>
-        <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
-          <div {...drag.handleProps} className="flex items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
+        <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow flex min-h-0 w-full flex-1 flex-col" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
+          <div {...drag.handleProps} className="flex shrink-0 items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}>
                 {module.shortTitle || module.title}
@@ -221,7 +221,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             </div>
           </div>
 
-          <div className={presentation ? "p-6" : "p-4"}>
+          <div className={`flex-1 min-h-0 overflow-y-auto ${presentation ? "p-6" : "p-4"}`}>
             <h3 className={`font-bold mb-2 ${presentation ? "text-2xl" : "text-base"}`} style={{ color: "hsl(45, 92%, 65%)" }}>
               {step.title}
             </h3>
@@ -237,7 +237,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             )}
           </div>
 
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderTop: "1px solid hsl(230, 50%, 22%)" }}>
+          <div className="flex shrink-0 items-center justify-between px-4 py-3" style={{ borderTop: "1px solid hsl(230, 50%, 22%)" }}>
             <button
               onClick={back}
               disabled={index === 0}
