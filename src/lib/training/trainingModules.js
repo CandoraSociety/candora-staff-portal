@@ -119,24 +119,28 @@ export const TRAINING_MODULES = [
         id: "dash-pin",
         title: "Pin a portal you'll use most",
         body: "Use the pin control on one of your portal cards to pin it to your dashboard.",
+        hint: "Hover over a portal card on your main page and click the pin icon that appears in its corner.",
         verify: { kind: "self" }
       },
       {
         id: "dash-todo",
         title: "Add a to-do to your organizer",
         body: "Open the personal organizer and add a task for yourself.",
+        hint: "On your main page, open the Personal Organizer, type your task in the add box and press Enter.",
         verify: { kind: "self" }
       },
       {
         id: "dash-howto",
         title: "Search the How-To knowledge base",
         body: "Ask the How-To search: \"How do I submit a timesheet?\"",
+        hint: "Type your question into the How-To search box on your main page and press Enter to get the step-by-step answer.",
         verify: { kind: "self" }
       },
       {
         id: "dash-esign",
         title: "Set up your e-signature",
         body: "Open the E-Signature portal and create your demo signature — draw it, type it, or upload an image. This is how you'll sign real documents later.",
+        hint: "Go to E-Signature, set up your PIN or password first if you haven't, then use the editor (type, draw or upload) and press Save signature to make it active.",
         path: "/e-signature",
         verify: { kind: "self" }
       }
@@ -272,6 +276,7 @@ export const TRAINING_MODULES = [
         id: "tm-vacation",
         title: "Request time off",
         body: "Submit a vacation or time-off request for a future date.",
+        hint: "Open Time & Attendance → Vacation / Time Off Request, pick your first day off and press Submit Request.",
         path: "/time-off/vacation-request",
         verify: { kind: "created", entity: "TimeOffRecord" }
       },
@@ -279,6 +284,7 @@ export const TRAINING_MODULES = [
         id: "tm-sick",
         title: "Log a sick or personal day",
         body: "Record a sick time or personal day entry for yourself.",
+        hint: "Open the Sick Time / Personal Day page, choose Sick Time or Personal Day, pick a date and press Record.",
         path: "/time-off/sick-personal",
         verify: { kind: "self" }
       },
@@ -286,6 +292,7 @@ export const TRAINING_MODULES = [
         id: "tm-timesheet",
         title: "Submit a timesheet",
         body: "Fill out and submit a timesheet for the current pay period.",
+        hint: "Open Timesheets, enter Start/End times (and any break) for a few days, then press Submit Timesheet at the bottom.",
         path: "/time-off/timesheets",
         verify: { kind: "created", entity: "Timesheet" }
       },
@@ -293,6 +300,7 @@ export const TRAINING_MODULES = [
         id: "tm-reimb",
         title: "Submit a reimbursement",
         body: "Add an expense entry (attach a receipt if you like) and submit a reimbursement request for it.",
+        hint: "Open Reimbursement Requests, click Add Receipt Entry, fill in and save the entry with the check mark, then press Submit for Reimbursement.",
         path: "/reimbursement-requests",
         verify: { kind: "created", entity: "StaffReimbursementRequest" }
       },
@@ -300,6 +308,7 @@ export const TRAINING_MODULES = [
         id: "tm-cc",
         title: "Upload a MasterCard receipt",
         body: "Upload a receipt for a purchase made on the Candora MasterCard.",
+        hint: "Open Candora MasterCard Receipts, click Add Receipt Entry, fill in the details and press Submit Receipts to Finance.",
         path: "/candora-cc-receipts",
         verify: { kind: "created", entity: "CCReceiptSubmission" }
       }
@@ -367,6 +376,7 @@ export const TRAINING_MODULES = [
         id: "sup-timeoff",
         title: "Approve a pending time-off request",
         body: "From your dashboard, approve (or reject with a reason) the pending time-off request from your demo staff member.",
+        hint: "Find the pending time-off banner on your main dashboard, open Sam Staff's request and press Approve — or Reject with a short reason.",
         path: "/",
         verify: { kind: "self" }
       },
@@ -374,6 +384,7 @@ export const TRAINING_MODULES = [
         id: "sup-timesheet",
         title: "Approve a submitted timesheet",
         body: "Review the pending timesheet and approve it with your e-signature.",
+        hint: "Open the submitted timesheet from the dashboard banner, check the hours, then Approve — you'll be asked for your e-signature code.",
         path: "/",
         verify: { kind: "self" }
       },
@@ -381,6 +392,7 @@ export const TRAINING_MODULES = [
         id: "sup-reimb",
         title: "Approve an expense submission",
         body: "Open the pending reimbursement, check its entries, and approve it with your e-signature.",
+        hint: "Open the pending expense submission from the dashboard banner, review its entries and press Approve with your e-signature.",
         path: "/",
         verify: { kind: "self" }
       },
@@ -388,6 +400,7 @@ export const TRAINING_MODULES = [
         id: "sup-team",
         title: "Check the team schedule",
         body: "Open the team schedule and see who's off around the time-off request you just reviewed.",
+        hint: "In the sidebar, open Time & Attendance → Team Schedule to see everyone's approved absences side by side.",
         path: "/time-off/team",
         verify: { kind: "self" }
       }
@@ -454,6 +467,7 @@ export const TRAINING_MODULES = [
         id: "pw-intake",
         title: "Add a new client through Intake",
         body: "Walk through the intake form and create a demo client. In Training Mode this only creates simulated data.",
+        hint: "Go to Intake, fill in the required fields — the duplicate matcher checks for existing files as you type — then save.",
         path: "/pathways/intake",
         verify: { kind: "created", entity: "Client" }
       },
@@ -461,6 +475,7 @@ export const TRAINING_MODULES = [
         id: "pw-profile",
         title: "Open a client's full profile",
         body: "From the Master List, search for a client and open their profile. Explore the barriers, action plan and employment sections.",
+        hint: "Go to the Master List, type a name in the search box and click the client's row to open their full file.",
         path: "/pathways/master",
         verify: { kind: "self" }
       },
@@ -468,6 +483,7 @@ export const TRAINING_MODULES = [
         id: "pw-compass",
         title: "Complete a Compass task",
         body: "Open Compass and mark one of the pending demo tasks as completed.",
+        hint: "Open Compass, pick a pending demo task and toggle or mark it as completed.",
         path: "/pathways/compass",
         verify: { kind: "self" }
       },
@@ -475,6 +491,7 @@ export const TRAINING_MODULES = [
         id: "pw-purchase",
         title: "Submit a purchase request",
         body: "Submit a purchase or exposure-course request for one of your demo clients.",
+        hint: "From your dashboard or a client profile, open Purchase Requests and fill in a new request for one of your clients.",
         path: "/pathways/dashboard",
         verify: { kind: "created", entity: "PurchaseRequest" }
       }
@@ -535,6 +552,7 @@ export const TRAINING_MODULES = [
         id: "rc-intake",
         title: "Intake a new client",
         body: "Use Intake to register a demo client. The duplicate matcher will help you practice finding existing files.",
+        hint: "Go to Intake, search for duplicates first, then complete the registration and save.",
         path: "/rc/intake",
         verify: { kind: "created", entity: "RCClient" }
       },
@@ -542,6 +560,7 @@ export const TRAINING_MODULES = [
         id: "rc-note",
         title: "Add a note to a client file",
         body: "Open a demo client and add a note. Try marking it as a safety alert to see how it stands out.",
+        hint: "Open a client file from Clients, click Add Note and try the safety-alert toggle.",
         path: "/rc/clients",
         verify: { kind: "created", entity: "RCClientNote" }
       },
@@ -549,6 +568,7 @@ export const TRAINING_MODULES = [
         id: "rc-service",
         title: "Log a service",
         body: "Log a service for one of your demo clients — services are what feed our funder reporting.",
+        hint: "Open a client file and use Log Service to record a service for them.",
         path: "/rc/clients",
         verify: { kind: "created", entity: "RCServiceLog" }
       }
@@ -611,6 +631,7 @@ export const TRAINING_MODULES = [
         id: "ell-learner",
         title: "Add a new learner",
         body: "Register a demo learner with their language background and CLB level.",
+        hint: "Go to Learners, click Add Learner and fill in their first language, country of origin and CLB level.",
         path: "/ell/learners",
         verify: { kind: "created", entity: "ELLLearner" }
       },
@@ -618,6 +639,7 @@ export const TRAINING_MODULES = [
         id: "ell-waitlist",
         title: "Work a waitlist entry",
         body: "Open the waitlist, contact a waiting learner and update their contact state with a note.",
+        hint: "Open the Waitlist, pick a waiting learner and use the contact buttons to update their state with a note.",
         path: "/ell/waitlist",
         verify: { kind: "self" }
       },
@@ -625,6 +647,7 @@ export const TRAINING_MODULES = [
         id: "ell-assess",
         title: "Record a CLB assessment",
         body: "Record an assessment for one of the demo learners, showing their before and after levels.",
+        hint: "Open Assessments and record a new CLB assessment with the before and after levels.",
         path: "/ell/assessments",
         verify: { kind: "self" }
       }
@@ -687,6 +710,7 @@ export const TRAINING_MODULES = [
         id: "cr-register",
         title: "Register a participant into a program",
         body: "Create a registration for a demo participant in any program.",
+        hint: "Go to Registrations, use the register/new-registration button and pick a program and participant.",
         path: "/central-registration/registrations",
         verify: { kind: "created", entity: "ProgramRegistration" }
       },
@@ -694,6 +718,7 @@ export const TRAINING_MODULES = [
         id: "cr-request",
         title: "Review a self-registration request",
         body: "Approve or decline one of the pending QR self-registration requests.",
+        hint: "Open Self-Registration Requests and use Approve or Decline on one of the pending requests.",
         path: "/central-registration/requests",
         verify: { kind: "self" }
       },
@@ -701,6 +726,7 @@ export const TRAINING_MODULES = [
         id: "cr-waitlist",
         title: "Check a program's waitlist",
         body: "Open the waitlists view and find the position order of a full program.",
+        hint: "Open Waitlists, pick a full program and look at the numbered waitlist positions.",
         path: "/central-registration/waitlists",
         verify: { kind: "self" }
       }

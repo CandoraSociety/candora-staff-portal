@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { X, CheckCircle2, Circle, RefreshCw, PartyPopper, ExternalLink } from "lucide-react";
+import { X, CheckCircle2, Circle, RefreshCw, PartyPopper, ExternalLink, Lightbulb } from "lucide-react";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 const snapKey = (key) => `candora-training-snapshots-${key}`;
@@ -27,6 +27,7 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
   const [done, setDone] = useState([]);
   const [checking, setChecking] = useState(false);
   const [snaps, setSnaps] = useState({});
+  const [hints, setHints] = useState([]);
   const drag = useTrainingWindowDrag(open, module?.key);
 
   useEffect(() => {
@@ -123,7 +124,21 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
                           <ExternalLink className="w-3 h-3" /> Open
                         </button>
                       )}
+                      {t.hint && (
+                        <button
+                          onClick={() => setHints(h => h.includes(t.id) ? h.filter(x => x !== t.id) : [...h, t.id])}
+                          className="flex items-center gap-0.5 text-[10px] font-semibold hover:opacity-70"
+                          style={{ color: hints.includes(t.id) ? "hsl(45, 92%, 65%)" : "hsl(230, 30%, 60%)" }}
+                        >
+                          <Lightbulb className="w-3 h-3" /> {hints.includes(t.id) ? "Hide hint" : "Hint"}
+                        </button>
+                      )}
                     </div>
+                    {t.hint && hints.includes(t.id) && (
+                      <p className="text-[11px] mt-2 leading-snug rounded-lg px-2 py-1.5" style={{ background: "hsl(45, 60%, 14%)", color: "hsl(45, 60%, 85%)", border: "1px solid hsl(45, 50%, 25%)" }}>
+                        {t.hint}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
