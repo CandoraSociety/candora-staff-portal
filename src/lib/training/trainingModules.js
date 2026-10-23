@@ -711,7 +711,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The Job Lab attendant's part",
-        body: "The client's job ends at the acknowledgements — both boxes must be checked before the form can go anywhere. From here it's the attendant's turn: the office-use section records whether the client managed in English or needed a translator, then the attendant enters the four-digit access code and presses Submit. The moment it's submitted, the client lands in the New Intake — Awaiting Assessment list back in the Pathways portal.",
+        body: "The client's job ends at the acknowledgements — both boxes must be checked before the form can go anywhere. From here it's the attendant's turn: the office-use section records whether the client managed in English or needed a translator, then the attendant enters the four-digit access code and presses Submit. The attendant's observations matter too: even if they weren't watching over the client's shoulder the whole time, what they noticed is an early signal for eligibility and the pathway determination — did the client need a lot of help with basic parts of the form? Did someone come along to translate? Did anything else come up in conversation? The moment the form is submitted, the client lands in the New Intake — Awaiting Assessment list back in the Pathways portal, and those observations travel with the file.",
         path: "/pathways/intake-portal",
         target: { selector: '[data-tour="pw-ext-ack"]', additionalSelectors: ['[data-tour="pw-ext-ribbon"]', '[data-tour="pw-ext-office"]', '[data-tour="pw-ext-submit"]'] }
       },
