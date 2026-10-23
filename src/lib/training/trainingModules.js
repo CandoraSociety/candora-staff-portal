@@ -68,23 +68,9 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Turning widgets on and off",
-        body: "Your dashboard is customizable. On this page, click any widget to turn it on or off — like the Personal Organizer, the How-To knowledge base and the translator — so your home page shows exactly what you use.",
+        body: "Your home page is made of widgets — optional panels like the How-To search, tasks and birthdays that you choose yourself. On this page, click any widget to turn it on or off, so your home page shows exactly what you use. Which widgets are even worth turning on is a personal thing, so there's a dedicated Dashboard Widgets module in the training catalog that walks through what each one does.",
         path: "/widget-customization",
         target: { selector: '[data-tour="widget-list"]' }
-      },
-      {
-        title: "Your personal organizer",
-        body: "The organizer is your private to-do space: set today's focus, list your priorities, and track your tasks. It follows you every time you sign in, on any device.",
-        path: "/",
-        revealWidget: "organizer",
-        target: { selector: '[data-tour="dashboard-organizer"]' }
-      },
-      {
-        title: "How-To knowledge base",
-        body: "Anywhere in the app, ask the How-To search how to do something — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language.",
-        path: "/",
-        revealWidget: "howto",
-        target: { selector: '[data-tour="dashboard-howto"]' }
       },
       {
         title: "Set up your e-signature — protect it first",
@@ -133,20 +119,6 @@ export const TRAINING_MODULES = [
         verify: { kind: "self" }
       },
       {
-        id: "dash-todo",
-        title: "Add a to-do to your organizer",
-        body: "Open the personal organizer and add a task for yourself.",
-        hint: "On your main page, open the Personal Organizer, type your task in the add box and press Enter.",
-        verify: { kind: "self" }
-      },
-      {
-        id: "dash-howto",
-        title: "Search the How-To knowledge base",
-        body: "Ask the How-To search: \"How do I submit a timesheet?\"",
-        hint: "Type your question into the How-To search box on your main page and press Enter to get the step-by-step answer.",
-        verify: { kind: "self" }
-      },
-      {
         id: "dash-esign",
         title: "Set up your e-signature",
         body: "Open the E-Signature portal and create your demo signature — draw it, type it, or upload an image. This is how you'll sign real documents later.",
@@ -156,6 +128,88 @@ export const TRAINING_MODULES = [
       }
     ]
   },
+  {
+    key: "dashboard_widgets",
+    title: "Dashboard Widgets",
+    shortTitle: "Widgets",
+    blurb: "What each home-page widget does — the organizer, the How-To assistant, tasks, notes, birthdays and more — and how to pick the ones you want.",
+    path: "/widget-customization",
+    steps: [
+      {
+        title: "Your home page, your widgets",
+        body: "Your main page is made of widgets: optional panels like the Personal Organizer, the How-To search, or upcoming birthdays. A few are always there — announcements, recent activity and upcoming events — but the rest are entirely your choice. This module walks through what each one does so you can decide which belong on your home page. You're in Training Mode as usual: nothing you toggle here is permanent.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour="widget-list"]' }
+      },
+      {
+        title: "Turning widgets on and off",
+        body: "This is the Add Functions page: every widget you can use is a card here, and clicking a card turns it on or off — changes save automatically and appear on your main page right away. You'll also choose your portal shortcuts and Microsoft apps on this same page, so it's worth knowing it well.",
+        target: { selector: '[data-tour="widget-list"]' }
+      },
+      {
+        title: "The Personal Organizer",
+        body: "Officially \"Organization for the Disorganized\": your private to-do space. Set today's focus, list your priorities and track your tasks — with a little AI help for planning your week. It's private to you and follows you on any device, so it's a favourite for staying on top of your own work.",
+        path: "/",
+        revealWidget: "organizer",
+        target: { selector: '[data-tour="dashboard-organizer"]' }
+      },
+      {
+        title: "The How-To AI Assistant",
+        body: "Ask the How-To search how to do anything in the portal — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language. It answers from Candora's own how-to knowledge first, and falls back to AI when it hasn't been asked before, so it's your fastest route to an answer instead of asking a co-worker.",
+        path: "/",
+        revealWidget: "howto",
+        target: { selector: '[data-tour="dashboard-howto"]' }
+      },
+      {
+        title: "My Tasks and My Reminders",
+        body: "These two keep your assigned work in view: My Tasks shows Compass tasks and to-dos assigned to you across the portal, and My Reminders shows deadlines you've set for yourself. Turn them on if your role comes with assigned tasks; they're quiet otherwise. Their cards are here on this page — toggle one on now if either sounds like you.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour="widget-list"]' }
+      },
+      {
+        title: "Notes, birthdays and recent clients",
+        body: "The rest of the optional widgets cover the human side of the workday: Quick Notes pins your recent notes, Team Birthdays shows upcoming birthdays and work anniversaries, Recent Clients shortcuts to the client files you last worked with, and Recent Files does the same for documents. You'll find their cards right here — pick whichever fits your role.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour="widget-list"]' }
+      },
+      {
+        title: "Tracking widgets",
+        body: "A few widgets are for specific kinds of work: Project Progress tracks active projects and grants (great if you're on those teams), Time Log is quick access to log your hours, Meeting Manager schedules meetings and builds agendas and minutes, Statistics shows quick metrics, and Google Translate translates the page into any language. And remember — the ones marked as locked (announcements, recent activity, upcoming events) are always on for everyone.",
+        path: "/",
+        revealWidget: "google_translate",
+        target: { selector: '[data-tour="dashboard-translate"]' }
+      },
+      {
+        title: "Time to practice",
+        body: "That's the tour! Now try it yourself: turn on a widget or two, add a to-do to the organizer, and ask the How-To search a real question — all on simulated data."
+      }
+    ],
+    tasks: [
+      {
+        id: "wig-toggle",
+        title: "Turn a widget on or off",
+        body: "On the Add Functions page, switch at least one widget on or off.",
+        hint: "Open Add Functions (the Customize button on your main page) and click any widget card to toggle it.",
+        path: "/widget-customization",
+        verify: { kind: "self" }
+      },
+      {
+        id: "wig-todo",
+        title: "Add a to-do to your organizer",
+        body: "Turn on the Personal Organizer (if it isn't already) and add a task for yourself.",
+        hint: "On your main page, open the Personal Organizer, type your task in the add box and press Enter.",
+        verify: { kind: "self" }
+      },
+      {
+        id: "wig-howto",
+        title: "Ask the How-To assistant a question",
+        body: "Ask the How-To search: \"How do I submit a timesheet?\"",
+        hint: "Type your question into the How-To search box on your main page and press Enter to get the step-by-step answer.",
+        verify: { kind: "self" }
+      }
+    ]
+  },
+
   {
     key: "staffadmin",
     title: "Time & Money — Mini-Module 1: Time Off & Timesheets",
@@ -807,6 +861,7 @@ export const TRAINING_MODULES = [
 // only the training for portals they can actually access (null = everyone).
 export const TRAINING_MODULE_ACCESS = {
   dashboard: null,
+  dashboard_widgets: null,
   staffadmin: null,
   staffadmin_money: null,
   staffadmin_supervisor: null,
@@ -820,7 +875,8 @@ export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === k
 
 export const moduleForPath = (pathname) => {
   if (!pathname) return null;
-  if (pathname === "/" || pathname.startsWith("/portal") || pathname.startsWith("/widget-customization")) {
+  if (pathname.startsWith("/widget-customization")) return getTrainingModule("dashboard_widgets");
+  if (pathname === "/" || pathname.startsWith("/portal")) {
     return getTrainingModule("dashboard");
   }
   const prefixes = [

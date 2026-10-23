@@ -21,21 +21,42 @@ export const FACILITATOR_GUIDE = {
       "Your portal shortcuts": "Cards are each person's own picks: only the portals they've turned on in Add Functions appear here. Ask each person to name the one portal they expect to use most today — it sets up the pinning step.",
       "Pinning your favourites": "Demonstrate live: hover a card, click the pin, watch the banner appear at the top. Common question: 'Can I pin more than one?' — no, one pinned portal at a time.",
       "Notifications and approvals": "This is the big one for supervisors: timesheet, vacation and reimbursement approvals surface here. For most staff, it's where payment notifications appear. Nothing needs to be 'checked' — it finds them.",
-      "Turning widgets on and off": "Let people try this one themselves while you watch — it's low-risk and personal. Mention the two most-loved widgets: the Personal Organizer and the How-To search.",
-      "Your personal organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
-      "How-To knowledge base": "Common question: 'What if it doesn't know the answer?' — it falls back to AI in plain language, and every question is logged so the preset answers keep improving.",
+      "Turning widgets on and off": "Let people try this one themselves while you watch — it's low-risk and personal. Point out that the dedicated Dashboard Widgets module covers what each widget does in detail; today only show them the toggle itself.",
       "Setting up your e-signature": "Everyone must complete this before signing real documents — it's also a practice task, so don't do it for them here. Mention all three methods (draw, type, upload) and that the reminder disappears once it's set.",
       "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup is the must-do. Circulate while they work. Mention Part 2 — Time & Money — as the natural next module.",
     },
     practiceNotes: {
       "dash-pin": "Watch that people find the pin — it only appears on hover.",
-      "dash-todo": "A quick early win; the organizer is on by default.",
-      "dash-howto": "Invite people to ask a real question they actually have.",
       "dash-esign": "Must-complete before the session ends — verify each person's signature exists.",
     },
     tips: [
       "Have everyone signed in on their own device before you start the tour — the tour is better watched on the projector, practice is done on their screen.",
       "Keep the talking-points panel on your own laptop and mirror only the tour screen.",
+    ],
+  },
+
+  dashboard_widgets: {
+    duration: "About 15 minutes (2 intro · 8 tour · 5 practice)",
+    objectives: [
+      "Staff know how to turn widgets on and off on the Add Functions page",
+      "Staff can name at least two widgets useful to their own role",
+    ],
+    stepNotes: {
+      "Your home page, your widgets": "Set expectations: this module is about personal choice, not a test. Locked widgets (announcements, recent activity, upcoming events) are the same for everyone; everything else is opt-in.",
+      "Turning widgets on and off": "Let people toggle freely here — it's their own home page and nothing can go wrong. Point out that portal shortcuts and Microsoft apps are chosen on this same page.",
+      "The Personal Organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
+      "The How-To AI Assistant": "Common question: 'What if it doesn't know the answer?' — it falls back to AI in plain language, and every question is logged so the preset answers keep improving.",
+      "My Tasks and My Reminders": "Role-dependent: skip quickly for people whose work doesn't come with assigned Compass tasks; linger for those it does.",
+      "Notes, birthdays and recent clients": "Quick pass — one sentence each. Team Birthdays is usually the crowd-pleaser; let the room react.",
+      "Tracking widgets": "Only demo the ones your group actually uses (e.g. Time Log for hourly staff, Meeting Manager for admin staff). Close by repeating that nothing is mandatory.",
+    },
+    practiceNotes: {
+      "wig-toggle": "Watch that toggles actually save — the card outline shows the state. Encourage them to leave their home page honest: only what they'll really use.",
+      "wig-todo": "A quick early win; the organizer is on by default.",
+      "wig-howto": "Invite people to ask a real question they actually have.",
+    },
+    tips: [
+      "Run this module casually — it works well as a drop-in after the main page tour, or whenever someone asks 'what's that box on my home page?'",
     ],
   },
 
