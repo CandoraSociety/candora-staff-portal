@@ -742,7 +742,7 @@ export const TRAINING_MODULES = [
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
         demoClient: "jordan",
-        body: "Jordan Example registered through the Job Lab after being laid off from a warehousing job he'd held for six years. At 34 he had a solid work history, an up-to-date resume, strong English, and a clear idea of the work he wanted — and his Barrier Identification turned up nothing standing in his way. That's exactly the profile the DEA stream exists for: Direct to Employment is a pathway within the program, not an entry route, and it's chosen when the client is already job-ready. So Jordan's determination assigned him the DEA stream, and his road skips the placement stretch entirely — a short action plan built with his career counsellor, then straight to employment.",
+        body: "Jordan Example registered through the Job Lab after being laid off from a warehousing job he'd held for six years. At 34 he had a solid work history, an up-to-date resume, strong English, and a clear idea of the work he wanted — and his Barrier Identification turned up nothing standing in his way. That's exactly the profile the DEA stream exists for: DEA is chosen when the client is already job-ready. So Jordan's determination assigned him the DEA stream, and his road skips the placement stretch entirely — a short action plan built with his career counsellor, then straight to employment.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
