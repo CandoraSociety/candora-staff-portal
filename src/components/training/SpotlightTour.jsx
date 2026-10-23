@@ -52,8 +52,13 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     if (step.target.selector === navSelector || (step.target.additionalSelectors || []).includes(navSelector)) return step.target;
     return { ...step.target, additionalSelectors: [...(step.target.additionalSelectors || []), navSelector] };
   }, [step, path]);
-  const focus = useSpotlightTarget(open && location.pathname === path, target, `${module?.key}:${index}`);
-  const rect = focus?.rect || null;
+  // The intro "video" plays centered with the full screen for itself: docking
+  // it beside its spotlight target caps the window's height to the space left
+  // around that sidebar item, which is far too short for the scene and forced
+  // the slide to scroll. Intro steps get no spotlight; the card centers instead.
+  const isIntro = !!step?.introExplainer;
+  const focus = useSpotlightTarget(open && !isIntro && location.pathname === path, target, `${module?.key}:${index}`);
+  const rect = isIntro ? null : focus?.rect || null;
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
