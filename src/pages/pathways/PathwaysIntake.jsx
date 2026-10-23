@@ -239,7 +239,7 @@ export default function PathwaysIntake() {
           <Button variant="outline" size="sm" onClick={() => navigate('/pathways/master')}>Master List</Button>
           <Button variant="outline" size="sm" onClick={() => navigate('/pathways/reports')}>Reports</Button>
           {!showForm && (
-            <Button onClick={() => { setEditingClient(null); setShowForm(true); }} className="gap-2">
+            <Button onClick={() => { setEditingClient(null); setShowForm(true); }} className="gap-2" data-tour="pw-intake-new-client">
               <PlusCircle className="w-4 h-4" /> New Client
             </Button>
           )}

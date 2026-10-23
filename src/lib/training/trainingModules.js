@@ -717,9 +717,9 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Intake — Compass referrals",
-        body: "The second way is a referral through Compass, the Government of Alberta's database — and these arrive from two places: directly from a CEC at Alberta Supports, and from the prime contractor. They sit under the CEC Referral badge here, in the same New Intake list. The Service Navigator accepts or rejects the referral in Compass itself. If the referral is accepted, the Service Navigator completes the intake manually in the Pathways CM portal, and the client joins the list like any other.",
+        body: "The second way is a referral through Compass, the Government of Alberta's database — and these arrive from two places: directly from a CEC at Alberta Supports, and from the prime contractor. They sit under the CEC Referral badge here, in the same New Intake list. The Service Navigator accepts or rejects the referral in Compass itself. If the referral is accepted, the Service Navigator completes the intake manually in the Pathways CM portal — it starts with this New Client button, which opens the intake form — and the client joins the list like any other.",
         path: "/pathways/intake",
-        target: { selector: '[data-tour="pw-intake-cec"]' }
+        target: { selector: '[data-tour="pw-intake-new-client"]', additionalSelectors: ['[data-tour="pw-intake-cec"]'] }
       },
       {
         title: "Barrier Identification — the Service Navigator",
