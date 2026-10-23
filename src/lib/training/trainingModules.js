@@ -36,18 +36,13 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Your portals",
-        body: "These cards are your doorways into each portal you have access to — Pathways, the Resource Centre, Finance, and so on. Only portals relevant to your role appear. Click one to jump straight into it.",
+        body: "These shortcut cards are the portals you've picked to keep on your home page — you choose them with Add Functions in the sidebar, and you can change your selection anytime. Every portal you have access to is always available under Portals in the sidebar, even the ones you don't put here. Click any card to jump straight into it.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
         title: "Pinning your favourites",
         body: "Hover over any portal card and a pin appears in its corner — use it to pin your most-used portal, and it gets a banner right at the top of your dashboard so it's always one click away.",
         target: { selector: '[data-tour="dashboard-pin"]' }
-      },
-      {
-        title: "Your employee card and settings",
-        body: "This card shows your position and contact details as the organization has them on file. The highlighted Customize button opens your settings, where you can update your profile, photo and personal preferences.",
-        target: { selector: '[data-tour="dashboard-employee"]', additionalSelectors: ['[data-tour="dashboard-customize"]'] }
       },
       {
         title: "Notifications and approvals",

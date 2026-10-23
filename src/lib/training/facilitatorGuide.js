@@ -15,9 +15,8 @@ export const FACILITATOR_GUIDE = {
     stepNotes: {
       "Welcome to your Candora portal": "Introduce yourself and the plan for the session. Repeat the key message twice: Training Mode means nothing they click can damage real data, so explore freely. Ask who has signed in before to gauge the room.",
       "Announcements": "Point at the unseen-count and the scrolling titles. Common question: 'How do I make an announcement go away?' — clicking the ribbon opens the list and Clear marks everything seen; announcements also expire on their own.",
-      "Your portals": "Cards are role-based: each person only sees the portals their job needs. Ask each person to name the one portal they expect to use most today — it sets up the pinning step.",
+      "Your portals": "Cards are each person's own picks: only the portals they've added with Add Functions appear here, and everything they can access is under Portals in the sidebar. Ask each person to name the one portal they expect to use most today — it sets up the pinning step.",
       "Pinning your favourites": "Demonstrate live: hover a card, click the pin, watch the banner appear at the top. Common question: 'Can I pin more than one?' — no, one pinned portal at a time.",
-      "Your employee card and settings": "Ask everyone to check their own position and contact details are current; corrections go through their manager or an admin. Show the Customize button but don't go deep — profile editing isn't part of this session.",
       "Notifications and approvals": "This is the big one for supervisors: timesheet, vacation and reimbursement approvals surface here. For most staff, it's where payment notifications appear. Nothing needs to be 'checked' — it finds them.",
       "Turning widgets on and off": "Let people try this one themselves while you watch — it's low-risk and personal. Mention the two most-loved widgets: the Personal Organizer and the How-To search.",
       "Your personal organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
