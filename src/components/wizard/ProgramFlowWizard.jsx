@@ -263,7 +263,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
     <div className="flex gap-6">
       {/* Sidebar — desktop */}
       <aside className="hidden md:block w-56 shrink-0">
-        <div className="sticky top-6 space-y-1">
+        <div data-tour="pw-flow-steps" className="sticky top-6 space-y-1">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3 px-2">
             Program Steps
           </div>

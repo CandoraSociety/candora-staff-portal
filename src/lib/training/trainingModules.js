@@ -746,18 +746,39 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-placement-tabs"]', additionalSelectors: ['[data-tour="pw-dash-tabs"]'] }
       },
       {
-        title: "The Employment Action Plan",
-        body: "Before any of the routes get under way, the career counsellor builds the employment action plan — and it lives in the client's Program Flow tab, right where the whole journey is managed. Open the client from the Not Started section of My Clients and click the Program Flow tab: if no plan exists yet you'll see the Create Action Plan button — press it and the plan builder opens.",
+        title: "The Employment Action Plan — where it lives",
+        body: "Before any of the routes get under way, the career counsellor builds the employment action plan — and it lives in the client's Program Flow tab, right where the whole journey is managed. Open a client from the Not Started section of My Clients — like Sam Specimen here. The Program Flow tab is the one you land on first, and the program's steps are listed down the left. The Action Plan step sits at the top: it's where everything starts, because the steps that follow only unlock once the plan exists.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
-        target: { selector: '[data-tour="pw-tab-flow"]', additionalSelectors: ['[data-tour="pw-flow-create-plan"]', '[data-tour="pw-profile-tabs"]'] }
+        target: { selector: '[data-tour="pw-tab-flow"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
       },
       {
-        title: "Completing the action plan",
-        body: "The builder starts from an Intake Summary that fills itself in from the client's file — employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're working from the client's whole story, not a blank page. Set the Program Start Date, then choose the plan items: on the WD road you tick the workshops, programs, placements, job-search and support options that fit, each with its own anticipated completion date; on the DEA road you list the short Employment Development Activities instead — job-search, resume or interview workshops, counselling — since a DEA plan runs about two weeks. Add any notes, then press Create Action Plan: the plan is saved to the client's file, a Compass task is created automatically, and the rest of the Program Flow steps unlock so the journey can get under way. And remember the plan is recorded twice — it's completed here in the Pathways CM portal and again in Compass, so both systems carry the same plan.",
+        title: "Starting the plan",
+        body: "With no plan on the file yet, the Program Flow tab shows the Create Action Plan button — press it now. The plan builder opens in the main panel, and the next few slides walk through it piece by piece as it sits on your screen.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
-        target: { selector: '[data-tour="pw-plan-summary"]', additionalSelectors: ['[data-tour="pw-plan-items"]'] }
+        target: { selector: '[data-tour="pw-flow-create-plan"]', additionalSelectors: ['[data-tour="pw-tab-flow"]'] }
+      },
+      {
+        title: "The Intake Summary",
+        body: "The builder starts from an Intake Summary that fills itself in from the client's file — employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're building on the client's whole story, not a blank page. The Program Start Date sits right below it: it defaults to today when the plan is created, it can be edited anytime, and it's the date the client's service officially starts.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-plan-summary"]' }
+      },
+      {
+        title: "Choosing the plan items",
+        body: "Now the plan itself: the options are grouped into Workshops, Programs, Placement/Training, Job Search, Supports and Other — tick the ones that fit this client's road. Each item you tick opens its own anticipated-completion date, so the plan carries a timeline, and the counselling and other items get their own notes. On a DEA file this section looks different: instead of checkboxes you list the short Employment Development Activities — job-search, resume or interview workshops, counselling — because a DEA plan runs about two weeks.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-plan-items"]' }
+      },
+      {
+        title: "Saving the plan — and what unlocks",
+        body: "Add any general notes at the bottom, then press Create Action Plan. The plan is saved to the client's file, a Compass task is created automatically so the entry steps stay on track, and the rest of the Program Flow steps unlock — the journey can get under way. One rule to remember: the plan is recorded twice — it's completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-flow-steps"]', additionalSelectors: ['[data-tour="pw-plan-summary"]'] }
       },
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
