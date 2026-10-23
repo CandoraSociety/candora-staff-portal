@@ -65,8 +65,22 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // around that sidebar item, which is far too short for the scene and forced
   // the slide to scroll. Intro steps get no spotlight; the card centers instead.
   const isIntro = !!step?.introExplainer;
-  const focus = useSpotlightTarget(open && !isIntro && onRoute, target, `${module?.key}:${index}`);
-  const rect = isIntro ? null : focus?.rect || null;
+  // Demo-client scene slides play like a short video; like the intro, they get
+  // the whole screen for the card so the scene and its text never scroll.
+  const isFullCard = isIntro || !!step?.demoClient;
+  const focus = useSpotlightTarget(open && !isFullCard && onRoute, target, `${module?.key}:${index}`);
+  const rect = isFullCard ? null : focus?.rect || null;
+  // Demo-client scene slides are narrated like a video: the audio starts by
+  // itself (there is still the read-aloud button to pause or replay it).
+  useEffect(() => {
+    if (!open || !step?.demoClient || !stepAudioUrl) return;
+    const audio = new Audio(stepAudioUrl);
+    audioRef.current = audio;
+    audio.onended = () => stopReading();
+    audio.onerror = () => setReading(false);
+    audio.play().then(() => setReading(true)).catch(() => setReading(false));
+    return () => { if (audioRef.current === audio) { audio.pause(); audioRef.current = null; } };
+  }, [open, step?.demoClient, stepAudioUrl]);
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
@@ -164,7 +178,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     try { sessionStorage.setItem(presentationKey, v ? "1" : "0"); } catch { /* ignore */ }
   };
 
-  const cardW = step.introExplainer ? 760 : presentation ? 660 : 560;
+  const cardW = isFullCard ? 760 : presentation ? 660 : 560;
   const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", display: "flex", flexDirection: "column", overflowY: "hidden", zIndex: 100 };
   if (rect) {
     const below = window.innerHeight - rect.top - rect.height - 20;
