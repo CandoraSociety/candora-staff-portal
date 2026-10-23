@@ -741,6 +741,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
+        demoClient: "jordan",
         body: "Jordan Example came in through Direct to Employment: the fast track, for clients ready to move straight into work. His determination assigned him the DEA stream, so his road skips the placement stretch entirely — a short action plan, then straight to employment.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
@@ -755,6 +756,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Route 2 — the WD road with an internal placement: meet Sam Specimen",
+        demoClient: "sam",
         body: "Sam Specimen travels the Workforce Development road. His action plan includes an internal placement: real work experience inside Candora — cleaning at the ARC, food services, reception or childcare. It's the stepping stone between the action plan and a real employer.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
@@ -768,6 +770,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Route 3 — the WD road with a work exposure placement: meet Casey Sample",
+        demoClient: "casey",
         body: "Casey Sample also travels the WD road, but her route runs through a work exposure placement with an external employer. That brings more moving parts along the way: Compass tasks, purchase requests for gear and courses, and the placement itself.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-casey",

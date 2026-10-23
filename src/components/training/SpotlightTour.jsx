@@ -9,6 +9,7 @@ import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 import SpotlightOverlay from "@/components/training/SpotlightOverlay";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 import TourVideo from "@/components/training/TourVideo";
+import DemoClientScene from "@/components/training/DemoClientScene";
 import PortalIntroExplainer from "@/components/training/PortalIntroExplainer";
 
 
@@ -244,6 +245,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             )}
             {step.introExplainer && <PortalIntroExplainer moduleKey={module.key} />}
             {step.video && <TourVideo src={step.video} />}
+            {step.demoClient && <DemoClientScene client={step.demoClient} />}
             <p className={presentation ? "text-lg leading-relaxed" : "text-sm leading-relaxed"} style={{ color: "hsl(45, 45%, 88%)" }}>
               {step.body}
             </p>
