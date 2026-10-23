@@ -232,6 +232,7 @@ export default function Dashboard() {
               </div>
               <Link 
                 to="/user/settings" 
+                data-tour="dashboard-customize"
                 className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
               >
                 <Settings className="w-4 h-4" />

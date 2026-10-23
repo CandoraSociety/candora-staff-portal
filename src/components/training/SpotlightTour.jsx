@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
@@ -20,7 +20,17 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const steps = module?.steps || [];
   const step = steps[index];
   const path = spotlightPath(module, index);
-  const rect = useSpotlightTarget(open && location.pathname === path, step?.target, `${module?.key}:${index}`);
+  // Every step that lands on a page also highlights the sidebar tab that page
+  // lives under, so learners see where the function lives in the navigation.
+  // Steps that already list the nav item (or target it directly) are skipped.
+  const target = useMemo(() => {
+    if (!step?.target || !path || path === "/") return step?.target;
+    const navSelector = `[data-tour-path="${path}"]`;
+    if (step.target.selector === navSelector || (step.target.additionalSelectors || []).includes(navSelector)) return step.target;
+    return { ...step.target, additionalSelectors: [...(step.target.additionalSelectors || []), navSelector] };
+  }, [step, path]);
+  const focus = useSpotlightTarget(open && location.pathname === path, target, `${module?.key}:${index}`);
+  const rect = focus?.rect || null;
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
@@ -167,7 +177,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             <p className={presentation ? "text-lg leading-relaxed" : "text-sm leading-relaxed"} style={{ color: "hsl(45, 45%, 88%)" }}>
               {step.body}
             </p>
-            {rect && (
+            {rect && focus?.interactive && (
               <p className="mt-2 text-[11px] italic" style={{ color: "hsl(230, 25%, 55%)" }}>
                 The highlighted area is live — click it to try it yourself, then come back and press Next.
               </p>

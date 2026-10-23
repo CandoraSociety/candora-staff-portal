@@ -176,6 +176,7 @@ function NavItem({ item, collapsed, active }) {
       <TooltipTrigger asChild>
         <Link
           to={item.path}
+          data-tour-path={item.path}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
             collapsed && "justify-center px-0",

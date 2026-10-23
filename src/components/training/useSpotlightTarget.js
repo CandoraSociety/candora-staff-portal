@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { findSpotlightTarget } from '@/components/training/spotlightTarget';
 
+const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, label, [role="button"], [contenteditable="true"]';
+
 export default function useSpotlightTarget(enabled, target, stepKey) {
   const [focus, setFocus] = useState(null);
   useEffect(() => {
@@ -25,9 +27,11 @@ export default function useSpotlightTarget(enabled, target, stepKey) {
         height: Math.max(...regions.map(region => region.top + region.height)) - top,
         regions,
       } : null;
+      // "The highlighted area is live" is only true when something in it takes a click.
+      const interactive = elements.some(node => node.matches(INTERACTIVE_SELECTOR) || node.querySelector(INTERACTIVE_SELECTOR));
       setFocus(previous => {
-        if (previous?.stepKey === stepKey && JSON.stringify(previous.rect) === JSON.stringify(rect)) return previous;
-        return { stepKey, rect };
+        if (previous?.stepKey === stepKey && previous.interactive === interactive && JSON.stringify(previous.rect) === JSON.stringify(rect)) return previous;
+        return { stepKey, rect, interactive };
       });
     };
     const schedule = () => {
@@ -46,5 +50,6 @@ export default function useSpotlightTarget(enabled, target, stepKey) {
       window.removeEventListener('scroll', schedule, true);
     };
   }, [enabled, target, stepKey]);
-  return enabled && focus?.stepKey === stepKey ? focus.rect : null;
+  if (!enabled || focus?.stepKey !== stepKey) return null;
+  return { rect: focus.rect, interactive: focus.interactive };
 }

@@ -47,7 +47,7 @@ export const TRAINING_MODULES = [
       {
         title: "Your employee card and settings",
         body: "This card shows your position and contact details as the organization has them on file. The highlighted Customize button opens your settings, where you can update your profile, photo and personal preferences.",
-        target: { selector: '[data-tour="dashboard-employee"]' }
+        target: { selector: '[data-tour="dashboard-employee"]', additionalSelectors: ['[data-tour="dashboard-customize"]'] }
       },
       {
         title: "Notifications and approvals",
