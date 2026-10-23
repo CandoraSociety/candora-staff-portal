@@ -568,7 +568,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   }
 
   return (
-    <div className="space-y-4">
+    <div data-tour="pw-roadmap" className="space-y-4">
       <style>{ANIM_STYLES}</style>
 
       {/* Click-outside backdrop — closes item/BIT panels */}

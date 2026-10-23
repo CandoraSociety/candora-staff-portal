@@ -783,22 +783,47 @@ export const TRAINING_MODULES = [
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
         demoClient: "jordan",
-        body: "Jordan Example registered through the Job Lab after being laid off from a warehousing job he'd held for six years. At 34 he had a solid work history, an up-to-date resume, strong English, and a clear idea of the work he wanted — and his Barrier Identification turned up nothing standing in his way. That's exactly the profile the DEA stream exists for: DEA is chosen when the client is already job-ready. So Jordan's determination assigned him the DEA stream, and his road skips the placement stretch entirely — a short action plan built with his career counsellor, then straight to employment.",
+        body: "Follow Jordan down the DEA road from the very beginning. His intake — he registered himself through the Job Lab — captured six years in warehousing, an up-to-date resume, strong English and a clear job target. The Service Navigator's Barrier Identification turned up nothing standing in his way, and the ERA agreed: already job-ready. That's exactly what the DEA stream is for, so the determination assigned Jordan the DEA stream and Terry Tester as his career counsellor — and from here, everything happens inside his file, so keep it open.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
       },
       {
-        title: "Jordan's program flow and completion",
-        body: "On the DEA road, the Program Flow tab does the heavy lifting: it walks the whole remaining journey step by step — the action plan, the job search and the employment entry, where the employer, job title, start date, hours and wage are recorded. Then the journey ends the way every journey ends: the program is marked complete, with the completion date recorded on the file — and the file keeps its full history for anyone who opens it later.",
+        title: "Jordan's action plan — built for his scenario",
+        demoClient: "jordan",
+        body: "Open the Action Plan step, and Jordan's plan is already there, exactly as Terry built it. The Intake Summary pulls his story together — laid off after six years, solid work history, strong English — and because he's on the DEA road the plan is a short list of Employment Development Activities with an anticipated date for each: his Job Search Workshop, his Interview Skills Workshop, and a round of one-on-one career counselling targeting warehouse and logistics postings. Notice the dates: they all fall inside the two-week window a DEA plan runs in, counted from the program start date at the top.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
-        target: { selector: '[data-tour="pw-tab-overview"]' }
+        target: { selector: '[data-tour="pw-plan-summary"]', additionalSelectors: ['[data-tour="pw-plan-items"]'] }
+      },
+      {
+        title: "The Program Progress tab — the clear picture",
+        demoClient: "jordan",
+        body: "Once the plan exists, the Program Progress tab becomes the clearest picture of what a client is doing and how they're getting there. Click Program Progress in the steps list — it's the last step on Jordan's file. Every plan item, barrier and placement in the journey appears here on one timeline, with milestones for the intake, the program start, the projected end, the completion and the 90-day follow-up.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        target: { selector: '[data-tour="pw-flow-progress"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
+      },
+      {
+        title: "How the timeline works",
+        demoClient: "jordan",
+        body: "Here's Jordan's timeline. The months run across the top, and each item is a bar from its start date to its deadline, colour-coded: purple for workshops and counselling, amber for barriers, green for placements. The status of each bar — Not Started, In Progress, Completed or Cancelled — is set by clicking it: the panel that opens lets you update the status, adjust the dates and add notes, and every change is logged to the progress notes and creates the matching Compass task, so the record in Compass stays in step with the portal. The Program Start date sits at the top too — click it to edit and the anticipated dates adjust with it.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        target: { selector: '[data-tour="pw-roadmap"]' }
+      },
+      {
+        title: "Jordan's road to completion",
+        demoClient: "jordan",
+        body: "This is what a journey looks like as it actually happens. Jordan's job-search workshop, interview-skills workshop and counselling each moved to In Progress and then Completed inside the two-week window — you can see the completed bars and the progress notes recording each one. Then employment: his employer, job title, start date, hours and wage are recorded on the Employment tab — Sample Solutions Ltd., Warehouse Associate. The program is marked complete with the completion date on the file, and the timeline ends with the 90-day follow-up milestone. A DEA road is short, but every step of it left a record.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        target: { selector: '[data-tour="pw-roadmap"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
       },
       {
         title: "Route 2 — the WD road with an internal placement: meet Sam Specimen",
         demoClient: "sam",
-        body: "Sam Specimen travels the Workforce Development road. His action plan includes an internal placement: real work experience inside Candora — cleaning at the ARC, food services, reception or childcare. It's the stepping stone between the action plan and a real employer.",
+        body: "Sam Specimen travels the Workforce Development road, and like every journey his started at intake — he registered through the Job Lab, and the Barrier Identification and ERA happened the way you saw earlier. The determination: WD, with Terry Tester as his career counsellor. Terry's action plan for Sam includes an internal placement — real work experience inside Candora: cleaning at the ARC, food services, reception or childcare. It's the stepping stone between the action plan and a real employer.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
@@ -812,7 +837,7 @@ export const TRAINING_MODULES = [
       {
         title: "Route 3 — the WD road with a work exposure placement: meet Casey Sample",
         demoClient: "casey",
-        body: "Casey Sample also travels the WD road, but her route runs through a work exposure placement with an external employer. That brings more moving parts along the way: Compass tasks, purchase requests for gear and courses, and the placement itself.",
+        body: "Casey Sample also travels the WD road, but her route runs through a work exposure placement with an external employer — and it started differently: a referral from a CEC at Alberta Supports, which the Service Navigator accepted in Compass before completing her intake by hand. Her Barrier Identification surfaced two barriers, transportation and finances, and after the ERA the determination was WD, with Terry Tester as her career counsellor. Her plan brings more moving parts along the way: Compass tasks, purchase requests for gear and courses, and the placement itself.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
@@ -828,6 +853,14 @@ export const TRAINING_MODULES = [
         body: "When the journey needs spending — safety boots, work clothes, an exposure course — it goes through a purchase request. Casey's is pending right now: each one travels a supervisor and ED approval chain before anything is bought, and they all collect on the Purchase Requests tab of your dashboard.",
         target: { selector: '[data-tour="pw-dash-tabs"]' },
         path: "/pathways/dashboard"
+      },
+      {
+        title: "Casey's progress tab",
+        demoClient: "casey",
+        body: "Casey's Program Progress tab tells the same story from the timeline's point of view. Her transportation and financial barriers sit on the timeline as amber bars with their own start and deadline dates, and her work exposure at Riverside Logistics is the green bar in progress toward its anticipated completion, alongside her exposure course and employment supports. The WD window runs about 16 weeks out from her program start. Click any bar to keep its status and dates current as Casey moves through the stages.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-flow-progress"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
       },
       {
         title: "Employment — recording outcomes",
