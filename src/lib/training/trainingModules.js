@@ -31,7 +31,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What is the Candora Staff Portal?",
-        body: "Watch this short explainer — it covers what the portal is and why you'll be in it every day. If you'd rather listen than read, turn on the voice-over with the speaker button.",
+        body: "Press Play to hear the introduction. You can pause, replay or move between scenes; each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
         introExplainer: true
       },
       {

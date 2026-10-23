@@ -127,7 +127,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     try { sessionStorage.setItem(presentationKey, v ? "1" : "0"); } catch { /* ignore */ }
   };
 
-  const cardW = presentation ? 580 : 440;
+  const cardW = step.introExplainer ? 760 : presentation ? 580 : 440;
   const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflowY: "auto", zIndex: 100 };
   if (rect) {
     const below = window.innerHeight - rect.top - rect.height - 20;
