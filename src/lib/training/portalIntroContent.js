@@ -71,9 +71,9 @@ const INTRO_SCENES_BY_MODULE = {
     },
     {
       kicker: 'Time & Money — Mini-Module 1',
-      title: 'Deadlines matter.',
+      title: 'Getting paid on time.',
       body: 'Finance uses your timesheet submissions to run payroll, so a late or missing timesheet means a late paycheque. The tour walks through each form step by step.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/0619a96c0_speech.mp3',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/3a80ac460_speech.mp3',
     },
   ],
   staffadmin_money: [
