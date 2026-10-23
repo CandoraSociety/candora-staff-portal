@@ -19,9 +19,9 @@ export default function PortalIntroExplainer({ moduleKey }) {
   const scene = scenes[index];
   const advance = () => index < scenes.length - 1 ? setIndex(index + 1) : setStarted(false);
   return (
-    <section aria-label="Module introduction" className="mb-3 rounded-xl border border-sidebar-border overflow-hidden">
+    <section aria-label="Module introduction" className="mb-2 rounded-xl border border-sidebar-border overflow-hidden">
       <PortalIntroScene scene={scene} index={index} total={scenes.length} time={time} />
-      <div className="bg-sidebar-accent text-sidebar-foreground p-3 space-y-3">
+      <div className="bg-sidebar-accent text-sidebar-foreground p-3 space-y-2">
         <audio
           ref={audioRef} key={playbackKey} controls playsInline autoPlay={started} preload="metadata"
           src={scene.audioUrl} aria-label={`Female narration: ${scene.title}`} className="w-full"

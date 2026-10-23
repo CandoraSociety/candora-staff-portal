@@ -222,9 +222,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
           </div>
 
           <div className={`flex-1 min-h-0 overflow-y-auto ${presentation ? "p-6" : "p-4"}`}>
-            <h3 className={`font-bold mb-2 ${presentation ? "text-2xl" : "text-base"}`} style={{ color: "hsl(45, 92%, 65%)" }}>
-              {step.title}
-            </h3>
+            {!step.introExplainer && (
+              <h3 className={`font-bold mb-2 ${presentation ? "text-2xl" : "text-base"}`} style={{ color: "hsl(45, 92%, 65%)" }}>
+                {step.title}
+              </h3>
+            )}
             {step.introExplainer && <PortalIntroExplainer moduleKey={module.key} />}
             {step.video && <TourVideo src={step.video} />}
             <p className={presentation ? "text-lg leading-relaxed" : "text-sm leading-relaxed"} style={{ color: "hsl(45, 45%, 88%)" }}>
