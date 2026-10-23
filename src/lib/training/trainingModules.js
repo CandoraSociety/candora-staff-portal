@@ -663,7 +663,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "One intake, many roads",
-        body: "Every journey in Pathways starts the same way administratively: intake, then barrier identification, the employment readiness assessment, and a determination. But from there the roads diverge, because the program has different trajectories a client can follow. This module walks three sample journeys — the DEA road, the WD road with an internal placement, and the WD road with a work exposure placement — but they're examples, not the only routes: each client's journey takes its own shape.",
+        body: "Even the way a journey starts differs a little: a client either fills in their own intake form on the job lab computers, or we complete the intake manually for a Compass referral. From there the roads converge — barrier identification, the employment readiness assessment, and a determination — and then diverge again, because the program has different trajectories a client can follow. This module walks three sample journeys — the DEA road, the WD road with an internal placement, and the WD road with a work exposure placement — but they're examples, not the only routes: each client's journey takes its own shape.",
         target: { selector: '[data-tour="pw-dash-tabs"]' },
         path: "/pathways/dashboard"
       },

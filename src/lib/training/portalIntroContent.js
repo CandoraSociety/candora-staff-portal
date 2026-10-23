@@ -152,8 +152,8 @@ const INTRO_SCENES_BY_MODULE = {
     {
       kicker: 'Pathways Client Journey',
       title: 'Welcome to the Client Journey.',
-      body: "Welcome to the Pathways Client Journey. This is the supplementary Pathways module. Every journey starts the same way, but the program has different trajectories, and this module walks three of them from intake to outcome, inside real demo files.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/c2eb211b8_speech.mp3',
+      body: "Welcome to the Pathways Client Journey. This is the supplementary Pathways module. Journeys start two ways: a self-filled intake form on the job lab computers, or an intake we complete manually for a Compass referral. From there the program has different trajectories, and this module walks three of them from intake to outcome, inside real demo files.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/496e2835d_speech.mp3',
     },
     {
       kicker: 'Pathways Client Journey',

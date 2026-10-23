@@ -159,7 +159,7 @@ export const FACILITATOR_GUIDE = {
     ],
     stepNotes: {
       "Welcome to the Client Journey": "Frame it: the Pathways tour showed where things live; this module walks three routes, each from intake to outcome.",
-      "One intake, many roads": "The key framing: administratively every journey starts the same way — intake, Barrier Identification, ERA, determination — but the trajectories differ. Draw the roads on a whiteboard if you can.",
+      "One intake, many roads": "The key framing: even the intake differs — a client self-filled form on the Job Lab, or an intake completed manually by the Service Navigator for a Compass referral. From there the roads converge (Barrier Identification, ERA, determination), then diverge by trajectory. Draw the roads on a whiteboard if you can.",
       "Every journey starts at Intake": "Two ways in — cover both: self-filled intake forms from the Job Lab, and Compass referrals. Reinforce the duplicate matcher: one client, one file.",
       "Intake, way one — the Job Lab": "The external intake portal runs on the job lab computers. The job assistant answers questions as the client fills the form out, reviews it, then submits — worth stressing there's no double entry from there.",
       "Intake, way two — Compass referrals": "Referrals arrive from a CEC at Alberta Supports or from the prime contractor. The accept-or-reject happens in Compass itself; if accepted, the Service Navigator completes the intake manually in Pathways CM.",
