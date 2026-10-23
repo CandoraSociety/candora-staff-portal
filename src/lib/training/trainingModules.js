@@ -26,7 +26,7 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to your Candora portal",
-        body: "This training runs in Training Mode: every record you see and touch is simulated demo data, so explore freely — nothing you change affects real client or staff information. This main page is your home base every time you sign in.",
+        body: "This training runs in Training Mode: every record you see and touch is simulated demo data, so explore freely — nothing you change affects real client or staff information. There's one exception, which you'll hit partway through: your e-signature, which you'll set up for real. This main page is your home base every time you sign in.",
         target: { selector: '[data-tour="dashboard-hero"]' }
       },
       {
@@ -81,7 +81,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Set up your e-signature — protect it first",
-        body: "Candora signs documents digitally, so let's actually set yours up now. In the E-Signature portal, choose a 4-digit PIN or a password, type it into both fields, and press Save & continue. This is the code you'll enter every time you sign a timesheet approval, reimbursement or document — so pick something you'll remember.",
+        body: "Candora signs documents digitally, so you'll set yours up now — and this is the one part of training that's real: the PIN and signature you create here stay on your account after training ends. In the E-Signature portal, choose a 4-digit PIN or a password, type it into both fields, and press Save & continue. This is the code you'll enter every time you sign a timesheet approval, reimbursement or document — so pick something you'll remember.",
         path: "/e-signature",
         target: { selector: '[data-tour="esign-security"]' }
       },
@@ -92,7 +92,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Save it and make it active",
-        body: "Press Save signature. Saving also makes it your active signature — it appears in My signatures with the Active badge, and that's the one used whenever something needs your approval. You can create as many as you like and switch the active one anytime. Until this is done, a reminder to set up your signature stays on your dashboard.",
+        body: "Press Save signature. Saving also makes it your active signature — it appears in My signatures with the Active badge, and that's the one used whenever something needs your approval. Like the PIN, this is real and stays with your account after training. You can create as many as you like and switch the active one anytime. Until this is done, a reminder to set up your signature stays on your dashboard.",
         target: { selector: '[data-tour="esign-save"]' }
       },
       {
@@ -114,7 +114,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real. When you finish this module, the Time & Money series is next — two mini-modules covering time off and timesheets, then receipts and reimbursements."
+        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real — except the e-signature you just set up, which stays on your account. When you finish this module, the Time & Money series is next — two mini-modules covering time off and timesheets, then receipts and reimbursements."
       }
     ],
     tasks: [
@@ -128,7 +128,7 @@ export const TRAINING_MODULES = [
       {
         id: "dash-esign",
         title: "Set up your e-signature",
-        body: "Open the E-Signature portal and create your demo signature — draw it, type it, or upload an image. This is how you'll sign real documents later.",
+        body: "Open the E-Signature portal and create your signature — draw it, type it, or upload an image. This is the one real thing in training: what you save becomes your actual signature for signing documents.",
         hint: "Go to E-Signature, set up your PIN or password first if you haven't, then use the editor (type, draw or upload) and press Save signature to make it active.",
         path: "/e-signature",
         verify: { kind: "self" }

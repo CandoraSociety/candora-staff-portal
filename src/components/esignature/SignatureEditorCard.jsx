@@ -11,6 +11,7 @@ import DrawSignatureCanvas from './DrawSignatureCanvas';
 import UploadSignatureEditor from './UploadSignatureEditor';
 import { SIGNATURE_FONTS } from '@/lib/esignature';
 import { composeSignedImage } from '@/lib/esignatureRender';
+import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { PenTool, Save } from 'lucide-react';
 
 const SIG_FIELDS = [
@@ -105,10 +106,7 @@ export default function SignatureEditorCard({ user, profile, editingSig, nextInd
     try {
       let signature_url = editingSig?.signature_url || null;
       if (tab !== 'typed' && imageDataUrl) {
-        const blob = await (await fetch(imageDataUrl)).blob();
-        const file = new File([blob], 'signature.png', { type: 'image/png' });
-        const res = await base44.integrations.Core.UploadPublicFile({ file });
-        signature_url = res.file_url;
+        signature_url = await uploadSignatureImage(imageDataUrl);
       }
       const payload = {
         ...signaturePayload(signature),

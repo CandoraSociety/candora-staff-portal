@@ -24,6 +24,15 @@ export const setTestMode = (on) => {
 
 let realClient = null;
 let realEntitiesRef = null;
+let realIntegrationsRef = null;
+
+// Public-storage upload that bypasses the Test Mode simulation. Used for
+// e-signature images: the learner's signature setup is one of the few things
+// that is REAL during training and persists after the session ends, so the
+// uploaded image must be a real, permanent URL — not the simulated pixel.
+export async function realUploadPublicFile(file) {
+  return realIntegrationsRef.Core.UploadPublicFile({ file });
+}
 
 // ── In-memory database ─────────────────────────────────────────────────────
 const db = new Map();
@@ -436,8 +445,11 @@ const entitiesProxy = new Proxy({}, {
     if (typeof name !== 'string') return undefined;
     // Training progress always persists to the REAL database, even while the
     // rest of the app runs on simulated Test Mode data — so completed
-    // training survives the end of a training session.
-    if (name === 'TrainingProgress' && realEntitiesRef?.TrainingProgress) return realEntitiesRef.TrainingProgress;
+    // training survives the end of a training session. E-signature records
+    // persist too: the PIN and signature a learner sets up during training is
+    // their real, usable e-signature — not something they must redo later.
+    const PERSIST_ENTITIES = new Set(['TrainingProgress', 'ESignatureProfile', 'SavedESignature']);
+    if (PERSIST_ENTITIES.has(name) && realEntitiesRef?.[name]) return realEntitiesRef[name];
     if (!target[name]) target[name] = makeCollection(name);
     return target[name];
   },
@@ -533,6 +545,7 @@ const analyticsSim = { track: () => {} };
 export function installTestModeInterceptor(client) {
   realClient = client;
   realEntitiesRef = client.entities;
+  realIntegrationsRef = client.integrations;
   const swap = (prop, value) => {
     try {
       Object.defineProperty(client, prop, { get: () => value, configurable: true });

@@ -266,7 +266,7 @@ export default function TrainingPill() {
         open={confirmExit}
         onOpenChange={(o) => !o && setConfirmExit(false)}
         title="Exit Training Mode?"
-        description="Your training progress is saved; any demo data you created is discarded."
+        description="Your training progress and e-signature are saved; any demo data you created is discarded."
         confirmLabel="Exit"
         destructive
         onConfirm={confirmExitTraining}

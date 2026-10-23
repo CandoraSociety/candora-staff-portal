@@ -23,12 +23,12 @@ export const FACILITATOR_GUIDE = {
       "Pinning your favourites": "Demonstrate live: hover a card, click the pin, watch the banner appear at the top. Common question: 'Can I pin more than one?' — no, one pinned portal at a time.",
       "Notifications and approvals": "This is the big one for supervisors: timesheet, vacation and reimbursement approvals surface here. For most staff, it's where payment notifications appear. Nothing needs to be 'checked' — it finds them.",
       "Turning widgets on and off": "Let people try this one themselves while you watch — it's low-risk and personal. Point out that the dedicated Dashboard Widgets module covers what each widget does in detail; today only show them the toggle itself.",
-      "Setting up your e-signature": "Everyone must complete this before signing real documents — it's also a practice task, so don't do it for them here. Mention all three methods (draw, type, upload) and that the reminder disappears once it's set.",
+      "Setting up your e-signature": "Everyone must complete this before signing real documents — it's also a practice task, so don't do it for them here. Unlike the rest of the session, this setup is REAL and persists after training: tell the room, so they pick a PIN they'll actually remember. Mention all three methods (draw, type, upload) and that the reminder disappears once it's set.",
       "Time to practice": "Switch the room to hands-on. Point at the checklist: the e-signature setup is the must-do. Circulate while they work. Mention Part 2 — Time & Money — as the natural next module.",
     },
     practiceNotes: {
       "dash-pin": "Watch that people find the pin — it only appears on hover.",
-      "dash-esign": "Must-complete before the session ends — verify each person's signature exists.",
+      "dash-esign": "Must-complete before the session ends — verify each person's signature exists. Remind them it's the one real thing they set up today, so the PIN needs to stick.",
     },
     tips: [
       "Have everyone signed in on their own device before you start the tour — the tour is better watched on the projector, practice is done on their screen.",
