@@ -59,21 +59,27 @@ const INTRO_SCENES_BY_MODULE = {
   staffadmin: [
     {
       kicker: 'Time & Money — Mini-Module 1',
-      title: 'Everyday time admin.',
-      body: 'This module covers the everyday side of working at Candora: booking time off, logging sick or personal days, and submitting your timesheet each pay period.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/61b9144b8_speech.mp3',
+      title: 'Requesting time off.',
+      body: 'Vacation and other time off is booked on the Vacation and Time Off Request page. Fill in your dates, submit, and your request goes straight to your supervisor for approval, with its status tracked right on the page.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/b020f6e9f_speech.mp3',
     },
     {
       kicker: 'Time & Money — Mini-Module 1',
-      title: 'Requests and approvals.',
-      body: 'Time off requests go straight to your supervisor, while sick and personal days are logged immediately. Approved time off then fills into your timesheet automatically.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/b1068288d_speech.mp3',
+      title: 'Sick time and personal days.',
+      body: 'Sick time and personal days are logged on their own page. They need no approval: record the day and it is logged immediately, and like approved time off, it fills into the Paid Leave column of your timesheet automatically.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/cacfabe7f_speech.mp3',
     },
     {
       kicker: 'Time & Money — Mini-Module 1',
       title: 'Submitting your timesheet.',
-      body: 'Finance uses your timesheet submissions to run payroll, so a late or missing timesheet means a late paycheque. The tour walks through each form step by step.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/47df9ed5e_speech.mp3',
+      body: 'Each pay period you enter your regular hours, plus any additional hours beyond your schedule, then submit for your supervisor to approve. Finance uses these submissions to run payroll.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/cec3e016a_speech.mp3',
+    },
+    {
+      kicker: 'Time & Money — Mini-Module 1',
+      title: 'The team schedule.',
+      body: "The team schedule shows everyone's approved absences side by side, so you can plan your time off around coverage. And whenever a request is approved, a notification appears automatically on your main dashboard.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/f8697d962_speech.mp3',
     },
   ],
   staffadmin_money: [
