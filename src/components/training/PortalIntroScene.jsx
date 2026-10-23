@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { PORTAL_INTRO_LOGO } from '@/lib/training/portalIntroContent';
 
@@ -11,27 +12,50 @@ const wordUp = {
 };
 
 export default function PortalIntroScene({ scene, index, total }) {
+  const first = index === 0;
+  // Scene 1: the logo fades in big and centered, then shrinks into its spot
+  // above the text. Later scenes keep the logo in place.
+  const [settled, setSettled] = useState(!first);
+  useEffect(() => {
+    if (first) {
+      setSettled(false);
+      const t = setTimeout(() => setSettled(true), 1700);
+      return () => clearTimeout(t);
+    }
+    setSettled(true);
+  }, [first]);
+
   return (
-    <div className="portal-intro-bg relative overflow-hidden text-sidebar-foreground px-5 py-6 sm:px-8 text-center">
+    <div className="portal-intro-bg relative overflow-hidden text-sidebar-foreground px-5 pt-6 pb-6 sm:px-8 text-center">
       <div className="portal-intro-blob portal-intro-blob-gold" aria-hidden="true" />
       <div className="portal-intro-blob portal-intro-blob-blue" aria-hidden="true" />
-      <div className="relative mx-auto mb-5 h-24 w-24 sm:h-28 sm:w-28">
-        <div className="portal-intro-rays" aria-hidden="true" />
-        <motion.img
+
+      <motion.div
+        initial={{ opacity: 0, top: '42%', scale: 1 }}
+        animate={{
+          opacity: 1,
+          scale: settled ? 0.5 : 1,
+          top: settled ? '72px' : '42%',
+          transition: settled
+            ? { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
+            : { duration: 0.7, ease: 'easeOut' },
+        }}
+        style={{ x: '-50%', y: '-50%' }}
+        className="absolute left-1/2 z-10 h-[200px] w-[200px] pointer-events-none"
+      >
+        <img
           src={PORTAL_INTRO_LOGO}
           alt="Candora's original sunflower logo"
-          initial={{ opacity: 0, scale: 0.5, rotate: -14 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 120, damping: 12 }}
-          className="portal-intro-logo relative h-full w-full object-contain"
+          className="portal-intro-logo h-full w-full object-contain"
         />
-      </div>
+      </motion.div>
+
       <motion.div
         key={index}
         initial="hidden"
         animate="show"
-        variants={{ show: { transition: { staggerChildren: 0.35, delayChildren: 0.15 } } }}
-        className="relative min-w-0"
+        variants={{ show: { transition: { staggerChildren: 0.35, delayChildren: first ? 2.2 : 0.15 } } }}
+        className="relative min-w-0 pt-[140px]"
       >
         <motion.p variants={fadeUp} className="text-xs font-semibold uppercase tracking-widest text-sidebar-primary">{scene.kicker}</motion.p>
         <motion.h4

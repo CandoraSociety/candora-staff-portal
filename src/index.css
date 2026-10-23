@@ -142,23 +142,6 @@
   from { transform: translate(0, 0) scale(1); }
   to { transform: translate(-26px, 20px) scale(1.08); }
 }
-.portal-intro-rays {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 300px;
-  height: 300px;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: repeating-conic-gradient(from 0deg, hsl(45, 92%, 53%, 0.20) 0deg 3deg, transparent 3deg 15deg);
-  filter: blur(0.5px);
-  animation: portal-intro-rays-spin 50s linear infinite;
-  pointer-events: none;
-}
-@keyframes portal-intro-rays-spin {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
 .portal-intro-logo {
   animation: portal-intro-float 7s ease-in-out infinite;
 }
