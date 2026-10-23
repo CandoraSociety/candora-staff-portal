@@ -675,18 +675,22 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Intake — the Job Lab",
-        body: "The first way: job seekers come to the computer lab and fill out the intake form themselves on our job lab computers. This runs on the external intake portal connected to Pathways: the job assistant can answer questions along the way, then reviews the self-filled form and submits it — and the client lands in the Intake section here in Pathways.",
-        path: "/pathways/intake"
+        body: "The first way: job seekers come to the computer lab and fill out the intake form themselves on our job lab computers. This runs on the external intake portal connected to Pathways: the job assistant can answer questions along the way, then reviews the self-filled form and submits it — and the client lands right here, in the New Intake — Awaiting Assessment list. The Self-Reg column marks these self-filled forms, and this highlighted demo client arrived exactly that way.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-general"]' }
       },
       {
         title: "Intake — Compass referrals",
-        body: "The second way is a referral through Compass, the Government of Alberta's database — and these arrive from two places: directly from a CEC at Alberta Supports, and from the prime contractor. The Service Navigator accepts or rejects the referral in Compass itself. If the referral is accepted, the Service Navigator completes the intake manually here in the Pathways CM portal, and the client joins the Intake section like any other.",
-        path: "/pathways/intake"
+        body: "The second way is a referral through Compass, the Government of Alberta's database — and these arrive from two places: directly from a CEC at Alberta Supports, and from the prime contractor. They sit under the CEC Referral badge here, in the same New Intake list. The Service Navigator accepts or rejects the referral in Compass itself. If the referral is accepted, the Service Navigator completes the intake manually in the Pathways CM portal, and the client joins the list like any other.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-cec"]' }
       },
       {
         title: "Barrier Identification — the Service Navigator",
-        body: "Once intake is done, the client sits in the Intake section until the Service Navigator does the Barrier Identification — recording the barriers that set the direction of everything that follows. It's the navigator who does this step, and keeping the record current is what lets any teammate pick up the file later.",
-        path: "/pathways/intake"
+        body: "Once intake is done, the client sits in the Intake section until the Service Navigator does the Barrier Identification — recording the barriers that set the direction of everything that follows. The tool for it is the BIT, the Barrier Identification Tool, and it lives on the client's file: open Casey's profile and click the BIT / ERA tab highlighted here. Casey's file shows it filled in — her confirmed barriers, the challenges behind each one, and the actions attached to them. Keeping this record current is what lets any teammate pick up the file later.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-tab-bit"]' }
       },
       {
         title: "The Employment Readiness Assessment (ERA)",

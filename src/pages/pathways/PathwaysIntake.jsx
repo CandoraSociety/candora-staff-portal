@@ -278,7 +278,7 @@ export default function PathwaysIntake() {
 
               {/* CEC Referral subsection */}
               {cecPending.length > 0 && (
-                <div>
+                <div data-tour="pw-intake-cec">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
                       CEC Referral
@@ -290,7 +290,7 @@ export default function PathwaysIntake() {
               )}
 
               {/* General intake subsection */}
-              <div>
+              <div data-tour="pw-intake-general">
                 {cecPending.length > 0 && (
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-semibold text-slate-600">General Intake</span>
