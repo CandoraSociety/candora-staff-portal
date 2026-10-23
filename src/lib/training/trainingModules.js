@@ -652,7 +652,7 @@ export const TRAINING_MODULES = [
   {
     key: "pathways_journey",
     title: "Pathways Client Journey",
-    shortTitle: "Client Journey",
+    shortTitle: "Pathways Client Journey",
     blurb: "The supplementary Pathways module: follow three demo clients — mid-journey, completed and waitlisted — through every stage of the client journey, inside their real files.",
     path: "/pathways/dashboard",
     steps: [
