@@ -329,7 +329,7 @@ export default function PathwaysWorkerDashboard() {
         )}
 
         {/* Tab switcher */}
-        <div className="flex gap-1 mb-5 bg-slate-100 rounded-lg p-1 w-fit">
+        <div data-tour="pw-dash-tabs" className="flex gap-1 mb-5 bg-slate-100 rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab("clients")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -532,7 +532,7 @@ export default function PathwaysWorkerDashboard() {
               )}
 
               {/* Placement sub-tabs */}
-              <div className="flex gap-1 mb-4 border-b border-slate-200">
+              <div data-tour="pw-placement-tabs" className="flex gap-1 mb-4 border-b border-slate-200">
                 {[
                   { id: "all", label: "All Clients", count: clients.filter(c => c.service_type === "direct_to_employment" || c.service_type === "pathways").length },
                   { id: "internal_training", label: "Internal Training", count: clients.filter(c => c.internal_placement && c.internal_placement !== "none").length },

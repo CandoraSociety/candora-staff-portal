@@ -547,7 +547,7 @@ export const TRAINING_MODULES = [
     key: "pathways",
     title: "Pathways Case Management",
     shortTitle: "Pathways",
-    blurb: "Employment-focused case management: your caseload, client files, Compass tasks and purchase requests.",
+    blurb: "Employment-focused case management: your caseload, client files, the client journey from intake to outcome, Compass tasks and purchase requests.",
     path: "/pathways/dashboard",
     steps: [
       {
@@ -568,14 +568,69 @@ export const TRAINING_MODULES = [
         path: "/pathways/dashboard"
       },
       {
+        title: "The dashboard tabs",
+        body: "Along the top of My Clients, the tab bar switches your whole view: My Clients is your caseload, Compass Queue lists the entry tasks waiting on you, Purchase Requests collects the spending requests awaiting approval, and the Monthly Narrative Report builds your monthly summary. The little amber badges count what's waiting.",
+        target: { selector: '[data-tour="pw-dash-tabs"]' },
+        path: "/pathways/dashboard"
+      },
+      {
+        title: "Your caseload, in sections",
+        body: "Your client list is grouped into collapsible cards — DEA, WD, Casual and Rejected — each with its own sub-sections, so you can fold away what you're not working on. The placement sub-tabs (All Clients, Internal Training, Work Exposure) filter the same list down to where each client is in their journey, and the quick cards on this page keep your recently viewed files and pending purchase requests one click away.",
+        target: { selector: '[data-tour="pw-placement-tabs"]' },
+        path: "/pathways/dashboard"
+      },
+      {
         title: "The Master List",
         body: "Every client in Pathways lives in the Master List. Search by name, filter by program or status, and click any client to open their full file.",
         target: { selector: 'a[href="/pathways/master"]' },
         path: "/pathways/master"
       },
       {
-        title: "Client profiles",
-        body: "A client profile holds everything in one place: demographics, barriers and action plans, employment details, workshops, notes and history. Staff across the team can pick up exactly where you left off."
+        title: "Open a client file",
+        body: "The best way to learn Pathways is inside a real file. Click any client row here to open their full profile — Casey Sample or Jordan Example are good demo files. The next slides walk you through that file and the client's journey inside it.",
+        target: { text: "Casey Sample" },
+        path: "/pathways/master"
+      },
+      {
+        title: "The client file",
+        body: "You're now inside the client's file. The header shows their name, stream badge and Compass HSID, with Schedule Appointment and Close File actions on the right. Below it, the tab bar is the map to the whole file — we'll walk each tab in turn. If you haven't opened a file yet, click any client on the Master List and the tour will follow you in.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-profile-tabs"]' }
+      },
+      {
+        title: "Program Flow — the journey map",
+        body: "Program Flow is the heart of the file: a guided roadmap that starts with barrier identification and the employment action plan, then tracks internal placements, work exposure and employment supports as the client moves along it — all the way to their determination and program completion. Click the tab to see this client's roadmap steps.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-tab-flow"]' }
+      },
+      {
+        title: "Client Overview — the file's details",
+        body: "Click Client Overview and the file opens into cards: Demographics, who the client is and how to reach them; Case Info, their status, stream and dates; Career Background, their objectives and employment history; and the Compass Entry Verification card, which confirms the file has been entered into Compass.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-tab-overview"]' }
+      },
+      {
+        title: "Employment",
+        body: "The Employment tab records the client's work placements, training and employment details — where you capture the outcomes that funder reporting counts on. Keep it current as each placement progresses.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-tab-employment"]' }
+      },
+      {
+        title: "Referrals",
+        body: "The Referrals tab tracks movement in and out of your door: where the client was referred from, and where you've referred them on to. Each referral records its status, so nothing falls through between agencies.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-tab-referrals"]' }
+      },
+      {
+        title: "BIT / ERA and Stream Switches",
+        body: "The BIT and ERA assessments live on their own tab, with their results kept in the file. Stream Switches records every move between program streams — its amber badge counts them, so a switched file never goes unnoticed.",
+        routePrefix: "/pathways/client/",
+        target: { selector: '[data-tour="pw-tab-bit"]', additionalSelectors: ['[data-tour="pw-tab-switches"]'] }
+      },
+      {
+        title: "A client's journey, start to finish",
+        body: "Put together, here's the journey: a client arrives through Intake — checked against the central database for duplicates. You identify barriers and build their action plan in Program Flow. Compass tasks and purchase requests track the funder steps and the spending, placements and employment details record progress, referrals connect outside supports, and the file closes with a determination once the client reaches their outcome. Every piece lives in this one file, and the team can pick it up exactly where you left off.",
+        routePrefix: "/pathways/client/"
       },
       {
         title: "Intake — adding a client",
@@ -612,8 +667,8 @@ export const TRAINING_MODULES = [
       {
         id: "pw-profile",
         title: "Open a client's full profile",
-        body: "From the Master List, search for a client and open their profile. Explore the barriers, action plan and employment sections.",
-        hint: "Go to the Master List, type a name in the search box and click the client's row to open their full file.",
+        body: "From the Master List, search for a client and open their profile. Click through every tab — Program Flow, Client Overview, Employment, Referrals, BIT / ERA and Stream Switches.",
+        hint: "Go to the Master List, type a name in the search box and click the client's row to open their full file, then click through the tabs across the top.",
         path: "/pathways/master",
         verify: { kind: "self" }
       },

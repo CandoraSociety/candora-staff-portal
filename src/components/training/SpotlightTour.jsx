@@ -43,6 +43,13 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const steps = module?.steps || [];
   const step = steps[index];
   const path = spotlightPath(module, index);
+  // Steps that live on dynamic pages (a client file sits at /pathways/client/:id)
+  // declare a routePrefix instead of a fixed path: the slide stays on whichever
+  // matching page the learner opened, and falls back to the last fixed route
+  // when none is open.
+  const onRoute = step?.routePrefix
+    ? location.pathname.startsWith(step.routePrefix)
+    : location.pathname === path;
   // Every step that lands on a page also highlights the sidebar tab that page
   // lives under, so learners see where the function lives in the navigation.
   // Steps that already list the nav item (or target it directly) are skipped.
@@ -57,7 +64,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // around that sidebar item, which is far too short for the scene and forced
   // the slide to scroll. Intro steps get no spotlight; the card centers instead.
   const isIntro = !!step?.introExplainer;
-  const focus = useSpotlightTarget(open && !isIntro && location.pathname === path, target, `${module?.key}:${index}`);
+  const focus = useSpotlightTarget(open && !isIntro && onRoute, target, `${module?.key}:${index}`);
   const rect = isIntro ? null : focus?.rect || null;
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
@@ -116,7 +123,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // without the tour snapping them back to the slide's route.
   const routedStep = useRef(null);
   useEffect(() => {
-    if (!open || !step || location.pathname === path) return;
+    if (!open || !step || onRoute) return;
     const stepId = `${module?.key}:${index}`;
     if (routedStep.current === stepId) return;
     routedStep.current = stepId;

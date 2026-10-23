@@ -41,8 +41,9 @@ const SECTION_STARTS = {
   },
   pathways: {
     "Welcome to Pathways": "Overview & caseload",
-    "Client profiles": "Client files & intake",
-    "Compass tasks": "Tasks & requests",
+    "The dashboard tabs": "Dashboard tabs & sections",
+    "The Master List": "Client files & the client journey",
+    "Intake — adding a client": "Tasks & requests",
     "Time to practice": "Practice",
   },
   rc: {

@@ -240,13 +240,13 @@ export default function PathwaysClientProfile() {
       {/* Tabs */}
       <div className="p-6">
         <Tabs defaultValue="program_flow" className="space-y-6">
-          <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
-            <TabsTrigger value="program_flow">Program Flow</TabsTrigger>
-            <TabsTrigger value="overview">Client Overview</TabsTrigger>
-            <TabsTrigger value="employment">Employment</TabsTrigger>
-            <TabsTrigger value="referrals">Referrals</TabsTrigger>
-            <TabsTrigger value="assessments">BIT / ERA</TabsTrigger>
-            <TabsTrigger value="stream_switches" className="relative">
+          <TabsList data-tour="pw-profile-tabs" className="mb-6 flex flex-wrap gap-1 h-auto">
+            <TabsTrigger value="program_flow" data-tour="pw-tab-flow">Program Flow</TabsTrigger>
+            <TabsTrigger value="overview" data-tour="pw-tab-overview">Client Overview</TabsTrigger>
+            <TabsTrigger value="employment" data-tour="pw-tab-employment">Employment</TabsTrigger>
+            <TabsTrigger value="referrals" data-tour="pw-tab-referrals">Referrals</TabsTrigger>
+            <TabsTrigger value="assessments" data-tour="pw-tab-bit">BIT / ERA</TabsTrigger>
+            <TabsTrigger value="stream_switches" data-tour="pw-tab-switches" className="relative">
               Stream Switches
               {client.program_stream_switches?.length > 0 && (
                 <span className="ml-1.5 bg-amber-400 text-amber-900 text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">
