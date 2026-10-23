@@ -674,12 +674,12 @@ export const TRAINING_MODULES = [
         path: "/pathways/intake"
       },
       {
-        title: "Intake, way one — the Job Lab",
+        title: "Intake — the Job Lab",
         body: "The first way: job seekers come to the computer lab and fill out the intake form themselves on our job lab computers. This runs on the external intake portal connected to Pathways: the job assistant can answer questions along the way, then reviews the self-filled form and submits it — and the client lands in the Intake section here in Pathways.",
         path: "/pathways/intake"
       },
       {
-        title: "Intake, way two — Compass referrals",
+        title: "Intake — Compass referrals",
         body: "The second way is a referral through Compass, the Government of Alberta's database — and these arrive from two places: directly from a CEC at Alberta Supports, and from the prime contractor. The Service Navigator accepts or rejects the referral in Compass itself. If the referral is accepted, the Service Navigator completes the intake manually here in the Pathways CM portal, and the client joins the Intake section like any other.",
         path: "/pathways/intake"
       },
