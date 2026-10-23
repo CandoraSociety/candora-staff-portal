@@ -393,12 +393,12 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Save the entry",
-        body: "Press the check mark to save the entry into the table, then repeat — Add Receipt Entry — for each separate receipt. You can edit or delete a saved entry before submitting, and the totals at the bottom keep a running count of everything waiting to be claimed.",
+        body: "Press the check mark to save the entry, then repeat — Add Receipt Entry — for each separate receipt. Saved entries sit in the Not Submitted queue, where you can edit or delete them, and the totals at the bottom keep a running count. You never submit receipts one at a time: they wait in the queue until you submit them together as one batch.",
         target: { text: "Add Receipt Entry" }
       },
       {
         title: "Submit for Reimbursement",
-        body: "When your entries are ready, press Submit for Reimbursement: they go together as one form, and the total at the bottom of the table is what you're claiming. It travels to your supervisor and then Finance, and once it's paid you're e-transferred the total. You can watch its progress on this page under Submitted Reimbursements — pending, approved, then Paid.",
+        body: "When your entries are ready, press Submit for Reimbursement: everything waiting in the queue compiles into one form — you never submit receipts one at a time. Check who the cheque is payable to and your e-transfer email, then add your e-signature, which verifies with your e-signature PIN or password. The signed form goes to your supervisor and then Finance, and once it's paid you're e-transferred the total. Watch its progress on this page under Submitted Reimbursements — pending, approved, then Paid.",
         target: { text: "Submit for Reimbursement" }
       },
       {
@@ -415,7 +415,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Submit Receipts to Finance",
-        body: "Press Submit Receipts to Finance when your entries are done — they go as one monthly batch, and Finance reconciles each receipt against the statement. If a receipt arrives after you've already submitted, just add it and submit again next time.",
+        body: "Just like reimbursements, card receipts queue up as you enter them and submit as one monthly batch. Press Submit Receipts to Finance when your entries are done, add your e-signature, and Finance reconciles each receipt against the statement. If a receipt arrives after you've already submitted, just add it and submit again next time.",
         target: { text: "Submit Receipts to Finance" }
       },
       {
@@ -436,7 +436,7 @@ export const TRAINING_MODULES = [
         title: "Submit a reimbursement",
         body: "Add an expense entry (attach a receipt if you like) and submit a reimbursement request for it.",
         path: "/reimbursement-requests",
-        hint: "Open Reimbursement Requests, click Add Receipt Entry, fill in and save the entry with the check mark, then press Submit for Reimbursement.",
+        hint: "Open Reimbursement Requests, click Add Receipt Entry, fill in and save the entry with the check mark, then press Submit for Reimbursement and add your e-signature.",
         verify: { kind: "created", entity: "StaffReimbursementRequest" }
       },
       {
@@ -444,7 +444,7 @@ export const TRAINING_MODULES = [
         title: "Upload a MasterCard receipt",
         body: "Upload a receipt for a purchase made on the Candora MasterCard.",
         path: "/candora-cc-receipts",
-        hint: "Open Candora MasterCard Receipts, click Add Receipt Entry, fill in the details and press Submit Receipts to Finance.",
+        hint: "Open Candora MasterCard Receipts, click Add Receipt Entry, fill in the details and press Submit Receipts to Finance — the batch is signed with your e-signature.",
         verify: { kind: "created", entity: "CCReceiptSubmission" }
       }
     ]
