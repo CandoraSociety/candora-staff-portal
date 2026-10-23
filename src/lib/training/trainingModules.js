@@ -729,7 +729,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The Employment Readiness Assessment (ERA)",
-        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. The BIT you just saw is completed in the portal, but the ERA is completed in Compass. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you mark it complete in Compass. Once the BIT is completed and the ERA is marked complete, the client file moves out of Awaiting Assessment and into the Assessment Complete — Awaiting Determination section of the Intake page, ready for the next step.",
+        body: "Immediately after Barrier Identification comes the Employment Readiness Assessment — the ERA. The BIT you just saw is completed in the portal, but the ERA is completed in Compass. And it depends on how the client arrived: Compass referrals usually already have their ERA completed before they reach us — sometimes the client's full story or the Barrier Identification makes us disagree with the result, but typically we would not conduct another ERA. Either way, once it's done you mark it complete in Compass. Once the BIT is completed and the ERA is marked complete, the client file moves out of Awaiting Assessment and into the Assessment Complete — Awaiting Determination section of the Intake page, ready for the next step. One more question is answered before the assessment closes: does this client need barriers addressed by a service navigator? If the answer is yes, a Service Navigator is selected for the client right there.",
         target: { selector: '[data-tour-path="/pathways/compass"]' },
         path: "/pathways/compass"
       },
@@ -740,6 +740,19 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-intake-determination"]' }
       },
       {
+        title: "After the determination — where the client appears",
+        body: "Once the determination is made and the career counsellor is assigned, the client leaves the Intake page and appears wherever their workers will pick them up: in the Master List, and on the career counsellor's My Dashboard in the Not Started section of their client list. And if a Service Navigator was selected back in the assessment, the client appears on the Service Navigator's My Dashboard too — so both workers see the file in their own queue from day one.",
+        path: "/pathways/dashboard",
+        target: { selector: '[data-tour="pw-placement-tabs"]', additionalSelectors: ['[data-tour="pw-dash-tabs"]'] }
+      },
+      {
+        title: "The Employment Action Plan",
+        body: "Before any of the routes get under way, the career counsellor builds the employment action plan. Select the client from the Not Started section of My Clients and you're prompted to complete the action plan: it sets out the client's employment goal, the barriers to work through, and the steps to employment — the roadmap the whole journey follows. And it's recorded twice: the action plan must be completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-profile-tabs"]' }
+      },
+      {
         title: "Route 1 — the DEA road: meet Jordan Example",
         demoClient: "jordan",
         body: "Jordan Example registered through the Job Lab after being laid off from a warehousing job he'd held for six years. At 34 he had a solid work history, an up-to-date resume, strong English, and a clear idea of the work he wanted — and his Barrier Identification turned up nothing standing in his way. That's exactly the profile the DEA stream exists for: DEA is chosen when the client is already job-ready. So Jordan's determination assigned him the DEA stream, and his road skips the placement stretch entirely — a short action plan built with his career counsellor, then straight to employment.",
@@ -748,8 +761,8 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
       },
       {
-        title: "Jordan's employment and completion",
-        body: "On the DEA road the Employment tab does the heavy lifting: employer, job title, start date, hours and wage are all recorded there. Then the journey ends the way every journey ends: the program is marked complete, with the completion date recorded on the file — and the file keeps its full history for anyone who opens it later.",
+        title: "Jordan's program flow and completion",
+        body: "On the DEA road, the Program Flow tab does the heavy lifting: it walks the whole remaining journey step by step — the action plan, the job search and the employment entry, where the employer, job title, start date, hours and wage are recorded. Then the journey ends the way every journey ends: the program is marked complete, with the completion date recorded on the file — and the file keeps its full history for anyone who opens it later.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
         target: { selector: '[data-tour="pw-tab-overview"]' }
