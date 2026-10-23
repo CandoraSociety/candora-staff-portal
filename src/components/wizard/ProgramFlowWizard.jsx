@@ -439,7 +439,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {!activeStep ? (
-          <div className="text-center py-16">
+          <div data-tour="pw-flow-create-plan" className="text-center py-16">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <p className="text-sm text-slate-500 mb-4">No action plan has been created yet.</p>
             <Button onClick={() => setActiveStep('employment_action_plan')}>

@@ -171,7 +171,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
       )}
 
       {/* Intake Summary */}
-      <Card className="border-blue-200 bg-blue-50/50">
+      <Card data-tour="pw-plan-summary" className="border-blue-200 bg-blue-50/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-xs font-semibold text-blue-800">Intake Summary (Auto-populated)</CardTitle>
         </CardHeader>
@@ -197,7 +197,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
 
       {/* DEA mode */}
       {isDEA && (
-        <Card>
+        <Card data-tour="pw-plan-items">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">Employment Development Activities (EDA)</CardTitle>
             <div className="text-xs text-muted-foreground">Timeline: {programStartDate || 'TBD'} → {deaEndDate} (14-day program)</div>
@@ -244,7 +244,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
 
       {/* Pathways/other mode — category checkboxes */}
       {!isDEA && (
-        <div className="space-y-4">
+        <div data-tour="pw-plan-items" className="space-y-4">
           {CATEGORIES.map(cat => {
             const catItems = availableItems.filter(i => i.category === cat);
             if (catItems.length === 0) return null;

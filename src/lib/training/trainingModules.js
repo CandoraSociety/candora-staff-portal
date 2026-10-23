@@ -747,10 +747,17 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The Employment Action Plan",
-        body: "Before any of the routes get under way, the career counsellor builds the employment action plan. Select the client from the Not Started section of My Clients and you're prompted to complete the action plan: it sets out the client's employment goal, the barriers to work through, and the steps to employment — the roadmap the whole journey follows. And it's recorded twice: the action plan must be completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
+        body: "Before any of the routes get under way, the career counsellor builds the employment action plan — and it lives in the client's Program Flow tab, right where the whole journey is managed. Open the client from the Not Started section of My Clients and click the Program Flow tab: if no plan exists yet you'll see the Create Action Plan button — press it and the plan builder opens.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
-        target: { selector: '[data-tour="pw-profile-tabs"]' }
+        target: { selector: '[data-tour="pw-tab-flow"]', additionalSelectors: ['[data-tour="pw-flow-create-plan"]', '[data-tour="pw-profile-tabs"]'] }
+      },
+      {
+        title: "Completing the action plan",
+        body: "The builder starts from an Intake Summary that fills itself in from the client's file — employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're working from the client's whole story, not a blank page. Set the Program Start Date, then choose the plan items: on the WD road you tick the workshops, programs, placements, job-search and support options that fit, each with its own anticipated completion date; on the DEA road you list the short Employment Development Activities instead — job-search, resume or interview workshops, counselling — since a DEA plan runs about two weeks. Add any notes, then press Create Action Plan: the plan is saved to the client's file, a Compass task is created automatically, and the rest of the Program Flow steps unlock so the journey can get under way. And remember the plan is recorded twice — it's completed here in the Pathways CM portal and again in Compass, so both systems carry the same plan.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-plan-summary"]', additionalSelectors: ['[data-tour="pw-plan-items"]'] }
       },
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
