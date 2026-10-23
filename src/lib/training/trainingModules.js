@@ -36,7 +36,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What's a portal?",
-        body: "A quick word on names: this whole app is called the Candora Staff Portal — and inside it, each area of work is also called a portal: Pathways, the Resource Centre, ELL, Finance and so on. Think of a portal as a self-contained workspace for one part of your job, with its own pages, tools and records. You only ever see the portals your role gives you access to, so your list won't necessarily match a co-worker's.",
+        body: "Fair warning about a naming quirk that trips everyone up: the word \"portal\" is used twice. The whole app you're in right now is called the Candora Staff Portal — and each area of work inside it is also called a portal: Pathways, the Resource Centre, ELL, Finance and so on. So when someone says \"open the portal,\" they almost always mean one of these areas, not the whole app. Think of each one as a self-contained workspace for one part of your job, with its own pages, tools and records. You only ever see the portals your role gives you access to, so your list won't necessarily match a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
