@@ -148,6 +148,26 @@ const INTRO_SCENES_BY_MODULE = {
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/ca5d476c6_speech.mp3',
     },
   ],
+  pathways_journey: [
+    {
+      kicker: 'Pathways — The Client Journey',
+      title: 'Welcome to the Client Journey.',
+      body: "Welcome to the Client Journey. This is the supplementary Pathways module. It follows the road every client travels, from first contact to a recorded outcome, and it walks that road with real demo files.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/22c62e905_speech.mp3',
+    },
+    {
+      kicker: 'Pathways — The Client Journey',
+      title: 'Three clients, three situations.',
+      body: "You will follow Casey Sample, partway along the DEA stream. Jordan Example, who finished the Direct to Employment fast track. And Sam Specimen, waiting to start. The same map, at three very different points.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2baac28b7_speech.mp3',
+    },
+    {
+      kicker: 'Pathways — The Client Journey',
+      title: 'How this module works.',
+      body: "Each scenario opens that client's demo file and walks the stage they are at. Click along inside the file as you go. The tour follows you, and nothing you touch is real data.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/4215a8f14_speech.mp3',
+    },
+  ],
   rc: [
     {
       kicker: 'Resource Centre',

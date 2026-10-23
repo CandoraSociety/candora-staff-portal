@@ -586,57 +586,10 @@ export const TRAINING_MODULES = [
         path: "/pathways/master"
       },
       {
-        title: "Open a client file",
-        body: "The best way to learn Pathways is inside a real file. Click any client row here to open their full profile — Casey Sample or Jordan Example are good demo files. The next slides walk you through that file and the client's journey inside it.",
-        target: { text: "Casey Sample" },
+        title: "The client journey — its own module",
+        body: "The journey a client travels — intake, barriers and the action plan, Compass tasks, placements, determination — is the most complex part of Pathways, so it has its own training module: The Client Journey. It follows three demo clients through three different scenarios, stage by stage, opening each client's file as the journey unfolds. When you finish this tour, open it from the training menu.",
+        target: { selector: '[data-tour-path="/pathways/master"]' },
         path: "/pathways/master"
-      },
-      {
-        title: "The client file",
-        body: "You're now inside the client's file. The header shows their name, stream badge and Compass HSID, with Schedule Appointment and Close File actions on the right. Below it, the tab bar is the map to the whole file — we'll walk each tab in turn. Feel free to click around inside the file as we go; the tour follows you.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
-      },
-      {
-        title: "Program Flow — the journey map",
-        body: "Program Flow is the heart of the file: a guided roadmap that starts with barrier identification and the employment action plan, then tracks internal placements, work exposure and employment supports as the client moves along it — all the way to their determination and program completion. Click the tab to see this client's roadmap steps.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-flow"]' }
-      },
-      {
-        title: "Client Overview — the file's details",
-        body: "Click Client Overview and the file opens into cards: Demographics, who the client is and how to reach them; Case Info, their status, stream and dates; Career Background, their objectives and employment history; and the Compass Entry Verification card, which confirms the file has been entered into Compass.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-overview"]' }
-      },
-      {
-        title: "Employment",
-        body: "The Employment tab records the client's work placements, training and employment details — where you capture the outcomes that funder reporting counts on. Keep it current as each placement progresses.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-employment"]' }
-      },
-      {
-        title: "Referrals",
-        body: "The Referrals tab tracks movement in and out of your door: where the client was referred from, and where you've referred them on to. Each referral records its status, so nothing falls through between agencies.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-referrals"]' }
-      },
-      {
-        title: "BIT / ERA and Stream Switches",
-        body: "The BIT and ERA assessments live on their own tab, with their results kept in the file. Stream Switches records every move between program streams — its amber badge counts them, so a switched file never goes unnoticed.",
-        routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-tab-bit"]', additionalSelectors: ['[data-tour="pw-tab-switches"]'] }
-      },
-      {
-        title: "A client's journey, start to finish",
-        body: "Put together, here's the journey: a client arrives through Intake — checked against the central database for duplicates. You identify barriers and build their action plan in Program Flow. Compass tasks and purchase requests track the funder steps and the spending, placements and employment details record progress, referrals connect outside supports, and the file closes with a determination once the client reaches their outcome. Every piece lives in this one file, and the team can pick it up exactly where you left off.",
-        routePrefix: "/pathways/client/"
       },
       {
         title: "Intake — adding a client",
@@ -693,6 +646,142 @@ export const TRAINING_MODULES = [
         hint: "From your dashboard or a client profile, open Purchase Requests and fill in a new request for one of your clients.",
         path: "/pathways/dashboard",
         verify: { kind: "created", entity: "PurchaseRequest" }
+      }
+    ]
+  },
+  {
+    key: "pathways_journey",
+    title: "Pathways: The Client Journey",
+    shortTitle: "Client Journey",
+    blurb: "The supplementary Pathways module: follow three demo clients — mid-journey, completed and waitlisted — through every stage of the client journey, inside their real files.",
+    path: "/pathways/dashboard",
+    steps: [
+      {
+        title: "Welcome to the Client Journey",
+        body: "Press Play to meet the Client Journey module and its three scenarios. Each scene stays on screen until its narration finishes. When you're ready, press Next to start walking the road.",
+        introExplainer: true
+      },
+      {
+        title: "The journey, in one picture",
+        body: "Every client in Pathways travels the same road: they arrive through Intake, you identify barriers and build an action plan, funded steps like Compass tasks and purchase requests move the file along, placements and employment record real progress, and a determination closes the journey. This module walks that road three times, with three demo clients at three different points — the Pathways tour showed you where things live; here you'll see the pieces follow each other for one person.",
+        target: { selector: '[data-tour="pw-dash-tabs"]' },
+        path: "/pathways/dashboard"
+      },
+      {
+        title: "Scenario 1 — meet Casey Sample",
+        body: "Casey Sample arrived about a month ago on the DEA stream. Her file is in progress: the service started thirty days ago, and she's mid-journey. Look at the header — the stream badge, Compass HSID and the tab bar are the same map you'll use for every client. Click through the tabs as we go; the tour follows you.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
+      },
+      {
+        title: "Casey at intake — checked, not re-created",
+        body: "Every journey starts here. The intake form checks for duplicates as you type, against the central database, lets you link to an existing file instead of creating a new one, and records the service start date. Casey was entered the same way — one client, one file.",
+        target: { selector: '[data-tour-path="/pathways/intake"]' },
+        path: "/pathways/intake"
+      },
+      {
+        title: "Barriers and the action plan",
+        body: "Open the Program Flow tab — this is Casey's roadmap. It starts with barrier identification, then the employment action plan, and tracks internal placements, work exposure and employment supports as she moves along. The roadmap is the story of her journey; keep it current and any teammate can pick up the file.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-tab-flow"]' }
+      },
+      {
+        title: "Compass tasks — the funded checklist",
+        body: "Compass entry tasks are the funder reporting steps each client must pass through. Casey has tasks waiting — you'll see them in the Compass queue on your dashboard too. Completing them isn't just admin: they protect the program's funding.",
+        target: { selector: '[data-tour-path="/pathways/compass"]' },
+        path: "/pathways/compass"
+      },
+      {
+        title: "Purchase requests — spending on the journey",
+        body: "When a journey needs spending — training fees, work gear, exposure courses — it goes through a purchase request. The Purchase Requests tab on your dashboard collects them; each one travels a supervisor and ED approval chain before anything is bought. Casey has one pending right now.",
+        target: { selector: '[data-tour="pw-dash-tabs"]' },
+        path: "/pathways/dashboard"
+      },
+      {
+        title: "Placements — Internal Training and Work Exposure",
+        body: "As Casey moves along her roadmap, the placement sub-tabs on your caseload view show where she is: All Clients, Internal Training, Work Exposure. The same clients, sliced by journey stage, so you can see who needs what next.",
+        target: { selector: '[data-tour="pw-placement-tabs"]' },
+        path: "/pathways/dashboard"
+      },
+      {
+        title: "Employment — recording progress",
+        body: "The Employment tab records where the journey gets real: work placements, training and employment details. This is where outcomes are captured — exactly what funder reporting counts on. Update it as each placement progresses.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-tab-employment"]' }
+      },
+      {
+        title: "Referrals — the wider circle",
+        body: "No journey happens alone. The Referrals tab tracks where Casey came from and where you've referred her on to, each with its status, so nothing falls through between agencies.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-tab-referrals"]' }
+      },
+      {
+        title: "Scenario 2 — meet Jordan Example",
+        body: "Jordan Example came in through Direct to Employment — the fast track, for clients ready to move straight into work. His service started four months ago. Notice how much shorter the road is: no classroom stretch, straight to placement and employment.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
+      },
+      {
+        title: "Jordan's determination and completion",
+        body: "Every journey ends with a determination. Jordan's file shows the completed program and the completion date in his Case Info. Once the outcome is recorded, the file closes with its full history — anyone can still open it and see exactly what happened.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        target: { selector: '[data-tour="pw-tab-overview"]' }
+      },
+      {
+        title: "Scenario 3 — meet Sam Specimen",
+        body: "Sam Specimen is waitlisted. His journey hasn't formally started: no service start date yet, no assigned worker. The waitlist is a real stage of the journey — reach out, assess, and when a seat opens, intake begins and the road starts.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-profile-header"]' }
+      },
+      {
+        title: "When a client changes streams",
+        body: "Plans change. If Sam starts on one stream and moves to another, the Stream Switches tab records the move — and its amber badge makes sure a switched file never goes unnoticed. The BIT and ERA assessments on the neighbouring tab back the decision.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-tab-switches"]', additionalSelectors: ['[data-tour="pw-tab-bit"]'] }
+      },
+      {
+        title: "Three clients, one map",
+        body: "Put the three together: Sam is waiting at the start, Casey is mid-journey with her roadmap, tasks and requests in motion, and Jordan has reached the outcome and closed his file. Different speeds, different streams — one map. That's the client journey you now know how to walk.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey"
+      },
+      {
+        title: "Time to practice",
+        body: "Now walk it yourself: follow Casey's file through the journey, complete one of her pending Compass tasks, and open Jordan's completed file to see a finished determination. All on simulated data."
+      }
+    ],
+    tasks: [
+      {
+        id: "pj-follow-casey",
+        title: "Follow Casey's journey through her file",
+        body: "Open Casey Sample from the Master List and walk her file: Program Flow, Employment and Referrals.",
+        hint: "Go to the Master List, search Casey Sample, open the file and click through the tabs.",
+        path: "/pathways/master",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pj-compass",
+        title: "Complete one of Casey's Compass tasks",
+        body: "Open Compass and mark one of Casey Sample's pending tasks as completed.",
+        hint: "Open Compass, find a pending task for Casey Sample and mark it completed.",
+        path: "/pathways/compass",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pj-jordan",
+        title: "See a completed journey",
+        body: "Open Jordan Example's file and find his completed program status and completion details in Client Overview.",
+        hint: "Master List, search Jordan Example, open the file and open the Client Overview tab.",
+        path: "/pathways/master",
+        verify: { kind: "self" }
       }
     ]
   },
@@ -945,6 +1034,7 @@ export const TRAINING_MODULE_ACCESS = {
   staffadmin_money: null,
   staffadmin_supervisor: null,
   pathways: "pathways",
+  pathways_journey: "pathways",
   rc: "rc",
   ell: "ell",
   centralreg: "central-registration",
@@ -963,6 +1053,7 @@ export const moduleForPath = (pathname) => {
     ["/time-off", "staffadmin"],
     ["/reimbursement-requests", "staffadmin_money"],
     ["/candora-cc-receipts", "staffadmin_money"],
+    ["/pathways/client/", "pathways_journey"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

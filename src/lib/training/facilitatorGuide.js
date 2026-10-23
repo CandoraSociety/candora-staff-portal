@@ -117,7 +117,7 @@ export const FACILITATOR_GUIDE = {
   },
 
   pathways: {
-    duration: "About 60 minutes (5 intro · 30 tour · 20 practice · 5 wrap-up)",
+    duration: "About 40 minutes (5 intro · 15 tour · 20 practice)",
     objectives: [
       "Caseworkers can find and open any client on their caseload",
       "Caseworkers can navigate a client file: every tab, and the client journey it records",
@@ -131,14 +131,7 @@ export const FACILITATOR_GUIDE = {
       "The dashboard tabs": "Click through all four tabs live: My Clients, Compass Queue, Purchase Requests, Monthly Narrative Report. The amber badges are the 'needs attention' counters — trainees should check them at the start of each day.",
       "Your caseload, in sections": "The DEA / WD / Casual / Rejected cards are collapsible for a reason: the list gets long. Show how the placement sub-tabs (All Clients, Internal Training, Work Exposure) slice the same caseload.",
       "The Master List": "Show search and the program/status filters. Stress: this is every client in Pathways, not just theirs — always open a file from here rather than re-creating someone.",
-      "Open a client file": "Have every trainee click a client and open the file before you continue — the rest of the tour runs inside the file. Casey Sample or Jordan Example work well.",
-      "The client file": "Point out the header: stream badge, Compass HSID, Schedule Appointment, Close File. Then slow down on the tab bar — it's the map for the next several slides.",
-      "Program Flow — the journey map": "The heart of the session: barriers, action plan, placements, supports, determination. Click into the tab and show the roadmap steps live if you have time.",
-      "Client Overview — the file's details": "Click the tab and walk the four cards: Demographics, Case Info, Career Background, Compass Entry Verification. Note the verification card — it's a funder-reporting safeguard, not busywork.",
-      "Employment": "Keep this one practical: placements, training and employment details. This is where outcomes get recorded for funder reporting.",
-      "Referrals": "In and out: where the client came from, where you've sent them. One status per referral, so nothing falls through between agencies.",
-      "BIT / ERA and Stream Switches": "Assessments live on their own tab; Stream Switches records moves between streams, and the amber badge counts them — call that badge out.",
-      "A client's journey, start to finish": "The wrap-up slide — narrate the journey yourself: intake, barriers, action plan, Compass tasks and purchase requests, placements, determination, close. Tie every earlier tab back to a stage of the journey.",
+      "The client journey — its own module": "Bridge slide: this tour showed where things live. The Client Journey module is the deep-dive that shows how it all connects — point trainees to it as the natural next session.",
       "Intake — adding a client": "The duplicate matcher runs as you type, and you can link straight to an existing central database file. This is a practice task — don't do it here, just show the flow.",
       "Compass tasks": "Explain the 'why': these checklist steps feed funder reporting, so completing them isn't just admin — it protects the program's funding.",
       "Employers and purchase requests": "Mention the approval chain: purchase and exposure-course requests go to a supervisor and the ED before anything is spent.",
@@ -156,6 +149,36 @@ export const FACILITATOR_GUIDE = {
     ],
   },
 
+  pathways_journey: {
+    duration: "About 45 minutes (4 intro · 30 tour · 10 practice)",
+    objectives: [
+      "Caseworkers can narrate the client journey end to end: intake to determination",
+      "Caseworkers know how a DEA-stream journey differs from the Direct to Employment fast track",
+      "Caseworkers know where each journey stage is recorded in the client file",
+    ],
+    stepNotes: {
+      "Welcome to the Client Journey": "Frame it: the Pathways tour showed where things live; this module shows how they connect for one person. Three scenarios, three very different clients.",
+      "The journey, in one picture": "Draw the road on a whiteboard if you can: intake, barriers and action plan, Compass tasks and purchase requests, placements, determination, close. Every scenario that follows walks this same road.",
+      "Scenario 1 — meet Casey Sample": "Have every trainee open Casey's file — the tour opens it for them. Point out the stream badge and Compass HSID in the header before moving on.",
+      "Casey at intake — checked, not re-created": "Reinforce the duplicate matcher: one client, one file. Casey was entered the same way they practiced in the Pathways module.",
+      "Barriers and the action plan": "The heart of scenario 1. Click into Program Flow live and walk the roadmap top to bottom: barriers, action plan, placements, supports. Stress keeping it current — the file must survive the worker.",
+      "Compass tasks — the funded checklist": "Explain the 'why' again: these steps feed funder reporting. Casey's pending tasks are visible in the Compass queue — show the badge count.",
+      "Purchase requests — spending on the journey": "Walk the approval chain: request, supervisor, ED, purchase. Casey's pending request is a live example on the dashboard.",
+      "Placements — Internal Training and Work Exposure": "Show how the sub-tabs slice the same caseload by journey stage — who needs what next.",
+      "Employment — recording progress": "Keep it practical: this tab is where outcomes get recorded. Funder reporting reads from here.",
+      "Referrals — the wider circle": "In and out: where the client came from, where they've been sent. One status per referral.",
+      "Scenario 2 — meet Jordan Example": "Contrast with Casey deliberately: same map, shorter road. Direct to Employment skips the classroom stretch.",
+      "Jordan's determination and completion": "Every journey ends with a determination. Have trainees find the completed program status and completion date in Case Info themselves.",
+      "Scenario 3 — meet Sam Specimen": "The waitlist is a real stage: no start date, no assigned worker. Discuss what 'reach out and assess' looks like in their role.",
+      "When a client changes streams": "Stream Switches and its amber badge — a switched file must never go unnoticed. BIT and ERA assessments back the decision.",
+      "Three clients, one map": "The wrap-up: narrate the road once more yourself, tying each scenario back to a stage. Then point them at the practice tasks.",
+    },
+    practiceNotes: {
+      "pj-follow-casey": "Watch for trainees re-creating Casey instead of searching the Master List — reinforce search-first every time.",
+      "pj-compass": "Quick task, but ask each trainee to say why it matters: funder reporting.",
+      "pj-jordan": "Everyone should find the completed program status in Case Info — not guess. Circulate.",
+    }
+  },
   rc: {
     duration: "About 40 minutes (5 intro · 18 tour · 12 practice · 5 wrap-up)",
     objectives: [

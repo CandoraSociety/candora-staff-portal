@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "rc", "ell", "centralreg"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "rc", "ell", "centralreg"] },
 ];
 
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
@@ -42,8 +42,15 @@ const SECTION_STARTS = {
   pathways: {
     "Welcome to Pathways": "Overview & caseload",
     "The dashboard tabs": "Dashboard tabs & sections",
-    "The Master List": "Client files & the client journey",
-    "Intake — adding a client": "Tasks & requests",
+    "The Master List": "Client files",
+    "The client journey — its own module": "Tasks & requests",
+    "Time to practice": "Practice",
+  },
+  pathways_journey: {
+    "Welcome to the Client Journey": "How the journey works",
+    "Scenario 1 — meet Casey Sample": "Scenario 1 — Casey's DEA journey",
+    "Scenario 2 — meet Jordan Example": "Scenario 2 — Jordan's fast track",
+    "Scenario 3 — meet Sam Specimen": "Scenario 3 — Sam's waitlist",
     "Time to practice": "Practice",
   },
   rc: {
