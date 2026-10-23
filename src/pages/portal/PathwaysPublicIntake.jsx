@@ -93,8 +93,8 @@ const CRIMINAL_RECORD_OPTIONS = [
 const EMPTY_EDU = () => ({ institution: '', education_type: '', field_of_study: '', start_date: '', end_date: '' });
 const EMPTY_EMP = () => ({ company: '', job_title: '', employment_type: '', start_date: '', end_date: '', responsibilities: '' });
 
-const SectionCard = ({ title, subtitle, children }) => (
-  <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+const SectionCard = ({ title, subtitle, tourId, children }) => (
+  <section data-tour={tourId} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
     <h2 className="text-lg font-semibold text-slate-800 mb-1">{title}</h2>
     {subtitle && <p className="text-sm text-slate-500 mb-4">{subtitle}</p>}
     <div className={subtitle ? '' : 'mt-4'}>{children}</div>
@@ -250,7 +250,7 @@ export default function PathwaysPublicIntake() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center" data-tour="pw-ext-hero">
           <h1 className="text-2xl font-bold text-slate-800 mb-2">Pathways Program Registration</h1>
           <p className="text-slate-600">
             The Pathways program helps individuals connect with meaningful employment. Please fill out the form below and a career counsellor will reach out to you.
@@ -267,7 +267,7 @@ export default function PathwaysPublicIntake() {
           <input type="text" name="website" value={form.website} onChange={e => set('website', e.target.value)} className="hidden" tabIndex={-1} autoComplete="off" />
 
           {/* Personal Information */}
-          <SectionCard title="Personal Information">
+          <SectionCard title="Personal Information" tourId="pw-ext-personal">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-1 block">First Name *</Label>
@@ -327,7 +327,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Citizenship & Language */}
-          <SectionCard title="Citizenship & Residency Status">
+          <SectionCard title="Citizenship & Residency Status" tourId="pw-ext-citizenship">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">What is your current status in Canada?</Label>
@@ -351,7 +351,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Education History */}
-          <SectionCard title="Education History" subtitle="List your education, starting with the most recent.">
+          <SectionCard title="Education History" subtitle="List your education, starting with the most recent." tourId="pw-ext-education">
             <div className="mb-4">
               <Label className="mb-1 block">Highest Level of Education Completed</Label>
               <Select value={form.highest_education} onValueChange={v => set('highest_education', v)}>
@@ -403,7 +403,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Employment History */}
-          <SectionCard title="Employment History" subtitle="List your work experience, starting with the most recent.">
+          <SectionCard title="Employment History" subtitle="List your work experience, starting with the most recent." tourId="pw-ext-employment">
             <div className="mb-4">
               <Label className="mb-1 block">Current Employment Status</Label>
               <Select value={form.employment_status} onValueChange={v => set('employment_status', v)}>
@@ -461,7 +461,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Employment Eligibility & Income */}
-          <SectionCard title="Employment Eligibility & Income">
+          <SectionCard title="Employment Eligibility & Income" tourId="pw-ext-eligibility">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">Are you legally entitled to work in Canada?</Label>
@@ -510,7 +510,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Transportation & Access */}
-          <SectionCard title="Transportation & Access">
+          <SectionCard title="Transportation & Access" tourId="pw-ext-transport">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">Do you have a valid driver's license?</Label>
@@ -554,7 +554,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Background Information */}
-          <SectionCard title="Background Information">
+          <SectionCard title="Background Information" tourId="pw-ext-background">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">Do you have a criminal record?</Label>
@@ -578,7 +578,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Resume Upload */}
-          <SectionCard title="Resume & Documents" subtitle="Upload your resume or any supporting documents (optional).">
+          <SectionCard title="Resume & Documents" subtitle="Upload your resume or any supporting documents (optional)." tourId="pw-ext-resume">
             <div className="space-y-3">
               <div className="border border-dashed border-slate-300 rounded-lg p-4 bg-slate-50">
                 <label className="flex flex-col items-center gap-2 cursor-pointer">
@@ -604,7 +604,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Career Goals */}
-          <SectionCard title="Career Goals & Objectives">
+          <SectionCard title="Career Goals & Objectives" tourId="pw-ext-goals">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">Career Goals & Objectives</Label>
@@ -614,7 +614,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Additional Information — subtle barrier self-identification */}
-          <SectionCard title="Additional Information">
+          <SectionCard title="Additional Information" tourId="pw-ext-additional">
             <div className="space-y-4">
               <div>
                 <Label className="mb-1 block">
@@ -633,7 +633,7 @@ export default function PathwaysPublicIntake() {
           </SectionCard>
 
           {/* Acknowledgements */}
-          <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <section data-tour="pw-ext-ack" className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Acknowledgements</h2>
             <div className="space-y-4">
               {[
@@ -653,14 +653,14 @@ export default function PathwaysPublicIntake() {
           </section>
 
           {/* Ribbon */}
-          <div className="rounded-lg px-6 py-4 text-center" style={{ background: 'hsl(45,92%,53%)' }}>
+          <div data-tour="pw-ext-ribbon" className="rounded-lg px-6 py-4 text-center" style={{ background: 'hsl(45,92%,53%)' }}>
             <p className="font-semibold text-slate-800">
               Form Complete. Please advise the Job Lab attendant to review and complete your submission.
             </p>
           </div>
 
           {/* For Office Use Only */}
-          <section className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 p-6">
+          <section data-tour="pw-ext-office" className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 p-6">
             <h2 className="text-lg font-semibold text-slate-700 mb-1">For Office Use Only</h2>
             <p className="text-xs text-slate-400 mb-4">To be completed by Job Lab attendant.</p>
             <div className="space-y-4">
@@ -693,7 +693,7 @@ export default function PathwaysPublicIntake() {
           </section>
 
           {/* Access Code + Submit */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-end">
+          <div data-tour="pw-ext-submit" className="flex flex-col sm:flex-row sm:items-end gap-4 justify-end">
             <div>
               <Label className="mb-1 block text-sm">Access Code</Label>
               <Input

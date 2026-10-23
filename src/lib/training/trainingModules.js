@@ -674,10 +674,46 @@ export const TRAINING_MODULES = [
         path: "/pathways/intake"
       },
       {
-        title: "Intake — the Job Lab",
-        body: "The first way: job seekers come to the computer lab and fill out the intake form themselves on our job lab computers. This runs on the external intake portal connected to Pathways: the job assistant can answer questions along the way, then reviews the self-filled form and submits it — and the client lands right here, in the New Intake — Awaiting Assessment list. The Self-Reg column marks these self-filled forms, and this highlighted demo client arrived exactly that way.",
-        path: "/pathways/intake",
-        target: { selector: '[data-tour="pw-intake-general"]' }
+        title: "Intake — the Job Lab: what the client sees",
+        body: "Here's the first way an intake happens: the client fills the form in themselves. This is the external intake portal — the exact page a job seeker sees on the job lab computers. Notice it's nothing like the staff portal: a plain public page with just the Candora logo and one long registration form, no case-management tools in sight. We'll walk down it section by section, the way the client fills it in.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-hero"]' }
+      },
+      {
+        title: "The form: personal information",
+        body: "The form opens with the basics: name, date of birth, gender, phone, email and address — only the first and last name are required. These fields build the client record, and they're what the duplicate matcher checks when the intake lands, so a client who already has a central database file gets linked to it instead of duplicated.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-personal"]' }
+      },
+      {
+        title: "The form: status, language and education",
+        body: "Next come status in Canada and English proficiency. These two matter far beyond this form: they weigh on program eligibility, and they tell us early whether an ELL referral belongs in this client's journey. Just below, the education section records the highest level completed and the client's full education history, with entries they can add or remove themselves.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-citizenship"]', additionalSelectors: ['[data-tour="pw-ext-education"]'] }
+      },
+      {
+        title: "The form: employment history and eligibility",
+        body: "The employment section captures the client's current status — unemployed, laid off, part-time seeking full-time — and their work history: employer, job title, dates and key responsibilities. Below that sit the eligibility questions: legally entitled to work in Canada, available to start immediately, primary source of income, and whether they've been in an employment program before. These answers feed straight into the determination you'll see later in this module.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-employment"]', additionalSelectors: ['[data-tour="pw-ext-eligibility"]'] }
+      },
+      {
+        title: "The form: transportation, background and documents",
+        body: "The practical barriers live here: driver's licence and vehicle access, phone and internet, government ID, criminal record and SIN. They look like small questions, but they shape which placements and supports are realistic for this client. The resume section lets the client attach a resume or supporting documents right on the form.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-transport"]', additionalSelectors: ['[data-tour="pw-ext-background"]', '[data-tour="pw-ext-resume"]'] }
+      },
+      {
+        title: "The form: career goals and circumstances",
+        body: "Near the bottom, the client describes their career goals in their own words — the raw material the career counsellor later shapes into the employment action plan. And just below, one more optional question: are there circumstances that might make it hard to find or keep work? Clients share as much or as little as they like — and whatever they write is a head start on the Barrier Identification that follows intake.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-goals"]', additionalSelectors: ['[data-tour="pw-ext-additional"]'] }
+      },
+      {
+        title: "The Job Lab attendant's part",
+        body: "The client's job ends at the acknowledgements — both boxes must be checked before the form can go anywhere. From here it's the attendant's turn: the office-use section records whether the client managed in English or needed a translator, then the attendant enters the four-digit access code and presses Submit. The moment it's submitted, the client lands in the New Intake — Awaiting Assessment list back in the Pathways portal.",
+        path: "/pathways/intake-portal",
+        target: { selector: '[data-tour="pw-ext-ack"]', additionalSelectors: ['[data-tour="pw-ext-ribbon"]', '[data-tour="pw-ext-office"]', '[data-tour="pw-ext-submit"]'] }
       },
       {
         title: "Intake — Compass referrals",
@@ -1079,6 +1115,7 @@ export const moduleForPath = (pathname) => {
     ["/reimbursement-requests", "staffadmin_money"],
     ["/candora-cc-receipts", "staffadmin_money"],
     ["/pathways/client/", "pathways_journey"],
+    ["/pathways/intake-portal", "pathways_journey"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

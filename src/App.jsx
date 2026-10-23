@@ -805,6 +805,10 @@ const AuthenticatedApp = () => {
         <Route path="/dev-tasks" element={<DevTasks />} />
         <Route path="/how-to-admin" element={<HowToAdmin />} />
 
+        {/* External Pathways intake portal, mounted in-app so training tours
+            can walk the client-facing form while Test Mode is active */}
+        <Route path="/pathways/intake-portal" element={<PathwaysPublicIntake />} />
+
         {/* Pathways CM - standalone layout */}
         <Route element={<PathwaysLayout />}>
           <Route path="/pathways" element={<Navigate to="/pathways/dashboard" replace />} />

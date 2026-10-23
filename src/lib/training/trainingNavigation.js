@@ -49,6 +49,8 @@ const SECTION_STARTS = {
   pathways_journey: {
     "Welcome to the Client Journey": "How the journey works",
     "Every journey starts at Intake": "How intake happens",
+    "Intake — the Job Lab: what the client sees": "The Job Lab form",
+    "Intake — Compass referrals": "Compass referrals",
     "Barrier Identification — the Service Navigator": "Barrier ID, ERA and the determination",
     "Route 1 — the DEA road: meet Jordan Example": "Route 1 — Jordan's DEA journey",
     "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Route 2 — Sam's internal placement",
