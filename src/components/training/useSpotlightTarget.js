@@ -15,7 +15,8 @@ export default function useSpotlightTarget(enabled, target, stepKey) {
         current = element;
         element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
       }
-      const elements = element ? [element, ...(target.additionalSelectors || []).map(selector => findSpotlightTarget({ selector })).filter(Boolean)] : [];
+      // Keep the page's navigation header highlighted even if its content target is absent.
+      const elements = [element, ...(target.additionalSelectors || []).map(selector => findSpotlightTarget({ selector }))].filter(Boolean);
       const regions = elements.map(node => {
         const bounds = node.getBoundingClientRect();
         return { top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height };

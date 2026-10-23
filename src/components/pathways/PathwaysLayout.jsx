@@ -64,6 +64,7 @@ function AppNav({ isSupervisorOnly = false }) {
     const active = location.pathname === item.path;
     return (
       <button
+        data-tour-path={item.path}
         onClick={() => navigate(item.path)}
         className={cn(
           "px-3 py-1.5 text-sm rounded-md font-medium transition-colors relative",
@@ -100,6 +101,7 @@ function AppNav({ isSupervisorOnly = false }) {
     const active = location.pathname === item.path;
     return (
       <button
+        data-tour-path={item.path}
         onClick={() => navigate(item.path)}
         className={cn(
           "px-3 py-2 text-sm rounded-md font-medium text-left transition-colors w-full",

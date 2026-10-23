@@ -564,7 +564,7 @@ export const TRAINING_MODULES = [
       {
         title: "My Clients — your dashboard",
         body: "This is your active caseload. Clients are assigned to you by email, so this list is always exactly the people you're working with right now.",
-        target: { selector: 'a[href="/pathways/dashboard"]' },
+        target: { selector: '[data-tour-path="/pathways/dashboard"]' },
         path: "/pathways/dashboard"
       },
       {
@@ -582,7 +582,7 @@ export const TRAINING_MODULES = [
       {
         title: "The Master List",
         body: "Every client in Pathways lives in the Master List. Search by name, filter by program or status, and click any client to open their full file.",
-        target: { selector: 'a[href="/pathways/master"]' },
+        target: { selector: '[data-tour-path="/pathways/master"]' },
         path: "/pathways/master"
       },
       {
@@ -641,19 +641,19 @@ export const TRAINING_MODULES = [
       {
         title: "Intake — adding a client",
         body: "New clients come in through Intake. It checks for duplicates as you type, lets you link to an existing central database file, and syncs the new client automatically once saved.",
-        target: { selector: 'a[href="/pathways/intake"]' },
+        target: { selector: '[data-tour-path="/pathways/intake"]' },
         path: "/pathways/intake"
       },
       {
         title: "Compass tasks",
         body: "Compass entry tasks and checklists are tracked per client here — these are the funder reporting steps you complete as each client progresses.",
-        target: { selector: 'a[href="/pathways/compass"]' },
+        target: { selector: '[data-tour-path="/pathways/compass"]' },
         path: "/pathways/compass"
       },
       {
         title: "Employers and purchase requests",
         body: "Employer contacts, work-exposure placements, and purchase or exposure-course requests are all managed from here.",
-        target: { selector: 'a[href="/pathways/employers"]' },
+        target: { selector: '[data-tour-path="/pathways/employers"]' },
         path: "/pathways/employers"
       },
       {
