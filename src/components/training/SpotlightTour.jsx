@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
-import { X, ArrowLeft, ArrowRight, Presentation } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, Presentation, Volume2, Square } from "lucide-react";
 import useSpotlightTarget from "@/components/training/useSpotlightTarget";
 import { spotlightPath } from "@/components/training/spotlightTarget";
+import { STEP_AUDIO } from "@/lib/training/portalStepAudio";
 import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 import SpotlightOverlay from "@/components/training/SpotlightOverlay";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
@@ -17,7 +18,27 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
+  const [reading, setReading] = useState(false);
+  const audioRef = useRef(null);
   const drag = useTrainingWindowDrag(open, module?.key);
+
+  // Read-aloud narration for the current slide (intro steps play their own)
+  const stepAudioUrl = STEP_AUDIO[module?.key]?.[index] || null;
+  const stopReading = () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setReading(false);
+  };
+  useEffect(() => { stopReading(); }, [index, module?.key]);
+  useEffect(() => () => stopReading(), []);
+  const toggleRead = () => {
+    if (reading) { stopReading(); return; }
+    if (!stepAudioUrl) return;
+    const audio = new Audio(stepAudioUrl);
+    audioRef.current = audio;
+    audio.onended = () => stopReading();
+    audio.onerror = () => setReading(false);
+    audio.play().then(() => setReading(true)).catch(() => setReading(false));
+  };
 
   const steps = module?.steps || [];
   const step = steps[index];
@@ -169,6 +190,17 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
               </span>
             </div>
             <div className="flex items-center gap-1">
+              {stepAudioUrl && (
+                <button
+                  onClick={toggleRead}
+                  className="p-1.5 rounded-lg hover:opacity-70 flex items-center gap-1"
+                  style={{ color: reading ? "hsl(45, 92%, 53%)" : "hsl(230, 30%, 60%)" }}
+                  title={reading ? "Stop reading aloud" : "Read this slide aloud"}
+                >
+                  {reading ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {reading && <span className="text-[10px] font-semibold">Reading</span>}
+                </button>
+              )}
               <button
                 onClick={togglePresentation}
                 className="p-1.5 rounded-lg hover:opacity-70 flex items-center gap-1"

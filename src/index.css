@@ -113,10 +113,41 @@
 /* ===== Training intro scenes — layered Candora navy/gold backdrop ===== */
 .portal-intro-bg {
   background:
-    radial-gradient(900px 420px at 88% -8%, hsl(45 92% 53% / 0.18), transparent 62%),
-    radial-gradient(760px 380px at -8% 108%, hsl(230 75% 45% / 0.28), transparent 60%),
     radial-gradient(560px 280px at 50% 128%, hsl(230 60% 32% / 0.35), transparent 70%),
     hsl(230 70% 10%);
+}
+.portal-intro-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.portal-intro-blob-gold {
+  width: 320px;
+  height: 320px;
+  top: -120px;
+  right: -80px;
+  background: hsl(45 92% 53% / 0.22);
+  animation: portal-intro-drift 14s ease-in-out infinite alternate;
+}
+.portal-intro-blob-blue {
+  width: 380px;
+  height: 380px;
+  bottom: -160px;
+  left: -100px;
+  background: hsl(230 75% 50% / 0.28);
+  animation: portal-intro-drift 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes portal-intro-drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-26px, 20px) scale(1.08); }
+}
+.portal-intro-logo {
+  animation: portal-intro-float 7s ease-in-out infinite;
+}
+@keyframes portal-intro-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 /* ===== Training windows — vibrant Candora-yellow outline with a soft shine ===== */
