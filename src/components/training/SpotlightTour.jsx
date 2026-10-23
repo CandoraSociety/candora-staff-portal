@@ -127,7 +127,10 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     const stepId = `${module?.key}:${index}`;
     if (routedStep.current === stepId) return;
     routedStep.current = stepId;
-    navigate(path);
+    // A routePrefix slide with no matching page open (e.g. the learner never
+    // opened a client file) opens its demo fallback instead, so the slide
+    // always has something real to spotlight.
+    navigate(step.routeFallback || path);
   }, [open, step, path, index, location.pathname, navigate]);
 
   if (!open || !module || !step) return null;

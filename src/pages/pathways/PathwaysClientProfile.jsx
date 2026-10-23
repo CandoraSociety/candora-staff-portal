@@ -187,6 +187,7 @@ export default function PathwaysClientProfile() {
 
       {/* Main Header */}
       <div
+        data-tour="pw-profile-header"
         className="border-b px-6 py-4 flex items-center justify-between gap-4"
         style={{ background: 'hsl(44,100%,88%)', borderColor: 'hsl(42,100%,70%)' }}
       >

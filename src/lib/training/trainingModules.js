@@ -593,38 +593,44 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The client file",
-        body: "You're now inside the client's file. The header shows their name, stream badge and Compass HSID, with Schedule Appointment and Close File actions on the right. Below it, the tab bar is the map to the whole file — we'll walk each tab in turn. If you haven't opened a file yet, click any client on the Master List and the tour will follow you in.",
+        body: "You're now inside the client's file. The header shows their name, stream badge and Compass HSID, with Schedule Appointment and Close File actions on the right. Below it, the tab bar is the map to the whole file — we'll walk each tab in turn. Feel free to click around inside the file as we go; the tour follows you.",
         routePrefix: "/pathways/client/",
-        target: { selector: '[data-tour="pw-profile-tabs"]' }
+        routeFallback: "/pathways/client/demo-pw-casey",
+        target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
       },
       {
         title: "Program Flow — the journey map",
         body: "Program Flow is the heart of the file: a guided roadmap that starts with barrier identification and the employment action plan, then tracks internal placements, work exposure and employment supports as the client moves along it — all the way to their determination and program completion. Click the tab to see this client's roadmap steps.",
         routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-flow"]' }
       },
       {
         title: "Client Overview — the file's details",
         body: "Click Client Overview and the file opens into cards: Demographics, who the client is and how to reach them; Case Info, their status, stream and dates; Career Background, their objectives and employment history; and the Compass Entry Verification card, which confirms the file has been entered into Compass.",
         routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-overview"]' }
       },
       {
         title: "Employment",
         body: "The Employment tab records the client's work placements, training and employment details — where you capture the outcomes that funder reporting counts on. Keep it current as each placement progresses.",
         routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-employment"]' }
       },
       {
         title: "Referrals",
         body: "The Referrals tab tracks movement in and out of your door: where the client was referred from, and where you've referred them on to. Each referral records its status, so nothing falls through between agencies.",
         routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-referrals"]' }
       },
       {
         title: "BIT / ERA and Stream Switches",
         body: "The BIT and ERA assessments live on their own tab, with their results kept in the file. Stream Switches records every move between program streams — its amber badge counts them, so a switched file never goes unnoticed.",
         routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-casey",
         target: { selector: '[data-tour="pw-tab-bit"]', additionalSelectors: ['[data-tour="pw-tab-switches"]'] }
       },
       {

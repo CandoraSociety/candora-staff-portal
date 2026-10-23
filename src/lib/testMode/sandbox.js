@@ -75,7 +75,7 @@ function demoData() {
       { first_name: 'Sam', last_name: 'Staff', email: 'sam.staff@candora.ca', position: 'Program Staff', department: 'Programs', org_tier: 'frontline_staff', is_active: true, hire_date: D(200), manager_email: 'test.user@candora.ca' },
     ],
     Client: [
-      { first_name: 'Casey', last_name: 'Sample', compass_hsid: '10001', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(30), counsellor_name: 'Terry Tester', phone: '780-555-0101', email: 'casey.sample@example.ca' },
+      { id: 'demo-pw-casey', first_name: 'Casey', last_name: 'Sample', compass_hsid: '10001', service_type: 'pathways', program_status: 'in_progress', status: 'new', service_start_date: D(30), counsellor_name: 'Terry Tester', phone: '780-555-0101', email: 'casey.sample@example.ca' },
       { first_name: 'Jordan', last_name: 'Example', compass_hsid: '10002', service_type: 'direct_to_employment', program_status: 'complete', status: 'new', service_start_date: D(120), eda_completion_date: D(20), counsellor_name: 'Terry Tester', phone: '780-555-0102', email: 'jordan.example@example.ca' },
       { first_name: 'Sam', last_name: 'Specimen', compass_hsid: '10003', service_type: 'pathways', program_status: 'waitlisted', status: 'new', counsellor_name: '', phone: '780-555-0103', email: 'sam.specimen@example.ca' },
     ],
