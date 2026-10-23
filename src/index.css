@@ -304,6 +304,13 @@ body.has-ms-ribbon {
   padding-right: 52px;
 }
 
+/* ===== Training Sidebar — docked right, pad content away ===== */
+@media (min-width: 768px) {
+  body.has-training-sidebar {
+    padding-right: 266px;
+  }
+}
+
 /* ===== Global Tab Bar ===== */
 body.has-tabbar .sticky.top-0:not(.global-tabbar):not(.global-testmode-ribbon),
 body.has-tabbar .fixed.top-0:not(.global-tabbar):not(.global-testmode-ribbon) {

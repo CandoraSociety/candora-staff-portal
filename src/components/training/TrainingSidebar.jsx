@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GraduationCap, PanelRightClose, PanelRightOpen } from "lucide-react";
 import useTrainingModules from "@/lib/useTrainingModules";
 import { startTrainingSession } from "@/lib/training/trainingSession";
@@ -11,6 +11,12 @@ export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour
   const [expanded, setExpanded] = useState(activeKey);
   const { modules, progress } = useTrainingModules();
   const { requestJump } = useTrainingTour();
+  // While the sidebar is open it is docked: the body gets right padding so the
+  // app's working space shrinks to sit beside it instead of being covered.
+  useEffect(() => {
+    document.body.classList.toggle("has-training-sidebar", open && modules.length > 0);
+    return () => document.body.classList.remove("has-training-sidebar");
+  }, [open, modules.length]);
   if (!modules.length) return null;
   const jumpToStep = (module, index) => {
     if (module.key === activeKey) { onOpenTour?.(); requestJump(module.key, index); }
