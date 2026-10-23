@@ -160,8 +160,10 @@ export const FACILITATOR_GUIDE = {
     stepNotes: {
       "Welcome to the Client Journey": "Frame it: the Pathways tour showed where things live; this module walks three routes, each from intake to outcome.",
       "One intake, many roads": "The key framing: administratively every journey starts the same way — intake, Barrier Identification, ERA, determination — but the trajectories differ. Draw the roads on a whiteboard if you can.",
-      "Every journey starts at Intake": "Reinforce the duplicate matcher: one client, one file. Mention the waitlist briefly — some clients wait for a seat, but the record still starts here.",
-      "Barrier Identification — the Service Navigator": "Click into Program Flow live. Stress that the Service Navigator records the barriers, and the record must survive the worker.",
+      "Every journey starts at Intake": "Two ways in — cover both: self-filled intake forms from the Job Lab, and Compass referrals. Reinforce the duplicate matcher: one client, one file.",
+      "Intake, way one — the Job Lab": "The external intake portal runs on the job lab computers. The job assistant answers questions as the client fills the form out, reviews it, then submits — worth stressing there's no double entry from there.",
+      "Intake, way two — Compass referrals": "Referrals arrive from a CEC at Alberta Supports or from the prime contractor. The accept-or-reject happens in Compass itself; if accepted, the Service Navigator completes the intake manually in Pathways CM.",
+      "Barrier Identification — the Service Navigator": "Not in the Program Flow tab — the client sits in the Intake section while the Service Navigator records the barriers. Stress the record must survive the worker.",
       "The Employment Readiness Assessment (ERA)": "The ERA is not done in the portal. Once it's completed outside, the step is verified complete in Compass — show trainees where it sits in the Compass queue.",
       "The determination: WD, DEA or not eligible": "The Service Navigator's call: WD, DEA, or not eligible — and not eligible usually means casual access to our resources. Then the navigator assigns the client to a career counsellor, who builds the action plan.",
       "Route 1 — the DEA road: meet Jordan Example": "Have every trainee open Jordan's file — the tour opens it for them. Contrast deliberately: the DEA road skips the placement stretch.",

@@ -48,8 +48,8 @@ const SECTION_STARTS = {
   },
   pathways_journey: {
     "Welcome to the Client Journey": "How the journey works",
-    "Every journey starts at Intake": "The shared first steps",
-    "The Employment Readiness Assessment (ERA)": "ERA and the determination",
+    "Every journey starts at Intake": "How intake happens",
+    "Barrier Identification — the Service Navigator": "Barrier ID, ERA and the determination",
     "Route 1 — the DEA road: meet Jordan Example": "Route 1 — Jordan's DEA journey",
     "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Route 2 — Sam's internal placement",
     "Route 3 — the WD road with a work exposure placement: meet Casey Sample": "Route 3 — Casey's work exposure",
