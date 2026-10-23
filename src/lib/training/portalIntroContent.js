@@ -59,6 +59,12 @@ const INTRO_SCENES_BY_MODULE = {
   staffadmin: [
     {
       kicker: 'Time & Money — Mini-Module 1',
+      title: 'Welcome.',
+      body: "This module covers the everyday time side of working at Candora: requesting time off, logging sick time and personal days, submitting your timesheet each pay period, and checking the team schedule. Let's walk through each one.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/fbc1f4806_speech.mp3',
+    },
+    {
+      kicker: 'Time & Money — Mini-Module 1',
       title: 'Requesting time off.',
       body: 'Vacation and other time off is booked on the Vacation and Time Off Request page. Fill in your dates, submit, and your request goes straight to your supervisor for approval, with its status tracked right on the page.',
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/b020f6e9f_speech.mp3',
