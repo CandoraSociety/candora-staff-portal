@@ -59,9 +59,9 @@ const INTRO_SCENES_BY_MODULE = {
   staffadmin: [
     {
       kicker: 'Time & Money — Mini-Module 1',
-      title: 'Welcome.',
-      body: "This module covers the everyday time side of working at Candora: requesting time off, logging sick time and personal days, submitting your timesheet each pay period, and checking the team schedule. Let's walk through each one.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/fbc1f4806_speech.mp3',
+      title: 'Welcome to Mini-Module 1.',
+      body: "This mini-module covers the everyday time side of working at Candora: requesting time off, logging sick time and personal days, submitting your timesheet each pay period, and checking the team schedule. Let's walk through each one.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/b14de2972_speech.mp3',
     },
     {
       kicker: 'Time & Money — Mini-Module 1',
