@@ -21,7 +21,7 @@ export default function GlobalTabBar() {
   }, []);
 
   return (
-    <div className="global-tabbar sticky top-0 z-50 flex items-stretch h-9 bg-sidebar border-b border-sidebar-border">
+    <div data-tour="global-tabbar" className="global-tabbar sticky top-0 z-50 flex items-stretch h-9 bg-sidebar border-b border-sidebar-border">
       <div className="flex items-stretch overflow-x-auto flex-1 global-tabbar-scroll">
         {tabs.map((tab) => {
           const registry = PORTAL_REGISTRY[tab.path];
@@ -71,6 +71,7 @@ export default function GlobalTabBar() {
       </div>
       <button
         onClick={() => openTab('/portal')}
+        data-tour="tabbar-add"
         className="flex items-center justify-center px-3 text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground transition-colors flex-shrink-0 border-l border-sidebar-border"
         title="Browse portals"
       >

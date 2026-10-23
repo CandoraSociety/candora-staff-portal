@@ -35,8 +35,23 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="dashboard-announcements"]' }
       },
       {
-        title: "Your portals",
-        body: "These shortcut cards are the portals you've picked to keep on your home page — you choose them with Add Functions in the sidebar, and you can change your selection anytime. Every portal you have access to is always available under Portals in the sidebar, even the ones you don't put here. Click any card to jump straight into it.",
+        title: "What's a portal?",
+        body: "A quick word on names: this whole app is called the Candora Staff Portal — and inside it, each area of work is also called a portal: Pathways, the Resource Centre, ELL, Finance and so on. Think of a portal as a self-contained workspace for one part of your job, with its own pages, tools and records. You only ever see the portals your role gives you access to, so your list won't necessarily match a co-worker's.",
+        target: { selector: '[data-tour="dashboard-portals"]' }
+      },
+      {
+        title: "Opening a portal",
+        body: "To open any portal, click Portals in the sidebar, or the + button at the right end of the tab bar at the top of the screen. Either one takes you to the portal picker: every portal you have access to, shown as a card. Click a card and that portal opens — there's nothing to install or set up first.",
+        target: { selector: '[data-tour="tabbar-add"]', additionalSelectors: ['[data-tour-path="/portal"]'] }
+      },
+      {
+        title: "Portals open like browser tabs",
+        body: "Each portal you open appears as a tab in the bar right at the top of the screen — exactly like tabs in an internet browser. Click any tab to switch back and forth between portals without losing your place: the tab returns you to the exact page you were on. The x on a tab closes it when you're done, and your main page always stays open as the first tab. Try it now if you like — open a portal, then click your Main Page tab to come back.",
+        target: { selector: '[data-tour="global-tabbar"]' }
+      },
+      {
+        title: "Your portal shortcuts",
+        body: "Back on your home page: these shortcut cards are the portals you've picked as favourites — you choose them on the Add Functions page (your dashboard's Customize button takes you there), and you can change your selection anytime. They're just shortcuts though: every portal you have access to is always available from the portal picker, even the ones you don't keep here. Click any card to jump straight into that portal.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
