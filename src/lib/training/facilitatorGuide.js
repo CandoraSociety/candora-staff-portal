@@ -15,7 +15,6 @@ export const FACILITATOR_GUIDE = {
     stepNotes: {
       "Welcome to your Candora portal": "Introduce yourself and the plan for the session. Repeat the key message twice: Training Mode means nothing they click can damage real data, so explore freely. Ask who has signed in before to gauge the room.",
       "What is the Candora Staff Portal?": "Press Play to start the female narration. Each scene advances only after its audio finishes; pause or replay whenever the room needs more time. The logo is Candora's original uploaded sunflower logo. Keep the explanation grounded: ERP means one connected system for day-to-day work instead of separate programs. Some functions are still being built, and nobody is expected to learn every portal today.",
-      "Announcements": "Point at the unseen-count and the scrolling titles. Common question: 'How do I make an announcement go away?' — clicking the ribbon opens the list and Clear marks everything seen; announcements also expire on their own.",
       "What's a portal?": "Clear up the naming confusion out loud: the whole app is the Candora Staff Portal, and the areas inside it are also portals. Analogy that lands: portals are like separate apps inside one staff portal, each one a workspace for a different part of the job.",
       "Opening a portal": "Demonstrate both entry points: Portals in the sidebar, and the + on the tab bar. Emphasize that the picker only shows the portals each person's role gives them — that's why neighbours may see different lists.",
       "Inside the Portals tab": "The tour now opens the actual Portals page. Point out the card names, descriptions and categories, then demonstrate the search and category filters. Explain that this is the full available list, unlike the personal shortcuts on the main page. Internal portals open in the app's tab bar; external tools open in a separate browser tab.",
@@ -44,7 +43,8 @@ export const FACILITATOR_GUIDE = {
       "Staff can name at least two widgets useful to their own role",
     ],
     stepNotes: {
-      "Your home page, your widgets": "Set expectations: this module is about personal choice, not a test. Locked widgets (announcements, recent activity, upcoming events) are the same for everyone; everything else is opt-in.",
+      "Your home page, your widgets": "This step opens the module intro: press Play and let the female narration run. Each scene advances only after its audio finishes; pause or replay whenever the room needs more time. Set expectations that the module is about personal choice, not a test.",
+      "Announcements": "The tour detours to the main page for this one. Point at the unseen-count and the scrolling titles. Common question: 'How do I make an announcement go away?' — clicking the ribbon opens the list and Clear marks everything seen; announcements also expire on their own. Locked widgets (announcements, recent activity, upcoming events) are the same for everyone; everything else is opt-in.",
       "Turning widgets on and off": "Let people toggle freely here — it's their own home page and nothing can go wrong. Point out that portal shortcuts and Microsoft apps are chosen on this same page.",
       "The Personal Organizer": "Emphasize it's private to them and follows them on any device. Suggest they use it right away for their first-week priorities.",
       "The How-To AI Assistant": "Common question: 'What if it doesn't know the answer?' — it falls back to AI in plain language, and every question is logged so the preset answers keep improving.",

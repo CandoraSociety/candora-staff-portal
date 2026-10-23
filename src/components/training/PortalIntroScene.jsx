@@ -3,7 +3,7 @@ import { PORTAL_INTRO_LOGO } from '@/lib/training/portalIntroContent';
 
 export default function PortalIntroScene({ scene, index, total }) {
   return (
-    <div className="bg-sidebar text-sidebar-foreground px-5 py-6 sm:px-8 text-center">
+    <div className="portal-intro-bg text-sidebar-foreground px-5 py-6 sm:px-8 text-center">
       <img
         src={PORTAL_INTRO_LOGO}
         alt="Candora's original sunflower logo"

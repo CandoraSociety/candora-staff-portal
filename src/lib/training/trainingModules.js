@@ -35,11 +35,6 @@ export const TRAINING_MODULES = [
         introExplainer: true
       },
       {
-        title: "Announcements",
-        body: "Organization-wide announcements live in this ribbon. The bell shows how many you haven't seen yet, and new titles scroll across it. Click the ribbon to open the full list, and use the Clear button to mark everything as seen.",
-        target: { selector: '[data-tour="dashboard-announcements"]' }
-      },
-      {
         title: "What's a portal?",
         body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
@@ -149,9 +144,16 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Your home page, your widgets",
-        body: "Your main page is made of widgets: optional panels like the Personal Organizer, the How-To search, or upcoming birthdays. A few are always there — announcements, recent activity and upcoming events — but the rest are entirely your choice. This module walks through what each one does so you can decide which belong on your home page. You're in Training Mode as usual: nothing you toggle here is permanent.",
+        body: "Press Play to hear a quick overview of this module and the widgets it covers. You can pause, replay or move between scenes; each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
+        introExplainer: true,
         path: "/widget-customization",
         target: { selector: '[data-tour="widget-list"]' }
+      },
+      {
+        title: "Announcements",
+        body: "First, one of the widgets that's always on for everyone: organization-wide announcements live in this ribbon. The bell shows how many you haven't seen yet, and new titles scroll across it. Click the ribbon to open the full list, and use the Clear button to mark everything as seen.",
+        path: "/",
+        target: { selector: '[data-tour="dashboard-announcements"]' }
       },
       {
         title: "Turning widgets on and off",
@@ -228,7 +230,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to Part 2",
-        body: "This is the Time & Money training, mini-module 1 of 2: the everyday time admin — booking time off, logging sick or personal days, and submitting your timesheet. (Receipts and reimbursements are mini-module 2.) As before, you're in Training Mode — nothing you submit here is real.",
+        body: "Press Play to hear a quick overview of this mini-module: time off, sick and personal days, and timesheets. Each scene stays on screen until its narration finishes. As always, you're in Training Mode — nothing you submit here is real. When you're ready, press Next below to continue training.",
+        introExplainer: true,
         target: { selector: '[data-tour="sidebar-time-attendance"]' }
       },
       {
@@ -348,7 +351,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to Receipts & Reimbursements",
-        body: "This mini-module walks through a complete sample submission, exactly as you'd do it for real: starting with uploading a receipt and letting the app read it for you, then what to do — field by field — when the autofill doesn't work properly. It covers both getting paid back for out-of-pocket expenses and recording Candora MasterCard receipts. You're still in Training Mode, so every receipt you enter here is simulated.",
+        body: "Press Play to hear a quick overview of this mini-module: uploading receipts, the autofill, and submitting reimbursements and MasterCard receipts. Each scene stays on screen until its narration finishes. You're in Training Mode, so every receipt you enter here is simulated. When you're ready, press Next below to continue training.",
+        introExplainer: true,
         revealNav: "/reimbursement-requests",
         target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/reimbursement-requests"]'] },
         path: "/reimbursement-requests"
@@ -456,7 +460,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to the supervisor add-on",
-        body: "This optional module is for anyone who supervises staff. The Time & Money mini-modules showed how your team requests time off, submits timesheets and claims expenses — this tour shows where those land for you, and how to review and approve them. You're still in Training Mode: the pending requests you see are simulated, so practice freely.",
+        body: "Press Play to hear a quick overview of this module: where your team's requests land and how to approve them. Each scene stays on screen until its narration finishes. The pending requests you'll see are simulated, so practice freely. When you're ready, press Next below to continue training.",
+        introExplainer: true,
         target: { selector: '[data-tour="dashboard-notifications"]' },
         path: "/"
       },
@@ -547,7 +552,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to Pathways",
-        body: "Pathways is Candora's employment case management portal. Everything about a client's journey — intake, barriers, action plans, placements and employment outcomes — lives here. Take a moment to notice the sidebar: it's your map to every section."
+        body: "Press Play to hear a quick overview of Pathways and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training — and take a moment to notice the sidebar, your map to every section.",
+        introExplainer: true
       },
       {
         title: "Home — your caseload snapshot",
@@ -638,7 +644,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to the Resource Centre",
-        body: "This portal holds Candora's central client database. It's the single source of truth for who our clients are, what they need, and how the organization has supported them — so keeping records complete here matters."
+        body: "Press Play to hear a quick overview of the Resource Centre and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training — keeping records complete here is what matters.",
+        introExplainer: true
       },
       {
         title: "The dashboard",
@@ -715,7 +722,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to the ELL portal",
-        body: "This portal manages English Language Learning: learner rosters, classes and courses, waitlist and CLB assessments."
+        body: "Press Play to hear a quick overview of the ELL portal and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
+        introExplainer: true
       },
       {
         title: "The dashboard",
@@ -794,7 +802,8 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to Central Registration",
-        body: "This portal registers participants into any Candora program from one place, so every program's roster and waitlist is consistent."
+        body: "Press Play to hear a quick overview of Central Registration and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
+        introExplainer: true
       },
       {
         title: "The dashboard",

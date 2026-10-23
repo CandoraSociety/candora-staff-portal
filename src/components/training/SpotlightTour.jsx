@@ -193,7 +193,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             <h3 className={`font-bold mb-2 ${presentation ? "text-2xl" : "text-base"}`} style={{ color: "hsl(45, 92%, 65%)" }}>
               {step.title}
             </h3>
-            {step.introExplainer && <PortalIntroExplainer />}
+            {step.introExplainer && <PortalIntroExplainer moduleKey={module.key} />}
             {step.video && <TourVideo src={step.video} />}
             <p className={presentation ? "text-lg leading-relaxed" : "text-sm leading-relaxed"} style={{ color: "hsl(45, 45%, 88%)" }}>
               {step.body}

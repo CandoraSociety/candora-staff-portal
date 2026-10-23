@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PortalIntroScene from '@/components/training/PortalIntroScene';
-import { PORTAL_INTRO_SCENES as scenes } from '@/lib/training/portalIntroContent';
+import { getModuleIntroScenes } from '@/lib/training/portalIntroContent';
 
-export default function PortalIntroExplainer() {
+export default function PortalIntroExplainer({ moduleKey }) {
+  const scenes = getModuleIntroScenes(moduleKey);
   const [index, setIndex] = useState(0);
   const [started, setStarted] = useState(false);
   const [replay, setReplay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  if (!scenes) return null;
   const scene = scenes[index];
   const advance = () => index < scenes.length - 1 ? setIndex(index + 1) : setStarted(false);
   return (
-    <section aria-label="About the Candora Staff Portal" className="mb-3 rounded-xl border border-sidebar-border overflow-hidden">
+    <section aria-label="Module introduction" className="mb-3 rounded-xl border border-sidebar-border overflow-hidden">
       <PortalIntroScene scene={scene} index={index} total={scenes.length} />
       <div className="bg-sidebar-accent text-sidebar-foreground p-3 space-y-3">
         <audio
@@ -25,7 +27,7 @@ export default function PortalIntroExplainer() {
           onError={() => { setLoading(false); setFailed(true); }}
         >Your browser does not support audio playback.</audio>
         <p className="text-xs text-center text-sidebar-foreground/80" role="status">
-          {failed ? 'Narration could not load. Read the scene above and use Next scene to continue.' : loading ? 'Loading narration…' : 'Press Play to listen. Each scene stays until its narration has finished.'}
+          {failed ? 'Narration could not load. Read the scene above and use Next scene to continue.' : loading ? 'Loading narration…' : 'Press Play to listen. Each scene stays on screen until its narration has finished.'}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Button variant="secondary" size="sm" disabled={index === 0} onClick={() => setIndex(index - 1)}>
