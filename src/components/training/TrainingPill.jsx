@@ -10,6 +10,7 @@ import FacilitatorSession from "@/components/training/FacilitatorSession";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
+import TrainingSidebar from "@/components/training/TrainingSidebar";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 
@@ -23,6 +24,7 @@ export default function TrainingPill() {
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  const [tourStep, setTourStep] = useState(null);
 
   const session = readSession();
   const fSession = readFacilitatorSession();
@@ -206,6 +208,16 @@ export default function TrainingPill() {
         </div>
       )}
 
+      {/* Docked right-hand sidebar — jump between mini-modules and steps */}
+      {samePortalSession && (
+        <TrainingSidebar
+          activeKey={module.key}
+          activeStepIndex={tourOpen ? tourStep : -1}
+          onOpenTour={() => setTourOpen(true)}
+          onOpenPractice={() => setChecklistOpen(true)}
+        />
+      )}
+
       {/* No session yet — offer training for this portal */}
       {!session && (
         <div className="fixed bottom-4 left-4 z-[60] print:hidden">
@@ -231,6 +243,7 @@ export default function TrainingPill() {
         module={module}
         progress={rec || null}
         updateProgress={updateProgress}
+        onStepChange={setTourStep}
         onClose={(finished) => { setTourOpen(false); if (finished) setChecklistOpen(true); }}
       />
       <PracticeChecklist

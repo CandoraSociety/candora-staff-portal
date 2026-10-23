@@ -111,7 +111,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real. When you finish this module, there's a Part 2 — Time & Money — covering time off, timesheets, receipts and reimbursements."
+        body: "That's the tour! Next you'll try a few things yourself with the practice checklist. Remember: you're in Training Mode, so nothing you do here is real. When you finish this module, the Time & Money series is next — two mini-modules covering time off and timesheets, then receipts and reimbursements."
       }
     ],
     tasks: [
@@ -148,14 +148,14 @@ export const TRAINING_MODULES = [
   },
   {
     key: "staffadmin",
-    title: "Main Page — Part 2: Time & Money",
-    shortTitle: "Time & Money",
-    blurb: "Part 2 of the main page training: booking time off, sick/personal days, timesheets, Candora MasterCard receipts and reimbursements.",
+    title: "Time & Money — Mini-Module 1: Time Off & Timesheets",
+    shortTitle: "Time Off & Timesheets",
+    blurb: "Time & Money mini-module 1: booking time off, logging sick/personal days, submitting timesheets, and the team schedule.",
     path: "/time-off/vacation-request",
     steps: [
       {
         title: "Welcome to Part 2",
-        body: "This is Part 2 of the main page training. It covers the everyday admin tasks: booking time off, logging sick or personal days, submitting timesheets, uploading Candora MasterCard receipts, and getting paid back for out-of-pocket expenses. As before, you're in Training Mode — nothing you submit here is real.",
+        body: "This is the Time & Money training, mini-module 1 of 2: the everyday time admin — booking time off, logging sick or personal days, and submitting your timesheet. (Receipts and reimbursements are mini-module 2.) As before, you're in Training Mode — nothing you submit here is real.",
         target: { selector: '[data-tour="sidebar-time-attendance"]' }
       },
       {
@@ -225,40 +225,7 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="sidebar-time-attendance"]' },
         path: "/time-off/team"
       },
-      {
-        title: "Reimbursements — getting paid back",
-        body: "Paid for something out of pocket? Add each expense as an entry, attach the receipt, then submit them together as one reimbursement request. It travels to your supervisor and then Finance, who e-transfer you the total once it's paid.",
-        revealNav: "/reimbursement-requests",
-        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/reimbursement-requests"]'] },
-        path: "/reimbursement-requests"
-      },
-      {
-        title: "Add a receipt entry",
-        body: "Click Add Receipt Entry and a row opens. Attach your receipt with the paperclip — the app reads it and fills in the date, supplier and total for you. Then choose the program it relates to, answer Food yes or no, and enter the total with GST. If the receipt included something personal, use the scissors control to subtract it from the claim. Save with the check mark, and repeat for each receipt.",
-        target: { text: "Add Receipt Entry" }
-      },
-      {
-        title: "Submit them for reimbursement",
-        body: "When your entries are ready, press Submit for Reimbursement and they go together as one form — the total at the bottom of the table is what you're claiming. It travels to your supervisor, then Finance. You can watch its progress on this page under Submitted Reimbursements, and it moves to Paid once Finance has e-transferred you.",
-        target: { text: "Submit for Reimbursement" }
-      },
-      {
-        title: "Candora MasterCard receipts",
-        body: "If you made a purchase on the Candora MasterCard, upload the receipt here — each one is matched against the monthly card statement so Finance can reconcile the card without chasing people for paperwork.",
-        revealNav: "/candora-cc-receipts",
-        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/candora-cc-receipts"]'] },
-        path: "/candora-cc-receipts"
-      },
-      {
-        title: "Enter each card receipt",
-        body: "The entry form works exactly like a reimbursement: Add Receipt Entry, attach the receipt photo or PDF with the paperclip so the details fill in automatically, pick the program, answer the food question and enter the total with GST. You're not claiming this money back — it was spent on the organization's card — so what matters is that each receipt is recorded accurately for the statement reconciliation.",
-        target: { text: "Add Receipt Entry" }
-      },
-      {
-        title: "Send them to Finance",
-        body: "Press Submit Receipts to Finance when your entries are done — they go as one monthly batch. Finance then matches each receipt against the MasterCard statement line by line, so a missing receipt here is what holds up the card reconciliation.",
-        target: { text: "Submit Receipts to Finance" }
-      },
+
       {
         title: "Where approvals and payments show up",
         body: "You don't need to check any of these pages for updates: when a supervisor approves your timesheet or time off, or Finance pays your reimbursement, a notification appears automatically on your main dashboard.",
@@ -268,7 +235,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Now try it yourself: request a day off, submit a timesheet, upload a MasterCard receipt, and put in a reimbursement — all on simulated data."
+        body: "That's the tour for this mini-module! Now try it yourself: request a day off, log a sick day, and submit a timesheet — all on simulated data. When you're ready, mini-module 2 walks you through receipts, reimbursements and MasterCard submissions step by step."
       }
     ],
     tasks: [
@@ -296,24 +263,116 @@ export const TRAINING_MODULES = [
         path: "/time-off/timesheets",
         verify: { kind: "created", entity: "Timesheet" }
       },
+    ]
+  },
+
+  {
+    key: "staffadmin_money",
+    title: "Time & Money — Mini-Module 2: Receipts & Reimbursements",
+    shortTitle: "Receipts & Reimb.",
+    blurb: "Time & Money mini-module 2: a full sample submission — uploading a receipt and the autofill, entering details by hand when autofill doesn't work, and submitting reimbursements and MasterCard receipts.",
+    path: "/reimbursement-requests",
+    steps: [
+      {
+        title: "Welcome to Receipts & Reimbursements",
+        body: "This mini-module walks through a complete sample submission, exactly as you'd do it for real: starting with uploading a receipt and letting the app read it for you, then what to do — field by field — when the autofill doesn't work properly. It covers both getting paid back for out-of-pocket expenses and recording Candora MasterCard receipts. You're still in Training Mode, so every receipt you enter here is simulated.",
+        revealNav: "/reimbursement-requests",
+        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/reimbursement-requests"]'] },
+        path: "/reimbursement-requests"
+      },
+      {
+        title: "Start with Add Receipt Entry",
+        body: "Every claim starts the same way: click Add Receipt Entry. A new row opens in the table below — that blank row is your workspace for this whole tour, and it's where the receipt upload happens.",
+        target: { text: "Add Receipt Entry" }
+      },
+      {
+        title: "Upload the receipt",
+        body: "Attach the receipt photo or PDF with the paperclip at the left of the row. The app reads the file and fills in the date, supplier and total for you — that's the autofill. Give it a few seconds to finish, and always give the results a quick once-over against the actual receipt: on a blurry photo or a multi-item receipt it can misread."
+      },
+      {
+        title: "What the autofill filled in",
+        body: "After the read, the Date, Supplier and Total fields are filled automatically and the paperclip icon lights up to show the attachment is saved. Check each one against the receipt: the date is when you spent the money, the supplier is who you paid, and the total is the full amount you were charged. If anything's missing, that's the next step's territory."
+      },
+      {
+        title: "When autofill doesn't work",
+        body: "If the photo is too blurry to read, nothing fills in, or a field comes back wrong — don't start over, just type it in. Click into the Date field and pick or type the date, enter the Supplier name by hand, and type the Total with GST yourself. Autofill is a convenience, not a requirement: what matters to Finance is that the numbers are right."
+      },
+      {
+        title: "Choose the program",
+        body: "Pick which program the purchase relates to from the Program dropdown — this routes the expense to the right funding pot, so it's the one field you can't skip. If none of the options fits, choose Other and type the program name.",
+        target: { text: "Program" }
+      },
+      {
+        title: "Answer the food question",
+        body: "Click Yes or No for Food? Food gets special GST treatment, so this needs an answer either way — it can't be left blank. It's about the items on the receipt, not where you bought them: groceries are food even from a big-box store."
+      },
+      {
+        title: "Enter the total — and the GST",
+        body: "Enter the receipt total with GST — the full amount you actually paid. If you answered Food = No, the GST calculates itself at 5% Alberta GST. If you answered Food = Yes, type the GST amount from the receipt yourself (enter 0 if none was charged), because not all food is charged GST."
+      },
+      {
+        title: "Excluding personal items — the scissors",
+        body: "Bought something personal on the same receipt? Use the scissors control to exclude it from the claim: enter the personal item's price before GST and a short description. The scissors subtract it from what you're claiming and handle its GST automatically, so your claim is only the Candora portion."
+      },
+      {
+        title: "Save the entry",
+        body: "Press the check mark to save the entry into the table, then repeat — Add Receipt Entry — for each separate receipt. You can edit or delete a saved entry before submitting, and the totals at the bottom keep a running count of everything waiting to be claimed.",
+        target: { text: "Add Receipt Entry" }
+      },
+      {
+        title: "Submit for Reimbursement",
+        body: "When your entries are ready, press Submit for Reimbursement: they go together as one form, and the total at the bottom of the table is what you're claiming. It travels to your supervisor and then Finance, and once it's paid you're e-transferred the total. You can watch its progress on this page under Submitted Reimbursements — pending, approved, then Paid.",
+        target: { text: "Submit for Reimbursement" }
+      },
+      {
+        title: "Now the Candora MasterCard",
+        body: "Card purchases work exactly the same way, on the Candora MasterCard Receipts page — with one big difference: you're not claiming this money back, it was spent on the organization's card. What matters is that each receipt is recorded accurately, because Finance matches them against the monthly MasterCard statement line by line — a missing receipt here is what holds up the card reconciliation.",
+        revealNav: "/candora-cc-receipts",
+        target: { selector: '[data-tour="sidebar-purchases"]', additionalSelectors: ['[data-tour-path="/candora-cc-receipts"]'] },
+        path: "/candora-cc-receipts"
+      },
+      {
+        title: "Enter each card receipt",
+        body: "Same flow as before: Add Receipt Entry, attach the receipt with the paperclip so the autofill fills in the date, supplier and total — or type them by hand if the read doesn't work — pick the program, answer the food question and enter the total with GST. The scissors apply here too, if the receipt mixed in anything personal.",
+        target: { text: "Add Receipt Entry" }
+      },
+      {
+        title: "Submit Receipts to Finance",
+        body: "Press Submit Receipts to Finance when your entries are done — they go as one monthly batch, and Finance reconciles each receipt against the statement. If a receipt arrives after you've already submitted, just add it and submit again next time.",
+        target: { text: "Submit Receipts to Finance" }
+      },
+      {
+        title: "Where approvals and payments show up",
+        body: "You never need to check these pages for updates: when your supervisor approves your submission, or Finance pays your reimbursement, a notification appears automatically on your main dashboard.",
+        revealWidget: "notifications",
+        target: { selector: '[data-tour="dashboard-notifications"]' },
+        path: "/"
+      },
+      {
+        title: "Time to practice",
+        body: "That's the tour! Now try the whole flow yourself: add an entry with an attached receipt, check what the autofill filled in (and fix anything by hand), and submit it for reimbursement — then do the same with a MasterCard receipt. All on simulated data."
+      }
+    ],
+    tasks: [
       {
         id: "tm-reimb",
         title: "Submit a reimbursement",
         body: "Add an expense entry (attach a receipt if you like) and submit a reimbursement request for it.",
-        hint: "Open Reimbursement Requests, click Add Receipt Entry, fill in and save the entry with the check mark, then press Submit for Reimbursement.",
         path: "/reimbursement-requests",
+        hint: "Open Reimbursement Requests, click Add Receipt Entry, fill in and save the entry with the check mark, then press Submit for Reimbursement.",
         verify: { kind: "created", entity: "StaffReimbursementRequest" }
       },
       {
         id: "tm-cc",
         title: "Upload a MasterCard receipt",
         body: "Upload a receipt for a purchase made on the Candora MasterCard.",
-        hint: "Open Candora MasterCard Receipts, click Add Receipt Entry, fill in the details and press Submit Receipts to Finance.",
         path: "/candora-cc-receipts",
+        hint: "Open Candora MasterCard Receipts, click Add Receipt Entry, fill in the details and press Submit Receipts to Finance.",
         verify: { kind: "created", entity: "CCReceiptSubmission" }
       }
     ]
   },
+
   {
     key: "staffadmin_supervisor",
     title: "Time & Money — Supervisor Add-On",
@@ -324,7 +383,7 @@ export const TRAINING_MODULES = [
     steps: [
       {
         title: "Welcome to the supervisor add-on",
-        body: "This optional module is for anyone who supervises staff. Part 2 showed how your team requests time off, submits timesheets and claims expenses — this tour shows where those land for you, and how to review and approve them. You're still in Training Mode: the pending requests you see are simulated, so practice freely.",
+        body: "This optional module is for anyone who supervises staff. The Time & Money mini-modules showed how your team requests time off, submits timesheets and claims expenses — this tour shows where those land for you, and how to review and approve them. You're still in Training Mode: the pending requests you see are simulated, so practice freely.",
         target: { selector: '[data-tour="dashboard-notifications"]' },
         path: "/"
       },
@@ -739,6 +798,7 @@ export const TRAINING_MODULES = [
 export const TRAINING_MODULE_ACCESS = {
   dashboard: null,
   staffadmin: null,
+  staffadmin_money: null,
   staffadmin_supervisor: null,
   pathways: "pathways",
   rc: "rc",
@@ -756,8 +816,8 @@ export const moduleForPath = (pathname) => {
   const prefixes = [
     ["/e-signature", "dashboard"],
     ["/time-off", "staffadmin"],
-    ["/reimbursement-requests", "staffadmin"],
-    ["/candora-cc-receipts", "staffadmin"],
+    ["/reimbursement-requests", "staffadmin_money"],
+    ["/candora-cc-receipts", "staffadmin_money"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

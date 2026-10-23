@@ -42,29 +42,52 @@ export const FACILITATOR_GUIDE = {
     objectives: [
       "Staff can request time off and log sick/personal days",
       "Staff can submit a timesheet without help",
-      "Staff know the MasterCard receipt and reimbursement flows, and where approvals show up",
+      "Staff know where approvals and payments show up on their dashboard",
     ],
     stepNotes: {
-      "Welcome to Part 2": "Position it as the everyday-admin half of the main page training. Repeat the Training Mode message: every request they submit today is simulated and disappears when they exit.",
+      "Welcome to Part 2": "Position it as mini-module 1 of the two-part Time & Money training. Repeat the Training Mode message: every request they submit today is simulated and disappears when they exit.",
       "Booking time off": "Walk one request end to end on the projector: dates, submit, pending status. Common question: 'Who approves it?' — their supervisor, and they'll see the status change right on this page.",
       "Sick time and personal days": "The common mistake is booking sick days as vacation — show the difference and mention both feed the same balances.",
       "Submitting your timesheet": "Stress the payroll link: a late or missing timesheet means a late paycheque. Deadlines beat perfection here.",
       "The team schedule": "Practical tip to give the room: check this before requesting time off, so requests don't bounce off a week where coverage is thin.",
-      "Reimbursements — getting paid back": "Show the two-part habit: add entries as you spend, then submit them together. Receipts attached at entry time save everyone hunting later.",
-      "Candora MasterCard receipts": "Clarify the split: out-of-pocket goes to reimbursements, purchases on the org card go here. Finance reconciles the card statement from these uploads.",
       "Where approvals and payments show up": "The reassurance step: nobody needs to poll these pages — approvals and payment notices arrive as dashboard notifications on their own.",
-      "Time to practice": "Hands-on: everyone submits a time-off request, a timesheet, a receipt and a reimbursement. Circulate — timesheet period dates are where people hesitate.",
+      "Time to practice": "Hands-on: everyone submits a time-off request, a sick day and a timesheet. Circulate — timesheet period dates are where people hesitate. Point to mini-module 2 for the receipts walkthrough.",
     },
     practiceNotes: {
       "tm-vacation": "Auto-checked. Have them pick a real future date so the form behaves like it will in real life.",
       "tm-sick": "Self-marked — remind them it's logged, not requested, but still reviewed.",
       "tm-timesheet": "Auto-checked. The must-do of this module: verify everyone submitted before the session ends.",
-      "tm-reimb": "Auto-checked. Encourage attaching a demo receipt — the habit that saves Finance the most time.",
-      "tm-cc": "Auto-checked. Any image file works for the demo upload; the point is seeing the confirmation flow.",
     },
     tips: [
       "Run this session close to a pay period start — timesheet habits stick best when the real one is due soon.",
       "Have the payroll deadline dates handy; it's the first question every group asks.",
+    ],
+  },
+
+  staffadmin_money: {
+    duration: "About 35 minutes (5 intro · 15 tour · 10 practice · 5 wrap-up)",
+    objectives: [
+      "Staff can add a receipt entry with the autofill upload, and by hand when autofill fails",
+      "Staff can exclude personal items from a claim with the scissors control",
+      "Staff know the difference between a reimbursement and a MasterCard receipt submission",
+    ],
+    stepNotes: {
+      "Welcome to Receipts & Reimbursements": "Position it as mini-module 2 of Time & Money: the money half. Everyone should have a photo or PDF handy to practice the upload with.",
+      "Start with Add Receipt Entry": "Set the two-part habit early: add entries as you spend, then submit them together. Receipts attached at entry time save everyone hunting later.",
+      "Upload the receipt": "Show the autofill reading a receipt live — then deliberately show a blurry one failing. The lesson is that manual entry is normal, not a failure.",
+      "When autofill doesn't work": "Walk every field: date, supplier, total. This is the step people actually get stuck on later — slow down here.",
+      "Choose the program": "Common question: 'Which program?' — if unsure, their supervisor can correct it before approval, but a good first guess saves a round trip.",
+      "Excluding personal items — the scissors": "The most common real-life case: a Costco receipt with a personal item on it. Show the GST handling.",
+      "Now the Candora MasterCard": "Clarify the split: out-of-pocket goes to reimbursements, purchases on the org card go here. Finance reconciles the card statement from these uploads.",
+      "Time to practice": "Hands-on: everyone adds an entry with an attached receipt and submits it, then does the same on the MasterCard side. Circulate — the program dropdown is where people hesitate.",
+    },
+    practiceNotes: {
+      "tm-reimb": "Auto-checked. Encourage attaching a demo receipt — the habit that saves Finance the most time.",
+      "tm-cc": "Auto-checked. Any image file works for the demo upload; the point is seeing the confirmation flow.",
+    },
+    tips: [
+      "Have 2-3 sample receipts ready (one blurry, one with a personal item) so the autofill and scissors steps can be shown honestly.",
+      "Repeat the money split: out-of-pocket = reimbursement, org card = MasterCard receipts.",
     ],
   },
 

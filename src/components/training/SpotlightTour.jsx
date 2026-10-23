@@ -12,7 +12,7 @@ import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setRevealedWidget, setRevealedNavPath } = useTrainingTour();
+  const { setRevealedWidget, setRevealedNavPath, jumpRequest } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
   const drag = useTrainingWindowDrag(open, module?.key);
@@ -25,6 +25,15 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
   const presentationKey = facilitator ? "candora-tour-presentation-f" : "candora-tour-presentation";
+
+  // Sidebar navigation — jump straight to a chosen step of this module's tour
+  useEffect(() => {
+    if (!jumpRequest || jumpRequest.moduleKey !== module?.key) return;
+    const total = module.steps?.length || 1;
+    const i = Math.max(0, Math.min(total - 1, jumpRequest.stepIndex));
+    setIndex(i);
+    try { sessionStorage.setItem(stepKey, String(i)); } catch { /* ignore */ }
+  }, [jumpRequest?.token]);
 
   // Optional widgets must exist on screen before the spotlight can measure them.
   useEffect(() => {
