@@ -150,41 +150,38 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Turning widgets on and off",
-        body: "This is the Add Functions page: every widget you can use is a card here, and clicking a card turns it on or off — changes save automatically and appear on your main page right away. You'll also choose your portal shortcuts and Microsoft apps on this same page, so it's worth knowing it well.",
+        body: "This is the Add Functions page: every widget you can use is a card here, and clicking a card turns it on or off — changes save automatically and appear on your main page right away. You'll also choose your portal shortcuts and Microsoft apps on this same page, so it's worth knowing it well. One note for the rest of this walkthrough: every card we discuss is shown as it looks when it's turned on, so you can see each widget at its best.",
         target: { selector: '[data-tour="widget-list"]' }
       },
       {
         title: "The Personal Organizer",
-        body: "Officially \"Organization for the Disorganized\": your private to-do space. Set today's focus, list your priorities and track your tasks — with a little AI help for planning your week. It's private to you and follows you on any device, so it's a favourite for staying on top of your own work.",
-        path: "/",
-        revealWidget: "organizer",
-        target: { selector: '[data-tour="dashboard-organizer"]' }
+        body: "Officially \"Organization for the Disorganized\": your private to-do space. Set today's focus, list your priorities and track your tasks — with a little AI help for planning your week. It's private to you and follows you on any device, so it's a favourite for staying on top of your own work. This is its card; once you turn it on, the organizer appears full-width on your main page.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour-widget="organizer"]' }
       },
       {
         title: "The How-To AI Assistant",
-        body: "Ask the How-To search how to do anything in the portal — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language. It answers from Candora's own how-to knowledge first, and falls back to AI when it hasn't been asked before, so it's your fastest route to an answer instead of asking a co-worker.",
-        path: "/",
-        revealWidget: "howto",
-        target: { selector: '[data-tour="dashboard-howto"]' }
+        body: "Ask the How-To search how to do anything in the portal — from submitting a timesheet to logging a client visit — and get a step-by-step answer in plain language. It answers from Candora's own how-to knowledge first, and falls back to AI when it hasn't been asked before, so it's your fastest route to an answer instead of asking a co-worker. Turn this one on and the search box sits on your main page, ready for your first question.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour-widget="howto"]' }
       },
       {
         title: "My Tasks and My Reminders",
-        body: "These two keep your assigned work in view: My Tasks shows Compass tasks and to-dos assigned to you across the portal, and My Reminders shows deadlines you've set for yourself. Turn them on if your role comes with assigned tasks; they're quiet otherwise. Their cards are here on this page — toggle one on now if either sounds like you.",
+        body: "These two keep your assigned work in view: My Tasks shows Compass tasks and to-dos assigned to you across the portal, and My Reminders shows deadlines you've set for yourself. Turn them on if your role comes with assigned tasks; they're quiet otherwise. Their cards are highlighted here — flip one on once the walkthrough is done if either sounds like you.",
         path: "/widget-customization",
-        target: { selector: '[data-tour="widget-list"]' }
+        target: { selector: '[data-tour-widget="my_tasks"]', additionalSelectors: ['[data-tour-widget="my_reminders"]'] }
       },
       {
         title: "Notes, birthdays and recent clients",
-        body: "The rest of the optional widgets cover the human side of the workday: Quick Notes pins your recent notes, Team Birthdays shows upcoming birthdays and work anniversaries, Recent Clients shortcuts to the client files you last worked with, and Recent Files does the same for documents. You'll find their cards right here — pick whichever fits your role.",
+        body: "The rest of the optional widgets cover the human side of the workday: Quick Notes pins your recent notes, Team Birthdays shows upcoming birthdays and work anniversaries, and Recent Clients shortcuts to the client files you last worked with. Their cards are highlighted here — pick whichever fits your role.",
         path: "/widget-customization",
-        target: { selector: '[data-tour="widget-list"]' }
+        target: { selector: '[data-tour-widget="quick_notes"]', additionalSelectors: ['[data-tour-widget="team_birthdays"]', '[data-tour-widget="recent_clients"]'] }
       },
       {
         title: "Tracking widgets",
-        body: "A few widgets are for specific kinds of work: Project Progress tracks active projects and grants (great if you're on those teams), Time Log is quick access to log your hours, Meeting Manager schedules meetings and builds agendas and minutes, Statistics shows quick metrics, and Google Translate translates the page into any language. And remember — the ones marked as locked (announcements, recent activity, upcoming events) are always on for everyone.",
-        path: "/",
-        revealWidget: "google_translate",
-        target: { selector: '[data-tour="dashboard-translate"]' }
+        body: "A few widgets are for specific kinds of work: Project Progress tracks active projects and grants (great if you're on those teams), Time Log is quick access to log your hours, Meeting Manager schedules meetings and builds agendas and minutes, Statistics shows quick metrics, and Google Translate translates the page into any language. Their cards are highlighted here. And remember — the ones marked as locked (announcements, recent activity, upcoming events) are always on for everyone.",
+        path: "/widget-customization",
+        target: { selector: '[data-tour-widget="project_progress"]', additionalSelectors: ['[data-tour-widget="time_log"]', '[data-tour-widget="meeting_manager"]', '[data-tour-widget="google_translate"]'] }
       },
       {
         title: "Time to practice",

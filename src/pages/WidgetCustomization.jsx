@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText, Users, Star, Bell, ImageIcon, Brain, HelpCircle, CalendarClock, LayoutDashboard, Lock, Languages } from 'lucide-react';
 import { MICROSOFT_APPS, DEFAULT_MS_APP_IDS } from '@/lib/microsoftApps';
+import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 
 const ICON_MAP = {
   BarChart2, Activity, Megaphone, Clock, CheckSquare, TrendingUp, FileText,
@@ -16,6 +17,7 @@ import { useOutletContext } from 'react-router-dom';
 
 export default function WidgetCustomization() {
   const { user: currentUser } = useOutletContext();
+  const { widgetsWalkthrough } = useTrainingTour();
   const queryClient = useQueryClient();
 
   const { data: preferences } = useQuery({
@@ -136,10 +138,13 @@ export default function WidgetCustomization() {
                const Icon = widget.icon;
                const isLocked = widget.locked;
                const isComingSoon = widget.comingSoon;
-               const enabled = isLocked || enabledWidgets.includes(widget.id);
+               // During the widget walkthrough every card shows as it looks
+               // when the widget is turned on, so learners see each one active.
+               const enabled = isLocked || widgetsWalkthrough || enabledWidgets.includes(widget.id);
                return (
                  <div
                    key={widget.id}
+                   data-tour-widget={widget.id}
                    onClick={() => !isComingSoon && !isLocked && toggleWidget(widget.id)}
                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all select-none ${
                      isLocked

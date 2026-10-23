@@ -12,7 +12,7 @@ import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setRevealedWidget, setRevealedNavPath, jumpRequest } = useTrainingTour();
+  const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
   const drag = useTrainingWindowDrag(open, module?.key);
@@ -50,6 +50,15 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     setRevealedWidget(open ? step?.revealWidget || null : null);
     return () => setRevealedWidget(null);
   }, [open, step?.revealWidget, setRevealedWidget]);
+
+  // While the Dashboard Widgets walkthrough spotlights a specific widget card,
+  // the Add Functions page shows every card as it looks when turned on.
+  useEffect(() => {
+    const on = open && module?.key === "dashboard_widgets"
+      && String(step?.target?.selector || "").includes("data-tour-widget");
+    setWidgetsWalkthrough(on);
+    return () => setWidgetsWalkthrough(false);
+  }, [open, module?.key, step?.target?.selector, setWidgetsWalkthrough]);
 
   // Keep hover-only sidebar sub-tabs visible while their tour step is open.
   useEffect(() => {
