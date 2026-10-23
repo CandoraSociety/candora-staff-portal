@@ -31,8 +31,8 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What is the Candora Staff Portal?",
-        body: "Before we go further, press play on this short video. In plain terms: the Candora Staff Portal is our complete ERP — an ERP (Enterprise Resource Planning system) is the one central piece of software an organization runs its day-to-day operations on, instead of juggling a pile of separate programs. Ours is also our full suite of work software, our administration, and our workspace all in one: almost everything we do administratively from day to day — client files, programs, HR, finance, training and more — is completed right here, inside this portal. A few functions are still being built, but this is where they'll live too. This is what you'll log into at the beginning of every work day.",
-        video: "https://media.base44.com/videos/public/6a249282cb496579542673b7/eda2c518a_Portal_Intro_Video.mp4"
+        body: "Watch this short explainer — it covers what the portal is and why you'll be in it every day. If you'd rather listen than read, turn on the voice-over with the speaker button.",
+        introExplainer: true
       },
       {
         title: "Announcements",
