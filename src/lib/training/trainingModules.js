@@ -587,7 +587,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The client journey — its own module",
-        body: "The journey a client travels — intake, barriers and the action plan, Compass tasks, placements, determination — is the most complex part of Pathways, so it has its own training module: The Client Journey. It follows three demo clients through three different scenarios, stage by stage, opening each client's file as the journey unfolds. When you finish this tour, open it from the training menu.",
+        body: "The journey a client travels — intake, barriers and the action plan, Compass tasks, placements, determination — is the most complex part of Pathways, so it has its own training module: Pathways Client Journey. It follows three demo clients through three different scenarios, stage by stage, opening each client's file as the journey unfolds. When you finish this tour, open it from the training menu.",
         target: { selector: '[data-tour-path="/pathways/master"]' },
         path: "/pathways/master"
       },
@@ -651,7 +651,7 @@ export const TRAINING_MODULES = [
   },
   {
     key: "pathways_journey",
-    title: "Pathways: The Client Journey",
+    title: "Pathways Client Journey",
     shortTitle: "Client Journey",
     blurb: "The supplementary Pathways module: follow three demo clients — mid-journey, completed and waitlisted — through every stage of the client journey, inside their real files.",
     path: "/pathways/dashboard",
