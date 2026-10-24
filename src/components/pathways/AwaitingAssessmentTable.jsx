@@ -98,7 +98,7 @@ export default function AwaitingAssessmentTable({ clients, onUpdate, onWaitlist 
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-1.5">
                     <Link to={`/pathways/assessment/${c.id}`}>
-                      <Button variant="outline" size="sm" className="gap-1">
+                      <Button data-tour="pw-intake-assess-btn" variant="outline" size="sm" className="gap-1">
                         <ClipboardCheck className="w-3.5 h-3.5" />
                         Assess
                       </Button>

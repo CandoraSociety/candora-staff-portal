@@ -1,47 +1,32 @@
 import { useEffect, useState } from 'react';
 import { findSpotlightTarget } from '@/components/training/spotlightTarget';
+import { spotlightBounds } from '@/components/training/cursorTarget';
 
-const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, label, [role="button"], [contenteditable="true"]';
+const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, [role="button"], [role="tab"]';
 
 export default function useSpotlightTarget(enabled, target, stepKey) {
   const [focus, setFocus] = useState(null);
+  const targetKey = JSON.stringify(target);
   useEffect(() => {
     if (!enabled || !target) return;
-    let current = null;
-    let frame;
+    let current = null, frame;
     const measure = () => {
       const element = findSpotlightTarget(target);
       if (element && element !== current) {
         current = element;
-        element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+        const margin = element.style.scrollMarginTop;
+        element.style.scrollMarginTop = '96px';
+        element.scrollIntoView({ block: element.getBoundingClientRect().height > window.innerHeight - 160 ? 'start' : 'center', inline: 'nearest', behavior: 'instant' });
+        element.style.scrollMarginTop = margin;
       }
-      // Keep the page's navigation header highlighted even if its content target is absent.
-      const elements = [element, ...(target.additionalSelectors || []).map(selector => findSpotlightTarget({ selector }))].filter(Boolean);
-      const regions = elements.map(node => {
-        const bounds = node.getBoundingClientRect();
-        return { top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height };
-      });
-      const top = Math.min(...regions.map(region => region.top));
-      const left = Math.min(...regions.map(region => region.left));
-      const rect = regions.length ? { top, left,
-        width: Math.max(...regions.map(region => region.left + region.width)) - left,
-        height: Math.max(...regions.map(region => region.top + region.height)) - top,
-        regions,
-      } : null;
-      // "The highlighted area is live" is only true when something in it takes a click.
-      const interactive = elements.some(node => node.matches(INTERACTIVE_SELECTOR) || node.querySelector(INTERACTIVE_SELECTOR));
-      setFocus(previous => {
-        if (previous?.stepKey === stepKey && previous.interactive === interactive && JSON.stringify(previous.rect) === JSON.stringify(rect)) return previous;
-        return { stepKey, rect, interactive };
-      });
+      const bounds = element ? spotlightBounds(element) : null;
+      const next = { stepKey, targetKey, rect: bounds?.rect || null, point: bounds?.point || null,
+        interactive: !!element && (element.matches(INTERACTIVE_SELECTOR) || !!element.querySelector(INTERACTIVE_SELECTOR)) };
+      setFocus(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
     };
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
-    };
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(measure); };
     measure();
-    // Keep searching while the slide is open, including delayed data and replaced cards.
-    const timer = window.setInterval(schedule, 250);
+    const timer = window.setInterval(schedule, 100);
     window.addEventListener('resize', schedule);
     window.addEventListener('scroll', schedule, true);
     return () => {
@@ -50,7 +35,6 @@ export default function useSpotlightTarget(enabled, target, stepKey) {
       window.removeEventListener('resize', schedule);
       window.removeEventListener('scroll', schedule, true);
     };
-  }, [enabled, target, stepKey]);
-  if (!enabled || focus?.stepKey !== stepKey) return null;
-  return { rect: focus.rect, interactive: focus.interactive };
+  }, [enabled, targetKey, stepKey]);
+  return enabled && focus?.stepKey === stepKey && focus?.targetKey === targetKey ? focus : null;
 }

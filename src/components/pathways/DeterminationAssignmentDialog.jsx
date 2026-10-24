@@ -43,7 +43,7 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
 
   return (
     <Dialog open={!!client} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent>
+      <DialogContent data-tour="pw-determination-dialog">
         <DialogHeader>
           <DialogTitle>
             {step === 'determination' ? 'Determination / Assignment' : 'Assign Career Counsellor'}
@@ -74,6 +74,7 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
                 return (
                   <button
                     key={opt.key}
+                    data-tour={`pw-determination-${opt.key}`}
                     disabled={isBlocked}
                     onClick={() => {
                       if (isBlocked) {
@@ -112,7 +113,7 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
               Assign <span className="font-semibold text-slate-700">{client?.first_name} {client?.last_name}</span> to a career counsellor. The client will appear on their dashboard and the master list under {selectedOption?.label}.
             </p>
             <Select value={selectedWorker} onValueChange={setSelectedWorker}>
-              <SelectTrigger><SelectValue placeholder="Select staff member..." /></SelectTrigger>
+              <SelectTrigger data-tour="pw-determination-counsellor"><SelectValue placeholder="Select staff member..." /></SelectTrigger>
               <SelectContent>
                 {staffList.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
@@ -135,6 +136,7 @@ export default function DeterminationAssignmentDialog({ client, staffList, onClo
           )}
           {step === 'determination' ? (
             <Button
+              data-tour="pw-determination-continue"
               disabled={!determination}
               onClick={() => needsCounsellor ? setStep('assign') : handleConfirm()}
               className="gap-1"

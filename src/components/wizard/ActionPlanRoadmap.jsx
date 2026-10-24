@@ -580,7 +580,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       <div className="flex items-center justify-between flex-wrap gap-2">
         <Tabs value={view} onValueChange={setView}>
           <TabsList>
-            <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            <TabsTrigger value="timeline" data-tour="pw-roadmap-timeline">Timeline</TabsTrigger>
             <TabsTrigger value="list">List</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
@@ -590,7 +590,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
       {/* Editable program start date — visible in all views */}
       {!barrierOnly && (
-        <div className="flex items-center gap-2 text-xs">
+        <div data-tour="pw-roadmap-start-date" className="flex items-center gap-2 text-xs">
           <CalendarCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span className="text-slate-500">Program Start:</span>
           <ServiceStartDateEditor client={client} onClientUpdate={onClientUpdate} />
@@ -606,7 +606,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
           <div className="overflow-x-auto">
             <div style={{ minWidth: 700 }}>
               {/* Month axis */}
-              <div className="flex ml-40 border-b border-slate-200 mb-1">
+              <div data-tour="pw-roadmap-months" className="flex ml-40 border-b border-slate-200 mb-1">
                 {months.map((m, i) => {
                   const leftP = pct(m) ?? 0;
                   const nextM = new Date(m); nextM.setMonth(nextM.getMonth() + 1);
@@ -620,7 +620,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
               </div>
 
               {/* Milestone label row */}
-              <div className="relative ml-40 h-10 mb-1">
+              <div data-tour="pw-roadmap-milestones" className="relative ml-40 h-10 mb-1">
                 {staggeredMilestones.map(m => (
                   <span
                     key={m.key}
@@ -660,22 +660,24 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
                 )}
 
                 {/* Action plan items */}
-                {renderNonBarrier.length > 0 && (
-                  <div className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 -ml-40 pl-1">ACTION PLAN ITEMS</div>
-                )}
-                {renderNonBarrier.map(item => (
-                  <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
-                ))}
+                <div data-tour="pw-roadmap-items">
+                  {renderNonBarrier.length > 0 && (
+                    <div className="text-[9px] font-bold text-slate-500 tracking-widest mb-0.5 -ml-40 pl-1">ACTION PLAN ITEMS</div>
+                  )}
+                  {renderNonBarrier.map(item => (
+                    <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
+                  ))}
+                </div>
 
                 {/* Barrier section */}
                 {barriers.length > 0 && (
-                  <>
+                  <div data-tour="pw-roadmap-barriers">
                     <div className="h-px bg-amber-300 my-1" />
                     <div className="text-[9px] font-bold text-amber-600 tracking-widest mb-0.5 -ml-40 pl-1">BARRIERS</div>
                     {barriers.map(item => (
                       <ItemRow key={item.key} item={item} pct={pct} openItem={openItem} setOpenItem={setOpenItem} onSave={handleSaveItem} saving={saving} projectedEndDate={projectedEnd} serviceStartDate={serviceStart} client={client} workshops={workshops} workshopSignups={workshopSignups} reloadWorkshops={reloadWorkshops} onClientUpdate={onClientUpdate} />
                     ))}
-                  </>
+                  </div>
                 )}
 
                 {/* BIT reviews row */}
@@ -722,7 +724,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
               </div>
 
               {/* Legend */}
-              <div className="flex flex-wrap gap-4 ml-40 mt-3 text-[10px] text-slate-500">
+              <div data-tour="pw-roadmap-legend" className="flex flex-wrap gap-4 ml-40 mt-3 text-[10px] text-slate-500">
                 {[['#f59e0b','Barrier'],['#22c55e','Placement'],['#a855f7','Workshops/Programs'],['#64748b','Other'],['#fbbf24','Today']].map(([c,l]) => (
                   <span key={l} className="flex items-center gap-1">
                     <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: c }} />
@@ -898,14 +900,16 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
       {!barrierOnly && <CrtAdditionalComments client={client} onClientUpdate={onClientUpdate} />}
 
       {/* Progress notes */}
-      <RoadmapProgressNotes
-        notes={client?.roadmap_progress_notes || []}
-        clientId={client.id}
-        onNotesUpdate={async (notes) => {
-          const updated = await base44.entities.Client.update(client.id, { roadmap_progress_notes: notes });
-          onClientUpdate?.(updated);
-        }}
-      />
+      <div data-tour="pw-roadmap-notes">
+        <RoadmapProgressNotes
+          notes={client?.roadmap_progress_notes || []}
+          clientId={client.id}
+          onNotesUpdate={async (notes) => {
+            const updated = await base44.entities.Client.update(client.id, { roadmap_progress_notes: notes });
+            onClientUpdate?.(updated);
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -980,6 +984,9 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
           {/* Bar fill — only shows when item has actually been started */}
           {startD && (
             <div
+              data-tour="pw-roadmap-first-item"
+              data-tour-open={isOpen ? 'true' : 'false'}
+              data-tour-placement={item.key.startsWith('wep_') ? 'true' : undefined}
               className="absolute top-0.5 bottom-0.5 rounded"
               style={{
                 left: `${startP}%`,
@@ -1008,7 +1015,7 @@ function ItemRow({ item, pct, openItem, setOpenItem, onSave, saving, projectedEn
         </div>
       </div>
       {isOpen && (
-        <div className="mb-2 ml-0 relative z-40">
+        <div data-tour="pw-roadmap-item-panel" className="mb-2 ml-0 relative z-40">
           {item.isWorkshopSignup ? (
             <WorkshopRoadmapPanel
               client={client}

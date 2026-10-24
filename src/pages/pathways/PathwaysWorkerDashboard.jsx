@@ -331,6 +331,7 @@ export default function PathwaysWorkerDashboard() {
         {/* Tab switcher */}
         <div data-tour="pw-dash-tabs" className="flex gap-1 mb-5 bg-slate-100 rounded-lg p-1 w-fit">
           <button
+            data-tour="pw-dash-clients"
             onClick={() => setActiveTab("clients")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               activeTab === "clients" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -339,6 +340,7 @@ export default function PathwaysWorkerDashboard() {
             <Users className="w-3.5 h-3.5" /> My Clients
           </button>
           <button
+            data-tour="pw-dash-compass"
             onClick={() => setActiveTab("compass")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               activeTab === "compass" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -353,6 +355,7 @@ export default function PathwaysWorkerDashboard() {
           </button>
           {isManagerOrAdmin && (
             <button
+              data-tour="pw-dash-purchases"
               onClick={() => setActiveTab("purchases")}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "purchases" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -367,6 +370,7 @@ export default function PathwaysWorkerDashboard() {
             </button>
           )}
           <button
+            data-tour="pw-dash-narrative"
             onClick={() => setActiveTab("narrative")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
               activeTab === "narrative" ? "bg-white shadow text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -540,6 +544,7 @@ export default function PathwaysWorkerDashboard() {
                 ].map(sub => (
                   <button
                     key={sub.id}
+                    data-tour={sub.id === 'internal_training' ? 'pw-placement-internal' : sub.id === 'work_exposure' ? 'pw-placement-exposure' : 'pw-placement-all'}
                     onClick={() => setPlacementSubTab(sub.id)}
                     className={`px-3 py-1.5 text-sm font-medium border-b-2 transition-colors ${
                       placementSubTab === sub.id

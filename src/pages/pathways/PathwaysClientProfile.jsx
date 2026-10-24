@@ -139,7 +139,7 @@ export default function PathwaysClientProfile() {
   const isSNOnly = isAssignedSN && (!client.assigned_worker || userEmail !== client.assigned_worker);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div data-tour-client={client.id} className="min-h-screen bg-slate-50">
       {/* Top Navigation Bar */}
       <div className="sticky top-0 z-40 px-6 py-2 flex items-center gap-3" style={{ background: 'hsl(231,64%,20%)' }}>
         <button onClick={() => navigate('/')}>
@@ -272,19 +272,19 @@ export default function PathwaysClientProfile() {
             <ClientProfileOverview client={client} onSave={handleSave} />
           </TabsContent>
 
-          <TabsContent value="referrals">
+          <TabsContent value="referrals" data-tour="pw-referrals-content">
             <ClientReferrals client={client} onSave={handleSave} />
           </TabsContent>
 
-          <TabsContent value="employment">
+          <TabsContent value="employment" data-tour="pw-employment-content">
             <ClientEmployment client={client} onSave={handleSave} />
           </TabsContent>
 
-          <TabsContent value="assessments">
+          <TabsContent value="assessments" data-tour="pw-assessments-content">
             <ClientAssessments client={client} onSave={handleSave} />
           </TabsContent>
 
-          <TabsContent value="stream_switches">
+          <TabsContent value="stream_switches" data-tour="pw-switches-content">
             <ClientStreamSwitches client={client} onSave={handleSave} />
           </TabsContent>
 

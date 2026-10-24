@@ -1,17 +1,20 @@
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 
 // A simulated pointer that plays the slide's action on the real page: as the
 // narration describes each step, the cursor glides to the element being
 // described and clicks it, so the tour watches like a hands-on video.
 export default function SimulatedCursor({ x, y, visible, clicking }) {
-  if (!visible || x == null || y == null) return null;
+  const lastPoint = useRef(null);
+  if (x != null && y != null) lastPoint.current = { x, y };
+  if (!visible || !lastPoint.current) return null;
   return createPortal(
     <div
       aria-hidden="true"
-      className="fixed z-[99] pointer-events-none"
+      className="fixed z-[10012] pointer-events-none"
       style={{
-        left: x,
-        top: y,
+        left: lastPoint.current.x,
+        top: lastPoint.current.y,
         transition:
           "left 0.9s cubic-bezier(0.45, 0, 0.2, 1), top 0.9s cubic-bezier(0.45, 0, 0.2, 1)",
       }}

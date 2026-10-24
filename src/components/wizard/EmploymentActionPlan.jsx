@@ -182,7 +182,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           <div><span className="font-medium">Career Objectives:</span> {client?.career_objectives || 'N/A'}</div>
           {client?.employment_history && <div className="col-span-2"><span className="font-medium">Employment History:</span> {client.employment_history}</div>}
           {client?.intake_notes && <div className="col-span-2"><span className="font-medium">Intake Notes:</span> {client.intake_notes}</div>}
-          <div className="col-span-2 flex items-center gap-2 pt-2 border-t border-blue-200">
+          <div data-tour="pw-plan-start-date" className="col-span-2 flex items-center gap-2 pt-2 border-t border-blue-200">
             <Label className="text-xs font-medium whitespace-nowrap">Program Start Date</Label>
             <Input
               type="date"
@@ -204,7 +204,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           </CardHeader>
           <CardContent className="space-y-3">
             {deaActivities.map((act, idx) => (
-              <div key={act.id} className="space-y-1">
+              <div key={act.id} data-tour={`pw-plan-dea-${act.id}`} className="space-y-1">
                 <div className="flex items-start gap-2">
                   <span className="text-xs text-muted-foreground mt-2 w-16 shrink-0">EDA {idx + 1}</span>
                   <Select value={act.type} onValueChange={v => updateDea(act.id, 'type', v)}>
@@ -249,7 +249,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
             const catItems = availableItems.filter(i => i.category === cat);
             if (catItems.length === 0) return null;
             return (
-              <Card key={cat}>
+              <Card key={cat} data-tour={`pw-plan-category-${cat}`}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">{cat}</CardTitle>
                 </CardHeader>
@@ -259,6 +259,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
+                          data-tour={`pw-plan-item-${item.key}`}
                           className="accent-primary w-4 h-4"
                           checked={selectedItems.includes(item.key)}
                           onChange={() => toggleItem(item.key)}
@@ -266,7 +267,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                         <span className="text-sm">{item.label}</span>
                       </label>
                       {selectedItems.includes(item.key) && (
-                        <div className="ml-6 mt-1 flex items-center gap-2">
+                        <div data-tour="pw-plan-dates" className="ml-6 mt-1 flex items-center gap-2">
                           <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
                           <Input
                             type="date"
@@ -298,7 +299,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
       )}
 
       {/* Notes */}
-      <Card>
+      <Card data-tour="pw-plan-notes">
         <CardHeader className="pb-2"><CardTitle className="text-sm">Additional Notes</CardTitle></CardHeader>
         <CardContent>
           <Textarea value={sdpNotes} onChange={e => setSdpNotes(e.target.value)} rows={3} placeholder="Add notes about the action plan..." className="text-sm" />
@@ -306,7 +307,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
       </Card>
 
       <div className="flex gap-3">
-        <Button onClick={() => handleSaveClick(false)} disabled={saving}>
+        <Button data-tour="pw-plan-save" onClick={() => handleSaveClick(false)} disabled={saving}>
           {saving ? 'Saving...' : isSubmitted ? 'Save Changes' : 'Create Action Plan'}
         </Button>
         {isSubmitted && (

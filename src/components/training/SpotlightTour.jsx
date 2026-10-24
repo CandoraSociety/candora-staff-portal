@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X, ArrowLeft, ArrowRight, Presentation, Volume2, Square } from "lucide-react";
@@ -9,6 +9,7 @@ import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 import SpotlightOverlay from "@/components/training/SpotlightOverlay";
 import SimulatedCursor from "@/components/training/SimulatedCursor";
 import useSimulatedCursor from "@/components/training/useSimulatedCursor";
+import useTourNarration from "@/components/training/useTourNarration";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 import TourVideo from "@/components/training/TourVideo";
 import DemoClientScene from "@/components/training/DemoClientScene";
@@ -21,28 +22,9 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
-  const [reading, setReading] = useState(false);
-  const [narrationMs, setNarrationMs] = useState(null);
   const audioRef = useRef(null);
   const drag = useTrainingWindowDrag(open, module?.key);
-
-  // Read-aloud narration for the current slide (intro steps play their own)
   const stepAudioUrl = STEP_AUDIO[module?.key]?.[index] || null;
-  const stopReading = () => {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    setReading(false);
-  };
-  useEffect(() => { stopReading(); setNarrationMs(null); }, [index, module?.key]);
-  useEffect(() => () => stopReading(), []);
-  const toggleRead = () => {
-    if (reading) { stopReading(); return; }
-    if (!stepAudioUrl) return;
-    const audio = new Audio(stepAudioUrl);
-    audioRef.current = audio;
-    audio.onended = () => stopReading();
-    audio.onerror = () => setReading(false);
-    audio.play().then(() => setReading(true)).catch(() => setReading(false));
-  };
 
   const steps = module?.steps || [];
   const step = steps[index];
@@ -51,7 +33,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // declare a routePrefix instead of a fixed path: the slide stays on whichever
   // matching page the learner opened, and falls back to the last fixed route
   // when none is open.
-  const onRoute = step?.routePrefix
+  const demoRoute = step?.routeFallback?.startsWith('/pathways/client/demo-');
+  const onRoute = demoRoute ? location.pathname === step.routeFallback : step?.routePrefix
     ? location.pathname.startsWith(step.routePrefix)
     : location.pathname === path;
   // The intro "video" plays centered with the full screen for itself: docking
@@ -62,39 +45,14 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // Demo-client scene slides play like a short video; like the intro, they get
   // the whole screen for the card so the scene and its text never scroll.
   const isFullCard = isIntro || !!step?.demoClient;
-  // The slide's action plays on the page itself: a cursor glides from stop to
-  // stop along the narration and clicks what's being described — clicks that
-  // only switch the view (step.clickTarget) are performed for real, the
-  // learner never navigates. The hook reports which stop the narration is on.
-  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, slideKey: `${module?.key}:${index}`, narrationMs });
-  // Every step that lands on a page also highlights the sidebar tab that page
-  // lives under, so learners see where the function lives in the navigation.
-  // While the narration plays, the spotlight follows it stop by stop — only
-  // the section the cursor is pointing at is highlighted, never every target
-  // on the slide at once. The full union of the slide's targets shows only
-  // until the cursor picks up the thread, or on slides without cursor stops.
-  const target = useMemo(() => {
-    const base = cursor.activeSelector ? { selector: cursor.activeSelector } : step?.target;
-    if (!base || !path || path === "/") return base;
-    const navSelector = `[data-tour-path="${path}"]`;
-    if (base.selector === navSelector || (base.additionalSelectors || []).includes(navSelector)) return base;
-    return { ...base, additionalSelectors: [...(base.additionalSelectors || []), navSelector] };
-  }, [step, path, cursor.activeSelector]);
-  const focus = useSpotlightTarget(open && !isFullCard && onRoute, target, `${module?.key}:${index}`);
+  const slideKey = `${module?.key}:${index}`;
+  const cursor = useSimulatedCursor({ enabled: open && onRoute && !isFullCard, step, slideKey, moduleKey: module?.key, audioRef });
+  const { reading, toggleRead } = useTourNarration({ enabled: open && onRoute && !isIntro && (isFullCard || cursor.ready), src: stepAudioUrl, slideKey, audioRef });
+  // Highlight only the current authored cue. Never add the page's navigation
+  // header, previous slide's target, or the union of all future cue regions.
+  const target = cursor.activeTarget;
+  const focus = useSpotlightTarget(open && !isFullCard && onRoute, target, slideKey);
   const rect = isFullCard ? null : focus?.rect || null;
-  // Narrated slides play like a video: scene slides and spotlight
-  // walkthroughs start their audio by themselves (the read-aloud button
-  // still pauses or replays it).
-  useEffect(() => {
-    if (!open || !stepAudioUrl || (!step?.demoClient && !step?.target)) return;
-    const audio = new Audio(stepAudioUrl);
-    audioRef.current = audio;
-    audio.onended = () => stopReading();
-    audio.onerror = () => setReading(false);
-    audio.onloadedmetadata = () => setNarrationMs(audio.duration > 0 ? audio.duration * 1000 : null);
-    audio.play().then(() => setReading(true)).catch(() => setReading(false));
-    return () => { if (audioRef.current === audio) { audio.pause(); audioRef.current = null; } };
-  }, [open, index, stepAudioUrl]);
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
@@ -220,9 +178,9 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   }
 
   return createPortal(
-    <div data-training-tour className="print:hidden">
+    <div data-training-tour className="relative z-[10010] print:hidden" style={{ pointerEvents: 'auto' }}>
       <SpotlightOverlay rect={rect} />
-      <SimulatedCursor {...cursor} />
+      <SimulatedCursor key={slideKey} x={focus?.point?.x} y={focus?.point?.y} visible={cursor.visible} clicking={cursor.clicking} />
       <div ref={drag.ref} style={{ ...cardStyle, ...drag.style }}>
         <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow flex min-h-0 w-full flex-1 flex-col" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
           <div {...drag.handleProps} className="flex shrink-0 items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
@@ -240,7 +198,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                   onClick={toggleRead}
                   className="p-1.5 rounded-lg hover:opacity-70 flex items-center gap-1"
                   style={{ color: reading ? "hsl(45, 92%, 53%)" : "hsl(230, 30%, 60%)" }}
-                  title={reading ? "Stop reading aloud" : "Read this slide aloud"}
+                  title={reading ? "Pause narration and walkthrough" : "Play or resume narration and walkthrough"}
                 >
                   {reading ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   {reading && <span className="text-[10px] font-semibold">Reading</span>}

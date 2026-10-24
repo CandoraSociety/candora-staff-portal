@@ -443,7 +443,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
           <div data-tour="pw-flow-create-plan" className="text-center py-16">
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <p className="text-sm text-slate-500 mb-4">No action plan has been created yet.</p>
-            <Button onClick={() => setActiveStep('employment_action_plan')}>
+            <Button data-tour="pw-flow-create-plan-button" onClick={() => setActiveStep('employment_action_plan')}>
               <Plus className="w-4 h-4 mr-1" /> Create Action Plan
             </Button>
           </div>
