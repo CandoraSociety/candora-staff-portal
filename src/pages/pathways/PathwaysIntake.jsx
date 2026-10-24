@@ -339,6 +339,7 @@ export default function PathwaysIntake() {
                               <Button
                                 size="sm"
                                 className="gap-1"
+                                data-tour="pw-intake-determination-btn"
                                 onClick={() => setAssignClientId(c.id)}
                               >
                                 <UserCheck className="w-3.5 h-3.5" />

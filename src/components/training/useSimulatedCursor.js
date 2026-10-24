@@ -2,32 +2,69 @@ import { useEffect, useRef, useState } from 'react';
 import { findSpotlightTarget } from '@/components/training/spotlightTarget';
 
 const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, label, [role="button"], [contenteditable="true"]';
+const GLIDE_MS = 1000;
 
-// The clickable element in or under a spotlight node: the node itself when it
-// takes a click, otherwise its first interactive descendant.
 const clickableIn = (el) => (!el ? null : el.matches(INTERACTIVE_SELECTOR) ? el : el.querySelector(INTERACTIVE_SELECTOR));
-
 const centerOf = (el) => {
   const b = el.getBoundingClientRect();
   return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
 };
+const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// The ordered places this slide's narration points at: step.cursorPath when
+// the slide names its own stops, otherwise the click it describes
+// (clickTarget, performed for real) followed by the spotlight's own selectors —
+// never the auto-highlighted sidebar tab, which is orientation, not the
+// action being narrated.
+const buildStops = (step) => {
+  if (step?.cursorPath?.length) return step.cursorPath.map((selector) => ({ selector }));
+  const stops = [];
+  const seen = new Set();
+  const add = (selector, click) => {
+    if (!selector || seen.has(selector)) return;
+    seen.add(selector);
+    stops.push({ selector, click });
+  };
+  add(step?.clickTarget, true);
+  add(step?.target?.selector, false);
+  (step?.target?.additionalSelectors || []).forEach((selector) => add(selector, false));
+  return stops;
+};
+
+// One stop resolves to the points the cursor visits in turn: the element
+// itself (a section is a place to point at first), then the control inside it
+// that the narration describes acting on.
+const resolveStop = (stop) => {
+  const el = findSpotlightTarget({ selector: stop.selector });
+  if (!el) return null;
+  const b = el.getBoundingClientRect();
+  const center = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+  const hit = clickableIn(el);
+  const hitPos = hit ? centerOf(hit) : null;
+  const points = [];
+  if (b.width > 260 || b.height > 140) points.push({ pos: center, pulse: false });
+  if (hitPos && (!points.length || distance(points[0].pos, hitPos) > 14)) points.push({ pos: hitPos, pulse: true });
+  if (!points.length) points.push({ pos: center, pulse: !!hit });
+  return { points, click: stop.click ? hit || el : null };
+};
 
 // Plays the slide's action as a cursor while its narration reads: the pointer
-// glides to whatever the slide is describing — the click it tells the learner
-// to make when there is one, otherwise the spotlight's target — and clicks it.
-// Clicks that only switch the view (step.clickTarget) are performed for real,
-// so the learner never has to navigate themselves.
-export default function useSimulatedCursor({ enabled, step, focus, slideKey }) {
+// glides from stop to stop — a section, then the control inside it, then the
+// next selector the slide spotlights — clicking each control the narration
+// describes acting on, and performing view-switching clicks (step.clickTarget)
+// for real so the learner never has to navigate themselves.
+export default function useSimulatedCursor({ enabled, step, slideKey, narrationMs }) {
   const [cursor, setCursor] = useState({ visible: false, x: null, y: null, clicking: false });
-  const focusRef = useRef(null);
-  focusRef.current = focus;
   const lastPos = useRef(null);
+  const narrationRef = useRef(null);
+  narrationRef.current = narrationMs || null;
 
   useEffect(() => {
     const timers = [];
     const frames = [];
     const clear = () => { timers.forEach(clearTimeout); frames.forEach(cancelAnimationFrame); };
-    if (!enabled || !step) {
+    const stops = buildStops(step);
+    if (!enabled || !step || !stops.length) {
       lastPos.current = null;
       setCursor({ visible: false, x: null, y: null, clicking: false });
       return clear;
@@ -43,47 +80,47 @@ export default function useSimulatedCursor({ enabled, step, focus, slideKey }) {
       ));
     };
 
-    const destination = () => {
-      // The element this slide's narration describes clicking.
-      if (step.clickTarget) {
-        const el = clickableIn(findSpotlightTarget({ selector: step.clickTarget }));
-        if (el) return { pos: centerOf(el), click: el };
-        // Fall through: the view that button opens is already on screen.
-      }
-      const selector = step.target?.selector;
-      const hit = selector ? clickableIn(findSpotlightTarget({ selector })) : null;
-      if (hit && focusRef.current?.interactive) return { pos: centerOf(hit), click: null };
-      const region = focusRef.current?.rect?.regions?.[0];
-      if (!region) return null;
-      return { pos: { x: region.left + region.width / 2, y: region.top + region.height / 2 }, click: null };
+    const pulse = () => {
+      setCursor((c) => ({ ...c, clicking: true }));
+      timers.push(setTimeout(() => setCursor((c) => ({ ...c, clicking: false })), 500));
     };
 
-    const play = (tries) => {
-      const dest = destination();
-      if (!dest) {
-        // The page may still be settling after the slide's navigation.
-        if (tries < 16) timers.push(setTimeout(() => play(tries + 1), 250));
+    // Pace the stops along the narration: one stop every few seconds,
+    // stretched to fill the audio's length when it is known.
+    const spacing = () => {
+      const span = narrationRef.current;
+      if (!span) return 2400;
+      return Math.min(9000, Math.max(1600, (span - 2000) / (stops.length * 2 + 1)));
+    };
+
+    let clicked = false;
+    const visit = (si, pi, tries) => {
+      if (si >= stops.length) return;
+      const resolved = resolveStop(stops[si]);
+      if (!resolved) {
+        // The page may still be settling after the slide's navigation, or
+        // waiting for an earlier stop's click to open this one.
+        if (tries < 20) timers.push(setTimeout(() => visit(si, pi, tries + 1), 350));
+        else visit(si + 1, 0, 0);
         return;
       }
-      glide(dest.pos);
-      // Arrive, then click the way the narration describes it.
+      const point = resolved.points[pi];
+      if (!point) { visit(si + 1, 0, 0); return; }
+      if (!lastPos.current || distance(lastPos.current, point.pos) > 12) glide(point.pos);
       timers.push(setTimeout(() => {
-        if (!dest.click && !focusRef.current?.interactive) return;
-        setCursor((c) => ({ ...c, clicking: true }));
-        timers.push(setTimeout(() => setCursor((c) => ({ ...c, clicking: false })), 500));
-        if (dest.click) dest.click.click();
-        // When the click opens the view this slide spotlights, drift over to it.
-        if (dest.click) {
-          timers.push(setTimeout(() => {
-            const region = focusRef.current?.rect?.regions?.[0];
-            if (region) glide({ x: region.left + region.width / 2, y: region.top + region.height / 2 });
-          }, 1400));
-        }
-      }, 1150));
+        const doClick = !!resolved.click && !clicked;
+        if (point.pulse || doClick) pulse();
+        if (doClick) { clicked = true; resolved.click.click(); }
+        const nextDelay = doClick ? 600 : spacing();
+        timers.push(setTimeout(() => {
+          if (pi + 1 < resolved.points.length) visit(si, pi + 1, 0);
+          else visit(si + 1, 0, 0);
+        }, nextDelay));
+      }, GLIDE_MS));
     };
-    timers.push(setTimeout(() => play(0), 450));
+    visit(0, 0, 0);
     return clear;
-  }, [enabled, slideKey, step?.clickTarget, step?.target?.selector]);
+  }, [enabled, slideKey, step?.clickTarget, step?.target?.selector, step?.cursorPath?.join('|')]);
 
   return cursor;
 }

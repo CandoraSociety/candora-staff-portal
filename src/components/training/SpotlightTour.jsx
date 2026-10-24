@@ -22,6 +22,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const [index, setIndex] = useState(0);
   const [presentation, setPresentation] = useState(false);
   const [reading, setReading] = useState(false);
+  const [narrationMs, setNarrationMs] = useState(null);
   const audioRef = useRef(null);
   const drag = useTrainingWindowDrag(open, module?.key);
 
@@ -31,7 +32,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setReading(false);
   };
-  useEffect(() => { stopReading(); }, [index, module?.key]);
+  useEffect(() => { stopReading(); setNarrationMs(null); }, [index, module?.key]);
   useEffect(() => () => stopReading(), []);
   const toggleRead = () => {
     if (reading) { stopReading(); return; }
@@ -76,7 +77,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // the narration is describing and clicks it, so the tour watches like a
   // video of someone using the portal — clicks that only switch the view
   // (step.clickTarget) are performed for real, the learner never navigates.
-  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, focus, slideKey: `${module?.key}:${index}` });
+  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, slideKey: `${module?.key}:${index}`, narrationMs });
   // Narrated slides play like a video: scene slides and spotlight
   // walkthroughs start their audio by themselves (the read-aloud button
   // still pauses or replays it).
@@ -86,6 +87,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     audioRef.current = audio;
     audio.onended = () => stopReading();
     audio.onerror = () => setReading(false);
+    audio.onloadedmetadata = () => setNarrationMs(audio.duration > 0 ? audio.duration * 1000 : null);
     audio.play().then(() => setReading(true)).catch(() => setReading(false));
     return () => { if (audioRef.current === audio) { audio.pause(); audioRef.current = null; } };
   }, [open, index, stepAudioUrl]);

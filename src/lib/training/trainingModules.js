@@ -737,6 +737,7 @@ export const TRAINING_MODULES = [
         title: "The determination: WD, DEA or not eligible",
         body: "With the barriers and the ERA in hand, the Service Navigator makes the determination right here on the Intake page: WD, Workforce Development; DEA, Direct to Employment; or not eligible for the program — and not eligible usually means the client can still access Candora's resources as a casual client. Press the Determination/Assignment button beside the client's name to record it, and once the determination is made, assign the client to a career counsellor in the same step — the counsellor takes over the file and builds the employment action plan from there.",
         path: "/pathways/intake",
+        cursorPath: ['[data-tour="pw-intake-determination"]', '[data-tour="pw-intake-determination-btn"]'],
         target: { selector: '[data-tour="pw-intake-determination"]' }
       },
       {
