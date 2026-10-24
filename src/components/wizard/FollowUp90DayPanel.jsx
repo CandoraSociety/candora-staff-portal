@@ -93,7 +93,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
   };
 
   return (
-    <div className="space-y-5">
+    <div data-tour="pw-followup-panel" className="space-y-5">
       <div>
         <h3 className="font-semibold text-slate-800 flex items-center gap-2">
           <CalendarCheck className="w-4 h-4 text-primary" />
@@ -106,7 +106,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
 
       {/* Due date alert */}
       {client?.followup_90day_date && (
-        <div className={`flex items-center gap-3 p-3 rounded-lg border text-sm font-medium ${
+        <div data-tour="pw-followup-due" className={`flex items-center gap-3 p-3 rounded-lg border text-sm font-medium ${
           isDone       ? 'bg-green-50 border-green-200 text-green-700' :
           isOverdue    ? 'bg-red-50 border-red-200 text-red-700' :
           isUrgent     ? 'bg-amber-50 border-amber-300 text-amber-800' :
@@ -178,7 +178,7 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={saving}>
+              <Button data-tour="pw-followup-save" onClick={handleSave} disabled={saving}>
                 <Save className="w-4 h-4 mr-1" />
                 {saving ? 'Saving…' : 'Record 90-Day Follow-Up'}
               </Button>

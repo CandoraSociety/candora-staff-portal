@@ -189,6 +189,7 @@ export const FACILITATOR_GUIDE = {
       "Employment — recording outcomes": "Keep it practical: whichever road, outcomes are recorded in the Employment tab. Funder reporting reads from here.",
       "Referrals — the wider circle": "In and out: where the client came from, where they've been sent. One status per referral.",
       "When a client changes streams": "Stream Switches and its amber badge — a switched file must never go unnoticed. BIT and ERA assessments back the decision.",
+      "The 90-Day Follow-Up — every road's last milestone": "The last milestone on every road — WD clients get it after employment, DEA clients after program completion. Stress the billing angle: the funder counts this one, so it never stays blank.",
       "Three sample journeys, one map": "The wrap-up: narrate the three sample journeys once more yourself — Jordan's completed DEA journey, Sam's internal placement, Casey's work exposure — and stress these are examples, not the only routes. Then point them at the practice tasks.",
     },
     practiceNotes: {

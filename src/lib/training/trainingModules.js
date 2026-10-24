@@ -816,6 +816,14 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-roadmap"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
       },
       {
+        title: "The 90-Day Follow-Up — every road's last milestone",
+        body: "Every road ends with the same last milestone: the 90-Day Follow-Up. Once a client finds employment — or, on the DEA road, completes the program — the 90-Day Follow-Up step appears in the steps list, due ninety days out. Press it, and the panel shows where you stand: the date alert counts down the days, turning amber as it closes in and red if it slips past. When the day comes, record the client's employment status ninety days on, with the post-completion status and a note if there's more to say. Saving writes the follow-up to the client's file, creates the Compass task and logs a billing-relevant status change — the funder counts this milestone, so never leave it blank.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-jordan",
+        clickTarget: '[data-tour="pw-flow-followup"]',
+        target: { selector: '[data-tour="pw-followup-panel"]', additionalSelectors: ['[data-tour="pw-flow-followup"]'] }
+      },
+      {
         title: "Route 2 — the WD road with an internal placement: meet Sam Specimen",
         demoClient: "sam",
         body: "Sam Specimen travels the Workforce Development road, and like every journey his started at intake — he registered through the Job Lab, and the Barrier Identification and ERA happened the way you saw earlier. The determination: WD, with Terry Tester as his career counsellor. Terry's action plan for Sam includes an internal placement — real work experience inside Candora: cleaning at the ARC, food services, reception or childcare. It's the stepping stone between the action plan and a real employer.",
