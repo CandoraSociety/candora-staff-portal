@@ -57,6 +57,7 @@ const SECTION_STARTS = {
     "Route 1 — the DEA road: meet Jordan Example": "Route 1 — Jordan's DEA journey",
     "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Route 2 — Sam's internal placement",
     "Route 3 — the WD road with a work exposure placement: meet Casey Sample": "Route 3 — Casey's work exposure",
+    "Practice Run 1 — the full road from intake": "Practice",
     "Time to practice": "Practice",
   },
   rc: {

@@ -19,6 +19,7 @@ export const PRIORITY_DEMO = {
   PathwaysStaff: [
     { name: 'Terry Tester', email: 'test.user@candora.ca', role: 'career_counsellor', is_active: true },
     { name: 'Dana Demo', email: 'test.admin@candora.ca', role: 'manager', is_active: true },
+    { name: 'Nadia Navigator', email: 'nadia.navigator@candora.ca', role: 'service_navigator', is_active: true },
   ],
   CompassTask: [
     { client_id: 'test_pc_maria', client_name: 'Maria Rivera', compass_hsid: '10011', task_type: 'assessment', title: 'Complete CLB reassessment booking', instructions: 'Book CLB reassessment and record result on the client profile.', assigned_worker_name: 'Terry Tester', status: 'pending' },

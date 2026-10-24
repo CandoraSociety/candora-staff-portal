@@ -653,7 +653,7 @@ export const TRAINING_MODULES = [
     key: "pathways_journey",
     title: "Pathways Client Journey",
     shortTitle: "Pathways Client Journey",
-    blurb: "The supplementary Pathways module: follow three demo clients — mid-journey, completed and waitlisted — through every stage of the client journey, inside their real files.",
+    blurb: "The supplementary Pathways module: follow three demo clients through every stage of the client journey, then practice it yourself — one full run from a manual intake and two from clients already awaiting assessment.",
     path: "/pathways/dashboard",
     steps: [
       {
@@ -755,34 +755,28 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Starting the plan",
-        body: "With no plan on the file yet, the Program Flow tab shows the Create Action Plan button — press it now. The plan builder opens in the main panel, and the next few slides walk through it piece by piece as it sits on your screen.",
+        body: "With no plan on the file yet, the Program Flow tab shows this Create Action Plan button. Pressing it is the career counsellor's first real act on the file: it opens the plan builder, which the next few slides describe. Don't press anything for now — you're in observer mode through this part of the training, and at the end of the module you'll build a plan yourself in the practice run.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
-        clickTarget: '[data-tour="pw-flow-create-plan"]',
         target: { selector: '[data-tour="pw-flow-create-plan"]', additionalSelectors: ['[data-tour="pw-tab-flow"]'] }
       },
       {
         title: "The Intake Summary",
-        body: "The builder starts from an Intake Summary that fills itself in from the client's file — employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're building on the client's whole story, not a blank page. The Program Start Date sits right below it: it defaults to today when the plan is created, it can be edited anytime, and it's the date the client's service officially starts.",
+        body: "The builder starts from an Intake Summary that fills itself in from the client's file: employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're building on the client's whole story, not a blank page. The Program Start Date sits right below it: it defaults to today when the plan is created, it can be edited anytime, and it's the date the client's service officially starts.",
         routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-sam",
-        clickTarget: '[data-tour="pw-flow-create-plan"]',
-        target: { selector: '[data-tour="pw-plan-summary"]' }
+        routeFallback: "/pathways/client/demo-pw-sam"
       },
       {
         title: "Choosing the plan items",
-        body: "Now the plan itself: the options are grouped into Workshops, Programs, Placement/Training, Job Search, Supports and Other — tick the ones that fit this client's road. Each item you tick opens its own anticipated-completion date, so the plan carries a timeline, and the counselling and other items get their own notes. On a DEA file this section looks different: instead of checkboxes you list the short Employment Development Activities — job-search, resume or interview workshops, counselling — because a DEA plan runs about two weeks.",
+        body: "Then the plan itself. The options are grouped into Workshops, Programs, Placement and Training, Job Search, Supports and Other — tick the ones that fit this client's road. Each item you tick opens its own anticipated-completion date, so the plan carries a timeline, and the counselling and other items get their own notes. On a DEA file this section looks different: instead of checkboxes you list the short Employment Development Activities — job-search, resume or interview workshops, counselling — because a DEA plan runs about two weeks.",
         routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-sam",
-        clickTarget: '[data-tour="pw-flow-create-plan"]',
-        target: { selector: '[data-tour="pw-plan-items"]' }
+        routeFallback: "/pathways/client/demo-pw-sam"
       },
       {
         title: "Saving the plan — and what unlocks",
-        body: "Add any general notes at the bottom, then press Create Action Plan. The plan is saved to the client's file, a Compass task is created automatically so the entry steps stay on track, and the rest of the Program Flow steps unlock — the journey can get under way. One rule to remember: the plan is recorded twice — it's completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
+        body: "When the items are chosen, any general notes go at the bottom, and pressing Create Action Plan saves the plan to the client's file. A Compass task is created automatically so the entry steps stay on track, and the rest of the Program Flow steps unlock — the journey can get under way. One rule to remember: the plan is recorded twice — it's completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
         routePrefix: "/pathways/client/",
-        routeFallback: "/pathways/client/demo-pw-sam",
-        target: { selector: '[data-tour="pw-flow-steps"]', additionalSelectors: ['[data-tour="pw-plan-summary"]'] }
+        routeFallback: "/pathways/client/demo-pw-sam"
       },
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
@@ -794,11 +788,10 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Jordan's action plan — built for his scenario",
-        body: "Open the Action Plan step, and Jordan's plan is already there, exactly as Terry built it. The Intake Summary pulls his story together — laid off after six years, solid work history, strong English — and because he's on the DEA road the plan is a short list of Employment Development Activities with an anticipated date for each: his Job Search Workshop, his Interview Skills Workshop, and a round of one-on-one career counselling targeting warehouse and logistics postings. Notice the dates: they all fall inside the two-week window a DEA plan runs in, counted from the program start date at the top.",
+        body: "Jordan's plan is already on the file, exactly as Terry built it. Because he's on the DEA road the plan is a short list of Employment Development Activities, and they sit right here under the Action Plan step: his Job Search Workshop, his Interview Skills Workshop, and a round of one-on-one career counselling targeting warehouse and logistics postings. Notice the pattern: a DEA plan runs about two weeks, so every activity falls inside a short window counted from the program start date.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
-        clickTarget: '[data-tour="pw-flow-plan-step"]',
-        target: { selector: '[data-tour="pw-plan-summary"]', additionalSelectors: ['[data-tour="pw-plan-items"]'] }
+        target: { selector: '[data-tour="pw-plan-subitems"]', additionalSelectors: ['[data-tour="pw-flow-plan-step"]'] }
       },
       {
         title: "The Program Progress tab — the clear picture",
@@ -892,33 +885,69 @@ export const TRAINING_MODULES = [
         routeFallback: "/pathways/client/demo-pw-casey"
       },
       {
+        title: "Practice Run 1 — the full road from intake",
+        body: "Now it's your turn, with three practice runs. Run 1 travels the whole road from the very start: a new client has been referred through Compass, and you'll complete their manual intake yourself — press New Client on the Intake page, watch the duplicate matcher check for existing files as you type, fill in their details and save. From there, continue the journey you just watched: verify and assess, complete the BIT, mark the ERA complete, make the determination, assign the career counsellor, and build and save the employment action plan in their Program Flow tab.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-new-client"]' }
+      },
+      {
+        title: "Practice Runs 2 and 3 — from Awaiting Assessment",
+        body: "Runs 2 and 3 start partway down the road: two demo clients are already sitting in the New Intake, Awaiting Assessment list. Jamie Joblab registered himself at the Job Lab; Rai Referral arrived through a CEC referral and waits under the CEC Referral badge. For each of them, pick up where the Service Navigator would: press Assess, verify the client information, complete the BIT, mark the ERA complete and finish the assessment, then make the determination and assign the career counsellor on the Intake page.",
+        path: "/pathways/intake",
+        target: { selector: '[data-tour="pw-intake-assessment"]', additionalSelectors: ['[data-tour="pw-intake-cec"]'] }
+      },
+      {
         title: "Time to practice",
-        body: "Now walk the roads yourself: follow Casey's file through her work exposure journey, complete one of her pending Compass tasks, and open Jordan's completed file to see a finished determination. All on simulated data."
+        body: "That's the tour! The practice checklist opens next with the three runs in order. Every task has its own instructions-and-hints button — press it for step-by-step guidance for exactly the task you're on, so you're never guessing where to click next. Work top to bottom, check your work as you go, and remember: you're in Training Mode, so nothing you create here is real."
       }
     ],
     tasks: [
       {
-        id: "pj-follow-casey",
-        title: "Follow Casey's journey through her file",
-        body: "Open Casey Sample from the Master List and walk her file: Program Flow, Employment and Referrals.",
-        hint: "Go to the Master List, search Casey Sample, open the file and click through the tabs.",
+        id: "pj-run1-intake",
+        title: "Run 1 — Complete the manual intake",
+        body: "A new client has been referred through Compass. Use the New Client button on the Intake page to complete their manual intake — make up a name and details.",
+        hint: "Go to Intake and press New Client. Fill in at least the required fields (first and last name) plus phone, email and any details you want to practice with — the duplicate matcher checks for existing files as you type. Save when done: your client lands in the New Intake — Awaiting Assessment list.",
+        path: "/pathways/intake",
+        verify: { kind: "created", entity: "Client" }
+      },
+      {
+        id: "pj-run1-assess",
+        title: "Run 1 — Verify and assess your new client",
+        body: "Press Assess beside your new client, verify their information, complete the BIT, mark the ERA complete and press Complete Assessment.",
+        hint: "On the Intake page press Assess beside your client's name, then Verify Client Information & Begin Assessment. Review or add to their details and continue to the assessment. In the Barrier Identification Tool, pick a barrier, tick its challenges and action steps and save — or record none if none apply. Tick 'ERA Completed in Compass', answer the barrier-removal question (No is fine for practice), then press Complete Assessment — the client moves to Assessment Complete — Awaiting Assignment.",
+        path: "/pathways/intake",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pj-run1-determination",
+        title: "Run 1 — Make the determination and assign",
+        body: "Back on the Intake page, make the determination for your client and assign them to a career counsellor.",
+        hint: "Find your client under Assessment Complete — Awaiting Assignment and press Determination/Assignment. Choose the service type (try WD), pick a career counsellor, and confirm — the client leaves the Intake page and appears on the counsellor's My Clients list.",
+        path: "/pathways/intake",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pj-run1-plan",
+        title: "Run 1 — Build the action plan",
+        body: "Open your client's file and create their employment action plan in the Program Flow tab.",
+        hint: "Open your client from the Master List (or the counsellor's My Clients). In the Program Flow tab press Create Action Plan, review the Intake Summary it pre-fills, tick the plan items that fit (each opens an anticipated-completion date), add notes and press Create Action Plan to save — the Program Progress timeline unlocks.",
         path: "/pathways/master",
         verify: { kind: "self" }
       },
       {
-        id: "pj-compass",
-        title: "Complete one of Casey's Compass tasks",
-        body: "Open Compass and mark one of Casey Sample's pending tasks as completed.",
-        hint: "Open Compass, find a pending task for Casey Sample and mark it completed.",
-        path: "/pathways/compass",
+        id: "pj-run2-jamie",
+        title: "Run 2 — Take Jamie Joblab from Awaiting Assessment",
+        body: "Jamie registered himself at the Job Lab and is waiting in the Awaiting Assessment list. Take him through the assessment, the determination and the assignment.",
+        hint: "On the Intake page press Assess beside Jamie Joblab. Verify his information, complete the BIT — try recording a real barrier such as transportation, with challenges and action steps — tick 'ERA Completed in Compass', answer the barrier-removal question (try Yes and pick a Service Navigator), then press Complete Assessment. Back on the Intake page press Determination/Assignment beside Jamie, choose his service type and assign his career counsellor.",
+        path: "/pathways/intake",
         verify: { kind: "self" }
       },
       {
-        id: "pj-jordan",
-        title: "See a completed journey",
-        body: "Open Jordan Example's file and find his completed program status and completion details in Client Overview.",
-        hint: "Master List, search Jordan Example, open the file and open the Client Overview tab.",
-        path: "/pathways/master",
+        id: "pj-run3-rai",
+        title: "Run 3 — Take Rai Referral from Awaiting Assessment",
+        body: "Rai arrived through a CEC referral and waits under the CEC Referral badge. Take him through the assessment, the determination and the assignment.",
+        hint: "Same road as Jamie: on the Intake page press Assess beside Rai Referral (under the CEC Referral badge), verify his information, complete the BIT, mark the ERA complete and press Complete Assessment, then press Determination/Assignment on the Intake page to choose his stream and assign his career counsellor.",
+        path: "/pathways/intake",
         verify: { kind: "self" }
       }
     ]

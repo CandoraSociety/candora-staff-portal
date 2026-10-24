@@ -14,7 +14,6 @@ import FollowUp90DayPanel from './FollowUp90DayPanel';
 import ProgramStatusPanel from './ProgramStatusPanel';
 import EDAStep from './EDAStep';
 import InternalPlacementStep from './InternalPlacementStep';
-import ExposuresSupportsStep from './ExposuresSupportsStep';
 import BarriersTab from './BarriersTab';
 
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
@@ -328,7 +327,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
 
                 {/* EDA sub-items — collapsible under Action Plan */}
                 {showSubItems && actionPlanExpanded && (
-                  <div className="ml-6 mt-1 mb-2 space-y-0.5 border-l-2 border-slate-200 pl-2">
+                  <div data-tour="pw-plan-subitems" className="ml-6 mt-1 mb-2 space-y-0.5 border-l-2 border-slate-200 pl-2">
                     {edaSubItems.map(sub => {
                       const subActive = activeStep === `eda:${sub.key}`;
                       let subStatus = null;
@@ -347,6 +346,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
                       return (
                         <button
                           key={sub.key}
+                          data-tour={`pw-plan-subitem-${sub.key}`}
                           onClick={() => setActiveStep(`eda:${sub.key}`)}
                           className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors flex items-center gap-1.5 ${
                             subActive

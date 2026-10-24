@@ -1,7 +1,6 @@
 const t = (name) => ({ selector: `[data-tour="${name}"]` });
 const cue = (at, name, options = {}) => ({ at, target: t(name), ...options });
 const flow = ['pw-tab-flow'];
-const plan = [...flow, 'pw-flow-plan-step'];
 const progress = [...flow, 'pw-flow-progress', 'pw-roadmap-timeline'];
 
 // Phrases locate each intended movement in the spoken slide. These are content
@@ -28,14 +27,12 @@ export const PATHWAYS_JOURNEY_CUES = {
   },
   'After the determination — where the client appears': { setup: ['pw-dash-clients'], cues: [cue(0, 'pw-placement-tabs'), cue('My Dashboard too', 'pw-dash-clients')] },
   'The Employment Action Plan — where it lives': { setup: flow, cues: [cue(0, 'pw-tab-flow'), cue("the program's steps are listed", 'pw-flow-steps'), cue('The Action Plan step', 'pw-flow-plan-step')] },
-  'Starting the plan': { setup: flow, cues: [
-    { at: 0, target: { selector: ['[data-tour="pw-flow-create-plan-button"]', '[data-tour="pw-flow-plan-step"]'] } },
-    { at: 'press it now', target: { selector: ['[data-tour="pw-flow-create-plan-button"]', '[data-tour="pw-flow-plan-step"]'] }, click: true, after: t('pw-plan-summary') },
-  ] },
-  'The Intake Summary': { setup: plan, cues: [cue(0, 'pw-plan-summary'), cue('The Program Start Date', 'pw-plan-start-date')] },
-  'Choosing the plan items': { setup: plan, cues: [cue(0, 'pw-plan-items'), cue('Workshops', 'pw-plan-category-Workshops'), cue('Programs', 'pw-plan-category-Programs'), cue('Placement/Training', 'pw-plan-category-Placement/Training'), cue('Job Search', 'pw-plan-category-Job Search'), cue('Supports and Other', 'pw-plan-category-Supports'), cue('tick the ones', 'pw-plan-item-job_search_workshop', { click: true }), cue('anticipated-completion date', 'pw-plan-dates')] },
-  'Saving the plan — and what unlocks': { setup: plan, cues: [cue(0, 'pw-plan-notes'), cue('press Create Action Plan', 'pw-plan-save'), cue('the rest of the Program Flow steps', 'pw-flow-steps')] },
-  "Jordan's action plan — built for his scenario": { setup: flow, cues: [cue(0, 'pw-flow-plan-step', { click: true, after: t('pw-plan-summary') }), cue('Employment Development Activities', 'pw-plan-items'), cue('Job Search Workshop', 'pw-plan-dea-dea-jordan-1'), cue('Interview Skills Workshop', 'pw-plan-dea-dea-jordan-2'), cue('one-on-one career counselling', 'pw-plan-dea-dea-jordan-3'), cue('program start date at the top', 'pw-plan-start-date')] },
+  // The action-plan section is observer mode: narration only, no clicks. The
+  // learner builds a plan themselves in the end-of-module practice runs.
+  'Starting the plan': { setup: flow, cues: [cue(0, 'pw-flow-create-plan')] },
+  "Jordan's action plan — built for his scenario": { setup: flow, cues: [cue(0, 'pw-plan-subitems'), cue('Job Search Workshop', 'pw-plan-subitem-dea_dea-jordan-1'), cue('Interview Skills Workshop', 'pw-plan-subitem-dea_dea-jordan-2'), cue('one-on-one career counselling', 'pw-plan-subitem-dea_dea-jordan-3')] },
+  'Practice Run 1 — the full road from intake': { cues: [cue(0, 'pw-intake-new-client')] },
+  'Practice Runs 2 and 3 — from Awaiting Assessment': { cues: [cue(0, 'pw-intake-assessment'), cue('CEC Referral badge', 'pw-intake-cec')] },
   'The Program Progress tab — the clear picture': { setup: flow, cues: [cue(0, 'pw-flow-progress'), cue('Click Program Progress', 'pw-flow-progress', { click: true, after: t('pw-roadmap') }), cue('with milestones', 'pw-roadmap-milestones')] },
   'How the timeline works': { setup: progress, cues: [cue(0, 'pw-roadmap-months'), cue('each item is a bar', 'pw-roadmap-items'), cue('colour-coded', 'pw-roadmap-legend'), cue('set by clicking it', 'pw-roadmap-first-item', { click: true, after: t('pw-roadmap-item-panel') }), cue('The Program Start date', 'pw-roadmap-start-date')] },
   "Jordan's road to completion": { setup: progress, cues: [cue(0, 'pw-roadmap-items'), cue('progress notes recording', 'pw-roadmap-notes'), cue('his employer, job title', 'pw-tab-employment', { click: true, after: t('pw-employment-content') }), cue('the timeline ends', 'pw-tab-flow', { click: true, after: t('pw-roadmap-milestones') })] },
