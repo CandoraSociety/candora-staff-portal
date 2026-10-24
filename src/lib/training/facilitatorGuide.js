@@ -190,6 +190,7 @@ export const FACILITATOR_GUIDE = {
       "Referrals — the wider circle": "In and out: where the client came from, where they've been sent. One status per referral.",
       "When a client changes streams": "Stream Switches and its amber badge — a switched file must never go unnoticed. BIT and ERA assessments back the decision.",
       "The 90-Day Follow-Up — every road's last milestone": "The last milestone on every road — WD clients get it after employment, DEA clients after program completion. Stress the billing angle: the funder counts this one, so it never stays blank.",
+      "Program Status — moving the file through its stages": "The file's life cycle: In Progress, then Complete — on WD only after the 90-day follow-up, on DEA via the completion decision — plus Cancelled and Incomplete. Stress that the 90-day date is set automatically at completion, and every move is a logged status change with undo, so mistakes are never permanent.",
       "Three sample journeys, one map": "The wrap-up: narrate the three sample journeys once more yourself — Jordan's completed DEA journey, Sam's internal placement, Casey's work exposure — and stress these are examples, not the only routes. Then point them at the practice tasks.",
     },
     practiceNotes: {

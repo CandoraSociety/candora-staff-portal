@@ -824,6 +824,13 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-followup-panel"]', additionalSelectors: ['[data-tour="pw-flow-followup"]'] }
       },
       {
+        title: "Program Status — moving the file through its stages",
+        body: "Program status is how the file itself moves through its life, and it changes from this Update Program Status menu on the Program Progress page. A file starts In Progress when the service starts, and on a WD file the Program Status panel below the steps shows the exact phase — Active (EDA) while the Employment Development Activities run, then Work Search Phase, then Follow-up Period. Completing follows the road's own rule: on WD it comes after the 90-day follow-up is recorded, on DEA through the completion decision — and marking complete stamps the completion date, sets the 90-day follow-up date automatically, creates the Compass task and logs the change. When a client leaves without finishing, the same menu marks the file Cancelled or Incomplete. Every move is recorded as a status change, and the menu's undo steps back through them one at a time — so nothing here is permanent.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-program-status-menu"]', additionalSelectors: ['[data-tour="pw-program-status-panel"]'] }
+      },
+      {
         title: "Route 2 — the WD road with an internal placement: meet Sam Specimen",
         demoClient: "sam",
         body: "Sam Specimen travels the Workforce Development road, and like every journey his started at intake — he registered through the Job Lab, and the Barrier Identification and ERA happened the way you saw earlier. The determination: WD, with Terry Tester as his career counsellor. Terry's action plan for Sam includes an internal placement — real work experience inside Candora: cleaning at the ARC, food services, reception or childcare. It's the stepping stone between the action plan and a real employer.",

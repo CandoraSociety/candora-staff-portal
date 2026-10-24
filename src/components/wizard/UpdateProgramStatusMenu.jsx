@@ -531,7 +531,7 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   };
 
   return (
-    <div className="flex items-center justify-end">
+    <div data-tour="pw-program-status-menu" className="flex items-center justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-8 text-xs">

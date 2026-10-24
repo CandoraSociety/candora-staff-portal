@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CheckCircle2, X, Bell, CalendarCheck, Play, RotateCcw, Ban, Briefcase } from 'lucide-react';
+import { CheckCircle2, Bell, CalendarCheck, RotateCcw, Ban, Briefcase } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskEdaProgramCompleted, withCrtComments } from '@/lib/compassTasks';
 import DEAProgramCompletionDialog from './DEAProgramCompletionDialog';
@@ -185,7 +184,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   // Completed status banner
   if (ps === 'complete') {
     return (
-      <div className="space-y-2">
+      <div data-tour="pw-program-status-panel" className="space-y-2">
         <div className="flex items-center gap-2 px-2 py-1.5 bg-green-50 border border-green-300 rounded-lg">
           <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -232,7 +231,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
   // Cancelled / Incomplete banner
   if (ps === 'cancelled' || ps === 'incomplete') {
     return (
-      <div className="space-y-2">
+      <div data-tour="pw-program-status-panel" className="space-y-2">
         <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border ${ps === 'cancelled' ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300'}`}>
           <Ban className={`w-4 h-4 shrink-0 ${ps === 'cancelled' ? 'text-red-600' : 'text-amber-600'}`} />
           <div className="flex-1 min-w-0">
@@ -266,7 +265,7 @@ export default function ProgramStatusPanel({ client, onClientUpdate }) {
     : 0;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div data-tour="pw-program-status-panel" className="flex flex-col gap-1.5">
       {wdPhase && (
         <div className="flex items-center gap-1.5 px-2 py-1 bg-indigo-50 border border-indigo-200 rounded text-[10px] font-semibold text-indigo-700">
           <Briefcase className="w-3 h-3 shrink-0" />
