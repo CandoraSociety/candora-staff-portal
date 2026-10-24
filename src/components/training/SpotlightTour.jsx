@@ -54,15 +54,6 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const onRoute = step?.routePrefix
     ? location.pathname.startsWith(step.routePrefix)
     : location.pathname === path;
-  // Every step that lands on a page also highlights the sidebar tab that page
-  // lives under, so learners see where the function lives in the navigation.
-  // Steps that already list the nav item (or target it directly) are skipped.
-  const target = useMemo(() => {
-    if (!step?.target || !path || path === "/") return step?.target;
-    const navSelector = `[data-tour-path="${path}"]`;
-    if (step.target.selector === navSelector || (step.target.additionalSelectors || []).includes(navSelector)) return step.target;
-    return { ...step.target, additionalSelectors: [...(step.target.additionalSelectors || []), navSelector] };
-  }, [step, path]);
   // The intro "video" plays centered with the full screen for itself: docking
   // it beside its spotlight target caps the window's height to the space left
   // around that sidebar item, which is far too short for the scene and forced
@@ -71,13 +62,26 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   // Demo-client scene slides play like a short video; like the intro, they get
   // the whole screen for the card so the scene and its text never scroll.
   const isFullCard = isIntro || !!step?.demoClient;
+  // The slide's action plays on the page itself: a cursor glides from stop to
+  // stop along the narration and clicks what's being described — clicks that
+  // only switch the view (step.clickTarget) are performed for real, the
+  // learner never navigates. The hook reports which stop the narration is on.
+  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, slideKey: `${module?.key}:${index}`, narrationMs });
+  // Every step that lands on a page also highlights the sidebar tab that page
+  // lives under, so learners see where the function lives in the navigation.
+  // While the narration plays, the spotlight follows it stop by stop — only
+  // the section the cursor is pointing at is highlighted, never every target
+  // on the slide at once. The full union of the slide's targets shows only
+  // until the cursor picks up the thread, or on slides without cursor stops.
+  const target = useMemo(() => {
+    const base = cursor.activeSelector ? { selector: cursor.activeSelector } : step?.target;
+    if (!base || !path || path === "/") return base;
+    const navSelector = `[data-tour-path="${path}"]`;
+    if (base.selector === navSelector || (base.additionalSelectors || []).includes(navSelector)) return base;
+    return { ...base, additionalSelectors: [...(base.additionalSelectors || []), navSelector] };
+  }, [step, path, cursor.activeSelector]);
   const focus = useSpotlightTarget(open && !isFullCard && onRoute, target, `${module?.key}:${index}`);
   const rect = isFullCard ? null : focus?.rect || null;
-  // The slide's action plays on the page itself: a cursor glides to whatever
-  // the narration is describing and clicks it, so the tour watches like a
-  // video of someone using the portal — clicks that only switch the view
-  // (step.clickTarget) are performed for real, the learner never navigates.
-  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, slideKey: `${module?.key}:${index}`, narrationMs });
   // Narrated slides play like a video: scene slides and spotlight
   // walkthroughs start their audio by themselves (the read-aloud button
   // still pauses or replays it).
