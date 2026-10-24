@@ -757,6 +757,7 @@ export const TRAINING_MODULES = [
         body: "With no plan on the file yet, the Program Flow tab shows the Create Action Plan button — press it now. The plan builder opens in the main panel, and the next few slides walk through it piece by piece as it sits on your screen.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
+        clickTarget: '[data-tour="pw-flow-create-plan"]',
         target: { selector: '[data-tour="pw-flow-create-plan"]', additionalSelectors: ['[data-tour="pw-tab-flow"]'] }
       },
       {
@@ -764,6 +765,7 @@ export const TRAINING_MODULES = [
         body: "The builder starts from an Intake Summary that fills itself in from the client's file — employment status, CLB level, service stream, career objectives, employment history and intake notes — so you're building on the client's whole story, not a blank page. The Program Start Date sits right below it: it defaults to today when the plan is created, it can be edited anytime, and it's the date the client's service officially starts.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
+        clickTarget: '[data-tour="pw-flow-create-plan"]',
         target: { selector: '[data-tour="pw-plan-summary"]' }
       },
       {
@@ -771,6 +773,7 @@ export const TRAINING_MODULES = [
         body: "Now the plan itself: the options are grouped into Workshops, Programs, Placement/Training, Job Search, Supports and Other — tick the ones that fit this client's road. Each item you tick opens its own anticipated-completion date, so the plan carries a timeline, and the counselling and other items get their own notes. On a DEA file this section looks different: instead of checkboxes you list the short Employment Development Activities — job-search, resume or interview workshops, counselling — because a DEA plan runs about two weeks.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
+        clickTarget: '[data-tour="pw-flow-create-plan"]',
         target: { selector: '[data-tour="pw-plan-items"]' }
       },
       {
@@ -790,23 +793,22 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Jordan's action plan — built for his scenario",
-        demoClient: "jordan",
         body: "Open the Action Plan step, and Jordan's plan is already there, exactly as Terry built it. The Intake Summary pulls his story together — laid off after six years, solid work history, strong English — and because he's on the DEA road the plan is a short list of Employment Development Activities with an anticipated date for each: his Job Search Workshop, his Interview Skills Workshop, and a round of one-on-one career counselling targeting warehouse and logistics postings. Notice the dates: they all fall inside the two-week window a DEA plan runs in, counted from the program start date at the top.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
+        clickTarget: '[data-tour="pw-flow-plan-step"]',
         target: { selector: '[data-tour="pw-plan-summary"]', additionalSelectors: ['[data-tour="pw-plan-items"]'] }
       },
       {
         title: "The Program Progress tab — the clear picture",
-        demoClient: "jordan",
         body: "Once the plan exists, the Program Progress tab becomes the clearest picture of what a client is doing and how they're getting there. Click Program Progress in the steps list — it's the last step on Jordan's file. Every plan item, barrier and placement in the journey appears here on one timeline, with milestones for the intake, the program start, the projected end, the completion and the 90-day follow-up.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
-        target: { selector: '[data-tour="pw-flow-progress"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
+        clickTarget: '[data-tour="pw-flow-progress"]',
+        target: { selector: '[data-tour="pw-roadmap"]' }
       },
       {
         title: "How the timeline works",
-        demoClient: "jordan",
         body: "Here's Jordan's timeline. The months run across the top, and each item is a bar from its start date to its deadline, colour-coded: purple for workshops and counselling, amber for barriers, green for placements. The status of each bar — Not Started, In Progress, Completed or Cancelled — is set by clicking it: the panel that opens lets you update the status, adjust the dates and add notes, and every change is logged to the progress notes and creates the matching Compass task, so the record in Compass stays in step with the portal. The Program Start date sits at the top too — click it to edit and the anticipated dates adjust with it.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
@@ -814,7 +816,6 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Jordan's road to completion",
-        demoClient: "jordan",
         body: "This is what a journey looks like as it actually happens. Jordan's job-search workshop, interview-skills workshop and counselling each moved to In Progress and then Completed inside the two-week window — you can see the completed bars and the progress notes recording each one. Then employment: his employer, job title, start date, hours and wage are recorded on the Employment tab — Sample Solutions Ltd., Warehouse Associate. The program is marked complete with the completion date on the file, and the timeline ends with the 90-day follow-up milestone. A DEA road is short, but every step of it left a record.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-jordan",
@@ -856,11 +857,11 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Casey's progress tab",
-        demoClient: "casey",
         body: "Casey's Program Progress tab tells the same story from the timeline's point of view. Her transportation and financial barriers sit on the timeline as amber bars with their own start and deadline dates, and her work exposure at Riverside Logistics is the green bar in progress toward its anticipated completion, alongside her exposure course and employment supports. The WD window runs about 16 weeks out from her program start. Click any bar to keep its status and dates current as Casey moves through the stages.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-casey",
-        target: { selector: '[data-tour="pw-flow-progress"]', additionalSelectors: ['[data-tour="pw-flow-steps"]'] }
+        clickTarget: '[data-tour="pw-flow-progress"]',
+        target: { selector: '[data-tour="pw-roadmap"]' }
       },
       {
         title: "Employment — recording outcomes",

@@ -288,7 +288,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
               <div key={step.key}>
                 <button
                   onClick={() => !isLocked && setActiveStep(step.key)}
-                  data-tour={step.key === 'roadmap' ? 'pw-flow-progress' : undefined}
+                  data-tour={step.key === 'roadmap' ? 'pw-flow-progress' : step.key === 'employment_action_plan' ? 'pw-flow-plan-step' : undefined}
                   disabled={isLocked}
                   className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors
                     ${isActive

@@ -7,6 +7,8 @@ import { spotlightPath } from "@/components/training/spotlightTarget";
 import { STEP_AUDIO } from "@/lib/training/portalStepAudio";
 import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 import SpotlightOverlay from "@/components/training/SpotlightOverlay";
+import SimulatedCursor from "@/components/training/SimulatedCursor";
+import useSimulatedCursor from "@/components/training/useSimulatedCursor";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 import TourVideo from "@/components/training/TourVideo";
 import DemoClientScene from "@/components/training/DemoClientScene";
@@ -70,17 +72,23 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const isFullCard = isIntro || !!step?.demoClient;
   const focus = useSpotlightTarget(open && !isFullCard && onRoute, target, `${module?.key}:${index}`);
   const rect = isFullCard ? null : focus?.rect || null;
-  // Demo-client scene slides are narrated like a video: the audio starts by
-  // itself (there is still the read-aloud button to pause or replay it).
+  // The slide's action plays on the page itself: a cursor glides to whatever
+  // the narration is describing and clicks it, so the tour watches like a
+  // video of someone using the portal — clicks that only switch the view
+  // (step.clickTarget) are performed for real, the learner never navigates.
+  const cursor = useSimulatedCursor({ enabled: open && !isFullCard, step, focus, slideKey: `${module?.key}:${index}` });
+  // Narrated slides play like a video: scene slides and spotlight
+  // walkthroughs start their audio by themselves (the read-aloud button
+  // still pauses or replays it).
   useEffect(() => {
-    if (!open || !step?.demoClient || !stepAudioUrl) return;
+    if (!open || !stepAudioUrl || (!step?.demoClient && !step?.target)) return;
     const audio = new Audio(stepAudioUrl);
     audioRef.current = audio;
     audio.onended = () => stopReading();
     audio.onerror = () => setReading(false);
     audio.play().then(() => setReading(true)).catch(() => setReading(false));
     return () => { if (audioRef.current === audio) { audio.pause(); audioRef.current = null; } };
-  }, [open, step?.demoClient, stepAudioUrl]);
+  }, [open, index, stepAudioUrl]);
   // Facilitator tours keep their own step position so running a session never
   // disturbs the facilitator's own learner progress for the same module.
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
@@ -208,6 +216,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   return createPortal(
     <div data-training-tour className="print:hidden">
       <SpotlightOverlay rect={rect} />
+      <SimulatedCursor {...cursor} />
       <div ref={drag.ref} style={{ ...cardStyle, ...drag.style }}>
         <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow flex min-h-0 w-full flex-1 flex-col" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
           <div {...drag.handleProps} className="flex shrink-0 items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>

@@ -189,6 +189,15 @@
   }
 }
 
+/* ===== Training simulated cursor — click ripple ===== */
+.sim-cursor-click {
+  animation: sim-cursor-click 0.5s ease-out both;
+}
+@keyframes sim-cursor-click {
+  from { transform: scale(0.4); opacity: 0.9; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+
 @media print {
   @page {
     size: letter;
