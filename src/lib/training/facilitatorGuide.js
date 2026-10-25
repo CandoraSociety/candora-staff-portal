@@ -150,15 +150,14 @@ export const FACILITATOR_GUIDE = {
   },
 
   pathways_journey: {
-    duration: "About 45 minutes (4 intro · 30 tour · 10 practice)",
+    duration: "About 25 minutes (4 intro · 21 tour)",
     objectives: [
-      "Caseworkers can narrate the client journey end to end: intake to determination",
+      "Caseworkers can narrate how the journey starts: both intake roads, from form to New Intake",
       "Caseworkers know the Service Navigator flow: Barrier Identification, the ERA, then the determination — WD, DEA or not eligible — and assignment to a career counsellor",
-      "Caseworkers know the three sample journeys are examples, not the only pathways",
-      "Caseworkers know where each journey stage is recorded in the client file",
+      "Caseworkers can build the Employment Action Plan and know what saving it unlocks",
     ],
     stepNotes: {
-      "Welcome to the Client Journey": "Frame it: the Pathways tour showed where things live; this module walks three routes, each from intake to outcome.",
+      "Welcome to the Client Journey": "Frame it: Part 1 covers how every journey starts — intake, barrier identification, the ERA, the determination and the action plan. The three sample routes and the practice runs follow in Part 2.",
       "One intake, many roads": "The key framing: even the intake differs — a client self-filled form on the Job Lab, or an intake completed manually by the Service Navigator for a Compass referral. From there the roads converge (Barrier Identification, ERA, determination), then diverge by trajectory. Draw the roads on a whiteboard if you can.",
       "Every journey starts at Intake": "Two ways in — cover both: self-filled intake forms from the Job Lab, and Compass referrals. Reinforce the duplicate matcher: one client, one file.",
       "Intake — the Job Lab: what the client sees": "The tour jumps to the external portal page — the client-facing registration form job seekers complete on the job lab computers. Scroll the page together; the next six slides each spotlight one part.",
@@ -175,7 +174,18 @@ export const FACILITATOR_GUIDE = {
       "Starting the plan": "Observer mode from here to the end of the journey slides — nobody presses anything. The Create Action Plan button is spotlit on Sam's file only to show where the plan gets built; trainees build one themselves in the practice runs.",
       "The Intake Summary": "Lecture slide: the builder pre-fills the client's whole story, plus the Program Start Date. There's nothing to click — keep the room moving.",
       "Choosing the plan items": "Lecture slide: the six plan-item groups, per-item anticipated dates, and the DEA difference (a short list of Employment Development Activities, roughly a two-week plan).",
-      "Saving the plan — and what unlocks": "Lecture slide: saving creates the Compass task, unlocks the Program Flow steps, and the plan is recorded twice — here and again in Compass.",
+      "Saving the plan — and what unlocks": "Lecture slide: saving creates the Compass task, unlocks the Program Flow steps, and the plan is recorded twice — here and again in Compass. This is Part 1's last stop — point trainees at Part 2 for the three roads and the practice runs.",
+    }
+  },
+
+  pathways_journey_part2: {
+    duration: "About 45 minutes (20 tour · 25 practice)",
+    objectives: [
+      "Caseworkers know the three sample journeys are examples, not the only pathways",
+      "Caseworkers know where each journey stage is recorded in the client file",
+      "Caseworkers can move a file through program status, record employment outcomes and referrals, and run the 90-day follow-up",
+    ],
+    stepNotes: {
       "Route 1 — the DEA road: meet Jordan Example": "Have every trainee open Jordan's file — the tour opens it for them. Contrast deliberately: the DEA road skips the placement stretch.",
       "Jordan's employment and completion": "Point out the employer, job title and start date in the Employment tab — then have trainees find the completed program status in Case Info themselves.",
       "Practice Run 1 — the full road from intake": "Set up the practice: Run 1 is the whole journey on a brand-new client, starting with a manual intake through the New Client button. Everything after this slide is hands-on.",

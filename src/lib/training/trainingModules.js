@@ -651,9 +651,9 @@ export const TRAINING_MODULES = [
   },
   {
     key: "pathways_journey",
-    title: "Pathways Client Journey",
-    shortTitle: "Pathways Client Journey",
-    blurb: "The supplementary Pathways module: follow three demo clients through every stage of the client journey, then practice it yourself — one full run from a manual intake and two from clients already awaiting assessment.",
+    title: "Pathways Client Journey (Part 1)",
+    shortTitle: "Journey — Part 1",
+    blurb: "Part 1 of the journey module: how every journey starts — both intake roads, barrier identification, the ERA, the determination, and building the Employment Action Plan that opens the road. The three sample journeys and the practice runs follow in Part 2.",
     path: "/pathways/dashboard",
     steps: [
       {
@@ -777,7 +777,16 @@ export const TRAINING_MODULES = [
         body: "When the items are chosen, any general notes go at the bottom, and pressing Create Action Plan saves the plan to the client's file. A Compass task is created automatically so the entry steps stay on track, and the rest of the Program Flow steps unlock — the journey can get under way. One rule to remember: the plan is recorded twice — it's completed here in the Pathways CM portal, and again in Compass, so both systems carry the same plan.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam"
-      },
+      }
+    ]
+  },
+  {
+    key: "pathways_journey_part2",
+    title: "Pathways Client Journey (Part 2)",
+    shortTitle: "Journey — Part 2",
+    blurb: "Part 2 of the journey module: follow three demo clients down their roads — Jordan's completed DEA journey, Sam's internal placement and Casey's work exposure — through progress, program status, employment and referrals, then practice the whole journey yourself.",
+    path: "/pathways/dashboard",
+    steps: [
       {
         title: "Route 1 — the DEA road: meet Jordan Example",
         demoClient: "jordan",
@@ -1217,6 +1226,7 @@ export const TRAINING_MODULE_ACCESS = {
   staffadmin_supervisor: null,
   pathways: "pathways",
   pathways_journey: "pathways",
+  pathways_journey_part2: "pathways",
   rc: "rc",
   ell: "ell",
   centralreg: "central-registration",
@@ -1235,8 +1245,8 @@ export const moduleForPath = (pathname) => {
     ["/time-off", "staffadmin"],
     ["/reimbursement-requests", "staffadmin_money"],
     ["/candora-cc-receipts", "staffadmin_money"],
-    ["/pathways/client/", "pathways_journey"],
     ["/pathways/intake-portal", "pathways_journey"],
+    ["/pathways/client/", "pathways_journey_part2"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

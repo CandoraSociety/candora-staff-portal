@@ -15,7 +15,7 @@ export function cueProgress(body, phrase) {
 }
 
 export function getCursorScript(moduleKey, step) {
-  const authored = (moduleKey === 'pathways_journey' ? PATHWAYS_JOURNEY_CUES : moduleKey === 'pathways' ? PATHWAYS_OVERVIEW_CUES : COMMON_CURSOR_CUES[moduleKey] || {})[step?.title];
+  const authored = (moduleKey === 'pathways_journey' || moduleKey === 'pathways_journey_part2' ? PATHWAYS_JOURNEY_CUES : moduleKey === 'pathways' ? PATHWAYS_OVERVIEW_CUES : COMMON_CURSOR_CUES[moduleKey] || {})[step?.title];
   const primary = step?.target ? { selector: step.target.selector, text: step.target.text } : null;
   const fallback = step?.clickTarget
     ? [{ at: 0, target: { selector: step.clickTarget }, click: true, after: primary }]

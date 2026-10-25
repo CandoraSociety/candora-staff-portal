@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "rc", "ell", "centralreg"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "rc", "ell", "centralreg"] },
 ];
 
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
@@ -54,6 +54,8 @@ const SECTION_STARTS = {
     "Barrier Identification — the Service Navigator": "Barrier ID, ERA and the determination",
     "After the determination — where the client appears": "Determination & assignment",
     "The Employment Action Plan — where it lives": "The Employment Action Plan",
+  },
+  pathways_journey_part2: {
     "Route 1 — the DEA road: meet Jordan Example": "Route 1 — Jordan's DEA journey",
     "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Route 2 — Sam's internal placement",
     "Route 3 — the WD road with a work exposure placement: meet Casey Sample": "Route 3 — Casey's work exposure",

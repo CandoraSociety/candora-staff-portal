@@ -112,6 +112,8 @@ export const STEP_AUDIO = {
     'https://media.base44.com/files/public/6a249282cb496579542673b7/d91862ab2_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/d625d6945_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/83e525c88_speech.mp3',
+  ],
+  pathways_journey_part2: [
     'https://media.base44.com/files/public/6a249282cb496579542673b7/9b85c3367_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/f6191b871_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/b6200ed04_speech.mp3',
