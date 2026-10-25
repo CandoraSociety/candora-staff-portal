@@ -88,22 +88,24 @@ export default function FacilitatorRunSheet({ module, open, onClose }) {
             </div>
           </section>
 
-          <section className="mt-6">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Practice — coaching notes</h2>
-            <div className="mt-2 space-y-3">
-              {module.tasks.map((t, i) => (
-                <div key={t.id} className="border border-slate-200 rounded-lg p-3">
-                  <p className="text-sm font-bold">{i + 1}. {t.title}</p>
-                  <p className="text-sm text-slate-600 mt-0.5">{t.body}</p>
-                  {guide?.practiceNotes?.[t.id] && (
-                    <p className="text-sm text-slate-800 mt-1.5 flex gap-1.5">
-                      <Lightbulb className="w-4 h-4 shrink-0 text-yellow-500" /> {guide.practiceNotes[t.id]}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
+          {!!module.tasks?.length && (
+            <section className="mt-6">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Practice — coaching notes</h2>
+              <div className="mt-2 space-y-3">
+                {module.tasks.map((t, i) => (
+                  <div key={t.id} className="border border-slate-200 rounded-lg p-3">
+                    <p className="text-sm font-bold">{i + 1}. {t.title}</p>
+                    <p className="text-sm text-slate-600 mt-0.5">{t.body}</p>
+                    {guide?.practiceNotes?.[t.id] && (
+                      <p className="text-sm text-slate-800 mt-1.5 flex gap-1.5">
+                        <Lightbulb className="w-4 h-4 shrink-0 text-yellow-500" /> {guide.practiceNotes[t.id]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {guide?.tips?.length > 0 && (
             <section className="mt-6">

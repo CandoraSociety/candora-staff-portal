@@ -9,7 +9,7 @@ const snapKey = (key) => `candora-training-snapshots-${key}`;
 // Snapshot the sandbox record counts for auto-verified ("created") tasks so we
 // can detect when the learner has actually created something.
 async function ensureSnapshots(module) {
-  const createdTasks = module.tasks.filter(t => t.verify?.kind === "created");
+  const createdTasks = (module.tasks || []).filter(t => t.verify?.kind === "created");
   if (!createdTasks.length) return {};
   let snaps = {};
   try { snaps = JSON.parse(sessionStorage.getItem(snapKey(module.key)) || "{}"); } catch { /* ignore */ }
@@ -36,7 +36,7 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
     (async () => setSnaps(await ensureSnapshots(module)))();
   }, [open, module?.key]);
 
-  if (!open || !module) return null;
+  if (!open || !module || !module.tasks?.length) return null;
 
   const isDone = (id) => done.includes(id.id || id);
   const doneCount = module.tasks.filter(t => done.includes(t.id)).length;

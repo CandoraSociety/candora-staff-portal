@@ -99,7 +99,7 @@ export default function TrainingPill() {
       next = await base44.entities.TrainingProgress.create({ ...base, started_date: new Date().toISOString(), ...fields });
     }
     const tasksDone = next.tasks_done || [];
-    const allTasks = module.tasks.length > 0 && tasksDone.length >= module.tasks.length;
+    const allTasks = !module.tasks?.length || tasksDone.length >= module.tasks.length;
     if (next.tour_done && allTasks && !next.is_completed) {
       next = await base44.entities.TrainingProgress.update(next.id, { is_completed: true, completed_date: new Date().toISOString() });
     }
@@ -177,13 +177,15 @@ export default function TrainingPill() {
               {rec?.tour_done ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Map className="w-3.5 h-3.5" />}
               {rec?.tour_done ? "Tour done" : (rec ? "Resume tour" : "Guided tour")}
             </button>
-            <button
-              onClick={() => setChecklistOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-              style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
-            >
-              <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
-            </button>
+            {!!module.tasks?.length && (
+              <button
+                onClick={() => setChecklistOpen(true)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
+                style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
+              >
+                <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
+              </button>
+            )}
             <button
               onClick={() => startTraining(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
@@ -244,7 +246,7 @@ export default function TrainingPill() {
         progress={rec || null}
         updateProgress={updateProgress}
         onStepChange={setTourStep}
-        onClose={(finished) => { setTourOpen(false); if (finished) setChecklistOpen(true); }}
+        onClose={(finished) => { setTourOpen(false); if (finished && module.tasks?.length) setChecklistOpen(true); }}
       />
       <PracticeChecklist
         open={checklistOpen}

@@ -20,18 +20,20 @@ export default function TrainingSidebarModule({ module, progress, isActive, isOp
             Guided tour{progress?.tour_done ? " — done" : ""}
           </p>
           <TrainingSidebarSteps module={module} isActive={isActive} activeStepIndex={activeStepIndex} onJump={onJump} />
-          <div className="border-t border-sidebar-primary/30 pt-2">
-            {isActive ? (
-              <button onClick={onOpenPractice} className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-sidebar-primary hover:bg-sidebar-accent">
-                <ListChecks className="h-3 w-3 shrink-0" />
-                <span className="text-[10px] font-semibold">Practice — {doneTasks}/{module.tasks.length} tasks</span>
-              </button>
-            ) : (
-              <p className="flex items-center gap-1.5 px-1.5 py-1 text-[10px] text-sidebar-foreground/60">
-                <ListChecks className="h-3 w-3 shrink-0" /> {module.tasks.length} practice tasks
-              </p>
-            )}
-          </div>
+          {!!module.tasks?.length && (
+            <div className="border-t border-sidebar-primary/30 pt-2">
+              {isActive ? (
+                <button onClick={onOpenPractice} className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-sidebar-primary hover:bg-sidebar-accent">
+                  <ListChecks className="h-3 w-3 shrink-0" />
+                  <span className="text-[10px] font-semibold">Practice — {doneTasks}/{module.tasks.length} tasks</span>
+                </button>
+              ) : (
+                <p className="flex items-center gap-1.5 px-1.5 py-1 text-[10px] text-sidebar-foreground/60">
+                  <ListChecks className="h-3 w-3 shrink-0" /> {module.tasks.length} practice tasks
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

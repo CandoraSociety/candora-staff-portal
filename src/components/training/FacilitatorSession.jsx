@@ -87,7 +87,7 @@ export default function FacilitatorSession({ module }) {
                   <p className="text-sm leading-relaxed mt-1.5" style={{ color: "hsl(45, 45%, 88%)" }}>{stepNote}</p>
                 </>
               )}
-              {checklistOpen && (
+              {checklistOpen && !!module.tasks?.length && (
                 <>
                   <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 65%)" }}>Practice — circulate and coach</p>
                   <div className="mt-2 space-y-2">
