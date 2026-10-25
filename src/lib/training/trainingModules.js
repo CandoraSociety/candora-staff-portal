@@ -848,10 +848,25 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="pw-profile-tabs"]', additionalSelectors: ['[data-tour="pw-profile-header"]'] }
       },
       {
+        title: "Sam's action plan — the WD road's first stretch",
+        body: "Before the placement begins, Sam's road runs through the same Action Plan step you saw on Jordan's file. Because Sam is on the WD stream, Terry's plan looks different: a longer set of Employment Development Activities, and the internal placement itself joins the plan as the road progresses. Every item carries its own anticipated-completion date counted from the program start — and where a DEA plan runs about two weeks, the WD window stretches to about sixteen. Same screen, a longer road: this is where the placement starts.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-plan-subitems"]', additionalSelectors: ['[data-tour="pw-flow-plan-step"]'] }
+      },
+      {
         title: "Sam's internal placement",
         body: "The placement lives right on Sam's file: the type, the start date, the supervisor and the schedule. And on your dashboard, the placement sub-tabs slice the same caseload by journey stage — the Internal Training tab shows exactly who's in a placement right now, which is where Sam appears.",
         target: { selector: '[data-tour="pw-placement-tabs"]' },
         path: "/pathways/dashboard"
+      },
+      {
+        title: "Sam's Program Progress — the placement on the timeline",
+        body: "Open the Program Progress tab on Sam's file, and the WD road shows itself whole. His Employment Development Activities run as purple bars, and the internal placement sits alongside them as the green bar, running from its start date toward its anticipated completion. Everything you learned on Jordan's timeline holds here: click any bar to keep its status and dates current, every change logs to the progress notes and creates the matching Compass task, and the Program Status panel under the steps shows the file's exact phase. This is the picture you'll come back to every time you open a WD file.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        clickTarget: '[data-tour="pw-flow-progress"]',
+        target: { selector: '[data-tour="pw-roadmap"]' }
       },
       {
         title: "Route 3 — the WD road with a work exposure placement: meet Casey Sample",

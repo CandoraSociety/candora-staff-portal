@@ -179,7 +179,7 @@ export const FACILITATOR_GUIDE = {
   },
 
   pathways_journey_part2: {
-    duration: "About 45 minutes (20 tour · 25 practice)",
+    duration: "About 45 minutes (22 tour · 25 practice)",
     objectives: [
       "Caseworkers know the three sample journeys are examples, not the only pathways",
       "Caseworkers know where each journey stage is recorded in the client file",
@@ -192,7 +192,9 @@ export const FACILITATOR_GUIDE = {
       "Practice Runs 2 and 3 — from Awaiting Assessment": "Runs 2 and 3 use Jamie Joblab (Job Lab self-registration) and Rai Referral (CEC referral), both already waiting in Awaiting Assessment — same assessment-to-assignment road, different starting points.",
       "Time to practice": "Point out the instructions-and-hints button on every practice task before letting them loose — nobody should be guessing where to click.",
       "Route 2 — the WD road with an internal placement: meet Sam Specimen": "Explain what an internal placement is for: real work experience inside Candora before an external employer.",
+      "Sam's action plan — the WD road's first stretch": "Contrast with Jordan's DEA plan directly on screen: same Action Plan step, longer window — the WD road runs about sixteen weeks, and the placement grows out of this plan.",
       "Sam's internal placement": "Show how the placement sub-tabs slice the caseload — Sam appears in Internal Training because his placement is on his file.",
+      "Sam's Program Progress — the placement on the timeline": "First WD timeline the trainees see in full: point out the green placement bar alongside the purple activities, and the Program Status panel's exact phase underneath.",
       "Route 3 — the WD road with a work exposure placement: meet Casey Sample": "The busiest road: Compass tasks, purchase requests and an external placement all in motion.",
       "Casey's Compass tasks": "Explain the 'why' again: these steps feed funder reporting. Casey's pending tasks are visible in the Compass queue — show the badge count.",
       "Casey's purchase requests": "Walk the approval chain: request, supervisor, ED, purchase. Casey's pending request is a live example on the dashboard.",
