@@ -652,7 +652,7 @@ export const TRAINING_MODULES = [
   {
     key: "pathways_journey",
     title: "Pathways Client Journey - Part 1",
-    shortTitle: "Journey - Part 1",
+    shortTitle: "Client Journey - Part 1",
     blurb: "Part 1 of the journey module: how every journey starts — both intake roads, barrier identification, the ERA, the determination, and building the Employment Action Plan that opens the road. The three sample journeys and the practice runs follow in Part 2.",
     path: "/pathways/dashboard",
     steps: [
@@ -783,7 +783,7 @@ export const TRAINING_MODULES = [
   {
     key: "pathways_journey_part2",
     title: "Pathways Client Journey - Part 2",
-    shortTitle: "Journey - Part 2",
+    shortTitle: "Client Journey - Part 2",
     blurb: "Part 2 of the journey module: follow three demo clients down their roads — Jordan's completed DEA journey, Sam's internal placement and Casey's work exposure — through progress, program status, employment and referrals, then practice the whole journey yourself.",
     path: "/pathways/dashboard",
     steps: [
