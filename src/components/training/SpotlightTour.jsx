@@ -11,6 +11,7 @@ import SimulatedCursor from "@/components/training/SimulatedCursor";
 import useSimulatedCursor from "@/components/training/useSimulatedCursor";
 import useTourNarration from "@/components/training/useTourNarration";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
+import { applyJourneyDemoState } from "@/lib/testMode/sandbox";
 import TourVideo from "@/components/training/TourVideo";
 import DemoClientScene from "@/components/training/DemoClientScene";
 import PortalIntroExplainer from "@/components/training/PortalIntroExplainer";
@@ -101,6 +102,13 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
       setIndex(saved < steps.length ? saved : 0);
       setPresentation(facilitator ? sessionStorage.getItem(presentationKey) !== "0" : sessionStorage.getItem(presentationKey) === "1");
     } catch { /* ignore */ }
+  }, [open, module?.key]);
+
+  // Part 2 follows the same demo client Part 1 showed unplanned: applying the
+  // journey demo state before the first navigation puts the WD plan and the
+  // ARC placement on Sam's file (and Part 1 reverts it).
+  useEffect(() => {
+    if (open) applyJourneyDemoState(module?.key);
   }, [open, module?.key]);
 
   // Slides without their own route inherit the last route in the module,

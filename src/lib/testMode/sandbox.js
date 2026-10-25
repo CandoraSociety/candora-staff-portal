@@ -570,6 +570,63 @@ const usersSim = { inviteUser: async () => ({ success: true, simulated: true }) 
 const analyticsSim = { track: () => {} };
 
 // ── Installer ──────────────────────────────────────────────────────────────
+// ── Journey module demo state ─────────────────────────────────────────────
+// Part 1 of the Pathways Client Journey shows Sam Specimen with no plan yet
+// (the Create Action Plan walkthrough); Part 2 follows the same Sam with a
+// built WD plan and an active internal placement. The base seed is the
+// Part-1 state — opening a journey tour applies or reverts the plan patch so
+// one demo client serves both modules.
+const SAM_JOURNEY_FIELDS = () => ({
+  action_plan_submitted: true,
+  sdp_items: ['job_search_workshop', 'resume_writing_workshop', 'workplace_readiness_workshop', 'internal_placement'],
+  sdp_item_details: {
+    job_search_workshop: { timeline_start: D(42), timeline_end: D(28) },
+    resume_writing_workshop: { timeline_start: D(24), timeline_end: D(-10) },
+    workplace_readiness_workshop: { timeline_start: D(7), timeline_end: D(-28) },
+  },
+  roadmap_item_status: {
+    job_search_workshop: { status: 'completed', started_date: D(42), completed_date: D(28) },
+    resume_writing_workshop: { status: 'started', started_date: D(23) },
+    workplace_readiness_workshop: { status: 'planned' },
+  },
+  roadmap_progress_notes: [
+    { id: 'sam-demo-note-2', date: D(27), event_type: 'eda', item_label: 'Job Search Workshop', item_key: 'job_search_workshop', note: 'Completed the full workshop series.', logged_by: 'test.user@candora.ca', logged_by_name: 'Terry Tester', compass_entered: true },
+    { id: 'sam-demo-note-1', date: D(15), event_type: 'started', item_label: 'Internal Placement', item_key: 'internal_placement', note: 'Started the ARC cleaning crew placement, Mon/Wed/Fri mornings with Dana Demo.', logged_by: 'test.user@candora.ca', logged_by_name: 'Terry Tester', compass_entered: true },
+  ],
+});
+
+const SAM_JOURNEY_PLACEMENT = () => ({
+  client_id: 'demo-pw-sam', client_name: 'Sam Specimen', placement_type: 'cleaning_arc',
+  assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester',
+  supervisor_name: 'Dana Demo', supervisor_email: 'test.admin@candora.ca',
+  referral_date: D(20), start_date: D(15), expected_end_date: D(-30), status: 'active',
+  orientation_completed: true, orientation_date: D(15),
+  health_safety_completed: true, health_safety_completed_date: D(15), health_safety_date: D(15),
+  training_goals: 'Build workplace routines, references and Canadian work experience',
+  transportation: 'transit_pass_provided',
+});
+
+export function applyJourneyDemoState(moduleKey) {
+  if (!isTestMode()) return;
+  if (moduleKey !== 'pathways_journey' && moduleKey !== 'pathways_journey_part2') return;
+  const sam = rowsOf('Client').find((r) => r.id === 'demo-pw-sam');
+  if (!sam) return;
+  const placements = rowsOf('InternalTraining');
+  if (moduleKey === 'pathways_journey_part2') {
+    if (sam.action_plan_submitted) return;
+    Object.assign(sam, personalize(SAM_JOURNEY_FIELDS()));
+    if (!placements.some((r) => r.client_id === 'demo-pw-sam')) {
+      placements.push(personalize(SAM_JOURNEY_PLACEMENT()));
+    }
+  } else {
+    if (!sam.action_plan_submitted) return;
+    for (const key of Object.keys(SAM_JOURNEY_FIELDS())) delete sam[key];
+    for (let i = placements.length - 1; i >= 0; i--) {
+      if (placements[i].client_id === 'demo-pw-sam') placements.splice(i, 1);
+    }
+  }
+}
+
 export function installTestModeInterceptor(client) {
   realClient = client;
   realEntitiesRef = client.entities;

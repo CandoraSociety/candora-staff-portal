@@ -861,12 +861,34 @@ export const TRAINING_MODULES = [
         path: "/pathways/dashboard"
       },
       {
+        title: "Inside the placement — the Internal Placements sub-tab",
+        body: "The placement is managed from its own sub-tab on the plan. Press Internal Placements on Sam's Action Plan step and the placement record opens: the referral and the start date, the expected end, the supervisor and the schedule, and the checkpoints a real placement runs through — orientation, health and safety, the training goals, and transportation if it's needed. While the placement runs you keep this record current, and when it ends, the evaluation saved here is what tells the next employer what Sam can do.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-plan-subitem-internal_placements"]', additionalSelectors: ['[data-tour="pw-plan-subitems"]'] }
+      },
+      {
         title: "Sam's Program Progress — the placement on the timeline",
         body: "Open the Program Progress tab on Sam's file, and the WD road shows itself whole. His Employment Development Activities run as purple bars, and the internal placement sits alongside them as the green bar, running from its start date toward its anticipated completion. Everything you learned on Jordan's timeline holds here: click any bar to keep its status and dates current, every change logs to the progress notes and creates the matching Compass task, and the Program Status panel under the steps shows the file's exact phase. This is the picture you'll come back to every time you open a WD file.",
         routePrefix: "/pathways/client/",
         routeFallback: "/pathways/client/demo-pw-sam",
         clickTarget: '[data-tour="pw-flow-progress"]',
         target: { selector: '[data-tour="pw-roadmap"]' }
+      },
+      {
+        title: "Updating the placement — one click, three records",
+        body: "Here is the habit that keeps a WD file honest. Click any bar on Sam's timeline — the placement's green bar, or one of the workshops — and the update panel opens: set the status, adjust the dates if the schedule shifted, and add a note. Saving does three things at once — the bar moves, the progress note is logged with your name and the date, and the matching Compass task is created, so Compass and the portal never drift apart. Do this at every check-in and the file tells the whole story by itself.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        clickTarget: '[data-tour="pw-flow-progress"]',
+        target: { selector: '[data-tour="pw-roadmap-items"]', additionalSelectors: ['[data-tour="pw-roadmap"]'] }
+      },
+      {
+        title: "Where Sam's road goes next — work search, employment, the 90-day",
+        body: "Sam's placement is the middle of his road, not the end. When the placement and the remaining Employment Development Activities finish, the Program Status panel's phase moves to Work Search, and the focus turns to a real employer. The day Sam is hired, everything you saw on Jordan's file applies: the employer, job title, start date and wage go on the Employment tab, the 90-Day Follow-Up step appears in the steps list, and on the WD road the program only completes after that follow-up is recorded. Different route, same finish line — and every stretch of it stays on the file.",
+        routePrefix: "/pathways/client/",
+        routeFallback: "/pathways/client/demo-pw-sam",
+        target: { selector: '[data-tour="pw-flow-steps"]', additionalSelectors: ['[data-tour="pw-program-status-panel"]'] }
       },
       {
         title: "Route 3 — the WD road with a work exposure placement: meet Casey Sample",
