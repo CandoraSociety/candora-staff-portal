@@ -13,7 +13,7 @@ export default function OrganizerWidget() {
   if (!user) return null;
 
   return (
-    <div className="w-full" data-tour="dashboard-organizer">
+    <div className="w-full h-full flex flex-col" data-tour="dashboard-organizer">
       <OrganizerPanel user={user} />
     </div>
   );
