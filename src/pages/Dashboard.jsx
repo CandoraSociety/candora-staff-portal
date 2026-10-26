@@ -278,7 +278,7 @@ export default function Dashboard() {
       {/* Widget cards — three across (announcements, pinned portal and quick access portals stay above) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isWidgetActive('organizer') && (
-          <div className="row-span-2 self-stretch flex flex-col w-full">
+          <div className="row-span-2 self-stretch flex flex-col w-full min-h-0 overflow-hidden">
             <OrganizerWidget />
           </div>
         )}

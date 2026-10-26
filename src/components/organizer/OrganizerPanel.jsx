@@ -75,10 +75,10 @@ export default function OrganizerPanel({ user }) {
   }, []);
 
   return (
-    <div className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md flex-1 flex flex-col">
+    <div className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md overflow-hidden flex-1 flex flex-col">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-5 py-4 cursor-pointer bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-colors"
+        className="flex items-center justify-between px-5 py-4 cursor-pointer shrink-0 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-colors"
         onClick={handleHeaderClick}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -109,7 +109,7 @@ export default function OrganizerPanel({ user }) {
 
       {/* Body */}
       {!collapsed && (
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5 flex-1 min-h-0 overflow-y-auto">
           {/* Custom tab bar */}
           <div className="flex gap-1 mb-4 bg-muted rounded-lg p-1 h-9">
             {TABS.map(tab => {
