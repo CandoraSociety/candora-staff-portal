@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, FileText, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
+import { openVaultFile } from "@/lib/vaultFiles";
 
 function getFileExtension(name) {
   if (!name) return "";
@@ -72,7 +73,7 @@ export default function RecentFiles({ files }) {
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="Download"
-                    onClick={() => window.open(file.file_url, "_blank")}>
+                    onClick={() => openVaultFile(file)}>
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>

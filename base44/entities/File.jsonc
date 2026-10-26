@@ -31,7 +31,24 @@
     },
     "file_url": {
       "type": "string",
-      "description": "URL of the uploaded file"
+      "description": "Legacy public storage URL \u2014 empty for files stored in SharePoint"
+    },
+    "sp_item_id": {
+      "type": "string",
+      "description": "SharePoint drive item id of the stored file (vault storage)"
+    },
+    "sp_path": {
+      "type": "string",
+      "description": "SharePoint folder path the file is stored under (e.g. /_VAULT_FileManager/Finance - Invoices)"
+    },
+    "storage_backend": {
+      "type": "string",
+      "enum": [
+        "sharepoint",
+        "base44"
+      ],
+      "default": "base44",
+      "description": "Where the file content lives \u2014 sharepoint vault, or legacy base44 public storage"
     },
     "file_type": {
       "type": "string",

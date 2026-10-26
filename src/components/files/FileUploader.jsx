@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 import CategorySelector from "./CategorySelector";
 import { generateStandardizedName, getFileExtension, ACCESS_LEVELS } from "@/lib/fileHelpers";
+import { uploadToVaultStorage } from "@/lib/vaultFiles";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function FileUploader({ onComplete }) {
@@ -83,7 +84,7 @@ export default function FileUploader({ onComplete }) {
     mutationFn: async () => {
       if (!file) throw new Error("No file selected");
       setIsUploading(true);
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const storage = await uploadToVaultStorage(file, { category, subcategory });
       const stdName = generateStandardizedName(file.name, category, accessLevel);
       const fileData = {
         original_name: file.name,
@@ -92,7 +93,10 @@ export default function FileUploader({ onComplete }) {
         description,
         summary: description || "",
         keywords,
-        file_url,
+        file_url: "",
+        storage_backend: "sharepoint",
+        sp_item_id: storage.item_id,
+        sp_path: storage.path,
         file_type: getFileExtension(file.name),
         file_size: file.size,
         category,

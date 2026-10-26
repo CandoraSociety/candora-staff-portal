@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Download, FileText, Calendar, User, Tag, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { openVaultFile } from "@/lib/vaultFiles";
 
 export default function FileSummaryDialog({ file, open, onOpenChange }) {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export default function FileSummaryDialog({ file, open, onOpenChange }) {
 
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" className="flex-1 gap-2" onClick={() => { onOpenChange(false); navigate(`/filemanager/view?id=${file.id}`); }}><ExternalLink className="h-4 w-4" /> Open File</Button>
-            <Button className="flex-1 gap-2" onClick={() => window.open(file.file_url, "_blank")}><Download className="h-4 w-4" /> Download</Button>
+            <Button className="flex-1 gap-2" onClick={() => openVaultFile(file)}><Download className="h-4 w-4" /> Download</Button>
           </div>
         </div>
       </DialogContent>

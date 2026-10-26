@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ExternalLink, Edit, Share2, Info } from "lucide-react";
 import { getFileExtension, getFileTypeStyle } from "@/lib/fileHelpers";
+import { getVaultFileUrl } from "@/lib/vaultFiles";
 
 const OFFICE_EXTS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
 import FileSummaryDialog from "@/components/files/FileSummaryDialog";
@@ -21,6 +22,20 @@ export default function FileViewer() {
     queryFn: () => base44.entities.File.get(fileId),
     enabled: !!fileId,
   });
+
+  // Resolve a short-lived content URL (SharePoint vault, or the legacy link)
+  const [contentUrl, setContentUrl] = useState(null);
+  useEffect(() => {
+    let active = true;
+    setContentUrl(null);
+    if (fileId) {
+      base44.entities.File.get(fileId)
+        .then((f) => getVaultFileUrl(f))
+        .then((url) => { if (active) setContentUrl(url); })
+        .catch(() => { if (active) setContentUrl(null); });
+    }
+    return () => { active = false; };
+  }, [fileId]);
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!file) return <div className="p-8 text-center">File not found</div>;
@@ -46,7 +61,7 @@ export default function FileViewer() {
             <Button variant="outline" size="sm" onClick={() => setShowSummary(true)} className="gap-1"><Info className="h-4 w-4" /> Info</Button>
             <Button variant="outline" size="sm" onClick={() => setShowShare(true)} className="gap-1"><Share2 className="h-4 w-4" /> Share</Button>
             <Link to={`/filemanager/edit?id=${file.id}`}><Button variant="outline" size="sm" className="gap-1"><Edit className="h-4 w-4" /> Edit</Button></Link>
-            <Button size="sm" onClick={() => window.open(file.file_url, "_blank")} className="gap-1"><Download className="h-4 w-4" /> Download</Button>
+            <Button size="sm" onClick={() => window.open(contentUrl, "_blank")} disabled={!contentUrl} className="gap-1"><Download className="h-4 w-4" /> Download</Button>
           </div>
         </div>
       </div>
@@ -54,13 +69,13 @@ export default function FileViewer() {
       <div className="p-6 max-w-[1400px] mx-auto">
         <div className="rounded-lg border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
           {isImage ? (
-            <img src={file.file_url} alt={file.display_name} className="w-full h-full object-contain" />
+            <img src={contentUrl} alt={file.display_name} className="w-full h-full object-contain" />
           ) : isPdf ? (
-            <iframe src={file.file_url} className="w-full h-full" title={file.display_name} />
+            <iframe src={contentUrl} className="w-full h-full" title={file.display_name} />
           ) : isOffice ? (
-            <iframe src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.file_url)}`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
+            <iframe src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(contentUrl || "")}`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
           ) : (
-            <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.file_url)}&embedded=true`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
+            <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(contentUrl || "")}&embedded=true`} className="w-full h-full" title={file.display_name} sandbox="allow-scripts allow-same-origin allow-popups" />
           )}
         </div>
       </div>

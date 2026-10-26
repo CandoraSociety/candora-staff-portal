@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, X, FileText, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { ACCESS_LEVELS, generateStandardizedName, getFileExtension } from "@/lib/fileHelpers";
+import { uploadToVaultStorage } from "@/lib/vaultFiles";
 
 const ACCEPTED_TYPES = ["pdf", "xlsx", "xls", "csv"];
 const ACCEPT_ATTR = ".pdf,.xlsx,.xls,.csv";
@@ -70,7 +71,7 @@ export default function QuickFileUploadDialog({ open, onOpenChange }) {
     if (!file || isUploading) return;
     setIsUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const storage = await uploadToVaultStorage(file, { category, subcategory });
       await base44.entities.File.create({
         original_name: file.name,
         standardized_name: generateStandardizedName(file.name, category, accessLevel),
@@ -78,7 +79,10 @@ export default function QuickFileUploadDialog({ open, onOpenChange }) {
         description,
         summary: description || "",
         keywords,
-        file_url,
+        file_url: "",
+        storage_backend: "sharepoint",
+        sp_item_id: storage.item_id,
+        sp_path: storage.path,
         file_type: getFileExtension(file.name),
         file_size: file.size,
         category,

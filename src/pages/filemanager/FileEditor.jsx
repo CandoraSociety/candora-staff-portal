@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { DRAW_TOOLS, IMAGE_EXTS, COLORS, HIGHLIGHT_COLORS, SIZES } from "@/lib/editorConstants";
 import { getFileExtension, generateStandardizedName } from "@/lib/fileHelpers";
+import { uploadToVaultStorage, getVaultFileUrl } from "@/lib/vaultFiles";
 import SignatureDialog from "@/components/files/SignatureDialog";
 import SaveVaultDialog from "@/components/files/SaveVaultDialog";
 import ShareDialog from "@/components/files/ShareDialog";
@@ -110,7 +111,9 @@ export default function FileEditor() {
 
   useEffect(() => {
     if (vaultFile && mode === "loading") {
-      openFile(vaultFile.file_url, vaultFile);
+      getVaultFileUrl(vaultFile)
+        .then((url) => url && openFile(url, vaultFile))
+        .catch(() => toast.error("Could not load this file from the vault."));
     }
   }, [vaultFile, mode, openFile]);
 
@@ -165,13 +168,16 @@ export default function FileEditor() {
     const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
     const file = new File([blob], `${saveName || "edited-file"}.png`, { type: "image/png" });
 
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const storage = await uploadToVaultStorage(file, { category: saveCategory });
 
     await base44.entities.File.create({
       original_name: file.name,
       display_name: saveName || file.name,
       standardized_name: generateStandardizedName(file.name, saveCategory, saveAccess),
-      file_url,
+      file_url: "",
+      storage_backend: "sharepoint",
+      sp_item_id: storage.item_id,
+      sp_path: storage.path,
       file_type: "png",
       file_size: file.size,
       category: saveCategory,
@@ -258,7 +264,7 @@ export default function FileEditor() {
                   return (
                     <button
                       key={f.id}
-                      onClick={() => openFile(f.file_url, f)}
+                      onClick={() => getVaultFileUrl(f).then((url) => url && openFile(url, f)).catch(() => toast.error("Could not load this file."))}
                       className="w-full text-left flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors"
                     >
                       {IMAGE_EXTS.includes(ext) ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}

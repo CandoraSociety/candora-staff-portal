@@ -5,6 +5,7 @@ import { Download, FileText, MoreVertical, Trash2, ExternalLink, Eye } from "luc
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { openVaultFile } from "@/lib/vaultFiles";
 
 function getFileExtension(name) {
   if (!name) return "";
@@ -53,7 +54,7 @@ export default function FileListItem({ file, onDelete, index = 0 }) {
       <span className="text-xs text-muted-foreground w-24">{file.created_date ? format(new Date(file.created_date), "MMM d, yyyy") : ""}</span>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/filemanager/view?id=${file.id}`)}><ExternalLink className="h-4 w-4" /></Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(file.file_url, "_blank")}><Download className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openVaultFile(file)}><Download className="h-4 w-4" /></Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end">

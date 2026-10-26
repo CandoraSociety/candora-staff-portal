@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { generateStandardizedName, getFileExtension, FILE_CATEGORIES, PHOTO_EXTS } from "@/lib/fileHelpers";
+import { uploadToVaultStorage } from "@/lib/vaultFiles";
 import BulkFileRow from "@/components/bulk/BulkFileRow";
 import PhotoSorterDialog from "@/components/bulk/PhotoSorterDialog";
 
@@ -65,13 +66,16 @@ export default function BulkUpload() {
     for (const item of uploadFiles) {
       try {
         setFiles((prev) => prev.map((f) => (f.id === item.id ? { ...f, status: "uploading" } : f)));
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: item.file });
+        const storage = await uploadToVaultStorage(item.file, { category: item.category });
         const stdName = generateStandardizedName(item.file.name, item.category, "universal");
         await base44.entities.File.create({
           original_name: item.file.name,
           standardized_name: stdName,
           display_name: item.file.name.replace(/\.[^/.]+$/, ""),
-          file_url,
+          file_url: "",
+          storage_backend: "sharepoint",
+          sp_item_id: storage.item_id,
+          sp_path: storage.path,
           file_type: getFileExtension(item.file.name),
           file_size: item.file.size,
           category: item.category,

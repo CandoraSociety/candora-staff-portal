@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { openVaultFile, getVaultFileUrl } from "@/lib/vaultFiles";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -98,8 +99,8 @@ export default function FileCard({ file, onDelete, index = 0 }) {
                     <DropdownMenuItem onClick={() => navigate(`/filemanager/view?id=${file.id}`)}><ExternalLink className="h-4 w-4 mr-2" /> Open</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`/filemanager/edit?id=${file.id}`)}><Eye className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setShowSummary(true)}><Eye className="h-4 w-4 mr-2" /> Summary</DropdownMenuItem>
-                    {CANVA_EXTS.includes(ext) && <DropdownMenuItem onClick={() => window.open(`https://www.canva.com/create/import/?url=${encodeURIComponent(file.file_url)}`, "_blank")}><Palette className="h-4 w-4 mr-2" /> Canva</DropdownMenuItem>}
-                    <DropdownMenuItem onClick={() => window.open(file.file_url, "_blank")}><Download className="h-4 w-4 mr-2" /> Download</DropdownMenuItem>
+                    {CANVA_EXTS.includes(ext) && <DropdownMenuItem onClick={() => getVaultFileUrl(file).then((url) => window.open(`https://www.canva.com/create/import/?url=${encodeURIComponent(url || "")}`, "_blank"))}><Palette className="h-4 w-4 mr-2" /> Canva</DropdownMenuItem>}
+                    <DropdownMenuItem onClick={() => openVaultFile(file)}><Download className="h-4 w-4 mr-2" /> Download</DropdownMenuItem>
                     {onDelete && <DropdownMenuItem onClick={() => onDelete(file)} className="text-destructive"><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -117,7 +118,7 @@ export default function FileCard({ file, onDelete, index = 0 }) {
               <div className="flex items-center gap-4 mt-2.5 text-xs text-muted-foreground">
                 <span><Clock className="h-3 w-3 inline mr-1" />{file.created_date ? format(new Date(file.created_date), "MMM d") : ""}</span>
                 {file.owner_name && <span>by {file.owner_name}</span>}
-                <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs" onClick={() => window.open(file.file_url, "_blank")}><Download className="h-3 w-3 mr-1" />Download</Button>
+                <Button variant="ghost" size="sm" className="ml-auto h-7 text-xs" onClick={() => openVaultFile(file)}><Download className="h-3 w-3 mr-1" />Download</Button>
               </div>
             </div>
           </div>

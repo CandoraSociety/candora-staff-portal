@@ -14,6 +14,31 @@ export default function FolderManagerPanel() {
   const [search, setSearch] = useState('');
   const [deleting, setDeleting] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [migrating, setMigrating] = useState(false);
+
+  const handleMigrateVault = async () => {
+    setMigrating(true);
+    try {
+      const res = await base44.functions.invoke('migrateVaultFilesToSharePoint', {});
+      const data = res.data || res;
+      if (data?.error) throw new Error(data.error);
+      const { migrated = 0, failed = 0, remaining = 0, failures = [] } = data || {};
+      toast({
+        title: `Moved ${migrated} file${migrated !== 1 ? 's' : ''} to SharePoint`,
+        description:
+          failed > 0
+            ? `${failed} failed${failures[0] ? ` (${failures[0].error})` : ''}. ${remaining > 0 ? `${remaining} remaining — run again to continue.` : ''}`
+            : remaining > 0
+              ? `${remaining} remaining — run again to continue.`
+              : 'Migration complete — nothing left on the old storage.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['spFoldersDetailed'] });
+    } catch (err) {
+      toast({ title: 'Migration failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setMigrating(false);
+    }
+  };
 
   const { data: folders = [], isLoading, error } = useQuery({
     queryKey: ['spFoldersDetailed'],
@@ -126,6 +151,18 @@ export default function FolderManagerPanel() {
 
   return (
     <div className="space-y-4">
+      {/* Move legacy uploads off public links into the SharePoint vault */}
+      <div className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/40">
+        <div>
+          <p className="text-sm font-medium">Move uploaded files to SharePoint</p>
+          <p className="text-xs text-muted-foreground">Copies files still on the old public links into the SharePoint vault, then repoints their records. Run until it reports nothing remaining.</p>
+        </div>
+        <Button size="sm" onClick={handleMigrateVault} disabled={migrating} className="flex-shrink-0">
+          {migrating && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />}
+          {migrating ? 'Moving…' : 'Move files'}
+        </Button>
+      </div>
+
       {/* Duplicate warning banner */}
       {duplicateGroups.length > 0 && (
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
