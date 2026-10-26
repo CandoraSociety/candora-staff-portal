@@ -270,35 +270,32 @@ export default function Dashboard() {
 
       {/* Live data moved to Admin > Users & Access */}
 
-      {/* Full-width Personal Organizer */}
-      {isWidgetActive('organizer') && (
-        <OrganizerWidget />
-      )}
+      {/* Widget cards — three across (announcements, pinned portal and quick access portals stay above) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        {isWidgetActive('organizer') && (
+          <OrganizerWidget />
+        )}
 
-      {/* How To Knowledge Base — below organizer */}
-      {isWidgetActive('howto') && <HowToSearch user={user} />}
+        {isWidgetActive('howto') && <HowToSearch user={user} />}
 
-      {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
-      <CollapsibleWidget title="Appointments" icon={Calendar}>
-        <WorkerAppointmentsPanel />
-      </CollapsibleWidget>
+        {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
+        <CollapsibleWidget title="Appointments" icon={Calendar}>
+          <WorkerAppointmentsPanel />
+        </CollapsibleWidget>
 
-      {/* Quick Files — permanent upload + search for the document vault */}
-      <QuickFilesWidget />
+        {/* Quick Files — permanent upload + search for the document vault */}
+        <QuickFilesWidget />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {isWidgetActive('google_translate') && (
-            <div data-tour="dashboard-translate">
-              <CollapsibleWidget title="Translate" icon={Languages}>
-                <GoogleTranslateWidget />
-              </CollapsibleWidget>
-            </div>
-          )}
-          <CollapsibleWidget title="Recent Activity" icon={Activity}>
-            <RecentActivityWidget />
-          </CollapsibleWidget>
-        </div>
+        {isWidgetActive('google_translate') && (
+          <div data-tour="dashboard-translate" className="w-full">
+            <CollapsibleWidget title="Translate" icon={Languages}>
+              <GoogleTranslateWidget />
+            </CollapsibleWidget>
+          </div>
+        )}
+        <CollapsibleWidget title="Recent Activity" icon={Activity}>
+          <RecentActivityWidget />
+        </CollapsibleWidget>
       </div>
 
     </div>
