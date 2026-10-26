@@ -270,6 +270,11 @@ export default function Dashboard() {
 
       {/* Live data moved to Admin > Users & Access */}
 
+      {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
+      <CollapsibleWidget title="Appointments" icon={Calendar}>
+        <WorkerAppointmentsPanel />
+      </CollapsibleWidget>
+
       {/* Widget cards — three across (announcements, pinned portal and quick access portals stay above) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
         {isWidgetActive('organizer') && (
@@ -277,11 +282,6 @@ export default function Dashboard() {
         )}
 
         {isWidgetActive('howto') && <HowToSearch user={user} />}
-
-        {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
-        <CollapsibleWidget title="Appointments" icon={Calendar}>
-          <WorkerAppointmentsPanel />
-        </CollapsibleWidget>
 
         {/* Quick Files — permanent upload + search for the document vault */}
         <QuickFilesWidget />
