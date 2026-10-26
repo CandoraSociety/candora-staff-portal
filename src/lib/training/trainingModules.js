@@ -80,6 +80,18 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="widget-list"]' }
       },
       {
+        title: "Quick Files — upload right from your dashboard",
+        body: "Most days you just need to put a document away or pull one back out, so the Quick Files widget sits permanently on your dashboard for exactly that. Press Upload a file and pick a PDF, Excel or CSV file. Before it lands, you give it the information that keeps the vault organized: a display name, the category it belongs to, an access level so only the right people can open it, and keywords that help you find it later. The file goes into the same document vault the File Manager uses — fully organized, not just dumped.",
+        path: "/",
+        target: { selector: '[data-tour="dashboard-quickfiles"]' }
+      },
+      {
+        title: "Quick Files — search without leaving your page",
+        body: "Finding a file is just as quick. Type into the Quick Files search box and it searches the vault by file name, description and keywords, showing only the files you're allowed to open — click a result and it opens in the File Manager's viewer. When you need the heavier tools — folders, bulk uploads, sharing — the link below the results takes you straight to the File Manager portal.",
+        path: "/",
+        target: { selector: '[data-tour="qf-search"]' }
+      },
+      {
         title: "Set up your e-signature — protect it first",
         body: "Candora signs documents digitally, so you'll set yours up now — and this is the one part of training that's real: the PIN and signature you create here stay on your account after training ends. In the E-Signature portal, choose a 4-digit PIN or a password, type it into both fields, and press Save & continue. This is the code you'll enter every time you sign a timesheet approval, reimbursement or document — so pick something you'll remember.",
         path: "/e-signature",

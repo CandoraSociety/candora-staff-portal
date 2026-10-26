@@ -20,6 +20,7 @@ import GlobalSearch from '@/components/search/GlobalSearch';
 import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWidget';
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import DashboardNotifications from '@/components/dashboard/DashboardNotifications';
+import QuickFilesWidget from '@/components/dashboard/QuickFilesWidget';
 
 import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
@@ -281,6 +282,9 @@ export default function Dashboard() {
       <CollapsibleWidget title="Appointments" icon={Calendar}>
         <WorkerAppointmentsPanel />
       </CollapsibleWidget>
+
+      {/* Quick Files — permanent upload + search for the document vault */}
+      <QuickFilesWidget />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
