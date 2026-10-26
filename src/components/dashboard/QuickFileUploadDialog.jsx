@@ -141,7 +141,7 @@ export default function QuickFileUploadDialog({ open, onOpenChange }) {
             <Input
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Friendly name for this file"
+              placeholder="Name others will see in search results"
             />
           </div>
 
