@@ -4,6 +4,22 @@ export const TRAINING_NAV_GROUPS = [
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "rc", "ell", "centralreg"] },
 ];
 
+// Which portal series each module belongs to — the training sidebar shows a
+// learner's active modules plus the next module of the same series.
+export const TRAINING_MODULE_SERIES = {
+  dashboard: "getting_started",
+  dashboard_widgets: "getting_started",
+  staffadmin: "time_money",
+  staffadmin_money: "time_money",
+  staffadmin_supervisor: "time_money",
+  pathways: "pathways",
+  pathways_journey: "pathways",
+  pathways_journey_part2: "pathways",
+  rc: "rc",
+  ell: "ell",
+  centralreg: "centralreg",
+};
+
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
 const SECTION_STARTS = {
   dashboard: {
