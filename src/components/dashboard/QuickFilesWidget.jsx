@@ -39,7 +39,7 @@ export default function QuickFilesWidget() {
   }, [query, allFiles, user]);
 
   return (
-    <div data-tour="dashboard-quickfiles">
+    <div data-tour="dashboard-quickfiles" className="h-full [&>div]:h-full">
       <CollapsibleWidget title="Quick Files" icon={FolderOpen}>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">

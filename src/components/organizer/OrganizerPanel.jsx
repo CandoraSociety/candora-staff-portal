@@ -75,7 +75,7 @@ export default function OrganizerPanel({ user }) {
   }, []);
 
   return (
-    <div className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md">
+    <div className="rounded-2xl border-2 border-violet-500/40 bg-card shadow-md flex-1 flex flex-col">
       {/* Header */}
       <div
         className="flex items-center justify-between px-5 py-4 cursor-pointer bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 transition-colors"
