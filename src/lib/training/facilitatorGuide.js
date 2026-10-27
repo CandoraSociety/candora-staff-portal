@@ -134,7 +134,7 @@ export const FACILITATOR_GUIDE = {
       "Your caseload, in sections": "The DEA / WD / Casual / Rejected cards are collapsible for a reason: the list gets long. Show how the placement sub-tabs (All Clients, Internal Training, Work Exposure) slice the same caseload.",
       "The Master List": "Show search and the program/status filters. Stress: this is every client in Pathways, not just theirs — always open a file from here rather than re-creating someone.",
       "The client journey — its own module": "Bridge slide: this tour showed where things live. The Client Journey module is the deep-dive that shows how it all connects — point trainees to it as the natural next session.",
-      "Intake — adding a client": "The duplicate matcher runs as you type, and you can link straight to an existing central database file. This is a practice task — don't do it here, just show the flow.",
+      "Intake — adding a client": "The duplicate matcher runs as you type, and you can link straight to an existing central client database file. This is a practice task — don't do it here, just show the flow.",
       "Compass tasks": "Explain the 'why': these checklist steps feed funder reporting, so completing them isn't just admin — it protects the program's funding.",
       "Employers and purchase requests": "Mention the approval chain: purchase and exposure-course requests go to a supervisor and the ED before anything is spent.",
       "Time to practice": "Hands-on time: everyone adds a demo client, opens a file from the Master List and clicks through its tabs, and submits a purchase request. Circulate — intake is where people get stuck.",
@@ -222,14 +222,14 @@ export const FACILITATOR_GUIDE = {
   rc: {
     duration: "About 40 minutes (5 intro · 18 tour · 12 practice · 5 wrap-up)",
     objectives: [
-      "Staff can search the central database and open a client file",
+      "Staff can search the central client database and open a client file",
       "Staff can run an intake without creating a duplicate record",
       "Staff know safety alerts must be read before discussing sensitive matters",
     ],
     stepNotes: {
-      "Welcome to the Resource Centre": "Set the stakes: this is the single source of truth for who our clients are — record quality here matters organization-wide. Training Mode means they can't break anything today.",
+      "Welcome to the Resource Centre": "Set the stakes: the central client database is the single source of truth for who our clients are, so record quality matters organization-wide. Resource Centre staff are its primary day-to-day users, but every program portal that manages participants feeds into it, and some pull information back from it. Training Mode means they can't break anything today.",
       "The dashboard": "Their starting overview: centre activity, pending visits, recent service logs. Point out it refreshes as the team works.",
-      "Clients — the central database": "Show search by name and phone. Everyone searches before creating — the rule of this portal.",
+      "Clients — the central client database": "Show search by name and phone. Everyone searches before creating — the rule of this portal.",
       "Inside a client file": "Spend the most time here. Safety alerts sit prominently at the top: always read them before a sensitive conversation. Then notes, needs, visits, referrals.",
       "Intake — new clients": "The duplicate matcher is the hero: find the existing file before creating a new one. Two records for one person is this portal's biggest data problem.",
       "Referrals": "Incoming and outgoing, each with a status, so nothing falls through the cracks with partner organizations.",

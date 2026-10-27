@@ -80,7 +80,7 @@ const SECTION_STARTS = {
   },
   rc: {
     "Welcome to the Resource Centre": "Overview",
-    "Clients — the central database": "Client files & intake",
+    "Clients — the central client database": "Client files & intake",
     "Referrals": "Referrals & case management",
     "Time to practice": "Practice",
   },

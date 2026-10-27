@@ -605,7 +605,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Intake — adding a client",
-        body: "New clients come in through Intake. It checks for duplicates as you type, lets you link to an existing central database file, and syncs the new client automatically once saved.",
+        body: "New clients come in through Intake. It checks for duplicates as you type, lets you link to an existing central client database file, and syncs the new client automatically once saved.",
         target: { selector: '[data-tour-path="/pathways/intake"]' },
         path: "/pathways/intake"
       },
@@ -681,7 +681,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Every journey starts at Intake",
-        body: "Whatever road a client ends up on, the record starts at intake — and there are two ways an intake happens. Either way, this is the one file the whole journey is built on: it checks for duplicates against the central database, links to an existing file instead of creating a new one, and records the service start date.",
+        body: "Whatever road a client ends up on, the record starts at intake — and there are two ways an intake happens. Either way, this is the one file the whole journey is built on: it checks for duplicates against the central client database, links to an existing file instead of creating a new one, and records the service start date.",
         target: { selector: '[data-tour-path="/pathways/intake"]' },
         path: "/pathways/intake"
       },
@@ -693,7 +693,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The form: personal information",
-        body: "The form opens with the basics: name, date of birth, gender, phone, email and address — only the first and last name are required. These fields build the client record, and they're what the duplicate matcher checks when the intake lands, so a client who already has a central database file gets linked to it instead of duplicated.",
+        body: "The form opens with the basics: name, date of birth, gender, phone, email and address — only the first and last name are required. These fields build the client record, and they're what the duplicate matcher checks when the intake lands, so a client who already has a central client database file gets linked to it instead of duplicated.",
         path: "/pathways/intake-portal",
         target: { selector: '[data-tour="pw-ext-personal"]' }
       },
@@ -1027,9 +1027,9 @@ export const TRAINING_MODULES = [
   },
   {
     key: "rc",
-    title: "Resource Centre (Central Database)",
+    title: "Resource Centre (Central Client Database)",
     shortTitle: "Resource Centre",
-    blurb: "The central client database: files, notes, safety alerts, visits, referrals and intensive case management.",
+    blurb: "The Resource Centre portal manages Candora's central client database: files, notes, safety alerts, visits, referrals and intensive case management. Client information flows into the central client database from every program portal, and in some cases those portals pull information back from it.",
     path: "/rc",
     steps: [
       {
@@ -1044,8 +1044,8 @@ export const TRAINING_MODULES = [
         path: "/rc"
       },
       {
-        title: "Clients — the central database",
-        body: "Every client file lives here. Search by name or phone, and click a client to open their full file.",
+        title: "Clients — the central client database",
+        body: "Every client file in the central client database lives here. Search by name or phone, and click a client to open their full file.",
         target: { selector: 'a[href="/rc/clients"]' },
         path: "/rc/clients"
       },

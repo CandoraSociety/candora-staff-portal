@@ -172,8 +172,8 @@ const INTRO_SCENES_BY_MODULE = {
     {
       kicker: 'Resource Centre',
       title: 'Welcome to the Resource Centre.',
-      body: "Welcome to the Resource Centre. The Resource Centre holds Candora's central client database, the single source of truth for who our clients are and how the organization has supported them.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/05e0fdab1_speech.mp3',
+      body: "Welcome to the Resource Centre, home of Candora's central client database. Resource Centre staff are the database's primary day-to-day users, but it belongs to the whole organization: the program portals that manage participants, such as Pathways, ELL, EmpowerU and the others, feed their client information into the central client database, and in some cases pull information back from it. It is the single source of truth for who our clients are and how the organization has supported them.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/fd2b76bc3_speech.mp3',
     },
     {
       kicker: 'Resource Centre',
