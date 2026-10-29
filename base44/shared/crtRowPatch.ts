@@ -1,4 +1,5 @@
 import { DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS, parseCrtDate } from './crtWorkbook.ts';
+import { findCrtRowIndexes } from './crtRowIdentity.ts';
 
 // Shared single-row CRT patch: writes the given cells (column index → string)
 // into the row matching hsid (preferred) or the normalized client name, in
@@ -103,15 +104,6 @@ export async function upsertClientRows({ accessToken, files, entries }) {
         return p.slice(0, NUM_COLUMNS);
       });
 
-      const hsidIndex = new Map();
-      const nameIndex = new Map();
-      for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
-        const row = values[i];
-        if (!row) continue;
-        const h = row[1] ? String(row[1]).trim() : '';
-        if (h) hsidIndex.set(h, i);
-        else if (row[0] && String(row[0]).trim()) nameIndex.set(NORM(row[0]), i);
-      }
       let lastDataRow = CLIENT_DATA_START_ROW - 2;
       for (let i = values.length - 1; i >= CLIENT_DATA_START_ROW - 1; i--) {
         if (values[i] && values[i].some(v => v !== '' && v !== null && v !== undefined)) { lastDataRow = i; break; }
@@ -119,22 +111,12 @@ export async function upsertClientRows({ accessToken, files, entries }) {
 
       const writes = new Map(); // row index -> row values
       for (const e of entries) {
-        const hsid = e.hsid ? String(e.hsid).trim() : '';
-        let rowIdx = hsid ? hsidIndex.get(hsid) : undefined;
-        if (rowIdx === undefined && e.clientName) {
-          const nk = NORM(e.clientName);
-          if (nameIndex.has(nk)) rowIdx = nameIndex.get(nk);
-        }
-        if (rowIdx === undefined && hsid) {
-          for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
-            if (values[i] && NORM(values[i][0]) === NORM(e.clientName || '')) { rowIdx = i; break; }
-          }
-        }
-
+        const rowIndexes = findCrtRowIndexes(values, e.hsid, e.clientName);
         const incoming = (e.row || []).slice(0, NUM_COLUMNS);
         while (incoming.length < NUM_COLUMNS) incoming.push('');
 
-        if (rowIdx !== undefined) {
+        if (rowIndexes.length) {
+          for (const rowIdx of rowIndexes) {
           const existing = values[rowIdx] || new Array(NUM_COLUMNS).fill('');
           const merged = incoming.map((val, col) => {
             if (FORCE_COLS.has(col)) return val;
@@ -153,6 +135,7 @@ export async function upsertClientRows({ accessToken, files, entries }) {
           writes.set(rowIdx, merged);
           summary.updated++;
           summary.clients[keyOf(e)] = 'updated';
+          }
         } else {
           lastDataRow += 1;
           values[lastDataRow] = incoming;
@@ -198,8 +181,8 @@ export async function upsertClientRows({ accessToken, files, entries }) {
           break;
         }
       }
-      // A successful PATCH alone does not prove the reviewed follow-up landed.
-      // Read it back, accepting Excel serial dates and formatted dates equally.
+      // Confirm every written cell, including each duplicate client row.
+      // Accept Excel serial dates and formatted dates equally.
       if (summary.status === 'ok') {
         const first = idxs[0], last = idxs[idxs.length - 1];
         let mismatch = '';
@@ -211,18 +194,22 @@ export async function upsertClientRows({ accessToken, files, entries }) {
             `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='A${first + 1}:Y${last + 1}')`,
             { headers: { Authorization: `Bearer ${accessToken}`, 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(30000) }
           );
-          if (!check.ok) throw new Error('Could not verify written 90-day fields');
+          if (!check.ok) throw new Error('Could not verify written CRT fields');
           const actual = (await check.json()).values || [];
           mismatch = '';
           for (const i of idxs) {
             const expected = writes.get(i), saved = actual[i - first] || [];
-            const sameClient = String(saved[1] ?? '').trim() === String(expected[1] ?? '').trim() && NORM(saved[0]) === NORM(expected[0]);
-            const sameStatus = String(saved[14] ?? '').trim() === String(expected[14] ?? '').trim();
-            const sameDate = (parseCrtDate(saved[15]) || String(saved[15] ?? '').trim()) === (parseCrtDate(expected[15]) || String(expected[15] ?? '').trim());
-            if (!sameClient || !sameStatus || !sameDate) {
-              mismatch = `90-day verification failed for ${expected[0]}: expected ${expected[14]} / ${expected[15]}, read ${saved[14] ?? ''} / ${saved[15] ?? ''}`;
-              break;
+            const dateColumns = new Set([3, 5, 7, 9, 11, 13, 15, 17, 19, 24]);
+            const normalize = (value, col) => dateColumns.has(col)
+              ? (parseCrtDate(value) || String(value ?? '').trim())
+              : String(value ?? '').replace(/\r\n/g, '\n').trim();
+            for (let col = 0; col < NUM_COLUMNS; col++) {
+              if (normalize(saved[col], col) !== normalize(expected[col], col)) {
+                mismatch = `CRT verification failed for ${expected[0]}, column ${String.fromCharCode(65 + col)}: expected ${expected[col] ?? ''}, read ${saved[col] ?? ''}`;
+                break;
+              }
             }
+            if (mismatch) break;
           }
           if (!mismatch) break;
         }

@@ -212,8 +212,11 @@ export default async function(req: Request): Promise<Response> {
       const cf = u.crt_fields || {};
       const hsid = String(u.hsid || cf.hsid || '').trim();
       const name = String(u.client_name || cf.participant_name || '').trim();
-      if (hsid && byHsid.has(hsid)) return byHsid.get(hsid);
+      // Some imported participants share an incorrectly duplicated HSID.
+      // Resolve the reviewed legal name first instead of updating the last
+      // unrelated client that happened to carry that number.
       if (name) { const nk = NORM(name); if (byName.has(nk)) return byName.get(nk); }
+      if (hsid && byHsid.has(hsid)) return byHsid.get(hsid);
       return null;
     };
 

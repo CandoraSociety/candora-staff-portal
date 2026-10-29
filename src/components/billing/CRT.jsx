@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import moment from 'moment';
 import CreateMonthDialog from './CreateMonthDialog';
 import CrtBillingHeader from './CrtBillingHeader';
+import CrtWorkbookFrame from '@/components/billing/CrtWorkbookFrame';
 
 export default function CRT({ clients = [] }) {
   const [syncing, setSyncing] = useState(false);
@@ -27,7 +28,7 @@ export default function CRT({ clients = [] }) {
   const [freezePaneApplying, setFreezePaneApplying] = useState(false);
 
   // Fetch CRT workbook status
-  const { data: status, isLoading, refetch } = useQuery({
+  const { data: status, isLoading, refetch, dataUpdatedAt: statusUpdatedAt } = useQuery({
     queryKey: ['crt-workbook-status'],
     queryFn: async () => {
       const res = await base44.functions.invoke('getCrtWorkbookStatus', {});
@@ -57,7 +58,7 @@ export default function CRT({ clients = [] }) {
   // the active workbook's embed (from status) is used directly. The query is
   // gated on the narrative sync finishing so the iframe never renders a
   // pre-sync (stale) snapshot of the Narrative Report sheet.
-  const { data: previewData, isLoading: previewLoading, refetch: refetchPreview } = useQuery({
+  const { data: previewData, isLoading: previewLoading, refetch: refetchPreview, dataUpdatedAt: previewUpdatedAt } = useQuery({
     queryKey: ['crt-file-preview', viewFileId],
     queryFn: async () => {
       const res = await base44.functions.invoke('getCrtFilePreview', { fileId: viewFileId });
@@ -72,7 +73,7 @@ export default function CRT({ clients = [] }) {
   const viewedFileName = viewFileId
     ? (status?.allFiles?.find(f => f.id === viewFileId)?.name || '')
     : (status?.activeWorkbook?.name || '');
-  const { data: crtRowsData } = useQuery({
+  const { data: crtRowsData, refetch: refetchCrtRows } = useQuery({
     queryKey: ['crt-rows-scroll', viewedFileName],
     queryFn: async () => {
       const res = await base44.functions.invoke('getCrtWorkbookRows', { file_name: viewedFileName });
@@ -99,6 +100,7 @@ export default function CRT({ clients = [] }) {
           (errs.length ? ` · ${errs.length} error(s)` : '')
         );
         refetch();
+        refetchCrtRows();
         if (viewFileId) refetchPreview();
       } else if (data.status === 'no_workbook') {
         toast.error('No CRT workbook found. Upload one to the _DEPT_Pathways SharePoint folder first.');
@@ -418,7 +420,7 @@ export default function CRT({ clients = [] }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => { if (viewFileId) refetchPreview(); else refetch(); }}
+                  onClick={() => Promise.all([viewFileId ? refetchPreview() : refetch(), refetchCrtRows()])}
                   title="Reload the preview so it shows the workbook's current contents"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -462,12 +464,9 @@ export default function CRT({ clients = [] }) {
               )}
             </div>
             <div className="rounded-lg overflow-hidden border border-slate-200 h-[80vh] min-h-[700px]">
-              <iframe
-                key={finalEmbedUrl}
-                src={finalEmbedUrl}
-                className="w-full h-full"
-                frameBorder="0"
-                title="CRT Workbook"
+              <CrtWorkbookFrame
+                url={finalEmbedUrl}
+                revision={viewFileId ? previewUpdatedAt : statusUpdatedAt}
               />
             </div>
           </CardContent>

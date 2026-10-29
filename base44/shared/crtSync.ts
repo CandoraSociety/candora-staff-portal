@@ -3,6 +3,7 @@ import {
   mapClientToCrtRow, listCrtFiles, parseCrtDate
 } from './crtWorkbook.ts';
 import { syncNarrativeReportIntoWorkbook } from './narrativeReport.ts';
+import { findCrtRowIndexes } from './crtRowIdentity.ts';
 
 // Sync a single workbook's Client Data sheet with the given portal clients.
 // NOT month-bound: every open workbook contains ALL current client
@@ -272,8 +273,7 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
     closedNames = new Set(closed.map(r => r.file_name));
   } catch { /* default: nothing closed */ }
 
-  const normName = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
-  const portalNameKey = (c) => normName(`${c.last_name || ''}, ${c.first_name || ''}`);
+  const clientName = `${client.last_name || ''}, ${client.first_name || ''}`;
 
   const results = [];
   for (const f of files) {
@@ -297,25 +297,10 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
         return padded.slice(0, NUM_COLUMNS);
       });
 
-      const hsid = client.compass_hsid ? String(client.compass_hsid).trim() : '';
-      let rowIdx = -1;
-      if (hsid) {
-        for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
-          const row = allValues[i];
-          if (row && row[1] && String(row[1]).trim() === hsid) { rowIdx = i; break; }
-        }
-      }
-      if (rowIdx < 0) {
-        const nk = portalNameKey(client);
-        for (let i = CLIENT_DATA_START_ROW - 1; i < allValues.length; i++) {
-          const row = allValues[i];
-          if (!row) continue;
-          const rh = row[1] ? String(row[1]).trim() : '';
-          if (!rh && row[0] && String(row[0]).trim() && normName(row[0]) === nk) { rowIdx = i; break; }
-        }
-      }
-
+      const matchingRows = findCrtRowIndexes(allValues, client.compass_hsid, clientName);
+      const writtenRows = [];
       const portalRow = mapClientToCrtRow(client, null);
+      for (const rowIdx of (matchingRows.length ? matchingRows : [-1])) {
       let rowToWrite = portalRow;
       let targetRow1;
       if (rowIdx >= 0) {
@@ -358,9 +343,11 @@ export async function syncOneClientIntoAllOpenWorkbooks(base44, accessToken, cli
       );
       if (!patchRes.ok) {
         const errText = await patchRes.text().catch(() => '');
-        results.push({ file: f.name, status: 'error', error: 'write failed: ' + errText.slice(0, 200) }); continue;
+        throw new Error('write failed: ' + errText.slice(0, 200));
       }
-      results.push({ file: f.name, status: rowIdx >= 0 ? 'updated' : 'added', row: targetRow1 });
+      writtenRows.push(targetRow1);
+      }
+      results.push({ file: f.name, status: matchingRows.length ? 'updated' : 'added', row: writtenRows[0], rows: writtenRows });
     } catch (e) {
       results.push({ file: f.name, status: 'error', error: e.message });
     }

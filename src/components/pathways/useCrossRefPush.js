@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function useCrossRefPush(assembleFields, onPushed) {
+  const queryClient = useQueryClient();
   const [pushing, setPushing] = useState(false);
   const busy = useRef(false);
   const pushAll = async (rows, label) => {
@@ -26,7 +28,7 @@ export default function useCrossRefPush(assembleFields, onPushed) {
         const { data } = await base44.functions.invoke('refreshAllBillingCounts', {});
         billingFailed = data?.status !== 'success' || data.workbooks?.some(w => w.status === 'error' || w.countErrors > 0);
       }
-      if (written === rows.length && !billingFailed) toast.success(`Pushed ${written} of ${rows.length} clients; 90-day status and date checked in every open CRT`, { id: notice });
+      if (written === rows.length && !billingFailed) toast.success(`Pushed ${written} of ${rows.length} clients; written fields checked in every open CRT`, { id: notice });
       else if (written) toast.warning(`Pushed ${written} of ${rows.length} clients${billingFailed ? '; billing totals need a refresh' : '; remaining clients need another push'}`, { id: notice });
       else toast.error('No clients were confirmed in every open CRT', { id: notice });
     } catch {
@@ -34,7 +36,12 @@ export default function useCrossRefPush(assembleFields, onPushed) {
     } finally {
       busy.current = false;
       setPushing(false);
-      if (written) onPushed();
+      if (written) {
+        await Promise.all(['crt-workbook-status', 'crt-file-preview', 'crt-rows-scroll', 'clients-billing'].map(key =>
+          queryClient.invalidateQueries({ queryKey: [key] })
+        ));
+        onPushed();
+      }
     }
   };
   return { pushing, pushAll, pushCrossRefUpdate: r => pushAll([r], r.client_name || 'Client') };
