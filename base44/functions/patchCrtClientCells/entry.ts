@@ -15,6 +15,8 @@ const CELL_COL = {
   day30_outcome_date: 11,
   day60_outcome: 12,
   day60_outcome_date: 13,
+  day90_outcome: 14,                 // O: 90-Day Outcome
+  day90_outcome_date: 15,            // P: 90-Day Outcome Date
   day180_outcome: 16,
   day180_outcome_date: 17,
   service_nav_support: 23,          // X: Service Navigation Support Y/N
@@ -28,7 +30,7 @@ const EMPLOYED_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
 
 // Keys whose value is a date that must be formatted as MM/DD/YY for the CRT
 // (the *_date keys plus the billing-month column, which is a date, not text).
-const DATE_KEYS = new Set(['day30_outcome_date', 'day60_outcome_date', 'day180_outcome_date', 'service_nav_billing_month']);
+const DATE_KEYS = new Set(['day30_outcome_date', 'day60_outcome_date', 'day90_outcome_date', 'day180_outcome_date', 'service_nav_billing_month']);
 
 export default async function(req: Request): Promise<Response> {
   try {
