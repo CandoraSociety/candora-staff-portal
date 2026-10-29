@@ -216,7 +216,7 @@ export const buildWorkExposurePdfBlob = async (records, billingMonth, brand = {}
     doc.setFontSize(10);
     doc.setTextColor(...navy);
     doc.text(
-      `TOTAL (${uniqueClients} placements, ${records.length} submissions)   ${totalHours.toFixed(1)} hrs   $${totalAmount.toFixed(2)}`,
+      `TOTAL (${uniqueClients} placements, ${records.length} submissions)   ${Number(totalHours.toFixed(10))} hrs   $${totalAmount.toFixed(2)}`,
       left,
       y
     );
