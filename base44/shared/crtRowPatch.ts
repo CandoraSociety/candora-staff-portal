@@ -164,20 +164,15 @@ export async function upsertClientRows({ accessToken, files, entries }) {
 
       if (!writes.size) { out.files.push(summary); continue; }
 
-      // One PATCH per contiguous block of changed rows.
+      // One bounded PATCH per workbook. Include untouched rows between the
+      // changed rows exactly as read, rather than opening the same workbook
+      // once per scattered client and overwhelming Excel's edit locks.
       const idxs = [...writes.keys()].sort((a, b) => a - b);
-      const blocks = [];
-      let start = idxs[0], prev = idxs[0];
-      for (const i of idxs.slice(1)) {
-        if (i === prev + 1) { prev = i; continue; }
-        blocks.push([start, prev]);
-        start = i; prev = i;
-      }
-      blocks.push([start, prev]);
+      const blocks = [[idxs[0], idxs[idxs.length - 1]]];
 
       for (const [a, b] of blocks) {
         const rows = [];
-        for (let i = a; i <= b; i++) rows.push(writes.get(i));
+        for (let i = a; i <= b; i++) rows.push(values[i] || new Array(NUM_COLUMNS).fill(''));
         const address = `A${a + 1}:Y${b + 1}`;
         // Excel Online intermittently answers 504 on a busy workbook — retry
         // once before reporting the block as failed.
