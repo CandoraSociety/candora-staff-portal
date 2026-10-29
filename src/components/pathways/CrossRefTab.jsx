@@ -638,13 +638,28 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     if (!rows.length) { toast.message(`No ${label.toLowerCase()} clients to push`); return; }
     setPushing(true);
     try {
-      const updates = rows.map(r => ({
-        hsid: r.hsid || '',
-        client_name: r.client_name || '',
-        crt_fields: assembleCrtFields(r),
-      }));
-      const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
-      reportPush(res, `${rows.length} ${label.toLowerCase()} client(s)`);
+      // Push in small batches: a whole section (40+ clients) in a single request
+      // can outrun the function's runtime and come back partial, which reads as
+      // "nothing landed". Each batch reports its own written/failed counts.
+      const CHUNK = 8;
+      let written = 0, failed = 0, processed = 0;
+      for (let i = 0; i < rows.length; i += CHUNK) {
+        const updates = rows.slice(i, i + CHUNK).map(r => ({
+          hsid: r.hsid || '',
+          client_name: r.client_name || '',
+          crt_fields: assembleCrtFields(r),
+        }));
+        const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
+        const results = res?.data?.results || [];
+        processed += updates.length;
+        written += results.filter(r => r.crt === 'updated' || r.crt === 'added').length;
+        failed += results.filter(r => r.crt === 'error' || r.crt === 'unknown' || r.error).length;
+      }
+      const total = `${label.toLowerCase()} client(s)`;
+      if (written && !failed) toast.success(`Pushed ${written} of ${processed} ${total} to the live CRT`);
+      else if (written && failed) toast.warning(`Pushed ${written} of ${processed} ${total} — ${failed} did not reach the CRT`);
+      else toast.error(`Could not write ${total} to the live CRT`);
+      if (written) loadLiveCrt();
     } catch (e) {
       toast.error(`Failed to push ${label.toLowerCase()} updates to the live CRT`);
     } finally {
