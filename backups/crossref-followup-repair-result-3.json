@@ -1,0 +1,103 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "hsid": "8763717454",
+      "name": "Friesen, Irene",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/01/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "7929049950",
+      "name": "Aman, Sahra",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/12/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2117229829",
+      "name": "Chan, Nyagak",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/24/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "9692590640",
+      "name": "Ferdusi, Zannatul",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/23/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "4585005293",
+      "name": "Ion Ion, Costica",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/18/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "5185894085",
+      "name": "Etounde, Benoit",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "10/29/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2134821459",
+      "name": "Solomon, Temesgen",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/13/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    }
+  ],
+  "crtWrite": {
+    "status": "partial",
+    "written_rows": 0,
+    "workbooks": [
+      {
+        "file": "CRT_October_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "write failed (rows 137-137): {\"error\":{\"code\":\"EditModeCannotAcquireLockTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooMan"
+      },
+      {
+        "file": "CRT_September_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_August_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_March_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "write failed (rows 68-68): {\"error\":{\"code\":\"FileOpenHostTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooManyRequestsUnca"
+      }
+    ]
+  },
+  "billingCounts": null
+}

@@ -1,0 +1,103 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "hsid": "5806663687",
+      "name": "Saeed Omer, Handoom",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "10/29/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2413374956",
+      "name": "Elmi Ahmed, Ladan",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "10/29/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "9859422793",
+      "name": "Dogru, Ahmet",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/18/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2136628431",
+      "name": "Nor Sangab, Khadijo",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/24/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "8799012318",
+      "name": "Iddi, Shungi",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/29/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "1292323225",
+      "name": "Nwokocha, Michael",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "05/02/26",
+      "crt_row_source": "cross_reference",
+      "crt": "error"
+    },
+    {
+      "hsid": "8795488744",
+      "name": "Adam, Yahya",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/17/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    }
+  ],
+  "crtWrite": {
+    "status": "partial",
+    "written_rows": 0,
+    "workbooks": [
+      {
+        "file": "CRT_October_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "write failed (rows 144-144): {\"error\":{\"code\":\"EditModeCannotAcquireLockTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooMan"
+      },
+      {
+        "file": "CRT_September_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "write failed (rows 91-91): {\"error\":{\"code\":\"FileOpenHostTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooManyRequestsUnca"
+      },
+      {
+        "file": "CRT_August_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_March_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      }
+    ]
+  },
+  "billingCounts": null
+}
