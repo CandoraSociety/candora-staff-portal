@@ -71,6 +71,16 @@ function buildCrossRefRow(cf) {
   return row;
 }
 
+// The client file drives the CRT row, but a reviewed cross-reference row can
+// carry values the file cannot express yet (for example a Placement Outcome on
+// a client whose program status is still In Progress). Fill only the cells the
+// client-derived row leaves EMPTY, so reviewed data the file doesn't hold still
+// reaches the workbook without overriding anything the file derives.
+function fillBlanks(row, cf) {
+  const xref = buildCrossRefRow(cf);
+  return row.map((v, i) => (String(v ?? '').trim() !== '' ? v : xref[i]));
+}
+
 const isCrtEligible = (c) =>
   (c.service_type === 'pathways' || c.service_type === 'direct_to_employment') && !!c.service_start_date;
 
