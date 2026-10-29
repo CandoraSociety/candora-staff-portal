@@ -21,6 +21,11 @@ const CELL_COL = {
   service_nav_billing_month: 24,    // Y: Service Nav Billing Month (MM/DD/YY)
 };
 
+// Column T (EDA Completion Date) mirrors the Placement Outcome Date whenever the
+// placement outcome is employed — same rule the full CRT sync applies — so a
+// manually patched E-RF/E-UF/SE placement fills T too instead of leaving it blank.
+const EMPLOYED_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+
 // Keys whose value is a date that must be formatted as MM/DD/YY for the CRT
 // (the *_date keys plus the billing-month column, which is a date, not text).
 const DATE_KEYS = new Set(['day30_outcome_date', 'day60_outcome_date', 'day180_outcome_date', 'service_nav_billing_month']);
@@ -43,6 +48,14 @@ export default async function(req: Request): Promise<Response> {
       if (col === undefined) continue;
       const v = String(raw ?? '').trim();
       writeVals[col] = (key.endsWith('_date') || DATE_KEYS.has(key)) && v ? (formatDateForCrt(v) || v) : v;
+    }
+
+    // Employed placement → T mirrors the placement date (cleared when the
+    // outcome is not employed or the date is blanked).
+    if ('placement_outcome' in (cells as any)) {
+      const outcome = String((cells as any).placement_outcome ?? '').trim();
+      const date = writeVals[CELL_COL.placement_outcome_date] || '';
+      writeVals[19] = EMPLOYED_OUTCOMES.includes(outcome) ? date : '';
     }
 
     const accessToken = await getGraphToken();
