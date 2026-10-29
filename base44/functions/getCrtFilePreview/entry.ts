@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { DRIVE_ID, getGraphToken } from '../../shared/crtWorkbook.ts';
-import { applySubmissionRange, monthFromCrtFileName } from '../../shared/crtDatePatch.ts';
+import { applySubmissionRange, monthFromCrtFileName, excelSerial } from '../../shared/crtDatePatch.ts';
 
 // Returns the embed (preview) URL for a specific CRT workbook file so the
 // frontend can show any monthly file in the live preview WITHOUT changing
@@ -40,8 +40,20 @@ export default async function(req: Request): Promise<Response> {
         const meta = await metaRes.json();
         const month = monthFromCrtFileName(meta.name);
         if (month) {
-          const { errors } = await applySubmissionRange(accessToken, fileId, month.year, month.monthIdx);
-          if (errors.length) rangeError = errors.join('; ');
+          const startSerial = excelSerial(new Date(Date.UTC(month.year, month.monthIdx, 1)));
+          const endSerial = excelSerial(new Date(Date.UTC(month.year, month.monthIdx + 1, 0)));
+          // Cheap check first: only write when this workbook's headers don't
+          // already show its own month (avoids a slow write on every preview).
+          const checkRes = await fetch(
+            `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${fileId}/workbook/worksheets('Invoice Tracker')/range(address='B8:B9')`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          const existing = checkRes.ok ? ((await checkRes.json()).values || []) : [];
+          const alreadyRight = existing[0]?.[0] === startSerial && existing[1]?.[0] === endSerial;
+          if (!alreadyRight) {
+            const { errors } = await applySubmissionRange(accessToken, fileId, month.year, month.monthIdx);
+            if (errors.length) rangeError = errors.join('; ');
+          }
         }
       }
     } catch (e) {
