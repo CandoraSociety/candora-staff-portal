@@ -610,13 +610,25 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
     return f;
   };
 
+  // Summarise the push response: the CRT write is what matters, so report the
+  // rows actually written rather than assuming the push landed.
+  const reportPush = (res, label) => {
+    const results = res?.data?.results || [];
+    const written = results.filter(r => r.crt === 'updated' || r.crt === 'added').length;
+    const failed = results.filter(r => r.crt === 'error' || r.crt === 'unknown' || r.error).length;
+    if (written && !failed) toast.success(`Pushed ${label} to the live CRT`);
+    else if (written && failed) toast.warning(`Pushed ${written} of ${results.length} ${label} — ${failed} did not reach the CRT`);
+    else toast.error(`Could not write ${label} to the live CRT`);
+    if (written) loadLiveCrt();
+  };
+
   const pushCrossRefUpdate = async (r) => {
     try {
       const crt_fields = assembleCrtFields(r);
-      await base44.functions.invoke('syncCrossRefUpdatesToCrt', {
+      const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', {
         updates: [{ hsid: r.hsid || '', client_name: r.client_name || '', crt_fields }],
       });
-      toast.success(`Pushed ${r.client_name || 'client'} to the live CRT`);
+      reportPush(res, r.client_name || 'client');
     } catch (e) {
       toast.error('Failed to push to the live CRT');
     }
@@ -631,8 +643,8 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         client_name: r.client_name || '',
         crt_fields: assembleCrtFields(r),
       }));
-      await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
-      toast.success(`Pushed ${updates.length} ${label.toLowerCase()} client(s) to the live CRT`);
+      const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
+      reportPush(res, `${rows.length} ${label.toLowerCase()} client(s)`);
     } catch (e) {
       toast.error(`Failed to push ${label.toLowerCase()} updates to the live CRT`);
     } finally {

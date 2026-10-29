@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import {
-  getGraphToken, listCrtFiles, mapClientToCrtRow, parseCrtDate
+  getGraphToken, listCrtFiles, mapClientToCrtRow, parseCrtDate, NUM_COLUMNS
 } from '../../shared/crtWorkbook.ts';
+import { upsertClientRows } from '../../shared/crtRowPatch.ts';
 import { refreshBillingCounts } from '../../shared/invoiceTrackerCounts.ts';
 import { properUserName } from '../../shared/userName.ts';
 
@@ -57,12 +58,21 @@ const PRESERVE_COLS = new Set([10, 11, 12, 13, 16, 17]);
 
 const NORM = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
 
-function buildCrossRefRow(cf, day90Date) {
+// Whole CRT row built straight from the reviewed cross-reference values. Used
+// for clients the entity sync cannot place on the CRT (no program stream or no
+// start date on their client file) — without it, pushing them reports success
+// but nothing ever reaches the workbook.
+function buildCrossRefRow(cf) {
   const row = new Array(NUM_COLUMNS).fill('');
   for (const [k, c] of Object.entries(FIELD_TO_COL)) row[c] = String(cf[k] ?? '').trim();
-  row[15] = String(day90Date || ''); // P: 90 Day Outcome Date — calculated, never from cross-ref
+  // 90 Day Outcome Date: no client file to calculate it from, so use the value
+  // reviewed in the cross-reference when staff supplied one.
+  row[15] = String(cf.day90_outcome_date ?? '').trim();
   return row;
 }
+
+const isCrtEligible = (c) =>
+  (c.service_type === 'pathways' || c.service_type === 'direct_to_employment') && !!c.service_start_date;
 
 function parseName(full) {
   const s = String(full || '').trim();
@@ -199,14 +209,15 @@ export default async function(req: Request): Promise<Response> {
 
     const results = [];
     const nonPortal = [];
+    const crtEntries = [];
     let anyClientUpdated = false;
 
-    // NOTE: the CRT row itself is NOT synced inline anymore. Every Client
-    // update/create below fires the "CRT Sync on Client Update" automation,
-    // which writes that client's row into every open workbook — syncing inline
-    // as well meant 6 workbook syncs PER pushed client, which pushed the
-    // request past the frontend timeout (the button reported failure even
-    // though the CRT was actually being updated).
+    // The pushed rows are written to every open CRT workbook at the END of the
+    // request, in one batched read + write per workbook (see upsertClientRows),
+    // so pushing many clients stays fast. Pushing used to rely solely on the
+    // "CRT Sync on Client Update" automation — when that automation skipped a
+    // client (no program stream / no start date on the client file) the push
+    // still reported success while nothing reached the workbook.
 
     for (let i = 0; i < updates.length; i++) {
       const u = updates[i];
@@ -238,7 +249,15 @@ export default async function(req: Request): Promise<Response> {
           roadmap_progress_notes: [entry, ...notes],
         });
         anyClientUpdated = true;
-        results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: true, day90_date: day90Date };
+        const eligible = isCrtEligible(projected);
+        crtEntries.push({
+          id: i,
+          hsid: String(projected.compass_hsid || cf.hsid || '').trim(),
+          clientName: cf.participant_name || `${projected.last_name || ''}, ${projected.first_name || ''}`,
+          row: eligible ? mapClientToCrtRow(projected, null) : buildCrossRefRow(cf),
+          preserveExisting: eligible,
+        });
+        results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: true, day90_date: day90Date, crt_row_source: eligible ? 'client_file' : 'cross_reference' };
       } catch (e) {
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: false, error: e.message };
       }
@@ -285,9 +304,54 @@ export default async function(req: Request): Promise<Response> {
         try {
           const created = await base44.asServiceRole.entities.Client.create(payload);
           anyClientCreated = true;
-          results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: true, client_id: created.id };
+          const eligible = isCrtEligible(created);
+          crtEntries.push({
+            id: idx,
+            hsid: String(created.compass_hsid || cf.hsid || '').trim(),
+            clientName: cf.participant_name || `${last_name}, ${first_name}`,
+            row: eligible ? mapClientToCrtRow(created, null) : buildCrossRefRow(cf),
+            preserveExisting: eligible,
+          });
+          results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: true, client_id: created.id, crt_row_source: eligible ? 'client_file' : 'cross_reference' };
         } catch (e) {
           results[idx] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: false, created: false, error: e.message };
+        }
+      }
+    }
+
+    // Write every pushed client's row into all open CRT workbooks now — one
+    // batched read + write per workbook. This is the step that actually moves
+    // the reviewed cross-reference data onto the CRT.
+    let crtWrite = null;
+    let sharedToken = null;
+    let sharedOpenFiles = null;
+    if (crtEntries.length) {
+      try {
+        const token = await getGraphToken();
+        const files = await listCrtFiles(token);
+        let closedNames = new Set();
+        try {
+          const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+          closedNames = new Set(closed.map(r => r.file_name));
+        } catch { /* default: nothing closed */ }
+        const openFiles = files.filter(f => !closedNames.has(f.name));
+        sharedToken = token;
+        sharedOpenFiles = openFiles;
+        const written = await upsertClientRows({ accessToken: token, files: openFiles, entries: crtEntries });
+        crtWrite = {
+          status: written.files.some(f => f.status === 'error') ? 'partial' : 'success',
+          written_rows: written.written,
+          workbooks: written.files.map(f => ({ file: f.file, status: f.status, updated: f.updated, added: f.added, error: f.error })),
+        };
+        for (const e of crtEntries) {
+          const r = results[e.id];
+          if (r) r.crt = written.clients[String(e.id)] || 'unknown';
+        }
+      } catch (e) {
+        crtWrite = { status: 'error', error: String(e.message || e).slice(0, 200) };
+        for (const e of crtEntries) {
+          const r = results[e.id];
+          if (r) r.crt = 'error';
         }
       }
     }
@@ -308,16 +372,23 @@ export default async function(req: Request): Promise<Response> {
     // same way the CRT Client Data sync already writes to all open months.
     // Closed/frozen months are skipped.
     let billingCounts = null;
-    if (anyClientUpdated || anyClientCreated) {
+    // Bulk repairs re-push many clients in sequence; refreshing every open
+    // workbook's Invoice Tracker on each call is what makes those runs slow, so
+    // callers doing a batch can skip it and refresh once at the end.
+    if ((anyClientUpdated || anyClientCreated) && !payload?.skip_billing) {
       try {
-        const token = await getGraphToken();
-        const files = await listCrtFiles(token);
-        let closedNames = new Set();
-        try {
-          const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
-          closedNames = new Set(closed.map(r => r.file_name));
-        } catch { /* default: nothing closed */ }
-        const openFiles = files.filter(f => !closedNames.has(f.name));
+        let token = sharedToken;
+        let openFiles = sharedOpenFiles;
+        if (!token || !openFiles) {
+          token = await getGraphToken();
+          const files = await listCrtFiles(token);
+          let closedNames = new Set();
+          try {
+            const closed = await base44.asServiceRole.entities.CrtWorkbook.filter({ status: 'closed' });
+            closedNames = new Set(closed.map(r => r.file_name));
+          } catch { /* default: nothing closed */ }
+          openFiles = files.filter(f => !closedNames.has(f.name));
+        }
         // Fetch ALL clients + financial records ONCE and reuse across every
         // workbook's Invoice Tracker refresh. Without this, each workbook
         // re-fetches up to 5000 clients + 5000 financial records — for 5 open
@@ -343,7 +414,7 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    return Response.json({ status: 'success', results, billingCounts });
+    return Response.json({ status: 'success', results, crtWrite, billingCounts });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
