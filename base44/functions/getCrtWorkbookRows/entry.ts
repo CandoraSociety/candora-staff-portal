@@ -54,7 +54,7 @@ export default async function(req: Request): Promise<Response> {
 
     const rangeRes = await fetch(
       `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${file.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      { headers: { Authorization: `Bearer ${accessToken}`, 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(30000) }
     );
     if (!rangeRes.ok) return Response.json({ error: 'Failed to read workbook', rows: [], count: 0 });
     const data = await rangeRes.json();

@@ -2,16 +2,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { getGraphToken, listCrtFiles, formatDateForCrt } from '../../shared/crtWorkbook.ts';
 import { patchClientRows } from '../../shared/crtRowPatch.ts';
 
-// Writes CRT cells the portal doesn't manage (30/60/180-day outcomes + dates)
-// directly into a matched client's row across every OPEN monthly workbook via
-// a targeted single-row PATCH that preserves all other columns. These columns
-// are preserved by the entity-triggered CRT sync (it only force-writes
-// portal-managed columns), so a direct patch here persists across future
-// client updates. Used by the "Edit CRT" inline editor in the Compass
-// verification checklist to correct follow-up outcome columns that have no
-// corresponding Client entity field (and therefore no automation).
+// Writes selected placement/follow-up cells into the matched client's row
+// across OPEN workbooks, preserving every other column. WD placement values
+// should also be saved on Client; DEA doesn't populate I/J automatically, so
+// its explicit manual placement values are preserved by normal CRT sync.
+// Also used by the Compass inline editor for 30/60/180-day outcome corrections.
 
 const CELL_COL = {
+  placement_outcome: 8,              // I: Placement Outcome
+  placement_outcome_date: 9,         // J: Placement Outcome Date
   day30_outcome: 10,
   day30_outcome_date: 11,
   day60_outcome: 12,

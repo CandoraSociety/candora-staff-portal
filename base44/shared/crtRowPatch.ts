@@ -9,53 +9,50 @@ const NORM = (s) => String(s || '').toLowerCase().replace(/,/g, ' ').split(/\s+/
 
 export async function patchClientRows({ accessToken, files, hsid, clientName, writeVals }) {
   const results = [];
+  const groups = [];
+  for (const [key, value] of Object.entries(writeVals).sort((a, b) => Number(a[0]) - Number(b[0]))) {
+    const col = Number(key), previous = groups[groups.length - 1];
+    if (previous && previous.end + 1 === col) { previous.end = col; previous.values.push(value); }
+    else groups.push({ start: col, end: col, values: [value] });
+  }
+  if (!groups.length) return results;
+  const dateColumns = new Set([3, 5, 7, 9, 11, 13, 15, 17, 19, 24]);
+  const normalized = (value, col) => dateColumns.has(col)
+    ? (parseCrtDate(value) || String(value ?? '').trim()) : String(value ?? '').trim();
   for (const f of files) {
     try {
-      const rangeRes = await fetch(
-        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
-        { headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(30000) }
-      );
-      if (!rangeRes.ok) { results.push({ file: f.name, status: 'error', error: 'read failed' }); continue; }
-      const data = await rangeRes.json();
-      const values = (data.values || []).map((r) => {
-        const p = [...r];
-        while (p.length < NUM_COLUMNS) p.push('');
-        return p.slice(0, NUM_COLUMNS);
-      });
-
-      let rowIdx = -1;
-      if (hsid) {
-        for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
-          if (values[i] && String(values[i][1] || '').trim() === hsid) { rowIdx = i; break; }
+      const baseUrl = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')`;
+      const headers = { Authorization: `Bearer ${accessToken}`, 'Cache-Control': 'no-cache' };
+      const rangeRes = await fetch(`${baseUrl}/usedRange(valuesOnly=true)`, { headers, signal: AbortSignal.timeout(30000) });
+      if (!rangeRes.ok) throw new Error('Could not read Client Data');
+      const { values = [] } = await rangeRes.json();
+      const indexes = findCrtRowIndexes(values, hsid, clientName);
+      if (!indexes.length) { results.push({ file: f.name, status: 'no_match' }); continue; }
+      const ranges = [];
+      for (const rowIdx of indexes) {
+        for (const group of groups) {
+          // Write only the explicitly requested cells, never a stale full row.
+          const address = `${String.fromCharCode(65 + group.start)}${rowIdx + 1}:${String.fromCharCode(65 + group.end)}${rowIdx + 1}`;
+          const url = `${baseUrl}/range(address='${address}')`;
+          const patch = await fetch(url, {
+            method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ values: [group.values] }), signal: AbortSignal.timeout(30000),
+          });
+          if (!patch.ok) throw new Error(`Could not write ${address}: ${(await patch.text()).slice(0, 120)}`);
+          let verified = false;
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (attempt) await new Promise(resolve => setTimeout(resolve, 1000));
+            const check = await fetch(url, { headers, signal: AbortSignal.timeout(30000) });
+            if (!check.ok) throw new Error(`Could not verify ${address}`);
+            const actual = (await check.json()).values?.[0] || [];
+            verified = group.values.every((value, i) => normalized(actual[i], group.start + i) === normalized(value, group.start + i));
+            if (verified) break;
+          }
+          if (!verified) throw new Error(`Saved values do not match in ${address}`);
+          ranges.push(address);
         }
       }
-      if (rowIdx < 0 && clientName) {
-        const nk = NORM(clientName);
-        for (let i = CLIENT_DATA_START_ROW - 1; i < values.length; i++) {
-          if (values[i] && NORM(values[i][0] || '') === nk) { rowIdx = i; break; }
-        }
-      }
-      if (rowIdx < 0) { results.push({ file: f.name, status: 'no_match' }); continue; }
-
-      const row = [...values[rowIdx]];
-      for (const [colStr, v] of Object.entries(writeVals)) row[Number(colStr)] = v;
-
-      const rangeAddress = `A${rowIdx + 1}:Y${rowIdx + 1}`;
-      const patchRes = await fetch(
-        `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='${rangeAddress}')`,
-        {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ values: [row] }),
-          signal: AbortSignal.timeout(30000),
-        }
-      );
-      if (!patchRes.ok) {
-        const errText = await patchRes.text().catch(() => '');
-        results.push({ file: f.name, status: 'error', error: 'write failed: ' + errText.slice(0, 200) });
-        continue;
-      }
-      results.push({ file: f.name, status: 'patched', row: rowIdx + 1 });
+      results.push({ file: f.name, status: 'patched', row: indexes[0] + 1, ranges, verified: true });
     } catch (e) {
       results.push({ file: f.name, status: 'error', error: String(e.message || e).slice(0, 200) });
     }
