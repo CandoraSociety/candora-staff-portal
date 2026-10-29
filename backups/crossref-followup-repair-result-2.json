@@ -1,0 +1,102 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "hsid": "7903895840",
+      "name": "Guled, Mariam",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/08/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "9153393484",
+      "name": "Ali, Hamdi",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/13/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "8952256322",
+      "name": "Ali, Qamar",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/06/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2056789445",
+      "name": "Muzein, Nesra",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/21/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2298488285",
+      "name": "Joof, Isatou",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "08/30/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "7499897648",
+      "name": "Duguay-Martin, Kysha-Lynn",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/09/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "8868576441",
+      "name": "Ali, Abdirazack",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/09/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    }
+  ],
+  "crtWrite": {
+    "status": "partial",
+    "written_rows": 7,
+    "workbooks": [
+      {
+        "file": "CRT_October_2026.xlsx",
+        "status": "error",
+        "updated": 6,
+        "added": 1,
+        "error": "write failed (rows 138-138): {\"error\":{\"code\":\"FileOpenHostTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooManyRequestsUnca"
+      },
+      {
+        "file": "CRT_September_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "write failed (rows 56-56): {\"error\":{\"code\":\"FileOpenHostTooManyRequests\",\"message\":\"We're sorry. We ran into a problem completing your request.\",\"innerError\":{\"code\":\"tooManyRequestsUnca"
+      },
+      {
+        "file": "CRT_August_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_March_2026.xlsx",
+        "status": "ok",
+        "updated": 7,
+        "added": 0
+      }
+    ]
+  },
+  "billingCounts": null
+}
