@@ -837,6 +837,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     {actionable && (
                       <button
                         onClick={() => toggleCompleted(r)}
+                        disabled={pushing}
                         title="Move to Completed - No action needed"
                         className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
                       >
@@ -846,6 +847,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                     {restorable && (
                       <button
                         onClick={() => toggleCompleted(r)}
+                        disabled={pushing}
                         title="Undo - move back to the active list"
                         className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors"
                       >
@@ -872,6 +874,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
                 <td className={`px-3 py-2.5 border-l-[3px] border-black ${updatedRow ? 'bg-blue-100' : ''}`}>
                   <button
                     onClick={() => toggleUpdated(r)}
+                    disabled={pushing}
                     className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md border transition-colors ${updatedRow ? 'border-blue-400 text-blue-700 bg-blue-200' : 'border-slate-300 text-slate-600 hover:bg-slate-50'}`}
                   >
                     <Check className="w-3.5 h-3.5" /> {updatedRow ? 'Updated' : 'Mark'}

@@ -1,0 +1,162 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "hsid": "9051665140",
+      "name": "Mohammed, Saliya",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/15/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "2642962340",
+      "name": "Nyirakaratwa, Louise",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/15/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "7344565127",
+      "name": "Bogale, Roman",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/23/26",
+      "crt_row_source": "cross_reference",
+      "crt": "updated"
+    },
+    {
+      "hsid": "2644327344",
+      "name": "Muhumed, Shamso",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/30/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "5459496971",
+      "name": "Mohamed Abdulle, Madina",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/12/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "4174486466",
+      "name": "Gonclaves, Anthony",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "08/19/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "9214991425",
+      "name": "Gur, Gatwech",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/24/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "7903895840",
+      "name": "Guled, Mariam",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/08/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "9153393484",
+      "name": "Ali, Hamdi",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/13/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "8952256322",
+      "name": "Ali, Qamar",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/06/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "2056789445",
+      "name": "Muzein, Nesra",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/21/26",
+      "crt_row_source": "client_file",
+      "crt": "added"
+    },
+    {
+      "hsid": "2298488285",
+      "name": "Joof, Isatou",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "08/30/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "7499897648",
+      "name": "Duguay-Martin, Kysha-Lynn",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/09/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    },
+    {
+      "hsid": "8868576441",
+      "name": "Ali, Abdirazack",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "09/09/26",
+      "crt_row_source": "client_file",
+      "crt": "updated"
+    }
+  ],
+  "crtWrite": {
+    "status": "success",
+    "written_rows": 56,
+    "workbooks": [
+      {
+        "file": "CRT_October_2026.xlsx",
+        "status": "ok",
+        "updated": 13,
+        "added": 1
+      },
+      {
+        "file": "CRT_September_2026.xlsx",
+        "status": "ok",
+        "updated": 14,
+        "added": 0
+      },
+      {
+        "file": "CRT_August_2026.xlsx",
+        "status": "ok",
+        "updated": 14,
+        "added": 0
+      },
+      {
+        "file": "CRT_March_2026.xlsx",
+        "status": "ok",
+        "updated": 14,
+        "added": 0
+      }
+    ]
+  },
+  "billingCounts": null
+}

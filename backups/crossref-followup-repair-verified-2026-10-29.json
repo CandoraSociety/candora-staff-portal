@@ -1,0 +1,43 @@
+{
+  "books": [
+    {
+      "file": "CRT_March_2026.xlsx",
+      "reviewedPairsChecked": 31,
+      "mismatches": [],
+      "brett": {
+        "status": "E-RF",
+        "date": "09/03/26"
+      }
+    },
+    {
+      "file": "CRT_August_2026.xlsx",
+      "reviewedPairsChecked": 31,
+      "mismatches": [],
+      "brett": {
+        "status": "E-RF",
+        "date": "09/03/26"
+      }
+    },
+    {
+      "file": "CRT_September_2026.xlsx",
+      "reviewedPairsChecked": 31,
+      "mismatches": [],
+      "brett": {
+        "status": "E-RF",
+        "date": "09/03/26"
+      }
+    },
+    {
+      "file": "CRT_October_2026.xlsx",
+      "reviewedPairsChecked": 31,
+      "mismatches": [
+        "Ali, Hamdi"
+      ],
+      "brett": {
+        "status": "E-RF",
+        "date": "09/03/26"
+      }
+    }
+  ],
+  "profileMismatches": []
+}
