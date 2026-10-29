@@ -99,6 +99,7 @@ export default function CRT({ clients = [] }) {
           (errs.length ? ` · ${errs.length} error(s)` : '')
         );
         refetch();
+        if (viewFileId) refetchPreview();
       } else if (data.status === 'no_workbook') {
         toast.error('No CRT workbook found. Upload one to the _DEPT_Pathways SharePoint folder first.');
       } else {
@@ -142,9 +143,11 @@ export default function CRT({ clients = [] }) {
       if (data.status === 'success') {
         toast.success(data.message);
         refetch();
+        if (viewFileId) refetchPreview();
       } else if (data.status === 'partial') {
         toast.info(data.message);
         refetch();
+        if (viewFileId) refetchPreview();
       } else {
         toast.error(data.error || 'Repair failed');
       }
@@ -167,6 +170,7 @@ export default function CRT({ clients = [] }) {
       if (data.status === 'success') {
         toast.success(data.message);
         refetch();
+        if (viewFileId) refetchPreview();
       } else {
         toast.error(data.error || 'Could not update status');
       }
@@ -414,6 +418,15 @@ export default function CRT({ clients = [] }) {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => { if (viewFileId) refetchPreview(); else refetch(); }}
+                  title="Reload the preview so it shows the workbook's current contents"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reload preview
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleApplyFreezePanes}
                   disabled={freezePaneApplying || !viewedFile}
                   title="Freeze rows 1–13 on the Client Data sheet so the headers stay visible while scrolling"
@@ -450,6 +463,7 @@ export default function CRT({ clients = [] }) {
             </div>
             <div className="rounded-lg overflow-hidden border border-slate-200 h-[80vh] min-h-[700px]">
               <iframe
+                key={finalEmbedUrl}
                 src={finalEmbedUrl}
                 className="w-full h-full"
                 frameBorder="0"
