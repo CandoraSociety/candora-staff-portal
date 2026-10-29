@@ -1,0 +1,312 @@
+[
+  {
+    "client_id": "6a6d290d170a716cb544f11b",
+    "name": "Getahu, Elsabet",
+    "hsid": "2022691402",
+    "status": "UE-LFW",
+    "day90Date": "09/09/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "UE-LFW"
+  },
+  {
+    "client_id": "6a83ff32fc6a46160a164dc1",
+    "name": "Klatt, Brett",
+    "hsid": "9405049645",
+    "status": "E-RF",
+    "day90Date": "09/03/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "E-RF"
+  },
+  {
+    "client_id": "6a83ff3360c44c54ec88f392",
+    "name": "Lafferty, Justin",
+    "hsid": "1254335456",
+    "status": "E-RF",
+    "day90Date": "08/25/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "E-RF"
+  },
+  {
+    "client_id": "6a83ff33e211188ff9cf2d48",
+    "name": "Mohammed, Saliya",
+    "hsid": "9051665140",
+    "status": "P",
+    "day90Date": "11/15/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ff337b4bd9ee443dde28",
+    "name": "Nyirakaratwa, Louise",
+    "hsid": "2642962340",
+    "status": "P",
+    "day90Date": "11/15/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ff3350701f3925a9f789",
+    "name": "Bogale, Roman",
+    "hsid": "7344565127",
+    "status": "P",
+    "day90Date": "11/23/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ff3328e8c25929c7f7d7",
+    "name": "Muhumed, Shamso",
+    "hsid": "2644327344",
+    "status": "P",
+    "day90Date": "11/30/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ff346542e57b878786a7",
+    "name": "Mohamed Abdulle, Madina",
+    "hsid": "5459496971",
+    "status": "P",
+    "day90Date": "11/12/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a8263eb6744d386e64fe6da",
+    "name": "Gonclaves, Anthony",
+    "hsid": "4174486466",
+    "status": "UTC",
+    "day90Date": "08/19/26",
+    "storedDate": null,
+    "crtDate": "08/17/26",
+    "crtStatus": "UTC"
+  },
+  {
+    "client_id": "6a826bd3770d15ef4146dbdd",
+    "name": "Gur, Gatwech",
+    "hsid": "9214991425",
+    "status": "P",
+    "day90Date": "12/24/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a8278a7a57ea33c86a595aa",
+    "name": "Guled, Mariam",
+    "hsid": "7903895840",
+    "status": "P",
+    "day90Date": "12/08/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a8279bdc8c9c1d70b8a06c7",
+    "name": "Ali, Hamdi",
+    "hsid": "9153393484",
+    "status": "P",
+    "day90Date": "12/13/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a827a3d0fad008061115fa1",
+    "name": "Ali, Qamar",
+    "hsid": "8952256322",
+    "status": "P",
+    "day90Date": "12/06/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a827bcc2c2769f25ada6556",
+    "name": "Muzein, Nesra",
+    "hsid": "2056789445",
+    "status": "E-RF",
+    "day90Date": "09/21/26",
+    "storedDate": "2026-10-06",
+    "crtDate": "",
+    "crtStatus": ""
+  },
+  {
+    "client_id": "6a8285835997710589ec3a01",
+    "name": "Joof, Isatou",
+    "hsid": "2298488285",
+    "status": "AoP",
+    "day90Date": "08/30/26",
+    "storedDate": "2026-09-01",
+    "crtDate": "09/01/26",
+    "crtStatus": "AoP"
+  },
+  {
+    "client_id": "6a6d290d170a716cb544f11a",
+    "name": "Duguay-Martin, Kysha-Lynn",
+    "hsid": "7499897648",
+    "status": "UTC",
+    "day90Date": "09/09/2026",
+    "storedDate": "2026-09-06",
+    "crtDate": "09/06/26",
+    "crtStatus": "UTC"
+  },
+  {
+    "client_id": "6a828dea53bb5fc470530a4c",
+    "name": "Ali, Abdirazack",
+    "hsid": "8868576441",
+    "status": "UE-LFW",
+    "day90Date": "09/09/2026",
+    "storedDate": "2026-11-18",
+    "crtDate": "11/18/26",
+    "crtStatus": "UE-LFW"
+  },
+  {
+    "client_id": "6a829286d3a9ef8182678337",
+    "name": "Friesen, Irene",
+    "hsid": "8763717454",
+    "status": "P",
+    "day90Date": "11/01/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a8293214c79ff3aee476fed",
+    "name": "Aman, Sahra",
+    "hsid": "7929049950",
+    "status": "P",
+    "day90Date": "11/12/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a82958496fb8dad307e996c",
+    "name": "Chan, Nyagak",
+    "hsid": "2117229829",
+    "status": "P",
+    "day90Date": "11/24/2026",
+    "storedDate": "2026-11-17",
+    "crtDate": "11/17/26",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a82969b46312f47e67db3ec",
+    "name": "Ferdusi, Zannatul",
+    "hsid": "9692590640",
+    "status": "P",
+    "day90Date": "12/23/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a6d290d170a716cb544f109",
+    "name": "Ion Ion, Costica",
+    "hsid": "4585005293",
+    "status": "E-RF",
+    "day90Date": "9/18/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "E-RF"
+  },
+  {
+    "client_id": "6a6d290d170a716cb544f10d",
+    "name": "Etounde, Benoit",
+    "hsid": "5185894085",
+    "status": "P",
+    "day90Date": "10/29/2026",
+    "storedDate": "2026-08-13",
+    "crtDate": "08/13/26",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83493f4fafeb55fc007c35",
+    "name": "Solomon, Temesgen",
+    "hsid": "2134821459",
+    "status": "UTC",
+    "day90Date": "09/13/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "UTC"
+  },
+  {
+    "client_id": "6a6d290d170a716cb544f11d",
+    "name": "Saeed Omer, Handoom",
+    "hsid": "5806663687",
+    "status": "P",
+    "day90Date": "10/29/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ff22af06fa906b8e7951",
+    "name": "Elmi Ahmed, Ladan",
+    "hsid": "2413374956",
+    "status": "P",
+    "day90Date": "10/29/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83cf4743e3033edaf59de9",
+    "name": "Dogru, Ahmet",
+    "hsid": "9859422793",
+    "status": "P",
+    "day90Date": "11/18/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83ce5034741fa4c8a7da2e",
+    "name": "Nor Sangab, Khadijo",
+    "hsid": "2136628431",
+    "status": "P",
+    "day90Date": "11/24/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6a83a74b15d466dc5e66617b",
+    "name": "Iddi, Shungi",
+    "hsid": "8799012318",
+    "status": "P",
+    "day90Date": "11/29/2026",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "P"
+  },
+  {
+    "client_id": "6ae2e39d206c825b4a6a1461",
+    "name": "Nwokocha, Michael",
+    "hsid": "1292323225",
+    "status": "E-UF",
+    "day90Date": "05/02/26",
+    "storedDate": null,
+    "crtDate": "",
+    "crtStatus": "E-UF"
+  },
+  {
+    "client_id": "6a6d290d170a716cb544f112",
+    "name": "Adam, Yahya",
+    "hsid": "8795488744",
+    "status": "E-RF",
+    "day90Date": "09/17/26",
+    "storedDate": "2026-08-18",
+    "crtDate": "08/18/26",
+    "crtStatus": "E-RF"
+  }
+]
