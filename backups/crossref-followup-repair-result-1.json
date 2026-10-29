@@ -1,0 +1,103 @@
+{
+  "status": "success",
+  "results": [
+    {
+      "hsid": "9051665140",
+      "name": "Mohammed, Saliya",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/15/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "2642962340",
+      "name": "Nyirakaratwa, Louise",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/15/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "7344565127",
+      "name": "Bogale, Roman",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/23/26",
+      "crt_row_source": "cross_reference",
+      "crt": "error"
+    },
+    {
+      "hsid": "2644327344",
+      "name": "Muhumed, Shamso",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/30/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "5459496971",
+      "name": "Mohamed Abdulle, Madina",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "11/12/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "4174486466",
+      "name": "Gonclaves, Anthony",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "08/19/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    },
+    {
+      "hsid": "9214991425",
+      "name": "Gur, Gatwech",
+      "matched": true,
+      "client_updated": true,
+      "day90_date": "12/24/26",
+      "crt_row_source": "client_file",
+      "crt": "error"
+    }
+  ],
+  "crtWrite": {
+    "status": "partial",
+    "written_rows": 0,
+    "workbooks": [
+      {
+        "file": "CRT_October_2026.xlsx",
+        "status": "error",
+        "updated": 7,
+        "added": 0,
+        "error": "Could not verify written 90-day fields"
+      },
+      {
+        "file": "CRT_September_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_August_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      },
+      {
+        "file": "CRT_March_2026.xlsx",
+        "status": "error",
+        "updated": 0,
+        "added": 0,
+        "error": "read failed"
+      }
+    ]
+  },
+  "billingCounts": null
+}

@@ -47,7 +47,7 @@ const FIELD_LABELS = {
 const FIELD_TO_COL = {
   participant_name: 0, hsid: 1, ceis_dea: 2, dea_start_date: 3, service_element: 4,
   service_start_date: 5, service_outcome: 6, service_outcome_date: 7,
-  placement_outcome: 8, placement_outcome_date: 9, day90_outcome: 14,
+  placement_outcome: 8, placement_outcome_date: 9, day90_outcome: 14, day90_outcome_date: 15,
   comments: 18, eda_completion_date: 19, work_exposure: 20, wage_subsidy: 21,
   employed_ftpt: 22, service_nav_support: 23, service_nav_billing_month: 24,
 };

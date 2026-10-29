@@ -1,4 +1,4 @@
-import { DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS } from './crtWorkbook.ts';
+import { DRIVE_ID, CLIENT_DATA_SHEET, CLIENT_DATA_START_ROW, NUM_COLUMNS, parseCrtDate } from './crtWorkbook.ts';
 
 // Shared single-row CRT patch: writes the given cells (column index → string)
 // into the row matching hsid (preferred) or the normalized client name, in
@@ -203,15 +203,49 @@ export async function upsertClientRows({ accessToken, files, entries }) {
           break;
         }
       }
+      // A successful PATCH alone does not prove the reviewed follow-up landed.
+      // Read it back, accepting Excel serial dates and formatted dates equally.
+      if (summary.status === 'ok') {
+        const first = idxs[0], last = idxs[idxs.length - 1];
+        let mismatch = '';
+        // Excel may briefly serve the pre-PATCH range. Retry the read only,
+        // without re-writing or declaring a stale read successful.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (attempt) await new Promise(resolve => setTimeout(resolve, 1500));
+          const check = await fetch(
+            `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${f.id}/workbook/worksheets('${CLIENT_DATA_SHEET}')/range(address='A${first + 1}:Y${last + 1}')`,
+            { headers: { Authorization: `Bearer ${accessToken}`, 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(30000) }
+          );
+          if (!check.ok) throw new Error('Could not verify written 90-day fields');
+          const actual = (await check.json()).values || [];
+          mismatch = '';
+          for (const i of idxs) {
+            const expected = writes.get(i), saved = actual[i - first] || [];
+            const sameClient = String(saved[1] ?? '').trim() === String(expected[1] ?? '').trim() && NORM(saved[0]) === NORM(expected[0]);
+            const sameStatus = String(saved[14] ?? '').trim() === String(expected[14] ?? '').trim();
+            const sameDate = (parseCrtDate(saved[15]) || String(saved[15] ?? '').trim()) === (parseCrtDate(expected[15]) || String(expected[15] ?? '').trim());
+            if (!sameClient || !sameStatus || !sameDate) {
+              mismatch = `90-day verification failed for ${expected[0]}: expected ${expected[14]} / ${expected[15]}, read ${saved[14] ?? ''} / ${saved[15] ?? ''}`;
+              break;
+            }
+          }
+          if (!mismatch) break;
+        }
+        if (mismatch) throw new Error(mismatch);
+      }
     } catch (e) {
       summary.status = 'error';
       summary.error = String(e.message || e).slice(0, 200);
     }
     out.files.push(summary);
     for (const [k, v] of Object.entries(summary.clients)) {
-      if (out.clients[k] === 'added') continue;
-      out.clients[k] = summary.status === 'error' ? 'error' : v;
+      out.clients[k] = out.clients[k] === 'error' || summary.status === 'error'
+        ? 'error' : (out.clients[k] === 'added' || v === 'added' ? 'added' : v);
     }
+  }
+  // Never let a later successful workbook mask a failed or missing workbook.
+  if (!out.files.length || out.files.some(f => f.status !== 'ok')) {
+    for (const entry of entries) out.clients[keyOf(entry)] = 'error';
   }
   out.written = out.files.filter(f => f.status === 'ok').reduce((n, f) => n + f.updated + f.added, 0);
   return out;

@@ -7,7 +7,9 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
   AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
-import { PLACEMENT_OUTCOME_CODES, FOLLOWUP_90DAY_CODES, outcomeLabel } from '@/lib/crtCodes';
+import { outcomeLabel } from '@/lib/crtCodes';
+import { CRT_COLUMNS, EDITABLE_CRT_KEYS, OUTCOME_SELECT_KEYS, SELECT_OPTIONS, DATE_COLUMNS, DATE_KEYS, MARCH_2026_END, parseCrtDate, withDateBreaks, assembleCrossRefFields } from '@/components/pathways/crossRefFields';
+import useCrossRefPush from '@/components/pathways/useCrossRefPush';
 import CrossRefNameVerification from './CrossRefNameVerification';
 import CrossRefPhaseDialog, { PHASE_LABELS, PHASE_BADGE_CLASS } from './CrossRefPhaseDialog';
 import { classifyClient } from '@/lib/clientClassification';
@@ -64,97 +66,7 @@ const buildClientNameKeys = (c) => {
   ].filter(Boolean);
 };
 
-const CRT_COLUMNS = [
-  { key: 'source_sheet', label: 'CRT Source Sheet' },
-  { key: 'participant_name', label: 'Participant Legal Name' },
-  { key: 'hsid', label: 'COMPASS HSID #' },
-  { key: 'ceis_dea', label: 'CEIS (DEA)' },
-  { key: 'dea_start_date', label: 'DEA Start Date' },
-  { key: 'service_element', label: 'Service Element' },
-  { key: 'service_start_date', label: 'Service Start Date' },
-  { key: 'service_outcome', label: 'Service Outcome' },
-  { key: 'service_outcome_date', label: 'Service Outcome Date' },
-  { key: 'placement_outcome', label: 'Placement Outcome' },
-  { key: 'placement_outcome_date', label: 'Placement Outcome Date' },
-  { key: 'day90_outcome', label: '90 Day Outcome' },
-  { key: 'day90_outcome_date', label: '90 Day Outcome Date' },
-  { key: 'comments', label: 'CRT Comments' },
-  { key: 'eda_completion_date', label: 'EDA Completion Date' },
-  { key: 'work_exposure', label: 'Work Exposure Y/N' },
-  { key: 'wage_subsidy', label: 'Wage Subsidy Y/N' },
-  { key: 'employed_ftpt', label: 'Employed FT/PT' },
-  { key: 'service_nav_support', label: 'Service Nav Support Y/N' },
-  { key: 'service_nav_billing_month', label: 'Service Nav Billing Month MM/DD/YY' },
-];
 
-// CRT fields to the right of the COMPASS HSID # column — editable inline.
-const EDITABLE_CRT_KEYS = CRT_COLUMNS
-  .filter(c => !['source_sheet', 'participant_name', 'hsid'].includes(c.key))
-  .map(c => c.key);
-
-// CRT columns that carry a dropdown (data validation) list in the real CRT
-// workbook — mirrored from the Compass inline CRT editor so the cross-reference
-// cells only accept the values the workbook itself accepts.
-const YES_NO = ['Yes', 'No'];
-const OUTCOME_SELECT_KEYS = ['placement_outcome', 'day90_outcome'];
-const SELECT_OPTIONS = {
-  ceis_dea: YES_NO,
-  service_element: ['CEIS', 'WD'],
-  service_outcome: ['In Progress', 'Complete', 'Cancelled', 'Incomplete'],
-  placement_outcome: PLACEMENT_OUTCOME_CODES,
-  day90_outcome: FOLLOWUP_90DAY_CODES,
-  work_exposure: YES_NO,
-  wage_subsidy: YES_NO,
-  employed_ftpt: ['FT', 'PT'],
-  service_nav_support: YES_NO,
-};
-
-const DATE_COLUMNS = [
-  { key: 'dea_start_date', label: 'DEA Start Date' },
-  { key: 'service_start_date', label: 'Service Start Date' },
-  { key: 'service_outcome_date', label: 'Service Outcome Date' },
-  { key: 'placement_outcome_date', label: 'Placement Outcome Date' },
-  { key: 'day90_outcome_date', label: '90 Day Outcome Date' },
-  { key: 'eda_completion_date', label: 'EDA Completion Date' },
-];
-
-const DATE_KEYS = new Set(DATE_COLUMNS.map(c => c.key));
-// The live CRT is the March 2026 workbook — dates March 2026 or earlier should
-// already be reflected there. Red dog-ears on such date cells are real sync gaps.
-const MARCH_2026_END = new Date(2026, 2, 31, 23, 59, 59);
-
-// Parse CRT date strings (typically MM/DD/YY) into a Date for sorting/filtering.
-const parseCrtDate = (s) => {
-  if (!s) return null;
-  const m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if (m) {
-    let y = +m[3]; if (y < 100) y += 2000;
-    const d = new Date(y, +m[1] - 1, +m[2]);
-    return isNaN(d) ? null : d;
-  }
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-};
-
-// Format CRT comment text for readability: insert a line break before each
-// date (MM/DD/YY or MM/DD/YYYY) so each dated entry sits on its own line.
-// Idempotent — won't double-break a date already preceded by a newline.
-const withDateBreaks = (s) => {
-  if (!s) return '';
-  const out = String(s).replace(/(\d{1,2}\/\d{1,2}\/\d{2,4})/g, (m, _g, offset, full) => {
-    const before = offset > 0 ? full[offset - 1] : '';
-    return before === '\n' ? m : '\n' + m;
-  });
-  return out.startsWith('\n') ? out.slice(1) : out;
-};
-
-const CROSSREF_PUSH_KEYS = [
-  'participant_name','hsid','ceis_dea','dea_start_date','service_element',
-  'service_start_date','service_outcome','service_outcome_date',
-  'placement_outcome','placement_outcome_date','day90_outcome','comments',
-  'eda_completion_date','work_exposure','wage_subsidy','employed_ftpt',
-  'service_nav_support','service_nav_billing_month',
-];
 
 const HIDDEN_KEY = 'crossRefHidden';
 const COMPLETED_KEY = 'crossRefCompleted';
@@ -336,7 +248,6 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       return n;
     });
   };
-  const [pushing, setPushing] = useState(false);
   // Per-cell "resolved" set for yellow-highlighted date cells. Keyed by
   // `${rowId}:${columnKey}`. When resolved, the yellow highlight is suppressed
   // for that cell (even though the underlying sync gap still applies).
@@ -600,72 +511,10 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
 
   const isUpdatedRow = (r) => rowKeys(r).some(k => updated.has(k));
 
-  const assembleCrtFields = (r) => {
-    const f = { participant_name: r.client_name || '', hsid: r.hsid || '' };
-    for (const key of CROSSREF_PUSH_KEYS) {
-      if (key === 'participant_name' || key === 'hsid') continue;
-      const fallback = r.crt ? (r.crt[key] || '') : '';
-      f[key] = getEdit(r, key, fallback);
-    }
-    return f;
-  };
-
-  // Summarise the push response: the CRT write is what matters, so report the
-  // rows actually written rather than assuming the push landed.
-  const reportPush = (res, label) => {
-    const results = res?.data?.results || [];
-    const written = results.filter(r => r.crt === 'updated' || r.crt === 'added').length;
-    const failed = results.filter(r => r.crt === 'error' || r.crt === 'unknown' || r.error).length;
-    if (written && !failed) toast.success(`Pushed ${label} to the live CRT`);
-    else if (written && failed) toast.warning(`Pushed ${written} of ${results.length} ${label} — ${failed} did not reach the CRT`);
-    else toast.error(`Could not write ${label} to the live CRT`);
-    if (written) loadLiveCrt();
-  };
-
-  const pushCrossRefUpdate = async (r) => {
-    try {
-      const crt_fields = assembleCrtFields(r);
-      const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', {
-        updates: [{ hsid: r.hsid || '', client_name: r.client_name || '', crt_fields }],
-      });
-      reportPush(res, r.client_name || 'client');
-    } catch (e) {
-      toast.error('Failed to push to the live CRT');
-    }
-  };
-
-  const pushAll = async (rows, label) => {
-    if (!rows.length) { toast.message(`No ${label.toLowerCase()} clients to push`); return; }
-    setPushing(true);
-    try {
-      // Push in small batches: a whole section (40+ clients) in a single request
-      // can outrun the function's runtime and come back partial, which reads as
-      // "nothing landed". Each batch reports its own written/failed counts.
-      const CHUNK = 8;
-      let written = 0, failed = 0, processed = 0;
-      for (let i = 0; i < rows.length; i += CHUNK) {
-        const updates = rows.slice(i, i + CHUNK).map(r => ({
-          hsid: r.hsid || '',
-          client_name: r.client_name || '',
-          crt_fields: assembleCrtFields(r),
-        }));
-        const res = await base44.functions.invoke('syncCrossRefUpdatesToCrt', { updates });
-        const results = res?.data?.results || [];
-        processed += updates.length;
-        written += results.filter(r => r.crt === 'updated' || r.crt === 'added').length;
-        failed += results.filter(r => r.crt === 'error' || r.crt === 'unknown' || r.error).length;
-      }
-      const total = `${label.toLowerCase()} client(s)`;
-      if (written && !failed) toast.success(`Pushed ${written} of ${processed} ${total} to the live CRT`);
-      else if (written && failed) toast.warning(`Pushed ${written} of ${processed} ${total} — ${failed} did not reach the CRT`);
-      else toast.error(`Could not write ${total} to the live CRT`);
-      if (written) loadLiveCrt();
-    } catch (e) {
-      toast.error(`Failed to push ${label.toLowerCase()} updates to the live CRT`);
-    } finally {
-      setPushing(false);
-    }
-  };
+  const { pushing, pushAll, pushCrossRefUpdate } = useCrossRefPush(
+    r => assembleCrossRefFields(r, getEdit),
+    () => { loadLiveCrt(); loadMarchCrt(); }
+  );
 
   const toggleUpdated = (r) => {
     const keys = rowKeys(r);
@@ -684,9 +533,13 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
   // their 90-day follow-up (program complete with a recorded 90-day outcome —
   // 'P' is the projected/pending marker, not a completed follow-up).
   const masterReviewClients = useMemo(() => (activeClients || []).filter(c => {
+    // Keep reviewed clients available for a retry after the first push updates
+    // their phase; otherwise their 90-day status makes them disappear mid-review.
+    const keys = rowKeys({ hsid: c.compass_hsid, client_name: `${c.last_name || ''}, ${c.first_name || ''}` });
+    if (keys.some(k => completed.has(k) || updated.has(k))) return true;
     const done90 = c.program_status === 'complete' && c.followup_90day_status && c.followup_90day_status !== 'P';
     return !(c.program_status === 'cancelled' || c.program_status === 'incomplete' || done90);
-  }), [activeClients]);
+  }), [activeClients, completed, updated]);
 
   // Keyed identities (HSID + name spellings) of the EXCLUDED master-list
   // clients — any row belonging to one of them stays out of the review.
@@ -723,7 +576,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
         return rowNameKeys(c.participant_name).some(k => rKeys.includes(k));
       });
     };
-    const isExcludedRow = (r) => rowKeys(r).some(k => excludedClientKeys.has(k));
+    const isExcludedRow = (r) => !isCompletedRow(r) && !isUpdatedRow(r) && rowKeys(r).some(k => excludedClientKeys.has(k));
 
     const out = rows.map((r, i) => {
       const ci = findCrtMatch(r);
@@ -771,7 +624,7 @@ export default function CrossRefTab({ activeClients, onCountsChange }) {
       out.push(row);
     });
     return out;
-  }, [rows, crtRows, masterReviewClients, excludedClientKeys]);
+  }, [rows, crtRows, masterReviewClients, excludedClientKeys, completed, updated]);
 
   const marchMap = useMemo(() => {
     const m = new Map();
