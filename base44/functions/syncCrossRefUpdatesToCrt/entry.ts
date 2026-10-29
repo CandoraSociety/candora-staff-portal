@@ -264,7 +264,7 @@ export default async function(req: Request): Promise<Response> {
           id: i,
           hsid: String(projected.compass_hsid || cf.hsid || '').trim(),
           clientName: cf.participant_name || `${projected.last_name || ''}, ${projected.first_name || ''}`,
-          row: eligible ? mapClientToCrtRow(projected, null) : buildCrossRefRow(cf),
+          row: eligible ? fillBlanks(mapClientToCrtRow(projected, null), cf) : buildCrossRefRow(cf),
           preserveExisting: eligible,
         });
         results[i] = { hsid: cf.hsid || '', name: cf.participant_name || '', matched: true, client_updated: true, day90_date: day90Date, crt_row_source: eligible ? 'client_file' : 'cross_reference' };
