@@ -9,6 +9,8 @@ import { patchClientRows } from '../../shared/crtRowPatch.ts';
 // Also used by the Compass inline editor for 30/60/180-day outcome corrections.
 
 const CELL_COL = {
+  service_outcome: 6,                // G: Service Outcome
+  service_outcome_date: 7,           // H: Service Outcome Date
   placement_outcome: 8,              // I: Placement Outcome
   placement_outcome_date: 9,         // J: Placement Outcome Date
   day30_outcome: 10,
