@@ -186,7 +186,9 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
       }
     } else if (dHasMarker) {
       try {
-        await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, null);
+        // Write an empty string, not null — Graph ignores null values, so the
+        // marker would silently stay behind on future-month rows.
+        await writeTrackerCell(accessToken, workbook.id, sheetName, COL_D, excelRow, '');
         dFilled.push({ row: excelRow, month: monthLabel, cleared: true });
       } catch (e) {
         countErrors.push({ row: excelRow, month: monthLabel, column: COL_D, key: 'fixedFee', error: String(e.message || e).slice(0, 120) });

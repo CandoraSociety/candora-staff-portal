@@ -138,6 +138,45 @@ export async function patchProtectedSheet(accessToken, itemId, sheet, writes) {
   }
 }
 
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// Read the billing month a CRT workbook belongs to from its filename
+// ("CRT_August_2026.xlsx" → { year: 2026, monthIdx: 7 }).
+export function monthFromCrtFileName(name) {
+  const m = String(name || '').match(/CRT_(\w+)_(\d{4})/i);
+  if (!m) return null;
+  const monthName = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
+  const monthIdx = MONTH_NAMES.indexOf(monthName);
+  if (monthIdx < 0) return null;
+  return { year: parseInt(m[2], 10), monthIdx };
+}
+
+// Write the submission-range dates (Client Data, Invoice Tracker, Outcomes
+// Report) for one workbook so the sheet headers always show THAT workbook's
+// own month. Returns the errors for any cells that were locked.
+export async function applySubmissionRange(accessToken, itemId, year, monthIdx) {
+  const startSerial = excelSerial(new Date(Date.UTC(year, monthIdx, 1)));
+  const endSerial = excelSerial(new Date(Date.UTC(year, monthIdx + 1, 0)));
+  const errors = [];
+  for (const r of SUBMISSION_RANGE_CELLS) {
+    try {
+      if (r.protected) {
+        // Password-protected sheet: value-only write (no fmt) — see repairCrtDateRanges.
+        await patchProtectedSheet(accessToken, itemId, r.sheet, [
+          { cell: r.startCell, value: startSerial },
+          { cell: r.endCell, value: endSerial },
+        ]);
+      } else {
+        await patchCell(accessToken, itemId, r.sheet, r.startCell, startSerial, 'mm/dd/yy');
+        await patchCell(accessToken, itemId, r.sheet, r.endCell, endSerial, 'mm/dd/yy');
+      }
+    } catch (e) {
+      errors.push(`${r.sheet} ${r.startCell}/${r.endCell}: ${String(e.message || e).split('\n')[0]}`);
+    }
+  }
+  return { startSerial, endSerial, errors };
+}
+
 // Submission start/end date cells across CRT workbook sheets.
 export const SUBMISSION_RANGE_CELLS = [
   { sheet: CLIENT_DATA_SHEET, startCell: 'B8', endCell: 'E8' },

@@ -1,63 +1,64 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
-import { getGraphToken, getActiveCrtWorkbook, CLIENT_DATA_SHEET } from '../../shared/crtWorkbook.ts';
-import { excelSerial, patchCell, patchProtectedSheet, SUBMISSION_RANGE_CELLS } from '../../shared/crtDatePatch.ts';
+import { getGraphToken, listCrtFiles, CLIENT_DATA_SHEET } from '../../shared/crtWorkbook.ts';
+import { patchCell, applySubmissionRange, monthFromCrtFileName } from '../../shared/crtDatePatch.ts';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// Repairs the active workbook's submission-range date cells so they match the
-// month/year encoded in its filename. Fixes files created by earlier roll-forward
-// attempts that wrote to the wrong cells or stored dates as text.
+// Repairs the submission-range date cells of every CRT workbook so each file's
+// headers show its OWN month/year (parsed from the filename) rather than a
+// month carried over from the file it was copied from.
+//
+// Payload:
+//   {}                       → repair every CRT workbook
+//   { file_name: "CRT_..." }  → repair that one workbook
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    let payload: any = {};
+    try { payload = await req.json(); } catch { /* no body */ }
+    const wantedName = String(payload?.file_name || '').trim().toLowerCase();
+
     const accessToken = await getGraphToken();
-    const active = await getActiveCrtWorkbook(accessToken);
-    if (!active) return Response.json({ status: 'no_workbook' }, { status: 200 });
+    const allFiles = await listCrtFiles(accessToken);
+    const files = wantedName
+      ? allFiles.filter(f => f.name.toLowerCase() === wantedName)
+      : allFiles;
+    if (!files.length) return Response.json({ status: 'no_workbook', message: 'No matching CRT workbook found.' });
 
-    // Parse the month/year from the filename "CRT_<Month>_<Year>.xlsx"
-    const m = active.name.match(/CRT_(\w+)_(\d{4})/i);
-    if (!m) return Response.json({ error: 'Could not parse month/year from filename' }, { status: 400 });
-    const monthName = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();
-    const monthIdx = MONTHS.indexOf(monthName);
-    const year = parseInt(m[2], 10);
-    if (monthIdx < 0) return Response.json({ error: `Unknown month "${m[1]}" in filename` }, { status: 400 });
+    const results = [];
+    for (const file of files) {
+      const month = monthFromCrtFileName(file.name);
+      if (!month) {
+        results.push({ workbook: file.name, status: 'skipped', message: 'Filename is not CRT_<Month>_<Year>.xlsx' });
+        continue;
+      }
+      const { errors } = await applySubmissionRange(accessToken, file.id, month.year, month.monthIdx);
 
-    const startSerial = excelSerial(new Date(Date.UTC(year, monthIdx, 1)));
-    const endSerial = excelSerial(new Date(Date.UTC(year, monthIdx + 1, 0)));
+      // Clear the stray ISO text left in B9 of Client Data from an earlier bad write
+      try { await patchCell(accessToken, file.id, CLIENT_DATA_SHEET, 'B9', ''); }
+      catch (e) { errors.push('clear B9: ' + String(e.message || e).split('\n')[0]); }
 
-    const errors = [];
-    for (const r of SUBMISSION_RANGE_CELLS) {
-      try {
-        if (r.protected) {
-          // Password-protected sheet: writing a value to an unlocked cell is allowed,
-          // but setting numberFormat is blocked by protection — so write value-only
-          // (no fmt) and rely on the cell's existing date format from the template.
-          await patchProtectedSheet(accessToken, active.id, r.sheet, [
-            { cell: r.startCell, value: startSerial },
-            { cell: r.endCell, value: endSerial },
-          ]);
-        } else {
-          await patchCell(accessToken, active.id, r.sheet, r.startCell, startSerial, 'mm/dd/yy');
-          await patchCell(accessToken, active.id, r.sheet, r.endCell, endSerial, 'mm/dd/yy');
-        }
-      } catch (e) { errors.push(`${r.sheet} ${r.startCell}/${r.endCell}: ${e.message.split('\n')[0]}`); }
+      const monthName = MONTHS[month.monthIdx];
+      results.push({
+        workbook: file.name,
+        status: errors.length ? 'partial' : 'success',
+        message: errors.length
+          ? `Repaired ${monthName} ${month.year}, but some cells were locked and skipped: ${errors.join('; ')}`
+          : `Repaired date ranges in ${file.name} to ${monthName} ${month.year}.`,
+        errors: errors.length ? errors : undefined,
+      });
     }
 
-    // Clear the stray ISO text left in B9 of Client Data from an earlier bad write
-    try {
-      await patchCell(accessToken, active.id, CLIENT_DATA_SHEET, 'B9', '');
-    } catch (e) { errors.push('clear B9: ' + e.message.split('\n')[0]); }
-
-    const repaired = errors.length === 0;
+    const failed = results.filter(r => r.status === 'partial');
     return Response.json({
-      status: repaired ? 'success' : 'partial',
-      message: repaired
-        ? `Repaired date ranges in ${active.name} to ${monthName} ${year}.`
-        : `Repaired ${monthName} ${year} in ${active.name}, but some cells were locked and skipped: ${errors.join('; ')}`,
-      errors: errors.length ? errors : undefined,
+      status: failed.length ? 'partial' : 'success',
+      message: failed.length
+        ? `${results.length - failed.length} of ${results.length} workbooks repaired. ${failed.map(f => f.message).join(' ')}`
+        : `Repaired date ranges in ${results.length} CRT workbook${results.length === 1 ? '' : 's'}.`,
+      results,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
