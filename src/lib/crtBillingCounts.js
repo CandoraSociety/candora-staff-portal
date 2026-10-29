@@ -137,6 +137,10 @@ function mapClientToCrtRowLite(client, monthEnd) {
 
 const EMPLOYED = ['E-RF', 'E-UF', 'SE'];
 
+// 90 Day Outcome (column O) values that bill the 90-day follow-up:
+// employed outcomes plus FTT (Further Training).
+const DAY90_BILLABLE = ['E-RF', 'E-UF', 'SE', 'FTT'];
+
 function inMonth(iso, startISO, endISO) {
   if (!iso) return false;
   return iso >= startISO && iso <= endISO;
@@ -179,9 +183,9 @@ export function computeCrtBillingCounts(clients, fileName) {
     // 3. WD Placement (EDA Completion) — Placement Outcome (I) in E-RF/E-UF/SE + Placement Outcome Date (J) in viewing month (T mirrors J when I is employed)
     if (row.isWd && EMPLOYED.includes(row.I) && inMonth(row.J, startISO, endISO)) wdPlacementCompletion++;
     // 4. CEIS (DEA) 90 Day — 90 Day Outcome (O) in E-RF/E-UF/SE + 90 Day Outcome Date (P) in viewing month
-    if (row.isDea && EMPLOYED.includes(row.O) && inMonth(row.P, startISO, endISO)) dea90Day++;
-    // 5. WD 90 Day — 90 Day Outcome (O) in E-RF/E-UF/SE + 90 Day Outcome Date (P) in viewing month
-    if (row.isWd && EMPLOYED.includes(row.O) && inMonth(row.P, startISO, endISO)) wd90Day++;
+    if (row.isDea && DAY90_BILLABLE.includes(row.O) && inMonth(row.P, startISO, endISO)) dea90Day++;
+    // 5. WD 90 Day — 90 Day Outcome (O) in E-RF/E-UF/SE/FTT + 90 Day Outcome Date (P) in viewing month
+    if (row.isWd && DAY90_BILLABLE.includes(row.O) && inMonth(row.P, startISO, endISO)) wd90Day++;
     // 6. Service Navigation Fee — Service Nav (X) Yes + Service Nav Billing Month (Y) in viewing month
     if ((row.X === 'Yes' || row.X === 'Y') && inMonth(row.Y, startISO, endISO)) serviceNavFee++;
   }

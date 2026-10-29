@@ -14,9 +14,9 @@ import { patchProtectedSheet } from '../../shared/crtDatePatch.ts';
 //     month without a G="Complete" filter; now uses G="Complete" & H in
 //     month to match the portal's wdPlacementCompletion definition
 //     (catches legacy clients whose H is set from completion_date, not T).
-//   • Columns BH / BL (DEA / WD 90 Day)      — were including "FTT" (Further
-//     Training) in the employed-outcome set; the portal only counts E-RF,
-//     E-UF, SE as employed for 90-day billing. FTT terms removed.
+//   • Columns BH / BL (DEA / WD 90 Day)      — bill a 90-day follow-up for
+//     E-RF, E-UF, SE and FTT (Further Training) outcomes in column O, with
+//     the date in column P inside the month.
 //
 // The formulas are idempotent — only written when the current formula doesn't
 // match the expected one (so re-running is safe and cheap).
@@ -24,17 +24,35 @@ import { patchProtectedSheet } from '../../shared/crtDatePatch.ts';
 const ROW = 10;
 const CLIENT_DATA = "'Client Data'";
 
+// 90-day outcomes (column O) that bill the follow-up: employed + FTT.
+const DAY90_OUTCOMES = ['E-RF', 'E-UF', 'SE', 'FTT'];
+const PLACEMENT_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
+
+// One SUMPRODUCT term counting rows matching `scope` whose 90-day outcome is
+// `outcome` and whose 90-day date (P) falls inside the month in B8:B9.
+const day90Term = (scope, outcome) =>
+  `SUMPRODUCT(${scope}*(${CLIENT_DATA}!$O$14:$O$15002="${outcome}")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))`;
+
+// One SUMPRODUCT term counting WD rows whose placement outcome (I) is
+// `outcome` and whose placement date (J) falls inside the month in B8:B9.
+const wdPlacementTerm = (outcome) =>
+  `SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$I$14:$I$15002="${outcome}")*(${CLIENT_DATA}!$J$14:$J$15002>=$B$8)*(${CLIENT_DATA}!$J$14:$J$15002<=$B9))`;
+
+const ceisScope = `(${CLIENT_DATA}!$E$14:$E$15002="CEIS")`;
+const legacyCeisScope = `(${CLIENT_DATA}!$C$14:$C$15002="Yes")*(${CLIENT_DATA}!$E$14:$E$15002="")`;
+const wdScope = `(${CLIENT_DATA}!$E$14:$E$15002="WD")`;
+
 // Expected (corrected) formulas — aligned with the portal's billing-count
 // definitions in base44/shared/crtBillingCounts.ts.
 const EXPECTED_FORMULAS: Record<string, string> = {
   // X — WD Complete: employed placement (I in E-RF/E-UF/SE) with J in [B8,B9]
-  X: `=SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$I$14:$I$15002="E-RF")*(${CLIENT_DATA}!$J$14:$J$15002>=$B$8)*(${CLIENT_DATA}!$J$14:$J$15002<=$B9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$I$14:$I$15002="E-UF")*(${CLIENT_DATA}!$J$14:$J$15002>=$B$8)*(${CLIENT_DATA}!$J$14:$J$15002<=$B9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$I$14:$I$15002="SE")*(${CLIENT_DATA}!$J$14:$J$15002>=$B$8)*(${CLIENT_DATA}!$J$14:$J$15002<=$B9))`,
+  X: `=${PLACEMENT_OUTCOMES.map(wdPlacementTerm).join('+')}`,
   // AN — WD Placement (EDA Completion): G="Complete" & H in [B8,B9]
   AN: `=SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$G$14:$G$15002="Complete")*(${CLIENT_DATA}!$H$14:$H$15002>=$B$8)*(${CLIENT_DATA}!$H$14:$H$15002<=$B9))`,
-  // BH — CEIS (DEA) 90 Day: O in E-RF/E-UF/SE & P in [B8,B9] (CEIS + legacy CEIS)
-  BH: `=SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="CEIS")*(${CLIENT_DATA}!$O$14:$O$15002="E-RF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="CEIS")*(${CLIENT_DATA}!$O$14:$O$15002="E-UF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="CEIS")*(${CLIENT_DATA}!$O$14:$O$15002="SE")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$C$14:$C$15002="Yes")*(${CLIENT_DATA}!$E$14:$E$15002="")*(${CLIENT_DATA}!$O$14:$O$15002="E-RF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$C$14:$C$15002="Yes")*(${CLIENT_DATA}!$E$14:$E$15002="")*(${CLIENT_DATA}!$O$14:$O$15002="E-UF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$C$14:$C$15002="Yes")*(${CLIENT_DATA}!$E$14:$E$15002="")*(${CLIENT_DATA}!$O$14:$O$15002="SE")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))`,
-  // BL — WD 90 Day: O in E-RF/E-UF/SE & P in [B8,B9]
-  BL: `=SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$O$14:$O$15002="E-RF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$O$14:$O$15002="E-UF")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))+SUMPRODUCT((${CLIENT_DATA}!$E$14:$E$15002="WD")*(${CLIENT_DATA}!$O$14:$O$15002="SE")*(${CLIENT_DATA}!$P$14:$P$15002>=$B$8)*(${CLIENT_DATA}!$P$14:$P$15002<=$B$9))`,
+  // BH — CEIS (DEA) 90 Day: O in E-RF/E-UF/SE/FTT & P in [B8,B9] (CEIS + legacy CEIS)
+  BH: `=${DAY90_OUTCOMES.flatMap((o) => [day90Term(ceisScope, o), day90Term(legacyCeisScope, o)]).join('+')}`,
+  // BL — WD 90 Day: O in E-RF/E-UF/SE/FTT & P in [B8,B9]
+  BL: `=${DAY90_OUTCOMES.map((o) => day90Term(wdScope, o)).join('+')}`,
 };
 
 // Read the current formula in a single cell (returns the formula string or "").

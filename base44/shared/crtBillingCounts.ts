@@ -12,6 +12,10 @@ import { CLIENT_DATA_START_ROW } from './crtWorkbook.ts';
 
 const EMPLOYED = ['E-RF', 'E-UF', 'SE'];
 
+// 90 Day Outcome (column O) values that bill the 90-day follow-up:
+// employed outcomes plus FTT (Further Training).
+const DAY90_BILLABLE = ['E-RF', 'E-UF', 'SE', 'FTT'];
+
 function toISO(d) {
   if (!d) return '';
   const date = d instanceof Date ? d : new Date(typeof d === 'string' && d.length === 10 ? d + 'T12:00:00' : d);
@@ -205,8 +209,8 @@ export function computeMonthBillingCountsFromClientData(rows, year: number, mont
     if (isDea && inMonth(F, startISO, endISO)) deaStarters++;
     if (isWd && G === 'Complete' && inMonth(H, startISO, endISO)) wdComplete++;
     if (isWd && EMPLOYED.includes(I) && inMonth(J, startISO, endISO)) wdPlacementCompletion++;
-    if (isDea && EMPLOYED.includes(O) && inMonth(P, startISO, endISO)) dea90Day++;
-    if (isWd && EMPLOYED.includes(O) && inMonth(P, startISO, endISO)) wd90Day++;
+    if (isDea && DAY90_BILLABLE.includes(O) && inMonth(P, startISO, endISO)) dea90Day++;
+    if (isWd && DAY90_BILLABLE.includes(O) && inMonth(P, startISO, endISO)) wd90Day++;
     if ((X === 'Yes' || X === 'Y') && inMonth(Y, startISO, endISO)) serviceNavFee++;
   }
 
@@ -236,8 +240,8 @@ export function computeMonthBillingCounts(clients, year, month0) {
     // AN (wdPlacementCompletion) — WD clients with placement employment date (T) in month.
     // T mirrors J when I is employed (E-RF/E-UF/SE); blank otherwise.
     if (r.isWd && EMPLOYED.includes(r.I) && inMonth(r.J, startISO, endISO)) wdPlacementCompletion++;
-    if (r.isDea && EMPLOYED.includes(r.O) && inMonth(r.P, startISO, endISO)) dea90Day++;
-    if (r.isWd && EMPLOYED.includes(r.O) && inMonth(r.P, startISO, endISO)) wd90Day++;
+    if (r.isDea && DAY90_BILLABLE.includes(r.O) && inMonth(r.P, startISO, endISO)) dea90Day++;
+    if (r.isWd && DAY90_BILLABLE.includes(r.O) && inMonth(r.P, startISO, endISO)) wd90Day++;
     if ((r.X === 'Yes' || r.X === 'Y') && inMonth(r.Y, startISO, endISO)) serviceNavFee++;
   }
 
