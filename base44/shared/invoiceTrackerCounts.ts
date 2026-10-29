@@ -21,8 +21,11 @@
 import {
   findInvoiceTrackerSheet, readInvoiceTracker, cellToMonthKey, writeTrackerCell, colIndex
 } from './invoiceTracker.ts';
-import { computeMonthBillingCounts, computeMonthWorkExposureTotal, computeMonthEmploymentSupportsTotal } from './crtBillingCounts.ts';
-import { crtMonthEnd } from './crtWorkbook.ts';
+import {
+  computeMonthBillingCounts, computeMonthBillingCountsFromClientData,
+  computeMonthWorkExposureTotal, computeMonthEmploymentSupportsTotal
+} from './crtBillingCounts.ts';
+import { crtMonthEnd, readClientDataValues } from './crtWorkbook.ts';
 
 // Retry a Graph API call that may hit a transient 504 (gateway timeout).
 // Microsoft Graph occasionally times out on worksheet operations; a short
@@ -123,6 +126,15 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
     try { financialRecords = await base44.asServiceRole.entities.FinancialRecord.list('-date', 5000) || []; } catch { /* empty */ }
   }
 
+  // Counts come from this workbook's own Client Data sheet, so each tally
+  // matches exactly what the CRT shows for that month (a date in column H only
+  // counts when column G is "Complete", and removed rows stop counting).
+  // Entity-derived counts remain the fallback if the sheet can't be read.
+  let clientDataRows = [];
+  try {
+    clientDataRows = await withGraphRetry(() => readClientDataValues(accessToken, workbook.id));
+  } catch { clientDataRows = []; }
+
   // Cap the upper bound at this workbook's own month so a prior-month workbook
   // only contains data through that month — not future months' data. The active
   // (current) month's workbook falls back to the current Edmonton month.
@@ -183,7 +195,9 @@ export async function refreshBillingCounts(base44, accessToken, workbook, preRea
       dSkipped++;
     }
 
-    const counts = isFuture ? null : computeMonthBillingCounts(clients, key.year, key.month);
+    const counts = isFuture ? null : (clientDataRows.length
+      ? computeMonthBillingCountsFromClientData(clientDataRows, key.year, key.month)
+      : computeMonthBillingCounts(clients, key.year, key.month));
     for (const [ck, col] of Object.entries(COUNT_COLUMNS)) {
       const expected = isFuture ? 0 : counts[ck];
       const existing = row[COUNT_INDICES[ck]];

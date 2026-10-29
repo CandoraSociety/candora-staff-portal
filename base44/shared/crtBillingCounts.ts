@@ -8,6 +8,8 @@
 // calendar month (gated by that month's end so values match the point-in-time
 // CRT snapshot for the month).
 
+import { CLIENT_DATA_START_ROW } from './crtWorkbook.ts';
+
 const EMPLOYED = ['E-RF', 'E-UF', 'SE'];
 
 function toISO(d) {
@@ -124,6 +126,91 @@ function mapClientLite(client, monthEnd) {
 function inMonth(iso, startISO, endISO) {
   if (!iso) return false;
   return iso >= startISO && iso <= endISO;
+}
+
+const SHEET_MONTHS = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+
+// Normalize a Client Data cell to ISO YYYY-MM-DD. Handles Excel serial dates
+// (what the Graph API returns), MM/DD/YY text, ISO text and "Month YYYY".
+function sheetCellToISO(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (typeof v === 'number') {
+    if (v > 30000 && v < 80000) {
+      const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000);
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    }
+    return '';
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) {
+    let yy = m[3];
+    if (yy.length === 2) yy = (Number(yy) > 50 ? '19' : '20') + yy;
+    return `${yy}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if (m) {
+    const mi = SHEET_MONTHS.indexOf(m[1].toLowerCase());
+    if (mi >= 0) return `${m[2]}-${String(mi + 1).padStart(2, '0')}-01`;
+  }
+  return '';
+}
+
+// Client Data column indices (0-based, A = 0)
+const CD = {
+  ceis: 2,          // C — CEIS (DEA) Yes/No
+  element: 4,       // E — Service Element (WD / CEIS)
+  start: 5,         // F — Service Start Date
+  outcome: 6,       // G — Service Outcome
+  outcomeDate: 7,   // H — Service Outcome Date
+  placeOutcome: 8,  // I — Placement Outcome
+  placeDate: 9,     // J — Placement Outcome Date
+  d90Outcome: 14,   // O — 90 Day Outcome
+  d90Date: 15,      // P — 90 Day Outcome Date
+  navSupport: 23,   // X — Service Navigation Support
+  navMonth: 24,     // Y — Service Nav Billing Month
+};
+
+// Same six billing-summary counts, but read straight from the workbook's
+// Client Data sheet — so the Invoice Tracker tallies always match what the CRT
+// shows for that month. A date in column H only counts when column G is
+// "Complete" (and the client's row still exists on the sheet).
+export function computeMonthBillingCountsFromClientData(rows, year: number, month0: number) {
+  const startISO = `${year}-${String(month0 + 1).padStart(2, '0')}-01`;
+  const endISO = toISO(new Date(year, month0 + 1, 0));
+
+  let deaStarters = 0;
+  let wdPlacementCompletion = 0;
+  let wdComplete = 0;
+  let dea90Day = 0;
+  let wd90Day = 0;
+  let serviceNavFee = 0;
+
+  for (let i = CLIENT_DATA_START_ROW - 1; i < (rows || []).length; i++) {
+    const row = rows[i] || [];
+    const isDea = String(row[CD.ceis] ?? '').trim().toLowerCase() === 'yes';
+    const isWd = String(row[CD.element] ?? '').trim().toUpperCase() === 'WD';
+    const F = sheetCellToISO(row[CD.start]);
+    const G = String(row[CD.outcome] ?? '').trim();
+    const H = sheetCellToISO(row[CD.outcomeDate]);
+    const I = String(row[CD.placeOutcome] ?? '').trim();
+    const J = sheetCellToISO(row[CD.placeDate]);
+    const O = String(row[CD.d90Outcome] ?? '').trim();
+    const P = sheetCellToISO(row[CD.d90Date]);
+    const X = String(row[CD.navSupport] ?? '').trim();
+    const Y = sheetCellToISO(row[CD.navMonth]);
+
+    if (isDea && inMonth(F, startISO, endISO)) deaStarters++;
+    if (isWd && G === 'Complete' && inMonth(H, startISO, endISO)) wdComplete++;
+    if (isWd && EMPLOYED.includes(I) && inMonth(J, startISO, endISO)) wdPlacementCompletion++;
+    if (isDea && EMPLOYED.includes(O) && inMonth(P, startISO, endISO)) dea90Day++;
+    if (isWd && EMPLOYED.includes(O) && inMonth(P, startISO, endISO)) wd90Day++;
+    if ((X === 'Yes' || X === 'Y') && inMonth(Y, startISO, endISO)) serviceNavFee++;
+  }
+
+  return { deaStarters, wdPlacementCompletion, wdComplete, dea90Day, wd90Day, serviceNavFee };
 }
 
 // Compute the six billing-summary counts for a single calendar month.

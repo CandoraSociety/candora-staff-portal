@@ -118,6 +118,18 @@ export async function listCrtFiles(accessToken) {
   return crtFiles;
 }
 
+// Read the raw cell values of the Client Data sheet (rows are arrays of cells,
+// index 0 = column A). Dates come back as Excel serial numbers.
+export async function readClientDataValues(accessToken, fileId) {
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${fileId}/workbook/worksheets('${CLIENT_DATA_SHEET}')/usedRange(valuesOnly=true)`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.values || [];
+}
+
 // Format a date string (ISO or YYYY-MM-DD) as MM/DD/YY for CRT
 export function formatDateForCrt(dateStr) {
   if (!dateStr) return '';
