@@ -91,8 +91,14 @@ export async function syncClientsIntoWorkbook(accessToken, workbook, allClients)
     const row = allValues[i];
     if (!row) continue;
     const h = row[1] ? String(row[1]).trim() : '';
-    if (h) hsidToRowIndex[h] = i;
-    else if (row[0] && String(row[0]).trim()) nameToRowIndex[normName(row[0])] = i;
+    // First occurrence wins: when a client has more than one row, the topmost
+    // row is the one kept (and updated in place); the extra copies stay
+    // unmatched and are cleared by the orphan cleanup below.
+    if (h) { if (hsidToRowIndex[h] === undefined) hsidToRowIndex[h] = i; }
+    else if (row[0] && String(row[0]).trim()) {
+      const k = normName(row[0]);
+      if (nameToRowIndex[k] === undefined) nameToRowIndex[k] = i;
+    }
   }
 
   let lastDataRow = CLIENT_DATA_START_ROW - 2;

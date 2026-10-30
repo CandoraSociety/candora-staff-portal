@@ -39,7 +39,13 @@ export function crtMonthEnd(fileName) {
   return new Date(Date.UTC(year, monthIdx + 1, 0)); // day 0 of next month = last day of this month
 }
 
-export const CLIENT_DATA_START_ROW = 15; // 1-based Excel row where client data begins
+// 1-based Excel row where client data begins. The template's header block is
+// rows 1–13 (row 13 blank), and the workbook's own formulas read the data area
+// from row 14 ('Client Data'!$E$14:$E$15002), so 14 is the first client row.
+// Reading from 15 skipped that first row — it was never updated or cleaned and
+// was copied forward month to month, showing up as a permanent "duplicate" of
+// whichever client it held.
+export const CLIENT_DATA_START_ROW = 14;
 export const NUM_COLUMNS = 25; // A through Y
 
 // CRT accepted values (from Outcomes_Database sheet)
