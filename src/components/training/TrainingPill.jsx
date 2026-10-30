@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, ArrowLeft, RotateCcw } from "lucide-react";
+import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
@@ -11,6 +11,7 @@ import ConfirmDialog from "@/components/training/ConfirmDialog";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 import TrainingSidebar from "@/components/training/TrainingSidebar";
+import TrainingLauncherBubble from "@/components/training/TrainingLauncherBubble";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 
@@ -222,22 +223,12 @@ export default function TrainingPill() {
 
       {/* No session yet — offer training for this portal */}
       {!session && (
-        <div className="fixed bottom-4 left-4 z-[60] print:hidden">
-          <div className="rounded-full border shadow-lg px-4 py-2 flex items-center gap-2" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(230, 50%, 22%)" }}>
-            <GraduationCap className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} />
-            <span className="text-xs" style={{ color: "hsl(230, 25%, 65%)" }}>
-              {rec?.is_completed ? `${module.shortTitle} training complete` : `New to ${module.shortTitle || module.title}?`}
-            </span>
-            <button
-              onClick={() => startTraining(rec?.is_completed)}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors hover:opacity-80"
-              style={{ background: rec ? "hsl(230, 55%, 20%)" : "hsl(45, 92%, 53%)", color: rec ? "hsl(45, 60%, 85%)" : "hsl(230, 70%, 10%)" }}
-            >
-              {rec?.is_completed ? "Retake" : (rec ? "Resume training" : "Start training")}
-              {!rec?.is_completed && rec && <ArrowLeft className="w-3 h-3 rotate-180" />}
-            </button>
-          </div>
-        </div>
+        <TrainingLauncherBubble
+          label={rec?.is_completed ? `${module.shortTitle} training complete` : `New to ${module.shortTitle || module.title}?`}
+          actionLabel={rec?.is_completed ? "Retake" : (rec ? "Resume training" : "Start training")}
+          showArrow={!rec?.is_completed && !!rec}
+          onAction={() => startTraining(rec?.is_completed)}
+        />
       )}
 
       <SpotlightTour
