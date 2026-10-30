@@ -121,6 +121,15 @@ function applyCrossRefToClient(client, cf) {
   const se = String(cf.service_element || '').trim().toUpperCase();
   if (se === 'CEIS') u.service_type = 'direct_to_employment';
   else if (se === 'WD') u.service_type = 'pathways';
+  // Blank Service Element: fall back to the CEIS (DEA) flag, exactly as the
+  // CRT import does. Without this the created file has no program stream, so
+  // the CRT sync treats the client as ineligible and wipes the row that was
+  // just pushed — the client silently vanishes from the CRT.
+  else if (!se) {
+    const ceis = String(cf.ceis_dea || '').trim().toUpperCase();
+    if (ceis === 'YES') u.service_type = 'direct_to_employment';
+    else if (ceis === 'NO') u.service_type = 'pathways';
+  }
 
   // DEA start date now lives in column F (service_start_date) for CEIS clients.
   // Read F first; fall back to D (dea_start_date) for backward compatibility with
