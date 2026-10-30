@@ -11,6 +11,7 @@ import { createCompassTask, task90DayFollowup, withCrtComments } from '@/lib/com
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
 import { PLACEMENT_OUTCOME_OPTIONS, FOLLOWUP_90DAY_OPTIONS, outcomeLabel } from '@/lib/crtCodes';
+import { has90DayOutcome } from '@/lib/clientClassification';
 
 export default function FollowUp90DayPanel({ client, onClientUpdate }) {
   const [form, setForm] = useState({
@@ -24,7 +25,9 @@ export default function FollowUp90DayPanel({ client, onClientUpdate }) {
 
   const set = (f, v) => setForm(prev => ({ ...prev, [f]: v }));
 
-  const isDone = !!client?.followup_90day_status;
+  // "P" (pending) is not a recorded follow-up — the client is still inside the
+  // 90-day follow-up period, so the form has to stay available.
+  const isDone = has90DayOutcome(client);
 
   const followup90Date = client?.followup_90day_date;
   const daysUntil = followup90Date

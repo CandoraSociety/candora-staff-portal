@@ -17,14 +17,23 @@ export const WD_SUBSECTIONS = [
 
 const EMPLOYED_CODES = ['E-RF', 'E-UF', 'E-PT'];
 
+// CRT column O carries the 90-day follow-up outcome. "P" means the follow-up
+// is still pending and a blank cell means it was never recorded — neither is a
+// finished 90-day follow-up, so those clients stay in the Follow-up Period
+// until a real outcome is entered.
+export function has90DayOutcome(c) {
+  const status = String(c?.followup_90day_status || '').trim().toUpperCase();
+  return !!status && status !== 'P';
+}
+
 export function classifyClient(c) {
   const ps = c.program_status;
-  const hasFollowup = !!c.followup_90day_status;
+  const followupDone = has90DayOutcome(c);
   const isEmployed = EMPLOYED_CODES.includes(c.employment_status);
   const hasEdaCompletion = !!c.completion_date;
 
   if (ps === 'incomplete' || ps === 'cancelled') return 'incomplete_cancelled';
-  if (ps === 'complete') return hasFollowup ? 'completed' : 'followup_period';
+  if (ps === 'complete') return followupDone ? 'completed' : 'followup_period';
 
   if (ps === 'in_progress' || (!ps && c.service_start_date)) {
     if (c.service_type === 'pathways') {

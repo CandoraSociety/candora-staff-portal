@@ -22,7 +22,7 @@ import {
 import { CheckCircle2, ChevronDown, ListChecks, Briefcase, ClipboardCheck, Ban, RotateCcw } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { base44 } from '@/api/base44Client';
-import { classifyClient } from '@/lib/clientClassification';
+import { classifyClient, has90DayOutcome } from '@/lib/clientClassification';
 import { logStatusChange } from '@/lib/logStatusChange';
 import { toast } from 'sonner';
 import { FOLLOWUP_90DAY_OPTIONS as OUTCOME_OPTIONS, PLACEMENT_OUTCOME_OPTIONS } from '@/lib/crtCodes';
@@ -173,7 +173,9 @@ export default function UpdateProgramStatusMenu({ client, onClientUpdate }) {
   const section = classifyClient(client);
   const inActiveEda = section === 'program_started' && (isDEA || isWD) && !!client?.service_start_date;
   const inWorkSearch = isWD && section === 'work_search' && !client?.employment_start_date;
-  const inFollowup = (isDEA || isWD) && section === 'followup_period' && !client?.followup_90day_status;
+  // A pending ("P") 90-day status is not a finished follow-up, so the outcome
+  // entry stays available for those clients too.
+  const inFollowup = (isDEA || isWD) && section === 'followup_period' && !has90DayOutcome(client);
 
   // 90-day outcome entry unlocks 2 days before the projected follow-up date
   const followupUnlockDate = (() => {

@@ -18,6 +18,7 @@ import RecentlyViewedClients, { recordRecentClient } from "@/components/pathways
 import PurchaseRequestsTab from "@/components/pathways/PurchaseRequestsTab";
 import MyPendingPurchaseRequests from "@/components/pathways/MyPendingPurchaseRequests";
 import MonthlyNarrativeReportTab from "@/components/pathways/MonthlyNarrativeReportTab";
+import { has90DayOutcome } from "@/lib/clientClassification";
 
 const COMPASS_URL = 'https://csscm.alberta.ca/home';
 
@@ -49,7 +50,7 @@ const BARRIER_STATUS_COLORS = {
 };
 
 function programStatusLabel(c) {
-  if (c.program_status === "complete" && !c.followup_90day_status) return "Complete (Follow-Up Period)";
+  if (c.program_status === "complete" && !has90DayOutcome(c)) return "Complete (Follow-Up Period)";
   if (c.program_status === "in_progress") return "In Progress";
   if (c.program_status === "complete") return "Complete";
   if (c.program_status === "incomplete") return "Incomplete";
@@ -183,7 +184,8 @@ export default function PathwaysWorkerDashboard() {
 
   // 90-Day Follow-Up Alert
   const upcomingFollowups = clients.filter(c => {
-    if (c.followup_90day_status) return false;
+    // A "P" (pending) status is not a finished follow-up, so those clients stay on this alert
+    if (has90DayOutcome(c)) return false;
     // 90-day follow-up only applies to completed clients — cancelled/incomplete didn't finish the program
     if (c.program_status === "cancelled" || c.program_status === "incomplete") return false;
     const followupDate = c.followup_90day_date
