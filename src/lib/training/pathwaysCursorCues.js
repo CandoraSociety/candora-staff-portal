@@ -71,7 +71,7 @@ export const PATHWAYS_SERVICE_NAV_CUES = {
   'Editing is yours alone': { cues: [cue(0, 'pw-barriers-tab')] },
   'What a barrier card holds': { cues: [cue(0, 'pw-barrier-1')] },
   'Resolving a barrier properly': { cues: [cue(0, 'pw-barrier-2')] },
-  'Keep the dates and the check-ins honest': { cues: [cue(0, 'pw-flow-progress')] },
+  'Dates and review check-ins on the timeline': { cues: [cue(0, 'pw-flow-progress')] },
   'Handing barriers off — referrals': { cues: [cue(0, 'pw-tab-referrals')] },
   'The assessment stays on the file': { cues: [cue(0, 'pw-tab-bit')] },
 };

@@ -192,7 +192,7 @@ export const STEP_AUDIO = {
     'https://media.base44.com/files/public/6a249282cb496579542673b7/06afd7659_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/2fc1b10a0_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/61685ab1c_speech.mp3',
-    'https://media.base44.com/files/public/6a249282cb496579542673b7/64d94b22b_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/ff17c0f08_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/6a9fca628_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/31ead440b_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/6a6b6bff8_speech.mp3',

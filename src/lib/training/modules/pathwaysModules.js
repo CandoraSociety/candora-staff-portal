@@ -154,8 +154,8 @@ export const PATHWAYS_EXTRA_MODULES = [
         path: "/pathways/client/demo-pw-priya"
       },
       {
-        title: "Keep the dates and the check-ins honest",
-        body: "The BIT set a check-in frequency and review dates, and those review dates plus the barrier windows appear on Program Progress as the client's timeline. Program Progress is also where the barrier windows sit against the counsellor's plan items, which is how you spot a barrier whose end date passed while the need is still there. Push a date out when the work slips — a stale date tells the wrong story at a funder review.",
+        title: "Dates and review check-ins on the timeline",
+        body: "The BIT set a check-in frequency and review dates, and those review dates plus the barrier windows appear on Program Progress as the client's timeline. Program Progress is also where the barrier windows sit against the counsellor's plan items, so a barrier whose end date has passed while the need is still there stands out. Where a date is a best estimate, enter the one the file supports and update it as the picture changes.",
         target: { selector: '[data-tour="pw-flow-progress"]' },
         path: "/pathways/client/demo-pw-priya"
       },

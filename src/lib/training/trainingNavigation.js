@@ -101,7 +101,7 @@ const SECTION_STARTS = {
     "Editing is yours alone": "Working the barriers",
     "What a barrier card holds": "Working the barriers",
     "Resolving a barrier properly": "Working the barriers",
-    "Keep the dates and the check-ins honest": "Timeline & review",
+    "Dates and review check-ins on the timeline": "Timeline & review",
     "Handing barriers off — referrals": "Handoff & the file's history",
     "The assessment stays on the file": "Handoff & the file's history",
     "Time to practice": "Practice",
