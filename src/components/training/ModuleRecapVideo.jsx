@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { motion, useTransform } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
 import PortalIntroLogo from '@/components/training/PortalIntroLogo';
+import RecapSections from '@/components/training/RecapSections';
 import useIntroPlaybackClock from '@/components/training/useIntroPlaybackClock';
 
 // The "What we've learned" wrap-up video. Same treatment as the module intro:
@@ -13,6 +14,7 @@ export default function ModuleRecapVideo({ recap, moduleKey }) {
   const [replay, setReplay] = useState(0);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [duration, setDuration] = useState(0);
   const playbackKey = `${moduleKey}-recap:${replay}`;
   const time = useIntroPlaybackClock(audioRef, playbackKey);
   const delay = useTransform(time, value => `${-value}s`);
@@ -52,6 +54,7 @@ export default function ModuleRecapVideo({ recap, moduleKey }) {
             aria-label={`Recap narration: ${recap.title}`}
             className="w-full"
             onLoadStart={() => { setLoading(true); setFailed(false); }}
+            onLoadedMetadata={event => setDuration(event.currentTarget.duration || 0)}
             onCanPlay={() => setLoading(false)}
             onError={() => { setLoading(false); setFailed(true); }}
           >
@@ -71,19 +74,7 @@ export default function ModuleRecapVideo({ recap, moduleKey }) {
         </div>
       </div>
 
-      {!!recap.takeaways?.length && (
-        <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-sidebar-primary">Key points</p>
-          <ul className="space-y-1">
-            {recap.takeaways.map(point => (
-              <li key={point} className="flex gap-1.5 text-xs leading-snug text-sidebar-foreground/90">
-                <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-sidebar-primary" aria-hidden="true" />
-                <span>{point}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <RecapSections recap={recap} moduleKey={moduleKey} time={time} duration={duration} />
     </div>
   );
 }
