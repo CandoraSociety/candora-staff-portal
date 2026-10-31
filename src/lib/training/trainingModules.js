@@ -16,6 +16,8 @@
 //           when the practice checklist first opens).
 //           { kind: "self" } → the learner marks it done themselves.
 
+import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
+
 export const TRAINING_MODULES = [
   {
     key: "dashboard",
@@ -1025,6 +1027,7 @@ export const TRAINING_MODULES = [
       }
     ]
   },
+  ...PATHWAYS_EXTRA_MODULES,
   {
     key: "rc",
     title: "Resource Centre (Central Client Database)",
@@ -1276,6 +1279,8 @@ export const TRAINING_MODULE_ACCESS = {
   pathways: "pathways",
   pathways_journey: "pathways",
   pathways_journey_part2: "pathways",
+  pathways_assessment: "pathways",
+  pathways_workshops: "pathways",
   rc: "rc",
   ell: "ell",
   centralreg: "central-registration",
@@ -1296,6 +1301,8 @@ export const moduleForPath = (pathname) => {
     ["/candora-cc-receipts", "staffadmin_money"],
     ["/pathways/intake-portal", "pathways_journey"],
     ["/pathways/client/", "pathways_journey_part2"],
+    ["/pathways/assessment/", "pathways_assessment"],
+    ["/pathways/workshops", "pathways_workshops"],
     ["/pathways", "pathways"],
     ["/rc", "rc"],
     ["/ell", "ell"],

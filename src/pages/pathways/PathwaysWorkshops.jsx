@@ -119,9 +119,9 @@ export default function PathwaysWorkshops() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start" data-tour="pw-workshops-tabs">
-          <TabsTrigger value="workshops">All Workshops</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="completed" className="ml-auto">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>
+          <TabsTrigger value="workshops" data-tour="pw-workshops-tab-all">All Workshops</TabsTrigger>
+          <TabsTrigger value="schedule" data-tour="pw-workshops-tab-schedule">Schedule</TabsTrigger>
+          <TabsTrigger value="completed" data-tour="pw-workshops-tab-completed" className="ml-auto">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="workshops" className="mt-4">
@@ -134,7 +134,7 @@ export default function PathwaysWorkshops() {
               <Button onClick={openNew} size="sm"><Plus className="w-4 h-4" /> Create your first workshop</Button>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-tour="pw-workshops-grid">
               {activeWorkshops.map(w => {
                 const next = nextOccurrence(w);
                 const count = next ? rosterCount(w, next) : 0;
@@ -163,11 +163,11 @@ export default function PathwaysWorkshops() {
                       </div>
 
                       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-slate-100">
-                        <Button variant="outline" size="sm" className="h-8" onClick={() => setRoster({ workshop: w, date: next || w.date })}>
+                        <Button variant="outline" size="sm" className="h-8" data-tour="pw-workshops-roster" onClick={() => setRoster({ workshop: w, date: next || w.date })}>
                           <Users className="w-3.5 h-3.5" /> Roster
                         </Button>
                         {w.status === 'scheduled' && (
-                          <Button variant="outline" size="sm" className="h-8 text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => handleComplete(w)}>
+                          <Button variant="outline" size="sm" data-tour="pw-workshops-complete" className="h-8 text-emerald-700 border-emerald-200 hover:bg-emerald-50" onClick={() => handleComplete(w)}>
                             <CheckCircle2 className="w-3.5 h-3.5" /> Complete
                           </Button>
                         )}
@@ -182,11 +182,11 @@ export default function PathwaysWorkshops() {
           )}
         </TabsContent>
 
-        <TabsContent value="completed" className="mt-4">
+        <TabsContent value="completed" className="mt-4" data-tour="pw-workshops-completed">
           <CompletedWorkshopsTab workshops={completedWorkshops} signups={signups} clients={clients} />
         </TabsContent>
 
-        <TabsContent value="schedule" className="mt-4">
+        <TabsContent value="schedule" className="mt-4" data-tour="pw-workshops-schedule">
           {loading ? (
             <p className="text-center text-sm text-slate-400 py-10">Loading…</p>
           ) : (

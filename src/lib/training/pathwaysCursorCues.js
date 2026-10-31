@@ -52,6 +52,28 @@ export const PATHWAYS_JOURNEY_CUES = {
   'When a client changes streams': { cues: [cue(0, 'pw-tab-switches', { click: true, after: t('pw-switches-content') }), cue('The BIT and ERA assessments', 'pw-tab-bit', { click: true, after: t('pw-assessments-content') })] },
 };
 
+export const PATHWAYS_ASSESSMENT_CUES = {
+  'Where the assessment starts': { cues: [cue(0, 'pw-intake-assessment')] },
+  'Press Assess to open the file': { cues: [cue(0, 'pw-intake-assess-btn')] },
+  'Verify the client information first': { cues: [cue(0, 'pw-assess-overview'), cue('Matching the client against the central client database', 'pw-assess-overview')] },
+  'The Barrier Identification Tool — the BIT': { cues: [cue(0, 'pw-assess-bit'), cue('the action steps that address them', 'pw-assess-bit')] },
+  'The ERA — completed in Compass': { cues: [cue(0, 'pw-era-card'), cue('tick ERA Completed in Compass', 'pw-era-card'), cue('upload the completed ERA form', 'pw-era-card')] },
+  'Does this client need a Service Navigator?': { cues: [cue(0, 'pw-era-sn-question')] },
+  'Complete the assessment': { cues: [cue(0, 'pw-assess-complete')] },
+  'Back on the Intake page — awaiting assignment': { cues: [cue(0, 'pw-intake-determination')] },
+};
+
+export const PATHWAYS_WORKSHOPS_CUES = {
+  'Workshops live in the Pathways menu': { cues: [{ at: 0, target: { selector: 'a[href="/pathways/workshops"]' } }] },
+  'Three views, one workshop list': { cues: [cue(0, 'pw-workshops-tabs')] },
+  'Creating a workshop': { cues: [cue(0, 'pw-workshops-new-btn')] },
+  'The Job Club shortcut': { cues: [cue(0, 'pw-workshops-jobclub-btn')] },
+  'What a workshop card tells you': { cues: [cue(0, 'pw-workshops-grid')] },
+  'Taking the roster': { cues: [cue(0, 'pw-workshops-roster')] },
+  'Completing a workshop — one click, many files': { cues: [cue(0, 'pw-workshops-complete')] },
+  'The schedule view': { cues: [cue(0, 'pw-workshops-tab-schedule', { click: true })] },
+};
+
 export const PATHWAYS_OVERVIEW_CUES = {
   'The dashboard tabs': { cues: [cue(0, 'pw-dash-clients'), cue('Compass Queue', 'pw-dash-compass', { click: true }), cue('Purchase Requests', 'pw-dash-purchases'), cue('Monthly Narrative Report', 'pw-dash-narrative', { click: true })] },
   'Your caseload, in sections': { setup: ['pw-dash-clients'], cues: [cue(0, 'pw-placement-tabs'), cue('Internal Training', 'pw-placement-internal'), cue('Work Exposure', 'pw-placement-exposure')] },

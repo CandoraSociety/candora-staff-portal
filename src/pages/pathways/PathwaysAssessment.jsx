@@ -187,7 +187,7 @@ export default function PathwaysAssessment() {
       {/* ─── LANDING STEP ─────────────────────────────────────────── */}
       {step === 'landing' && (
         <div className="p-6 max-w-2xl mx-auto">
-          <Card>
+          <Card data-tour="pw-assess-landing">
             <CardContent className="p-8 text-center space-y-4">
               {assessmentDone ? (
                 <>
@@ -222,7 +222,7 @@ export default function PathwaysAssessment() {
                   <p className="text-sm text-slate-500">
                     Verify the client's information and begin the BIT/ERA assessment process.
                   </p>
-                  <Button size="lg" onClick={() => setStep('overview')} className="gap-2">
+                  <Button size="lg" data-tour="pw-assess-begin" onClick={() => setStep('overview')} className="gap-2">
                     <ClipboardCheck className="w-4 h-4" /> Verify Client Information & Begin Assessment
                   </Button>
                 </>
@@ -234,7 +234,7 @@ export default function PathwaysAssessment() {
 
       {/* ─── OVERVIEW STEP ────────────────────────────────────────── */}
       {step === 'overview' && (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6" data-tour="pw-assess-overview">
           <CentralDatabaseMatcher client={client} onLinked={handleCentralDbLink} />
           <IntakeForm
             client={client}

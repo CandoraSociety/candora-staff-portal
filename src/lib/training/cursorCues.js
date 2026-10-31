@@ -1,5 +1,13 @@
-import { PATHWAYS_JOURNEY_CUES, PATHWAYS_OVERVIEW_CUES } from '@/lib/training/pathwaysCursorCues';
+import { PATHWAYS_JOURNEY_CUES, PATHWAYS_OVERVIEW_CUES, PATHWAYS_ASSESSMENT_CUES, PATHWAYS_WORKSHOPS_CUES } from '@/lib/training/pathwaysCursorCues';
 import { COMMON_CURSOR_CUES } from '@/lib/training/commonCursorCues';
+
+const MODULE_CUE_MAPS = {
+  pathways_journey: PATHWAYS_JOURNEY_CUES,
+  pathways_journey_part2: PATHWAYS_JOURNEY_CUES,
+  pathways: PATHWAYS_OVERVIEW_CUES,
+  pathways_assessment: PATHWAYS_ASSESSMENT_CUES,
+  pathways_workshops: PATHWAYS_WORKSHOPS_CUES,
+};
 
 const normalise = (text) => String(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 // Anchor positions are estimated from the spoken script, not evenly distributed
@@ -15,7 +23,7 @@ export function cueProgress(body, phrase) {
 }
 
 export function getCursorScript(moduleKey, step) {
-  const authored = (moduleKey === 'pathways_journey' || moduleKey === 'pathways_journey_part2' ? PATHWAYS_JOURNEY_CUES : moduleKey === 'pathways' ? PATHWAYS_OVERVIEW_CUES : COMMON_CURSOR_CUES[moduleKey] || {})[step?.title];
+  const authored = (MODULE_CUE_MAPS[moduleKey] || COMMON_CURSOR_CUES[moduleKey] || {})[step?.title];
   const primary = step?.target ? { selector: step.target.selector, text: step.target.text } : null;
   const fallback = step?.clickTarget
     ? [{ at: 0, target: { selector: step.clickTarget }, click: true, after: primary }]
