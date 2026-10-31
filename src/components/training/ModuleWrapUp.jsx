@@ -13,10 +13,13 @@ export default function ModuleWrapUp({ open, module, progress, updateProgress, s
   const recap = getModuleRecap(module?.key);
   const quiz = recap?.quiz || [];
   const [stage, setStage] = useState(startStage);
+  const [result, setResult] = useState(null);
   const drag = useTrainingWindowDrag(open, module?.key);
 
   useEffect(() => {
-    if (open) setStage(startStage);
+    if (!open) return;
+    setStage(startStage);
+    setResult(null);
   }, [open, startStage, module?.key]);
 
   if (!open || !module || !recap) return null;
@@ -30,6 +33,7 @@ export default function ModuleWrapUp({ open, module, progress, updateProgress, s
   };
 
   const finishQuiz = async ({ score, passed }) => {
+    setResult({ score, passed });
     await save({
       recap_done: true,
       quiz_score: score,
@@ -39,7 +43,8 @@ export default function ModuleWrapUp({ open, module, progress, updateProgress, s
     setStage('done');
   };
 
-  const quizScore = progress?.quiz_score;
+  // The just-taken score shows immediately; otherwise the saved one.
+  const quizScore = result?.score ?? progress?.quiz_score;
 
   return (
     <div ref={drag.ref} style={drag.style} className="fixed bottom-4 right-4 z-[85] w-[430px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-y-auto print:hidden">

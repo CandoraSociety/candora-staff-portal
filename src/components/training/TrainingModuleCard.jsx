@@ -1,5 +1,7 @@
 import { CheckCircle2, PlayCircle, RotateCcw } from 'lucide-react';
 
+import { getModuleRecap } from '@/lib/training/moduleRecaps';
+
 // One training module card on the Staff Portal Training page.
 export default function TrainingModuleCard({ module, record, onStart }) {
   const doneTasks = record?.tasks_done?.length || 0;
@@ -26,6 +28,7 @@ export default function TrainingModuleCard({ module, record, onStart }) {
         <p className="text-xs text-muted-foreground mt-1">{module.blurb}</p>
         <p className="text-xs text-muted-foreground mt-1">
           {module.steps?.length || 0} guided steps{totalTasks > 0 ? ` · ${totalTasks} practice tasks` : ''}
+          {getModuleRecap(module.key) ? ' · recap + quiz' : ''}
         </p>
       </div>
       <button

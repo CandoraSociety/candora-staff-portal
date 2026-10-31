@@ -197,6 +197,19 @@ export default function TrainingPill() {
                 <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
               </button>
             )}
+            {!!recap && (
+              <button
+                onClick={() => openWrapUp("recap")}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
+                style={wrapUpDone
+                  ? { background: "hsl(152, 45%, 28%)", color: "hsl(152, 60%, 80%)" }
+                  : { background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
+                title="Watch the recap and take the quiz"
+              >
+                {wrapUpDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
+                {wrapUpDone ? `Recap done${rec?.quiz_score != null ? ` · ${rec.quiz_score}%` : ""}` : "What we've learned"}
+              </button>
+            )}
             <button
               onClick={() => startTraining(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
@@ -247,7 +260,21 @@ export default function TrainingPill() {
         progress={rec || null}
         updateProgress={updateProgress}
         onStepChange={setTourStep}
+        onFinish={() => {
+          setTourOpen(false);
+          if (recap) openWrapUp("recap");
+          else if (module.tasks?.length) setChecklistOpen(true);
+        }}
         onClose={(finished) => { setTourOpen(false); if (finished && module.tasks?.length) setChecklistOpen(true); }}
+      />
+      <ModuleWrapUp
+        open={wrapUp.open}
+        module={module}
+        progress={rec || null}
+        updateProgress={updateProgress}
+        startStage={wrapUp.stage}
+        onClose={() => setWrapUp({ open: false, stage: "recap" })}
+        onStartPractice={() => { setWrapUp({ open: false, stage: "recap" }); if (module.tasks?.length) setChecklistOpen(true); }}
       />
       <PracticeChecklist
         open={checklistOpen}

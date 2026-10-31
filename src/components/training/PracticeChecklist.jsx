@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { X, CheckCircle2, Circle, RefreshCw, PartyPopper, ExternalLink, Lightbulb } from "lucide-react";
 import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
+import { getModuleRecap } from "@/lib/training/moduleRecaps";
 
 const snapKey = (key) => `candora-training-snapshots-${key}`;
 
@@ -41,6 +42,9 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
   const isDone = (id) => done.includes(id.id || id);
   const doneCount = module.tasks.filter(t => done.includes(t.id)).length;
   const allDone = doneCount === module.tasks.length;
+  // The module also ends with its recap video and quiz
+  const recap = getModuleRecap(module.key);
+  const wrapUpPending = !!recap && (!progress?.recap_done || (!!recap.quiz?.length && !progress?.quiz_passed));
 
   const persist = async (list) => {
     setDone(list);
@@ -151,7 +155,11 @@ export default function PracticeChecklist({ open, module, progress, updateProgre
             <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: "hsl(152, 45%, 16%)", border: "1px solid hsl(152, 45%, 30%)" }}>
               <PartyPopper className="w-4 h-4 shrink-0" style={{ color: "hsl(45, 92%, 60%)" }} />
               <p className="text-xs font-semibold" style={{ color: "hsl(152, 50%, 75%)" }}>
-                Practice complete — your training{progress?.tour_done ? " for this portal" : ""} is recorded{progress?.tour_done ? "! You can exit Training Mode." : " once you finish the tour."}
+                {!progress?.tour_done
+                  ? "Practice complete — your training is recorded once you finish the tour."
+                  : wrapUpPending
+                    ? "Practice complete — finish the \u201cWhat we've learned\u201d recap and quiz to complete this module."
+                    : "Practice complete — your training for this portal is recorded! You can exit Training Mode."}
               </p>
             </div>
           ) : (
