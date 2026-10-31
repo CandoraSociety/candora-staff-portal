@@ -97,6 +97,7 @@ const SECTION_STARTS = {
     "What Service Navigation is": "Overview",
     "The assessment was the start — this is the work": "The navigator view of the file",
     "What a navigator sees": "The navigator view of the file",
+    "The suggestions you hand the counsellor": "Handoff & the file's history",
     "Barriers — the step you own": "Working the barriers",
     "Editing is yours alone": "Working the barriers",
     "What a barrier card holds": "Working the barriers",

@@ -109,7 +109,7 @@ export const PATHWAYS_EXTRA_MODULES = [
     key: "pathways_service_nav",
     title: "Service Navigation — Working the Client File",
     shortTitle: "Service Navigation",
-    blurb: "After the assessment: where an assigned client's file lives, how barriers are worked and resolved week to week, keeping the review dates and the progress timeline honest, and handing barriers off through referrals.",
+    blurb: "After the assessment: where an assigned client's file lives, how the suggested action plan items you ticked reach the counsellor, how barriers are worked and resolved week to week, keeping the review dates and the progress timeline honest, and handing barriers off through referrals.",
     path: "/pathways/client/demo-pw-priya",
     steps: [
       {
@@ -127,6 +127,11 @@ export const PATHWAYS_EXTRA_MODULES = [
         title: "What a navigator sees",
         body: "When you are the assigned navigator and not also the client's counsellor, the file opens on a navigator view: Program Flow shows two steps, Barriers and Program Progress. The action plan, employment supports and placements stay with the counsellor. If you happen to hold both roles on a file you see the full flow, and Barriers is still your step to keep current.",
         target: { selector: '[data-tour="pw-profile-tabs"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "The suggestions you hand the counsellor",
+        body: "The action plan items you ticked at the end of the assessment travel with the file. They appear to the career counsellor inside their Employment Action Plan step, with your notes, so the plan starts from what the BIT revealed rather than a blank page — and the counsellor decides which of them actually go on the roadmap. Because that block sits on the counsellor's side of the file, it is not part of your Program Flow: when something new turns up later, carry it through a barrier's action steps or a referral, or raise it with the counsellor directly.",
         path: "/pathways/client/demo-pw-priya"
       },
       {
