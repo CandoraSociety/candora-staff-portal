@@ -593,18 +593,20 @@ export default function PathwaysWorkerDashboard() {
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Service Navigation</span>
                     <div className="flex-1 h-px bg-slate-300" />
                   </div>
-                  <CollapsibleSection
-                    title="Service Navigation WD Clients"
-                    count={snDisplayed.length}
-                    accentColor="#0f766e"
-                    variant="main"
-                    defaultOpen
-                    forceOpen={!!search && search.trim().length > 0}
-                  >
-                    {snDisplayed.length > 0
-                      ? renderClientTable(snDisplayed, 'wd', 'all')
-                      : <p className="text-sm text-slate-400 italic px-4 py-3">No clients assigned to you as Service Navigator.</p>}
-                  </CollapsibleSection>
+                  <div data-tour="pw-sn-section">
+                    <CollapsibleSection
+                      title="Service Navigation WD Clients"
+                      count={snDisplayed.length}
+                      accentColor="#0f766e"
+                      variant="main"
+                      defaultOpen
+                      forceOpen={!!search && search.trim().length > 0}
+                    >
+                      {snDisplayed.length > 0
+                        ? renderClientTable(snDisplayed, 'wd', 'all')
+                        : <p className="text-sm text-slate-400 italic px-4 py-3">No clients assigned to you as Service Navigator.</p>}
+                    </CollapsibleSection>
+                  </div>
                 </>
               )}
               </>

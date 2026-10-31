@@ -110,15 +110,15 @@ export default function PathwaysWorkshops() {
           <h1 className="text-2xl font-bold text-slate-800">Workshops</h1>
           <p className="text-sm text-slate-500">Create workshops and schedule recurring sessions with rosters.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-tour="pw-workshops-actions">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /></Button>
-          <Button variant="outline" onClick={openJobClub} size="sm"><Plus className="w-4 h-4" /> New Job Club Session</Button>
-          <Button onClick={openNew} size="sm"><Plus className="w-4 h-4" /> New Workshop</Button>
+          <Button variant="outline" onClick={openJobClub} size="sm" data-tour="pw-workshops-jobclub-btn"><Plus className="w-4 h-4" /> New Job Club Session</Button>
+          <Button onClick={openNew} size="sm" data-tour="pw-workshops-new-btn"><Plus className="w-4 h-4" /> New Workshop</Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start" data-tour="pw-workshops-tabs">
           <TabsTrigger value="workshops">All Workshops</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="completed" className="ml-auto">Completed{completedWorkshops.length > 0 ? ` (${completedWorkshops.length})` : ''}</TabsTrigger>

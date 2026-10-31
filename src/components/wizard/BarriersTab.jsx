@@ -130,7 +130,7 @@ export default function BarriersTab({ client, onSave, canEdit }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-tour="pw-barriers-tab">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5 text-amber-500" />
@@ -143,7 +143,7 @@ export default function BarriersTab({ client, onSave, canEdit }) {
             </span>
           )}
           {canEdit && (
-            <Button size="sm" onClick={handleSave} disabled={saving}>
+            <Button size="sm" onClick={handleSave} disabled={saving} data-tour="pw-barriers-save">
               <Save className="w-4 h-4 mr-1" />
               {saving ? 'Saving...' : 'Save Barriers'}
             </Button>
@@ -165,7 +165,7 @@ export default function BarriersTab({ client, onSave, canEdit }) {
               : b.status === 'in_progress' ? 'border-blue-300 bg-blue-50'
               : 'border-amber-200 bg-amber-50';
             return (
-              <Card key={n} className={statusColor}>
+              <Card key={n} className={statusColor} data-tour={`pw-barrier-${n}`}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <span className="text-amber-600 font-bold">Barrier {n}:</span>
