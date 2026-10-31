@@ -1,4 +1,4 @@
-import { PATHWAYS_JOURNEY_CUES, PATHWAYS_OVERVIEW_CUES, PATHWAYS_ASSESSMENT_CUES, PATHWAYS_WORKSHOPS_CUES } from '@/lib/training/pathwaysCursorCues';
+import { PATHWAYS_JOURNEY_CUES, PATHWAYS_OVERVIEW_CUES, PATHWAYS_ASSESSMENT_CUES, PATHWAYS_SERVICE_NAV_CUES, PATHWAYS_WORKSHOPS_CUES } from '@/lib/training/pathwaysCursorCues';
 import { COMMON_CURSOR_CUES } from '@/lib/training/commonCursorCues';
 
 const MODULE_CUE_MAPS = {
@@ -6,6 +6,7 @@ const MODULE_CUE_MAPS = {
   pathways_journey_part2: PATHWAYS_JOURNEY_CUES,
   pathways: PATHWAYS_OVERVIEW_CUES,
   pathways_assessment: PATHWAYS_ASSESSMENT_CUES,
+  pathways_service_nav: PATHWAYS_SERVICE_NAV_CUES,
   pathways_workshops: PATHWAYS_WORKSHOPS_CUES,
 };
 

@@ -1280,6 +1280,7 @@ export const TRAINING_MODULE_ACCESS = {
   pathways_journey: "pathways",
   pathways_journey_part2: "pathways",
   pathways_assessment: "pathways",
+  pathways_service_nav: "pathways",
   pathways_workshops: "pathways",
   rc: "rc",
   ell: "ell",

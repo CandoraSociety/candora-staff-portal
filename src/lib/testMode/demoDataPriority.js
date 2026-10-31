@@ -17,7 +17,7 @@ export const PRIORITY_DEMO = {
     { id: 'test_pc_leo', first_name: 'Leo', last_name: 'Fontaine', compass_hsid: '10016', phone: '780-555-1106', service_type: 'pathways', program_status: 'in_progress', status: 'new', assigned_worker_name: '', residency_status: 'work_permit', employment_status: 'UE', referral_source: 'school', intake_date: D(1), is_waitlisted: true, waitlist_date: D(1) },
   ],
   PathwaysStaff: [
-    { name: 'Terry Tester', email: 'test.user@candora.ca', role: 'career_counsellor', is_active: true },
+    { name: 'Terry Tester', email: 'test.user@candora.ca', role: 'career_counsellor', secondary_role: 'service_navigator', is_active: true },
     { name: 'Dana Demo', email: 'test.admin@candora.ca', role: 'manager', is_active: true },
     { name: 'Nadia Navigator', email: 'nadia.navigator@candora.ca', role: 'service_navigator', is_active: true },
   ],

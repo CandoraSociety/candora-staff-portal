@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_workshops", "rc", "ell", "centralreg"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg"] },
 ];
 
 // Which portal series each module belongs to — the training sidebar shows a
@@ -16,6 +16,7 @@ export const TRAINING_MODULE_SERIES = {
   pathways_journey: "pathways",
   pathways_journey_part2: "pathways",
   pathways_assessment: "pathways",
+  pathways_service_nav: "pathways",
   pathways_workshops: "pathways",
   rc: "rc",
   ell: "ell",
@@ -89,6 +90,18 @@ const SECTION_STARTS = {
     "Does this client need a Service Navigator?": "Service Navigator & completion",
     "Complete the assessment": "Service Navigator & completion",
     "Back on the Intake page — awaiting assignment": "Service Navigator & completion",
+  },
+  pathways_service_nav: {
+    "The assessment was the start — this is the work": "The navigator view of the file",
+    "What a navigator sees": "The navigator view of the file",
+    "Barriers — the step you own": "Working the barriers",
+    "Editing is yours alone": "Working the barriers",
+    "What a barrier card holds": "Working the barriers",
+    "Resolving a barrier properly": "Working the barriers",
+    "Keep the dates and the check-ins honest": "Timeline & review",
+    "Handing barriers off — referrals": "Handoff & the file's history",
+    "The assessment stays on the file": "Handoff & the file's history",
+    "Time to practice": "Practice",
   },
   pathways_workshops: {
     "Workshops live in the Pathways menu": "Overview",

@@ -63,6 +63,18 @@ export const PATHWAYS_ASSESSMENT_CUES = {
   'Back on the Intake page — awaiting assignment': { cues: [cue(0, 'pw-intake-determination')] },
 };
 
+export const PATHWAYS_SERVICE_NAV_CUES = {
+  'The assessment was the start — this is the work': { cues: [cue(0, 'pw-profile-header')] },
+  'What a navigator sees': { cues: [cue(0, 'pw-profile-tabs')] },
+  'Barriers — the step you own': { cues: [cue(0, 'pw-flow-barriers')] },
+  'Editing is yours alone': { cues: [cue(0, 'pw-barriers-tab')] },
+  'What a barrier card holds': { cues: [cue(0, 'pw-barrier-1')] },
+  'Resolving a barrier properly': { cues: [cue(0, 'pw-barrier-2')] },
+  'Keep the dates and the check-ins honest': { cues: [cue(0, 'pw-flow-progress')] },
+  'Handing barriers off — referrals': { cues: [cue(0, 'pw-tab-referrals')] },
+  'The assessment stays on the file': { cues: [cue(0, 'pw-tab-bit')] },
+};
+
 export const PATHWAYS_WORKSHOPS_CUES = {
   'Workshops live in the Pathways menu': { cues: [{ at: 0, target: { selector: 'a[href="/pathways/workshops"]' } }] },
   'Three views, one workshop list': { cues: [cue(0, 'pw-workshops-tabs')] },

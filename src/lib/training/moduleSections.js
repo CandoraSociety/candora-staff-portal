@@ -3,7 +3,7 @@
 export const TRAINING_MODULE_SECTIONS = [
   { key: "main_page", title: "Main Page", moduleKeys: ["dashboard", "dashboard_widgets"] },
   { key: "time_money", title: "Time & Money", moduleKeys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { key: "pathways", title: "Pathways", moduleKeys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_workshops"] },
+  { key: "pathways", title: "Pathways", moduleKeys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops"] },
   { key: "rc", title: "Resource Centre", moduleKeys: ["rc"] },
   { key: "ell", title: "ELL", moduleKeys: ["ell"] },
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },

@@ -54,7 +54,7 @@ export const PATHWAYS_EXTRA_MODULES = [
       },
       {
         title: "Back on the Intake page — awaiting assignment",
-        body: "The client now sits in Assessment Complete — Awaiting Assignment, waiting for the Determination/Assignment step. Their BIT and ERA travel with the file: they show on the client's BIT / ERA tab for the rest of the client's time in the program, so any teammate can pick the file up and keep the barriers current. That is the assessment done — the practice tasks below take you through it end to end.",
+        body: "The client now sits in Assessment Complete — Awaiting Assignment, waiting for the Determination/Assignment step. Their BIT and ERA travel with the file: they show on the client's BIT / ERA tab for the rest of the client's time in the program, so any teammate can pick the file up and keep the barriers current. That is the assessment done — the practice tasks below take you through it end to end. From here the client's barriers become your week-to-week work, which the Service Navigation module walks you through.",
         target: { selector: '[data-tour="pw-intake-determination"]' },
         path: "/pathways/intake"
       }
@@ -82,6 +82,107 @@ export const PATHWAYS_EXTRA_MODULES = [
         body: "Tick ERA Completed in Compass, then answer the Service Navigator question and complete the assessment.",
         hint: "Tick the checkbox, choose Yes or No on the barrier-removal question (pick a Service Navigator if you chose Yes), then press Complete Assessment.",
         path: "/pathways/intake",
+        verify: { kind: "self" }
+      }
+    ]
+  },
+  {
+    key: "pathways_service_nav",
+    title: "Service Navigation — Working the Client File",
+    shortTitle: "Service Navigation",
+    blurb: "After the assessment: where an assigned client's file lives, how barriers are worked and resolved week to week, keeping the review dates and the progress timeline honest, and handing barriers off through referrals.",
+    path: "/pathways/client/demo-pw-priya",
+    steps: [
+      {
+        title: "The assessment was the start — this is the work",
+        body: "Completing the assessment handed the client on; it did not end your involvement. From the moment a client is assigned to you as their Service Navigator, the barrier work in their file is yours week to week, while the career counsellor builds the employment plan on that same file. Your navigator clients appear in the Service Navigation section of your dashboard and on the Master List — open the file from either. This demo client is assigned to you as navigator with a different counsellor, which is the usual arrangement.",
+        target: { selector: '[data-tour="pw-profile-header"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "What a navigator sees",
+        body: "When you are the assigned navigator and not also the client's counsellor, the file opens on a navigator view: Program Flow shows two steps, Barriers and Program Progress. The action plan, employment supports and placements stay with the counsellor. If you happen to hold both roles on a file you see the full flow, and Barriers is still your step to keep current.",
+        target: { selector: '[data-tour="pw-profile-tabs"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Barriers — the step you own",
+        body: "Everything recorded in the BIT during the assessment arrives here as editable cards: the barrier, the challenges behind it, the action steps and the dates. This is where a barrier is actually worked — moved to in progress when the work starts, and to resolved only when the need is genuinely met. Its review history sits with the card, so a barrier cannot quietly sit untouched for months.",
+        target: { selector: '[data-tour="pw-flow-barriers"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Editing is yours alone",
+        body: "Only the assigned Service Navigator can change barriers. Everyone else — the counsellor, supervisors, managers — sees the same cards read-only with a lock note beside the heading, so the barrier plan can't be edited by accident. Save Barriers records your changes on the file; the counsellor's plan is untouched by them.",
+        target: { selector: '[data-tour="pw-barriers-tab"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "What a barrier card holds",
+        body: "Status is unresolved, in progress or resolved. Internal/External resources decides who actually addresses it — a Candora program, or an outside agency the client is referred to. Start and end dates place the barrier on the client's timeline. Action steps say what will be done, challenges record why the barrier exists, and resources and notes record who is involved and what happened.",
+        target: { selector: '[data-tour="pw-barrier-1"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Resolving a barrier properly",
+        body: "Resolved is not a status you tick and move on from. The card then requires an end date and a short note explaining how the barrier was resolved — that note is the record of what worked, and it is what a teammate reads when the client asks about it months later. Resolving a barrier also queues a Compass task for it, so the outcome reaches Compass instead of living only in the portal.",
+        target: { selector: '[data-tour="pw-barrier-2"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Keep the dates and the check-ins honest",
+        body: "The BIT set a check-in frequency and review dates, and those review dates plus the barrier windows appear on Program Progress as the client's timeline. Program Progress is also where the barrier windows sit against the counsellor's plan items, which is how you spot a barrier whose end date passed while the need is still there. Push a date out when the work slips — a stale date tells the wrong story at a funder review.",
+        target: { selector: '[data-tour="pw-flow-progress"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Handing barriers off — referrals",
+        body: "The Referrals tab is how a barrier leaves your desk. Internal referrals point at Candora's own programs — ELL, EmpowerU, Digital Literacy, Family Programs, Childcare, Settlement Services — and external ones at outside agencies. Saving a new referral emails the receiving program team with the client's name and what was referred, so the handoff is recorded on both sides and the barrier's Internal/External setting matches what actually happened.",
+        target: { selector: '[data-tour="pw-tab-referrals"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "The assessment stays on the file",
+        body: "The BIT / ERA tab holds the complete Barrier Identification Tool and the ERA record as they stood when the determination was made, plus the Service Navigator question and who the client was assigned to. Barriers are worked in Program Flow, not here — come to this tab to read the original reasoning, re-open the full tool, or move the file to a different navigator when someone leaves or caseloads change.",
+        target: { selector: '[data-tour="pw-tab-bit"]' },
+        path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "Time to practice",
+        body: "That's the tour. Open the demo client as their navigator, move one barrier to in progress, resolve another with its resolution note, and send an internal referral so you see the handoff recorded."
+      }
+    ],
+    tasks: [
+      {
+        id: "pw-sn-status",
+        title: "Move a barrier to in progress",
+        body: "Open the demo client, change one barrier's status to In Progress and save the barriers.",
+        hint: "Barriers step, pick the Transportation barrier, set Status to In Progress and press Save Barriers.",
+        path: "/pathways/client/demo-pw-priya",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pw-sn-resolve",
+        title: "Resolve a barrier with its note",
+        body: "Resolve one barrier — including an end date and how it was resolved.",
+        hint: "Set Status to Resolved, add the end date and write how the barrier was resolved, then save.",
+        path: "/pathways/client/demo-pw-priya",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pw-sn-referral",
+        title: "Send an internal referral",
+        body: "Send the client to one of Candora's own programs from the Referrals tab.",
+        hint: "Open the Referrals tab, tick one internal referral such as Digital Literacy or Settlement Services, and save.",
+        path: "/pathways/client/demo-pw-priya",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pw-sn-timeline",
+        title: "Check the barrier windows on the timeline",
+        body: "Look at Program Progress and confirm the barrier dates sit against the plan items.",
+        hint: "Open Program Progress and find the barrier rows next to the counsellor's plan items.",
+        path: "/pathways/client/demo-pw-priya",
         verify: { kind: "self" }
       }
     ]
