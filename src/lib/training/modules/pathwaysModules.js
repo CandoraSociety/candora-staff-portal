@@ -17,6 +17,11 @@ export const PATHWAYS_EXTRA_MODULES = [
         path: "/pathways/intake"
       },
       {
+        title: "The assessment, start to finish",
+        body: "Press Play to hear a quick overview of this module: verifying the file, the Barrier Identification Tool, the ERA in Compass, and the question that decides whether a Service Navigator keeps the file. Each scene stays on screen until its narration finishes. You're in Training Mode throughout, so nothing you open or save here is real. When you're ready, press Next below to continue training.",
+        introExplainer: true
+      },
+      {
         title: "Press Assess to open the file",
         body: "The Assess button beside a client's name opens their assessment. Nothing is recorded until you walk through the file, so pressing Assess is always safe — it opens the client's details first, not the barriers.",
         target: { selector: '[data-tour="pw-intake-assess-btn"]' },
@@ -112,6 +117,11 @@ export const PATHWAYS_EXTRA_MODULES = [
         body: "Completing the assessment handed the client on; it did not end your involvement. From the moment a client is assigned to you as their Service Navigator, the barrier work in their file is yours week to week, while the career counsellor builds the employment plan on that same file. Your navigator clients appear in the Service Navigation section of your dashboard and on the Master List — open the file from either. This demo client is assigned to you as navigator with a different counsellor, which is the usual arrangement.",
         target: { selector: '[data-tour="pw-profile-header"]' },
         path: "/pathways/client/demo-pw-priya"
+      },
+      {
+        title: "What Service Navigation is",
+        body: "Press Play to hear a quick overview of this mini-module: where an assigned client's file lives, how barriers are worked and resolved week to week, and how referrals hand a barrier off to another program. Each scene stays on screen until its narration finishes. You're in Training Mode, so every change you make here is simulated. When you're ready, press Next below to continue training.",
+        introExplainer: true
       },
       {
         title: "What a navigator sees",
@@ -213,6 +223,11 @@ export const PATHWAYS_EXTRA_MODULES = [
         body: "Workshops are one of the group activities the action plan points at, so they sit inside the Pathways portal rather than in a separate calendar tool. This module covers creating them, scheduling recurring sessions, taking a roster and completing a workshop so attendance reaches the client's file.",
         target: { selector: 'a[href="/pathways/workshops"]' },
         path: "/pathways"
+      },
+      {
+        title: "What Workshops & Job Club are",
+        body: "Press Play to hear a quick overview of this mini-module: creating workshops and the Job Club, scheduling recurring sessions, taking a roster, and completing a workshop so attendance reaches the client's file. Each scene stays on screen until its narration finishes. You're in Training Mode, so nothing you create here is real. When you're ready, press Next below to continue training.",
+        introExplainer: true
       },
       {
         title: "Three views, one workshop list",

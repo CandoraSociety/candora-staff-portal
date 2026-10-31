@@ -228,6 +228,66 @@ const INTRO_SCENES_BY_MODULE = {
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/cb872b578_speech.mp3',
     },
   ],
+  pathways_assessment: [
+    {
+      kicker: 'Pathways Assessment',
+      title: 'Welcome to the Assessment.',
+      body: "Welcome to the Assessment module. This is where a new client's file is read properly, the barriers behind their employment situation are recorded, and the file is handed on to a career counsellor with a plan already taking shape.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/9271e6839_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Assessment',
+      title: 'The BIT and the ERA.',
+      body: 'Two pieces of work sit inside the assessment. The Barrier Identification Tool records each barrier, the challenges behind it, and the action steps that address it. The Employment Readiness Assessment is completed in Compass, and the portal records that it is done.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2e1bc598f_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Assessment',
+      title: "What you'll practice.",
+      body: "In this module you will open a demo client's assessment, record a barrier with its action steps, suggest action plan items for the counsellor, and complete the assessment. Nothing you touch is real data.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/65fa2cecb_speech.mp3',
+    },
+  ],
+  pathways_service_nav: [
+    {
+      kicker: 'Pathways Service Navigation',
+      title: 'Welcome to Service Navigation.',
+      body: "Welcome to Service Navigation. Once a client is assigned to you as their navigator, the barrier work in their file becomes yours, week to week, alongside the career counsellor's employment plan on that same file.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2e69f4880_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Service Navigation',
+      title: 'Barriers are the work.',
+      body: 'Barriers arrive from the assessment as editable cards. You move them to in progress when the work starts, and to resolved only when the need is genuinely met, with an end date and a note that records what worked.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/a64c9d010_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Service Navigation',
+      title: "What you'll practice.",
+      body: "In this module you will open a demo client as their navigator, move a barrier to in progress, resolve another with its resolution note, and send an internal referral. Nothing you touch is real data.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/72f5c078f_speech.mp3',
+    },
+  ],
+  pathways_workshops: [
+    {
+      kicker: 'Pathways Workshops & Job Club',
+      title: 'Welcome to Workshops & Job Club.',
+      body: "Welcome to Workshops and Job Club. Workshops are the group activities the action plan points at, and they live inside Pathways so that the attendance you take reaches each client's file.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/9afafaa07_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Workshops & Job Club',
+      title: 'One click marks many files.',
+      body: 'Completing a workshop does more than change a badge. Every client marked as attended has the matching workshop item on their action plan marked complete.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/543db2221_speech.mp3',
+    },
+    {
+      kicker: 'Pathways Workshops & Job Club',
+      title: "What you'll practice.",
+      body: "In this module you will create a workshop, take the roster for one session, and complete the workshop. Nothing you touch is real data.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/be7b1fe85_speech.mp3',
+    },
+  ],
 };
 
 export function getModuleIntroScenes(moduleKey) {

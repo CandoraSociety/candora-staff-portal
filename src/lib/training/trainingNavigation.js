@@ -82,6 +82,7 @@ const SECTION_STARTS = {
     "Time to practice": "Practice",
   },
   pathways_assessment: {
+    "The assessment, start to finish": "Overview",
     "Where the assessment starts": "Where it starts",
     "Press Assess to open the file": "Opening and verifying the file",
     "Verify the client information first": "Opening and verifying the file",
@@ -93,6 +94,7 @@ const SECTION_STARTS = {
     "Back on the Intake page — awaiting assignment": "Service Navigator & completion",
   },
   pathways_service_nav: {
+    "What Service Navigation is": "Overview",
     "The assessment was the start — this is the work": "The navigator view of the file",
     "What a navigator sees": "The navigator view of the file",
     "Barriers — the step you own": "Working the barriers",
@@ -105,6 +107,7 @@ const SECTION_STARTS = {
     "Time to practice": "Practice",
   },
   pathways_workshops: {
+    "What Workshops & Job Club are": "Overview",
     "Workshops live in the Pathways menu": "Overview",
     "Three views, one workshop list": "The workshop list",
     "Creating a workshop": "Creating and scheduling",
