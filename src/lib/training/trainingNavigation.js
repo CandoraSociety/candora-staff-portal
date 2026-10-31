@@ -23,6 +23,17 @@ export const TRAINING_MODULE_SERIES = {
   centralreg: "centralreg",
 };
 
+// Display name of each training series (the "portal" a module belongs to) —
+// used by the sidebar's portal-wide module menu.
+export const TRAINING_SERIES_TITLES = {
+  getting_started: "Getting started",
+  time_money: "Time & money",
+  pathways: "Pathways",
+  rc: "Resource Centre",
+  ell: "ELL",
+  centralreg: "Central Registration",
+};
+
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
 const SECTION_STARTS = {
   dashboard: {

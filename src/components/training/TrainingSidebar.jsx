@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { GraduationCap, PanelRightClose, PanelRightOpen } from "lucide-react";
 import useTrainingModules from "@/lib/useTrainingModules";
 import { startTrainingSession } from "@/lib/training/trainingSession";
-import { TRAINING_NAV_GROUPS, TRAINING_MODULE_SERIES } from "@/lib/training/trainingNavigation";
+import { TRAINING_NAV_GROUPS, TRAINING_MODULE_SERIES, TRAINING_SERIES_TITLES } from "@/lib/training/trainingNavigation";
 import { useTrainingTour } from "@/components/training/TrainingTourProvider";
 import TrainingSidebarModule from "@/components/training/TrainingSidebarModule";
 import TrainingSidebarNextModule from "@/components/training/TrainingSidebarNextModule";
+import TrainingSidebarPortalMenu from "@/components/training/TrainingSidebarPortalMenu";
 
 export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour, onOpenPractice }) {
   const [open, setOpen] = useState(true);
@@ -21,15 +22,21 @@ export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour
     return module.key === activeKey || (!!record && !record.is_completed);
   });
 
-  // The single "up next" module: the first module the learner hasn't started.
-  // When something is active it must belong to the same portal series; with
-  // nothing active yet it's simply the first module on the list.
-  const activeSeries = new Set(activeModules.map(module => TRAINING_MODULE_SERIES[module.key]));
-  const nextModule = modules.find(module => {
-    if (progressFor(module.key) || module.key === activeKey) return false;
-    if (activeModules.length) return activeSeries.has(TRAINING_MODULE_SERIES[module.key]);
-    return true;
-  });
+  // "Up next" always follows the module order inside the same portal series —
+  // whoever finishes first, the learner is walked through the portal's modules
+  // in sequence. Completing a later module never skips the ones before it.
+  const currentKey = activeKey || activeModules[activeModules.length - 1]?.key || null;
+  const currentSeries = currentKey ? TRAINING_MODULE_SERIES[currentKey] : null;
+  const portalModules = currentSeries
+    ? modules.filter(module => TRAINING_MODULE_SERIES[module.key] === currentSeries)
+    : [];
+  const currentIndex = portalModules.findIndex(module => module.key === currentKey);
+  const nextModule = currentIndex >= 0 ? portalModules[currentIndex + 1] || null : null;
+
+  const openModule = (module) => {
+    if (module.key === activeKey) { onOpenTour?.(); return; }
+    startTrainingSession(module.key);
+  };
 
   const hasContent = activeModules.length > 0 || !!nextModule;
 
@@ -79,6 +86,19 @@ export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour
             <section aria-label="Next module">
               <h2 className="mb-2 border-b-2 border-sidebar-primary/50 bg-sidebar-accent px-2.5 py-2 text-[11px] font-bold uppercase tracking-wide text-sidebar-primary">Up next</h2>
               <TrainingSidebarNextModule module={nextModule} />
+            </section>
+          )}
+          {portalModules.length > 1 && (
+            <section aria-label="All modules in this portal">
+              <h2 className="mb-2 border-b-2 border-sidebar-primary/50 bg-sidebar-accent px-2.5 py-2 text-[11px] font-bold uppercase tracking-wide text-sidebar-primary">
+                All {TRAINING_SERIES_TITLES[currentSeries] || "portal"} modules
+              </h2>
+              <TrainingSidebarPortalMenu
+                modules={portalModules}
+                activeKey={activeKey}
+                progressFor={progressFor}
+                onOpen={openModule}
+              />
             </section>
           )}
         </div>
