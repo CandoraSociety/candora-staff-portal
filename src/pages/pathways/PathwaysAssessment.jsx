@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createCompassTask, taskBitEraCompleted } from '@/lib/compassTasks';
+import SuggestedPlanItemsEditor from '@/components/pathways/SuggestedPlanItemsEditor';
 
 export default function PathwaysAssessment() {
   const { id } = useParams();
@@ -340,6 +341,12 @@ export default function PathwaysAssessment() {
                 Save Notes
               </Button>
             </div>
+
+            {/* Suggested action plan items for the career counsellor */}
+            <SuggestedPlanItemsEditor
+              client={client}
+              onSaved={updates => setClient(prev => ({ ...prev, ...updates }))}
+            />
 
             {/* Barrier Removal Determination */}
             <div data-tour="pw-era-sn-question" className="border-t border-slate-200 pt-4 space-y-3">

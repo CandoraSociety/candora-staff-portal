@@ -10,25 +10,11 @@ import { CheckCircle2, ChevronRight, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskActionPlanCreated } from '@/lib/compassTasks';
+import { ACTION_PLAN_ITEMS } from '@/lib/actionPlanItems';
 
 // ─── Action Plan Options ────────────────────────────────────────────────────
 
-const ALL_ITEMS = [
-  { key: 'job_search_workshop',         label: 'Job Search Workshop',           category: 'Workshops' },
-  { key: 'resume_writing_workshop',     label: 'Resume Writing Workshop',        category: 'Workshops' },
-  { key: 'interview_skills_workshop',   label: 'Interview Skills Workshop',      category: 'Workshops' },
-  { key: 'workplace_readiness_workshop',label: 'Workplace Readiness Workshop',   category: 'Workshops' },
-  { key: 'financial_literacy_workshop', label: 'Financial Literacy Workshop',    category: 'Workshops' },
-  { key: 'skills_assessment',           label: 'Skills Assessment',              category: 'Programs' },
-  { key: 'internal_placement',          label: 'Internal Placement',             category: 'Placement/Training', pathwaysOnly: true },
-  { key: 'exposure_course',             label: 'Exposure Course',                category: 'Placement/Training' },
-  { key: 'paid_external_placement',     label: 'Work Exposure Placement',        category: 'Placement/Training', notDEA: true },
-  { key: 'employment_supports',         label: 'Employment Supports',            category: 'Supports' },
-  { key: 'one_on_one_counselling',      label: 'One on One Career Counselling',  category: 'Supports' },
-  { key: 'job_applications',            label: 'Job Applications',               category: 'Job Search' },
-  { key: 'networking',                  label: 'Networking',                     category: 'Job Search' },
-  { key: 'other',                       label: 'Other',                          category: 'Other' },
-];
+const ALL_ITEMS = ACTION_PLAN_ITEMS;
 
 const DEA_ACTIVITY_TYPES = [
   'Job Search Workshop',

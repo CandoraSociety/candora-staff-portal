@@ -505,6 +505,21 @@
     "sdp_notes": {
       "type": "string"
     },
+    "suggested_plan_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Action plan item keys the service navigator suggested to the career counsellor during the assessment"
+    },
+    "suggested_plan_other": {
+      "type": "string",
+      "description": "Free-text 'Other' action plan activity suggested by the service navigator"
+    },
+    "suggested_plan_notes": {
+      "type": "string",
+      "description": "Service navigator's notes explaining the suggested action plan items"
+    },
     "internal_referrals": {
       "type": "array",
       "items": {

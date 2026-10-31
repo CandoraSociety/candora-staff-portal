@@ -15,6 +15,7 @@ import ProgramStatusPanel from './ProgramStatusPanel';
 import EDAStep from './EDAStep';
 import InternalPlacementStep from './InternalPlacementStep';
 import BarriersTab from './BarriersTab';
+import SuggestedPlanItemsCard from '@/components/pathways/SuggestedPlanItemsCard';
 
 const FOLLOWUP_STEP = { key: 'followup_90day', label: '90-Day Follow-Up', short: '90-Day Follow-Up', icon: CalendarCheck };
 const BARRIERS_STEP = { key: 'barriers', label: 'Barriers', short: 'Barriers', icon: Shield };
@@ -441,6 +442,7 @@ export default function ProgramFlowWizard({ client, onSave, onComplete, onClient
       <div className="flex-1 min-w-0">
         {!activeStep ? (
           <div data-tour="pw-flow-create-plan" className="text-center py-16">
+            <SuggestedPlanItemsCard client={client} />
             <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
             <p className="text-sm text-slate-500 mb-4">No action plan has been created yet.</p>
             <Button data-tour="pw-flow-create-plan-button" onClick={() => setActiveStep('employment_action_plan')}>
