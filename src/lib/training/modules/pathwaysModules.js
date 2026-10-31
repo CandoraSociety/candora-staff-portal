@@ -41,6 +41,12 @@ export const PATHWAYS_EXTRA_MODULES = [
         path: "/pathways/assessment/demo-pw-intake-jamie"
       },
       {
+        title: "Suggested action plan items for the counsellor",
+        body: "The last thing on the assessment page before the determination is a set of action plan items you can suggest to whoever ends up counselling this client. Tick the ones you think the plan should carry — workshops, counselling, job search activities, or Other with your own wording — and write the notes that explain why. The counsellor sees your ticks and notes on the client's file at the moment they sit down to build the action plan, and chooses from there; the plan itself is still theirs to write. This is the fast way to pass on what you learned in the BIT without a conversation, and it costs nothing if you leave it blank.",
+        target: { selector: '[data-tour="pw-assess-suggestions"]' },
+        path: "/pathways/assessment/demo-pw-intake-jamie"
+      },
+      {
         title: "Does this client need a Service Navigator?",
         body: "One question closes the assessment: does this client need their barriers addressed by a Service Navigator? Yes means the barriers are heavy enough that barrier removal becomes its own stream of work, and a Service Navigator is picked right here — the client then appears on that navigator's dashboard alongside the career counsellor's list. No means the career counsellor carries the barriers as part of the plan. Service Navigation is tracked for WD clients only, so a DEA file cannot be assigned one.",
         target: { selector: '[data-tour="pw-era-sn-question"]' },
@@ -81,6 +87,14 @@ export const PATHWAYS_EXTRA_MODULES = [
         title: "Mark the ERA complete and answer the navigator question",
         body: "Tick ERA Completed in Compass, then answer the Service Navigator question and complete the assessment.",
         hint: "Tick the checkbox, choose Yes or No on the barrier-removal question (pick a Service Navigator if you chose Yes), then press Complete Assessment.",
+        path: "/pathways/intake",
+        verify: { kind: "self" }
+      },
+      {
+        id: "pw-assess-suggestions",
+        title: "Suggest action plan items for the counsellor",
+        body: "Tick two or three suggested action plan items, add a note and save the suggestions.",
+        hint: "In the Suggested Action Plan Items block, tick items such as Job Search Workshop and Job Applications, write a short note, then press Save Suggestions.",
         path: "/pathways/intake",
         verify: { kind: "self" }
       }

@@ -87,6 +87,7 @@ const SECTION_STARTS = {
     "Verify the client information first": "Opening and verifying the file",
     "The Barrier Identification Tool — the BIT": "The BIT and the ERA",
     "The ERA — completed in Compass": "The BIT and the ERA",
+    "Suggested action plan items for the counsellor": "Suggestions for the counsellor",
     "Does this client need a Service Navigator?": "Service Navigator & completion",
     "Complete the assessment": "Service Navigator & completion",
     "Back on the Intake page — awaiting assignment": "Service Navigator & completion",

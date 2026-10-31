@@ -58,6 +58,7 @@ export const PATHWAYS_ASSESSMENT_CUES = {
   'Verify the client information first': { cues: [cue(0, 'pw-assess-overview'), cue('Matching the client against the central client database', 'pw-assess-overview')] },
   'The Barrier Identification Tool — the BIT': { cues: [cue(0, 'pw-assess-bit'), cue('the action steps that address them', 'pw-assess-bit')] },
   'The ERA — completed in Compass': { cues: [cue(0, 'pw-era-card'), cue('tick ERA Completed in Compass', 'pw-era-card'), cue('upload the completed ERA form', 'pw-era-card')] },
+  'Suggested action plan items for the counsellor': { cues: [cue(0, 'pw-assess-suggestions')] },
   'Does this client need a Service Navigator?': { cues: [cue(0, 'pw-era-sn-question')] },
   'Complete the assessment': { cues: [cue(0, 'pw-assess-complete')] },
   'Back on the Intake page — awaiting assignment': { cues: [cue(0, 'pw-intake-determination')] },

@@ -343,10 +343,12 @@ export default function PathwaysAssessment() {
             </div>
 
             {/* Suggested action plan items for the career counsellor */}
-            <SuggestedPlanItemsEditor
-              client={client}
-              onSaved={updates => setClient(prev => ({ ...prev, ...updates }))}
-            />
+            <div data-tour="pw-assess-suggestions">
+              <SuggestedPlanItemsEditor
+                client={client}
+                onSaved={updates => setClient(prev => ({ ...prev, ...updates }))}
+              />
+            </div>
 
             {/* Barrier Removal Determination */}
             <div data-tour="pw-era-sn-question" className="border-t border-slate-200 pt-4 space-y-3">
