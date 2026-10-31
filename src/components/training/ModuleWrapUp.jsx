@@ -43,7 +43,7 @@ export default function ModuleWrapUp({ module, progress, updateProgress, onFinis
         </p>
       </div>
 
-      {stage === 'recap' && <ModuleRecapVideo recap={recap} moduleKey={module.key} />}
+      {stage === 'recap' && <ModuleRecapVideo key={module.key} recap={recap} moduleKey={module.key} />}
 
       {stage === 'quiz' && <ModuleQuiz quiz={quiz} onComplete={finishQuiz} />}
 
