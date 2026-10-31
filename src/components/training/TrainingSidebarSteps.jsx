@@ -1,6 +1,9 @@
+import { Film } from "lucide-react";
 import { getTrainingStepSections } from "@/lib/training/trainingNavigation";
+import { getModuleRecap } from "@/lib/training/moduleRecaps";
 
 export default function TrainingSidebarSteps({ module, isActive, activeStepIndex, onJump }) {
+  const hasRecap = !!getModuleRecap(module.key);
   return (
     <div className="space-y-3 border-l border-sidebar-border pl-2">
       {getTrainingStepSections(module).map(section => (
@@ -22,6 +25,17 @@ export default function TrainingSidebarSteps({ module, isActive, activeStepIndex
           })}
         </section>
       ))}
+      {/* The wrap-up is the module's own last part, not a separate activity */}
+      {hasRecap && (
+        <button
+          onClick={() => onJump(module, module.steps.length)}
+          title="Open the module's recap and quiz"
+          className="flex w-full items-start gap-1.5 rounded-md px-1.5 py-1 text-left text-sidebar-primary hover:bg-sidebar-accent"
+        >
+          <Film className="mt-px h-3 w-3 shrink-0" />
+          <span className="text-[10px] font-semibold leading-snug">What we've learned</span>
+        </button>
+      )}
     </div>
   );
 }

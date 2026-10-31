@@ -15,13 +15,18 @@ import { applyJourneyDemoState } from "@/lib/testMode/sandbox";
 import TourVideo from "@/components/training/TourVideo";
 import DemoClientScene from "@/components/training/DemoClientScene";
 import PortalIntroExplainer from "@/components/training/PortalIntroExplainer";
+import ModuleWrapUp from "@/components/training/ModuleWrapUp";
+import { getModuleRecap } from "@/lib/training/moduleRecaps";
 
 
-export default function SpotlightTour({ open, module, progress, updateProgress, onClose, onFinish, facilitator, onStepChange }) {
+export default function SpotlightTour({ open, module, progress, updateProgress, onClose, withWrapUp, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
   const [index, setIndex] = useState(0);
+  // The module's closing "what we've learned" section runs inside this window
+  // as its last part, not as a separate window opened from another control.
+  const [wrappingUp, setWrappingUp] = useState(false);
   const [presentation, setPresentation] = useState(false);
   const audioRef = useRef(null);
   const drag = useTrainingWindowDrag(open, module?.key);
@@ -45,7 +50,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const isIntro = !!step?.introExplainer;
   // Demo-client scene slides play like a short video; like the intro, they get
   // the whole screen for the card so the scene and its text never scroll.
-  const isFullCard = isIntro || !!step?.demoClient;
+  const isFullCard = isIntro || !!step?.demoClient || wrappingUp;
+  const recap = withWrapUp ? getModuleRecap(module?.key) : null;
   const slideKey = `${module?.key}:${index}`;
   const cursor = useSimulatedCursor({ enabled: open && onRoute && !isFullCard, step, slideKey, moduleKey: module?.key, audioRef });
   const { reading, toggleRead } = useTourNarration({ enabled: open && onRoute && !isIntro && (isFullCard || cursor.ready), src: stepAudioUrl, slideKey, audioRef });
@@ -59,12 +65,17 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const stepKey = `candora-tour-step${facilitator ? "-f" : ""}-${module?.key}`;
   const presentationKey = facilitator ? "candora-tour-presentation-f" : "candora-tour-presentation";
 
+  // Opening a tour or switching modules starts back at the slides, never
+  // mid-wrap-up (a sidebar jump to the recap re-opens it right after).
+  useEffect(() => { setWrappingUp(false); }, [open, module?.key]);
+
   // Sidebar navigation — jump straight to a chosen step of this module's tour
   useEffect(() => {
     if (!jumpRequest || jumpRequest.moduleKey !== module?.key) return;
     const total = module.steps?.length || 1;
     const i = Math.max(0, Math.min(total - 1, jumpRequest.stepIndex));
     setIndex(i);
+    setWrappingUp(!!recap && jumpRequest.stepIndex >= total);
     try { sessionStorage.setItem(stepKey, String(i)); } catch { /* ignore */ }
   }, [jumpRequest?.token]);
 
@@ -139,17 +150,20 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
       const i = index + 1;
       saveStep(i);
       setIndex(i);
+    } else if (recap) {
+      // The last slide hands straight into the module's own wrap-up section.
+      try { sessionStorage.removeItem(stepKey); } catch { /* ignore */ }
+      await updateProgress({ tour_done: true, tour_step_index: 0 });
+      setWrappingUp(true);
     } else {
       try { sessionStorage.removeItem(stepKey); } catch { /* ignore */ }
       await updateProgress({ tour_done: true, tour_step_index: 0 });
-      // A guided tour ends on the module's "what we've learned" recap and quiz;
-      // sessions without a wrap-up (facilitated runs) keep the old behaviour.
-      if (onFinish) onFinish();
-      else onClose(true);
+      onClose(true);
     }
   };
 
   const back = () => {
+    if (wrappingUp) { setWrappingUp(false); return; }
     const i = Math.max(0, index - 1);
     saveStep(i);
     setIndex(i);
@@ -204,11 +218,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                 {module.shortTitle || module.title}
               </span>
               <span className={`font-semibold ${presentation ? "text-base" : "text-xs"}`} style={{ color: "hsl(45, 60%, 80%)" }}>
-                Step {index + 1} of {steps.length}
+                {wrappingUp ? "What we've learned" : `Step ${index + 1} of ${steps.length}`}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              {stepAudioUrl && (
+              {stepAudioUrl && !wrappingUp && (
                 <button
                   onClick={toggleRead}
                   className="p-1.5 rounded-lg hover:opacity-70 flex items-center gap-1"
@@ -240,6 +254,16 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
           </div>
 
           <div className={`flex-1 min-h-0 overflow-y-auto ${presentation ? "p-6" : "p-4"}`}>
+            {wrappingUp ? (
+              <ModuleWrapUp
+                module={module}
+                progress={progress}
+                updateProgress={updateProgress}
+                onFinish={() => onClose(true)}
+                onBack={() => setWrappingUp(false)}
+              />
+            ) : (
+            <>
             {!step.introExplainer && (
               <h3 className={`font-bold mb-2 ${presentation ? "text-2xl" : "text-base"}`} style={{ color: "hsl(45, 92%, 65%)" }}>
                 {step.title}
@@ -256,8 +280,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                 The highlighted area is live — click it to try it yourself, then come back and press Next.
               </p>
             )}
+            </>
+            )}
           </div>
 
+          {!wrappingUp && (
           <div className="flex shrink-0 items-center justify-between px-4 py-3" style={{ borderTop: "1px solid hsl(230, 50%, 22%)" }}>
             <button
               onClick={back}
@@ -277,9 +304,10 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors hover:opacity-80"
               style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}
             >
-              {index === steps.length - 1 ? (onFinish ? "What we've learned" : "Start practice") : "Next"} <ArrowRight className="w-3.5 h-3.5" />
+              {index === steps.length - 1 ? (recap ? "What we've learned" : "Start practice") : "Next"} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>,

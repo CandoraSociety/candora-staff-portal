@@ -77,9 +77,18 @@ export const RECAP_SECTIONS = {
 };
 
 // Sections for a module, falling back to one group holding every takeaway.
+// Any takeaway not named by a section is folded into the last one, so the
+// recap never silently drops a point.
 export const getRecapSections = (moduleKey, recap) => {
   const takeaways = recap?.takeaways || [];
   const sections = RECAP_SECTIONS[moduleKey];
-  if (sections?.length) return sections;
-  return takeaways.length ? [{ label: 'Key points', tone: 'gold', points: takeaways.map((_, index) => index) }] : [];
+  if (!sections?.length) {
+    return takeaways.length ? [{ label: 'Key points', tone: 'gold', points: takeaways.map((_, index) => index) }] : [];
+  }
+  const used = new Set(sections.flatMap(section => section.points));
+  const missing = takeaways.map((_, index) => index).filter(index => !used.has(index));
+  if (!missing.length) return sections;
+  return sections.map((section, index) => index === sections.length - 1
+    ? { ...section, points: [...section.points, ...missing] }
+    : section);
 };

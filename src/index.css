@@ -375,6 +375,10 @@ body.has-ms-ribbon {
   body.has-training-sidebar {
     padding-right: 266px;
   }
+  /* Training windows that dock bottom-right sit beside the sidebar, never under it */
+  body.has-training-sidebar .training-float-right {
+    right: 272px;
+  }
 }
 
 /* ===== Global Tab Bar ===== */

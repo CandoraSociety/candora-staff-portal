@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw, Video } from "lucide-react";
+import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
 import { getModuleRecap } from "@/lib/training/moduleRecaps";
-import ModuleWrapUp from "@/components/training/ModuleWrapUp";
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
@@ -28,7 +27,6 @@ export default function TrainingPill() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [tourStep, setTourStep] = useState(null);
-  const [wrapUp, setWrapUp] = useState({ open: false, stage: "recap" });
 
   const session = readSession();
   const fSession = readFacilitatorSession();
@@ -144,9 +142,6 @@ export default function TrainingPill() {
   const totalTasks = module?.tasks?.length || 0;
   const doneTasks = rec?.tasks_done?.length || 0;
   const isAdmin = user?.role === "admin";
-  const recap = getModuleRecap(module.key);
-  const wrapUpDone = !!rec?.recap_done && (!recap?.quiz?.length || !!rec.quiz_passed);
-  const openWrapUp = (stage = "recap") => setWrapUp({ open: true, stage });
 
   // No module here — only show a "return to training" pill if a session is
   // active on another portal.
@@ -195,19 +190,6 @@ export default function TrainingPill() {
                 style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
               >
                 <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
-              </button>
-            )}
-            {!!recap && (
-              <button
-                onClick={() => openWrapUp("recap")}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-                style={wrapUpDone
-                  ? { background: "hsl(152, 45%, 28%)", color: "hsl(152, 60%, 80%)" }
-                  : { background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
-                title="Watch the recap and take the quiz"
-              >
-                {wrapUpDone ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
-                {wrapUpDone ? `Recap done${rec?.quiz_score != null ? ` · ${rec.quiz_score}%` : ""}` : "What we've learned"}
               </button>
             )}
             <button
@@ -260,21 +242,8 @@ export default function TrainingPill() {
         progress={rec || null}
         updateProgress={updateProgress}
         onStepChange={setTourStep}
-        onFinish={() => {
-          setTourOpen(false);
-          if (recap) openWrapUp("recap");
-          else if (module.tasks?.length) setChecklistOpen(true);
-        }}
+        withWrapUp
         onClose={(finished) => { setTourOpen(false); if (finished && module.tasks?.length) setChecklistOpen(true); }}
-      />
-      <ModuleWrapUp
-        open={wrapUp.open}
-        module={module}
-        progress={rec || null}
-        updateProgress={updateProgress}
-        startStage={wrapUp.stage}
-        onClose={() => setWrapUp({ open: false, stage: "recap" })}
-        onStartPractice={() => { setWrapUp({ open: false, stage: "recap" }); if (module.tasks?.length) setChecklistOpen(true); }}
       />
       <PracticeChecklist
         open={checklistOpen}
