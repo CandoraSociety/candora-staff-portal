@@ -12,6 +12,7 @@ import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientEmployment from '@/components/client/ClientEmployment';
 import ClientAssessments from '@/components/client/ClientAssessments';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
+import CentralDatabasePreviewTab from '@/components/client/CentralDatabasePreviewTab';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
 import { logStatusChange } from '@/lib/logStatusChange';
 import ProgramFlowWizard from '@/components/wizard/ProgramFlowWizard';
@@ -244,6 +245,7 @@ export default function PathwaysClientProfile() {
           <TabsList data-tour="pw-profile-tabs" className="mb-6 flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="program_flow" data-tour="pw-tab-flow">Program Flow</TabsTrigger>
             <TabsTrigger value="overview" data-tour="pw-tab-overview">Client Overview</TabsTrigger>
+            <TabsTrigger value="central_db">Central Database</TabsTrigger>
             <TabsTrigger value="employment" data-tour="pw-tab-employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals" data-tour="pw-tab-referrals">Referrals</TabsTrigger>
             <TabsTrigger value="assessments" data-tour="pw-tab-bit">BIT / ERA</TabsTrigger>
@@ -270,6 +272,10 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="overview">
             <ClientProfileOverview client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="central_db">
+            <CentralDatabasePreviewTab client={client} />
           </TabsContent>
 
           <TabsContent value="referrals" data-tour="pw-referrals-content">
