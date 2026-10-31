@@ -35,6 +35,25 @@
         "type": "string"
       }
     },
+    "recap_done": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the learner has finished the module's 'What we've learned' recap video"
+    },
+    "quiz_score": {
+      "type": "number",
+      "description": "Best score of the module's end-of-training quiz, as a percentage"
+    },
+    "quiz_passed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the learner reached the quiz pass mark for this module"
+    },
+    "quiz_done_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the learner last completed the module quiz"
+    },
     "started_date": {
       "type": "string",
       "format": "date-time",
@@ -43,12 +62,12 @@
     "completed_date": {
       "type": "string",
       "format": "date-time",
-      "description": "When both the tour and all practice tasks were completed"
+      "description": "When the tour, practice tasks, recap and quiz were all completed"
     },
     "is_completed": {
       "type": "boolean",
       "default": false,
-      "description": "Whether the whole module (tour + practice) is complete"
+      "description": "Whether the whole module (tour + practice + recap + quiz) is complete"
     }
   },
   "required": [

@@ -17,7 +17,7 @@ import DemoClientScene from "@/components/training/DemoClientScene";
 import PortalIntroExplainer from "@/components/training/PortalIntroExplainer";
 
 
-export default function SpotlightTour({ open, module, progress, updateProgress, onClose, facilitator, onStepChange }) {
+export default function SpotlightTour({ open, module, progress, updateProgress, onClose, onFinish, facilitator, onStepChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
@@ -142,7 +142,10 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     } else {
       try { sessionStorage.removeItem(stepKey); } catch { /* ignore */ }
       await updateProgress({ tour_done: true, tour_step_index: 0 });
-      onClose(true);
+      // A guided tour ends on the module's "what we've learned" recap and quiz;
+      // sessions without a wrap-up (facilitated runs) keep the old behaviour.
+      if (onFinish) onFinish();
+      else onClose(true);
     }
   };
 
@@ -270,7 +273,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg font-semibold text-xs transition-colors hover:opacity-80"
               style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}
             >
-              {index === steps.length - 1 ? "Start practice" : "Next"} <ArrowRight className="w-3.5 h-3.5" />
+              {index === steps.length - 1 ? (onFinish ? "What we've learned" : "Start practice") : "Next"} <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

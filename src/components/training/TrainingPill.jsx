@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw } from "lucide-react";
+import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw, Video } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
+import { getModuleRecap } from "@/lib/training/moduleRecaps";
+import ModuleWrapUp from "@/components/training/ModuleWrapUp";
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
@@ -26,6 +28,7 @@ export default function TrainingPill() {
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const [tourStep, setTourStep] = useState(null);
+  const [wrapUp, setWrapUp] = useState({ open: false, stage: "recap" });
 
   const session = readSession();
   const fSession = readFacilitatorSession();
@@ -101,7 +104,11 @@ export default function TrainingPill() {
     }
     const tasksDone = next.tasks_done || [];
     const allTasks = !module.tasks?.length || tasksDone.length >= module.tasks.length;
-    if (next.tour_done && allTasks && !next.is_completed) {
+    // The module also ends with its "what we've learned" recap and quiz
+    const recap = getModuleRecap(module.key);
+    const recapDone = !recap || !!next.recap_done;
+    const quizPassed = !recap?.quiz?.length || !!next.quiz_passed;
+    if (next.tour_done && allTasks && recapDone && quizPassed && !next.is_completed) {
       next = await base44.entities.TrainingProgress.update(next.id, { is_completed: true, completed_date: new Date().toISOString() });
     }
     setRec(next);
@@ -137,6 +144,9 @@ export default function TrainingPill() {
   const totalTasks = module?.tasks?.length || 0;
   const doneTasks = rec?.tasks_done?.length || 0;
   const isAdmin = user?.role === "admin";
+  const recap = getModuleRecap(module.key);
+  const wrapUpDone = !!rec?.recap_done && (!recap?.quiz?.length || !!rec.quiz_passed);
+  const openWrapUp = (stage = "recap") => setWrapUp({ open: true, stage });
 
   // No module here — only show a "return to training" pill if a session is
   // active on another portal.
