@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useOutletContext } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { GraduationCap, CheckCircle2, PlayCircle, RotateCcw } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { TRAINING_MODULES, TRAINING_MODULE_ACCESS } from '@/lib/training/trainingModules';
+import { groupModulesBySection } from '@/lib/training/moduleSections';
 import { startTrainingSession } from '@/lib/training/trainingSession';
 import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import ConfirmDialog from '@/components/training/ConfirmDialog';
+import TrainingModuleCard from '@/components/training/TrainingModuleCard';
 
 // Sidebar tab listing every training module the signed-in staff member can
-// take — modules for portals they don't have access to are not shown.
+// take, grouped by the portal each one teaches — modules for portals they
+// don't have access to are not shown.
 export default function StaffPortalTraining() {
   const { user, access } = useOutletContext();
   const [retakeModule, setRetakeModule] = useState(null);
@@ -31,6 +34,7 @@ export default function StaffPortalTraining() {
     return true;
   });
 
+  const sections = groupModulesBySection(modules);
   const completedCount = modules.filter(m => progress.find(p => p.portal_key === m.key)?.is_completed).length;
 
   // Retaking a completed module clears its saved progress (record + tour step)
@@ -70,48 +74,29 @@ export default function StaffPortalTraining() {
         <span className="font-semibold">{completedCount} of {modules.length}</span> training modules completed
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        {modules.map(m => {
-          const rec = progress.find(p => p.portal_key === m.key);
-          const doneTasks = rec?.tasks_done?.length || 0;
-          const totalTasks = m.tasks?.length || 0;
-          const completed = !!rec?.is_completed;
-          return (
-            <div key={m.key} className="rounded-xl border bg-card p-4 flex flex-col gap-3">
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold">{m.title}</h3>
-                  {completed ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-success shrink-0">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-                    </span>
-                  ) : rec ? (
-                    <span className="text-xs font-semibold text-primary shrink-0">
-                      In progress{totalTasks > 0 ? ` · ${doneTasks}/${totalTasks} practice` : ''}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground shrink-0">Not started</span>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{m.blurb}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {m.steps?.length || 0} guided steps{totalTasks > 0 ? ` · ${totalTasks} practice tasks` : ''}
-                </p>
-              </div>
-              <button
-                onClick={() => handleStart(m, rec)}
-                className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors hover:opacity-90 bg-primary text-primary-foreground mt-auto"
-              >
-                {completed
-                  ? <><RotateCcw className="w-3.5 h-3.5" /> Retake training</>
-                  : rec
-                    ? <><PlayCircle className="w-3.5 h-3.5" /> Resume training</>
-                    : <><PlayCircle className="w-3.5 h-3.5" /> Start training</>}
-              </button>
+      {sections.map(section => {
+        const sectionDone = section.modules.filter(m => progress.find(p => p.portal_key === m.key)?.is_completed).length;
+        return (
+          <section key={section.key} className="space-y-3">
+            <div className="flex items-baseline justify-between gap-3 border-b pb-2">
+              <h2 className="font-display text-lg font-bold tracking-wide">{section.title}</h2>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {sectionDone}/{section.modules.length} completed
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {section.modules.map(m => (
+                <TrainingModuleCard
+                  key={m.key}
+                  module={m}
+                  record={progress.find(p => p.portal_key === m.key)}
+                  onStart={handleStart}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       <ConfirmDialog
         open={!!retakeModule}
