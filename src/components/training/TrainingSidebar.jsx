@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { GraduationCap, PanelRightClose, PanelRightOpen } from "lucide-react";
 import useTrainingModules from "@/lib/useTrainingModules";
 import { startTrainingSession } from "@/lib/training/trainingSession";
@@ -57,14 +58,17 @@ export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour
     }
   };
 
-  if (!open) return (
-    <button data-training-sidebar onClick={() => setOpen(true)} title="Show training sidebar" className="fixed right-0 top-1/2 z-[99] hidden -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-sidebar-primary/50 bg-sidebar px-1.5 py-3 text-sidebar-primary shadow-lg md:flex print:hidden">
+  // Rendered into <body> so no page wrapper's stacking context can push it
+  // behind a training window or under a spotlight dim.
+  if (!open) return createPortal(
+    <button data-training-sidebar onClick={() => setOpen(true)} title="Show training sidebar" className="fixed right-0 top-1/2 z-[10011] hidden -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-sidebar-primary/50 bg-sidebar px-1.5 py-3 text-sidebar-primary shadow-lg md:flex print:hidden">
       <PanelRightOpen className="h-4 w-4" /><span className="text-[10px] font-bold [writing-mode:vertical-rl]">Training</span>
-    </button>
+    </button>,
+    document.body
   );
 
-  return (
-    <aside data-training-sidebar aria-label="Training modules" className="fixed bottom-4 right-3 top-20 z-[99] hidden w-[250px] flex-col md:flex print:hidden">
+  return createPortal(
+    <aside data-training-sidebar aria-label="Training modules" className="fixed bottom-4 right-3 top-20 z-[10011] hidden w-[250px] flex-col md:flex print:hidden">
       <div className="training-window-glow flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-sidebar text-sidebar-foreground shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-sidebar-border px-3 py-2.5">
           <div className="flex items-center gap-1.5 text-xs font-bold"><GraduationCap className="h-4 w-4 text-sidebar-primary" />Training modules</div>
@@ -103,6 +107,7 @@ export default function TrainingSidebar({ activeKey, activeStepIndex, onOpenTour
           )}
         </div>
       </div>
-    </aside>
+    </aside>,
+    document.body
   );
 }

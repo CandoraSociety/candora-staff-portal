@@ -162,13 +162,17 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   };
 
   const cardW = isFullCard ? 760 : presentation ? 660 : 560;
+  // The docked training sidebar sits on top of every training window, so the
+  // slide keeps its working space to the left of it instead of sliding under it.
+  const sidebarDocked = window.innerWidth >= 768 && document.body.classList.contains("has-training-sidebar");
+  const workWidth = window.innerWidth - (sidebarDocked ? 266 : 0);
   const cardStyle = { position: "fixed", width: cardW, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", display: "flex", flexDirection: "column", overflowY: "hidden", zIndex: 100 };
   if (rect) {
     const below = window.innerHeight - rect.top - rect.height - 20;
     const above = rect.top - 20;
     const needed = presentation ? 400 : 300;
-    cardStyle.left = Math.min(Math.max(16, rect.left), Math.max(16, window.innerWidth - cardW - 16));
-    if (step.revealNav && window.innerWidth - rect.left - rect.width - 36 >= cardW) {
+    cardStyle.left = Math.min(Math.max(16, rect.left), Math.max(16, workWidth - cardW - 16));
+    if (step.revealNav && workWidth - rect.left - rect.width - 36 >= cardW) {
       cardStyle.left = rect.left + rect.width + 20;
       cardStyle.top = Math.max(16, Math.min(rect.top, window.innerHeight - needed - 16));
       cardStyle.maxHeight = window.innerHeight - cardStyle.top - 16;
@@ -183,7 +187,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
       cardStyle.bottom = 16;
     }
   } else {
-    cardStyle.left = "50%";
+    cardStyle.left = workWidth / 2;
     cardStyle.top = "50%";
     cardStyle.transform = "translate(-50%, -50%)";
   }
