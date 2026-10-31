@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useTransform } from 'framer-motion';
 import { RotateCcw } from 'lucide-react';
 import PortalIntroLogo from '@/components/training/PortalIntroLogo';
@@ -19,6 +19,9 @@ export default function ModuleRecapVideo({ recap, moduleKey }) {
   const time = useIntroPlaybackClock(audioRef, playbackKey);
   const delay = useTransform(time, value => `${-value}s`);
   const textStart = 4.7;
+
+  // Leaving the recap (or the module) stops its narration too.
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
 
   return (
     <div className="space-y-3">

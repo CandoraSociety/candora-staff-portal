@@ -54,7 +54,9 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   const recap = withWrapUp ? getModuleRecap(module?.key) : null;
   const slideKey = `${module?.key}:${index}`;
   const cursor = useSimulatedCursor({ enabled: open && onRoute && !isFullCard, step, slideKey, moduleKey: module?.key, audioRef });
-  const { reading, toggleRead } = useTourNarration({ enabled: open && onRoute && !isIntro && (isFullCard || cursor.ready), src: stepAudioUrl, slideKey, audioRef });
+  // The wrap-up brings its own narration, so the slide's reading stops the
+  // moment it opens instead of talking over the recap.
+  const { reading, toggleRead } = useTourNarration({ enabled: open && onRoute && !isIntro && !wrappingUp && (isFullCard || cursor.ready), src: stepAudioUrl, slideKey, audioRef });
   // Highlight only the current authored cue. Never add the page's navigation
   // header, previous slide's target, or the union of all future cue regions.
   const target = cursor.activeTarget;
@@ -152,6 +154,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
       setIndex(i);
     } else if (recap) {
       // The last slide hands straight into the module's own wrap-up section.
+      // Silence its narration first so it never overlaps the recap audio.
+      audioRef.current?.pause();
       try { sessionStorage.removeItem(stepKey); } catch { /* ignore */ }
       await updateProgress({ tour_done: true, tour_step_index: 0 });
       setWrappingUp(true);
