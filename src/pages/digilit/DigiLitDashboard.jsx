@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { PARTICIPANT_STATUS_OPTIONS, SESSION_STATUS_OPTIONS, TOPIC_AREA_LABELS, SKILL_LEVEL_LABELS, SKILL_LEVEL_OPTIONS } from '@/lib/digilitConstants';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function DigiLitDashboard() {
   const { data: participants = [] } = useQuery({ queryKey: ['digilit-participants'], queryFn: () => base44.entities.DigiLitParticipant.list('-registration_date', 500) });
@@ -70,6 +71,8 @@ export default function DigiLitDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="digital_literacy" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Link to="/digilit/participants"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"><Users className="h-5 w-5 text-blue-600" /></div><div><p className="text-sm font-medium text-foreground">Participants</p><p className="text-xs text-muted-foreground">{participants.length} registered</p></div></CardContent></Card></Link>

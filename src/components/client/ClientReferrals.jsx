@@ -47,20 +47,16 @@ export default function ClientReferrals({ client, onSave }) {
       await onSave(form);
 
       if (newInternal.length > 0) {
-        await base44.functions.invoke('sendAlertEmail', {
-          alert_type: 'internal_referrals',
-          client_name: `${client.first_name} ${client.last_name}`,
+        const me = await base44.auth.me();
+        await base44.entities.ProgramReferral.bulkCreate(newInternal.map(program => ({
           client_id: client.id,
-          referrals: newInternal,
-        });
-      }
-      if (newExternal.length > 0) {
-        await base44.functions.invoke('sendAlertEmail', {
-          alert_type: 'external_referrals',
           client_name: `${client.first_name} ${client.last_name}`,
-          client_id: client.id,
-          referrals: newExternal,
-        });
+          program,
+          referred_by_name: me?.full_name || '',
+          referred_by_email: me?.email || '',
+          referral_date: new Date().toISOString().split('T')[0],
+          status: 'new',
+        })));
       }
 
       toast.success('Referrals saved');
@@ -78,7 +74,7 @@ export default function ClientReferrals({ client, onSave }) {
         <CardHeader>
           <CardTitle>Internal Referrals</CardTitle>
           <p className="text-sm text-slate-500 mt-1">
-            Select all internal referrals made. Staff responsible for each program will be notified automatically.
+            Select all internal referrals made. Each new referral appears on the receiving program's dashboard.
           </p>
         </CardHeader>
         <CardContent>
@@ -104,7 +100,7 @@ export default function ClientReferrals({ client, onSave }) {
         <CardHeader>
           <CardTitle>External Referrals</CardTitle>
           <p className="text-sm text-slate-500 mt-1">
-            Select all external referrals made. Where available, the external partner will be notified automatically.
+            Select all external referrals made. These are recorded on the client's file only — tell the outside partner directly.
           </p>
         </CardHeader>
         <CardContent>

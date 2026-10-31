@@ -1,0 +1,114 @@
+{
+  "name": "ProgramReferral",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "Pathways client file this referral came from"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Client's full name (denormalized for the receiving program's dashboard)"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "ell",
+        "empoweru",
+        "digital_literacy",
+        "family_programs",
+        "childcare_program",
+        "settlement_services",
+        "other_internal"
+      ],
+      "description": "Receiving Candora program \u2014 decides which portal dashboard shows this referral"
+    },
+    "referred_by_name": {
+      "type": "string",
+      "description": "Staff member who made the referral"
+    },
+    "referred_by_email": {
+      "type": "string"
+    },
+    "referral_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "completed",
+        "declined"
+      ],
+      "default": "new",
+      "description": "Progress on the receiving program's side"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Receiving program's notes on the referral"
+    },
+    "handled_by_name": {
+      "type": "string"
+    },
+    "handled_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "client_name",
+    "program",
+    "referral_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

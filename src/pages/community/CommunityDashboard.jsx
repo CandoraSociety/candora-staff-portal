@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { PROGRAM_CATEGORY_OPTIONS, PROGRAM_STATUS_OPTIONS } from '@/lib/communityConstants';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function CommunityDashboard() {
   const { data: programs = [] } = useQuery({ queryKey: ['community-programs'], queryFn: () => base44.entities.CommunityProgram.list('name', 200) });
@@ -72,6 +73,8 @@ export default function CommunityDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="family_programs" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Link to="/community/programs"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"><FolderTree className="h-5 w-5 text-blue-600" /></div><div><p className="text-sm font-medium text-foreground">Programs</p><p className="text-xs text-muted-foreground">{programs.length} total</p></div></CardContent></Card></Link>

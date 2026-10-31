@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Users, BookOpen, UserCog, ClipboardCheck, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import ProgramReferralsPanel from "@/components/referrals/ProgramReferralsPanel";
 
 export default function ELLDashboard() {
   const { data: learners } = useQuery({
@@ -160,6 +161,8 @@ export default function ELLDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="ell" />
 
       <Card>
         <CardHeader>

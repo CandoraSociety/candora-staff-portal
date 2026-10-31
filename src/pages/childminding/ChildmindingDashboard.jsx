@@ -6,6 +6,7 @@ import { ClipboardList, CalendarDays, DollarSign, Baby, ArrowRight, CalendarPlus
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PROGRAM_OPTIONS, PROGRAM_LABELS, PROGRAM_COLORS, calculateBilling, getProgramLabel, MONTH_NAMES } from '@/lib/childmindingConstants';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 import ChildmindingSessionDialog from '@/components/childminding/ChildmindingSessionDialog';
 import ChildmindingSessionDetail from '@/components/childminding/ChildmindingSessionDetail';
 
@@ -126,6 +127,8 @@ export default function ChildmindingDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="childcare_program" />
 
       <ChildmindingSessionDialog open={createSessionOpen} onOpenChange={setCreateSessionOpen} />
       <ChildmindingSessionDetail session={openSession} open={!!openSession} onOpenChange={(o) => { if (!o) setOpenSession(null); }} />

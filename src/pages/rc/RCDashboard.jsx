@@ -6,6 +6,7 @@ import { Users, ArrowLeftRight, Baby, ArrowRight, UserPlus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { REFERRAL_STATUS_OPTIONS, IS_PHAC } from '@/lib/rcConstants';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function RCDashboard() {
   const { data: clients = [] } = useQuery({ queryKey: ['rc-clients'], queryFn: () => base44.entities.RCClient.list() });
@@ -60,6 +61,8 @@ export default function RCDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="settlement_services" />
     </div>
   );
 }

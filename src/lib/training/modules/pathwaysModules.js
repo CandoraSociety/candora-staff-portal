@@ -161,7 +161,7 @@ export const PATHWAYS_EXTRA_MODULES = [
       },
       {
         title: "Handing barriers off — referrals",
-        body: "The Referrals tab is how a barrier leaves your desk. Internal referrals point at Candora's own programs — ELL, EmpowerU, Digital Literacy, Family Programs, Childcare, Settlement Services — and external ones at outside agencies. Saving a referral records it on the client's file, and for now that is all it does: nothing is emailed and the referral does not yet appear on the receiving program's dashboard, so tell them directly. Set the barrier's Internal/External setting to match where the referral actually went.",
+        body: "The Referrals tab is how a barrier leaves your desk. Internal referrals point at Candora's own programs — ELL, EmpowerU, Digital Literacy, Family Programs, Childcare, Settlement Services — and external ones at outside agencies. Saving a new internal referral also raises it on that program's dashboard as an open referral, showing the client's name and who sent it, so you don't have to chase it yourself. External referrals stay on the client's file only, so tell the outside partner directly. Set the barrier's Internal/External setting to match where the referral actually went.",
         target: { selector: '[data-tour="pw-tab-referrals"]' },
         path: "/pathways/client/demo-pw-priya"
       },

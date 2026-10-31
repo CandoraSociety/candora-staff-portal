@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { COHORT_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
 import { formatDate, parseDateSmart } from '@/lib/dateUtils';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function EmpowerUDashboard() {
   const { data: cohorts = [] } = useQuery({ queryKey: ['empoweru-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
@@ -90,6 +91,8 @@ export default function EmpowerUDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <ProgramReferralsPanel program="empoweru" />
     </div>
   );
 }
