@@ -21,6 +21,7 @@ export default function PortalCardItem({ card }) {
       target={card.is_external ? '_blank' : '_self'}
       rel={card.is_external ? 'noopener noreferrer' : undefined}
       onClick={handleClick}
+      data-tour={`portal-card-${(card.url || '').replace(/^\//, '').split('/')[0]}`}
       className="block group"
     >
       <Card className="h-full shadow-sm border-border/50 hover:shadow-md hover:border-primary/20 transition-all duration-300 overflow-hidden">

@@ -25,7 +25,7 @@ export function cueProgress(body, phrase) {
 
 export function getCursorScript(moduleKey, step) {
   const authored = (MODULE_CUE_MAPS[moduleKey] || COMMON_CURSOR_CUES[moduleKey] || {})[step?.title];
-  const primary = step?.target ? { selector: step.target.selector, text: step.target.text } : null;
+  const primary = step?.target ? { selector: step.target.selector, selectors: step.target.selectors, text: step.target.text } : null;
   const fallback = step?.clickTarget
     ? [{ at: 0, target: { selector: step.clickTarget }, click: true, after: primary }]
     : primary ? [{ at: 0, target: primary }] : [];

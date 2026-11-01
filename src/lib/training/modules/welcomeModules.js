@@ -1,7 +1,8 @@
 // ── Welcome & app tour training module ─────────────────────────────────────
 // The first module everyone takes: a friendly orientation to the whole
-// Candora Staff Portal — the layout, the language and the few moves that
-// apply everywhere. It deliberately teaches no portal in depth and tells
+// Candora Staff Portal — the portals themselves, how they connect, the layout
+// and the few moves that apply everywhere. It explains each portal in a
+// sentence or two rather than teaching any one of them in depth, and tells
 // learners, repeatedly, that they are not expected to remember any of it.
 
 export const WELCOME_MODULES = [
@@ -32,31 +33,80 @@ export const WELCOME_MODULES = [
         title: "Every portal, in one list",
         body: "Portals is the full list of workspaces your access allows, and it's worth a look even now. You can search it, and the category tabs narrow it down. Because the list is built from your permissions, yours is shorter than a colleague's — that's by design, not a gap. Open any card and it becomes a tab, ready whenever you come back to it.",
         path: "/portal",
-        target: { selector: '[data-tour="portal-cards"]', additionalSelectors: ['[data-tour="portal-filters"]'] }
+        target: { selectors: ['[data-tour="portal-filters"]', '[data-tour="portal-cards"]'] }
       },
       {
-        title: "Portals that work with people",
-        body: "Most of Candora's programs live here in one form or another. Pathways carries employment case management. The Resource Centre is the central client database. English Language Learning runs classes, waitlists and assessments. EmpowerU runs financial empowerment cohorts, and Digital Literacy, Community Programs, the Family Resource Network and Childminding each have their own. Different work, the same app.",
-        path: "/rc",
-        target: { selector: '[data-tour="page-content"]' }
+        title: "Client work: the core programs",
+        body: "Five portals carry most of the client work. Pathways CM is employment case management: intake, assessments, barrier action plans, placements, 90-day follow-ups and billing. The Candora Central Database is the shared client record — intake, appointments with reminders, notes and referrals. ELL runs English language classes, learners, CLB assessments and waitlists. EmpowerU runs 10-week financial cohorts with waitlists and ATB savings account setup. Digital Literacy is the volunteer-led, PALS-partnered program whose progress syncs into Pathways.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-pathways"]',
+          '[data-tour="portal-card-rc"]',
+          '[data-tour="portal-card-ell"]',
+          '[data-tour="portal-card-empoweru"]',
+          '[data-tour="portal-card-digilit"]'
+        ] }
+      },
+      {
+        title: "Community, family and childminding",
+        body: "Four portals look after groups and families. Community Programs covers occasional volunteer-run groups such as Sewing Group, Seniors Circle and Music Mental Health — participants, sessions, attendance and facilitator evaluations. FRN Programs handles targeted family intake, referrals and assessments like Connect Parent and Nobody's Perfect. PHAC runs drop-in programs for children from birth to six, tracking sessions, attendance and registered families. Childminding registers children, tracks schedules and exports billing.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-community"]',
+          '[data-tour="portal-card-frn"]',
+          '[data-tour="portal-card-phac"]',
+          '[data-tour="portal-card-childminding"]'
+        ] }
       },
       {
         title: "The shared front door",
-        body: "Some portals exist to receive people rather than to serve them over months. Central Registration is the shared front door: programs, sessions, capacity, waitlists and self-registration requests for every area in one place. Reception records the visit when somebody walks in. Between them, no program has to invent its own intake.",
-        path: "/central-registration",
-        target: { selector: '[data-tour="page-content"]' }
+        body: "Two portals receive people. Central Registration is the shared front door for every program: sessions and capacity, registrations, waitlists, volunteer applications and the self-registration requests that come in by QR code. Reception is the front desk — appointments, drop-ins, the staff directory with click-to-call, program registration with approval, the resource finder and urgent alerts.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-central-registration"]',
+          '[data-tour="portal-card-reception"]'
+        ] }
       },
       {
-        title: "Money, people and paperwork",
-        body: "The same app also runs the organization itself. Finance holds payroll, reimbursements, MasterCard receipts, budgets and Pathways billing. NexusHR looks after employee records, reviews, incidents and training. The Volunteer Manager, the Events Manager, Grants, Marketing and the Board each have a portal too. If a job exists at Candora, there is a place for it.",
-        path: "/finance",
-        target: { selector: '[data-tour="page-content"]' }
+        title: "People, staff and learning",
+        body: "Four portals look after the people side. HR Management holds employee records, performance reviews, incidents, corrective actions, contracts, legal cases, pay grids and training records. The Volunteer Manager runs volunteers end to end — positions, events, shifts, hours, training, recognition and approvals. The Learning Management System authors and delivers your own training modules and programs. Outlook brings mail and calendar into the app.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-nexushr"]',
+          '[data-tour="portal-card-volunteermgr"]',
+          '[data-tour="portal-card-lms"]',
+          '[data-tour="portal-card-outlook"]'
+        ] }
+      },
+      {
+        title: "Money, services and growth",
+        body: "Five portals run the business. Finance is payroll, Pathways payables and invoices, reimbursements, MasterCard receipts, budgets and cash flow. Food Services covers menus, orders, inventory, recipes, catering and customers. The Events, Projects and Programs Manager tracks events, programs, projects and contacts. Marketing & Fundraising handles campaigns, brand assets, email, social, SEO and requests. The Grant & Proposal Manager tracks funders, proposals and reporting deadlines.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-finance"]',
+          '[data-tour="portal-card-food"]',
+          '[data-tour="portal-card-eventsmgr"]',
+          '[data-tour="portal-card-marketing"]',
+          '[data-tour="portal-card-grants"]'
+        ] }
+      },
+      {
+        title: "Oversight, numbers and history",
+        body: "Five more for oversight. The Executive Director Portal holds strategy, KPIs, projects, budgets, the org chart and board reporting. The Candora Board portal runs meetings, agendas, minutes, motions, documents and member onboarding. The Reports Portal generates internal, funder and annual reports from data across the app. Candora Archives keeps the timeline, biographies, stories and historical documents. The Admin Console manages cards, widgets, users and access.",
+        path: "/portal",
+        target: { selectors: [
+          '[data-tour="portal-card-ed"]',
+          '[data-tour="portal-card-board"]',
+          '[data-tour="portal-card-reporting"]',
+          '[data-tour="portal-card-archives"]',
+          '[data-tour="portal-card-admin"]'
+        ] }
       },
       {
         title: "Every portal files into one vault",
         body: "One more worth seeing now. The File Manager is the document vault behind the whole app. A receipt attached in Purchases, a signed timesheet, a document uploaded from any portal's dashboard — they all land in the same place, sorted into folders by portal and protected by access levels. You may almost never open this portal and still use it every week.",
-        path: "/filemanager",
-        target: { selector: '[data-tour="page-content"]' }
+        path: "/portal",
+        target: { selectors: ['[data-tour="portal-card-filemanager"]'] }
       },
       {
         title: "One person, one record",
