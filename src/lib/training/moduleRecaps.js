@@ -719,6 +719,85 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  central_database_basics: {
+    kicker: "What we've learned",
+    title: "One file, read and written by every program.",
+    body: "Let's bring it together. The central database holds one file per person, and every Candora program works from it. You find someone in Database and narrow the list by program area, status, funder or demographics. Inside the file the header gives you the facts, the program strips tell you which portals are already involved, and the safety alerts are read before any conversation. Add Note and Client Visit are the two records you will write most, and both land on this one file. The habit that keeps all of it working is simple: look for the existing file before you create a new one.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/800ad4dbe_speech.mp3",
+    takeaways: [
+      "Every person has one file here, however many programs they walk through.",
+      "Database searches the name or email; program area, status, funder and demographics answer the real questions.",
+      "The header gives the facts, the program strips show which portals are involved, and safety alerts are read first.",
+      "Add Note and Client Visit both write to this one file, and every program reads it back.",
+      "Session registration in another portal adds a condensed profile and its program strip here automatically.",
+    ],
+    quiz: [
+      {
+        question: "Where does every client file in the central database live?",
+        options: ["Referrals", "Case Management", "Database", "The dashboard"],
+        answer: 2,
+        explain: "Database is the full list of client files; the other pages read from the records it holds.",
+      },
+      {
+        question: "What do the coloured strips on a client file show?",
+        options: ["Their payment history", "Which Candora programs the person is already part of", "Their attendance at workshops", "Their assigned worker's other clients"],
+        answer: 1,
+        explain: "Each program that knows the person writes its own strip, so you see every involvement at a glance.",
+      },
+      {
+        question: "Someone is registered in the ELL portal. What happens to their central file?",
+        options: ["A new central file is created every time", "A condensed profile and an ELL strip are added to the same file", "Nothing until staff copy it over by hand", "The file is locked until ELL closes it"],
+        answer: 1,
+        explain: "The program portal syncs a condensed profile and its participation strip into the central record.",
+      },
+      {
+        question: "What should you always do before creating a client record?",
+        options: ["Ask the client to fill the form twice", "Search for an existing file and link it", "Check the finance portal", "Create two so one can be deleted"],
+        answer: 1,
+        explain: "The intakes and this portal both look for an existing file first; linking keeps one complete history.",
+      },
+    ],
+  },
+
+  central_database_advanced: {
+    kicker: "What we've learned",
+    title: "Stewardship: links, logs and the truth of the file.",
+    body: "To recap the advanced side. The central record owns identity and case work, while each program portal owns its own program detail, and the sync only writes the participation strip. A confirmed link is what makes a program's next sync update this file instead of searching for a match, so a name variant or a missing email is exactly how duplicates appear. Referrals have to be moved on, service logs carry the funder category that reporting counts, and Case Management is where needs, priorities and the intensive workspace live. Every program that works with the person reads this file, so write what a colleague needs and nothing more.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/924180f6b_speech.mp3",
+    takeaways: [
+      "The central record owns identity and case work; program portals own their own program detail.",
+      "Program strips are written by the programs — a missing strip means that program has never recorded them.",
+      "A confirmed link makes future syncs update this record; without one, matching falls back to email then name and date of birth.",
+      "Referrals need their status moved on, and service logs with duration and funder category are what reporting counts.",
+      "Case Management holds needs, priorities and the intensive workspace; write only what a colleague needs.",
+    ],
+    quiz: [
+      {
+        question: "Who owns a client's Pathways plan, barriers and placements?",
+        options: ["The central database", "The Pathways portal", "Finance", "Whoever last edited the central file"],
+        answer: 1,
+        explain: "Program detail stays in the program portal; the central record keeps identity and case work.",
+      },
+      {
+        question: "What does a confirmed link between a program record and a central file do?",
+        options: ["Copies the whole file into the program portal", "Makes that program's future syncs update the central record", "Locks the central file from editing", "Moves the client out of other programs"],
+        answer: 1,
+        explain: "With a link the sync updates the known record instead of searching, which is what prevents duplicates.",
+      },
+      {
+        question: "What are the funder reports built from?",
+        options: ["Notes typed on the dashboard", "Service logs with type, duration and funder category", "The program strips", "The referral list"],
+        answer: 1,
+        explain: "Service logs are the reporting layer, which is why a loosely logged visit becomes a number nobody can defend.",
+      },
+      {
+        question: "A referral has been sitting at the same status for weeks. What does that mean?",
+        options: ["The referral is complete", "It is an unfinished piece of work", "It was declined automatically", "Nothing, status is optional"],
+        answer: 1,
+        explain: "Referrals record progress between us and the receiving party; a status that never moves means nobody followed up.",
+      },
+    ],
+  },
 };
 
 export const getModuleRecap = (key) => MODULE_RECAPS[key] || null;

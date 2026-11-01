@@ -21,10 +21,12 @@ import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules"
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
+import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
   ...WELCOME_MODULES,
+  ...CENTRAL_DATABASE_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1293,6 +1295,8 @@ export const TRAINING_MODULE_ACCESS = {
   pathways_service_nav: "pathways",
   pathways_workshops: "pathways",
   rc: "rc",
+  central_database_basics: "rc",
+  central_database_advanced: "rc",
   ell: "ell",
   centralreg: "central-registration",
   reception: "reception",

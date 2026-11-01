@@ -100,4 +100,44 @@ export const DATABASE_RECAP_SCENES = {
       'Portal tabs mirror your access, and folders are created and secured in Users and Access.',
     ] },
   ],
+  central_database_basics: [
+    { title: 'One person, one file', audioUrl: audio('800ad4dbe'), points: [
+      'Find the person first: Database searches the name or email, then narrows by program area, status, funder or demographics.',
+      'One card per person: the same client in Pathways, ELL and EmpowerU appears once, not three times.',
+      'Open the file rather than reading the card: contact details, worker, case status and funder tags are only the summary.',
+      'Read the alerts before the conversation: safety alerts sit at the top of the file for a reason.',
+    ] },
+    { title: 'Read before you write', audioUrl: audio('1f8bcd6ea'), points: [
+      'The header carries the facts: contact details, case status, funder tags, last visit and visit count.',
+      'Program strips show every portal already involved, and what each one recorded.',
+      'Staff notes are for the next worker — what they must know to pick the file up.',
+      'A safety alert needs an explanation, because that explanation is what shows in red on the file.',
+    ] },
+    { title: 'What you write, others rely on', audioUrl: audio('aa6413710'), points: [
+      'Add Note and Client Visit both land on this one file; there is no second notebook.',
+      'Program portals feed this record: registering someone in Pathways, ELL, EmpowerU, FRN, PHAC, Community or Digital Literacy adds a profile and a strip.',
+      'Matching runs on email, then name with date of birth — which is why spelling matters.',
+      'Check for an existing file before creating one: one record with the whole history is the point.',
+    ] },
+  ],
+  central_database_advanced: [
+    { title: 'Know which portal owns which fact', audioUrl: audio('924180f6b'), points: [
+      'Central record: identity and case work — contact details, case status, worker, notes, alerts, needs, visits.',
+      'Program portals: their own detail — Pathways plan and barriers, ELL class and CLB, EmpowerU cohort checkpoints.',
+      'The sync writes the participation strip only; it never overwrites the case-work fields.',
+      'Personal details are set when the record is first created, so the first writer owns them thereafter.',
+    ] },
+    { title: "Link, don't duplicate", audioUrl: audio('57e847b7d'), points: [
+      'Program intakes list the possible central records, with what the person is already in.',
+      'A confirmed link makes future syncs update that record instead of searching for one.',
+      'Without a link, matching falls back to email, then name and date of birth — a name variant or missing email creates a second file.',
+      'Repair at the source: fix the spelling in the portal that got it wrong, and note what you found.',
+    ] },
+    { title: 'The reporting layer', audioUrl: audio('436fa79b8'), points: [
+      'Referrals move both ways, and every one needs its status moved on — a static referral is unfinished work.',
+      'Service logs carry type, duration, funder category and follow-up; they are what the funder reports count.',
+      'Case Management splits Intensive Services, General Clients and Caregiver Capacity; needs carry priority and status.',
+      'Write what a colleague needs and nothing more: every program working with the person reads this file.',
+    ] },
+  ],
 };
