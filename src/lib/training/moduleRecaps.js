@@ -588,10 +588,10 @@ export const MODULE_RECAPS = {
         explain: "Each portal files into its own SharePoint folder, which shows as a sub-folder under All Files.",
       },
       {
-        question: "Which access level should you pick?",
-        options: ["Universal, so nobody is blocked", "The least open level that still does the job", "Personal, always", "Whatever the last person chose"],
+        question: "What does a file's access level control?",
+        options: ["Which folder it sits in", "Who is allowed to open it", "What the file is called", "How large it can be"],
         answer: 1,
-        explain: "Access level is the gate: choose the narrowest level that still lets the right people in.",
+        explain: "It's the gate on the file. Which level is right depends on what the file is and who needs it, so pick the narrowest one that still does the job.",
       },
       {
         question: "A file you expect isn't showing in All Files. What do you check first?",
