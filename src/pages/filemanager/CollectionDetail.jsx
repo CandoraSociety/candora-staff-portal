@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getFileExtension, getFileTypeStyle, formatFileSize } from "@/lib/fileHelpers";
 import FilePickerGrid from "@/components/collections/FilePickerGrid";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 export default function CollectionDetail() {
   const { id } = useParams();
@@ -23,15 +24,8 @@ export default function CollectionDetail() {
     enabled: !!id,
   });
 
-  const { data: files = [] } = useQuery({
-    queryKey: ["collection-files", id],
-    queryFn: async () => {
-      if (!collection?.file_ids) return [];
-      const all = await base44.entities.File.list("-created_date", 100);
-      return all.filter((f) => collection.file_ids.includes(f.id));
-    },
-    enabled: !!collection,
-  });
+  const { files: accessibleFiles } = useAccessibleFiles();
+  const files = accessibleFiles.filter((f) => collection?.file_ids?.includes(f.id));
 
   const deleteCollectionMutation = useMutation({
     mutationFn: async () => {

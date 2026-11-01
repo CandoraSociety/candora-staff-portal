@@ -70,19 +70,20 @@ export default function GlobalSearch({ user, access }) {
         }))
       });
 
-      // Search Files
-      const files = await base44.entities.File.filter({}).then(f => f.slice(0, 50));
-      const matchedFiles = files.filter(f =>
-        f.name.toLowerCase().includes(searchQuery.toLowerCase())
+      // Search Files — only the files this user is allowed to open
+      const fileRes = await base44.functions.invoke('getAccessibleFiles', {});
+      const visibleFiles = (fileRes.data?.files ?? fileRes.files ?? []).slice(0, 500);
+      const matchedFiles = visibleFiles.filter(f =>
+        (f.display_name || f.original_name || '').toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 5);
-      
+
       searchResults.push({
         category: 'files',
         items: matchedFiles.map(f => ({
           id: f.id,
-          title: f.name,
+          title: f.display_name || f.original_name,
           description: f.file_type,
-          url: `/filemanager/view?file=${f.id}`,
+          url: `/filemanager/view?id=${f.id}`,
           icon: 'File',
         }))
       });

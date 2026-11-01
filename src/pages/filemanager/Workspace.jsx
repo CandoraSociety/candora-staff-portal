@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/AuthContext";
 import WorkspaceGroup from "@/components/workspace/WorkspaceGroup";
 import CreateGroupDialog from "@/components/workspace/CreateGroupDialog";
 import PinFromVaultDialog from "@/components/workspace/PinFromVaultDialog";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 export default function Workspace() {
   const { user } = useAuth();
@@ -24,10 +25,7 @@ export default function Workspace() {
     enabled: !!user,
   });
 
-  const { data: vaultFiles = [] } = useQuery({
-    queryKey: ["vault-files"],
-    queryFn: () => base44.entities.File.list("-created_date", 1000),
-  });
+  const { files: vaultFiles } = useAccessibleFiles();
 
   const groupedItems = workspaceItems.reduce((acc, item) => {
     const group = item.workspace_group || "Ungrouped";

@@ -22,6 +22,7 @@ import EditorToolbar from "@/components/editor/EditorToolbar";
 import EditorCanvas from "@/components/editor/EditorCanvas";
 import EditorToolsPanel from "@/components/editor/EditorToolsPanel";
 import EditorMobileToolbar from "@/components/editor/EditorMobileToolbar";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 export default function FileEditor() {
   const navigate = useNavigate();
@@ -64,11 +65,7 @@ export default function FileEditor() {
     enabled: !!fileId,
   });
 
-  const { data: allFiles = [] } = useQuery({
-    queryKey: ["files"],
-    queryFn: () => base44.entities.File.list("-created_date", 500),
-    enabled: mode === "select",
-  });
+  const { files: allFiles } = useAccessibleFiles();
 
   const initCanvas = useCallback((img, fileMeta) => {
     const canvas = canvasRef.current;

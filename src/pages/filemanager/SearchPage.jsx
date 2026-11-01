@@ -1,30 +1,20 @@
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Search, X, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { canAccessFile, getFileExtension, getFileTypeStyle, formatFileSize } from "@/lib/fileHelpers";
+import { getFileExtension, getFileTypeStyle, formatFileSize } from "@/lib/fileHelpers";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 export default function SearchPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState({ category: "all", access: "all" });
 
-  const { data: allFiles = [] } = useQuery({
-    queryKey: ["all-files-search"],
-    queryFn: () => base44.entities.File.list("-created_date", 2000),
-  });
-
-  const user = base44.auth.me();
-
-  const accessibleFiles = useMemo(() => 
-    allFiles.filter((f) => canAccessFile(f, user)), 
-    [allFiles, user]
-  );
+  // Server already returns only what this user may see
+  const { files: accessibleFiles } = useAccessibleFiles();
 
   const results = useMemo(() => {
     if (!query.trim()) return [];

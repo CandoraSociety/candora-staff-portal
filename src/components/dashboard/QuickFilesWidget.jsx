@@ -1,34 +1,28 @@
 import React, { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import CollapsibleWidget from "@/components/dashboard/CollapsibleWidget";
 import QuickFileUploadDialog from "@/components/dashboard/QuickFileUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { FolderOpen, Search, Upload, FileText, X, ArrowRight } from "lucide-react";
-import { canAccessFile, getFileExtension, formatFileSize } from "@/lib/fileHelpers";
+import { getFileExtension, formatFileSize } from "@/lib/fileHelpers";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 const MAX_RESULTS = 5;
 
 export default function QuickFilesWidget() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  const { data: allFiles = [] } = useQuery({
-    queryKey: ["all-files-search"],
-    queryFn: () => base44.entities.File.list("-created_date", 2000),
-  });
+  // Only files this user may see come back from the server
+  const { files: allFiles } = useAccessibleFiles();
 
   const results = useMemo(() => {
     const q = (query || "").toLowerCase().trim();
     if (!q) return [];
     return allFiles
-      .filter((f) => canAccessFile(f, user))
       .filter((f) =>
         (f.display_name || f.original_name || "").toLowerCase().includes(q) ||
         (f.description || "").toLowerCase().includes(q) ||
@@ -36,7 +30,7 @@ export default function QuickFilesWidget() {
         (f.keywords || []).some((k) => k.toLowerCase().includes(q))
       )
       .slice(0, MAX_RESULTS);
-  }, [query, allFiles, user]);
+  }, [query, allFiles]);
 
   return (
     <div data-tour="dashboard-quickfiles" className="h-full [&>div]:h-full">

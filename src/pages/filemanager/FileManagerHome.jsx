@@ -27,7 +27,7 @@ export default function FileManagerHome() {
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     Promise.all([
-      base44.entities.File.list("-created_date", 50),
+      base44.functions.invoke("getAccessibleFiles", {}).then((res) => res.data?.files ?? res.files ?? []),
       base44.entities.Note.list("-created_date", 10),
       base44.entities.Collection.filter({ status: "active" }),
       base44.entities.FileCategory.list(),

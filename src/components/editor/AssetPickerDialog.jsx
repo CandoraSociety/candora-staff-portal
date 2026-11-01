@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { Upload, Image as ImageIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { getFileExtension } from "@/lib/fileHelpers";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 const IMAGE_EXTS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 
@@ -23,15 +24,8 @@ export default function AssetPickerDialog({ open, onOpenChange, onSelect, assetT
     queryFn: () => base44.entities.EditorAsset.list("-created_date", 200),
   });
 
-  const { data: vaultFiles = [] } = useQuery({
-    queryKey: ["vault-images"],
-    queryFn: () => base44.entities.File.list("-created_date", 500),
-    select: (files) =>
-      files.filter((f) => {
-        const ext = getFileExtension(f.original_name);
-        return IMAGE_EXTS.includes(ext);
-      }),
-  });
+  const { files: accessibleFiles } = useAccessibleFiles();
+  const vaultFiles = accessibleFiles.filter((f) => IMAGE_EXTS.includes(getFileExtension(f.original_name)));
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];

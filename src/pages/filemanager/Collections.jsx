@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 import CreateCollectionDialog from "@/components/collections/CreateCollectionDialog";
 import CollectionDetail from "@/components/collections/CollectionDetail";
+import useAccessibleFiles from "@/lib/useAccessibleFiles";
 
 export default function Collections() {
   const { user } = useAuth();
@@ -23,10 +24,7 @@ export default function Collections() {
     queryFn: () => base44.entities.Collection.list("-created_date"),
   });
 
-  const { data: files = [] } = useQuery({
-    queryKey: ["files"],
-    queryFn: () => base44.entities.File.list("-created_date", 1000),
-  });
+  const { files } = useAccessibleFiles();
 
   const deleteCollectionMutation = useMutation({
     mutationFn: (id) => base44.entities.Collection.delete(id),
