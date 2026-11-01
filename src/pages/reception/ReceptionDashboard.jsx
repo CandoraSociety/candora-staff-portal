@@ -12,10 +12,12 @@ import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
 import ReceptionDashboardCalendar from '@/components/reception/ReceptionDashboardCalendar';
 import { APPT_STATUS_OPTIONS, DROPIN_STATUS_OPTIONS, REG_STATUS_OPTIONS } from '@/lib/receptionConstants';
 import { useAuth } from '@/lib/AuthContext';
+import { useSimpleMode } from '@/lib/useSimpleMode';
 
 export default function ReceptionDashboard() {
   const [urgentOpen, setUrgentOpen] = useState(false);
   const { user } = useAuth();
+  const { simpleMode } = useSimpleMode();
 
   const { data: appointments = [] } = useQuery({ queryKey: ['reception-appointments'], queryFn: () => base44.entities.ReceptionAppointment.list('-appointment_date', 200) });
   const { data: dropIns = [] } = useQuery({ queryKey: ['reception-dropins'], queryFn: () => base44.entities.DropInVisit.list('-visit_date', 200) });
@@ -34,6 +36,9 @@ export default function ReceptionDashboard() {
     { label: 'Pending Approvals', value: pendingRegs.length, icon: ClipboardList, path: '/reception/registration', color: '#a855f7' },
   ];
 
+  // Simple mode trims the front desk down to the basic tools.
+  const visibleStats = simpleMode ? stats.filter(s => s.path !== '/reception/registration') : stats;
+
   return (
     <div className="space-y-6">
       <PortalQuickUpload moduleId="reception" />
@@ -42,8 +47,8 @@ export default function ReceptionDashboard() {
         <Button variant="destructive" onClick={() => setUrgentOpen(true)}><Siren className="h-4 w-4" /> Urgent Alert</Button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(stat => { const Icon = stat.icon; return (
+      <div className={`grid grid-cols-2 ${simpleMode ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
+        {visibleStats.map(stat => { const Icon = stat.icon; return (
           <Link key={stat.label} to={stat.path}>
             <Card className="hover:shadow-md transition-shadow"><CardContent className="p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: stat.color + '15' }}><Icon className="h-5 w-5" style={{ color: stat.color }} /></div>
@@ -84,10 +89,12 @@ export default function ReceptionDashboard() {
 
       <ReceptionDashboardCalendar />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${simpleMode ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4`}>
         <Link to="/reception/staff"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"><Users className="h-5 w-5 text-blue-600" /></div><div><p className="text-sm font-medium text-foreground">Staff Directory</p><p className="text-xs text-muted-foreground">Find staff &amp; call</p></div></CardContent></Card></Link>
         <Link to="/reception/resources"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center"><Search className="h-5 w-5 text-green-600" /></div><div><p className="text-sm font-medium text-foreground">Resource Finder</p><p className="text-xs text-muted-foreground">Find programs &amp; services</p></div></CardContent></Card></Link>
-        <Link to="/reception/registration"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center"><ClipboardList className="h-5 w-5 text-purple-600" /></div><div><p className="text-sm font-medium text-foreground">Program Registration</p><p className="text-xs text-muted-foreground">{pendingRegs.length} pending approval</p></div></CardContent></Card></Link>
+        {!simpleMode && (
+          <Link to="/reception/registration"><Card className="hover:shadow-md transition-shadow cursor-pointer"><CardContent className="p-4 flex items-center gap-3"><div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center"><ClipboardList className="h-5 w-5 text-purple-600" /></div><div><p className="text-sm font-medium text-foreground">Program Registration</p><p className="text-xs text-muted-foreground">{pendingRegs.length} pending approval</p></div></CardContent></Card></Link>
+        )}
       </div>
 
       <UrgentAlertDialog open={urgentOpen} onOpenChange={setUrgentOpen} currentUser={user} onSaved={() => setUrgentOpen(false)} />

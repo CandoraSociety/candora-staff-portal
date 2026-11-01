@@ -4,6 +4,8 @@ import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
+import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
+import { useSimpleMode } from '@/lib/useSimpleMode';
 
 const NAV_ITEMS = [
   { path: '/reception', label: 'Dashboard', icon: LayoutDashboard },
@@ -15,10 +17,18 @@ const NAV_ITEMS = [
   { path: '/reception/urgent', label: 'Urgent Alerts', icon: Siren },
 ];
 
+// Tools hidden from the front desk while simple mode is on.
+const SIMPLE_MODE_HIDDEN = ['/reception/registration'];
+
 export default function ReceptionLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, orgName } = useOrgSettings();
+  const { simpleMode, setSimpleMode } = useSimpleMode();
+
+  const navItems = simpleMode
+    ? NAV_ITEMS.filter((item) => !SIMPLE_MODE_HIDDEN.includes(item.path))
+    : NAV_ITEMS;
 
   const isActive = (path) => path === '/reception' ? location.pathname === '/reception' : location.pathname.startsWith(path);
 
@@ -32,13 +42,16 @@ export default function ReceptionLayout() {
             <div><h1 className="text-sidebar-foreground font-display font-bold text-sm leading-tight">Reception</h1><p className="text-sidebar-foreground/60 text-xs leading-tight">Front Desk Portal</p></div>
           </div>
           <nav className="hidden lg:flex items-center gap-1">
-            {NAV_ITEMS.map(item => { const Icon = item.icon; return (
+            {navItems.map(item => { const Icon = item.icon; return (
               <Link key={item.path} to={item.path} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}</Link>
             ); })}
           </nav>
-          <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+          <div className="flex items-center gap-4">
+            <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark className="hidden sm:flex" />
+            <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
+          </div>
         </div>
-        {mobileOpen && <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">{NAV_ITEMS.map(item => { const Icon = item.icon; return (
+        {mobileOpen && <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">{navItems.map(item => { const Icon = item.icon; return (
           <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}</Link>
         ); })}</nav>}
       </header>

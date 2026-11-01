@@ -21,6 +21,8 @@ import AppChangeRequestsWidget from '@/components/appchanges/AppChangeRequestsWi
 import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import DashboardNotifications from '@/components/dashboard/DashboardNotifications';
 import QuickFilesWidget from '@/components/dashboard/QuickFilesWidget';
+import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
+import { useSimpleMode } from '@/lib/useSimpleMode';
 
 import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
@@ -100,6 +102,7 @@ export default function Dashboard() {
   const { user, access, permissions } = useOutletContext();
   const queryClient = useQueryClient();
   const { revealedWidget } = useTrainingTour();
+  const { simpleMode, setSimpleMode } = useSimpleMode();
 
   const { data: cards = [] } = useQuery({
     queryKey: ['portalCards'],
@@ -201,13 +204,18 @@ export default function Dashboard() {
       {/* Announcement Ribbon */}
       <AnnouncementRibbon announcements={userAnnouncements} user={user} />
 
-      {/* E-signature setup reminder — until the user sets up their signature */}
-      <ESignatureSetupReminder />
+      {/* Simple mode leaves only announcements, tasks & reminders and portal shortcuts */}
+      {!simpleMode && (
+        <>
+          {/* E-signature setup reminder — until the user sets up their signature */}
+          <ESignatureSetupReminder />
 
-      <DashboardNotifications user={user} />
+          <DashboardNotifications user={user} />
 
-      {/* Employee Info Card */}
-      <EmployeeInfoCard user={user} />
+          {/* Employee Info Card */}
+          <EmployeeInfoCard user={user} />
+        </>
+      )}
 
       {/* Pinned Portal */}
       {pinnedCard && (
@@ -231,21 +239,26 @@ export default function Dashboard() {
                 <p className="text-primary text-lg font-semibold"><span>{user?.full_name || 'Guest'}</span></p>
                 <p className="text-white/80 mt-1"><span>Your integrated management platform</span></p>
               </div>
-              <Link 
-                to="/user/settings" 
-                data-tour="dashboard-customize"
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
-              >
-                <Settings className="w-4 h-4" />
-                Customize
-              </Link>
+              <div className="flex items-center gap-4">
+                <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
+                {!simpleMode && (
+                  <Link
+                    to="/user/settings"
+                    data-tour="dashboard-customize"
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Customize
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* App Change Requests — admin review panel */}
-      {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (
+      {!simpleMode && user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (
         <AppChangeRequestsWidget />
       )}
 
@@ -270,35 +283,44 @@ export default function Dashboard() {
 
       {/* Live data moved to Admin > Users & Access */}
 
-      {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
-      <CollapsibleWidget title="Appointments" icon={Calendar}>
-        <WorkerAppointmentsPanel />
-      </CollapsibleWidget>
+      {simpleMode ? (
+        /* Simple mode — my tasks and reminders, full width, nothing else */
+        <div className="min-h-[480px] flex flex-col">
+          <OrganizerWidget />
+        </div>
+      ) : (
+        <>
+          {/* Appointments — the worker's own schedule by default, with a switch to view other workers */}
+          <CollapsibleWidget title="Appointments" icon={Calendar}>
+            <WorkerAppointmentsPanel />
+          </CollapsibleWidget>
 
-      {/* Widget cards — three across (announcements, pinned portal and quick access portals stay above) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isWidgetActive('organizer') && (
-          <div className="row-span-2 self-stretch flex flex-col w-full min-h-0 overflow-hidden">
-            <OrganizerWidget />
-          </div>
-        )}
+          {/* Widget cards — three across (announcements, pinned portal and quick access portals stay above) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isWidgetActive('organizer') && (
+              <div className="row-span-2 self-stretch flex flex-col w-full min-h-0 overflow-hidden">
+                <OrganizerWidget />
+              </div>
+            )}
 
-        {isWidgetActive('howto') && <HowToSearch user={user} />}
+            {isWidgetActive('howto') && <HowToSearch user={user} />}
 
-        {/* Quick Files — permanent upload + search for the document vault */}
-        <QuickFilesWidget />
+            {/* Quick Files — permanent upload + search for the document vault */}
+            <QuickFilesWidget />
 
-        {isWidgetActive('google_translate') && (
-          <div data-tour="dashboard-translate" className="w-full [&>div]:h-full">
-            <CollapsibleWidget title="Translate" icon={Languages}>
-              <GoogleTranslateWidget />
+            {isWidgetActive('google_translate') && (
+              <div data-tour="dashboard-translate" className="w-full [&>div]:h-full">
+                <CollapsibleWidget title="Translate" icon={Languages}>
+                  <GoogleTranslateWidget />
+                </CollapsibleWidget>
+              </div>
+            )}
+            <CollapsibleWidget title="Recent Activity" icon={Activity}>
+              <RecentActivityWidget />
             </CollapsibleWidget>
           </div>
-        )}
-        <CollapsibleWidget title="Recent Activity" icon={Activity}>
-          <RecentActivityWidget />
-        </CollapsibleWidget>
-      </div>
+        </>
+      )}
 
     </div>
   );

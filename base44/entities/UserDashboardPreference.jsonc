@@ -63,6 +63,11 @@
       ],
       "default": "grid"
     },
+    "simple_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "When on, the main page and the Reception portal show only the essentials \u2014 announcements, tasks & reminders, portal shortcuts, and the basic front-desk tools"
+    },
     "enabled_microsoft_apps": {
       "type": "array",
       "items": {
