@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { GraduationCap, ListChecks, Map, LogOut, Users, CheckCircle2, RotateCcw } from "lucide-react";
+import { GraduationCap, Play, Map, LogOut, Users, CheckCircle2, RotateCcw } from "lucide-react";
 import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules";
 import { getModuleRecap } from "@/lib/training/moduleRecaps";
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
@@ -139,9 +139,14 @@ export default function TrainingPill() {
     window.location.reload();
   };
 
-  const totalTasks = module?.tasks?.length || 0;
-  const doneTasks = rec?.tasks_done?.length || 0;
   const isAdmin = user?.role === "admin";
+
+  // Continue exactly where the learner stopped: the tour (which resumes at the
+  // saved step) until it's done, then the practice checklist.
+  const resumeTraining = () => {
+    if (!rec?.tour_done) setTourOpen(true);
+    else setChecklistOpen(true);
+  };
 
   // No module here — only show a "return to training" pill if a session is
   // active on another portal.
@@ -183,15 +188,13 @@ export default function TrainingPill() {
               {rec?.tour_done ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Map className="w-3.5 h-3.5" />}
               {rec?.tour_done ? "Tour done" : (rec ? "Resume tour" : "Guided tour")}
             </button>
-            {!!module.tasks?.length && (
-              <button
-                onClick={() => setChecklistOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-                style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
-              >
-                <ListChecks className="w-3.5 h-3.5" /> Practice {totalTasks ? `${doneTasks}/${totalTasks}` : ""}
-              </button>
-            )}
+            <button
+              onClick={resumeTraining}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
+              style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
+            >
+              <Play className="w-3.5 h-3.5" /> Resume training
+            </button>
             <button
               onClick={() => startTraining(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
