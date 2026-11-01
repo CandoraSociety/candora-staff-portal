@@ -182,7 +182,7 @@ export default function FileUploader({ onComplete }) {
             </div>
 
             {/* Form Fields */}
-            <div className="space-y-4">
+            <div data-tour="fm-upload-fields" className="space-y-4">
               <div>
                 <Label>Display Name</Label>
                 <Input
@@ -197,7 +197,7 @@ export default function FileUploader({ onComplete }) {
                 <CategorySelector value={category} onChange={setCategory} onSubcategoryChange={setSubcategory} className="w-full" />
               </div>
 
-              <div>
+              <div data-tour="fm-upload-access">
                 <Label>Access Level</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {ACCESS_LEVELS.map((al) => {

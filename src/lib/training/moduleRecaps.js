@@ -567,6 +567,46 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+
+  filemanager: {
+    kicker: "What we've learned",
+    title: "One vault, many doors.",
+    body: "Let's review the File Manager. It is the document vault behind the whole portal: the Quick Files widget on your home page, the upload card on every portal dashboard, receipts and signed documents all land in it, so you already use it without opening it. When you do upload, the details are the work — a display name, a category, an access level, a description and keywords. Access level is the setting you cannot fix later on behalf of someone who cannot see the file, so choose the least open level that still does the job. And the rest you reach for when the day calls for it: bulk import for a stack, collections for a package, and notes to keep the context with the document.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/fa8603833_speech.mp3",
+    takeaways: [
+      "The vault is behind the whole portal — dashboard Quick Files, portal upload cards, receipts and signed documents all file here.",
+      "Uploading well means a display name, a category, an access level, a description and keywords.",
+      "Choose the least open access level that still does the job; you only see what you're allowed to open.",
+      "Each portal files into its own folder, so an ELL document and a Finance document never mix.",
+      "Bulk Import, Collections, My Workspace and Notes are there when a single upload isn't enough.",
+    ],
+    quiz: [
+      {
+        question: "A file is uploaded from a portal's dashboard upload card. Where does it land?",
+        options: ["In My Files, as personal", "In that portal's own folder in the vault", "In the dashboard, not the vault", "In an email attachment"],
+        answer: 1,
+        explain: "Each portal files into its own SharePoint folder, which shows as a sub-folder under All Files.",
+      },
+      {
+        question: "Which access level should you pick?",
+        options: ["Universal, so nobody is blocked", "The least open level that still does the job", "Personal, always", "Whatever the last person chose"],
+        answer: 1,
+        explain: "Access level is the gate: choose the narrowest level that still lets the right people in.",
+      },
+      {
+        question: "A file you expect isn't showing in All Files. What do you check first?",
+        options: ["The access filter and your permissions", "The storage-used count", "Whether the file is a PDF", "The dashboard counters"],
+        answer: 0,
+        explain: "The vault only returns files you're authorized to see — the access filter explains most missing files.",
+      },
+      {
+        question: "What are keywords for?",
+        options: ["They rename the file", "They're what the searches match on later", "They set the access level", "They replace the category"],
+        answer: 1,
+        explain: "Quick Files and the vault search both match keywords — they're how a file gets found months later.",
+      },
+    ],
+  },
 };
 
 export const getModuleRecap = (key) => MODULE_RECAPS[key] || null;

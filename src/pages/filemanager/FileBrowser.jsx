@@ -123,7 +123,7 @@ export default function FileBrowser() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 flex-wrap">
+      <div data-tour="fm-filters" className="flex items-center gap-4 flex-wrap">
         <SearchBar value={search} onChange={setSearch} placeholder="Search files..." />
         <FileFilters filters={filters} onFilterChange={setFilters} grantedFileLevels={grantedFileLevels} isAdmin={isAdmin} />
         <div className="ml-auto flex items-center gap-1 border rounded-lg p-1">
@@ -135,7 +135,7 @@ export default function FileBrowser() {
       {filteredFiles.length === 0 ? (
         <div className="text-center py-16"><p className="text-muted-foreground">No files found.</p><Link to="/filemanager/upload"><Button className="mt-4 gap-2"><Upload className="h-4 w-4" /> Upload File</Button></Link></div>
       ) : viewMode === "grid" ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{filteredFiles.map((file, i) => <FileCard key={file.id} file={file} onDelete={handleDelete} index={i} />)}</div>
+        <div data-tour="fm-grid" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{filteredFiles.map((file, i) => <FileCard key={file.id} file={file} onDelete={handleDelete} index={i} />)}</div>
       ) : (
         <div className="space-y-2">{filteredFiles.map((file, i) => <FileListItem key={file.id} file={file} onDelete={handleDelete} index={i} />)}</div>
       )}

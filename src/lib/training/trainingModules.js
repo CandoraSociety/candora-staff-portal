@@ -17,6 +17,7 @@
 //           { kind: "self" } → the learner marks it done themselves.
 
 import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
+import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules";
 
 export const TRAINING_MODULES = [
   {
@@ -1265,7 +1266,8 @@ export const TRAINING_MODULES = [
         verify: { kind: "self" }
       }
     ]
-  }
+  },
+  ...FILE_MANAGER_MODULES
 ];
 
 // Which portal a training module belongs to — used to show each staff member
@@ -1285,6 +1287,7 @@ export const TRAINING_MODULE_ACCESS = {
   rc: "rc",
   ell: "ell",
   centralreg: "central-registration",
+  filemanager: "filemanager",
 };
 
 export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === key) || null;
@@ -1308,6 +1311,7 @@ export const moduleForPath = (pathname) => {
     ["/rc", "rc"],
     ["/ell", "ell"],
     ["/central-registration", "centralreg"],
+    ["/filemanager", "filemanager"],
   ];
   for (const [prefix, key] of prefixes) {
     if (pathname.startsWith(prefix)) return getTrainingModule(key);

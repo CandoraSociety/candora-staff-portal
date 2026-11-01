@@ -302,6 +302,39 @@ export const FACILITATOR_GUIDE = {
       "The approval-creates-the-participant flow is the 'aha' moment — demo it live with a demo request.",
     ],
   },
+
+  filemanager: {
+    duration: "About 25 minutes (4 intro · 12 tour · 7 practice · 2 wrap-up)",
+    objectives: [
+      "Staff recognize that the vault is already part of their day, without opening the portal",
+      "Staff can upload a file with a category, access level and keywords so it can be found again",
+      "Staff know how to find a file when someone asks for one, and when to escalate to a bulk import",
+    ],
+    stepNotes: {
+      "Welcome to the File Manager": "Frame the session honestly: most people will never need the full tool, so nobody is expected to become a File Manager user today. The goal is knowing where the vault is and how to get a file out of it. Repeat the Training Mode message — nothing uploaded here is real.",
+      "You already use it": "This is the slide that makes the module relevant. Point at the Quick Files widget on their own dashboard and ask who has uploaded something from a portal dashboard before. The point lands: they have been using the vault all along without naming it.",
+      "The vault at a glance": "Quick pass. The counters are a health check, not a daily destination. The sorting banner is the one thing worth pointing out — it's how files that arrived without a category get noticed.",
+      "All Files": "Show the portal sub-folders in the sidebar. Stress the permissions idea: everyone sees a different All Files, and that's by design, not a bug.",
+      "Narrowing it down": "Have the room watch you find something in three clicks: search, then a category filter. Name the common support question out loud — 'my file isn't there' is almost always an access filter.",
+      "Opening a file": "Open one file so they see the viewer and the download action. Mention that access is enforced on the file itself, not just the page.",
+      "Uploading one file": "Live demo a real upload on the projector if you have a demo document. Spend the time on keywords — it's the field people skip and the one that makes the file findable later.",
+      "The access levels": "Read the five levels out loud, slow. The rule to repeat: choose the least open level that still does the job, because you cannot widen access later for someone who cannot see the file to ask about it.",
+      "My Files — your own space": "Short slide. Most staff will use this one more than the rest of the portal — it's the personal drive equivalent.",
+      "Portal folders": "Connect it back to the first slide: the upload card they already use puts files in the right portal folder with no filing decision needed.",
+      "Bulk Import — a stack, not a file": "Only demo this if your group actually digitizes records. The photo sorter is the crowd-pleaser; the sorting banner closes the loop on uncategorized files.",
+      "Beyond storing: collections, workspace, notes": "One sentence each — collections for packages like grant applications, workspace for what's in progress, notes for context that would otherwise sit in an email.",
+      "Time to practice": "Hands-on and short: one upload, one search, one bulk import. Circulate on the upload — the access level and category are where people hesitate. Close by saying again that most of this is here when they need it, not part of the daily routine.",
+    },
+    practiceNotes: {
+      "fm-upload": "Auto-checked. Watch that a category and an access level are actually set, and that at least one keyword was added.",
+      "fm-find": "Self-marked. Ask them to say out loud why the file they couldn't find was hidden — the access filter answer should come back.",
+      "fm-bulk": "Self-marked. Two files is enough; the point is seeing the batch flow, not volume.",
+    },
+    tips: [
+      "Run this module for everyone, even people who will never open the portal — the Quick Files connection is what makes it stick.",
+      "Have one demo document and a couple of photos ready so the single upload and the bulk import can both be shown honestly.",
+    ],
+  },
 };
 
 export const getFacilitatorGuide = (moduleKey) => FACILITATOR_GUIDE[moduleKey] || null;

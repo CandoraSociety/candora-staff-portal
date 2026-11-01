@@ -60,4 +60,24 @@ export const DATABASE_RECAP_SCENES = {
       'Confirm the outcome: Check the resulting registration status and the relevant program record.',
     ] },
   ],
+  filemanager: [
+    { title: 'Most of it you will never need', audioUrl: audio('fa8603833'), points: [
+      'One vault, many doors: the dashboard Quick Files widget, portal upload cards, receipts and signed documents all file here.',
+      'The dashboard: file, note and collection counts, recent files, categories in use, and anything waiting to be sorted.',
+      'All Files: everything your permissions reach, with each portal’s files in their own sub-folder.',
+      'If a file is missing: check the access filter first — you only see what you are allowed to open.',
+    ] },
+    { title: 'Upload once, file it properly', audioUrl: audio('8183ef37d'), points: [
+      'Display name and category: how the file is found, and how it is filed.',
+      'Keywords: they are what the Quick Files search and the vault search match on later.',
+      'Access level: personal, universal, manager, finance or corporate — the least open level that still does the job.',
+      'My Files: your own space, filtered from the same list; nobody else can open what is in it.',
+    ] },
+    { title: 'The tools beyond storing', audioUrl: audio('61257a70b'), points: [
+      'Bulk Import: a whole stack at once, filed as you go or sorted afterwards.',
+      'Collections: a package of files handed over as one set, like a grant application with its attachments.',
+      'My Workspace and Notes: the working surface, and the context kept with the document.',
+      'Practice: upload a file, find it with search and filters, then try a bulk import.',
+    ] },
+  ],
 };

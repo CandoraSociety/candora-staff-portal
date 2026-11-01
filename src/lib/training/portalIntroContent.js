@@ -288,6 +288,26 @@ const INTRO_SCENES_BY_MODULE = {
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/be7b1fe85_speech.mp3',
     },
   ],
+  filemanager: [
+    {
+      kicker: 'File Manager',
+      title: 'Welcome to the File Manager.',
+      body: "Welcome to the File Manager, Candora's document vault. Most staff will never need its full functionality, but almost everyone interacts with it every week, often without ever opening it.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/688f5e6ec_speech.mp3',
+    },
+    {
+      kicker: 'File Manager',
+      title: 'One vault, many doors.',
+      body: 'Files arrive here from the upload card on every portal dashboard, from the Quick Files widget on your home page, from receipts, and from the documents you sign. The File Manager is simply where that vault is browsed, organized and shared.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/de9e8fd52_speech.mp3',
+    },
+    {
+      kicker: 'File Manager',
+      title: "What you'll practice.",
+      body: "You'll upload a file with its category and access level, find it again with search and filters, and run a bulk import. Everything is simulated, so nothing you upload here is real.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/47b985ded_speech.mp3',
+    },
+  ],
 };
 
 export function getModuleIntroScenes(moduleKey) {

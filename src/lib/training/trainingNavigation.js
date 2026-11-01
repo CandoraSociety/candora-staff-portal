@@ -2,6 +2,7 @@ export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg"] },
+  { title: "Tools", keys: ["filemanager"] },
 ];
 
 // Which portal series each module belongs to — the training sidebar shows a
@@ -21,6 +22,7 @@ export const TRAINING_MODULE_SERIES = {
   rc: "rc",
   ell: "ell",
   centralreg: "centralreg",
+  filemanager: "filemanager",
 };
 
 // Display name of each training series (the "portal" a module belongs to) —
@@ -32,6 +34,7 @@ export const TRAINING_SERIES_TITLES = {
   rc: "Resource Centre",
   ell: "ELL",
   centralreg: "Central Registration",
+  filemanager: "File Manager",
 };
 
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
@@ -146,6 +149,14 @@ const SECTION_STARTS = {
     "Welcome to Central Registration": "Overview",
     "Programs": "Programs & registration",
     "Self-registration requests": "Self-registration & calendar",
+    "Time to practice": "Practice",
+  },
+  filemanager: {
+    "Welcome to the File Manager": "Overview",
+    "You already use it": "Where the vault meets your day",
+    "All Files": "Browsing and finding",
+    "Uploading one file": "Uploading and access levels",
+    "Portal folders": "Folders, bulk and collections",
     "Time to practice": "Practice",
   },
 };

@@ -238,6 +238,12 @@ function demoData() {
     Note: [
       { title: 'Demo note', content: 'This note only exists in Test Mode.' },
     ],
+    // A few vault files so the File Manager training has something to browse
+    File: [
+      { original_name: 'Grant Application Package.pdf', display_name: 'Grant Application Package', description: 'Demo grant application with attachments (Test Mode)', keywords: ['grant', 'application', 'funder'], file_type: 'pdf', file_size: 482000, category: 'corporate', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
+      { original_name: 'ELL Class Roster.xlsx', display_name: 'ELL Class Roster', description: 'Demo class roster (Test Mode)', keywords: ['ell', 'roster', 'class'], file_type: 'xlsx', file_size: 22000, category: 'ell', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
+      { original_name: 'Staff Photo.jpg', display_name: 'Staff Photo', description: 'Demo photo (Test Mode)', keywords: ['photo', 'staff'], file_type: 'jpg', file_size: 1240000, category: 'to_be_sorted', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
+    ],
     Reminder: [
       { title: 'Demo reminder', due_date: D(-2), is_completed: false },
     ],

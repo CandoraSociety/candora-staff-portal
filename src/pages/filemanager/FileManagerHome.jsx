@@ -67,7 +67,7 @@ export default function FileManagerHome() {
       )}
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div data-tour="fm-stats" className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Files" value={loading ? "—" : myFiles.length} icon={Files} href="/filemanager/files" />
         <StatCard title="Notes" value={loading ? "—" : notes.length} icon={StickyNote} href="/filemanager/notes" />
         <StatCard title="Collections" value={loading ? "—" : collections.length} icon={FolderOpen} href="/filemanager/collections" />

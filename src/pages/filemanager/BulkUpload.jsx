@@ -127,6 +127,7 @@ export default function BulkUpload() {
       </div>
 
       <div 
+        data-tour="fm-bulk"
         className="border-2 border-dashed rounded-xl p-8 text-center"
         onDrop={handleDrop}
         onDragOver={handleDragOver}

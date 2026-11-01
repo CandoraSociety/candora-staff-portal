@@ -88,7 +88,7 @@ function AppNav() {
   const renderAllFilesSection = (forceExpanded = false) => {
     const showLabels = forceExpanded || !collapsed;
     return (
-      <div className="space-y-0.5">
+      <div data-tour="fm-portal-folders" className="space-y-0.5">
         <div className="flex items-center gap-1">
           <Link
             to="/filemanager/files"
