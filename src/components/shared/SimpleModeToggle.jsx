@@ -7,8 +7,8 @@ export default function SimpleModeToggle({ simpleMode, onChange, onDark = false,
   return (
     <label
       className={cn(
-        'flex items-center gap-2 text-xs font-semibold cursor-pointer select-none',
-        onDark ? 'text-white/90' : 'text-muted-foreground',
+        'flex items-center gap-2 text-xs font-semibold cursor-pointer select-none whitespace-nowrap',
+        onDark ? 'text-white/90' : 'text-foreground',
         className
       )}
       title="Show only the essentials for basic tasks"

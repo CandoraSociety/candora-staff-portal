@@ -204,6 +204,13 @@ export default function Dashboard() {
       {/* Announcement Ribbon */}
       <AnnouncementRibbon announcements={userAnnouncements} user={user} />
 
+      {/* Simple mode — this user's own switch, always in the same spot on the page */}
+      <div className="flex items-center justify-end">
+        <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
+          <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} />
+        </div>
+      </div>
+
       {/* Simple mode leaves only announcements, tasks & reminders and portal shortcuts */}
       {!simpleMode && (
         <>
@@ -240,7 +247,6 @@ export default function Dashboard() {
                 <p className="text-white/80 mt-1"><span>Your integrated management platform</span></p>
               </div>
               <div className="flex items-center gap-4">
-                <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
                 {!simpleMode && (
                   <Link
                     to="/user/settings"
