@@ -20,6 +20,11 @@ export const RECEPTION_MODULES = [
         target: { selector: 'a[href="/reception"]' }
       },
       {
+        title: "Watch the introduction",
+        body: "Press Play to hear the introduction. You can pause, replay or move between scenes; each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
+        introExplainer: true
+      },
+      {
         title: "Your dashboard at a glance",
         body: "The dashboard is the first screen of the day. The four cards count today's appointments and drop-ins, how many people are checked in right now, and how many program registrations are waiting for approval — each one is a shortcut into that list. Below them you get today's appointments and who's currently in the building, then the calendar, then the staff directory, resource finder and program registration cards. When the lobby is empty, this page tells you the desk is clear.",
         path: "/reception",
