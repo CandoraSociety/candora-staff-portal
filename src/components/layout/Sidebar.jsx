@@ -116,7 +116,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav data-tour="sidebar-nav" className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}

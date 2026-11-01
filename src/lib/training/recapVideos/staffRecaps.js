@@ -1,6 +1,26 @@
 // The on-screen points are also the exact script of each stored narration.
 const audio = name => `https://media.base44.com/files/public/6a249282cb496579542673b7/${name}_speech.mp3`;
 export const STAFF_RECAP_SCENES = {
+  welcome: [
+    { title: 'One app, many workspaces', audioUrl: audio('99abaa5ce'), points: [
+      'One app, many workspaces: Pathways, the Resource Centre, ELL, Finance and the File Manager all live inside the same staff portal.',
+      'Your access decides your list: you only see the portals your role opens, so your list can differ from a colleague’s.',
+      'Portals open as tabs: each tab keeps your place, and the plus button reopens one any time.',
+      'The sidebar and top bar travel with you: they stay the same on every page.',
+    ] },
+    { title: 'Three things worth remembering', audioUrl: audio('3ffdd4b3c'), points: [
+      'Start at your main page: announcements, alerts and the portals you use most live there.',
+      'Open a workspace: use the Portals list or the plus button on the tab bar.',
+      'Keep only what helps: shortcut cards and widgets are yours to choose in Add functions.',
+      'Ask when unsure: the How-To knowledge base answers plain-language questions on your main page.',
+    ] },
+    { title: 'Learn it as you need it', audioUrl: audio('755bcac54'), points: [
+      'You are not expected to memorise this: today was about recognising the parts of the screen.',
+      'Most people use two or three portals: never opening the rest is normal.',
+      'Training waits for you: every module saves its own progress, so start and pause as needed.',
+      'Come back whenever you like: this is the first module in the catalog.',
+    ] },
+  ],
   dashboard: [
     { title: 'Find your workspace', audioUrl: audio('8fbf03d4e'), points: [
       'Open a portal: Use Portals or the plus button to find the tools available to your account.',

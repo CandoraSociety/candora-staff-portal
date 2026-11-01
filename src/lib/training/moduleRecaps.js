@@ -8,6 +8,45 @@
 // quiz:   [{ question, options[], answer, explain }]
 //         answer = index of the correct option.
 export const MODULE_RECAPS = {
+  welcome: {
+    kicker: "What we've learned",
+    title: "Familiar, not fluent — and that's the point.",
+    body: "Let's bring the tour together. The Candora Staff Portal is one app made of many workspaces, and you only see the ones your role opens. Your main page is home base: announcements, alerts and your own shortcut cards. A portal opens from the Portals list or the plus button, and each one takes its place as a tab that remembers where you were. The sidebar and top bar stay with you on every page. Nothing here needs memorising — training is a reference shelf you come back to when the work calls for it.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/99abaa5ce_speech.mp3",
+    takeaways: [
+      "One app, many workspaces: each area of work has its own portal, and access decides which ones you see.",
+      "Your main page is home base — announcements, alerts and the portals you use most.",
+      "Open a portal from the Portals list or the + button, and it becomes a tab that keeps your place.",
+      "Your shortcut cards and widgets are yours to choose; nobody else's page changes.",
+      "Most people use two or three portals — not knowing the rest is normal and expected.",
+    ],
+    quiz: [
+      {
+        question: "How many of the app's portals are you expected to learn in your first week?",
+        options: ["All of them, so you can cover for anyone", "The two or three your role actually uses", "One a week until you've seen them all", "Only the ones you're shown in a meeting"],
+        answer: 1,
+        explain: "Most staff settle into a small handful of portals. The rest can wait until the work calls for them.",
+      },
+      {
+        question: "How do you open a portal?",
+        options: ["Only from the sidebar's Admin section", "From the Portals list, or the + button on the tab bar", "From your e-signature settings", "Each portal has its own separate website"],
+        answer: 1,
+        explain: "Both the Portals list and the + on the tab bar open the same picker of portals you have access to.",
+      },
+      {
+        question: "You open a portal, then click back to your Main Page tab. What happens to the portal's tab?",
+        options: ["It closes and the page is lost", "It stays open and keeps your place", "It signs you out of the portal", "It resets to that portal's first page"],
+        answer: 1,
+        explain: "Tabs behave like browser tabs — they stay open and return you to the exact page you were on.",
+      },
+      {
+        question: "Someone isn't sure how to do something in the app. Where should they start?",
+        options: ["Ask a colleague to do it for them", "The How-To Knowledge Base on their main page", "Reinstall the app", "Wait for the next training session"],
+        answer: 1,
+        explain: "The How-To Knowledge Base answers plain-language questions from the staff how-to guide, right on the main page.",
+      },
+    ],
+  },
   dashboard: {
     kicker: "What we've learned",
     title: "The Main Page, in one place.",

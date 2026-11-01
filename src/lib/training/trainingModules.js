@@ -19,8 +19,11 @@
 import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
 import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules";
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
+import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 
 export const TRAINING_MODULES = [
+  // Welcome & app tour leads the catalog — every staff member starts here.
+  ...WELCOME_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1275,6 +1278,7 @@ export const TRAINING_MODULES = [
 // Which portal a training module belongs to — used to show each staff member
 // only the training for portals they can actually access (null = everyone).
 export const TRAINING_MODULE_ACCESS = {
+  welcome: null,
   dashboard: null,
   dashboard_widgets: null,
   staffadmin: null,

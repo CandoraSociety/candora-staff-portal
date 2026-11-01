@@ -26,7 +26,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile, classNa
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={onToggleMobile}>
           <Menu className="w-5 h-5" />
         </Button>
-        <div className="hidden sm:flex items-center gap-2 bg-muted rounded-lg px-3 py-2 w-72">
+        <div data-tour="topbar-search" className="hidden sm:flex items-center gap-2 bg-muted rounded-lg px-3 py-2 w-72">
           <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
@@ -44,7 +44,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile, classNa
 
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors">
+            <button data-tour="topbar-profile" className="flex items-center gap-3 hover:bg-muted rounded-lg px-2 py-1.5 transition-colors">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={user?.avatar_url} className="object-cover" />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">

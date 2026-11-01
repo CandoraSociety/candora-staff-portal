@@ -5,6 +5,39 @@
 // generic hint, so nothing breaks if a step is renamed.
 
 export const FACILITATOR_GUIDE = {
+  welcome: {
+    duration: "About 20 minutes (5 introduction · 10 tour · 5 wrap-up)",
+    objectives: [
+      "Staff recognise the parts of the screen: sidebar, tab bar, main page, portal menu",
+      "Staff can open a portal and move between tabs without losing their place",
+      "Staff leave knowing they're not expected to learn every portal — only the ones their role uses",
+      "Staff know where to go back to for training and for help",
+    ],
+    stepNotes: {
+      "Start here — nothing to memorise": "Set the tone before anything else: this module is an orientation, not a test. Say out loud that nobody is expected to remember the tour. Ask who has signed in before — it tells you how much of the room you can move quickly.",
+      "One app, many workspaces": "Use the naming clarification early: the whole app is the Candora Staff Portal, and the areas inside it are also called portals. The analogy that lands: they're like separate workspaces inside one system, not separate programs. Add that access decides the list, so neighbours will see different things.",
+      "The sidebar is your map": "Point at the sidebar on the projector and name only the five or six items that apply to everyone. Mention the Admin section exists for admins rather than reading it out. The distinction worth repeating: sidebar moves between areas, portal menu moves within one.",
+      "Portals open as tabs": "The analogy everyone gets. Have them open one portal and click back to their Main Page tab so they feel the switch. Common question: 'Did closing the tab log me out?' — no, reopen from +.",
+      "Your main page is home base": "Tell supervisors explicitly that team approvals land here. For everyone else, it's announcements, alerts and payment updates — nothing to poll.",
+      "Make the page yours": "Low-risk and personal — let them try it while you talk. One pinned portal at a time; shortcuts are chosen in Add functions.",
+      "The widgets you'll actually use": "Resist touring every widget. Name Quick Files and the How-To Knowledge Base, then say the rest are optional and covered in the Dashboard Widgets module. This is where you model the 'you don't need all of it' message.",
+      "Everyday staff items": "Show the two sidebar groups that every employee uses regardless of role: Purchases and Time & Attendance. Tell them the Time & Money modules cover both in detail — they don't need to learn them today.",
+      "Where the training lives": "The key reassurance for the whole session: the catalog is a reference shelf, not homework. Ask each person to name the one portal they'll actually work in, and point at that module.",
+      "Search, your account, and getting help": "Show the How-To Knowledge Base answering one real question from the room. Say where account and access questions go: supervisor or administrator.",
+      "What to remember today": "Repeat the three things as a call-and-response if the room is small: start at your main page, open a workspace with Portals or +, and the sidebar and top bar go everywhere. Then say the reassurance a second time: two or three portals is normal.",
+      "Time to practice": "Keep it light — this is a confidence module. Everyone opens a portal and returns to their main page; pinning and visiting the catalog can be skipped without consequence.",
+    },
+    practiceNotes: {
+      "welcome-portal": "Self-marked. Do this one together as a group so nobody gets stuck on the tab bar.",
+      "welcome-pin": "Self-marked. Ask afterwards which portal they chose and why — it reveals what each role actually does all day.",
+      "welcome-catalog": "Self-marked. Point them at the module for their own portal; that's the natural next step after this one.",
+    },
+    tips: [
+      "Run this on someone's very first day, before any portal-specific module — it removes most of the 'which one do I open?' questions later.",
+      "Keep the pace brisk and the language plain. The goal is familiarity, not recall; resist answering every detailed question and point at the relevant module instead.",
+      "If the group is experienced staff, run only the first four steps and jump to the training catalog — the reassurance still matters for new hires joining later.",
+    ],
+  },
   dashboard: {
     duration: "About 45 minutes (5 intro · 20 tour · 15 practice · 5 wrap-up)",
     objectives: [

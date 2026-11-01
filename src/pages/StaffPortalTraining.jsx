@@ -70,7 +70,7 @@ export default function StaffPortalTraining() {
         </p>
       </div>
 
-      <div className="rounded-xl border bg-muted/30 px-4 py-3 text-sm">
+      <div data-tour="training-catalog" className="rounded-xl border bg-muted/30 px-4 py-3 text-sm">
         <span className="font-semibold">{completedCount} of {modules.length}</span> training modules completed
       </div>
 

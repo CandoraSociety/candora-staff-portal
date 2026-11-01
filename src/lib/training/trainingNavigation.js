@@ -1,5 +1,5 @@
 export const TRAINING_NAV_GROUPS = [
-  { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
+  { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
@@ -8,6 +8,7 @@ export const TRAINING_NAV_GROUPS = [
 // Which portal series each module belongs to — the training sidebar shows a
 // learner's active modules plus the next module of the same series.
 export const TRAINING_MODULE_SERIES = {
+  welcome: "getting_started",
   dashboard: "getting_started",
   dashboard_widgets: "getting_started",
   staffadmin: "time_money",
@@ -40,6 +41,15 @@ export const TRAINING_SERIES_TITLES = {
 
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.
 const SECTION_STARTS = {
+  welcome: {
+    "Start here — nothing to memorise": "Welcome",
+    "One app, many workspaces": "The big picture",
+    "The sidebar is your map": "Getting around",
+    "Your main page is home base": "Your main page",
+    "Everyday staff items": "Everyday staff tools",
+    "Where the training lives": "Training & help",
+    "Time to practice": "Practice",
+  },
   dashboard: {
     "Welcome to your Candora portal": "Getting started",
     "What's a portal?": "Portals & navigation",

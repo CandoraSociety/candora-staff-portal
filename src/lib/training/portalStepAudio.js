@@ -3,6 +3,20 @@
 // explainer step, which plays its own scene narration). Same female voice as
 // the intro videos; static MP3s, no generation at playback.
 export const STEP_AUDIO = {
+  welcome: [
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/969137d62_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/0f9c50951_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/c656ad564_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/cb79c5448_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/e5345f6f8_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/3416007e6_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/b5f4bf4a3_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/72bbc033f_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/acbb54636_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/e6852ccf2_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/578d7cf26_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/44653e49e_speech.mp3',
+  ],
   dashboard: [
     'https://media.base44.com/files/public/6a249282cb496579542673b7/1e48715c5_speech.mp3',
     null,
