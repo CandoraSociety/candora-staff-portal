@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +60,7 @@ export default function MarketingHome() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="marketing" />
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Marketing &amp; Fundraising</h1>
         <p className="text-slate-500 text-sm mt-1">Manage campaigns, assets, email, social media, and more.</p>

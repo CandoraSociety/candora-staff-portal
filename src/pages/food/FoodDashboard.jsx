@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { ShoppingBag, DollarSign, AlertTriangle, TrendingUp, CalendarDays, Users, Clock } from 'lucide-react';
@@ -69,6 +70,7 @@ export default function FoodDashboard() {
 
   return (
     <div className="p-6 space-y-6">
+      <PortalQuickUpload moduleId="food" />
       <div>
         <h1 className="text-2xl font-bold">Food Services Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">Overview of operations and performance</p>

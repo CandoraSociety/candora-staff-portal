@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +39,7 @@ export default function LMSDashboard() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <PortalQuickUpload moduleId="lms" />
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>

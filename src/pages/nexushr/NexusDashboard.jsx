@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +37,8 @@ export default function NexusDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader title="HR Dashboard" description="Overview of your organization's HR data" />
+
+      <PortalQuickUpload moduleId="nexushr" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Active Employees" value={activeEmployees} icon={Users} color="bg-primary/10 text-primary" to="/nexushr/employees" />

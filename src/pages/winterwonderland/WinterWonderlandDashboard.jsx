@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -57,6 +58,7 @@ export default function WinterWonderlandDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="winter-wonderland" />
       {/* Festival Header */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-900">
         <CardContent className="pt-6">

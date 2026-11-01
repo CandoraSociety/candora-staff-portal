@@ -1,4 +1,5 @@
 import React from "react";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Users, BookOpen, UserCog, ClipboardCheck, TrendingUp } from "lucide-react";
@@ -65,6 +66,7 @@ export default function ELLDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="ell" />
       <div>
         <h1 className="text-3xl font-display font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Overview of your English Language Learning program</p>

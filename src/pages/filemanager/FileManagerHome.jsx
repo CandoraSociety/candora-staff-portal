@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { base44 } from "@/api/base44Client";
 import { Files, StickyNote, FolderOpen, HardDrive } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
@@ -47,6 +48,7 @@ export default function FileManagerHome() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-8 space-y-6">
+      <PortalQuickUpload moduleId="filemanager" />
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">

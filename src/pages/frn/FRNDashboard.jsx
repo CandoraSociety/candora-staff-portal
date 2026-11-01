@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -45,6 +46,7 @@ export default function FRNDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="frn" />
       <div>
         <h1 className="text-2xl font-heading font-bold text-foreground">FRN Programs Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">Overview of targeted FRN program intake and enrollment</p>

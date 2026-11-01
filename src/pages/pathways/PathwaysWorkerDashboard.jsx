@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { LogOut, Users, Bell, Database, CalendarClock, ArrowRightLeft, Check, X, Building2, ShoppingCart, ExternalLink, FileText } from "lucide-react";
@@ -246,7 +247,8 @@ export default function PathwaysWorkerDashboard() {
         </Button>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+        <PortalQuickUpload moduleId="pathways" />
         {/* Recently viewed clients */}
         <RecentlyViewedClients />
 

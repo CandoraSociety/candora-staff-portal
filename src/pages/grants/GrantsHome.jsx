@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export default function GrantsHome() {
 
   return (
     <div className="space-y-8">
+      <PortalQuickUpload moduleId="grants" />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold tracking-tight text-accent">Grant / Proposal Manager</h1>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -51,6 +52,7 @@ export default function ChildmindingDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="childminding" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold text-foreground">Childminding Dashboard</h1>

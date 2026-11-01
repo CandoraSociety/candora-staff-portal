@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Calendar, FileText, Users, Target, Clock, ChevronRight, MessageSquare } from "lucide-react";
@@ -40,6 +41,7 @@ export default function BoardDashboard() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-8">
+      <PortalQuickUpload moduleId="board" />
       <div>
         <h1 className="font-heading text-3xl font-semibold text-foreground">Board Dashboard</h1>
         <p className="text-muted-foreground mt-1">{format(new Date(), "EEEE, MMMM d, yyyy")}</p>

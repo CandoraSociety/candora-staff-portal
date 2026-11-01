@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -35,6 +36,7 @@ export default function ReceptionDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="reception" />
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-heading font-bold text-foreground">Reception Dashboard</h1><p className="text-muted-foreground text-sm mt-1">{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
         <Button variant="destructive" onClick={() => setUrgentOpen(true)}><Siren className="h-4 w-4" /> Urgent Alert</Button>

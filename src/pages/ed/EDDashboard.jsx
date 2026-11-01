@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +72,7 @@ export default function EDDashboard() {
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
+      <PortalQuickUpload moduleId="ed" />
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold">{greeting()}, {user?.full_name?.split(" ")[0] || "Director"} 👋</h1>

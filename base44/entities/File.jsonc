@@ -39,7 +39,7 @@
     },
     "sp_path": {
       "type": "string",
-      "description": "SharePoint folder path the file is stored under (e.g. /_VAULT_FileManager/Finance - Invoices)"
+      "description": "SharePoint folder path the file is stored under (e.g. /_VAULT_FileManager/Finance - Invoices or /_DEPT_ELL)"
     },
     "storage_backend": {
       "type": "string",
@@ -95,6 +95,10 @@
     "source_app": {
       "type": "string",
       "description": "Name of the app that triggered this upload (for cross-app automation)"
+    },
+    "portal_key": {
+      "type": "string",
+      "description": "Portal module whose SharePoint folder this file was uploaded to from that portal's dashboard (e.g. ell, pathways, finance). Empty for File Manager uploads."
     }
   },
   "required": [

@@ -16,6 +16,22 @@ export async function uploadToVaultStorage(file, { category, subcategory } = {})
   return res.data;
 }
 
+// Upload from a portal's dashboard: the file lands in that portal's own
+// SharePoint folder rather than the File Manager's category tree.
+export async function uploadToPortalStorage(file, { portal, portalName, description } = {}) {
+  const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+  const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri, expires_in: 600 });
+  const res = await base44.functions.invoke("uploadPortalFile", {
+    signed_url,
+    original_name: file.name,
+    portal,
+    portal_name: portalName,
+    description: description || "",
+  });
+  if (res.data?.error) throw new Error(res.data.error);
+  return res.data;
+}
+
 // Resolves a usable (short-lived) URL for a vault file. Records not yet
 // migrated still use their legacy link.
 export async function getVaultFileUrl(file) {

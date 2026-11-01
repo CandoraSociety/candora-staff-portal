@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
@@ -36,6 +37,7 @@ export default function EmpowerUDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="empoweru" />
       <div>
         <h1 className="text-2xl font-heading font-bold text-foreground">EmpowerU Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">10-week financial literacy program · Partnered with United Way · Funded by ATB</p>

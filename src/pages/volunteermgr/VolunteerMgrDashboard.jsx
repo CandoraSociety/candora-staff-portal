@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import BirthdayCard from '@/components/volunteermgr/BirthdayCard';
@@ -180,6 +181,8 @@ export default function VolunteerMgrDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Quick upload into the Volunteer Manager SharePoint folder */}
+      <PortalQuickUpload moduleId="volunteermgr" />
       {/* Header */}
       <div>
         <div className="flex items-center gap-2.5">

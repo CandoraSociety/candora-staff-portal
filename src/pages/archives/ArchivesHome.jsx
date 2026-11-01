@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import PortalQuickUpload from "@/components/portal/PortalQuickUpload";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -43,6 +44,7 @@ export default function ArchivesHome() {
 
   return (
     <div className="space-y-8">
+      <PortalQuickUpload moduleId="archives" />
       {/* Hero */}
       <div className="relative rounded-2xl overflow-hidden bg-sidebar p-8 md:p-12">
         <div className="relative z-10">

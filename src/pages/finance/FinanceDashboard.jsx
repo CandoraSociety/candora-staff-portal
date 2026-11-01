@@ -1,4 +1,5 @@
 import React from 'react';
+import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -22,6 +23,7 @@ export default function FinanceDashboard() {
 
   return (
     <div className="space-y-6">
+      <PortalQuickUpload moduleId="finance" />
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Wallet className="h-6 w-6 text-primary" /> Finance Dashboard
