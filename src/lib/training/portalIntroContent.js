@@ -4,6 +4,50 @@ export const PORTAL_INTRO_LOGO = 'https://base44.app/api/apps/6a249282cb49657954
 // Per-module intro "videos": scene slides + static, generated female narration.
 // No generation calls or browser TTS at playback — each scene plays its MP3.
 const INTRO_SCENES_BY_MODULE = {
+  welcome: [
+    {
+      kicker: 'Orientation',
+      title: 'Welcome to the Candora Staff Portal.',
+      body: 'Welcome to the Candora Staff Portal. This is the app you sign into at the start of your workday: one system for the tools, the information, and the paperwork that come with your job. Over the next few minutes you will see how the whole thing is laid out, and where everything lives.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/e0525d226_speech.mp3',
+    },
+    {
+      kicker: 'What this app is',
+      title: 'One organization, one system.',
+      body: 'It helps to know what kind of app this is. Instead of separate programs for clients, for programs, for finance, and for staff paperwork, Candora runs on one connected system. Almost all of your administrative work happens inside this one place, and what you save here connects to everything else.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/8bbae9a57_speech.mp3',
+    },
+    {
+      kicker: 'The portals',
+      title: 'One app, many workspaces.',
+      body: 'Inside the staff portal, the work is split into workspaces we call portals. Pathways for employment case management, the Resource Centre for the central client database, English Language Learning, Finance, Reception, the File Manager, and more. Each is simply a part of the same app, built for one area of the work.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/2494ff4e1_speech.mp3',
+    },
+    {
+      kicker: 'Your screen',
+      title: 'Three parts that never move.',
+      body: 'Three parts of the screen stay with you everywhere. Down the left, the sidebar is your map between areas. Along the top, the tab bar holds each portal you have opened, rather like tabs in a web browser. And your main page is home base, where every sign-in starts.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/4c83500f7_speech.mp3',
+    },
+    {
+      kicker: 'Your page',
+      title: 'A main page that belongs to you.',
+      body: 'Your main page is yours. Shortcut cards put the portals you use most one click away, optional panels let you decide how much or how little sits in front of you, and the alerts that need your attention appear there on their own. Changing any of it only affects your own view.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/47ab75549_speech.mp3',
+    },
+    {
+      kicker: 'Everyday staff work',
+      title: 'The items every employee uses.',
+      body: 'Two sidebar groups belong to every employee, whichever portal you work in. Purchases holds reimbursement requests and card receipts. Time and Attendance holds your time off, sick and personal days, and your timesheets. They follow you everywhere, so you never go hunting for them.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/306faf906_speech.mp3',
+    },
+    {
+      kicker: 'The promise',
+      title: "You don't need to learn all of it.",
+      body: 'And here is the important part. You are not expected to learn all of this today. Most people settle into two or three portals and leave the rest alone. There is a training module for each area whenever the work calls for it, and a knowledge base that answers plain questions. Start with familiarity. The details come as you need them.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/df48b6c9c_speech.mp3',
+    },
+  ],
   dashboard: [
     {
       kicker: 'Candora Staff Portal',

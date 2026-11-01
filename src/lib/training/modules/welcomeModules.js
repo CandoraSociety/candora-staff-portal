@@ -13,6 +13,12 @@ export const WELCOME_MODULES = [
     path: "/",
     steps: [
       {
+        title: "Welcome to the Candora Staff Portal",
+        body: "Press Play to hear the orientation: what this app is, the workspaces inside it, and the three parts of the screen that never move. Each scene stays on screen until its narration has finished. Nothing here is graded, and everything you see in training is simulated. When you're ready, press Next below to walk the app itself.",
+        introExplainer: true,
+        path: "/"
+      },
+      {
         title: "Start here — nothing to memorise",
         body: "Welcome to Candora. This is the first training module, and it's deliberately gentle: a tour of the app and how it's laid out, not a test. Nothing here is graded, and nothing you click during training touches real client or staff records — it all runs on simulated demo data. The single aim today is familiarity: by the end you'll recognise the parts of the screen and know where to go back to when you need something. You are not expected to remember the details.",
         target: { selector: '[data-tour="dashboard-hero"]' }

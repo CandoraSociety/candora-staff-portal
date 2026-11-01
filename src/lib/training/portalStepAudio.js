@@ -4,6 +4,7 @@
 // the intro videos; static MP3s, no generation at playback.
 export const STEP_AUDIO = {
   welcome: [
+    null,
     'https://media.base44.com/files/public/6a249282cb496579542673b7/969137d62_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/0f9c50951_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/c656ad564_speech.mp3',
