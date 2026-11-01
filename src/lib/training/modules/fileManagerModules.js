@@ -57,8 +57,8 @@ export const FILE_MANAGER_MODULES = [
         target: { selector: '[data-tour="fm-upload-fields"]' }
       },
       {
-        title: "The access levels",
-        body: "Five levels decide who sees a file: personal (only you), universal (everyone), manager, finance (only authorized people) and corporate. Choose the least open level that still does the job — this is the setting you can't fix later on behalf of someone who can't see the file. Finance files also let you name the people authorized to open them.",
+        title: "Setting the access level",
+        body: "This row of cards is where you set the permission level, and it's one click while you upload. Five levels: personal (only you), universal (all staff), manager (managers only), finance (the finance team) and corporate (executive leadership). Some cards are greyed out depending on your role — manager, finance and corporate are only offered to the roles they belong to. Set it correctly here, because the level is chosen at upload and there's no edit afterwards: a file filed as universal is in every staff member's search results, and one filed as finance never reaches anyone outside finance. When in doubt, pick the least open level that still does the job.",
         path: "/filemanager/upload",
         target: { selector: '[data-tour="fm-upload-access"]' }
       },

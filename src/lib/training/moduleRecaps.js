@@ -576,7 +576,7 @@ export const MODULE_RECAPS = {
     takeaways: [
       "The vault is behind the whole portal — dashboard Quick Files, portal upload cards, receipts and signed documents all file here.",
       "Uploading well means a display name, a category, an access level, a description and keywords.",
-      "Choose the least open access level that still does the job; you only see what you're allowed to open.",
+      "Access level is set by clicking its card while you upload — personal, universal, manager, finance or corporate — and some cards only appear for the roles they belong to. You only see what you're allowed to open.",
       "Each portal files into its own folder, so an ELL document and a Finance document never mix.",
       "Bulk Import, Collections, My Workspace and Notes are there when a single upload isn't enough.",
     ],
