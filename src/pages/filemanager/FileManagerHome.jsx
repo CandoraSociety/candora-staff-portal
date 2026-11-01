@@ -59,7 +59,7 @@ export default function FileManagerHome() {
 
       {/* Sorting Banner */}
       {unsortedFiles.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50 overflow-hidden p-0">
+        <Card data-tour="fm-sorting" className="border-amber-200 bg-amber-50 overflow-hidden p-0">
           <CardContent className="p-0">
             <SortingTasksBanner count={unsortedFiles.length} files={unsortedFiles} />
           </CardContent>

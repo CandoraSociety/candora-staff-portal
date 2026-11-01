@@ -7,7 +7,7 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "rc", title: "Resource Centre", moduleKeys: ["rc"] },
   { key: "ell", title: "ELL", moduleKeys: ["ell"] },
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
-  { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager"] },
+  { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },
 ];
 
 // Splits the modules a staff member can take into portal sections. Any module

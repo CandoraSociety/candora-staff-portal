@@ -232,7 +232,7 @@ export default function FileEditor() {
             Back
           </Button>
         </div>
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div data-tour="fm-editor" className="flex-1 flex items-center justify-center p-8">
           <div className="max-w-lg w-full space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-bold mb-1">Open a File to Edit</h2>
@@ -318,7 +318,7 @@ export default function FileEditor() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div data-tour="fm-editor" className="flex-1 flex overflow-hidden">
         {/* Left Toolbar (Desktop) */}
         <EditorToolbar
           tool={tool}

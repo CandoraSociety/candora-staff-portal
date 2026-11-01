@@ -80,4 +80,24 @@ export const DATABASE_RECAP_SCENES = {
       'Practice: upload a file, find it with search and filters, then try a bulk import.',
     ] },
   ],
+  filemanager_advanced: [
+    { title: 'Finding it, and clearing the queue', audioUrl: audio('95c7f7331'), points: [
+      'Search page: matches display name, original name, description, summary and keywords, then narrows by category and access level.',
+      'It only ever returns files you are allowed to open — a short list usually means permissions, not a missing file.',
+      'The amber banner is the sorting queue: one file at a time, pick a category, save, and it moves to the next.',
+      'A tidy queue keeps the category filters and the dashboard breakdown worth trusting.',
+    ] },
+    { title: 'Collections and your workspace', audioUrl: audio('215510ec7'), points: [
+      'A collection groups existing files for one purpose: a grant package, an audit, a board package.',
+      'Files are not copied or moved, and deleting a collection never deletes the files inside it.',
+      'My Workspace groups the files of one piece of work and pins them from the vault without moving them.',
+      'The workspace is private to you — nobody else works from your groups.',
+    ] },
+    { title: 'Editor, notes and permissions', audioUrl: audio('c6e438917'), points: [
+      'The editor annotates a PDF or image — draw, highlight, text, signature — and saves it as a new file; the original stays untouched.',
+      'Notes keep the context with the work and stay searchable; the floating note button follows you.',
+      'A shared link never bypasses permissions, and editing details is how a misfiled file gets its category fixed.',
+      'Portal tabs mirror your access, and folders are created and secured in Users and Access.',
+    ] },
+  ],
 };

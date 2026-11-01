@@ -2,7 +2,7 @@ export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg"] },
-  { title: "Tools", keys: ["filemanager"] },
+  { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
 // Which portal series each module belongs to — the training sidebar shows a
@@ -23,6 +23,7 @@ export const TRAINING_MODULE_SERIES = {
   ell: "ell",
   centralreg: "centralreg",
   filemanager: "filemanager",
+  filemanager_advanced: "filemanager",
 };
 
 // Display name of each training series (the "portal" a module belongs to) —
@@ -157,6 +158,14 @@ const SECTION_STARTS = {
     "All Files": "Browsing and finding",
     "Uploading one file": "Uploading and access levels",
     "Portal folders": "Folders, bulk and collections",
+    "Time to practice": "Practice",
+  },
+  filemanager_advanced: {
+    "Beyond the basics": "Overview",
+    "Search the whole vault": "Finding and filing",
+    "Clearing the sorting queue": "Finding and filing",
+    "Collections — handing over a package": "Working with files",
+    "Working a file from the list": "Working with files",
     "Time to practice": "Practice",
   },
 };

@@ -125,7 +125,7 @@ export default function Notes() {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div data-tour="fm-notes" className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Notes</h1>
           <p className="text-sm text-muted-foreground mt-1">

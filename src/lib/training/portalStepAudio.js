@@ -225,4 +225,16 @@ export const STEP_AUDIO = {
     'https://media.base44.com/files/public/6a249282cb496579542673b7/66c56cc62_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/91879025a_speech.mp3',
   ],
+  filemanager_advanced: [
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/8fc4d2017_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/c5bb38e9d_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/74bd6a45b_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/f9a06365c_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/4255372b8_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/272efa909_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/1e4a21dc1_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/2662542e2_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/e719e2539_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/7b744aa37_speech.mp3',
+  ],
 };

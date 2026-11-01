@@ -66,7 +66,7 @@ export default function Collections() {
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto space-y-6">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div data-tour="fm-collections" className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Collections</h1>
           <p className="text-sm text-muted-foreground mt-1">

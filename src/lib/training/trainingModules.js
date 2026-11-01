@@ -18,6 +18,7 @@
 
 import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
 import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules";
+import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 
 export const TRAINING_MODULES = [
   {
@@ -1267,7 +1268,8 @@ export const TRAINING_MODULES = [
       }
     ]
   },
-  ...FILE_MANAGER_MODULES
+  ...FILE_MANAGER_MODULES,
+  ...FILE_MANAGER_ADVANCED_MODULES
 ];
 
 // Which portal a training module belongs to — used to show each staff member
@@ -1288,6 +1290,7 @@ export const TRAINING_MODULE_ACCESS = {
   ell: "ell",
   centralreg: "central-registration",
   filemanager: "filemanager",
+  filemanager_advanced: "filemanager",
 };
 
 export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === key) || null;

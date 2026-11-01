@@ -607,6 +607,39 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  filemanager_advanced: {
+    kicker: "What we've learned",
+    title: "Keeping a vault usable at scale.",
+    body: "Let's bring the advanced side together. Finding a file you only half remember is the search page's job, because it matches the display name, the original name, the description, the summary and the keywords, and it only returns what you are allowed to open. The amber banner is the sorting queue, one file at a time, and an empty queue is what keeps the categories trustworthy. Collections group existing files for one hand-over without copying them, and your workspace groups the files of one piece of work without moving them. The editor annotates a document and saves it as a new file, leaving the original alone, and notes keep the context searchable. Sharing never bypasses permissions, and folders are created and secured in Users and Access.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/95c7f7331_speech.mp3",
+    takeaways: [
+      "The search page matches description, summary and keywords too, then narrows by category and access level.",
+      "The amber banner is the sorting queue: one file at a time, a category each, and the banner clears when it's empty.",
+      "A collection is a hand-over set of existing files — nothing is copied, and deleting it never deletes the files.",
+      "The editor annotates a document and saves it as a new file, so the original stays untouched.",
+      "A shared link never bypasses permissions, and folders are created or renamed in Users and Access.",
+    ],
+    quiz: [
+      {
+        question: "A file you know exists doesn't come back from the search page. What is the most likely reason?",
+        options: ["The search only covers names", "You don't have its access level", "The file is a PDF", "Search skips older files"],
+        answer: 1,
+        explain: "Search reads every field but only returns files you're allowed to open, so permissions are the usual answer.",
+      },
+      {
+        question: "What happens to the files inside a collection when you delete the collection?",
+        options: ["They're deleted with it", "They move to My Files", "They stay where they're filed", "They become unsorted"],
+        answer: 2,
+        explain: "A collection is only a grouping — the files themselves are never copied, moved or deleted with it.",
+      },
+      {
+        question: "You annotate and sign a PDF in the File Editor and save it. What happens to the original?",
+        options: ["It's overwritten", "It's moved to the sorting queue", "It stays untouched", "It's deleted after a week"],
+        answer: 2,
+        explain: "The marked-up version is saved into the vault as a new file; the original is left exactly as it was.",
+      },
+    ],
+  },
 };
 
 export const getModuleRecap = (key) => MODULE_RECAPS[key] || null;

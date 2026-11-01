@@ -318,7 +318,7 @@ export const FACILITATOR_GUIDE = {
       "Narrowing it down": "Have the room watch you find something in three clicks: search, then a category filter. Name the common support question out loud — 'my file isn't there' is almost always an access filter.",
       "Opening a file": "Open one file so they see the viewer and the download action. Mention that access is enforced on the file itself, not just the page.",
       "Uploading one file": "Live demo a real upload on the projector if you have a demo document. Spend the time on keywords — it's the field people skip and the one that makes the file findable later.",
-      "The access levels": "Read the five levels out loud, slow. The rule to repeat: choose the least open level that still does the job, because you cannot widen access later for someone who cannot see the file to ask about it.",
+      "Setting the access level": "Read the five levels out loud, slow. The rule to repeat: choose the least open level that still does the job, because you cannot widen access later for someone who cannot see the file to ask about it.",
       "My Files — your own space": "Short slide. Most staff will use this one more than the rest of the portal — it's the personal drive equivalent.",
       "Portal folders": "Connect it back to the first slide: the upload card they already use puts files in the right portal folder with no filing decision needed.",
       "Bulk Import — a stack, not a file": "Only demo this if your group actually digitizes records. The photo sorter is the crowd-pleaser; the sorting banner closes the loop on uncategorized files.",
@@ -333,6 +333,36 @@ export const FACILITATOR_GUIDE = {
     tips: [
       "Run this module for everyone, even people who will never open the portal — the Quick Files connection is what makes it stick.",
       "Have one demo document and a couple of photos ready so the single upload and the bulk import can both be shown honestly.",
+    ],
+  },
+
+  filemanager_advanced: {
+    duration: "About 30 minutes (5 tour · 20 practice · 5 wrap-up)",
+    objectives: [
+      "The filing staff member can find a file from a half-remembered detail, not just its name",
+      "They can clear a sorting backlog and build a hand-over collection without moving files",
+      "They know the editor, the workspace and notes, and that sharing never bypasses permissions",
+    ],
+    stepNotes: {
+      "Beyond the basics": "Set the room: this is not a module for everyone. It's for the people who file on behalf of a team — admin, finance, HR. Frame it as keeping the vault trustworthy for everyone else.",
+      "Search the whole vault": "Demo the difference from the All Files box: search on a word from inside a document, not the file name. Repeat the permissions point — a short result list is a permissions answer, not a missing file.",
+      "Clearing the sorting queue": "Have them clear two or three files themselves. The habit to name out loud: the queue is short if it's never left to grow.",
+      "Collections — handing over a package": "Build one live with three files. Say the two facts people get wrong: nothing is copied or moved, and deleting the collection leaves the files alone.",
+      "My Workspace — the desk you're working at": "Ask each person to name one piece of work they'd group here. Point out it is private — this is not a shared team space.",
+      "The File Editor": "Sign or annotate one page on the projector. Stress that saving creates a new file and the original stays as it was — that is what makes it safe to use on records.",
+      "Notes that stay with the work": "Short. The point is to stop putting context in email. Show the floating note button and where the note lands.",
+      "Working a file from the list": "Walk the four actions on one card. The permissions point again: a shared link still needs the access level, so sharing is not a way to widen access.",
+      "Folders, portal tabs and permissions": "Show the portal tabs and explain that folders are created and secured in Users and Access by an admin. This is where they learn to send that request instead of refiling by hand.",
+      "Time to practice": "Three tasks: search by keyword, build a collection, clear one file out of the queue. Circulate on the collection — that is where people hesitate over what a collection is for.",
+    },
+    practiceNotes: {
+      "fm-adv-search": "Self-marked. Ask them what word they searched and why it wasn't the file name.",
+      "fm-adv-collection": "Auto-checked. Two files is enough; ask what hand-over the collection represents.",
+      "fm-adv-sort": "Self-marked. Confirm they picked a real category rather than leaving it as To Be Sorted.",
+    },
+    tips: [
+      "Run this only for staff who already file on a team's behalf — running it for everyone muddies what the basic module is for.",
+      "Have a messy batch ready so the sorting queue demo has real work in it.",
     ],
   },
 };
