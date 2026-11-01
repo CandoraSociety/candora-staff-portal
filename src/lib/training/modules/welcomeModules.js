@@ -9,7 +9,7 @@ export const WELCOME_MODULES = [
     key: "welcome",
     title: "Welcome to the Candora Staff Portal",
     shortTitle: "Welcome & App Tour",
-    blurb: "Start here. A short orientation to how the whole app is laid out — the sidebar, the portals, your main page — and why you only need to remember a few things today.",
+    blurb: "Start here. An orientation to the whole app: the portals and what each area of Candora does, how those portals feed each other, the sidebar, your main page — and why you only need to remember a few things today.",
     path: "/",
     steps: [
       {
@@ -27,6 +27,54 @@ export const WELCOME_MODULES = [
         title: "One app, many workspaces",
         body: "The Candora Staff Portal is one application. Inside it, each area of work has its own portal — Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Finance, Reception, the File Manager, and more. A portal is simply a workspace with its own pages and records, not a separate program to install. And nobody has all of them: your access decides which portals appear for you, which is why your list can look different from a co-worker's. That's normal.",
         target: { selector: '[data-tour="dashboard-portals"]' }
+      },
+      {
+        title: "Every portal, in one list",
+        body: "Portals is the full list of workspaces your access allows, and it's worth a look even now. You can search it, and the category tabs narrow it down. Because the list is built from your permissions, yours is shorter than a colleague's — that's by design, not a gap. Open any card and it becomes a tab, ready whenever you come back to it.",
+        path: "/portal",
+        target: { selector: '[data-tour="portal-cards"]', additionalSelectors: ['[data-tour="portal-filters"]'] }
+      },
+      {
+        title: "Portals that work with people",
+        body: "Most of Candora's programs live here in one form or another. Pathways carries employment case management. The Resource Centre is the central client database. English Language Learning runs classes, waitlists and assessments. EmpowerU runs financial empowerment cohorts, and Digital Literacy, Community Programs, the Family Resource Network and Childminding each have their own. Different work, the same app.",
+        path: "/rc",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "The shared front door",
+        body: "Some portals exist to receive people rather than to serve them over months. Central Registration is the shared front door: programs, sessions, capacity, waitlists and self-registration requests for every area in one place. Reception records the visit when somebody walks in. Between them, no program has to invent its own intake.",
+        path: "/central-registration",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "Money, people and paperwork",
+        body: "The same app also runs the organization itself. Finance holds payroll, reimbursements, MasterCard receipts, budgets and Pathways billing. NexusHR looks after employee records, reviews, incidents and training. The Volunteer Manager, the Events Manager, Grants, Marketing and the Board each have a portal too. If a job exists at Candora, there is a place for it.",
+        path: "/finance",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "Every portal files into one vault",
+        body: "One more worth seeing now. The File Manager is the document vault behind the whole app. A receipt attached in Purchases, a signed timesheet, a document uploaded from any portal's dashboard — they all land in the same place, sorted into folders by portal and protected by access levels. You may almost never open this portal and still use it every week.",
+        path: "/filemanager",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "One person, one record",
+        body: "Now the important part: these portals are not separate islands. A person who joins English Language Learning, EmpowerU, the Family Resource Network or a community program is matched to the same file in the central client database, so one person is one record everywhere. That's what lets any program see the whole picture instead of only its own slice of it.",
+        path: "/rc/clients",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "Referrals travel between portals",
+        body: "Referrals are the second connection. When a Pathways client needs language classes, digital skills or family support, the counsellor refers them to that Candora program from the client's file. The referral appears on the receiving program's own dashboard with the client's name and who sent it, and its progress is tracked back on the original file. Nothing is retyped or emailed.",
+        path: "/pathways/dashboard",
+        target: { selector: '[data-tour="page-content"]' }
+      },
+      {
+        title: "Your staff record ties it together",
+        body: "The staff side works the same way. Your employee record carries your supervisor, which is why a vacation request, a timesheet or an expense you submit reaches the right person's dashboard on its own. Approve the vacation and it fills into your timesheet. Approve the timesheet and Finance can run payroll from it. One record, one chain, no chasing.",
+        path: "/time-off/vacation-request",
+        target: { selector: '[data-tour="page-content"]' }
       },
       {
         title: "The sidebar is your map",

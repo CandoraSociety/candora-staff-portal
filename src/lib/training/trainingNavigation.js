@@ -44,6 +44,7 @@ const SECTION_STARTS = {
   welcome: {
     "Start here — nothing to memorise": "Welcome",
     "One app, many workspaces": "The big picture",
+    "Every portal, in one list": "Portals & how they connect",
     "The sidebar is your map": "Getting around",
     "Your main page is home base": "Your main page",
     "Everyday staff items": "Everyday staff tools",

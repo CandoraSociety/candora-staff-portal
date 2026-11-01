@@ -3,10 +3,10 @@ const audio = name => `https://media.base44.com/files/public/6a249282cb496579542
 export const STAFF_RECAP_SCENES = {
   welcome: [
     { title: 'One app, many workspaces', audioUrl: audio('99abaa5ce'), points: [
-      'One app, many workspaces: Pathways, the Resource Centre, ELL, Finance and the File Manager all live inside the same staff portal.',
+      'One app, many workspaces: client programs, registration, operations, people and money, oversight and the file vault all live inside the same staff portal.',
       'Your access decides your list: you only see the portals your role opens, so your list can differ from a colleague’s.',
-      'Portals open as tabs: each tab keeps your place, and the plus button reopens one any time.',
-      'The sidebar and top bar travel with you: they stay the same on every page.',
+      'One person, one record: every program that registers someone links to the same file in the central client database.',
+      'Work moves between portals: referrals arrive on another program’s dashboard, files land in one vault, and approved timesheets flow on to Finance.',
     ] },
     { title: 'Three things worth remembering', audioUrl: audio('3ffdd4b3c'), points: [
       'Start at your main page: announcements, alerts and the portals you use most live there.',

@@ -107,7 +107,7 @@ export default function AppLayout() {
             onClick={() => setShowWizard(true)}
           />
         )}
-        <main className="p-6 max-w-7xl mx-auto">
+        <main className="p-6 max-w-7xl mx-auto" data-tour="page-content">
           <Outlet context={{ user, access, permissions }} />
         </main>
       </div>

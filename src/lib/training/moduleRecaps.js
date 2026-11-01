@@ -11,14 +11,14 @@ export const MODULE_RECAPS = {
   welcome: {
     kicker: "What we've learned",
     title: "Familiar, not fluent — and that's the point.",
-    body: "Let's bring the tour together. The Candora Staff Portal is one app made of many workspaces, and you only see the ones your role opens. Your main page is home base: announcements, alerts and your own shortcut cards. A portal opens from the Portals list or the plus button, and each one takes its place as a tab that remembers where you were. The sidebar and top bar stay with you on every page. Nothing here needs memorising — training is a reference shelf you come back to when the work calls for it.",
+    body: "Let's bring the tour together. The Candora Staff Portal is one app made of many workspaces, and you only see the ones your role opens. Your main page is home base: announcements, alerts and your own shortcut cards. A portal opens from the Portals list or the plus button, and each one takes its place as a tab that remembers where you were. The sidebar and top bar stay with you on every page. And the portals are not islands: one central client database holds one record per person, referrals arrive on another program's dashboard, documents land in one vault, and an approved timesheet flows on to Finance. Nothing here needs memorising — training is a reference shelf you come back to when the work calls for it.",
     audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/99abaa5ce_speech.mp3",
     takeaways: [
-      "One app, many workspaces: each area of work has its own portal, and access decides which ones you see.",
+      "One app, many workspaces: client programs, registration, operations, people and money, oversight and the file vault all sit inside the same staff portal.",
       "Your main page is home base — announcements, alerts and the portals you use most.",
       "Open a portal from the Portals list or the + button, and it becomes a tab that keeps your place.",
-      "Your shortcut cards and widgets are yours to choose; nobody else's page changes.",
-      "Most people use two or three portals — not knowing the rest is normal and expected.",
+      "The portals are connected: one person is one record in the central client database, referrals travel to the receiving program, and every document files into one vault.",
+      "On the staff side your employee record does the routing — approvals reach your supervisor, and approved time off and timesheets flow on to Finance.",
     ],
     quiz: [
       {
