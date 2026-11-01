@@ -1037,84 +1037,6 @@ export const TRAINING_MODULES = [
   },
   ...PATHWAYS_EXTRA_MODULES,
   {
-    key: "rc",
-    title: "Resource Centre (Central Client Database)",
-    shortTitle: "Resource Centre",
-    blurb: "The Resource Centre portal manages Candora's central client database: files, notes, safety alerts, visits, referrals and intensive case management. Client information flows into the central client database from every program portal, and in some cases those portals pull information back from it.",
-    path: "/rc",
-    steps: [
-      {
-        title: "Welcome to the Resource Centre",
-        body: "Press Play to hear a quick overview of the Resource Centre and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training — keeping records complete here is what matters.",
-        introExplainer: true
-      },
-      {
-        title: "The dashboard",
-        body: "Your starting overview: activity across the centre, your pending visits and recent service logs.",
-        target: { selector: 'a[href="/rc"]' },
-        path: "/rc"
-      },
-      {
-        title: "Clients — the central client database",
-        body: "Every client file in the central client database lives here. Search by name or phone, and click a client to open their full file.",
-        target: { selector: 'a[href="/rc/clients"]' },
-        path: "/rc/clients"
-      },
-      {
-        title: "Inside a client file",
-        body: "A client file holds contact details, case notes, needs, visits and referrals. Safety alerts appear prominently at the top — always read them before discussing sensitive matters with a client."
-      },
-      {
-        title: "Intake — new clients",
-        body: "New clients are registered through Intake. The duplicate matcher helps you find an existing file before creating a new one, so we never end up with two records for the same person.",
-        target: { selector: 'a[href="/rc/intake"]' },
-        path: "/rc/intake"
-      },
-      {
-        title: "Referrals",
-        body: "Incoming and outgoing referrals are tracked here with their status, so nothing falls through the cracks between us and partner organizations.",
-        target: { selector: 'a[href="/rc/referrals"]' },
-        path: "/rc/referrals"
-      },
-      {
-        title: "Intensive case management",
-        body: "Complex files get deeper support here: service plans, stages, goals and risks — for clients who need more than a single visit.",
-        target: { selector: 'a[href="/rc/case-management"]' },
-        path: "/rc/case-management"
-      },
-      {
-        title: "Time to practice",
-        body: "That's the tour! Now you'll register a demo client, add a note, and log a service — all on simulated data."
-      }
-    ],
-    tasks: [
-      {
-        id: "rc-intake",
-        title: "Intake a new client",
-        body: "Use Intake to register a demo client. The duplicate matcher will help you practice finding existing files.",
-        hint: "Go to Intake, search for duplicates first, then complete the registration and save.",
-        path: "/rc/intake",
-        verify: { kind: "created", entity: "RCClient" }
-      },
-      {
-        id: "rc-note",
-        title: "Add a note to a client file",
-        body: "Open a demo client and add a note. Try marking it as a safety alert to see how it stands out.",
-        hint: "Open a client file from Clients, click Add Note and try the safety-alert toggle.",
-        path: "/rc/clients",
-        verify: { kind: "created", entity: "RCClientNote" }
-      },
-      {
-        id: "rc-service",
-        title: "Log a service",
-        body: "Log a service for one of your demo clients — services are what feed our funder reporting.",
-        hint: "Open a client file and use Log Service to record a service for them.",
-        path: "/rc/clients",
-        verify: { kind: "created", entity: "RCServiceLog" }
-      }
-    ]
-  },
-  {
     key: "ell",
     title: "ELL (English Language Learning)",
     shortTitle: "ELL",
@@ -1294,7 +1216,6 @@ export const TRAINING_MODULE_ACCESS = {
   pathways_assessment: "pathways",
   pathways_service_nav: "pathways",
   pathways_workshops: "pathways",
-  rc: "rc",
   central_database_basics: "rc",
   central_database_advanced: "rc",
   ell: "ell",
@@ -1322,7 +1243,7 @@ export const moduleForPath = (pathname) => {
     ["/pathways/assessment/", "pathways_assessment"],
     ["/pathways/workshops", "pathways_workshops"],
     ["/pathways", "pathways"],
-    ["/rc", "rc"],
+    ["/rc", "central_database_basics"],
     ["/ell", "ell"],
     ["/central-registration", "centralreg"],
     ["/reception", "reception"],

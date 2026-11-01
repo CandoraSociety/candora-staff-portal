@@ -252,34 +252,6 @@ export const FACILITATOR_GUIDE = {
       "pj-run3-rai": "Same road as Jamie — a good check that the sequence stuck without the hints.",
     }
   },
-  rc: {
-    duration: "About 40 minutes (5 intro · 18 tour · 12 practice · 5 wrap-up)",
-    objectives: [
-      "Staff can search the central client database and open a client file",
-      "Staff can run an intake without creating a duplicate record",
-      "Staff know safety alerts must be read before discussing sensitive matters",
-    ],
-    stepNotes: {
-      "Welcome to the Resource Centre": "Set the stakes: the central client database is the single source of truth for who our clients are, so record quality matters organization-wide. Resource Centre staff are its primary day-to-day users, but every program portal that manages participants feeds into it, and some pull information back from it. Training Mode means they can't break anything today.",
-      "The dashboard": "Their starting overview: centre activity, pending visits, recent service logs. Point out it refreshes as the team works.",
-      "Clients — the central client database": "Show search by name and phone. Everyone searches before creating — the rule of this portal.",
-      "Inside a client file": "Spend the most time here. Safety alerts sit prominently at the top: always read them before a sensitive conversation. Then notes, needs, visits, referrals.",
-      "Intake — new clients": "The duplicate matcher is the hero: find the existing file before creating a new one. Two records for one person is this portal's biggest data problem.",
-      "Referrals": "Incoming and outgoing, each with a status, so nothing falls through the cracks with partner organizations.",
-      "Intensive case management": "For complex files only: service plans, stages, goals, risks. Most staff won't use it daily but should know it exists.",
-      "Time to practice": "Hands-on: register a demo client, add a note (try a safety alert), log a service. Logging services correctly is what feeds funder reporting.",
-    },
-    practiceNotes: {
-      "rc-intake": "Auto-checked. Encourage them to trigger the duplicate matcher on purpose by typing a demo client's name.",
-      "rc-note": "Auto-checked. The safety-alert toggle is the interesting part — make sure everyone tries it.",
-      "rc-service": "Auto-checked. Emphasize: a visit without a logged service is a visit funders never see.",
-    },
-    tips: [
-      "Stress the search-before-create rule at every step — it's the habit that keeps the database clean.",
-      "Safety alerts deserve a real example (an allergy, a no-contact request) so people understand their weight.",
-    ],
-  },
-
   ell: {
     duration: "About 40 minutes (5 intro · 18 tour · 12 practice · 5 wrap-up)",
     objectives: [

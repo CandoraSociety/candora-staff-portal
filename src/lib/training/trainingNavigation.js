@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "central_database_basics", "central_database_advanced", "ell", "centralreg", "reception"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "central_database_basics", "central_database_advanced", "ell", "centralreg", "reception"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -20,7 +20,6 @@ export const TRAINING_MODULE_SERIES = {
   pathways_assessment: "pathways",
   pathways_service_nav: "pathways",
   pathways_workshops: "pathways",
-  rc: "rc",
   central_database_basics: "rc",
   central_database_advanced: "rc",
   centralreg: "centralreg",
@@ -184,12 +183,6 @@ const SECTION_STARTS = {
     "Taking the roster": "Rosters & completion",
     "Completing a workshop — one click, many files": "Rosters & completion",
     "The schedule view": "Rosters & completion",
-    "Time to practice": "Practice",
-  },
-  rc: {
-    "Welcome to the Resource Centre": "Overview",
-    "Clients — the central client database": "Client files & intake",
-    "Referrals": "Referrals & case management",
     "Time to practice": "Practice",
   },
   ell: {

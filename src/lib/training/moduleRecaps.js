@@ -367,45 +367,6 @@ export const MODULE_RECAPS = {
     ],
   },
 
-  rc: {
-    kicker: "What we've learned",
-    title: "One record per person.",
-    body: "To bring it together: the Resource Centre is our central client database. The dashboard gives you the overview, and Clients holds every file. Inside a file you will find contact details, notes, needs, visits and referrals, with safety alerts at the top that you always read first. New clients are registered through Intake, where the duplicate matcher stops us creating two records for one person. Referrals are tracked in both directions, and complex files get the deeper support of intensive case management.",
-    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/a48c51e2b_speech.mp3",
-    takeaways: [
-      "The Resource Centre is the central client database — every client file lives in Clients.",
-      "A file holds contact details, notes, needs, visits and referrals.",
-      "Safety alerts sit at the top of a file and are read before any sensitive conversation.",
-      "Intake's duplicate matcher keeps one record per person; link an existing file instead of creating a new one.",
-      "Referrals are tracked in both directions, and complex files move to intensive case management.",
-    ],
-    quiz: [
-      {
-        question: "Where does every client file in the central client database live?",
-        options: ["Clients", "Referrals", "Intensive case management", "The dashboard"],
-        answer: 0,
-        explain: "Clients is the central client database; the other pages read from those files.",
-      },
-      {
-        question: "What must you read first when opening a client file?",
-        options: ["Service logs", "Safety alerts at the top", "Referral history", "The visit list"],
-        answer: 1,
-        explain: "Safety alerts appear prominently at the top and should always be read before discussing sensitive matters.",
-      },
-      {
-        question: "What does Intake's duplicate matcher prevent?",
-        options: ["Missing notes", "Two records for the same person", "Late services", "Lost referrals"],
-        answer: 1,
-        explain: "It finds an existing file before a new one is created, so nobody ends up with two records.",
-      },
-      {
-        question: "Which files get service plans, stages, goals and risks?",
-        options: ["All files", "Files in intensive case management", "Only new intakes", "Referrals"],
-        answer: 1,
-        explain: "Intensive case management is the deeper workspace for clients who need more than a single visit.",
-      },
-    ],
-  },
   reception: {
     kicker: "What we've learned",
     title: "The desk, in three moves.",

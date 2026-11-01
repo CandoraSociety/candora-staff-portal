@@ -1,25 +1,5 @@
 const audio = name => `https://media.base44.com/files/public/6a249282cb496579542673b7/${name}_speech.mp3`;
 export const DATABASE_RECAP_SCENES = {
-  rc: [
-    { title: 'One person, one central client file', audioUrl: audio('c12c9affb'), points: [
-      'Find the person first: Use Clients to search the central client database by name or phone.',
-      'Check duplicate matches: Intake helps you link the existing file before creating another.',
-      'Keep the basics current: The file holds contact information, case notes, needs, visits and referrals.',
-      'Use the dashboard: Review current activity, pending visits and recent service logs.',
-    ] },
-    { title: 'Make each interaction useful to the next worker', audioUrl: audio('02f1d87ac'), points: [
-      'Read safety alerts first: Check the top of the file before discussing sensitive information.',
-      'Write the case note: Record what happened and what another worker needs to understand.',
-      'Log the service: Record the support delivered; service logs feed funder reporting.',
-      'Keep needs and visits current: Update the existing client file so the history stays together.',
-    ] },
-    { title: 'Track the next step, not just the visit', audioUrl: audio('76466adae'), points: [
-      'Incoming referrals: Record where the client came from and the current referral status.',
-      'Outgoing referrals: Keep the receiving agency and the handoff status visible on the file.',
-      'Use deeper support when needed: Intensive case management holds service plans, stages, goals and risks.',
-      'Return to the same record: Keeping all work together prevents duplicate or disconnected client histories.',
-    ] },
-  ],
   ell: [
     { title: 'Keep the learner roster accurate', audioUrl: audio('03ed639fc'), points: [
       'Learners: Find each person’s CLB level, enrollment status and assigned class.',

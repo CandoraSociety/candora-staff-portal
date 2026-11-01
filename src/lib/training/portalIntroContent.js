@@ -215,26 +215,6 @@ const INTRO_SCENES_BY_MODULE = {
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/6372a3dfb_speech.mp3',
     },
   ],
-  rc: [
-    {
-      kicker: 'Resource Centre',
-      title: 'Welcome to the Resource Centre.',
-      body: "Welcome to the Resource Centre, home of Candora's central client database. Resource Centre staff are the database's primary day-to-day users, but it belongs to the whole organization: the program portals that manage participants, such as Pathways, ELL, EmpowerU and the others, feed their client information into the central client database, and in some cases pull information back from it. It is the single source of truth for who our clients are and how the organization has supported them.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/fd2b76bc3_speech.mp3',
-    },
-    {
-      kicker: 'Resource Centre',
-      title: 'Files, notes and alerts.',
-      body: 'Every client file holds contact details, case notes, needs, visits and referrals, with safety alerts shown prominently at the top.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/0c67b0e6d_speech.mp3',
-    },
-    {
-      kicker: 'Resource Centre',
-      title: "What you'll practice.",
-      body: "You'll register a client through Intake, add a note, and log a service, the records that feed our funder reporting.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/8d360cfda_speech.mp3',
-    },
-  ],
   ell: [
     {
       kicker: 'English Language Learning',
