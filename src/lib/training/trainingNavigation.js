@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "rc", "ell", "centralreg", "reception"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -23,6 +23,7 @@ export const TRAINING_MODULE_SERIES = {
   rc: "rc",
   ell: "ell",
   centralreg: "centralreg",
+  reception: "reception",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
 };
@@ -36,6 +37,7 @@ export const TRAINING_SERIES_TITLES = {
   rc: "Resource Centre",
   ell: "ELL",
   centralreg: "Central Registration",
+  reception: "Reception",
   filemanager: "File Manager",
 };
 
@@ -49,6 +51,16 @@ const SECTION_STARTS = {
     "Your main page is home base": "Your main page",
     "Everyday staff items": "Everyday staff tools",
     "Where the training lives": "Training & help",
+    "Time to practice": "Practice",
+  },
+  reception: {
+    "Welcome to the front desk": "Getting started",
+    "Your dashboard at a glance": "The dashboard",
+    "Appointments — visitor and client": "Appointments & drop-ins",
+    "Client Visit — one flow for every visit": "Client visits",
+    "Program registration": "Programs & people",
+    "Staff Directory — who do they need to see": "Front desk tools",
+    "Simple mode for the front desk": "Making it simple",
     "Time to practice": "Practice",
   },
   dashboard: {

@@ -50,7 +50,9 @@ export default function ReceptionLayout() {
             ); })}
           </nav>
           <div className="flex items-center gap-4">
-            <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark className="hidden sm:flex" />
+            <div data-tour="reception-simple-mode" className="hidden sm:block">
+              <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
+            </div>
             <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
           </div>
         </div>

@@ -406,6 +406,46 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  reception: {
+    kicker: "What we've learned",
+    title: "The desk, in three moves.",
+    body: "To bring it together: find the person, record the visit, and send them to the right place. Appointments holds the day's bookings and lets you check a visitor in the moment they arrive; drop-ins record everyone who walks in, and checking them out keeps the building count honest. Client Visit is where a visit actually becomes a record, whether it was bus tickets handed over or a casework conversation, and Program Registration signs people up without a second list. When the answer isn't one of our programs, Resource Finder finds the outside support. And on a busy shift, Simple mode leaves three cards and three tabs, so nothing gets in the way of the person standing at the desk.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/905251bda_speech.mp3",
+    takeaways: [
+      "Find the person first: search the central client database before typing a new name.",
+      "Appointments are booked, checked in and updated from the one list — visitor and client tabs separate them.",
+      "A drop-in records every walk-in; check them out when they leave so the dashboard stays true.",
+      "Client Visit turns a visit into a record — grab-and-go resources or a casework conversation with its service category.",
+      "Program Registration signs people into any Candora program, and Resource Finder covers the help we don't run ourselves.",
+      "Simple mode trims the desk to three cards and three tabs: Appointments, Drop-Ins and Program Registration.",
+    ],
+    quiz: [
+      {
+        question: "Someone walks in with no appointment. What do you record?",
+        options: ["A visitor appointment for now", "A drop-in with their arrival time and who they're seeing", "A program registration", "Nothing until their worker arrives"],
+        answer: 1,
+        explain: "Walk-ins are drop-ins: they record arrival, purpose and staff member, and get checked out when they leave.",
+      },
+      {
+        question: "A visitor with a booking has just arrived. What's the one action that matters most?",
+        options: ["Check them in on their appointment row", "Create a second appointment", "Log a client visit", "Email the staff member"],
+        answer: 0,
+        explain: "Checking in marks them attended, so the staff member knows their visitor is in the building.",
+      },
+      {
+        question: "Where does what you record during a client visit end up?",
+        options: ["In a reception-only list", "On that client's file in the central client database", "In an email to the caseworker", "Nowhere until Finance reconciles it"],
+        answer: 1,
+        explain: "Visits are written into the client's service history, which caseworkers and funder reporting read.",
+      },
+      {
+        question: "What does Simple mode do to Reception?",
+        options: ["Hides the client's personal information", "Leaves three cards and three tabs: Appointments, Drop-Ins, Program Registration", "Turns off program registration", "Shares your dashboard with other staff"],
+        answer: 1,
+        explain: "It trims your own view to the three front desk moves, and only affects your account.",
+      },
+    ],
+  },
 
   ell: {
     kicker: "What we've learned",

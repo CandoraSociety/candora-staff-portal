@@ -20,6 +20,7 @@ import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
 import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules";
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
+import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -1271,6 +1272,7 @@ export const TRAINING_MODULES = [
       }
     ]
   },
+  ...RECEPTION_MODULES,
   ...FILE_MANAGER_MODULES,
   ...FILE_MANAGER_ADVANCED_MODULES
 ];
@@ -1293,6 +1295,7 @@ export const TRAINING_MODULE_ACCESS = {
   rc: "rc",
   ell: "ell",
   centralreg: "central-registration",
+  reception: "reception",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
 };
@@ -1318,6 +1321,7 @@ export const moduleForPath = (pathname) => {
     ["/rc", "rc"],
     ["/ell", "ell"],
     ["/central-registration", "centralreg"],
+    ["/reception", "reception"],
     ["/filemanager", "filemanager"],
   ];
   for (const [prefix, key] of prefixes) {

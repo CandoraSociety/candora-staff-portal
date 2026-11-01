@@ -8,6 +8,7 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "rc", title: "Resource Centre", moduleKeys: ["rc"] },
   { key: "ell", title: "ELL", moduleKeys: ["ell"] },
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
+  { key: "reception", title: "Reception", moduleKeys: ["reception"] },
   { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },
 ];
 
