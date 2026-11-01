@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -17,8 +17,13 @@ const NAV_ITEMS = [
   { path: '/reception/urgent', label: 'Urgent Alerts', icon: Siren },
 ];
 
-// Tools hidden from the front desk while simple mode is on.
-const SIMPLE_MODE_HIDDEN = ['/reception/registration'];
+// Simple mode keeps only the three moves a receptionist needs.
+const SIMPLE_NAV_ITEMS = [
+  { path: '/reception', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/reception/appointments', label: 'Appointments', icon: CalendarDays },
+  { path: '/reception/dropins', label: 'Drop-Ins', icon: DoorOpen },
+  { path: '/reception/registration', label: 'Program Registration', icon: ClipboardList },
+];
 
 export default function ReceptionLayout() {
   const location = useLocation();
@@ -26,9 +31,7 @@ export default function ReceptionLayout() {
   const { logoUrl, orgName } = useOrgSettings();
   const { simpleMode, setSimpleMode } = useSimpleMode();
 
-  const navItems = simpleMode
-    ? NAV_ITEMS.filter((item) => !SIMPLE_MODE_HIDDEN.includes(item.path))
-    : NAV_ITEMS;
+  const navItems = simpleMode ? SIMPLE_NAV_ITEMS : NAV_ITEMS;
 
   const isActive = (path) => path === '/reception' ? location.pathname === '/reception' : location.pathname.startsWith(path);
 
