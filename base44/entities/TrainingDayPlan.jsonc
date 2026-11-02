@@ -48,7 +48,7 @@
     },
     "blocks": {
       "type": "array",
-      "description": "The agenda, in order. Each block's start and end times are derived from start_time and the minutes before it.",
+      "description": "The agenda, in order. Each block's start and end times are derived from start_time and the minutes before it \u2014 unless the block carries its own start_time.",
       "items": {
         "type": "object",
         "properties": {
@@ -66,6 +66,10 @@
           },
           "minutes": {
             "type": "number"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Optional clock time for this block in 24-hour HH:MM when it must land at a set time. Empty = it flows on from the block before it."
           },
           "module_key": {
             "type": "string",

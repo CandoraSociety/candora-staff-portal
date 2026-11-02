@@ -19,11 +19,31 @@ export default function PlanBlockCard({ block, count, onChange, onRemove, onMove
   return (
     <div className="rounded-2xl border bg-card overflow-hidden print:break-inside-avoid">
       <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b bg-muted/30">
-        <div className="w-[112px] shrink-0">
-          <p className="text-sm font-bold tabular-nums flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground" /> {block.time}
+        <div className="shrink-0">
+          <div className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <input
+              type="time"
+              value={block.start_time || block.startHHMM}
+              onChange={(e) => onChange({ start_time: e.target.value })}
+              className="w-[84px] rounded-lg border bg-background px-1 py-0.5 text-sm font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-ring/30 print:hidden"
+              title="When this block starts — blocks below it follow on from here"
+            />
+            <span className="hidden print:inline text-sm font-bold tabular-nums">{block.time}</span>
+            <span className="text-xs text-muted-foreground tabular-nums">– {block.endTime}</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+            {block.minutes} min
+            {block.pinned && (
+              <button
+                onClick={() => onChange({ start_time: "" })}
+                className="font-semibold underline decoration-dotted hover:text-foreground print:hidden"
+                title="Back to flowing on from the block above"
+              >
+                auto
+              </button>
+            )}
           </p>
-          <p className="text-[11px] text-muted-foreground">{block.minutes} min</p>
         </div>
 
         <select

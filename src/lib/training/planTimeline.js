@@ -1,9 +1,10 @@
 import { TRAINING_MODULES, getTrainingModule } from "@/lib/training/trainingModules";
 
 // ── Training-day timeline maths ───────────────────────────────────────────
-// A plan stores only each block's length in minutes; start and end times are
-// derived from the plan's start time, so editing one block's duration shifts
-// everything after it and the day's end time stays honest.
+// Times run from the plan's start time through each block's length. A block may
+// also carry its own start time (an arrival at 9:15 for a 9:45 training start,
+// a guest who is only free at 11:00) — that pins the block and everything after
+// it continues from there.
 
 export const MODULE_OPTIONS = TRAINING_MODULES.map(m => ({
   key: m.key,
@@ -52,19 +53,31 @@ export const formatClock = (mins) => {
   return `${h12}:${String(m).padStart(2, "0")} ${suffix}`;
 };
 
+// Minutes → HH:MM, for the editable start-time inputs.
+export const toClockInput = (mins) => {
+  const t = ((Math.round(mins) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+};
+
 // Blocks with their calculated start/end, plus where the day lands.
 export function withTimes(plan) {
   let cursor = toMinutes(plan?.start_time || "09:00");
   const blocks = (plan?.blocks || []).map((b, index) => {
-    const start = cursor;
+    // A block's own start time wins over the running clock.
+    const start = b.start_time ? toMinutes(b.start_time) : cursor;
     const minutes = Math.max(0, Number(b.minutes) || 0);
-    cursor = start + minutes;
+    const end = start + minutes;
+    cursor = end;
     return {
       ...b,
       index,
       minutes,
       startMinutes: start,
-      time: `${formatClock(start)} – ${formatClock(cursor)}`,
+      startHHMM: toClockInput(start),
+      endHHMM: toClockInput(end),
+      endTime: formatClock(end),
+      pinned: Boolean(b.start_time),
+      time: `${formatClock(start)} – ${formatClock(end)}`,
       module: b.module_key ? getTrainingModule(b.module_key) : null,
     };
   });
@@ -82,6 +95,7 @@ export const emptyBlock = (type = "session") => ({
   type,
   title: type === "break" ? "Break" : type === "admin" ? "Admin" : "New block",
   minutes: type === "break" ? 15 : 20,
+  start_time: "",
   module_key: "",
   why: "",
   cue: "",
@@ -94,6 +108,7 @@ export const stripComputed = (blocks = []) =>
     type: b.type || "session",
     title: b.title || "",
     minutes: Math.max(0, Number(b.minutes) || 0),
+    start_time: b.start_time || "",
     module_key: b.module_key || "",
     why: b.why || "",
     cue: b.cue || "",
