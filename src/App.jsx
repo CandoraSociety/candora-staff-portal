@@ -84,6 +84,7 @@ import UsersAccess from '@/pages/admin/UsersAccess';
 import Announcements from '@/pages/admin/Announcements';
 import OrgSettingsPage from '@/pages/admin/OrgSettingsPage';
 import TrainingHub from '@/pages/admin/TrainingHub';
+import TrainingDayPlan from '@/pages/admin/TrainingDayPlan';
 import UserSettings from '@/pages/UserSettings';
 import StaffPortalTraining from '@/pages/StaffPortalTraining';
 import ReimbursementRequests from '@/pages/ReimbursementRequests';
@@ -470,6 +471,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/announcements" element={<Announcements />} />
           <Route path="/admin/settings" element={<OrgSettingsPage />} />
           <Route path="/admin/training" element={<TrainingHub />} />
+          <Route path="/admin/training-day" element={<TrainingDayPlan />} />
           <Route path="/user/settings" element={<UserSettings />} />
           <Route path="/reimbursement-requests" element={<ReimbursementRequests />} />
           <Route path="/candora-cc-receipts" element={<CandoraCCReceipts />} />

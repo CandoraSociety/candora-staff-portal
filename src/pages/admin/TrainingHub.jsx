@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -6,10 +7,11 @@ import { TRAINING_MODULES, getTrainingModule } from "@/lib/training/trainingModu
 import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
-import { GraduationCap, RefreshCw, RotateCcw, Presentation, Users, PlayCircle, FileText } from "lucide-react";
+import { GraduationCap, RefreshCw, RotateCcw, Presentation, Users, PlayCircle, FileText, CalendarDays } from "lucide-react";
 
 export default function TrainingHub() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState(TRAINING_MODULES[0].key);
   const [showRunSheet, setShowRunSheet] = useState(false);
@@ -85,12 +87,21 @@ export default function TrainingHub() {
             (<Presentation className="w-3.5 h-3.5 inline" />), and watch the table below update as each person finishes.
           </p>
         </div>
-        <button
-          onClick={refresh}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent shrink-0"
-        >
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => navigate("/admin/training-day")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:opacity-90"
+            style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}
+          >
+            <CalendarDays className="w-4 h-4" /> Training day plan
+          </button>
+          <button
+            onClick={refresh}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+        </div>
       </div>
 
       {/* Module selector */}
