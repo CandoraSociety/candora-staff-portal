@@ -19,6 +19,23 @@
       "type": "string",
       "description": "The group name or the person this plan is for"
     },
+    "attendees": {
+      "type": "array",
+      "description": "Staff members attending this training day, chosen from the staff directory. Handouts shared by the facilitator land in these people's dashboard notifications.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Staff member's display name"
+          },
+          "email": {
+            "type": "string",
+            "description": "Staff member's work email \u2014 where shared handouts are sent"
+          }
+        }
+      }
+    },
     "plan_date": {
       "type": "string",
       "format": "date",

@@ -22,9 +22,13 @@ export const getModuleObjectives = (module) => getFacilitatorGuide(module?.key)?
 export const getModuleTips = (module) => getFacilitatorGuide(module?.key)?.tips || [];
 
 // Handouts are printed from the day's plan, so they only exist while a plan is
-// driving the session — a single module run has nothing to print from.
-export const getRoomHandouts = (module, plan) =>
-  plan && isPathwaysModule(module?.key) ? PATHWAYS_HANDOUTS : [];
+// driving the session — a single module run has nothing to print from. The
+// attendee agenda is built from any plan; the Pathways reference card and
+// practice worksheet only make sense in a Pathways session.
+export const getRoomHandouts = (module, plan) => {
+  if (!plan) return [];
+  return isPathwaysModule(module?.key) ? PATHWAYS_HANDOUTS : [PATHWAYS_HANDOUTS[0]];
+};
 
 // The start-of-session briefing: hand out what participants need, then get the
 // room ready. Order matters — handouts first, screens last.

@@ -26,6 +26,7 @@ const planSnapshot = (plan) => (plan ? {
   title: plan.title || "Training day",
   plan_date: plan.plan_date || "",
   audience: plan.audience || "",
+  attendees: plan.attendees || [],
   start_time: plan.start_time || "09:00",
   summary: plan.summary || "",
   blocks: stripComputed(plan.blocks || []),

@@ -16,10 +16,11 @@
         "reimbursement_paid",
         "cc_receipts_paid",
         "ed_briefing",
+        "training_material",
         "other"
       ],
       "default": "other",
-      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, other)"
+      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, training handout shared by a facilitator, other)"
     },
     "related_form_id": {
       "type": "string",
@@ -131,7 +132,7 @@
     },
     "link": {
       "type": "string",
-      "description": "Optional in-app path to open from the notification (e.g. /reimbursement-requests)"
+      "description": "Optional in-app path or file URL to open from the notification (e.g. /reimbursement-requests, or a shared training handout)"
     },
     "is_read": {
       "type": "boolean",

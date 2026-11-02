@@ -8,7 +8,8 @@ import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
 import { planModuleKeys } from "@/lib/training/planAssignment";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 import PlanPrintDialog from "@/components/training/plan/PlanPrintDialog";
-import { CalendarDays, FileText, Loader2, Play, Plus, Presentation } from "lucide-react";
+import PlanAttendeesDialog from "@/components/training/plan/PlanAttendeesDialog";
+import { CalendarDays, FileText, Loader2, Play, Plus, Presentation, UserPlus } from "lucide-react";
 
 const NAVY = "hsl(230, 70%, 12%)";
 const GOLD = "hsl(45, 92%, 53%)";
@@ -45,6 +46,8 @@ export default function FacilitateTab() {
   const [selectedModule, setSelectedModule] = useState(TRAINING_MODULES[0].key);
   const [runSheet, setRunSheet] = useState(null);
   const [printPlan, setPrintPlan] = useState(null);
+  const [attendeePlan, setAttendeePlan] = useState(null);
+  const [startAfter, setStartAfter] = useState(null);
 
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ["facilitate-training-plans"],
@@ -52,6 +55,26 @@ export default function FacilitateTab() {
   });
 
   const module = getTrainingModule(selectedModule);
+
+  // A day can't start until the facilitator has named who is in the room, so the
+  // participants dialog comes first and the session starts once it is saved.
+  const startDay = (plan, firstModule, blockIndex) => {
+    if (!(plan.attendees || []).length) {
+      setStartAfter({ plan, module: firstModule, blockIndex });
+      setAttendeePlan(plan);
+      return;
+    }
+    startFacilitatedSession(firstModule, { plan, blockIndex });
+  };
+
+  const attendeesSaved = (list) => {
+    const pending = startAfter;
+    setAttendeePlan(null);
+    setStartAfter(null);
+    if (pending?.module) {
+      startFacilitatedSession(pending.module, { plan: { ...pending.plan, attendees: list }, blockIndex: pending.blockIndex });
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -164,7 +187,14 @@ export default function FacilitateTab() {
                   </div>
                   <div className="flex flex-wrap gap-2 shrink-0">
                     <button
-                      onClick={() => firstModule && startFacilitatedSession(firstModule, { plan, blockIndex: firstIndex })}
+                      onClick={() => { setStartAfter(null); setAttendeePlan(plan); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-card text-xs font-semibold hover:bg-accent"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      {plan.attendees?.length ? `${plan.attendees.length} participant${plan.attendees.length === 1 ? "" : "s"}` : "Add participants"}
+                    </button>
+                    <button
+                      onClick={() => firstModule && startDay(plan, firstModule, firstIndex)}
                       disabled={!firstModule}
                       title={firstModule ? `Run the day, starting with ${firstModule.title}` : "Add a module block to run this day"}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 disabled:opacity-40"
@@ -228,6 +258,12 @@ export default function FacilitateTab() {
 
       {runSheet && <FacilitatorRunSheet module={runSheet} open onClose={() => setRunSheet(null)} />}
       <PlanPrintDialog open={!!printPlan} plan={printPlan} onClose={() => setPrintPlan(null)} />
+      <PlanAttendeesDialog
+        open={!!attendeePlan}
+        plan={attendeePlan}
+        onClose={() => { setAttendeePlan(null); setStartAfter(null); }}
+        onSaved={attendeesSaved}
+      />
     </div>
   );
 }
