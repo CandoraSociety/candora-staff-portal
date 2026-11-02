@@ -72,8 +72,11 @@ export default function TrainingPill() {
   // practice controls instead of personal training progress.
   if (fSession) {
     const fm = getTrainingModule(fSession.portal);
-    if (module && fSession.portal === module.key) {
-      return <FacilitatorSession module={module} />;
+    // The facilitator's notes stay docked for the whole session — they demo
+    // live in the app, so navigating away from the module's page must not take
+    // the sidebar (and the day's agenda) off the screen.
+    if (fm) {
+      return <FacilitatorSession module={fm} />;
     }
     return (
       <div className="fixed bottom-4 left-4 z-[60] print:hidden">

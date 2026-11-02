@@ -50,7 +50,7 @@ export default function FacilitatorSidebar({
       <button
         onClick={onOpen}
         title="Show facilitator sidebar"
-        className="fixed right-0 top-1/2 z-[10011] hidden -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-sidebar-primary/50 bg-sidebar px-1.5 py-3 text-sidebar-primary shadow-lg md:flex print:hidden"
+        className="fixed right-0 top-1/2 z-[10011] flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-sidebar-primary/50 bg-sidebar px-1.5 py-3 text-sidebar-primary shadow-lg print:hidden"
       >
         <PanelRightOpen className="h-4 w-4" />
         <span className="text-[10px] font-bold [writing-mode:vertical-rl]">Facilitator</span>
@@ -61,7 +61,7 @@ export default function FacilitatorSidebar({
 
   return createPortal(
     <>
-      <aside aria-label="Facilitator sidebar" className="fixed bottom-4 right-3 top-20 z-[10011] hidden w-[250px] flex-col md:flex print:hidden">
+      <aside aria-label="Facilitator notes" className="fixed bottom-20 right-3 top-16 z-[10011] flex w-[88vw] max-w-[300px] flex-col md:bottom-4 md:top-20 md:w-[250px] print:hidden">
         <div className="training-window-glow flex min-h-0 flex-col overflow-hidden rounded-2xl border shadow-2xl" style={{ background: NAVY, borderColor: "hsl(45, 60%, 45%)" }}>
           <div className="flex shrink-0 items-start justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
             <div className="min-w-0">
@@ -69,6 +69,7 @@ export default function FacilitatorSidebar({
                 <GraduationCap className="h-4 w-4" style={{ color: GOLD }} /> Facilitating
               </p>
               <p className="text-[11px] mt-0.5 leading-snug" style={{ color: MUTED }}>{module.shortTitle || module.title}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: "hsl(45, 60%, 62%)" }}>Your notes — never projected</p>
             </div>
             <button onClick={onClose} title="Hide sidebar" className="rounded-lg p-1 hover:opacity-70" style={{ color: MUTED }}>
               <PanelRightClose className="h-4 w-4" />

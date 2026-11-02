@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GraduationCap, ListChecks, ClipboardCheck, LogOut, Map } from "lucide-react";
+import { GraduationCap, ListChecks, ClipboardCheck, LogOut, Map, PanelRightOpen } from "lucide-react";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
@@ -59,6 +59,9 @@ export default function FacilitatorSession({ module }) {
           </span>
           <button onClick={() => setTourOpen(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}>
             <Map className="w-3.5 h-3.5" /> Tour
+          </button>
+          <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}>
+            <PanelRightOpen className="w-3.5 h-3.5" /> Notes
           </button>
           <button onClick={openPractice} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}>
             <ListChecks className="w-3.5 h-3.5" /> Practice

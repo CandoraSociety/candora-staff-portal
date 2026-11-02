@@ -83,11 +83,14 @@ export const getBriefingItems = (module, plan) => {
   return items;
 };
 
-// A section's own talking point plus the one screen it lives on.
+// A section's own talking point plus the one screen it lives on. Sections with
+// no written guidance still get the slide's own text, so the panel is never
+// empty while the room watches.
 export const getSectionNote = (module, step) => {
   const guide = getFacilitatorGuide(module?.key);
   return guide?.stepNotes?.[step?.title]
-    || "No extra talking point for this section — follow the words on the slide and keep the pace moving.";
+    || step?.body
+    || "Follow the words on the slide and keep the pace moving.";
 };
 
 export const getPracticeNote = (module, task) => {
